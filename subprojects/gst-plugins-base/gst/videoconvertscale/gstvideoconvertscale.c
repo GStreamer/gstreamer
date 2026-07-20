@@ -113,6 +113,11 @@ typedef struct
   gint borders_h;
   gint borders_w;
 
+  gint crop_x;
+  gint crop_y;
+  gint crop_width;
+  gint crop_height;
+
   GstTaskPool *task_pool;
   gboolean task_pool_from_persistent_context;
 } GstVideoConvertScalePrivate;
@@ -255,6 +260,8 @@ static GstCaps *gst_video_convert_scale_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_video_convert_scale_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static gboolean gst_video_convert_scale_propose_allocation (GstBaseTransform *
+    trans, GstQuery * decide_query, GstQuery * query);
 static gboolean gst_video_convert_scale_transform_meta (GstBaseTransform *
     trans, GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
@@ -277,13 +284,7 @@ static gboolean
 gst_video_convert_scale_filter_meta (GstBaseTransform * trans, GstQuery * query,
     GType api, const GstStructure * params)
 {
-  /* This element cannot passthrough the crop meta, because it would convert the
-   * wrong sub-region of the image, and worst, our output image may not be large
-   * enough for the crop to be applied later */
-  if (api == GST_VIDEO_CROP_META_API_TYPE)
-    return FALSE;
-
-  /* propose all other metadata upstream */
+  /* propose all metadata upstream */
   return TRUE;
 }
 
@@ -424,6 +425,8 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_scale_src_event);
   trans_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_video_convert_scale_transform_meta);
+  trans_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_convert_scale_propose_allocation);
 
   filter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_convert_scale_set_info);
   filter_class->transform_frame =
@@ -793,6 +796,10 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
     NULL
   };
 
+  /* Drop it as we apply the crop */
+  if (info->api == GST_VIDEO_CROP_META_API_TYPE)
+    return FALSE;
+
   should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
 
   /* Cant handle the tags in this meta, let the parent class handle it */
@@ -829,6 +836,24 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
   }
 
   /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
+static gboolean
+gst_video_convert_scale_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query)
+{
+  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
+          decide_query, query))
+    return FALSE;
+
+  /* Passthrough is passthrough */
+  if (decide_query == NULL)
+    return TRUE;
+
+  /* If we're not passthrough, we can handle crop meta as well */
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
+
   return TRUE;
 }
 
@@ -1072,6 +1097,9 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   /* if present, these must match */
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
+
+  /* Reset the crop meta memory */
+  priv->crop_x = priv->crop_y = priv->crop_width = priv->crop_height = 0;
 
   if (priv->converter_config) {
     options = gst_structure_copy (priv->converter_config);
@@ -2001,10 +2029,30 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
 {
   GstVideoConvertScalePrivate *priv = PRIV (filter);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoCropMeta *cmeta;
+  gboolean update_config = FALSE;
 
   GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "doing video scaling");
 
-  if (priv->converter_config_changed ||
+  cmeta = gst_buffer_get_video_crop_meta (in_frame->buffer);
+  if (cmeta && (cmeta->x != priv->crop_x ||
+          cmeta->y != priv->crop_y ||
+          cmeta->width != priv->crop_width ||
+          cmeta->height != priv->crop_height))
+    update_config = TRUE;
+  if (!cmeta && (priv->crop_width != 0 || priv->crop_height != 0))
+    update_config = TRUE;
+
+  if (cmeta) {
+    priv->crop_x = cmeta->x;
+    priv->crop_y = cmeta->y;
+    priv->crop_width = cmeta->width;
+    priv->crop_height = cmeta->height;
+  } else {
+    priv->crop_x = priv->crop_y = priv->crop_width = priv->crop_height = 0;
+  }
+
+  if (priv->converter_config_changed || update_config ||
       !gst_video_info_is_equal (&priv->last_frame_vinfo, &in_frame->info)) {
     GstStructure *options;
 
@@ -2022,6 +2070,20 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
       options =
           gst_structure_copy (gst_video_converter_get_config (priv->convert));
 
+    if (cmeta) {
+      gst_structure_set_static_str (options,
+          GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, cmeta->x,
+          GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, cmeta->y,
+          GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, cmeta->width,
+          GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, cmeta->height, NULL);
+    } else if (!priv->converter_config) {
+      gst_structure_remove_fields (options,
+          GST_VIDEO_CONVERTER_OPT_SRC_X,
+          GST_VIDEO_CONVERTER_OPT_SRC_Y,
+          GST_VIDEO_CONVERTER_OPT_SRC_WIDTH,
+          GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, NULL);
+    }
+
     gst_video_converter_free (priv->convert);
     priv->convert =
         gst_video_convert_scale_create_converter (GST_VIDEO_CONVERT_SCALE
@@ -2029,6 +2091,7 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
 
     priv->converter_config_changed = FALSE;
   }
+
 
   gst_video_converter_frame (priv->convert, in_frame, out_frame);
 

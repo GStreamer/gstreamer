@@ -299,6 +299,169 @@ GST_START_TEST (test_converter_config_update)
 
 GST_END_TEST;
 
+static GstBuffer *
+create_cropped_gray8_buffer (void)
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+  GstVideoCropMeta *crop_meta;
+  gsize offsets[GST_VIDEO_MAX_PLANES] = { 0, 0, 0, 0 };
+  gint strides[GST_VIDEO_MAX_PLANES] = { 4, 0, 0, 0 };
+
+  buffer = gst_buffer_new_allocate (NULL, 16, NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_WRITE));
+  memset (map.data, 0, map.size);
+  map.data[5] = 16;
+  map.data[6] = 32;
+  map.data[9] = 64;
+  map.data[10] = 128;
+  gst_buffer_unmap (buffer, &map);
+
+  gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_GRAY8, 4, 4, 1, offsets, strides);
+  crop_meta = gst_buffer_add_video_crop_meta (buffer);
+  crop_meta->x = 1;
+  crop_meta->y = 1;
+  crop_meta->width = 2;
+  crop_meta->height = 2;
+
+  return buffer;
+}
+
+/* Test that crop configuration is reset when GstVideoCropMeta disappears */
+GST_START_TEST (test_crop_meta_changes)
+{
+  GstHarness *h;
+  GstBuffer *cropped;
+  GstBuffer *uncropped;
+  GstBuffer *cropped_again;
+
+  h = gst_harness_new ("videoconvertscale");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=GRAY8,width=2,height=2,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,format=RGB,width=2,height=2,framerate=30/1");
+
+  cropped = gst_harness_push_and_pull (h, create_cropped_gray8_buffer ());
+  fail_unless (cropped != NULL);
+  uncropped = gst_harness_push_and_pull (h,
+      create_gray8_buffer_with_layout (0, 2));
+  fail_unless (uncropped != NULL);
+  cropped_again = gst_harness_push_and_pull (h, create_cropped_gray8_buffer ());
+  fail_unless (cropped_again != NULL);
+
+  fail_unless (rgb_buffer_pixels_equal (cropped, uncropped));
+  fail_unless (rgb_buffer_pixels_equal (cropped, cropped_again));
+
+  gst_buffer_unref (cropped_again);
+  gst_buffer_unref (uncropped);
+  gst_buffer_unref (cropped);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* Test that configured source rectangles survive crop metadata changes */
+GST_START_TEST (test_converter_config_after_crop)
+{
+  GstHarness *h;
+  GstBuffer *configured;
+  GstBuffer *cropped;
+  GstBuffer *restored;
+  GstStructure *config;
+
+  h = gst_harness_new ("videoconvertscale");
+  config = gst_structure_new ("GstVideoConverter",
+      GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, 0,
+      GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, 0,
+      GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, 2,
+      GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, 2, NULL);
+  g_object_set (h->element, "converter-config", config, NULL);
+  gst_structure_free (config);
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=GRAY8,width=2,height=2,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,format=RGB,width=2,height=2,framerate=30/1");
+
+  configured = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
+  fail_unless (configured != NULL);
+  cropped = gst_harness_push_and_pull (h, create_cropped_gray8_buffer ());
+  fail_unless (cropped != NULL);
+  restored = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
+  fail_unless (restored != NULL);
+
+  fail_if (rgb_buffer_pixels_equal (configured, cropped));
+  fail_unless (rgb_buffer_pixels_equal (configured, restored));
+
+  gst_buffer_unref (restored);
+  gst_buffer_unref (cropped);
+  gst_buffer_unref (configured);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* videoconvertscale crops the input buffer itself based on GstVideoCropMeta
+ * before converting/scaling, so it should always accept it on its sink pad
+ * whenever it actually performs a conversion. */
+GST_START_TEST (test_propose_allocation_crop_meta)
+{
+  GstElement *element;
+  GstBaseTransformClass *klass;
+  GstQuery *decide_query;
+  GstQuery *query;
+  GstCaps *caps;
+
+  element = gst_element_factory_make ("videoconvertscale", NULL);
+  fail_unless (element != NULL);
+  klass = GST_BASE_TRANSFORM_GET_CLASS (element);
+  caps = gst_caps_from_string ("video/x-raw,format=I420,width=320,height=240");
+  decide_query = gst_query_new_allocation (caps, FALSE);
+  query = gst_query_new_allocation (caps, FALSE);
+  gst_caps_unref (caps);
+
+  fail_unless (klass->propose_allocation (GST_BASE_TRANSFORM (element),
+          decide_query, query));
+  fail_unless (gst_query_find_allocation_meta (query,
+          GST_VIDEO_CROP_META_API_TYPE, NULL));
+
+  gst_query_unref (query);
+  gst_query_unref (decide_query);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
+/* When negotiated in passthrough mode (no scaling/converting needed),
+ * videoconvertscale never looks at the buffer, so it must not claim to
+ * support GstVideoCropMeta unless downstream already does. */
+GST_START_TEST (test_propose_allocation_crop_meta_passthrough)
+{
+  GstHarness *h;
+  GstQuery *query;
+  GstCaps *caps;
+
+  h = gst_harness_new ("videoconvertscale");
+
+  gst_harness_set_sink_caps_str (h, "video/x-raw,format=I420,width=320,"
+      "height=240,framerate=30/1");
+  gst_harness_set_src_caps_str (h, "video/x-raw,format=I420,width=320,"
+      "height=240,framerate=30/1");
+
+  caps = gst_pad_get_current_caps (h->srcpad);
+  fail_unless (caps != NULL);
+  query = gst_query_new_allocation (caps, FALSE);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_pad_peer_query (h->srcpad, query));
+  fail_if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_CROP_META_API_TYPE, NULL));
+  gst_query_unref (query);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 videoconvert_suite (void)
 {
@@ -311,6 +474,10 @@ videoconvert_suite (void)
   tcase_add_test (tc_chain, test_negotiate_alternate);
   tcase_add_test (tc_chain, test_videometa_layout_changes);
   tcase_add_test (tc_chain, test_converter_config_update);
+  tcase_add_test (tc_chain, test_crop_meta_changes);
+  tcase_add_test (tc_chain, test_converter_config_after_crop);
+  tcase_add_test (tc_chain, test_propose_allocation_crop_meta);
+  tcase_add_test (tc_chain, test_propose_allocation_crop_meta_passthrough);
 
   return s;
 }
