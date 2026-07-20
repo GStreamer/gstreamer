@@ -20,7 +20,7 @@ gst_dep = dependency('gstreamer-1.0', version : gst_req)
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req)
 gstbad_dep = dependency('gstreamer-analytics-1.0', version :gst_req)
 gmodule_dep = dependency('gmodule-no-export-2.0')
-libdl = cc.find_library('dl', required: false)
+libdl = dependency('dl', required: false)
 pygobject_dep = dependency('pygobject-3.0', allow_fallback: true, version: '>= 3.8')
 
 pymod = import('python')
