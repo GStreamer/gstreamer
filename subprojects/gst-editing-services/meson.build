@@ -136,7 +136,8 @@ build_gir = gir.found() and (not meson.is_cross_build() or get_option('introspec
 gir_init_section = [ '--add-init-section=' + \
     'extern void gst_init(gint*,gchar**);' + \
     'extern void ges_init(void);' + \
-    'g_setenv("GST_REGISTRY_1.0", "/no/way/this/exists.reg", TRUE);' + \
+    'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
+    'g_setenv("GST_REGISTRY_1_0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_DEBUG", "0", TRUE);' + \

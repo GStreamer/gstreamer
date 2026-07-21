@@ -106,7 +106,8 @@ json_dep = dependency('json-glib-1.0')
 gst_c_args = ['-DHAVE_CONFIG_H', '-DGST_USE_UNSTABLE_API']
 
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
-    'g_setenv("GST_REGISTRY_1.0", "/no/way/this/exists.reg", TRUE);' + \
+    'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
+    'g_setenv("GST_REGISTRY_1_0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_TRACERS", "", TRUE);' + \
