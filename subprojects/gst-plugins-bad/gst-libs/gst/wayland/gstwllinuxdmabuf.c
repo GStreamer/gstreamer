@@ -173,16 +173,6 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
     }
   }
 
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-    GST_DEBUG_OBJECT (mem->allocator, "interlaced buffer");
-    flags = ZWP_LINUX_BUFFER_PARAMS_V1_FLAGS_INTERLACED;
-
-    if (!GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF)) {
-      GST_DEBUG_OBJECT (mem->allocator, "with bottom field first");
-      flags |= ZWP_LINUX_BUFFER_PARAMS_V1_FLAGS_BOTTOM_FIRST;
-    }
-  }
-
   /* Request buffer creation */
   zwp_linux_buffer_params_v1_add_listener (params, &params_listener, &data);
   zwp_linux_buffer_params_v1_create (params, width, height, fourcc, flags);
