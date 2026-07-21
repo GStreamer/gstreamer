@@ -75,7 +75,8 @@ gst_vulkan_handle_init (GstVulkanHandle * handle, GstVulkanDevice * device,
 
   init_debug ();
 
-  GST_TRACE ("new %p", handle);
+  GST_TRACE ("new %p for vulkan handle %"
+      GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT, handle, handle_val);
 
   gst_mini_object_init (&handle->parent, 0, GST_TYPE_VULKAN_HANDLE, NULL, NULL,
       (GstMiniObjectFreeFunction) gst_vulkan_handle_free);
