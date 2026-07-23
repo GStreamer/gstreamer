@@ -19,60 +19,27 @@ of it.
 ### Introduction
 
 Video decoding can be an extremely CPU-intensive task, especially for
-higher resolutions like 1080p HDTV. Fortunately, modern graphics cards,
+higher resolutions like 1080p or even 4K. Fortunately, modern graphics cards,
 equipped with programmable GPUs, are able to take care of this job,
 allowing the CPU to concentrate on other duties. Having dedicated
 hardware becomes essential for low-power CPUs which are simply incapable
 of decoding such media fast enough.
 
-In the current state of things (June 2016) each GPU manufacturer offers
-a different method to access their hardware (a different API), and a
-strong industry standard has not emerged yet.
+As of June 2026, the following video decoding acceleration APIs exist which would cover most GPUs available on the market across different manufacturers:
 
-As of June 2016, there exist at least 8 different video decoding
-acceleration APIs:
+ - [VAAPI](http://en.wikipedia.org/wiki/Video_Acceleration_API) (*Video Acceleration API*): Initially designed by [Intel](http://en.wikipedia.org/wiki/Intel) in 2007, targeted at the X Window System on Unix-based operating systems, now open-source. It now also supports Wayland through dmabuf. It is currently not limited to Intel GPUs as other hardware manufacturers are also free to use this API. Accessible to GStreamer through the `va` plugin from `gst-plugins-bad`.
 
- - [VAAPI](http://en.wikipedia.org/wiki/Video_Acceleration_API) (*Video
-Acceleration API*): Initially designed by
-[Intel](http://en.wikipedia.org/wiki/Intel) in 2007, targeted at the X
-Window System on Unix-based operating systems, now open-source. It now
-also supports Wayland through dmabuf. It is currently not limited to
-Intel GPUs as other manufacturers are free to use this API, for example,
-[Imagination
-Technologies](http://en.wikipedia.org/wiki/Imagination_Technologies) or
-[S3 Graphics](http://en.wikipedia.org/wiki/S3_Graphics). Accessible to
-GStreamer through `va` plugin from `gst-plugins-bad`.
+ - [AMF](https://gpuopen.com/advanced-media-framework/) (*Advanced Media Framework SDK*): An open source framework by [AMD](http://en.wikipedia.org/wiki/AMD) for interfacing with their own GPUs. Accessible to GStreamer through the `amfcodec` plugin from `gst-plugins-bad`.
 
- - [OVD](http://developer.amd.com/sdks/AMDAPPSDK/assets/OpenVideo_Decode_API.PDF)
-(*Open Video Decode*): Another API from [AMD
-Graphics](http://en.wikipedia.org/wiki/AMD_Graphics), designed to be a
-platform agnostic method for softrware developers to leverage the
-[Universal Video
-Decode](http://en.wikipedia.org/wiki/Unified_Video_Decoder) (UVD)
-hardware inside AMD Radeon graphics cards. Currently unavailable to
-GStreamer .
+ - [NVDEC](https://en.wikipedia.org/wiki/NVDEC)/[NVENC](https://en.wikipedia.org/wiki/NVENC): NVIDIA's proprietary APIs for hardware video acceleration, used by NVIDIA GPUs from Fermi onwards. Accessible to GStreamer through the `nvcodec` plugin from `gst-plugins-bad`.
 
- - [DCE](http://en.wikipedia.org/wiki/Distributed_Codec_Engine)
-(*Distributed Codec Engine*): An open source software library ("libdce")
-and API specification by [Texas
-Instruments](http://en.wikipedia.org/wiki/Texas_Instruments), targeted
-at Linux systems and ARM platforms. Accessible to GStreamer through
-the [gstreamer-ducati](https://github.com/robclark/gst-ducati) plugin.
+ - [Vulkan Video](https://www.khronos.org/blog/an-introduction-to-vulkan-video): An extension of the [Vulkan](https://en.wikipedia.org/wiki/Vulkan_(API)) graphics and compute API, but for video encoding and decoding. Accessible to GStreamer through the `vulkan` plugin from `gst-plugins-bad`.
 
- - [Android
-   MediaCodec](https://developer.android.com/reference/android/media/MediaCodec.html): This is Android's API to access the device's
-   hardware decoder and encoder if available. This is accessible through the
-   `androidmedia` plugin in gst-plugins-bad. This includes both encoding and
-   decoding.
+ - [Android MediaCodec](https://developer.android.com/reference/android/media/MediaCodec.html): This is Android's API to access the device's hardware decoder and encoder if available. This is accessible through the `androidmedia` plugin in `gst-plugins-bad`. This includes both encoding and decoding.
 
- - Apple VideoTool Box Framework: Apple's API to access hardware is available
-  through the `applemedia` plugin which includes both encoding through
-  the `vtenc` element and decoding through the `vtdec` element.
+ - [Apple VideoToolbox Framework](https://developer.apple.com/documentation/videotoolbox): Apple's API to access hardware is available through the `applemedia` plugin which includes both encoding through the `vtenc` element and decoding through the `vtdec` element.
 
- - Video4Linux: Recent Linux kernels have a kernel API to expose
-   hardware codecs in a standard way, this is now supported by the
-   `v4l2` plugin in `gst-plugins-good`. This can support both decoding
-   and encoding depending on the platform.
+ - [Video4Linux](https://en.wikipedia.org/wiki/Video4Linux): Recent Linux kernels have a kernel API to expose hardware codecs in a standard way, this is now supported by the `v4l2` plugin in `gst-plugins-good`. This can support both decoding and encoding depending on the platform.
 
 ### Inner workings of hardware-accelerated video decoding plugins
 
