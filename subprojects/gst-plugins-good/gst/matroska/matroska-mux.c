@@ -126,6 +126,8 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-huffyuv, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-ffvhuff, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-dv, "
         COMMON_VIDEO_CAPS "; "
         "video/x-h263, "
@@ -1363,7 +1365,8 @@ skip_details:
         videocontext->fourcc = GST_MAKE_FOURCC ('B', 'R', 'A', 64);
     }
   } else if (!strcmp (mimetype, "video/x-huffyuv")      /* MS/VfW compatibility cases */
-      ||!strcmp (mimetype, "video/x-divx")
+      ||!strcmp (mimetype, "video/x-ffvhuff")
+      || !strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
       || !strcmp (mimetype, "video/x-h263")
       || !strcmp (mimetype, "video/x-msmpeg")
@@ -1375,6 +1378,8 @@ skip_details:
 
     if (!strcmp (mimetype, "video/x-huffyuv"))
       fourcc = GST_MAKE_FOURCC ('H', 'F', 'Y', 'U');
+    else if (!strcmp (mimetype, "video/x-ffvhuff"))
+      fourcc = GST_MAKE_FOURCC ('F', 'F', 'V', 'H');
     else if (!strcmp (mimetype, "video/x-dv"))
       fourcc = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');
     else if (!strcmp (mimetype, "video/x-h263"))
