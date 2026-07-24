@@ -21,7 +21,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -172,10 +171,13 @@ GST_START_TEST (test_query_drain)
   query = gst_query_new_allocation (caps, TRUE);
   do_peer_query_func (query);
 
-  fail_unless (gst_query_get_n_allocation_pools (query) == 1);
+  for (i = 0; i < gst_query_get_n_allocation_pools (query); ++i) {
+    gst_query_parse_nth_allocation_pool (query, i, &originpool, &size, &min,
+        &max);
+    if (GST_IS_GL_BUFFER_POOL (originpool))
+      break;
+  }
 
-  gst_query_parse_nth_allocation_pool (query, 0, &originpool, &size, &min,
-      &max);
   fail_unless (originpool != NULL);
   gst_query_unref (query);
 
@@ -199,8 +201,8 @@ GST_START_TEST (test_query_drain)
 
   fail_unless (gst_buffer_pool_set_active (pool, TRUE));
 
-  /* Unpopulate the pool and forget about its initial buffers 
-   * It is necessary because the pool has to know there are 
+  /* Unpopulate the pool and forget about its initial buffers
+   * It is necessary because the pool has to know there are
    * N outstanding buffers. */
   for (i = 0; i < maxbuffers; ++i) {
     fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf,
