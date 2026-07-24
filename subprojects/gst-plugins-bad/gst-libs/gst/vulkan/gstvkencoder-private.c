@@ -1089,10 +1089,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
-  /* initialize the vulkan operation */
-  if (!gst_vulkan_operation_begin (priv->exec, &err))
-    goto bail;
-
   _setup_rate_control (self, pic, info, &rc_info, &rc_layer);
 
   /* *INDENT-OFF* */
@@ -1165,6 +1161,11 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   };
   /* *INDENT-ON* */
 
+again:
+  /* initialize the vulkan operation */
+  if (!gst_vulkan_operation_begin (priv->exec, &err))
+    goto bail;
+
   cmd_buf = priv->exec->cmd_buf;
   priv->vk.CmdBeginVideoCoding (cmd_buf->cmd, &begin_coding);
 
@@ -1175,7 +1176,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
    */
   if (priv->session_reset) {
     priv->vk.CmdControlVideoCoding (cmd_buf->cmd, &coding_ctrl);
-    priv->session_reset = FALSE;
   }
 
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
@@ -1254,10 +1254,20 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   priv->vk.CmdEndVideoCoding (cmd_buf->cmd, &end_coding);
 
   if (!gst_vulkan_operation_end (priv->exec, &err)) {
+    if (g_error_matches (err, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (self, "Detected a synchronisation hazard, retrying");
+      g_clear_error (&err);
+      goto again;
+    }
     GST_ERROR_OBJECT (self, "The operation did not complete properly: %s",
         err->message);
     goto bail;
   }
+
+  if (priv->session_reset) {
+    priv->session_reset = FALSE;
+  }
+
   /* Wait the operation to complete or we might have a failing query */
   gst_vulkan_operation_wait (priv->exec);
 

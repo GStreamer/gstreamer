@@ -429,11 +429,12 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     gst_object_unref (cmd_pool);
   }
 
-  if (!gst_vulkan_operation_add_dependency_frame (raw->exec, *outbuf,
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT))
+again:
+  if (!gst_vulkan_operation_begin (raw->exec, &error))
     goto error;
 
-  if (!gst_vulkan_operation_begin (raw->exec, &error))
+  if (!gst_vulkan_operation_add_dependency_frame (raw->exec, *outbuf,
+          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT))
     goto error;
 
   cmd_buf = raw->exec->cmd_buf;
@@ -515,8 +516,15 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     gst_vulkan_command_buffer_unlock (cmd_buf);
   }
 
-  if (!gst_vulkan_operation_end (raw->exec, &error))
+  if (!gst_vulkan_operation_end (raw->exec, &error)) {
+    if (g_error_matches (error, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (raw->upload,
+          "Detected a synchronisation hazard, retrying");
+      g_clear_error (&error);
+      goto again;
+    }
     goto error;
+  }
 
   ret = GST_FLOW_OK;
 
@@ -689,6 +697,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     return GST_FLOW_ERROR;
 
   gst_buffer_pool_set_active (pool, TRUE);
+
   if ((ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL))
       != GST_FLOW_OK)
     goto out;
@@ -701,6 +710,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     gst_object_unref (cmd_pool);
   }
 
+again:
   if (!gst_vulkan_operation_begin (raw->exec, &error))
     goto error;
 
@@ -827,8 +837,16 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     gst_vulkan_command_buffer_unlock (cmd_buf);
   }
 
-  if (!gst_vulkan_operation_end (raw->exec, &error))
+  if (!gst_vulkan_operation_end (raw->exec, &error)) {
+    if (g_error_matches (error, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (raw->upload,
+          "Detected a synchronisation hazard, retrying");
+      g_clear_error (&error);
+      gst_clear_buffer (&in_vk_copy);
+      goto again;
+    }
     goto error;
+  }
 
   ret = GST_FLOW_OK;
 

@@ -1387,6 +1387,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     gst_memory_unref (uniforms);
   }
 
+again:
   if (!(cmd_buf =
           gst_vulkan_full_screen_quad_prepare_draw (conv->quad, &error)))
     goto error;
@@ -1458,8 +1459,15 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     }
   }
 
-  if (!gst_vulkan_full_screen_quad_submit (conv->quad, &error))
+  if (!gst_vulkan_full_screen_quad_submit (conv->quad, &error)) {
+    if (g_error_matches (error, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (conv, "Detected a synchronisation hazard, retrying");
+      g_clear_error (&error);
+      gst_clear_vulkan_command_buffer (&cmd_buf);
+      goto again;
+    }
     goto error;
+  }
 
   for (i = 0; i < in_n_mems; i++)
     gst_clear_vulkan_image_view (&in_img_views[i]);

@@ -481,6 +481,7 @@ gst_vulkan_decoder_flush (GstVulkanDecoder * self, GError ** error)
   };
   /* *INDENT-ON* */
 
+again:
   if (!gst_vulkan_operation_begin (priv->exec, error))
     return FALSE;
 
@@ -488,7 +489,19 @@ gst_vulkan_decoder_flush (GstVulkanDecoder * self, GError ** error)
   priv->vk.CmdControlVideoCoding (priv->exec->cmd_buf->cmd, &decode_ctrl);
   priv->vk.CmdEndVideoCoding (priv->exec->cmd_buf->cmd, &decode_end);
 
-  ret = gst_vulkan_operation_end (priv->exec, error);
+  GError *error_internal = NULL;
+  if (!(ret = gst_vulkan_operation_end (priv->exec, &error_internal))) {
+    if (g_error_matches (error_internal, GST_VULKAN_ERROR,
+            VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (self, "Detected a synchronisation hazard, retrying");
+      g_clear_error (&error_internal);
+      goto again;
+    }
+    if (error)
+      *error = error_internal;
+    else
+      g_clear_error (&error_internal);
+  }
 
   return ret;
 }
@@ -649,6 +662,7 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
   pic->decode_info.srcBufferRange = GST_ROUND_UP_N (slices_size,
       priv->caps.caps.minBitstreamBufferSizeAlignment);
 
+again:
   if (!gst_vulkan_operation_begin (priv->exec, error))
     return FALSE;
 
@@ -746,7 +760,19 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
   gst_vulkan_operation_end_query (priv->exec, 0);
   priv->vk.CmdEndVideoCoding (cmd_buf->cmd, &decode_end);
 
-  ret = gst_vulkan_operation_end (priv->exec, error);
+  GError *error_internal = NULL;
+  if (!(ret = gst_vulkan_operation_end (priv->exec, &error_internal))) {
+    if (g_error_matches (error_internal, GST_VULKAN_ERROR,
+            VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (self, "Detected a synchronisation hazard, retrying");
+      g_clear_error (&error_internal);
+      goto again;
+    }
+    if (error)
+      *error = error_internal;
+    else
+      g_clear_error (&error_internal);
+  }
 
   return ret;
 }

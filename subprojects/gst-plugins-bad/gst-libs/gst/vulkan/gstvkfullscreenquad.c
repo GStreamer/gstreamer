@@ -1648,6 +1648,7 @@ gst_vulkan_full_screen_quad_draw (GstVulkanFullScreenQuad * self,
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
 
   GST_OBJECT_LOCK (self);
+again:
   if (!(cmd = prepare_draw_internal (self, error))) {
     GST_OBJECT_UNLOCK (self);
     goto error;
@@ -1660,8 +1661,20 @@ gst_vulkan_full_screen_quad_draw (GstVulkanFullScreenQuad * self,
   }
   gst_vulkan_command_buffer_unlock (cmd);
 
-  if (!submit_internal (self, error)) {
+  GError *error_internal = NULL;
+  if (!submit_internal (self, &error_internal)) {
+    if (g_error_matches (error_internal, GST_VULKAN_ERROR,
+            VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (self, "Detected a synchronisation hazard, retrying");
+      g_clear_error (&error_internal);
+      gst_vulkan_command_buffer_unlock (cmd);
+      goto again;
+    }
     GST_OBJECT_UNLOCK (self);
+    if (error)
+      *error = error_internal;
+    else
+      g_clear_error (&error_internal);
     goto error;
   }
 
