@@ -45,6 +45,13 @@ static GstPad *mysrcpad, *mysinkpad;
     "video/x-raw, "                 \
     "framerate = (fraction) 0/1"
 
+#define VIDEO_CAPS_VARIABLE_FRAMERATE_STRING \
+    "video/x-raw, "                 \
+    "width = (int) 320, "               \
+    "height = (int) 240, "              \
+    "framerate = (fraction) 0/1 , "     \
+    "format = (string) I420"
+
 #define VIDEO_CAPS_NO_FRAMERATE_STRING  \
     "video/x-raw, "                 \
     "width = (int) 320, "               \
@@ -2038,6 +2045,77 @@ GST_START_TEST (test_segment_update_same)
 
 GST_END_TEST;
 
+/* Closing a segment while the output framerate is variable and the held
+ * buffer has no duration (PTS-only input, e.g. FLV) must not hit the
+ * assertion in gst_video_rate_push_buffer(); the held buffer is pushed
+ * exactly once instead.
+ * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/5229 */
+GST_START_TEST (test_segment_update_vfr_no_duration)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+
+  videorate =
+      setup_videorate_full (&srctemplate, &force_variable_rate_template);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_VARIABLE_FRAMERATE_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* first buffer with PTS but no duration, held as prevbuf */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 0;
+  gst_buffer_memset (buf, 0, 1, 4);
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* second buffer with PTS but no duration; the first buffer goes out with
+   * its duration backfilled, this one is now held without a duration */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 2, 4);
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buf = buffers->data;
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+
+  /* new segment closes the current one; the held buffer must be pushed
+   * exactly once, with an invalid duration */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 10 * GST_SECOND;
+  segment.time = 10 * GST_SECOND;
+  segment.position = 10 * GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  buf = g_list_nth_data (buffers, 1);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), 40 * GST_MSECOND);
+  fail_unless (!GST_BUFFER_DURATION_IS_VALID (buf));
+  assert_videorate_stats (videorate, "close segment", 2, 2, 0, 0);
+
+  /* the stream keeps working in the new segment and drains on EOS */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 10 * GST_SECOND;
+  gst_buffer_memset (buf, 0, 3, 4);
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  buf = g_list_nth_data (buffers, 2);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), 10 * GST_SECOND);
+  assert_videorate_stats (videorate, "eos", 3, 3, 0, 0);
+
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_segment_update_average_period)
 {
   GstElement *videorate;
@@ -2394,6 +2472,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_base_nonzero);
   tcase_add_test (tc_chain, test_segment_update_start_advance);
   tcase_add_test (tc_chain, test_segment_update_same);
+  tcase_add_test (tc_chain, test_segment_update_vfr_no_duration);
   tcase_add_test (tc_chain, test_segment_update_average_period);
   tcase_add_test (tc_chain, test_segment_update);
   tcase_add_test (tc_chain, test_drop_only_ref_count);

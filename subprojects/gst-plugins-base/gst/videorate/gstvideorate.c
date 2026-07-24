@@ -1062,6 +1062,20 @@ gst_video_rate_duplicate_to_close_segment (GstVideoRate * videorate)
 
   GST_DEBUG_OBJECT (videorate, "Pushing buffers to close segment");
 
+  /* With a variable output framerate and no duration on the held buffer,
+   * there is no way to infer how long it should last, nor to advance
+   * next_ts by duplicating it. Push it once and stop. */
+  if (!videorate->to_rate_numerator &&
+      !GST_BUFFER_DURATION_IS_VALID (videorate->prevbuf)) {
+    GST_DEBUG_OBJECT (videorate, "Closing segment with a single buffer with "
+        "invalid duration, cannot fill the segment by duplicating");
+    if (gst_video_rate_flush_prev (videorate, FALSE, GST_CLOCK_TIME_NONE,
+            TRUE) == GST_FLOW_OK)
+      count = 1;
+
+    return count;
+  }
+
   res = GST_FLOW_OK;
   /* fill up to the end of current segment */
   while (res == GST_FLOW_OK
