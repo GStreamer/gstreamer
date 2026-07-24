@@ -32567,6 +32567,12 @@ they can be changed when the element is in the READY or lower state.</doc>
 plugin. One would use this macro to export a plugin, so that it can be used
 by other applications.
 
+Since GStreamer 1.14, the @name must match the basename of the shared library
+the plugin ships as: the dynamic loader derives the plugin name from the
+library file name, so a plugin installed as `libgst&lt;name&gt;.so` must pass that
+same name here. A mismatch makes GStreamer silently fail to recognise the
+file as a plugin.
+
 The macro uses a define named PACKAGE for the #GstPluginDesc,source field.
 When using autoconf, this is usually set automatically via the AC_INIT
 macro, and set in config.h. If you are not using autoconf, you will need to
@@ -32584,7 +32590,8 @@ If defined, the GST_PACKAGE_RELEASE_DATETIME will also be used for the
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">minor version number of the gstreamer-core that plugin was compiled for</doc>
         </parameter>
         <parameter name="name">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">short, but unique name of the plugin</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">short, but unique name of the plugin. It must match the basename of
+    the plugin's shared library (see below).</doc>
         </parameter>
         <parameter name="description">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.h">information about the purpose of the plugin</doc>
