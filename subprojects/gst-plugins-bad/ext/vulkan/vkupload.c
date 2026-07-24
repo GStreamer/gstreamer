@@ -1422,8 +1422,14 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
      * by this element, so upload methods can reason about downstream's original
      * requirements. */
     downstream_usage = usage;
-    /* these usage parameters are essential for upload */
-    usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    /* Force only VK_IMAGE_USAGE_TRANSFER_DST_BIT because it's essential for
+     * upload.
+     *
+     * We cannot add further usage flags because we would need to validate them
+     * calling vkGetPhysicalDeviceVideoFormatPropertiesKHR, among others; but
+     * vkupload doesn't have all the parameters required. That has to be done by
+     * the element that offers the buffer pool */
+    usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     if (!upload_methods[vk_upload->current_impl]->update_output_usage
         (vk_upload->upload_impls[vk_upload->current_impl], downstream_usage,
             &usage)) {
