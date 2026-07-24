@@ -244,7 +244,21 @@ gst_analytics_segmentation_mtd_get_mtd_type (void)
  *
  * Get segmentation mask data.
  *
- * Returns: Segmentation mask data stored in a #GstBuffer
+ * The mask location (@masks_loc_x, @masks_loc_y, @masks_loc_w, @masks_loc_h) is
+ * the rectangle, in image pixel coordinates, that the mask covers. A mask that
+ * spans the whole image reports @masks_loc_w and @masks_loc_h equal to the image
+ * width and height (see gst_analytics_relation_meta_add_segmentation_mtd());
+ * there is no special "whole frame" zero value, so a zero @masks_loc_w or
+ * @masks_loc_h denotes a degenerate (empty) location.
+ *
+ * The mask's own pixel dimensions, stride and format are not conveyed by this
+ * rectangle: they come from the #GstVideoMeta attached to the returned buffer,
+ * which the producer is required to attach (see
+ * gst_analytics_relation_meta_add_segmentation_mtd()). Read them with
+ * gst_buffer_get_video_meta(); the mask is a single-plane GRAY8 or GRAY16 image
+ * whose pixel values are region ids.
+ *
+ * Returns: (transfer full) (nullable): Segmentation mask data stored in a #GstBuffer
  *
  * Since: 1.26
  */
