@@ -55,6 +55,7 @@ core_tests = [
   [ 'gst/gsttoc.c' ],
   [ 'gst/gsttocsetter.c' ],
   [ 'gst/gsttracer.c', not tracer_hooks ],
+  [ 'gst/gsttracerdeinit.c', not tracer_hooks or not gst_debug or not gst_registry ],
   [ 'gst/gsttracerrecord.c', not tracer_hooks or not gst_debug],
   [ 'gst/gsturi.c' ],
   [ 'gst/gstutils.c', not gst_registry ],

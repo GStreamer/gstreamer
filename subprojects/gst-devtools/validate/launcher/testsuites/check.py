@@ -89,6 +89,7 @@ LONG_VALGRIND_TESTS = [
 VALGRIND_BLACKLIST = [
     (r'check.gstreamer.gst_gstsystemclock.test_stress_cleanup_unschedule', '?'),
     (r'check.gstreamer.gst_gstsystemclock.test_stress_reschedule', '?'),
+    (r'check.gstreamer.gst_gsttracerdeinit', 'leaks a bin on purpose to check the leaks tracer report at gst_deinit()'),
     (r'check.gstreamer.tools_gstinspect', '?'),
     (r'check.gst-plugins-base.elements_videoscale', '?'),
     (r'check.gst-plugins-base.pipelines_gl_launch_lines', '?'),
