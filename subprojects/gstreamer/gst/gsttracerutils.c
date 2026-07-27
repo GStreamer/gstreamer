@@ -404,33 +404,65 @@ _priv_gst_tracing_init (void)
   }
 }
 
+/* Tears down one hook list. The list is stolen from the table before its
+ * tracers are unreffed so that a trace event dispatched by a dying tracer
+ * never iterates half-destroyed hooks. */
+static void
+gst_tracing_teardown_hook_list (gpointer key)
+{
+  GList *hooks, *t_node;
+  GstTracerHook *hook;
+
+  hooks = g_hash_table_lookup (_priv_tracers, key);
+  if (!hooks)
+    return;
+
+  g_hash_table_steal (_priv_tracers, key);
+  for (t_node = hooks; t_node; t_node = g_list_next (t_node)) {
+    hook = (GstTracerHook *) t_node->data;
+    gst_object_unref (hook->tracer);
+    g_free (hook);
+  }
+  g_list_free (hooks);
+}
+
 void
 _priv_gst_tracing_deinit (void)
 {
-  GList *h_list, *h_node, *t_node;
-  GstTracerHook *hook;
+  if (_priv_tracers) {
+    GList *keys, *k;
+    gpointer report_keys[4];
+    guint i;
+
+    /* Shutting down a tracer can make it emit final reports as trace events
+     * from dispose/finalize (e.g. the leaks tracer lists the leaked objects),
+     * so tracing must stay enabled until all tracers are gone and the hooks
+     * delivering those reports ("span-begin", "span-end", "event" and the
+     * catch-all hooks) must be torn down after all the other ones. */
+    report_keys[0] = GINT_TO_POINTER (GST_TRACER_QUARK (HOOK_SPAN_BEGIN));
+    report_keys[1] = GINT_TO_POINTER (GST_TRACER_QUARK (HOOK_SPAN_END));
+    report_keys[2] = GINT_TO_POINTER (GST_TRACER_QUARK (HOOK_EVENT));
+    report_keys[3] = NULL;      /* hooks registered for all hook types */
+
+    keys = g_hash_table_get_keys (_priv_tracers);
+    for (k = keys; k; k = g_list_next (k)) {
+      gboolean is_report_key = FALSE;
+
+      for (i = 0; i < G_N_ELEMENTS (report_keys); i++)
+        is_report_key = is_report_key || (k->data == report_keys[i]);
+      if (!is_report_key)
+        gst_tracing_teardown_hook_list (k->data);
+    }
+    g_list_free (keys);
+
+    for (i = 0; i < G_N_ELEMENTS (report_keys); i++)
+      gst_tracing_teardown_hook_list (report_keys[i]);
+
+    g_hash_table_destroy (_priv_tracers);
+    _priv_tracers = NULL;
+  }
 
   _priv_tracer_enabled = FALSE;
-  if (!_priv_tracers) {
-    G_LOCK (span_formats);
-    g_clear_pointer (&_priv_span_formats, g_ptr_array_unref);
-    G_UNLOCK (span_formats);
-    return;
-  }
-
-  /* shutdown tracers for final reports */
-  h_list = g_hash_table_get_values (_priv_tracers);
-  for (h_node = h_list; h_node; h_node = g_list_next (h_node)) {
-    for (t_node = h_node->data; t_node; t_node = g_list_next (t_node)) {
-      hook = (GstTracerHook *) t_node->data;
-      gst_object_unref (hook->tracer);
-      g_free (hook);
-    }
-    g_list_free (h_node->data);
-  }
-  g_list_free (h_list);
-  g_hash_table_destroy (_priv_tracers);
-  _priv_tracers = NULL;
 
   G_LOCK (span_formats);
   g_clear_pointer (&_priv_span_formats, g_ptr_array_unref);
