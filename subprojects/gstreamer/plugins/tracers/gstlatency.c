@@ -28,12 +28,12 @@
  * pipeline latency is traced. The 'flags' parameter can be used to enabled
  * element tracing and/or the latency reported by each element.
  *
- * The measurements are emitted as structured tracer events. Enable the `log`
- * tracer alongside it so they are rendered into the `GST_TRACER` debug
- * category:
+ * The measurements are emitted as structured tracer events, rendered into
+ * the `GST_TRACER` debug category by the automatically enabled `log`
+ * tracer:
  *
  * ```
- * GST_TRACERS="latency(flags=pipeline+element+reported);log" GST_DEBUG=GST_TRACER:7 ./...
+ * GST_TRACERS="latency(flags=pipeline+element+reported)" GST_DEBUG=GST_TRACER:7 ./...
  * ```
  */
 /* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later

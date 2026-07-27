@@ -24,12 +24,12 @@
  *
  * A tracing module that builds usage statistic for elements and pads.
  *
- * The statistics are emitted as structured tracer events. Enable the `log`
- * tracer alongside it so they are written to the `GST_TRACER` debug category,
- * then post-process the log with `gst-stats-1.0`:
+ * The statistics are emitted as structured tracer events, written to the
+ * `GST_TRACER` debug category by the automatically enabled `log` tracer;
+ * post-process the log with `gst-stats-1.0`:
  *
  * ```
- * GST_TRACERS="stats;log" GST_DEBUG=GST_TRACER:7 GST_DEBUG_FILE=trace.log ./...
+ * GST_TRACERS=stats GST_DEBUG=GST_TRACER:7 GST_DEBUG_FILE=trace.log ./...
  * gst-stats-1.0 trace.log
  * ```
  */

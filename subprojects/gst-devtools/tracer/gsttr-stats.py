@@ -4,7 +4,7 @@ Aggregate values for each tracer event type and print them with some statistics.
 
 How to run:
 1) generate some log
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage;latency;log" GST_DEBUG_FILE=trace.log <application>
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage;latency" GST_DEBUG_FILE=trace.log <application>
 
 2) print everything
 python3 gsttr-stats.py trace.log

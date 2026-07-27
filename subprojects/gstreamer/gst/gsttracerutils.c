@@ -355,6 +355,7 @@ _priv_gst_tracing_init (void)
     GstTracerFactory *factory;
     gchar **t = g_strsplit_set (env, ";", 0);
     gchar *params;
+    gboolean log_tracer_requested = FALSE;
 
     GST_INFO ("enabling tracers: '%s'", env);
     i = 0;
@@ -386,6 +387,9 @@ _priv_gst_tracing_init (void)
 
       GST_INFO ("checking tracer: '%s'", t[i]);
 
+      if (g_str_equal (t[i], "log"))
+        log_tracer_requested = TRUE;
+
       if ((feature = gst_registry_lookup_feature (registry, t[i]))) {
         factory = GST_TRACER_FACTORY (gst_plugin_feature_load (feature));
         if (factory) {
@@ -401,6 +405,26 @@ _priv_gst_tracing_init (void)
       i++;
     }
     g_strfreev (t);
+
+#ifndef GST_DISABLE_GST_DEBUG
+    /* Since the log tracer is the one rendering trace events into the debug
+     * log, auto-enable it when the GST_TRACER debug category is active so
+     * that e.g. GST_TRACERS=leaks GST_DEBUG=GST_TRACER:7 keeps logging the
+     * leak reports like it did when GstTracerRecord rendered them itself. */
+    if (!log_tracer_requested && _priv_tracer_enabled
+        && gst_debug_category_get_threshold (tracer_debug) >= GST_LEVEL_TRACE) {
+      if ((feature = gst_registry_lookup_feature (registry, "log"))) {
+        factory = GST_TRACER_FACTORY (gst_plugin_feature_load (feature));
+        if (factory) {
+          GST_INFO
+              ("auto-enabling the log tracer to render trace events to the debug log");
+          gst_tracer_utils_create_tracer (factory, "log", NULL);
+          gst_object_unref (factory);
+        }
+        gst_object_unref (feature);
+      }
+    }
+#endif
   }
 }
 

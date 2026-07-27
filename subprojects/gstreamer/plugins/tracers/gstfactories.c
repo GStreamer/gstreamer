@@ -31,7 +31,7 @@
  *
  * As a very simple example, you can run your application like this:
  * ```
- * $ GST_TRACERS="factories;log" GST_DEBUG=GST_TRACER:7 gst-launch-1.0 audiotestsrc num-buffers=10 ! fakesink 2> log.txt
+ * $ GST_TRACERS=factories GST_DEBUG=GST_TRACER:7 gst-launch-1.0 audiotestsrc num-buffers=10 ! fakesink 2> log.txt
  * ...
  * $ gst-stats-1.0 log.txt
  * Plugins used: audiotestsrc;coreelements

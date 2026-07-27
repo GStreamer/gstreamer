@@ -25,7 +25,10 @@
  *
  * This tracing module tracks the lifetimes of #GstObject and #GstMiniObject
  * objects and prints a list of leaks to the debug log under `GST_TRACER:7` when
- * gst_deinit() is called, and also prints a g_warning().
+ * gst_deinit() is called, and also prints a g_warning(). Since 1.30 the
+ * reports are emitted as tracer events rendered to the debug log by the
+ * `log` tracer, which is automatically enabled when the `GST_TRACER` debug
+ * category is at least at TRACE level.
  *
  * Starting with GStreamer 1.18, you can also use GObject action signals on the tracer
  * object to fetch leak information. Use gst_tracing_get_active_tracers() to
