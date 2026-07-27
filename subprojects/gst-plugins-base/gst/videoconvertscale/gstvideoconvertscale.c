@@ -108,6 +108,8 @@ typedef struct
   GstStructure *converter_config;
   gboolean converter_config_changed;
 
+  GstVideoInfo last_frame_vinfo;
+
   gint borders_h;
   gint borders_w;
 
@@ -454,6 +456,8 @@ gst_video_convert_scale_init (GstVideoConvertScale * self)
   priv->matrix_mode = DEFAULT_PROP_MATRIX_MODE;
   priv->gamma_mode = DEFAULT_PROP_GAMMA_MODE;
   priv->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
+
+  gst_video_info_init (&priv->last_frame_vinfo);
 
   priv->converter_config = NULL;
   priv->converter_config_changed = FALSE;
@@ -828,14 +832,6 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
   return TRUE;
 }
 
-static GstStructure *
-gst_video_convert_scale_get_converter_config (GstVideoConvertScale * self,
-    GstVideoInfo * out_info)
-{
-  GstVideoConvertScalePrivate *priv = PRIV (self);
-  return gst_structure_copy (priv->converter_config);
-}
-
 static void
 gst_video_convert_scale_post_task_pool_request (GstVideoConvertScale * self)
 {
@@ -886,14 +882,18 @@ gst_video_convert_scale_create_converter (GstVideoConvertScale * self,
   }
   GST_OBJECT_UNLOCK (self);
 
+  priv->last_frame_vinfo = *in_info;
+
   /* Create converter with the task pool (or NULL if not set) */
   if (pool) {
     GST_DEBUG_OBJECT (self, "Using task pool %" GST_PTR_FORMAT
         " for video converter", pool);
     converter =
-        gst_video_converter_new_with_pool (in_info, out_info, config, pool);
+        gst_video_converter_new_with_pool (&priv->last_frame_vinfo, out_info,
+        config, pool);
   } else {
-    converter = gst_video_converter_new (in_info, out_info, config);
+    converter = gst_video_converter_new (&priv->last_frame_vinfo, out_info,
+        config);
   }
 
   /* Release the task pool reference */
@@ -969,7 +969,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     goto format_mismatch;
 
   if (priv->converter_config) {
-    options = gst_video_convert_scale_get_converter_config (self, out_info);
+    options = gst_structure_copy (priv->converter_config);
     GST_DEBUG_OBJECT (self,
         "Using user-provided converter-config: %" GST_PTR_FORMAT, options);
     goto build_converter;
@@ -1995,15 +1995,20 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
 
   GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "doing video scaling");
 
-  if (priv->converter_config_changed) {
-    GstStructure *options =
-        gst_video_convert_scale_get_converter_config (GST_VIDEO_CONVERT_SCALE
-        (filter), &filter->out_info);
+  if (priv->converter_config_changed ||
+      !gst_video_info_is_equal (&priv->last_frame_vinfo, &in_frame->info)) {
+    GstStructure *options;
+
+    if (priv->converter_config_changed)
+      options = gst_structure_copy (priv->converter_config);
+    else
+      options =
+          gst_structure_copy (gst_video_converter_get_config (priv->convert));
 
     gst_video_converter_free (priv->convert);
     priv->convert =
         gst_video_convert_scale_create_converter (GST_VIDEO_CONVERT_SCALE
-        (filter), &filter->in_info, &filter->out_info, options);
+        (filter), &in_frame->info, &filter->out_info, options);
 
     priv->converter_config_changed = FALSE;
   }
