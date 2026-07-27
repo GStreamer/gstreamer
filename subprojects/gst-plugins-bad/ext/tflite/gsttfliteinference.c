@@ -96,6 +96,7 @@ typedef struct _GstTFliteInferencePrivate
 
   GstCaps *model_incaps;
   GstCaps *model_outcaps;
+  gchar *group_id;
 
   gint channels;
   gboolean in_place;
@@ -247,6 +248,7 @@ gst_tflite_inference_finalize (GObject * object)
   g_free (priv->model_file);
   g_free (priv->scales);
   g_free (priv->offsets);
+  g_free (priv->group_id);
   g_ptr_array_unref (priv->tensor_templates);
   G_OBJECT_CLASS (gst_tflite_inference_parent_class)->finalize (object);
 }
@@ -924,7 +926,9 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     if (i == (o_size - 1)) {
       gchar *gid = gst_analytics_modelinfo_get_group_id (modelinfo);
       gst_structure_set_value (tensors_s, gid, &v_tensors_set);
-      g_free (gid);
+
+      g_free (priv->group_id);
+      priv->group_id = g_steal_pointer (&gid);
 
       priv->model_outcaps = gst_caps_new_simple ("video/x-raw", "tensors",
           GST_TYPE_STRUCTURE, tensors_s, NULL);
@@ -986,6 +990,7 @@ gst_tflite_inference_stop (GstBaseTransform * trans)
 
   g_clear_pointer (&priv->scales, g_free);
   g_clear_pointer (&priv->offsets, g_free);
+  g_clear_pointer (&priv->group_id, g_free);
 
   gst_clear_caps (&priv->model_incaps);
   gst_clear_caps (&priv->model_outcaps);
@@ -995,12 +1000,115 @@ gst_tflite_inference_stop (GstBaseTransform * trans)
   return TRUE;
 }
 
+/* Add the tensor group named group_id from model_groups into dest_groups.
+ * Returns FALSE without modifying dest_groups if model_groups doesn't have
+ * that group, or if dest_groups already has a group with that same id (e.g.
+ * two elements downstream produce the same model's group). */
 static gboolean
-remove_tensors_from_struct (GstCapsFeatures * features, GstStructure * s,
-    gpointer user_data)
+merge_tensor_group (GstStructure * dest_groups,
+    const GstStructure * model_groups, const gchar * group_id)
 {
-  gst_structure_remove_field (s, "tensors");
+  const GValue *group_value;
+
+  if (gst_structure_has_field (dest_groups, group_id))
+    return FALSE;
+
+  group_value = gst_structure_get_value (model_groups, group_id);
+  if (!group_value)
+    return FALSE;
+
+  gst_structure_set_value (dest_groups, group_id, group_value);
+
   return TRUE;
+}
+
+static gboolean
+caps_has_tensor_group (const GstCaps * caps, const gchar * group_id)
+{
+  guint i;
+
+  if (!group_id)
+    return FALSE;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    const GstStructure *s = gst_caps_get_structure (caps, i);
+    const GValue *tensors_value = gst_structure_get_value (s, "tensors");
+    const GstStructure *tensorgroups = tensors_value ?
+        gst_value_get_structure (tensors_value) : NULL;
+
+    if (tensorgroups && gst_structure_has_field (tensorgroups, group_id))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static GstCaps *
+transform_sink_caps (GstTFliteInference * self,
+    GstTFliteInferencePrivate * priv, const GstCaps * caps)
+{
+  GstStructure *model_struct = gst_caps_get_structure (priv->model_outcaps, 0);
+  const GValue *model_tensors_value =
+      gst_structure_get_value (model_struct, "tensors");
+  const GstStructure *model_tensorgroups = model_tensors_value ?
+      gst_value_get_structure (model_tensors_value) : NULL;
+  GstCaps *other_caps;
+  guint i;
+
+  other_caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    const GstStructure *input_s = gst_caps_get_structure (caps, i);
+    const GstCapsFeatures *features = gst_caps_get_features (caps, i);
+    const GValue *tensors_value = gst_structure_get_value (input_s, "tensors");
+    const GstStructure *incoming_tensorgroups = tensors_value ?
+        gst_value_get_structure (tensors_value) : NULL;
+    GstStructure *merged_tensorgroups = incoming_tensorgroups ?
+        gst_structure_copy (incoming_tensorgroups) :
+        gst_structure_new_empty ("tensorgroups");
+    GstStructure *candidate_s = gst_structure_copy (input_s);
+    GstCaps *candidate = gst_caps_new_empty ();
+    GstCaps *intersect;
+
+    gst_structure_remove_field (candidate_s, "tensors");
+    gst_caps_append_structure_full (candidate, candidate_s,
+        gst_caps_features_copy (features));
+    intersect = gst_caps_intersect_full (candidate, priv->model_incaps,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (candidate);
+
+    if (gst_caps_is_empty (intersect)) {
+      gst_caps_unref (intersect);
+      gst_structure_free (merged_tensorgroups);
+      continue;
+    }
+
+    if (priv->group_id &&
+        (!model_tensorgroups ||
+            !merge_tensor_group (merged_tensorgroups,
+                model_tensorgroups, priv->group_id))) {
+      GST_WARNING_OBJECT (self, "Tensor group '%s' is already present "
+          "upstream, refusing to negotiate", priv->group_id);
+      gst_caps_unref (intersect);
+      gst_structure_free (merged_tensorgroups);
+      continue;
+    }
+
+    if (gst_structure_n_fields (merged_tensorgroups) > 0) {
+      guint j;
+
+      intersect = gst_caps_make_writable (intersect);
+      for (j = 0; j < gst_caps_get_size (intersect); j++) {
+        gst_structure_set (gst_caps_get_structure (intersect, j),
+            "tensors", GST_TYPE_STRUCTURE, merged_tensorgroups, NULL);
+      }
+    }
+
+    gst_structure_free (merged_tensorgroups);
+    gst_caps_append (other_caps, intersect);
+  }
+
+  return other_caps;
 }
 
 static GstCaps *
@@ -1010,7 +1118,7 @@ gst_tflite_inference_transform_caps (GstBaseTransform * trans,
   GstTFliteInference *self = GST_TFLITE_INFERENCE (trans);
   GstTFliteInferencePrivate *priv =
       gst_tflite_inference_get_instance_private (self);
-  GstCaps *other_caps, *restrictions;
+  GstCaps *other_caps;
 
   if (priv->model_incaps == NULL) {
     other_caps = gst_caps_ref (caps);
@@ -1021,14 +1129,34 @@ gst_tflite_inference_transform_caps (GstBaseTransform * trans,
       priv->model_incaps);
 
   if (direction == GST_PAD_SINK) {
-    restrictions = gst_caps_intersect_full (caps, priv->model_incaps,
-        GST_CAPS_INTERSECT_FIRST);
-    other_caps = gst_caps_intersect (restrictions, priv->model_outcaps);
-    gst_caps_unref (restrictions);
+    other_caps = transform_sink_caps (self, priv, caps);
   } else if (direction == GST_PAD_SRC) {
-    /* Remove tensors from caps */
+    /* Going from src-side (downstream, possibly carrying our own tensor
+     * group plus groups added by other tfliteinference elements) to
+     * sink-side caps: remove only our own group so it doesn't propagate
+     * further upstream, keeping any other groups intact. */
     GstCaps *tmp_caps = gst_caps_copy (caps);
-    gst_caps_map_in_place (tmp_caps, remove_tensors_from_struct, NULL);
+    guint i;
+
+    for (i = 0; i < gst_caps_get_size (tmp_caps); i++) {
+      GstStructure *s = gst_caps_get_structure (tmp_caps, i);
+      const GValue *tensors_value = gst_structure_get_value (s, "tensors");
+      const GstStructure *tensorgroups = tensors_value ?
+          gst_value_get_structure (tensors_value) : NULL;
+
+      if (tensorgroups && priv->group_id &&
+          gst_structure_has_field (tensorgroups, priv->group_id)) {
+        GstStructure *new_tensorgroups = gst_structure_copy (tensorgroups);
+
+        gst_structure_remove_field (new_tensorgroups, priv->group_id);
+        if (gst_structure_n_fields (new_tensorgroups) == 0)
+          gst_structure_remove_field (s, "tensors");
+        else
+          gst_structure_set (s, "tensors", GST_TYPE_STRUCTURE,
+              new_tensorgroups, NULL);
+        gst_structure_free (new_tensorgroups);
+      }
+    }
 
     other_caps = gst_caps_intersect_full (tmp_caps, priv->model_incaps,
         GST_CAPS_INTERSECT_FIRST);
@@ -1053,6 +1181,12 @@ gst_tflite_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GstTFliteInference *self = GST_TFLITE_INFERENCE (trans);
   GstTFliteInferencePrivate *priv =
       gst_tflite_inference_get_instance_private (self);
+
+  if (caps_has_tensor_group (incaps, priv->group_id)) {
+    GST_ERROR_OBJECT (self, "Tensor group '%s' is already present upstream",
+        priv->group_id);
+    return FALSE;
+  }
 
   if (!gst_video_info_from_caps (&priv->video_info, incaps)) {
     GST_ERROR_OBJECT (self, "Failed to parse caps");
