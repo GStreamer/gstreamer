@@ -2704,6 +2704,259 @@ GST_START_TEST (test_group_mtd_iterate_member_data)
 
 GST_END_TEST;
 
+/* Test orientation metadata fields, typed retrieval and buffer copying */
+GST_START_TEST (test_orientation_mtd)
+{
+  GstBuffer *buf;
+  GstBuffer *copy;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsRelationMeta *copy_rmeta;
+  GstAnalyticsOrientationMtd orientation_mtd;
+  GstAnalyticsOrientationMtd retrieved_mtd;
+  GstAnalyticsClsMtd cls_mtd;
+  gfloat class_confidence = 1.0f;
+  GQuark class_quark = g_quark_from_static_string ("face");
+  gfloat yaw;
+  gfloat pitch;
+  gfloat confidence;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+  ret = gst_analytics_relation_meta_add_orientation_mtd (rmeta,
+      12.5f, -7.25f, 0.85f, &orientation_mtd);
+  fail_unless (ret);
+
+  ret = gst_analytics_orientation_mtd_get_angles (&orientation_mtd,
+      &yaw, &pitch);
+  fail_unless (ret);
+  fail_unless_equals_float (yaw, 12.5f);
+  fail_unless_equals_float (pitch, -7.25f);
+  ret = gst_analytics_orientation_mtd_get_confidence (&orientation_mtd,
+      &confidence);
+  fail_unless (ret);
+  fail_unless_equals_float (confidence, 0.85f);
+
+  ret = gst_analytics_relation_meta_get_orientation_mtd (rmeta,
+      orientation_mtd.id, &retrieved_mtd);
+  fail_unless (ret);
+  fail_unless (retrieved_mtd.meta == rmeta);
+  fail_unless_equals_int (retrieved_mtd.id, orientation_mtd.id);
+
+  ret = gst_analytics_relation_meta_add_cls_mtd (rmeta, 1,
+      &class_confidence, &class_quark, &cls_mtd);
+  fail_unless (ret);
+  fail_if (gst_analytics_relation_meta_get_orientation_mtd (rmeta,
+          cls_mtd.id, &retrieved_mtd));
+
+  copy = gst_buffer_copy_deep (buf);
+  copy_rmeta = gst_buffer_get_analytics_relation_meta (copy);
+  fail_unless (copy_rmeta != NULL);
+  ret = gst_analytics_relation_meta_get_orientation_mtd (copy_rmeta,
+      orientation_mtd.id, &retrieved_mtd);
+  fail_unless (ret);
+  ret = gst_analytics_orientation_mtd_get_angles (&retrieved_mtd, &yaw, &pitch);
+  fail_unless (ret);
+  fail_unless_equals_float (yaw, 12.5f);
+  fail_unless_equals_float (pitch, -7.25f);
+  ret = gst_analytics_orientation_mtd_get_confidence (&retrieved_mtd,
+      &confidence);
+  fail_unless (ret);
+  fail_unless_equals_float (confidence, 0.85f);
+
+  gst_buffer_unref (copy);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+/* Test orientation metadata horizontal flip matrix transformation */
+GST_START_TEST (test_orientation_mtd_transform_hflip)
+{
+  GstBuffer *src_buf, *dst_buf;
+  GstAnalyticsRelationMeta *src_rmeta, *dst_rmeta;
+  GstAnalyticsOrientationMtd orientation_mtd, retrieved_mtd;
+  GstVideoInfo vinfo;
+  GstVideoRectangle rect = { 0, 0, 100, 100 };
+  GstVideoMetaTransformMatrix trans;
+  gfloat yaw, pitch, confidence;
+  gboolean ret;
+  GstMeta *src_meta;
+
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  src_buf = gst_buffer_new ();
+  src_rmeta = gst_buffer_add_analytics_relation_meta (src_buf);
+  ret = gst_analytics_relation_meta_add_orientation_mtd (src_rmeta,
+      20.0f, 10.0f, 0.9f, &orientation_mtd);
+  fail_unless (ret);
+
+  dst_buf = gst_buffer_new ();
+  gst_video_meta_transform_matrix_init (&trans, &vinfo, &rect, &vinfo, &rect);
+  trans.matrix[0][0] = -1.0f;
+
+  src_meta =
+      gst_buffer_get_meta (src_buf, GST_ANALYTICS_RELATION_META_API_TYPE);
+  fail_unless (src_meta != NULL);
+  ret = src_meta->info->transform_func (dst_buf, src_meta, src_buf,
+      gst_video_meta_transform_matrix_get_quark (), &trans);
+  fail_unless (ret);
+
+  dst_rmeta = gst_buffer_get_analytics_relation_meta (dst_buf);
+  fail_unless (dst_rmeta != NULL);
+
+  ret = gst_analytics_relation_meta_get_orientation_mtd (dst_rmeta,
+      orientation_mtd.id, &retrieved_mtd);
+  fail_unless (ret);
+  ret = gst_analytics_orientation_mtd_get_angles (&retrieved_mtd, &yaw, &pitch);
+  fail_unless (ret);
+  fail_unless_equals_float (yaw, -20.0f);
+  fail_unless_equals_float (pitch, 10.0f);
+  ret = gst_analytics_orientation_mtd_get_confidence (&retrieved_mtd,
+      &confidence);
+  fail_unless (ret);
+  fail_unless_equals_float (confidence, 0.9f);
+
+  gst_buffer_unref (dst_buf);
+  gst_buffer_unref (src_buf);
+}
+
+GST_END_TEST;
+
+/* Test orientation metadata vertical flip matrix transformation */
+GST_START_TEST (test_orientation_mtd_transform_vflip)
+{
+  GstBuffer *src_buf, *dst_buf;
+  GstAnalyticsRelationMeta *src_rmeta, *dst_rmeta;
+  GstAnalyticsOrientationMtd orientation_mtd, retrieved_mtd;
+  GstVideoInfo vinfo;
+  GstVideoRectangle rect = { 0, 0, 100, 100 };
+  GstVideoMetaTransformMatrix trans;
+  gfloat yaw, pitch, confidence;
+  gboolean ret;
+  GstMeta *src_meta;
+
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  src_buf = gst_buffer_new ();
+  src_rmeta = gst_buffer_add_analytics_relation_meta (src_buf);
+  ret = gst_analytics_relation_meta_add_orientation_mtd (src_rmeta,
+      15.0f, 12.0f, 0.85f, &orientation_mtd);
+  fail_unless (ret);
+
+  dst_buf = gst_buffer_new ();
+  gst_video_meta_transform_matrix_init (&trans, &vinfo, &rect, &vinfo, &rect);
+  trans.matrix[1][1] = -1.0f;
+
+  src_meta =
+      gst_buffer_get_meta (src_buf, GST_ANALYTICS_RELATION_META_API_TYPE);
+  fail_unless (src_meta != NULL);
+  ret = src_meta->info->transform_func (dst_buf, src_meta, src_buf,
+      gst_video_meta_transform_matrix_get_quark (), &trans);
+  fail_unless (ret);
+
+  dst_rmeta = gst_buffer_get_analytics_relation_meta (dst_buf);
+  fail_unless (dst_rmeta != NULL);
+
+  ret = gst_analytics_relation_meta_get_orientation_mtd (dst_rmeta,
+      orientation_mtd.id, &retrieved_mtd);
+  fail_unless (ret);
+  ret = gst_analytics_orientation_mtd_get_angles (&retrieved_mtd, &yaw, &pitch);
+  fail_unless (ret);
+  fail_unless_equals_float (yaw, 15.0f);
+  fail_unless_equals_float (pitch, -12.0f);
+  ret = gst_analytics_orientation_mtd_get_confidence (&retrieved_mtd,
+      &confidence);
+  fail_unless (ret);
+  fail_unless_equals_float (confidence, 0.85f);
+
+  gst_buffer_unref (dst_buf);
+  gst_buffer_unref (src_buf);
+}
+
+GST_END_TEST;
+
+static void
+orientation_test (gfloat matrix_0_0, gfloat matrix_0_1, gfloat matrix_1_0,
+    gfloat matrix_1_1,
+    gfloat in_yaw, gfloat in_pitch, gfloat out_yaw, gfloat out_pitch)
+{
+  GstBuffer *src_buf, *dst_buf;
+  GstAnalyticsRelationMeta *src_rmeta, *dst_rmeta;
+  GstAnalyticsOrientationMtd orientation_mtd, retrieved_mtd;
+  GstVideoInfo vinfo;
+  GstVideoRectangle rect = { 0, 0, 100, 100 };
+  GstVideoMetaTransformMatrix trans;
+  gfloat yaw, pitch, confidence;
+  gboolean ret;
+  GstMeta *src_meta;
+
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  src_buf = gst_buffer_new ();
+  src_rmeta = gst_buffer_add_analytics_relation_meta (src_buf);
+  ret = gst_analytics_relation_meta_add_orientation_mtd (src_rmeta,
+      in_yaw, in_pitch, 0.95f, &orientation_mtd);
+  fail_unless (ret);
+
+  dst_buf = gst_buffer_new ();
+  gst_video_meta_transform_matrix_init (&trans, &vinfo, &rect, &vinfo, &rect);
+  trans.matrix[0][0] = matrix_0_0;
+  trans.matrix[0][1] = matrix_0_1;
+  trans.matrix[1][0] = matrix_1_0;
+  trans.matrix[1][1] = matrix_1_1;
+
+  src_meta =
+      gst_buffer_get_meta (src_buf, GST_ANALYTICS_RELATION_META_API_TYPE);
+  fail_unless (src_meta != NULL);
+  ret = src_meta->info->transform_func (dst_buf, src_meta, src_buf,
+      gst_video_meta_transform_matrix_get_quark (), &trans);
+  fail_unless (ret);
+
+  dst_rmeta = gst_buffer_get_analytics_relation_meta (dst_buf);
+  fail_unless (dst_rmeta != NULL);
+
+  ret = gst_analytics_relation_meta_get_orientation_mtd (dst_rmeta,
+      orientation_mtd.id, &retrieved_mtd);
+  fail_unless (ret);
+  ret = gst_analytics_orientation_mtd_get_angles (&retrieved_mtd, &yaw, &pitch);
+  fail_unless (ret);
+  fail_unless (fabsf (yaw - out_yaw) < 0.00001f, "yaw=%f out_yaw=%f", yaw,
+      out_yaw);
+  fail_unless (fabsf (pitch - out_pitch) < 0.00001f, "pitch=%f out_pitch=%f",
+      pitch, out_pitch);
+  ret = gst_analytics_orientation_mtd_get_confidence (&retrieved_mtd,
+      &confidence);
+  fail_unless (ret);
+  fail_unless_equals_float (confidence, 0.95f);
+
+  gst_buffer_unref (dst_buf);
+  gst_buffer_unref (src_buf);
+}
+
+/* Test orientation metadata general homography matrix transformation (rotation + scale) */
+GST_START_TEST (test_orientation_mtd_transform_homography)
+{
+  /* Formula for matrix: [[s*cos(θ), -sin(θ), 0], [sin(θ), s*cos(θ), 0], [0, 0, 1]] */
+
+  /* Rotation 30° + scale 1.5 */
+  orientation_test (1.2990381057f, -0.5000000000f, 0.5000000000f, 1.2990381057f,
+      10.0f, 8.0f, 16.663803f, 5.392991f);
+
+  /* Rotation 90° */
+  orientation_test (0, 1, -1, 0, 10, 8, -8, 10);
+
+  /* Rotation 180° */
+  orientation_test (-1, 0, 0, -1, 10, 8, -10, -8);
+
+
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_add_keypoint_mtd_2d)
 {
   /* Verify we can create a 2D keypoint metadata */
@@ -3466,6 +3719,7 @@ analyticmeta_suite (void)
   TCase *tc_chain_tensor_mtd;
   TCase *tc_chain_group;
   TCase *tc_chain_keypoint;
+  TCase *tc_chain_orientation;
   TCase *tc_chain_semantic_tag;
 
   s = suite_create ("Analytic Meta Library");
@@ -3554,6 +3808,14 @@ analyticmeta_suite (void)
   tcase_add_test (tc_chain_keypoint, test_keypoints_group_with_confidences);
   tcase_add_test (tc_chain_keypoint, test_keypoints_group_without_confidences);
   tcase_add_test (tc_chain_keypoint, test_keypoint_group_2d_vs_3d);
+
+  tc_chain_orientation = tcase_create ("Orientation Mtd");
+  suite_add_tcase (s, tc_chain_orientation);
+  tcase_add_test (tc_chain_orientation, test_orientation_mtd);
+  tcase_add_test (tc_chain_orientation, test_orientation_mtd_transform_hflip);
+  tcase_add_test (tc_chain_orientation, test_orientation_mtd_transform_vflip);
+  tcase_add_test (tc_chain_orientation,
+      test_orientation_mtd_transform_homography);
 
   tc_chain_semantic_tag = tcase_create ("Semantic Tag");
   suite_add_tcase (s, tc_chain_semantic_tag);

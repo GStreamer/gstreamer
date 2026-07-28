@@ -34,6 +34,7 @@
 #include <gst/analytics/gstanalyticsgroupmtd.h>
 #include <gst/analytics/gstanalyticskeypointmtd.h>
 #include <gst/analytics/gstanalyticstensorprovenancemtd.h>
+#include <gst/analytics/gstanalyticsorientationmtd.h>
 #include <gst/analytics/gstanalyticstensormtd.h>
 #include <gst/analytics/gstanalyticstextmtd.h>
 #include <gst/analytics/gsttensorlistmeta.h>

@@ -1388,6 +1388,68 @@ identified by @id is stored.</doc>
         </return-value>
       </function>
     </record>
+    <record name="OrientationMtd" c:type="GstAnalyticsOrientationMtd" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">This metadata item represents the orientation in space of an object</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_angles" c:identifier="gst_analytics_orientation_mtd_get_angles" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Get orientation angles
+See #gst_analytics_relation_meta_add_orientation_mtd for more details</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">TRUE if successful, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">handle</doc>
+            <type name="OrientationMtd" c:type="const GstAnalyticsOrientationMtd*"/>
+          </instance-parameter>
+          <parameter name="yaw" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Yaw angle in degrees, with 0 facing forward and increasing to the right</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+          <parameter name="pitch" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Pitch angle in degrees, with 0 facing forward and increasing upwards</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_confidence" c:identifier="gst_analytics_orientation_mtd_get_confidence" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Get orientation confidence.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">TRUE if successful, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">handle</doc>
+            <type name="OrientationMtd" c:type="const GstAnalyticsOrientationMtd*"/>
+          </instance-parameter>
+          <parameter name="confidence" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Confidence score</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_mtd_type" c:identifier="gst_analytics_orientation_mtd_get_mtd_type" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Get an id identifying #GstAnalyticsMtd type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">opaque id of #GstAnalyticsMtd type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
     <bitfield name="RelTypes" version="1.24" c:type="GstAnalyticsRelTypes">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <member name="none" value="0" c:identifier="GST_ANALYTICS_REL_TYPE_NONE">
@@ -1712,6 +1774,37 @@ new struct sub-classing GstAnalyticsRelatableMtd.</doc>
           <parameter name="cls_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Handle updated to newly added classification meta.</doc>
             <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_orientation_mtd" c:identifier="gst_analytics_relation_meta_add_orientation_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Add orientation metadata to @instance. The (0,0) represents looking straight
+through the image (or screen).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">TRUE if added successfully, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Instance of #GstAnalyticsRelationMeta where to add orientation</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="yaw" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Yaw angle in degrees, with 0 facing forward and increasing to the right</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="pitch" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Pitch angle in degrees, with 0 facing forward and increasing upwards</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="confidence" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Confidence score</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="orientation_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Handle updated to newly added orientation</doc>
+            <type name="OrientationMtd" c:type="GstAnalyticsOrientationMtd*"/>
           </parameter>
         </parameters>
       </method>
@@ -2199,6 +2292,28 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Will be filled with relatable
    meta</doc>
             <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_orientation_mtd" c:identifier="gst_analytics_relation_meta_get_orientation_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Retrieve orientation metadata instance from @meta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">TRUE if successful, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Instance of #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Id of #GstAnalyticsOrientationMtd instance to retrieve</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Will be filled with orientation mtd</doc>
+            <type name="OrientationMtd" c:type="GstAnalyticsOrientationMtd*"/>
           </parameter>
         </parameters>
       </method>
@@ -4430,6 +4545,14 @@ or over-constrain a dynamic axis, %TRUE otherwise.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Opaque id of the #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="orientation_mtd_get_mtd_type" c:identifier="gst_analytics_orientation_mtd_get_mtd_type" moved-to="OrientationMtd.get_mtd_type" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">Get an id identifying #GstAnalyticsMtd type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">opaque id of #GstAnalyticsMtd type</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
