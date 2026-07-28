@@ -15786,7 +15786,7 @@
                 "long-name": "RTP MPEG2 ES video payloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\n",
+                        "caps": "video/mpeg:\n    mpegversion: { (int)1, (int)2 }\n   systemstream: false\n",
                         "direction": "sink",
                         "presence": "always"
                     },

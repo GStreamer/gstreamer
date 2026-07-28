@@ -38,7 +38,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-        "mpegversion = (int) 2, systemstream = (boolean) FALSE")
+        "mpegversion = (int) {1, 2}, systemstream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate gst_rtp_mpv_pay_src_template =
