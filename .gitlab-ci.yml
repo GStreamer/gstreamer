@@ -310,13 +310,24 @@ pre-commit checks:
     # shared across everything really
     CCACHE_MAXSIZE: '10G'
 
+.base_toplevel_and_ci_changes: &toplevel_and_ci_changes
+  - .gitlab-ci.yml
+  - .gitlab-image-tags.yml
+  - gst-env.py
+  - meson.build
+  - ci/gitlab/*.py
+  - ci/scripts/**/*
+  - "scripts/*"
+  - subprojects/*.wrap
+
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
   - .gitlab-image-tags.yml
   - gst-env.py
+  - meson.build
   - ci/gitlab/*.py
   - ci/scripts/**/*
-  - meson.build
+  - "scripts/*"
   - subprojects/*.wrap
   - subprojects/gst-devtools/**/*
   - subprojects/gst-editing-services/**/*
@@ -978,9 +989,9 @@ valgrind core:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
 
@@ -991,9 +1002,9 @@ valgrind base:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
           - "subprojects/gst-plugins-base/**/*"
@@ -1007,9 +1018,9 @@ valgrind good:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
           - "subprojects/gst-plugins-base/**/*"
@@ -1022,9 +1033,9 @@ valgrind ugly:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
           - "subprojects/gst-plugins-base/**/*"
@@ -1038,9 +1049,9 @@ valgrind bad:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
           - "subprojects/gst-plugins-base/**/*"
@@ -1061,9 +1072,9 @@ valgrind ges:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
           - "subprojects/gst-plugins-base/**/*"
@@ -1079,9 +1090,9 @@ valgrind rtsp-server:
   rules:
     - changes:
         paths:
-          - "*"
-          - "scripts/*"
-          - "ci/**/*"
+          *toplevel_and_ci_changes
+    - changes:
+        paths:
           - "subprojects/gst-devtools/**/*"
           - "subprojects/gstreamer/**/*"
           - "subprojects/gst-plugins-base/**/*"
