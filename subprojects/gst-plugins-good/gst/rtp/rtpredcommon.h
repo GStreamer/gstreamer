@@ -22,6 +22,7 @@
 #define __RTP_RED_COMMON_H__
 
 #include <glib.h>
+#include <gst/rtp/gstrtpbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -74,6 +75,7 @@ guint16  rtp_red_block_get_timestamp_offset (gpointer red_block);
 guint8   rtp_red_block_get_payload_type     (gpointer red_block);
 void     rtp_red_block_set_is_redundant     (gpointer red_block, gboolean is_redundant);
 guint16  rtp_red_block_get_payload_length   (gpointer red_block);
+gboolean rtp_red_copy_extension_data        (GstRTPBuffer * dst, GstRTPBuffer * src);
 
 G_END_DECLS
 

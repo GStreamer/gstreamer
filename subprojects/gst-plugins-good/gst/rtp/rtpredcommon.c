@@ -19,6 +19,7 @@
  */
 
 #include "rtpredcommon.h"
+#include <string.h>
 
 gsize
 rtp_red_block_header_get_length (gboolean is_redundant)
@@ -87,4 +88,28 @@ rtp_red_block_set_payload_length (gpointer red_block, guint16 length)
 
   hdr->length_lo = length & 0xff;
   hdr->length_hi = length >> 8;
+}
+
+/* Copies the whole RTP header extension area of @src onto @dst, returns
+ * FALSE if the extension data could not be copied. */
+gboolean
+rtp_red_copy_extension_data (GstRTPBuffer * dst, GstRTPBuffer * src)
+{
+  guint16 bits;
+  gpointer data;
+  guint wordlen;
+  guint16 dst_bits;
+  gpointer dst_data;
+  guint dst_wordlen;
+
+  if (!gst_rtp_buffer_get_extension_data (src, &bits, &data, &wordlen))
+    return TRUE;
+
+  if (!gst_rtp_buffer_set_extension_data (dst, bits, wordlen)
+      || !gst_rtp_buffer_get_extension_data (dst, &dst_bits, &dst_data,
+          &dst_wordlen))
+    return FALSE;
+
+  memcpy (dst_data, data, wordlen * sizeof (guint32));
+  return TRUE;
 }

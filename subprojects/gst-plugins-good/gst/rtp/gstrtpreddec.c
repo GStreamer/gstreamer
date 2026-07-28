@@ -289,7 +289,8 @@ gst_red_history_lost_seq_num_for_timestamp (GstRtpRedDec * self,
 static GstBuffer *
 gst_rtp_red_create_packet (GstRtpRedDec * self, GstRTPBuffer * red_rtp,
     gboolean marker, guint8 pt, guint16 seq_num, guint32 timestamp,
-    gsize red_payload_subbuffer_start, gsize red_payload_subbuffer_len)
+    gsize red_payload_subbuffer_start, gsize red_payload_subbuffer_len,
+    gboolean copy_extensions)
 {
   guint csrc_count = gst_rtp_buffer_get_csrc_count (red_rtp);
   GstBuffer *ret = gst_rtp_buffer_new_allocate (0, 0, csrc_count);
@@ -305,6 +306,15 @@ gst_rtp_red_create_packet (GstRtpRedDec * self, GstRTPBuffer * red_rtp,
   gst_rtp_buffer_set_ssrc (&ret_rtp, gst_rtp_buffer_get_ssrc (red_rtp));
   for (i = 0; i < csrc_count; ++i)
     gst_rtp_buffer_set_csrc (&ret_rtp, i, gst_rtp_buffer_get_csrc (red_rtp, i));
+
+  /* The RTP header extensions of the RED packet describe the stream of the
+   * main block, restore them on the unwrapped packet. They are not copied to
+   * packets recovered from redundant blocks: the extensions of the lost
+   * packet are not recoverable (and e.g. a TWCC seqnum of the carrying RED
+   * packet would be wrong on it). */
+  if (copy_extensions && !rtp_red_copy_extension_data (&ret_rtp, red_rtp))
+    GST_WARNING_OBJECT (self, "Failed to copy RTP header extensions");
+
   gst_rtp_buffer_unmap (&ret_rtp);
 
   ret = gst_buffer_append (ret,
@@ -339,7 +349,7 @@ gst_rtp_red_create_from_redundant_block (GstRtpRedDec * self,
     ret =
         gst_rtp_red_create_packet (self, red_rtp, FALSE,
         rtp_red_block_get_payload_type (red_hdr), lost_seq, lost_timestamp,
-        *red_payload_offset, rtp_red_block_get_payload_length (red_hdr));
+        *red_payload_offset, rtp_red_block_get_payload_length (red_hdr), FALSE);
     GST_BUFFER_FLAG_SET (ret, GST_RTP_BUFFER_FLAG_REDUNDANT);
   } else {
     GST_LOG_OBJECT (self, "Ignore RED packet pt=%u ts=%u len=%u because already"
@@ -362,7 +372,7 @@ gst_rtp_red_create_from_main_block (GstRtpRedDec * self,
       rtp_red_block_get_payload_type (payload + red_hdr_offset),
       gst_rtp_buffer_get_seq (red_rtp),
       gst_rtp_buffer_get_timestamp (red_rtp),
-      *red_payload_offset, -1);
+      *red_payload_offset, -1, TRUE);
   *red_payload_offset = gst_rtp_buffer_get_payload_len (red_rtp);
   GST_LOG_OBJECT (self, "Extracting main payload from RED pt=%u seq=%u ts=%u"
       " marker=%u", rtp_red_block_get_payload_type (payload + red_hdr_offset),

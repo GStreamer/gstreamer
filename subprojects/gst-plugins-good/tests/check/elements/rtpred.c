@@ -866,6 +866,99 @@ GST_START_TEST (rtpredenc_too_large_length)
 
 GST_END_TEST;
 
+GST_START_TEST (rtpredenc_preserves_header_extensions)
+{
+  GstHarness *h = gst_harness_new ("rtpredenc");
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstBuffer *bufin, *bufout;
+  guint16 twcc_seq = 0x1234;
+  guint8 colorspace[4] = { 0x09, 0x10, 0x09, 0x14 };
+  gpointer out_data;
+  guint out_size;
+
+  g_object_set (h->element, "pt", PT_RED, "allow-no-red-blocks", TRUE, NULL);
+  gst_harness_set_src_caps_str (h, GST_RTP_RED_ENC_CAPS_STR);
+
+  /* All the RTP header extensions of the input packet must be preserved on
+   * the RED packet, including their data */
+  bufin =
+      _new_rtp_buffer (TRUE, 0, PT_MEDIA, 0, TIMESTAMP_NTH (0), 0xabe2b0b, 0);
+  fail_unless (gst_rtp_buffer_map (bufin, GST_MAP_READWRITE, &rtp));
+  fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 1,
+          &twcc_seq, sizeof (twcc_seq)));
+  fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 2,
+          colorspace, sizeof (colorspace)));
+  gst_rtp_buffer_unmap (&rtp);
+
+  bufout = gst_harness_push_and_pull (h, bufin);
+
+  fail_unless (gst_rtp_buffer_map (bufout, GST_MAP_READ, &rtp));
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp), PT_RED);
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0,
+          &out_data, &out_size));
+  fail_unless_equals_int (out_size, sizeof (twcc_seq));
+  fail_unless (memcmp (out_data, &twcc_seq, sizeof (twcc_seq)) == 0);
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2, 0,
+          &out_data, &out_size));
+  fail_unless_equals_int (out_size, sizeof (colorspace));
+  fail_unless (memcmp (out_data, colorspace, sizeof (colorspace)) == 0);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (bufout);
+
+  _check_red_sent (h, 1);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtpreddec_main_block_preserves_header_extensions)
+{
+  GstHarness *h = gst_harness_new ("rtpreddec");
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 red_in[] = { PT_MEDIA, 0xa, 0xa, 0xa, 0xa, 0xa };
+  guint16 twcc_seq = 0x4321;
+  guint8 colorspace[4] = { 0x09, 0x10, 0x09, 0x14 };
+  GstBuffer *bufinp, *bufout;
+  gpointer out_data;
+  guint out_size;
+
+  g_object_set (h->element, "pt", PT_RED, NULL);
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+
+  /* The RTP header extensions of the RED packet must be restored on the
+   * unwrapped main block packet, including their data */
+  bufinp =
+      _new_rtp_buffer (TRUE, 0, PT_RED, 549, TIMESTAMP_NTH (0), 0xabe2b0b,
+      sizeof (red_in));
+  fail_unless (gst_rtp_buffer_map (bufinp, GST_MAP_READWRITE, &rtp));
+  memcpy (gst_rtp_buffer_get_payload (&rtp), &red_in, sizeof (red_in));
+  fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 1,
+          &twcc_seq, sizeof (twcc_seq)));
+  fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 2,
+          colorspace, sizeof (colorspace)));
+  gst_rtp_buffer_unmap (&rtp);
+
+  bufout = gst_harness_push_and_pull (h, bufinp);
+
+  fail_unless (gst_rtp_buffer_map (bufout, GST_MAP_READ, &rtp));
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp), PT_MEDIA);
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0,
+          &out_data, &out_size));
+  fail_unless_equals_int (out_size, sizeof (twcc_seq));
+  fail_unless (memcmp (out_data, &twcc_seq, sizeof (twcc_seq)) == 0);
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2, 0,
+          &out_data, &out_size));
+  fail_unless_equals_int (out_size, sizeof (colorspace));
+  fail_unless (memcmp (out_data, colorspace, sizeof (colorspace)) == 0);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (bufout);
+
+  _check_red_received (h, 1);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpred_suite (void)
 {
@@ -888,6 +981,8 @@ rtpred_suite (void)
   tcase_add_loop_test (tc_chain, rtpredenc_too_large_timestamp_offset, 0, 2);
   tcase_add_loop_test (tc_chain, rtpredenc_too_large_length, 0, 2);
   tcase_add_test (tc_chain, rtpredenc_transport_cc);
+  tcase_add_test (tc_chain, rtpredenc_preserves_header_extensions);
+  tcase_add_test (tc_chain, rtpreddec_main_block_preserves_header_extensions);
 
   return s;
 }
