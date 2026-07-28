@@ -118,18 +118,23 @@ gst_rtp_header_extension_colorspace_write (GstRTPHeaderExtension * ext,
       self->colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
       self->colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN &&
       self->colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN) {
-    /* Nothing to write. */
+    GST_TRACE_OBJECT (ext, "nothing to write, colorimetry unknown");
     return 0;
   }
 
-  gst_rtp_buffer_map (output, GST_MAP_READ, &rtp);
+  if (!gst_rtp_buffer_map (output, GST_MAP_READ, &rtp)) {
+    GST_WARNING_OBJECT (ext, "failed to map output as RTP buffer");
+    return 0;
+  }
   is_frame_last_buffer = gst_rtp_buffer_get_marker (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
   if (!is_frame_last_buffer) {
     /* Only a video frame's final packet should carry color space info. */
+    GST_TRACE_OBJECT (ext, "not a frame-final packet (no marker), skipping");
     return 0;
   }
+  GST_LOG_OBJECT (ext, "marker packet, writing color space");
 
   *ptr++ = gst_video_color_primaries_to_iso (self->colorimetry.primaries);
   *ptr++ = gst_video_transfer_function_to_iso (self->colorimetry.transfer);
