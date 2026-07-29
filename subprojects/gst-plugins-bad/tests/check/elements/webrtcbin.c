@@ -2811,10 +2811,19 @@ GST_START_TEST (test_data_channel_close)
     g_clear_object (&tdc.dc1);
     g_clear_object (&tdc.dc2);
 
-    /* XXX: try to do something better here */
-    while (g_weak_ref_get (&dc1_ref) != NULL
-        || g_weak_ref_get (&dc2_ref) != NULL)
+    /* XXX: try to do something better here. Wait for both data channel
+     * objects to be finalized. */
+    while (TRUE) {
+      GObject *dc1_obj = g_weak_ref_get (&dc1_ref);
+      GObject *dc2_obj = g_weak_ref_get (&dc2_ref);
+      gboolean finalized = dc1_obj == NULL && dc2_obj == NULL;
+
+      g_clear_object (&dc1_obj);
+      g_clear_object (&dc2_obj);
+      if (finalized)
+        break;
       g_usleep (100 * 1000);
+    }
 
     g_weak_ref_clear (&dc1_ref);
     g_weak_ref_clear (&dc2_ref);
