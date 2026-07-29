@@ -31,6 +31,7 @@ typedef struct AHardwareBuffer AHardwareBuffer;
  * GstAHardwareBufferMemoryQueryFunction:
  * @mem: a #GstMemory
  * @buffer: (type gpointer) (out) (transfer none): location for the `AHardwareBuffer`
+ * @user_data: user data
  *
  * Function used by memory implementations to expose AHardwareBuffer backing
  * through gst_ahardware_buffer_memory_peek_buffer().
@@ -43,7 +44,7 @@ typedef struct AHardwareBuffer AHardwareBuffer;
  * Since: 1.30
  */
 typedef gboolean (*GstAHardwareBufferMemoryQueryFunction) (GstMemory * mem,
-    AHardwareBuffer ** buffer);
+    AHardwareBuffer ** buffer, gpointer user_data);
 
 /**
  * GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER:
@@ -148,7 +149,8 @@ gboolean        gst_ahardware_buffer_memory_peek_buffer
 GST_ALLOCATORS_API
 void            gst_ahardware_buffer_memory_register_query_function
                                                            (GType allocator_type,
-                                                            GstAHardwareBufferMemoryQueryFunction query);
+                                                            GstAHardwareBufferMemoryQueryFunction query,
+                                                            gpointer user_data);
 
 G_END_DECLS
 

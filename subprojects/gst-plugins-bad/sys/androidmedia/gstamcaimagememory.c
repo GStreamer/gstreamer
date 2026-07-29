@@ -68,7 +68,8 @@ static GstAllocator *gst_amc_aimage_allocator;
 #define GST_AMC_AIMAGE_ACQUIRE_FENCE_TIMEOUT_MS 100
 
 static gboolean
-gst_amc_aimage_memory_query (GstMemory * gmem, AHardwareBuffer ** buffer)
+gst_amc_aimage_memory_query (GstMemory * gmem, AHardwareBuffer ** buffer,
+    G_GNUC_UNUSED gpointer user_data)
 {
   GstAmcAImageMemory *mem = (GstAmcAImageMemory *) gmem;
 
@@ -88,7 +89,7 @@ gst_amc_aimage_memory_init_once (void)
         g_object_new (GST_TYPE_AMC_AIMAGE_ALLOCATOR, NULL);
     gst_object_ref_sink (gst_amc_aimage_allocator);
     gst_ahardware_buffer_memory_register_query_function
-        (GST_TYPE_AMC_AIMAGE_ALLOCATOR, gst_amc_aimage_memory_query);
+        (GST_TYPE_AMC_AIMAGE_ALLOCATOR, gst_amc_aimage_memory_query, NULL);
     g_once_init_leave (&once, 1);
   }
 }

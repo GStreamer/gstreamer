@@ -117,6 +117,10 @@ reference owned by @mem and valid for as long as @mem is alive.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">location for the `AHardwareBuffer`</doc>
           <type name="gpointer" c:type="AHardwareBuffer**"/>
         </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h">user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
       </parameters>
     </callback>
     <constant name="ALLOCATOR_DMABUF" value="dmabuf" c:type="GST_ALLOCATOR_DMABUF">
@@ -738,7 +742,7 @@ keep the AHardwareBuffer beyond @mem's lifetime.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="ahardware_buffer_memory_register_query_function" c:identifier="gst_ahardware_buffer_memory_register_query_function" version="1.30" introspectable="0">
+    <function name="ahardware_buffer_memory_register_query_function" c:identifier="gst_ahardware_buffer_memory_register_query_function" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">Registers @query as the AHardwareBuffer query function for #GstMemory
 objects allocated by @allocator_type.
 
@@ -754,10 +758,14 @@ return borrowed AHardwareBuffer references owned by the queried memory.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">a #GstAllocator type</doc>
           <type name="GType" c:type="GType"/>
         </parameter>
-        <parameter name="query" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">function used to query AHardwareBuffer backing for memory allocated
-    by @allocator_type</doc>
+        <parameter name="query" transfer-ownership="none" scope="forever" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">function used to query
+    AHardwareBuffer backing for memory allocated by @allocator_type</doc>
           <type name="AHardwareBufferMemoryQueryFunction" c:type="GstAHardwareBufferMemoryQueryFunction"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">user data to pass to @query</doc>
+          <type name="gpointer" c:type="gpointer"/>
         </parameter>
       </parameters>
     </function>

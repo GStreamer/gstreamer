@@ -95,6 +95,7 @@ typedef struct
 {
   GType allocator_type;
   GstAHardwareBufferMemoryQueryFunction query;
+  gpointer user_data;
 } GstAHardwareBufferQueryEntry;
 
 G_LOCK_DEFINE_STATIC (ahardware_buffer_query_functions);
@@ -211,18 +212,23 @@ gst_ahardware_buffer_format_from_caps_string (const gchar * value,
   return TRUE;
 }
 
-/* Returns a process-lifetime query function. There is intentionally no
- * unregister operation, so callers can safely invoke the returned function
- * after releasing the query-functions lock.
+/* Returns a process-lifetime query function and its user data. There is
+ * intentionally no unregister operation, so callers can safely use them after
+ * releasing the query-functions lock.
  */
-static GstAHardwareBufferMemoryQueryFunction
-gst_ahardware_buffer_memory_find_query_function (GstMemory * mem)
+static gboolean
+gst_ahardware_buffer_memory_find_query_function (GstMemory * mem,
+    GstAHardwareBufferMemoryQueryFunction * query, gpointer * user_data)
 {
   GType allocator_type;
-  GstAHardwareBufferMemoryQueryFunction query = NULL;
 
-  g_return_val_if_fail (mem != NULL, NULL);
-  g_return_val_if_fail (mem->allocator != NULL, NULL);
+  g_return_val_if_fail (mem != NULL, FALSE);
+  g_return_val_if_fail (mem->allocator != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (user_data != NULL, FALSE);
+
+  *query = NULL;
+  *user_data = NULL;
 
   allocator_type = G_OBJECT_TYPE (mem->allocator);
 
@@ -234,14 +240,15 @@ gst_ahardware_buffer_memory_find_query_function (GstMemory * mem)
           GstAHardwareBufferQueryEntry, i);
 
       if (g_type_is_a (allocator_type, entry->allocator_type)) {
-        query = entry->query;
+        *query = entry->query;
+        *user_data = entry->user_data;
         break;
       }
     }
   }
   G_UNLOCK (ahardware_buffer_query_functions);
 
-  return query;
+  return *query != NULL;
 }
 
 /**
@@ -309,14 +316,15 @@ gboolean
 gst_ahardware_buffer_memory_peek_buffer (GstMemory * mem,
     AHardwareBuffer ** buffer)
 {
-  GstAHardwareBufferMemoryQueryFunction query =
-      gst_ahardware_buffer_memory_find_query_function (mem);
+  GstAHardwareBufferMemoryQueryFunction query;
+  gpointer user_data;
   AHardwareBuffer *queried_buffer = NULL;
 
-  if (!query)
+  if (!gst_ahardware_buffer_memory_find_query_function (mem, &query,
+          &user_data))
     return FALSE;
 
-  if (!query (mem, &queried_buffer))
+  if (!query (mem, &queried_buffer, user_data))
     return FALSE;
 
   if (!queried_buffer)
@@ -331,8 +339,9 @@ gst_ahardware_buffer_memory_peek_buffer (GstMemory * mem,
 /**
  * gst_ahardware_buffer_memory_register_query_function:
  * @allocator_type: a #GstAllocator type
- * @query: function used to query AHardwareBuffer backing for memory allocated
- *     by @allocator_type
+ * @query: (scope forever) (closure user_data): function used to query
+ *     AHardwareBuffer backing for memory allocated by @allocator_type
+ * @user_data: user data to pass to @query
  *
  * Registers @query as the AHardwareBuffer query function for #GstMemory
  * objects allocated by @allocator_type.
@@ -345,7 +354,7 @@ gst_ahardware_buffer_memory_peek_buffer (GstMemory * mem,
  */
 void
 gst_ahardware_buffer_memory_register_query_function (GType allocator_type,
-    GstAHardwareBufferMemoryQueryFunction query)
+    GstAHardwareBufferMemoryQueryFunction query, gpointer user_data)
 {
   GstAHardwareBufferQueryEntry entry;
 
@@ -364,6 +373,7 @@ gst_ahardware_buffer_memory_register_query_function (GType allocator_type,
 
     if (existing->allocator_type == allocator_type) {
       existing->query = query;
+      existing->user_data = user_data;
       G_UNLOCK (ahardware_buffer_query_functions);
       return;
     }
@@ -371,6 +381,7 @@ gst_ahardware_buffer_memory_register_query_function (GType allocator_type,
 
   entry.allocator_type = allocator_type;
   entry.query = query;
+  entry.user_data = user_data;
   g_array_append_val (ahardware_buffer_query_functions, entry);
   G_UNLOCK (ahardware_buffer_query_functions);
 }
