@@ -14811,6 +14811,20 @@
                     }
                 },
                 "properties": {
+                    "max-fragmentation-unit-size": {
+                        "blurb": "Maximum size in bytes for a fragmentation unit (0 = auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "33554432",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "request-keyframe": {
                         "blurb": "Request new keyframe when packet loss is detected",
                         "conditionally-available": false,
@@ -14931,6 +14945,20 @@
                     }
                 },
                 "properties": {
+                    "max-fragmentation-unit-size": {
+                        "blurb": "Maximum size in bytes for a fragmentation unit (0 = auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "33554432",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "request-keyframe": {
                         "blurb": "Request new keyframe when packet loss is detected",
                         "conditionally-available": false,

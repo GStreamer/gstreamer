@@ -41,12 +41,14 @@ GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
 #define DEFAULT_ACCESS_UNIT   FALSE
 #define DEFAULT_WAIT_FOR_KEYFRAME FALSE
 #define DEFAULT_REQUEST_KEYFRAME FALSE
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (32 * 1024 * 1024)
 
 enum
 {
   PROP_0,
   PROP_WAIT_FOR_KEYFRAME,
   PROP_REQUEST_KEYFRAME,
+  PROP_MAX_FRAGMENTATION_UNIT_SIZE,
 };
 
 
@@ -126,6 +128,9 @@ gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
     case PROP_REQUEST_KEYFRAME:
       self->request_keyframe = g_value_get_boolean (value);
       break;
+    case PROP_MAX_FRAGMENTATION_UNIT_SIZE:
+      self->max_fragmentation_unit_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -144,6 +149,9 @@ gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_REQUEST_KEYFRAME:
       g_value_set_boolean (value, self->request_keyframe);
+      break;
+    case PROP_MAX_FRAGMENTATION_UNIT_SIZE:
+      g_value_set_uint (value, self->max_fragmentation_unit_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -195,6 +203,24 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
           DEFAULT_REQUEST_KEYFRAME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpH264Depay:max-fragmentation-unit-size:
+   *
+   * Maximum size in bytes for a fragmentation unit. Larger units
+   * will be dropped to prevent excessive memory usage.
+   *
+   * Use 0 for automatic.
+   *
+   * Since: 1.28.6
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_MAX_FRAGMENTATION_UNIT_SIZE,
+      g_param_spec_uint ("max-fragmentation-unit-size",
+          "Max Fragmentation Unit Size",
+          "Maximum size in bytes for a fragmentation unit (0 = auto)", 0,
+          G_MAXUINT, DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_rtp_h264_depay_src_template);
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -227,6 +253,8 @@ gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay)
       (GDestroyNotify) gst_buffer_unref);
   rtph264depay->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
   rtph264depay->request_keyframe = DEFAULT_REQUEST_KEYFRAME;
+  rtph264depay->max_fragmentation_unit_size =
+      DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE;
 }
 
 static void
@@ -1553,8 +1581,21 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         rtph264depay->fu_marker = marker;
 
         /* if NAL unit ends, flush the adapter */
-        if (E)
+        if (E) {
           gst_rtp_h264_finish_fragmentation_unit (rtph264depay);
+          GST_DEBUG_OBJECT (rtph264depay, "End of Fragmentation Unit");
+        } else {
+          guint limit = rtph264depay->max_fragmentation_unit_size ?
+              rtph264depay->max_fragmentation_unit_size :
+              DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE;
+          if (gst_adapter_available (rtph264depay->adapter) > limit) {
+            GST_WARNING_OBJECT (rtph264depay,
+                "Too big (> %u bytes) fragmentation unit, dropping.", limit);
+            gst_rtp_base_depayload_flush (depayload, FALSE);
+            gst_adapter_clear (rtph264depay->adapter);
+            return NULL;
+          }
+        }
         break;
       }
       default:
