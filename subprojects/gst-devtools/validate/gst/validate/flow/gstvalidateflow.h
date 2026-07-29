@@ -62,6 +62,13 @@ struct _ValidateFlowOverride
   gchar **ignored_event_types;
   gchar **logged_unregistered_sei_uuids;
 
+  /* Conditional buffer recording: only record buffers once the whole event
+   * sequence (e.g. flush-stop then segment) has been seen in order.
+   * matched_events counts how far into the sequence we are. */
+  gchar **record_buffers_after_events;
+  guint matched_events;
+  gboolean record_buffers_enabled;
+
   gchar *expectations_file_path;
   gchar *actual_results_file_path;
   gchar **extra_serialized_metas;

@@ -124,6 +124,13 @@ several overrides and listening to different pads with different settings.
 * `pad`: Required. Name of the pad that will be monitored.
 * `record-buffers`: Default: false. Whether buffers will be logged. By default
    only events are logged.
+* `record-buffers-after-event`: Default: unset. Only record buffers once the
+   given event sequence has been seen in order. Can be a single event type name
+   or a list of event types (e.g., `{flush-stop,segment}`). Unrelated events in
+   between are ignored, and seeing the sequence's first event restarts the
+   match, so a fresh seek re-arms it. Recording starts disabled and is enabled
+   once the whole sequence has been observed. This is useful for tests where the
+   number of buffers before a seek is non-deterministic.
 * `buffers-checksum`: Default: 'none'. Define the type of checksums to be used
    valid values are:
   * `none`: No checksum recorded

@@ -288,6 +288,40 @@ validate_flow_override_event_handler (GstValidateOverride * override,
   if (flow->error_writing_file)
     return;
 
+  /* Conditional buffer recording: only record buffers once the whole
+   * configured event sequence has been seen in order (e.g. flush-stop then
+   * segment). Unrelated events in between are ignored, and seeing the
+   * sequence's first event restarts the match, so a fresh seek re-arms it. */
+  if (flow->record_buffers_after_events && flow->record_buffers_after_events[0]) {
+    const gchar *event_type_name =
+        gst_event_type_get_name (GST_EVENT_TYPE (event));
+    guint n_events = g_strv_length (flow->record_buffers_after_events);
+    const gchar *expected =
+        flow->record_buffers_after_events[flow->matched_events];
+
+    if (g_ascii_strcasecmp (event_type_name, expected) == 0) {
+      flow->matched_events++;
+      if (flow->matched_events == n_events) {
+        flow->record_buffers_enabled = TRUE;
+        flow->matched_events = 0;
+        GST_DEBUG_OBJECT (flow,
+            "Saw the complete event sequence, enabling buffer recording");
+      } else {
+        flow->record_buffers_enabled = FALSE;
+        GST_DEBUG_OBJECT (flow,
+            "Matched %s event (%u/%u), waiting for the rest", event_type_name,
+            flow->matched_events, n_events);
+      }
+    } else if (flow->matched_events > 0
+        && g_ascii_strcasecmp (event_type_name,
+            flow->record_buffers_after_events[0]) == 0) {
+      flow->matched_events = 1;
+      flow->record_buffers_enabled = (n_events == 1);
+      GST_DEBUG_OBJECT (flow, "Restarting the event sequence at %s event",
+          event_type_name);
+    }
+  }
+
   event_string = validate_flow_format_event (flow, event);
 
   if (event_string) {
@@ -306,6 +340,10 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   GstObject *target;
 
   if (flow->error_writing_file || !flow->record_buffers)
+    return;
+
+  /* Only record buffers once the configured event sequence has been seen. */
+  if (flow->record_buffers_after_events && !flow->record_buffers_enabled)
     return;
 
   target = gst_validate_monitor_get_target (pad_monitor);
@@ -412,6 +450,14 @@ validate_flow_override_new (GstStructure * config)
       gst_validate_utils_get_strv (config, "ignored-event-types");
   flow->logged_unregistered_sei_uuids =
       gst_validate_utils_get_strv (config, "logged-unregistered-sei-uuids");
+
+  /* record-buffers-after-event: only record buffers after seeing the given
+   * event sequence. A single event or a list (e.g. { flush-stop, segment });
+   * buffers arriving before or between the events are ignored. */
+  flow->record_buffers_after_events =
+      gst_validate_utils_get_strv (config, "record-buffers-after-event");
+  flow->matched_events = 0;
+  flow->record_buffers_enabled = (flow->record_buffers_after_events == NULL);
 
   tmpval = gst_structure_get_value (config, "ignored-fields");
   if (tmpval) {
@@ -794,6 +840,7 @@ validate_flow_override_finalize (GObject * object)
   g_strfreev (flow->logged_upstream_event_types);
   g_strfreev (flow->ignored_event_types);
   g_strfreev (flow->logged_unregistered_sei_uuids);
+  g_strfreev (flow->record_buffers_after_events);
   g_strfreev (flow->extra_serialized_metas);
   if (flow->ignored_fields)
     gst_structure_free (flow->ignored_fields);
