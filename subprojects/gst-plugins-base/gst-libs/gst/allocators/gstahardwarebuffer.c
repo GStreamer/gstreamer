@@ -145,7 +145,7 @@ static const GstAHardwareBufferFormatName ahardware_buffer_formats[] = {
 
 /**
  * gst_ahardware_buffer_format_to_caps_string:
- * @format: an Android AHardwareBuffer format value
+ * @format: a #GstAHardwareBufferFormat
  *
  * Converts an Android AHardwareBuffer format value to the canonical string
  * representation used by the `ahb-format` caps field. Known formats use the
@@ -156,7 +156,7 @@ static const GstAHardwareBufferFormatName ahardware_buffer_formats[] = {
  * Since: 1.30
  */
 gchar *
-gst_ahardware_buffer_format_to_caps_string (guint32 format)
+gst_ahardware_buffer_format_to_caps_string (GstAHardwareBufferFormat format)
 {
   for (guint i = 0; i < G_N_ELEMENTS (ahardware_buffer_formats); i++) {
     if (ahardware_buffer_formats[i].value == format)
@@ -169,7 +169,7 @@ gst_ahardware_buffer_format_to_caps_string (guint32 format)
 /**
  * gst_ahardware_buffer_format_from_caps_string:
  * @value: an AHardwareBuffer format string
- * @format: (out): location for the Android AHardwareBuffer format value
+ * @format: (out): location for the #GstAHardwareBufferFormat
  *
  * Parses the canonical string representation used by the `ahb-format` caps
  * field.
@@ -180,7 +180,7 @@ gst_ahardware_buffer_format_to_caps_string (guint32 format)
  */
 gboolean
 gst_ahardware_buffer_format_from_caps_string (const gchar * value,
-    guint32 * format)
+    GstAHardwareBufferFormat * format)
 {
   guint64 parsed;
 
@@ -207,7 +207,7 @@ gst_ahardware_buffer_format_from_caps_string (const gchar * value,
           NULL))
     return FALSE;
 
-  *format = (guint32) parsed;
+  *format = (GstAHardwareBufferFormat) ((guint32) parsed);
   return TRUE;
 }
 

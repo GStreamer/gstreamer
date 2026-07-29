@@ -73,7 +73,7 @@ GST_START_TEST (test_ahardware_buffer_formats)
 
   static const struct
   {
-    guint32 value;
+    GstAHardwareBufferFormat value;
     const gchar *name;
   } known[] = {
     AHB_FORMAT (R8G8B8A8_UNORM),
@@ -105,7 +105,7 @@ GST_START_TEST (test_ahardware_buffer_formats)
     AHB_FORMAT (B10G10R10A2_UNORM),
     AHB_FORMAT (B10G10R10X2_UNORM),
   };
-  guint32 value;
+  GstAHardwareBufferFormat value;
   gchar *str;
 
   for (guint i = 0; i < G_N_ELEMENTS (known); i++) {
@@ -116,7 +116,8 @@ GST_START_TEST (test_ahardware_buffer_formats)
     g_free (str);
   }
 
-  str = gst_ahardware_buffer_format_to_caps_string (0x32315659);
+  str = gst_ahardware_buffer_format_to_caps_string
+      ((GstAHardwareBufferFormat) 0x32315659);
   fail_unless_equals_string (str, "0x32315659");
   fail_unless (gst_ahardware_buffer_format_from_caps_string (str, &value));
   fail_unless_equals_int (value, 0x32315659);

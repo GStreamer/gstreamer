@@ -1535,8 +1535,8 @@ gst_amc_video_dec_negotiate_ahardware_buffer_format (GstAmcVideoDec * self,
   gst_caps_set_features (new_state->caps, 0,
       gst_caps_features_new_static_str
       (GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER, NULL));
-  format_str =
-      gst_ahardware_buffer_format_to_caps_string (ahardware_buffer_format);
+  format_str = gst_ahardware_buffer_format_to_caps_string
+      ((GstAHardwareBufferFormat) ahardware_buffer_format);
   gst_caps_set_simple (new_state->caps, "ahb-format", G_TYPE_STRING,
       format_str, NULL);
   g_free (format_str);

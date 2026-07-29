@@ -125,12 +125,12 @@ typedef enum {
 
 GST_ALLOCATORS_API
 gchar *         gst_ahardware_buffer_format_to_caps_string
-                                                           (guint32 format);
+                                                           (GstAHardwareBufferFormat format);
 
 GST_ALLOCATORS_API
 gboolean        gst_ahardware_buffer_format_from_caps_string
                                                            (const gchar * value,
-                                                            guint32 * format);
+                                                            GstAHardwareBufferFormat * format);
 
 GST_ALLOCATORS_API
 gboolean        gst_is_ahardware_buffer_memory

@@ -693,8 +693,8 @@ field.</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
         <parameter name="format" direction="out" caller-allocates="0" transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">location for the Android AHardwareBuffer format value</doc>
-          <type name="guint32" c:type="guint32*"/>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">location for the #GstAHardwareBufferFormat</doc>
+          <type name="AHardwareBufferFormat" c:type="GstAHardwareBufferFormat*"/>
         </parameter>
       </parameters>
     </function>
@@ -709,8 +709,8 @@ Android constant suffix and unknown formats use fixed-width hexadecimal.</doc>
       </return-value>
       <parameters>
         <parameter name="format" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">an Android AHardwareBuffer format value</doc>
-          <type name="guint32" c:type="guint32"/>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.c">a #GstAHardwareBufferFormat</doc>
+          <type name="AHardwareBufferFormat" c:type="GstAHardwareBufferFormat"/>
         </parameter>
       </parameters>
     </function>

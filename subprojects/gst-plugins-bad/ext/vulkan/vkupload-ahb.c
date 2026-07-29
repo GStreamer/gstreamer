@@ -105,7 +105,7 @@ struct AhbUpload
   GstVideoInfo in_info;
   GstVideoInfo out_info;
   GstVideoChromaSite chroma_site;
-  guint32 ahb_format;
+  GstAHardwareBufferFormat ahb_format;
 
   GstVulkanDevice *cached_device;
   PFN_vkGetAndroidHardwareBufferPropertiesANDROID get_ahb_properties;
@@ -1303,7 +1303,7 @@ _ahb_set_transformed_format (GstStructure * structure)
   if (G_VALUE_HOLDS_STRING (ahb_formats)) {
     const gchar *ahb_format_str = g_value_get_string (ahb_formats);
     GstVideoFormat video_format;
-    guint32 ahb_format;
+    GstAHardwareBufferFormat ahb_format;
 
     if (!gst_ahardware_buffer_format_from_caps_string (ahb_format_str,
             &ahb_format))
@@ -1326,7 +1326,7 @@ _ahb_set_transformed_format (GstStructure * structure)
       const GValue *item = gst_value_list_get_value (ahb_formats, i);
       const gchar *ahb_format_str;
       GstVideoFormat video_format;
-      guint32 ahb_format;
+      GstAHardwareBufferFormat ahb_format;
 
       if (!G_VALUE_HOLDS_STRING (item))
         continue;
@@ -1557,7 +1557,8 @@ _ahb_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   AHardwareBuffer_describe (ahb, &desc);
 
   if (ahb_upload->ahb_format != 0 && ahb_upload->ahb_format != desc.format) {
-    gchar *actual = gst_ahardware_buffer_format_to_caps_string (desc.format);
+    gchar *actual = gst_ahardware_buffer_format_to_caps_string
+        ((GstAHardwareBufferFormat) desc.format);
     gchar *expected =
         gst_ahardware_buffer_format_to_caps_string (ahb_upload->ahb_format);
 
