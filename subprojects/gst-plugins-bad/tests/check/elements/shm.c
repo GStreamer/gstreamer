@@ -335,10 +335,14 @@ GST_START_TEST (test_shm_fill_resume)
   g_object_set (src, "sizetype", 2, "sizemax", 200, NULL);
 
   sink = gst_element_factory_make ("shmsink", NULL);
-  /* shm fits ~3 buffers after alignment, forces ack-reclaim cycle */
+  /* shm fits ~3 buffers after alignment, forces ack-reclaim cycle.
+   * wait-for-connection=TRUE so the producer blocks until the consumer is
+   * accepted instead of free-running and starving the shmsink poll thread
+   * of the OBJECT_LOCK it needs to accept the client, which livelocks the
+   * test under valgrind (same pathology as test_shm_live, issue #790). */
   g_object_set (sink,
       "socket-path", "shm-fill-test",
-      "shm-size", (guint) 1024, "wait-for-connection", FALSE, NULL);
+      "shm-size", (guint) 1024, "wait-for-connection", TRUE, NULL);
 
   producer = gst_pipeline_new ("producer-pipeline");
   gst_bin_add_many (GST_BIN (producer), src, sink, NULL);
