@@ -1993,6 +1993,9 @@ GST_START_TEST (test_session_stats)
   p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
   g_signal_emit_by_name (t->webrtc2, "get-stats", NULL, p);
 
+  /* Wait for both get-stats promises: tearing down with one still pending
+   * answers it with an error structure that fails validate_stats(). */
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
   test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
 
   test_webrtc_free (t);
@@ -2040,6 +2043,9 @@ GST_START_TEST (test_stats_with_stream)
   p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
   g_signal_emit_by_name (t->webrtc2, "get-stats", NULL, p);
 
+  /* Wait for BOTH get-stats promises to be answered before tearing down,
+   * see test_session_stats. */
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
   test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
 
   test_webrtc_free (t);
