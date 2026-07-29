@@ -549,9 +549,9 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   gst_audio_encoder_set_frame_samples_min (enc, enc_info.frameLength);
   gst_audio_encoder_set_frame_samples_max (enc, enc_info.frameLength);
 
-  self->encoder_delay = gst_util_uint64_scale (enc_info.nDelay,
-      GST_SECOND, GST_AUDIO_INFO_RATE (info));
-  gst_audio_encoder_set_latency (enc, self->encoder_delay,
+  self->encoder_delay = enc_info.nDelay;
+  gst_audio_encoder_set_latency (enc, gst_util_uint64_scale (enc_info.nDelay,
+          GST_SECOND, GST_AUDIO_INFO_RATE (info)),
       gst_util_uint64_scale (enc_info.nDelay + enc_info.frameLength,
           GST_SECOND, GST_AUDIO_INFO_RATE (info)));
 
@@ -691,7 +691,17 @@ gst_fdkaacenc_handle_frame (GstAudioEncoder * enc, GstBuffer * inbuf)
   gst_buffer_unmap (outbuf, &omap);
   gst_buffer_set_size (outbuf, out_args.numOutBytes);
 
-  ret = gst_audio_encoder_finish_frame (enc, outbuf, self->samples_per_frame);
+  gint nsamples;
+  if (self->encoder_delay >= self->samples_per_frame) {
+    nsamples = 0;
+    self->encoder_delay -= self->samples_per_frame;
+  } else if (self->encoder_delay) {
+    nsamples = self->samples_per_frame - self->encoder_delay;
+    self->encoder_delay = 0;
+  } else {
+    nsamples = self->samples_per_frame;
+  }
+  ret = gst_audio_encoder_finish_frame (enc, outbuf, nsamples);
   outbuf = NULL;
 
 out:
@@ -706,30 +716,6 @@ out:
   }
 
   return ret;
-}
-
-static GstFlowReturn
-gst_fdkaacenc_pre_push (GstAudioEncoder * enc, GstBuffer ** buffer)
-{
-  GstFdkAacEnc *self = GST_FDKAACENC (enc);
-  GstBuffer *buf = *buffer;
-
-  /* We need to adjust outgoing timestamps of buffers to compensate
-     for any AAC priming samples that the codec injected at startup... */
-  if (self->encoder_delay != GST_CLOCK_TIME_NONE &&
-      GST_BUFFER_PTS_IS_VALID (buf)) {
-    GstClockTime pts = GST_BUFFER_PTS (buf);
-    buf = gst_buffer_make_writable (buf);
-    if (pts >= self->encoder_delay)
-      GST_BUFFER_PTS (buf) = pts - self->encoder_delay;
-    else
-      GST_BUFFER_PTS (buf) = 0;
-    GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf);
-
-    *buffer = buf;
-  }
-
-  return GST_FLOW_OK;
 }
 
 static void
@@ -753,7 +739,7 @@ gst_fdkaacenc_init (GstFdkAacEnc * self)
   self->enc = NULL;
   self->is_drained = TRUE;
   self->afterburner = FALSE;
-  self->encoder_delay = GST_CLOCK_TIME_NONE;
+  self->encoder_delay = 0;
   self->peak_bitrate = DEFAULT_PEAK_BITRATE;
   self->rate_control = DEFAULT_RATE_CONTROL;
   self->vbr_preset = DEFAULT_VBR_PRESET;
@@ -776,7 +762,6 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_fdkaacenc_set_format);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_fdkaacenc_get_caps);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_fdkaacenc_handle_frame);
-  base_class->pre_push = GST_DEBUG_FUNCPTR (gst_fdkaacenc_pre_push);
   base_class->flush = GST_DEBUG_FUNCPTR (gst_fdkaacenc_flush);
 
   g_object_class_install_property (object_class, PROP_BITRATE,
