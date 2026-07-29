@@ -56,6 +56,25 @@ struct _GstVulkanBarrierStateClass
   gpointer _reserved        [GST_PADDING];
 };
 
+/**
+ * GstVulkanBarrierStateForEachImageFunc:
+ *
+ * Since: 1.30
+ */
+typedef void (*GstVulkanBarrierStateForEachImageFunc) (GstVulkanImageMemory * image, gpointer user_data);
+/**
+ * GstVulkanBarrierStateForEachBufferFunc:
+ *
+ * Since: 1.30
+ */
+typedef void (*GstVulkanBarrierStateForEachBufferFunc) (GstVulkanBufferMemory * buffer, gpointer user_data);
+/**
+ * GstVulkanBarrierStateForEachTimelineSemaphoreFunc:
+ *
+ * Since: 1.30
+ */
+typedef void (*GstVulkanBarrierStateForEachTimelineSemaphoreFunc) (GstVulkanTimelineSemaphore * timeline, gpointer user_data);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanBarrierState, gst_object_unref)
 
 GST_VULKAN_API
@@ -111,6 +130,21 @@ gboolean                gst_vulkan_barrier_state_commit         (GstVulkanBarrie
 GST_VULKAN_API
 void                    gst_vulkan_barrier_state_rollback       (GstVulkanBarrierState *self,
                                                                  gpointer state);
+GST_VULKAN_API
+void                    gst_vulkan_barrier_state_foreach_image_unlocked (GstVulkanBarrierState *self,
+                                                                 gpointer state,
+                                                                 GstVulkanBarrierStateForEachImageFunc func,
+                                                                 gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_barrier_state_foreach_buffer_unlocked (GstVulkanBarrierState *self,
+                                                                 gpointer state,
+                                                                 GstVulkanBarrierStateForEachBufferFunc func,
+                                                                 gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_barrier_state_foreach_timeline_semaphore_unlocked (GstVulkanBarrierState *self,
+                                                                 gpointer state,
+                                                                 GstVulkanBarrierStateForEachTimelineSemaphoreFunc func,
+                                                                 gpointer user_data);
 GST_VULKAN_API
 void                    gst_vulkan_barrier_state_unlock         (GstVulkanBarrierState *self,
                                                                  gpointer state);

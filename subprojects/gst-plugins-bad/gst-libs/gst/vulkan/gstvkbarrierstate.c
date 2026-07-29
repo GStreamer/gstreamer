@@ -762,6 +762,130 @@ find_dependency (GstVulkanBarrierState * self, gpointer mem)
   return NULL;
 }
 
+/**
+ * gst_vulkan_barrier_state_foreach_image_unlocked:
+ * @self: a #GstVulkanBarrierState
+ * @state: a state cookie from gst_vulkan_barrier_state_lock()
+ * @func: (scope call): function to call on every #GstVulkanImageMemory
+ *        currently tracked by @self.
+ * @user_data: user provided data for @func
+ *
+ * Call a user provided function for every #GstVulkanImageMemory currently locked by @self.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_barrier_state_foreach_image_unlocked (GstVulkanBarrierState * self,
+    gpointer state, GstVulkanBarrierStateForEachImageFunc func,
+    gpointer user_data)
+{
+  g_return_if_fail (GST_IS_VULKAN_BARRIER_STATE (self));
+  g_return_if_fail (state != NULL);
+
+  GstVulkanBarrierStatePrivate *priv = GET_PRIV (self);
+  struct lock_state *locks = (struct lock_state *) state;
+  int i;
+
+  g_return_if_fail (priv->state_cookie == locks->state_cookie);
+
+  GST_OBJECT_LOCK (self);
+
+  for (i = 0; i < locks->n_locks; i++) {
+    struct dependency *dep = &g_array_index (priv->deps, struct dependency,
+        locks->locks[i].barrier_i);
+
+    switch (dep->type) {
+      case GST_VULKAN_BARRIER_TYPE_IMAGE:
+        func (dep->image.mem, user_data);
+      default:
+        break;
+    }
+  }
+
+  GST_OBJECT_UNLOCK (self);
+}
+
+/**
+ * gst_vulkan_barrier_state_foreach_buffer_unlocked:
+ * @self: a #GstVulkanBarrierState
+ * @state: a state cookie from gst_vulkan_barrier_state_lock()
+ * @func: (scope call): function to call on every #GstVulkanBufferMemory
+ *        currently tracked by @self.
+ * @user_data: user provided data for @func
+ *
+ * Call a user provided function for every #GstVulkanBufferMemory currently locked by @self.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_barrier_state_foreach_buffer_unlocked (GstVulkanBarrierState * self,
+    gpointer state, GstVulkanBarrierStateForEachBufferFunc func,
+    gpointer user_data)
+{
+  g_return_if_fail (GST_IS_VULKAN_BARRIER_STATE (self));
+  g_return_if_fail (state != NULL);
+
+  GstVulkanBarrierStatePrivate *priv = GET_PRIV (self);
+  struct lock_state *locks = (struct lock_state *) state;
+  int i;
+
+  g_return_if_fail (priv->state_cookie == locks->state_cookie);
+
+  GST_OBJECT_LOCK (self);
+
+  for (i = 0; i < locks->n_locks; i++) {
+    struct dependency *dep = &g_array_index (priv->deps, struct dependency,
+        locks->locks[i].barrier_i);
+
+    switch (dep->type) {
+      case GST_VULKAN_BARRIER_TYPE_BUFFER:
+        func (dep->buffer.mem, user_data);
+      default:
+        break;
+    }
+  }
+
+  GST_OBJECT_UNLOCK (self);
+}
+
+/**
+ * gst_vulkan_barrier_state_foreach_timeline_semaphore_unlocked:
+ * @self: a #GstVulkanBarrierState
+ * @state: a state cookie from gst_vulkan_barrier_state_lock()
+ * @func: (scope call): function to call on every #GstVulkanTimelineSemaphore
+ *        currently tracked by @self.
+ * @user_data: user provided data for @func
+ *
+ * Call a user provided function for every #GstVulkanTimelineSemaphore currently locked by @self.
+ *
+ * Since: 1.30
+ */
+void gst_vulkan_barrier_state_foreach_timeline_semaphore_unlocked
+    (GstVulkanBarrierState * self, gpointer state,
+    GstVulkanBarrierStateForEachTimelineSemaphoreFunc func, gpointer user_data)
+{
+  g_return_if_fail (GST_IS_VULKAN_BARRIER_STATE (self));
+  g_return_if_fail (state != NULL);
+
+  GstVulkanBarrierStatePrivate *priv = GET_PRIV (self);
+  struct lock_state *locks = (struct lock_state *) state;
+  int i;
+
+  g_return_if_fail (priv->state_cookie == locks->state_cookie);
+
+  GST_OBJECT_LOCK (self);
+
+  for (i = 0; i < locks->n_semaphore_locks; i++) {
+    struct semaphore_update *update =
+        &g_array_index (priv->semaphore_updates, struct semaphore_update,
+        locks->semaphore_locks[i].timeline_i);
+
+    func (update->timeline, user_data);
+  }
+
+  GST_OBJECT_UNLOCK (self);
+}
+
 static struct dependency *
 ensure_image_dep (GstVulkanBarrierState * self, GstVulkanImageMemory * image)
 {

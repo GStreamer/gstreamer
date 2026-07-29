@@ -496,6 +496,21 @@ gst_vulkan_operation_submit1 (GstVulkanOperation * self, GstVulkanFence * fence,
   return TRUE;
 }
 
+struct TrashListFence
+{
+  GstVulkanTrashList *trash_list;
+  GstVulkanFence *fence;
+};
+
+static void
+add_mini_object_to_trash_list (GstMiniObject * obj,
+    struct TrashListFence *udata)
+{
+  gst_vulkan_trash_list_add (udata->trash_list,
+      gst_vulkan_trash_list_acquire (udata->trash_list, udata->fence,
+          gst_vulkan_trash_mini_object_unref, gst_mini_object_ref (obj)));
+}
+
 /**
  * gst_vulkan_operation_end:
  * @self: a #GstVulkanOperation
@@ -560,6 +575,20 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
     gst_vulkan_barrier_state_rollback (priv->barriers, barrier_lock);
     goto bail;
   }
+  struct TrashListFence tlf = {
+    .trash_list = priv->trash_list,
+    .fence = fence,
+  };
+  gst_vulkan_barrier_state_foreach_image_unlocked (priv->barriers, barrier_lock,
+      (GstVulkanBarrierStateForEachImageFunc) add_mini_object_to_trash_list,
+      &tlf);
+  gst_vulkan_barrier_state_foreach_buffer_unlocked (priv->barriers,
+      barrier_lock,
+      (GstVulkanBarrierStateForEachBufferFunc) add_mini_object_to_trash_list,
+      &tlf);
+  gst_vulkan_barrier_state_foreach_timeline_semaphore_unlocked (priv->barriers,
+      barrier_lock, (GstVulkanBarrierStateForEachTimelineSemaphoreFunc)
+      add_mini_object_to_trash_list, &tlf);
   gst_vulkan_barrier_state_unlock (priv->barriers, barrier_lock);
 
   gst_vulkan_trash_list_add (priv->trash_list,
