@@ -1125,6 +1125,26 @@ use ges_effect_class_register_rate_property().</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-base-effect.h"/>
       <implements name="Extractable"/>
       <implements name="MetaContainer"/>
+      <method name="get_source" c:identifier="ges_base_effect_get_source" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">Gets the core #GESSource @effect is applied on top of: the source it was
+explicitly bound to (through ges_source_add_effect()) if any, otherwise the
+core source of @effect's current track, so the result is meaningful even for
+effects added through ges_clip_add_top_effect(). Routing uses the explicit
+binding, not this derived value; serialization preserves the effect's track,
+so this derived source survives a save/load round-trip.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-base-effect.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">the #GESSource, or %NULL. Unref after
+usage.</doc>
+          <type name="Source" c:type="GESSource*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="effect" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">a #GESBaseEffect</doc>
+            <type name="BaseEffect" c:type="GESBaseEffect*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="is_time_effect" c:identifier="ges_base_effect_is_time_effect" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">Get whether the effect is considered a time effect or not. An effect
 with registered time properties or set translation functions is
@@ -2661,6 +2681,24 @@ default implementation</doc>
           <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
           <field name="can_add_effects" writable="1">
             <type name="gboolean" c:type="gboolean"/>
+          </field>
+          <field name="select_element_tracks" introspectable="0">
+            <callback name="select_element_tracks" introspectable="0">
+              <source-position filename="../subprojects/gst-editing-services/ges/ges-clip.h"/>
+              <return-value>
+                <array name="GLib.PtrArray" c:type="GPtrArray*">
+                  <type name="gpointer" c:type="gpointer"/>
+                </array>
+              </return-value>
+              <parameters>
+                <parameter name="clip" transfer-ownership="none">
+                  <type name="Clip" c:type="GESClip*"/>
+                </parameter>
+                <parameter name="track_element" transfer-ownership="none">
+                  <type name="TrackElement" c:type="GESTrackElement*"/>
+                </parameter>
+              </parameters>
+            </callback>
           </field>
         </record>
       </union>
@@ -8408,6 +8446,34 @@ subclass will return a decodebin, and we will append a volume.</doc>
           </parameter>
         </parameters>
       </virtual-method>
+      <method name="add_effect" c:identifier="ges_source_add_effect" version="1.30" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source.c">Adds @effect on top of @source, binding it to @source so that it follows it
+to whichever #GESTrack(s) @source is placed in (see #GESSourceTrackMap),
+instead of being applied to whatever core element happens to share its track.
+
+If @source is not yet in a #GESClip, the effect is remembered and added once
+@source is parented to one.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source.c">%TRUE if @effect was added.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source.c">a core #GESSource</doc>
+            <type name="Source" c:type="GESSource*"/>
+          </instance-parameter>
+          <parameter name="effect" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source.c">the #GESBaseEffect to add on top of @source</doc>
+            <type name="BaseEffect" c:type="GESBaseEffect*"/>
+          </parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source.c">the priority index for @effect within @source's effect chain, or -1
+  to append it at the lowest priority</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
       <field name="parent" readable="0" private="1">
         <type name="TrackElement" c:type="GESTrackElement"/>
       </field>
@@ -8530,6 +8596,245 @@ or %NULL if there was an error.</doc>
     </record>
     <record name="SourcePrivate" c:type="GESSourcePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-source.h"/>
+    </record>
+    <record name="SourceTrackMap" c:type="GESSourceTrackMap" opaque="1" version="1.30" glib:type-name="GESSourceTrackMap" glib:get-type="ges_source_track_map_get_type" c:symbol-prefix="source_track_map">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">A #GESSourceTrackMap describes which sources of a #GESUriClip's URI should be
+used, and, for each of them, the #GESTrack(s) its source should be placed
+into. It is set on a clip with ges_uri_clip_set_source_track_map().
+
+Only the sources present in the map produce a core child. A source may be
+routed to one track, or to several (its source is then copied into each), or
+to none (%NULL, "selected but unplaced": the core child is created but put in
+no track).
+
+A #GESSourceTrackMap is immutable: once built it cannot be changed, so it can
+be shared safely between threads and between clips. Build one with a
+#GESSourceTrackMapBuilder (ges_source_track_map_builder_new(),
+ges_source_track_map_builder_add(),
+ges_source_track_map_builder_build()) or, in C, all at once with
+ges_source_track_map_new_full().</doc>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-types.h"/>
+      <constructor name="new_full" c:identifier="ges_source_track_map_new_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Creates a #GESSourceTrackMap from an inline array of routings, e.g.:
+
+``` c
+ges_source_track_map_new_full ((GESSourceTrackMapEntry[]) {
+    {.source = stream0, .track = atrack0},
+    {.source = stream1, .track = atrack1},
+    {0},
+});
+```</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a new #GESSourceTrackMap.</doc>
+          <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+        </return-value>
+        <parameters>
+          <parameter name="entries" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">an array of #GESSourceTrackMapEntry routings,
+  terminated by an entry whose #GESSourceTrackMapEntry.source is %NULL</doc>
+            <array c:type="const GESSourceTrackMapEntry*">
+              <type name="SourceTrackMapEntry" c:type="GESSourceTrackMapEntry"/>
+            </array>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="contains" c:identifier="ges_source_track_map_contains" version="1.30">
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">whether @source is routed by @self.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMap</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </instance-parameter>
+          <parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESUriSourceAsset</doc>
+            <type name="UriSourceAsset" c:type="GESUriSourceAsset*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_size" c:identifier="ges_source_track_map_get_size" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Get the number of sources routed by @self.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">the number of mapped sources.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMap</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_sources" c:identifier="ges_source_track_map_get_sources" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Get the sources routed by @self, in the order they were added.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">the list of mapped
+#GESUriSourceAsset-s. Free with g_list_free_full (list, gst_object_unref).</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="UriSourceAsset"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMap</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_tracks" c:identifier="ges_source_track_map_get_tracks" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Get the #GESTrack-s @source is routed to.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">the list of #GESTrack-s
+@source is routed to, or %NULL if @source is unplaced or not in @self. Free
+with g_list_free_full (list, gst_object_unref).</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="Track"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMap</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </instance-parameter>
+          <parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESUriSourceAsset</doc>
+            <type name="UriSourceAsset" c:type="GESUriSourceAsset*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ref" c:identifier="ges_source_track_map_ref" version="1.30">
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">@self</doc>
+          <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMap</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="unref" c:identifier="ges_source_track_map_unref" version="1.30">
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMap</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder" opaque="1" version="1.30" glib:type-name="GESSourceTrackMapBuilder" glib:get-type="ges_source_track_map_builder_get_type" c:symbol-prefix="source_track_map_builder">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h">An incremental builder for an immutable #GESSourceTrackMap. Create it with
+ges_source_track_map_builder_new(), add routings with
+ges_source_track_map_builder_add(), then finish with
+ges_source_track_map_builder_build(), which consumes the builder and
+returns the immutable map.</doc>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-types.h"/>
+      <constructor name="new" c:identifier="ges_source_track_map_builder_new" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Creates a new #GESSourceTrackMapBuilder. Add routings with
+ges_source_track_map_builder_add(), then finish with
+ges_source_track_map_builder_build().</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a new #GESSourceTrackMapBuilder.</doc>
+          <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+        </return-value>
+      </constructor>
+      <method name="add" c:identifier="ges_source_track_map_builder_add" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Routes @source to @track. Called more than once with the same @source and
+different tracks, @source is placed into each of them. Returns @builder
+so calls can be chained.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">@builder.</doc>
+          <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMapBuilder</doc>
+            <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+          </instance-parameter>
+          <parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESUriSourceAsset of the clip's URI</doc>
+            <type name="UriSourceAsset" c:type="GESUriSourceAsset*"/>
+          </parameter>
+          <parameter name="track" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESTrack @source should be
+  placed into, or %NULL to select @source without placing it (unplaced)</doc>
+            <type name="Track" c:type="GESTrack*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="build" c:identifier="ges_source_track_map_builder_build" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Finishes the builder, returning the immutable #GESSourceTrackMap and freeing
+@builder (it must not be used afterwards).</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a new #GESSourceTrackMap.</doc>
+          <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMapBuilder</doc>
+            <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="copy" c:identifier="ges_source_track_map_builder_copy" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Copies @builder, producing an independent builder in the same building state.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a copy of @builder.</doc>
+          <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMapBuilder</doc>
+            <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="ges_source_track_map_builder_free" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">Frees a #GESSourceTrackMapBuilder, discarding the routings accumulated in it.
+Use ges_source_track_map_builder_build() to obtain the map instead.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.c">a #GESSourceTrackMapBuilder</doc>
+            <type name="SourceTrackMapBuilder" c:type="GESSourceTrackMapBuilder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="SourceTrackMapEntry" c:type="GESSourceTrackMapEntry" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h">A single source-to-track routing, used to build a #GESSourceTrackMap through
+ges_source_track_map_new_full().</doc>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h"/>
+      <field name="source" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h">a #GESUriSourceAsset describing one source of a URI</doc>
+        <type name="UriSourceAsset" c:type="GESUriSourceAsset*"/>
+      </field>
+      <field name="track" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-source-track-map.h">the #GESTrack the source should
+  be placed into, or %NULL to select the source without placing it (its
+  core source is created but put in no track)</doc>
+        <type name="Track" c:type="GESTrack*"/>
+      </field>
     </record>
     <function-macro name="TIMELINE_ELEMENT_DURATION" c:identifier="GES_TIMELINE_ELEMENT_DURATION" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h">The #GESTimelineElement:duration of @obj.
@@ -15681,6 +15986,22 @@ the URI points to a file of some type.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <method name="get_source_track_map" c:identifier="ges_uri_clip_get_source_track_map" glib:get-property="source-track-map" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">Get the #GESSourceTrackMap set on @self with
+ges_uri_clip_set_source_track_map().</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-uri-clip.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">the #GESSourceTrackMap of
+@self, or %NULL if it uses all the streams of the URI.</doc>
+          <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">the #GESUriClip</doc>
+            <type name="UriClip" c:type="GESUriClip*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_uri" c:identifier="ges_uri_clip_get_uri" glib:get-property="uri">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">Get the location of the resource.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-uri-clip.h"/>
@@ -15757,6 +16078,52 @@ the URI points to a file of some type.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_source_track_map" c:identifier="ges_uri_clip_set_source_track_map" glib:set-property="source-track-map" version="1.30" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">Sets which streams of the URI @self uses, and the #GESTrack each of them is
+placed into. Only the streams present in @map produce a core child; a stream
+mapped to a specific track is placed exactly there (so a URI with several
+streams of the same type can be routed to distinct tracks), while a stream
+mapped to %NULL is selected but left unplaced (its source is created but put
+in no track).
+
+The core sources are created as soon as the map is set: the streams newly
+present in @map get a fresh source, and the sources of the streams that left
+@map are removed. @self can already be in a #GESTimeline, in which case the
+sources are placed, removed or moved between tracks to match the new @map
+right away; a source re-routed to a different track keeps its identity (and
+its bound top effects) rather than being recreated.
+
+Passing %NULL only removes the stored map; it does not rebuild or re-place
+sources that a previous map already created. It is therefore meant to be set
+before the clip's core sources exist (e.g. at construction), so that they are
+then created for every stream with the default per-type selection.</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-uri-clip.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">%TRUE if the sources were successfully synchronised to @map.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">the #GESUriClip</doc>
+            <type name="UriClip" c:type="GESUriClip*"/>
+          </instance-parameter>
+          <parameter name="map" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">the #GESSourceTrackMap routing the URI's
+streams to tracks, or %NULL to use all the streams of the URI with the
+default per-type track selection. The clip takes ownership of @map, which
+is immutable, so the caller cannot change the clip's routing afterwards.</doc>
+            <type name="SourceTrackMap" c:type="GESSourceTrackMap*"/>
+          </parameter>
+          <parameter name="created" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">
+return location for the list of core sources created for the newly mapped
+streams, or %NULL to ignore it.</doc>
+            <type name="GLib.List" c:type="GList**">
+              <type name="TrackElement"/>
+            </type>
+          </parameter>
+        </parameters>
+      </method>
       <property name="is-image" writable="1" construct="1" transfer-ownership="none" setter="set_is_image" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">Whether this uri clip represents a still image or not. This must be set
 before create_track_elements is called.</doc>
@@ -15765,6 +16132,12 @@ before create_track_elements is called.</doc>
       <property name="mute" writable="1" construct="1" transfer-ownership="none" setter="set_mute" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">Whether the sound will be played or not.</doc>
         <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="source-track-map" version="1.30" writable="1" transfer-ownership="none" setter="set_source_track_map" getter="get_source_track_map">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-clip.c">The #GESSourceTrackMap routing the URI's streams to tracks, or %NULL to use
+all the streams with the default per-type selection. See
+ges_uri_clip_set_source_track_map().</doc>
+        <type name="SourceTrackMap"/>
       </property>
       <property name="supported-formats" writable="1" construct="1" transfer-ownership="none" default-value="GES_TRACK_TYPE_UNKNOWN">
         <type name="TrackType"/>
