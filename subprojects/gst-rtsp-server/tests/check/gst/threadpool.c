@@ -202,7 +202,9 @@ GST_START_TEST (test_pool_thread_copy)
   fail_unless (GST_IS_MINI_OBJECT_TYPE (thread2, GST_TYPE_RTSP_THREAD));
 
   gst_rtsp_thread_stop (thread1);
-  gst_rtsp_thread_stop (thread2);
+  /* The copy shares thread1's mainloop and only holds references, so unref it
+   * rather than stopping it (which would race on the shared context). */
+  gst_rtsp_thread_unref (thread2);
   g_object_unref (pool);
 }
 

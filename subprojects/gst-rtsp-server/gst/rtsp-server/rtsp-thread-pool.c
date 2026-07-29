@@ -73,7 +73,9 @@ _gst_rtsp_thread_free (GstRTSPThreadImpl * impl)
 {
   GST_DEBUG ("free thread %p", impl);
 
-  g_source_unref (impl->source);
+  /* impl->source is only set once the thread has been stopped */
+  if (impl->source)
+    g_source_unref (impl->source);
   g_main_loop_unref (impl->thread.loop);
   g_main_context_unref (impl->thread.context);
   g_free (impl);
