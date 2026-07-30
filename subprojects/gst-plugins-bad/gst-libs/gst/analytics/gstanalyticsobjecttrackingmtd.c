@@ -63,7 +63,7 @@ struct _GstAnalyticsTrackingMtdData
 
 
 static const GstAnalyticsMtdImpl tracking_impl = {
-  "object-tracking",
+  "tracking",
   NULL
 };
 

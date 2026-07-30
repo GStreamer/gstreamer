@@ -71,7 +71,7 @@ static void gst_analytics_group_mtd_clear (GstBuffer * buffer,
     GstAnalyticsMtd * mtd);
 
 static const GstAnalyticsMtdImpl group_impl = {
-  "grouping-mtd",
+  "group",
   gst_analytics_group_mtd_transform,
   gst_analytics_group_mtd_clear
 };

@@ -207,7 +207,7 @@ gst_analytics_keypoint_mtd_meta_transform (GstBuffer * transbuf,
 }
 
 static const GstAnalyticsMtdImpl keypoint_impl = {
-  "keypoint-mtd",
+  "keypoint",
   gst_analytics_keypoint_mtd_meta_transform,
   gst_analytics_keypoint_mtd_clear
 };
