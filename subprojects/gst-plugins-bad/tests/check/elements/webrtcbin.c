@@ -6656,6 +6656,7 @@ _pad_added_src_check_msid (struct test_webrtc *t, GstElement * element,
     GstPad * pad, gpointer user_data)
 {
   const char *expected_msid = user_data;
+  GstHarness *h;
   char *msid;
 
   if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)
@@ -6664,6 +6665,13 @@ _pad_added_src_check_msid (struct test_webrtc *t, GstElement * element,
   g_object_get (pad, "msid", &msid, NULL);
   fail_unless_equals_string (msid, expected_msid);
   g_clear_pointer (&msid, g_free);
+
+  /* Link the exposed pad to a fakesink so it doesn't return
+   * GST_FLOW_NOT_LINKED once RTP flows, which would make nicesrc post a
+   * not-linked stream error. */
+  h = gst_harness_new_with_element (element, NULL, GST_OBJECT_NAME (pad));
+  gst_harness_add_sink_parse (h, "fakesink async=false sync=false");
+  t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
 }
