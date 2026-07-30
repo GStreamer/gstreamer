@@ -477,11 +477,6 @@ gst_analytics_relation_meta_transform (GstBuffer * transbuf,
   guint *free_match = NULL;
   guint *match = NULL;
 
-  if (!GST_META_TRANSFORM_IS_COPY (type) &&
-      !GST_VIDEO_META_TRANSFORM_IS_SCALE (type) &&
-      !GST_VIDEO_META_TRANSFORM_IS_MATRIX (type))
-    return FALSE;
-
   if (dst_rmeta == NULL) {
     GstAnalyticsRelationMetaInitParams init_params = {
       src_rmeta->rel_order, src_rmeta->max_size
