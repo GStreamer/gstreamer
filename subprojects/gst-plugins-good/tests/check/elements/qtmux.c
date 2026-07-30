@@ -1847,6 +1847,19 @@ GST_START_TEST (test_caps_renego)
   fail_unless (buf != NULL);
   gst_buffer_unref (buf);
 
+  /* Drain to EOS before teardown so releasing the request pad can't race the
+   * still-running aggregate() task. */
+  for (;;) {
+    GstEvent *event = gst_harness_pull_event (h);
+    GstEventType event_type;
+
+    fail_unless (event != NULL);
+    event_type = GST_EVENT_TYPE (event);
+    gst_event_unref (event);
+    if (event_type == GST_EVENT_EOS)
+      break;
+  }
+
   gst_harness_teardown (h);
   gst_object_unref (pad);
 }
