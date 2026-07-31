@@ -78,6 +78,7 @@ struct _GstVulkanOperationPrivate
   {
     GArray *wait_semaphores;
     GArray *signal_semaphores;
+    GPtrArray *semaphores;
 
     /* if sync2 isn't supported but timeline is */
     GArray *wait_dst_stage_mask;
@@ -229,6 +230,7 @@ gst_vulkan_operation_finalize (GObject * object)
 
   g_clear_pointer (&priv->deps.signal_semaphores, g_array_unref);
   g_clear_pointer (&priv->deps.wait_semaphores, g_array_unref);
+  g_clear_pointer (&priv->deps.semaphores, g_ptr_array_unref);
 
   g_clear_pointer (&priv->deps.wait_dst_stage_mask, g_array_unref);
   g_clear_pointer (&priv->deps.wait_semaphore_values, g_array_unref);
@@ -253,6 +255,9 @@ gst_vulkan_operation_init (GstVulkanOperation * self)
   GstVulkanOperationPrivate *priv = GET_PRIV (self);
 
   priv->trash_list = gst_vulkan_trash_fence_list_new ();
+
+  priv->deps.semaphores =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_vulkan_handle_unref);
 }
 
 static void
@@ -271,6 +276,22 @@ gst_vulkan_operation_class_init (GstVulkanOperationClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, g_properties);
+}
+
+/**
+ * gst_vulkan_operation_get_command_pool:
+ * @self: a #GstVulkanOperation
+ *
+ * Returns: (transfer none): the #GstVulkanCommandPool @self was created with
+ *
+ * Since: 1.30
+ */
+GstVulkanCommandPool *
+gst_vulkan_operation_get_command_pool (GstVulkanOperation * self)
+{
+  GstVulkanOperationPrivate *priv = GET_PRIV (self);
+
+  return priv->cmd_pool;
 }
 
 /**
@@ -633,6 +654,15 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
           GST_MINI_OBJECT_CAST (self->cmd_buf)));
   self->cmd_buf = NULL;
 
+  for (gsize i = 0; i < priv->deps.semaphores->len; i++) {
+    GstVulkanHandle *semaphore = g_ptr_array_index (priv->deps.semaphores, i);
+
+    gst_vulkan_trash_list_add (priv->trash_list,
+        gst_vulkan_trash_list_acquire (priv->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
+            GST_MINI_OBJECT_CAST (gst_vulkan_handle_ref (semaphore))));
+  }
+
   priv->op_submitted = TRUE;
   gst_mini_object_take ((GstMiniObject **) & priv->last_fence,
       (GstMiniObject *) fence);
@@ -911,6 +941,103 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
 }
 
 /**
+ * gst_vulkan_operation_add_wait_semaphore:
+ * @self: a #GstVulkanOperation
+ * @semaphore: (transfer full): a semaphore
+ * @stage: source pipeline stage (VkPipelineStageFlags or VkPipelinStageFlags2)
+ *
+ * Adds @semaphore to the list of semaphores waited on in vkQueueSubmit/2.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_operation_add_wait_semaphore (GstVulkanOperation * self,
+    GstVulkanHandle * semaphore, guint64 stage)
+{
+  GstVulkanOperationPrivate *priv;
+
+  g_return_if_fail (GST_IS_VULKAN_OPERATION (self));
+  g_return_if_fail (semaphore->type == GST_VULKAN_HANDLE_TYPE_SEMAPHORE);
+
+  GST_OBJECT_LOCK (self);
+
+  priv = GET_PRIV (self);
+
+#if defined(VK_KHR_timeline_semaphore)
+#if defined(VK_KHR_synchronization2)
+  if (priv->has_sync2 && priv->has_timeline) {
+    g_array_append_vals (priv->deps.wait_semaphores, &(VkSemaphoreSubmitInfoKHR) {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,.semaphore =
+          semaphore->handle,.stageMask = stage,}
+        , 1);
+  } else
+#endif /* synchronization2 */
+  if (priv->has_timeline && stage <= G_MAXUINT32) {
+    // value is required to be present but ignored for non-timeline semaphores
+    guint64 value = 0;
+    g_array_append_val (priv->deps.wait_semaphores, semaphore->handle);
+    g_array_append_val (priv->deps.wait_semaphore_values, value);
+  } else
+#endif /* timeline semaphore */
+  {
+    g_array_append_val (priv->deps.wait_semaphores, semaphore->handle);
+  }
+
+  g_ptr_array_add (priv->deps.semaphores, semaphore);
+
+  GST_OBJECT_UNLOCK (self);
+}
+
+/**
+ * gst_vulkan_operation_add_signal_semaphore:
+ * @self: a #GstVulkanOperation
+ * @semaphore: (transfer full): a semaphore
+ * @stage: destination pipeline stage (VkPipelineStageFlags or VkPipelinStageFlags2)
+ *
+ * Adds @semaphore to the list of semaphores signalled by vkQueueSubmit/2.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_operation_add_signal_semaphore (GstVulkanOperation * self,
+    GstVulkanHandle * semaphore, guint64 stage)
+{
+  GstVulkanOperationPrivate *priv;
+
+  g_return_if_fail (GST_IS_VULKAN_OPERATION (self));
+  g_return_if_fail (semaphore->type == GST_VULKAN_HANDLE_TYPE_SEMAPHORE);
+
+  priv = GET_PRIV (self);
+
+  GST_OBJECT_LOCK (self);
+
+#if defined(VK_KHR_timeline_semaphore)
+#if defined(VK_KHR_synchronization2)
+  if (priv->has_sync2 && priv->has_timeline) {
+    g_array_append_vals (priv->deps.signal_semaphores,
+        &(VkSemaphoreSubmitInfoKHR) {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO_KHR,.semaphore =
+          semaphore->handle,.stageMask = stage,}
+        , 1);
+  } else
+#endif /* synchronization2 */
+  if (priv->has_timeline && stage <= G_MAXUINT32) {
+    // value is required to be present but ignored for non-timeline semaphores
+    guint64 value = 0;
+    g_array_append_val (priv->deps.signal_semaphores, semaphore->handle);
+    g_array_append_val (priv->deps.signal_semaphore_values, value);
+  } else
+#endif /* timeline semaphore */
+  {
+    g_array_append_val (priv->deps.signal_semaphores, semaphore->handle);
+  }
+
+  g_ptr_array_add (priv->deps.semaphores, semaphore);
+
+  GST_OBJECT_UNLOCK (self);
+}
+
+/**
  * gst_vulkan_operation_discard_dependencies:
  * @self: a #GstVulkanOperation
  *
@@ -931,6 +1058,7 @@ gst_vulkan_operation_discard_dependencies (GstVulkanOperation * self)
 
   g_array_set_size (priv->deps.signal_semaphores, 0);
   g_array_set_size (priv->deps.wait_semaphores, 0);
+  g_ptr_array_set_size (priv->deps.semaphores, 0);
 
   if (priv->deps.wait_dst_stage_mask)
     g_array_set_size (priv->deps.wait_dst_stage_mask, 0);

@@ -95,6 +95,8 @@ gboolean                gst_vulkan_operation_end                (GstVulkanOperat
 GST_VULKAN_API
 void                    gst_vulkan_operation_reset              (GstVulkanOperation * self);
 GST_VULKAN_API
+GstVulkanCommandPool *  gst_vulkan_operation_get_command_pool   (GstVulkanOperation * self);
+GST_VULKAN_API
 GstVulkanFence *        gst_vulkan_operation_get_last_fence     (GstVulkanOperation * self);
 GST_VULKAN_API
 GstVulkanTrashList *    gst_vulkan_operation_get_trash_list     (GstVulkanOperation * self);
@@ -108,6 +110,14 @@ gboolean                gst_vulkan_operation_add_frame_barrier  (GstVulkanOperat
                                                                  guint64 new_access,
                                                                  VkImageLayout new_layout,
                                                                  GstVulkanQueue * new_queue);
+GST_VULKAN_API
+void                    gst_vulkan_operation_add_wait_semaphore (GstVulkanOperation * self,
+                                                                 GstVulkanHandle * semaphore,
+                                                                 guint64 stage);
+GST_VULKAN_API
+void                    gst_vulkan_operation_add_signal_semaphore (GstVulkanOperation * self,
+                                                                 GstVulkanHandle * semaphore,
+                                                                 guint64 stage);
 GST_VULKAN_API
 void                    gst_vulkan_operation_update_frame       (GstVulkanOperation * self,
                                                                  GstBuffer * frame,
