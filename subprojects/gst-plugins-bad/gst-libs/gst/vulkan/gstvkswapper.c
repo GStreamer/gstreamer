@@ -300,10 +300,12 @@ gboolean
 gst_vulkan_swapper_choose_queue (GstVulkanSwapper * swapper,
     GstVulkanQueue * available_queue, GError ** error)
 {
+  GstVulkanQueue *queue = NULL;
+
   if (!_vulkan_swapper_ensure_surface (swapper, error))
     return FALSE;
 
-  if (swapper->queue)
+  if (swapper->exec)
     return TRUE;
 
   if (available_queue) {
@@ -316,10 +318,10 @@ gst_vulkan_swapper_choose_queue (GstVulkanSwapper * swapper,
         gst_vulkan_window_get_presentation_support (swapper->window,
         swapper->device, available_queue->index);
     if (supports_present && flags & VK_QUEUE_GRAPHICS_BIT)
-      swapper->queue = gst_object_ref (available_queue);
+      queue = gst_object_ref (available_queue);
   }
 
-  if (!swapper->queue) {
+  if (!queue) {
     struct choose_data data;
 
     data.swapper = swapper;
@@ -341,12 +343,22 @@ gst_vulkan_swapper_choose_queue (GstVulkanSwapper * swapper,
       return FALSE;
     }
 
-    swapper->queue = gst_object_ref (data.present_queue);
+    queue = gst_object_ref (data.present_queue);
     if (data.present_queue)
       gst_object_unref (data.present_queue);
     if (data.graphics_queue)
       gst_object_unref (data.graphics_queue);
   }
+
+  GstVulkanCommandPool *cmd_pool;
+  if (!(cmd_pool = gst_vulkan_queue_create_command_pool (queue, error))) {
+    gst_clear_object (&queue);
+    return FALSE;
+  }
+  gst_clear_object (&queue);
+
+  swapper->exec = gst_vulkan_operation_new (cmd_pool);
+  gst_clear_object (&cmd_pool);
 
   return TRUE;
 }
@@ -415,10 +427,6 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
   gpu = gst_vulkan_device_get_physical_device (swapper->device);
 
   if (!gst_vulkan_swapper_choose_queue (swapper, NULL, error))
-    return FALSE;
-
-  if (!(swapper->cmd_pool =
-          gst_vulkan_queue_create_command_pool (swapper->queue, error)))
     return FALSE;
 
   err =
@@ -572,13 +580,7 @@ gst_vulkan_swapper_finalize (GObject * object)
 
   g_mutex_clear (&priv->render_lock);
 
-  if (swapper->cmd_pool)
-    gst_object_unref (swapper->cmd_pool);
-  swapper->cmd_pool = NULL;
-
-  if (swapper->queue)
-    gst_object_unref (swapper->queue);
-  swapper->queue = NULL;
+  gst_clear_object (&swapper->exec);
 
   if (swapper->device)
     gst_object_unref (swapper->device);
@@ -919,7 +921,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     priv->swap_chain_images[i]->barrier.parent.pipeline_stages =
         VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
     priv->swap_chain_images[i]->barrier.parent.access_flags =
-        VK_ACCESS_MEMORY_READ_BIT;
+        VK_ACCESS_TRANSFER_READ_BIT;
     priv->swap_chain_images[i]->barrier.image_layout =
         VK_IMAGE_LAYOUT_UNDEFINED;
   }
@@ -934,7 +936,7 @@ _swapchain_resize (GstVulkanSwapper * swapper, GError ** error)
   GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
   int i;
 
-  if (!swapper->queue) {
+  if (!swapper->exec) {
     if (!_vulkan_swapper_retrieve_surface_properties (swapper, error)) {
       return FALSE;
     }
@@ -1039,65 +1041,54 @@ gst_vulkan_swapper_set_caps (GstVulkanSwapper * swapper, GstCaps * caps,
   return _swapchain_resize (swapper, error);
 }
 
-static gboolean
-_build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
-    GstBuffer * buffer, GstVulkanCommandBuffer ** cmd_ret, GError ** error)
+static GstVulkanHandle *
+new_semaphore (GstVulkanDevice * device, GError ** error)
+{
+  /* *INDENT-OFF* */
+  VkSemaphoreCreateInfo semaphore_info = (VkSemaphoreCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+  };
+  /* *INDENT-ON* */
+  VkSemaphore semaphore = { 0, };
+  VkResult err = vkCreateSemaphore (device->device, &semaphore_info,
+      NULL, &semaphore);
+  if (gst_vulkan_error_to_g_error (err, error, "vkCreateSemaphore") < 0)
+    return NULL;
+
+  return gst_vulkan_handle_new_wrapped (device,
+      GST_VULKAN_HANDLE_TYPE_SEMAPHORE, semaphore,
+      gst_vulkan_handle_free_semaphore, NULL);
+}
+
+static GstVulkanHandle *
+_render_buffer_for_present (GstVulkanSwapper * swapper, guint32 swap_idx,
+    GstBuffer * buffer, GstVulkanHandle * acquire_semaphore, GError ** error)
 {
   GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
+  GstVulkanBarrierState *barriers;
   GstMemory *in_mem;
   GstVulkanImageMemory *swap_img;
   GstVulkanCommandBuffer *cmd_buf;
+  GstVulkanHandle *present_semaphore = NULL;
   GstVideoRectangle src;
-  VkResult err;
 
   g_return_val_if_fail (swap_idx < priv->n_swap_chain_images, FALSE);
   swap_img = priv->swap_chain_images[swap_idx];
 
-  if (!(cmd_buf = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
-    return FALSE;
+again:
+  if (!gst_vulkan_operation_begin (swapper->exec, error))
+    return NULL;
 
-  {
-    /* *INDENT-OFF* */
-    VkCommandBufferBeginInfo cmd_buf_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL
-    };
-    /* *INDENT-ON* */
+  cmd_buf = swapper->exec->cmd_buf;
+  barriers = gst_vulkan_operation_get_barriers (swapper->exec);
 
-    gst_vulkan_command_buffer_lock (cmd_buf);
-    err = vkBeginCommandBuffer (cmd_buf->cmd, &cmd_buf_info);
-    if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
-      goto unlock_error;
-  }
+  gst_vulkan_barrier_state_add_image_barrier (barriers, swap_img,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, NULL);
 
-  {
-    /* *INDENT-OFF* */
-    VkImageMemoryBarrier image_memory_barrier = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = swap_img->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-        .oldLayout = swap_img->barrier.image_layout,
-        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = swap_img->image,
-        .subresourceRange = swap_img->barrier.subresource_range
-    };
-    /* *INDENT-ON* */
-
-    vkCmdPipelineBarrier (cmd_buf->cmd,
-        swap_img->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-        &image_memory_barrier);
-
-    swap_img->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    swap_img->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
-    swap_img->barrier.image_layout = image_memory_barrier.newLayout;
-  }
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
 
   src.x = src.y = 0;
   src.w = priv->dar_width;
@@ -1146,19 +1137,6 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
             {priv->display_rect.x + priv->display_rect.w, priv->display_rect.y + priv->display_rect.h, 1},
         },
     };
-    VkImageMemoryBarrier image_memory_barrier = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = img_mem->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
-        .oldLayout = img_mem->barrier.image_layout,
-        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = img_mem->image,
-        .subresourceRange = img_mem->barrier.subresource_range
-    };
     VkClearColorValue clear = {{0.0, 0.0, 0.0, 1.0}};
     VkImageSubresourceRange clear_range = {
         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -1169,85 +1147,53 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd_buf->cmd, img_mem->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-        &image_memory_barrier);
+    gst_vulkan_barrier_state_add_image_barrier (barriers, img_mem,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        NULL);
 
-    img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
-    img_mem->barrier.image_layout = image_memory_barrier.newLayout;
+    gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
 
     vkCmdClearColorImage (cmd_buf->cmd, swap_img->image,
-        swap_img->barrier.image_layout, &clear, 1, &clear_range);
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear, 1, &clear_range);
 
-    /* *INDENT-OFF* */
-    image_memory_barrier = (VkImageMemoryBarrier) {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = swap_img->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-        .oldLayout = swap_img->barrier.image_layout,
-        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = swap_img->image,
-        .subresourceRange = swap_img->barrier.subresource_range
-    };
-    /* *INDENT-ON* */
+    gst_vulkan_barrier_state_add_image_barrier (barriers, swap_img,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        NULL);
+    gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
 
-    vkCmdPipelineBarrier (cmd_buf->cmd,
-        swap_img->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-        &image_memory_barrier);
-
-    swap_img->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    swap_img->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
-    swap_img->barrier.image_layout = image_memory_barrier.newLayout;
-
-    vkCmdBlitImage (cmd_buf->cmd, img_mem->image, img_mem->barrier.image_layout,
-        swap_img->image, swap_img->barrier.image_layout, 1, &blit,
-        VK_FILTER_LINEAR);
-  }
-  {
-    /* *INDENT-OFF* */
-    VkImageMemoryBarrier image_memory_barrier = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = swap_img->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-        .oldLayout = swap_img->barrier.image_layout,
-        .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = swap_img->image,
-        .subresourceRange = swap_img->barrier.subresource_range
-    };
-    /* *INDENT-ON* */
-
-    vkCmdPipelineBarrier (cmd_buf->cmd,
-        swap_img->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-        &image_memory_barrier);
-
-    swap_img->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    swap_img->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
-    swap_img->barrier.image_layout = image_memory_barrier.newLayout;
+    vkCmdBlitImage (cmd_buf->cmd, img_mem->image,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, swap_img->image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
   }
 
-  err = vkEndCommandBuffer (cmd_buf->cmd);
-  if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0)
-    goto unlock_error;
-  gst_vulkan_command_buffer_unlock (cmd_buf);
+  gst_vulkan_barrier_state_add_image_barrier (barriers, swap_img,
+      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0,
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, NULL);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
 
-  *cmd_ret = cmd_buf;
+  if (!(present_semaphore = new_semaphore (swapper->device, error)))
+    return NULL;
 
-  return TRUE;
+  gst_vulkan_operation_add_wait_semaphore (swapper->exec,
+      gst_vulkan_handle_ref (acquire_semaphore),
+      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+  gst_vulkan_operation_add_signal_semaphore (swapper->exec,
+      gst_vulkan_handle_ref (present_semaphore),
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
-unlock_error:
-  gst_vulkan_command_buffer_unlock (cmd_buf);
-  return FALSE;
+  if (!gst_vulkan_operation_end (swapper->exec, error)) {
+    if (g_error_matches (*error, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_DEBUG_OBJECT (swapper, "Detected a synchronisation hazard, retrying");
+      g_clear_error (error);
+      goto again;
+    }
+    gst_clear_vulkan_handle (&present_semaphore);
+    return NULL;
+  }
+
+  return present_semaphore;
 }
 
 static gboolean
@@ -1255,9 +1201,7 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
     GstBuffer * buffer, GError ** error)
 {
   GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
-  VkSemaphore acquire_semaphore = { 0, };
-  VkSemaphore present_semaphore = { 0, };
-  VkSemaphoreCreateInfo semaphore_info = { 0, };
+  GstVulkanHandle *acquire_semaphore = NULL, *present_semaphore = NULL;
   GstVulkanFence *fence = NULL;
   VkPresentInfoKHR present;
   GstVulkanCommandBuffer *cmd_buf = NULL;
@@ -1280,29 +1224,20 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
 
   gst_buffer_replace (&priv->current_buffer, buffer);
 
-  /* *INDENT-OFF* */
-  semaphore_info = (VkSemaphoreCreateInfo) {
-      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
-  };
-  /* *INDENT-ON* */
-
 reacquire:
-  err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
-      NULL, &acquire_semaphore);
-  if (gst_vulkan_error_to_g_error (err, error, "vkCreateSemaphore") < 0)
+  if (!(acquire_semaphore = new_semaphore (swapper->device, error)))
     goto error;
 
   err =
       priv->AcquireNextImageKHR (swapper->device->device,
-      priv->swap_chain, -1, acquire_semaphore, VK_NULL_HANDLE, &swap_idx);
+      priv->swap_chain, -1, acquire_semaphore->handle, VK_NULL_HANDLE,
+      &swap_idx);
   /* TODO: Deal with the VK_SUBOPTIMAL_KHR and VK_ERROR_OUT_OF_DATE_KHR */
   if (err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame acquired");
 
-    vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
-    acquire_semaphore = VK_NULL_HANDLE;
+    gst_clear_vulkan_handle (&acquire_semaphore);
+
     if (!_swapchain_resize (swapper, error))
       goto error;
     goto reacquire;
@@ -1311,63 +1246,18 @@ reacquire:
     goto error;
   }
 
-  if (!_build_render_buffer_cmd (swapper, swap_idx, buffer, &cmd_buf, error))
+  if (!(present_semaphore =
+          _render_buffer_for_present (swapper, swap_idx, buffer,
+              acquire_semaphore, error)))
     goto error;
-
-  err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
-      NULL, &present_semaphore);
-  if (gst_vulkan_error_to_g_error (err, error, "vkCreateSemaphore") < 0)
-    goto error;
-
-  {
-    VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    VkSubmitInfo submit_info = { 0, };
-
-    /* *INDENT-OFF* */
-    submit_info = (VkSubmitInfo) {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = NULL,
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &acquire_semaphore,
-        .pWaitDstStageMask = &stages,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd_buf->cmd,
-        .signalSemaphoreCount = 1,
-        .pSignalSemaphores = &present_semaphore,
-    };
-    /* *INDENT-ON* */
-
-    fence = gst_vulkan_device_create_fence (swapper->device, error);
-    if (!fence)
-      goto error;
-
-    gst_vulkan_queue_submit_lock (swapper->queue);
-    err =
-        vkQueueSubmit (swapper->queue->queue, 1, &submit_info,
-        GST_VULKAN_FENCE_FENCE (fence));
-    gst_vulkan_queue_submit_unlock (swapper->queue);
-    if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
-      goto error;
-
-    gst_vulkan_trash_list_add (priv->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
-            GST_MINI_OBJECT_CAST (cmd_buf)));
-    gst_vulkan_trash_list_add (priv->trash_list,
-        gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
-    acquire_semaphore = VK_NULL_HANDLE;
-
-    gst_vulkan_command_buffer_unlock (cmd_buf);
-    cmd_buf = NULL;
-    gst_vulkan_fence_unref (fence);
-    fence = NULL;
-  }
+  gst_clear_vulkan_handle (&acquire_semaphore);
 
   /* *INDENT-OFF* */
   present = (VkPresentInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
       .pNext = NULL,
       .waitSemaphoreCount = 1,
-      .pWaitSemaphores = &present_semaphore,
+      .pWaitSemaphores = &present_semaphore->handle,
       .swapchainCount = 1,
       .pSwapchains = &priv->swap_chain,
       .pImageIndices = &swap_idx,
@@ -1375,7 +1265,9 @@ reacquire:
   };
   /* *INDENT-ON* */
 
-  err = priv->QueuePresentKHR (swapper->queue->queue, &present);
+  GstVulkanCommandPool *cmd_pool =
+      gst_vulkan_operation_get_command_pool (swapper->exec);
+  err = priv->QueuePresentKHR (cmd_pool->queue->queue, &present);
 
   if (present_err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame submitted");
@@ -1401,16 +1293,17 @@ reacquire:
     if (!fence)
       goto error;
 
-    gst_vulkan_queue_submit_lock (swapper->queue);
+    gst_vulkan_queue_submit_lock (cmd_pool->queue);
     err =
-        vkQueueSubmit (swapper->queue->queue, 1, &submit_info,
+        vkQueueSubmit (cmd_pool->queue->queue, 1, &submit_info,
         GST_VULKAN_FENCE_FENCE (fence));
-    gst_vulkan_queue_submit_unlock (swapper->queue);
+    gst_vulkan_queue_submit_unlock (cmd_pool->queue);
     if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
       goto error;
 
     gst_vulkan_trash_list_add (priv->trash_list,
-        gst_vulkan_trash_new_free_semaphore (fence, present_semaphore));
+        gst_vulkan_trash_new_mini_object_unref (fence,
+            (GstMiniObject *) present_semaphore));
     gst_vulkan_trash_list_add (priv->trash_list,
         gst_vulkan_trash_new_mini_object_unref (fence,
             (GstMiniObject *) gst_buffer_ref (buffer)));
@@ -1422,10 +1315,8 @@ reacquire:
 
 error:
   {
-    if (acquire_semaphore)
-      vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
-    if (present_semaphore)
-      vkDestroySemaphore (swapper->device->device, present_semaphore, NULL);
+    gst_clear_vulkan_handle (&acquire_semaphore);
+    gst_clear_vulkan_handle (&present_semaphore);
     if (cmd_buf) {
       gst_vulkan_command_buffer_unlock (cmd_buf);
       gst_vulkan_command_buffer_unref (cmd_buf);

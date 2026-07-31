@@ -52,10 +52,16 @@ typedef struct _GstVulkanSwapperPrivate GstVulkanSwapperPrivate;
  * @parent: parent #GstObject
  * @device: the #GstVulkanDevice
  * @window: the #GstVulkanWindow to display into
- * @queue: the #GstVulkanQueue to display with
- * @cmd_pool: the #GstVulkanCommandPool to allocate command buffers from
+ * @exec: the #GstVulkanOperation in use
  *
  * Since: 1.18
+ */
+/**
+ * GstVulkanSwapper.exec:
+ *
+ * the #GstVulkanOperation in use
+ *
+ * Since: 1.30
  */
 struct _GstVulkanSwapper
 {
@@ -63,8 +69,7 @@ struct _GstVulkanSwapper
 
   GstVulkanDevice *device;
   GstVulkanWindow *window;
-  GstVulkanQueue *queue;
-  GstVulkanCommandPool *cmd_pool;
+  GstVulkanOperation *exec;
 
   /* <private> */
   gpointer _reserved        [GST_PADDING];
