@@ -186,6 +186,35 @@ gst_vulkan_operation_constructed (GObject * object)
 
   priv->barriers = gst_vulkan_barrier_state_new (device);
 
+#if defined(VK_KHR_timeline_semaphore)
+#if defined(VK_KHR_synchronization2)
+  if (priv->has_sync2 && priv->has_timeline) {
+    priv->deps.signal_semaphores =
+        g_array_new (FALSE, FALSE, sizeof (VkSemaphoreSubmitInfoKHR));
+    priv->deps.wait_semaphores =
+        g_array_new (FALSE, FALSE, sizeof (VkSemaphoreSubmitInfoKHR));
+  } else
+#endif /* synchronization2 */
+  if (priv->has_timeline) {
+    priv->deps.signal_semaphores =
+        g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
+    priv->deps.wait_semaphores =
+        g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
+    priv->deps.wait_dst_stage_mask =
+        g_array_new (FALSE, FALSE, sizeof (VkPipelineStageFlags));
+    priv->deps.wait_semaphore_values =
+        g_array_new (FALSE, FALSE, sizeof (guint64));
+    priv->deps.signal_semaphore_values =
+        g_array_new (FALSE, FALSE, sizeof (guint64));
+  } else
+#endif
+  {
+    priv->deps.signal_semaphores =
+        g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
+    priv->deps.wait_semaphores =
+        g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
+  }
+
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
@@ -197,6 +226,13 @@ gst_vulkan_operation_finalize (GObject * object)
   gst_vulkan_operation_reset (GST_VULKAN_OPERATION (object));
 
   g_clear_pointer (&priv->query_data, g_free);
+
+  g_clear_pointer (&priv->deps.signal_semaphores, g_array_unref);
+  g_clear_pointer (&priv->deps.wait_semaphores, g_array_unref);
+
+  g_clear_pointer (&priv->deps.wait_dst_stage_mask, g_array_unref);
+  g_clear_pointer (&priv->deps.wait_semaphore_values, g_array_unref);
+  g_clear_pointer (&priv->deps.signal_semaphore_values, g_array_unref);
 
   if (priv->query_pool) {
     vkDestroyQueryPool (priv->cmd_pool->queue->device->device, priv->query_pool,
@@ -750,16 +786,6 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
 #if defined(VK_KHR_timeline_semaphore)
 #if defined(VK_KHR_synchronization2)
   if (priv->has_sync2 && priv->has_timeline) {
-    if (!priv->deps.signal_semaphores) {
-      priv->deps.signal_semaphores =
-          g_array_new (FALSE, FALSE, sizeof (VkSemaphoreSubmitInfoKHR));
-    }
-
-    if (!priv->deps.wait_semaphores) {
-      priv->deps.wait_semaphores =
-          g_array_new (FALSE, FALSE, sizeof (VkSemaphoreSubmitInfoKHR));
-    }
-
     guint n_mems = gst_buffer_n_memory (frame);
     guint64 *semaphore_values = g_alloca0 (sizeof (guint64) * n_mems);
     for (i = 0; i < n_mems; i++) {
@@ -816,30 +842,6 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
   }
 #endif /* synchronization2 */
   if (priv->has_timeline && wait_stage <= G_MAXUINT32) {
-    if (!priv->deps.signal_semaphores) {
-      priv->deps.signal_semaphores =
-          g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
-    }
-
-    if (!priv->deps.wait_semaphores) {
-      priv->deps.wait_semaphores =
-          g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
-    }
-
-    if (!priv->deps.wait_dst_stage_mask) {
-      priv->deps.wait_dst_stage_mask =
-          g_array_new (FALSE, FALSE, sizeof (VkPipelineStageFlags));
-    }
-
-    if (!priv->deps.wait_semaphore_values) {
-      priv->deps.wait_semaphore_values =
-          g_array_new (FALSE, FALSE, sizeof (guint64));
-    }
-    if (!priv->deps.signal_semaphore_values) {
-      priv->deps.signal_semaphore_values =
-          g_array_new (FALSE, FALSE, sizeof (guint64));
-    }
-
     guint n_mems = gst_buffer_n_memory (frame);
     guint64 *semaphore_values = g_alloca0 (sizeof (guint64) * n_mems);
     for (i = 0; i < n_mems; i++) {
@@ -927,12 +929,15 @@ gst_vulkan_operation_discard_dependencies (GstVulkanOperation * self)
   GST_OBJECT_LOCK (self);
   gst_vulkan_barrier_state_reset (priv->barriers);
 
-  g_clear_pointer (&priv->deps.signal_semaphores, g_array_unref);
-  g_clear_pointer (&priv->deps.wait_semaphores, g_array_unref);
+  g_array_set_size (priv->deps.signal_semaphores, 0);
+  g_array_set_size (priv->deps.wait_semaphores, 0);
 
-  g_clear_pointer (&priv->deps.wait_dst_stage_mask, g_array_unref);
-  g_clear_pointer (&priv->deps.wait_semaphore_values, g_array_unref);
-  g_clear_pointer (&priv->deps.signal_semaphore_values, g_array_unref);
+  if (priv->deps.wait_dst_stage_mask)
+    g_array_set_size (priv->deps.wait_dst_stage_mask, 0);
+  if (priv->deps.wait_semaphore_values)
+    g_array_set_size (priv->deps.wait_semaphore_values, 0);
+  if (priv->deps.signal_semaphore_values)
+    g_array_set_size (priv->deps.signal_semaphore_values, 0);
 
   GST_OBJECT_UNLOCK (self);
 }
