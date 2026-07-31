@@ -262,7 +262,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <gst/gl/gstglcontext.h>
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gsth265parser.h>

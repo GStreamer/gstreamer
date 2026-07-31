@@ -52,7 +52,7 @@
 #include "coremediabuffer.h"
 #include "vtutil.h"
 
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_avf_asset_src_debug);
 #define GST_CAT_DEFAULT gst_avf_asset_src_debug

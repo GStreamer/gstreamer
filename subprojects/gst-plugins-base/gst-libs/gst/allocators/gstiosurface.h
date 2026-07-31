@@ -20,13 +20,8 @@
 #ifndef __GST_IOSURFACE_H__
 #define __GST_IOSURFACE_H__
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The GStreamer IOSurface library is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
 #include <gst/gst.h>
-#include <gst/iosurface/iosurface-prelude.h>
+#include <gst/allocators/allocators-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -35,7 +30,7 @@ typedef struct __IOSurface *IOSurfaceRef;
 /**
  * GstIOSurfaceMemoryQueryFunction:
  * @mem: a #GstMemory
- * @surface: (out) (transfer none): location for the #IOSurfaceRef
+ * @surface: (out) (transfer none): location for the IOSurfaceRef
  * @plane: (out): location for the IOSurface plane index represented by @mem
  *
  * Function used by memory implementations to expose IOSurface backing through
@@ -60,18 +55,18 @@ typedef gboolean (*GstIOSurfaceMemoryQueryFunction) (GstMemory * mem,
  */
 #define GST_CAPS_FEATURE_MEMORY_IOSURFACE "memory:IOSurface"
 
-GST_IOSURFACE_API
+GST_ALLOCATORS_API
 gboolean        gst_is_iosurface_memory                    (GstMemory * mem);
 
-GST_IOSURFACE_API
+GST_ALLOCATORS_API
 gboolean        gst_is_iosurface_buffer                    (GstBuffer * buffer);
 
-GST_IOSURFACE_API
+GST_ALLOCATORS_API
 gboolean        gst_iosurface_memory_peek_surface          (GstMemory * mem,
                                                             IOSurfaceRef * surface,
                                                             guint * plane);
 
-GST_IOSURFACE_API
+GST_ALLOCATORS_API
 void            gst_iosurface_memory_register_query_function
                                                            (GType allocator_type,
                                                             GstIOSurfaceMemoryQueryFunction query);

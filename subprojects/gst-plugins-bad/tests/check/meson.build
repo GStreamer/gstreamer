@@ -196,14 +196,15 @@ endif
 if host_system == 'darwin'
   videotoolbox_dep = dependency('VideoToolbox')
   avfoundation_test_dep = dependency('appleframeworks', modules : ['Foundation', 'AVFoundation'])
+  iosurface_test_dep = dependency('IOSurface')
   base_tests += [
     [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep], [], false],
-    [['pipelines/avfsources-output-paths.c'], false, [avfoundation_test_dep, gstiosurface_dep], [], false],
+    [['pipelines/avfsources-output-paths.c'], false, [avfoundation_test_dep, iosurface_test_dep, gstallocators_dep], [], false],
     [['elements/vtdec.c']],
     [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
     [['pipelines/avfassetsrc-partial.c']],
-    [['pipelines/vtdec-output-paths.c'], false, [gstiosurface_dep]],
-    [['pipelines/vtenc-iosurface-input.c'], false, [dependency('appleframeworks', modules : ['CoreFoundation', 'CoreVideo', 'IOSurface']), gstiosurface_dep]],
+    [['pipelines/vtdec-output-paths.c'], false, [iosurface_test_dep, gstallocators_dep]],
+    [['pipelines/vtenc-iosurface-input.c'], false, [dependency('appleframeworks', modules : ['CoreFoundation', 'CoreVideo', 'IOSurface']), gstallocators_dep]],
   ]
 
   if subsystem == 'macos'

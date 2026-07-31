@@ -21,7 +21,7 @@
 #define __IOSURFACE_OUTPUT_PATHS_H__
 
 #include <gst/check/gstcheck.h>
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include <gst/video/video.h>
 #include <CoreVideo/CVPixelBuffer.h>
 #include <IOSurface/IOSurfaceRef.h>

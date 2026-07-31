@@ -35,7 +35,7 @@
 
 #include <gst/video/video.h>
 #include <gst/gl/gstglcontext.h>
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include "coremediabuffer.h"
 #include "videotexturecache-gl.h"
 #include "helpers.h"

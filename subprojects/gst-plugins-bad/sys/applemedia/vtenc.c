@@ -126,7 +126,7 @@
 
 #include "vtenc.h"
 
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include <CoreVideo/CVPixelBufferIOSurface.h>
 #include <IOSurface/IOSurfaceRef.h>
 

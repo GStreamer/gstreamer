@@ -24,7 +24,7 @@
 
 #include "iosurfaceglmemory.h"
 
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_IO_SURFACE_GL_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_IO_SURFACE_GL_MEMORY

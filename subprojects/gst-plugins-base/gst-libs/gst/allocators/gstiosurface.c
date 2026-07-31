@@ -125,7 +125,7 @@ gst_is_iosurface_buffer (GstBuffer * buffer)
 /**
  * gst_iosurface_memory_peek_surface:
  * @mem: a #GstMemory
- * @surface: (out) (transfer none) (optional): the #IOSurfaceRef
+ * @surface: (out) (transfer none) (optional): the IOSurfaceRef
  * @plane: (out) (optional): the IOSurface plane index represented by @mem
  *
  * Queries whether @mem is backed by an IOSurface and, if so, returns the
@@ -133,7 +133,7 @@ gst_is_iosurface_buffer (GstBuffer * buffer)
  * @surface and @plane are only modified if this function returns %TRUE.
  *
  * The returned IOSurface is owned by @mem and is valid for as long as @mem is
- * alive. Callers must call CFRetain() if they want to keep the IOSurfaceRef
+ * alive. Callers must call CFRetain if they want to keep the IOSurfaceRef
  * beyond @mem's lifetime.
  *
  * Returns: %TRUE if @mem exposes an IOSurface.

@@ -19,7 +19,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/app/gstappsink.h>
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include <gst/video/video.h>
 #include <TargetConditionals.h>
 

@@ -177,6 +177,11 @@ gst_is_dmabuf_memory().</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="CAPS_FEATURE_MEMORY_IOSURFACE" value="memory:IOSurface" c:type="GST_CAPS_FEATURE_MEMORY_IOSURFACE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">Name of the caps feature for indicating the use of IOSurface-backed memory.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="DMABUF_ALLOCATOR" c:identifier="GST_DMABUF_ALLOCATOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.h"/>
       <parameters>
@@ -525,6 +530,32 @@ The memory is only mmapped on gst_buffer_map() request.</doc>
        the memory is freed. Since: 1.10</doc>
       </member>
     </bitfield>
+    <callback name="IOSurfaceMemoryQueryFunction" c:type="GstIOSurfaceMemoryQueryFunction" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">Function used by memory implementations to expose IOSurface backing through
+gst_iosurface_memory_peek_surface().
+
+Returning %TRUE requires setting both @surface and @plane. @surface must be
+a borrowed reference owned by @mem and valid for as long as @mem is alive.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">%TRUE if @mem exposes an IOSurface.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+        <parameter name="surface" direction="out" caller-allocates="0" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">location for the IOSurfaceRef</doc>
+          <type c:type="IOSurfaceRef*"/>
+        </parameter>
+        <parameter name="plane" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">location for the IOSurface plane index represented by @mem</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+      </parameters>
+    </callback>
     <function-macro name="IS_DMABUF_ALLOCATOR" c:identifier="GST_IS_DMABUF_ALLOCATOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.h"/>
       <parameters>
@@ -840,6 +871,64 @@ querying AHardwareBuffer-backed #GstMemory.
 The #GST_CAPS_FEATURE_MEMORY_AHARDWAREBUFFER caps feature can be used on
 `video/x-raw` caps to negotiate AHardwareBuffer-backed buffers.</doc>
     </docsection>
+    <docsection name="iosurface">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">The IOSurface library provides helpers for detecting and querying
+IOSurface-backed #GstMemory.
+
+The #GST_CAPS_FEATURE_MEMORY_IOSURFACE caps feature can be used on
+`video/x-raw` caps to negotiate IOSurface-backed buffers.</doc>
+    </docsection>
+    <function name="iosurface_memory_peek_surface" c:identifier="gst_iosurface_memory_peek_surface" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">Queries whether @mem is backed by an IOSurface and, if so, returns the
+IOSurface and plane represented by this memory.
+@surface and @plane are only modified if this function returns %TRUE.
+
+The returned IOSurface is owned by @mem and is valid for as long as @mem is
+alive. Callers must call CFRetain if they want to keep the IOSurfaceRef
+beyond @mem's lifetime.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">%TRUE if @mem exposes an IOSurface.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+        <parameter name="surface" direction="out" caller-allocates="0" transfer-ownership="none" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">the IOSurfaceRef</doc>
+          <type c:type="IOSurfaceRef*"/>
+        </parameter>
+        <parameter name="plane" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">the IOSurface plane index represented by @mem</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="iosurface_memory_register_query_function" c:identifier="gst_iosurface_memory_register_query_function" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">Registers @query as the IOSurface query function for #GstMemory objects
+allocated by @allocator_type.
+
+This function is intended for memory implementers rather than applications.
+@query must remain valid for the lifetime of the process and must only
+return borrowed IOSurface references owned by the queried memory.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="allocator_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">a #GstAllocator type</doc>
+          <type name="GType" c:type="GType"/>
+        </parameter>
+        <parameter name="query" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">function used to query
+    IOSurface backing for memory allocated by @allocator_type</doc>
+          <type name="IOSurfaceMemoryQueryFunction" c:type="GstIOSurfaceMemoryQueryFunction"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="is_ahardware_buffer_buffer" c:identifier="gst_is_ahardware_buffer_buffer" version="1.30">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstahardwarebuffer.h"/>
       <return-value transfer-ownership="none">
@@ -905,6 +994,33 @@ gst_fd_memory_get_fd().</doc>
       <parameters>
         <parameter name="mem" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">#GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="is_iosurface_buffer" c:identifier="gst_is_iosurface_buffer" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">%TRUE if @buffer is non-empty and every memory block in @buffer
+exposes an IOSurface.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="is_iosurface_memory" c:identifier="gst_is_iosurface_memory" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">%TRUE if @mem exposes an IOSurface.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">a #GstMemory</doc>
           <type name="Gst.Memory" c:type="GstMemory*"/>
         </parameter>
       </parameters>

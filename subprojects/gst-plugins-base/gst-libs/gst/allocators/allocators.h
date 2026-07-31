@@ -31,5 +31,6 @@
 #include <gst/allocators/gstshmallocator.h>
 #include <gst/allocators/gstudmabufallocator.h>
 #include <gst/allocators/gstahardwarebuffer.h>
+#include <gst/allocators/gstiosurface.h>
 
 #endif /* __GST_ALLOCATORS_H__ */

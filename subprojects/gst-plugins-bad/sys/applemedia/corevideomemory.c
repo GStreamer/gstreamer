@@ -23,7 +23,7 @@
 
 #include "corevideomemory.h"
 
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include <CoreVideo/CVPixelBufferIOSurface.h>
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_APPLE_CORE_VIDEO_MEMORY);

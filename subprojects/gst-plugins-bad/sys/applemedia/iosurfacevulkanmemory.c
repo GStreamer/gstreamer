@@ -24,7 +24,7 @@
 
 #include "iosurfacevulkanmemory.h"
 #include <vulkan/vulkan_metal.h>
-#include <gst/iosurface/gstiosurface.h>
+#include <gst/allocators/gstiosurface.h>
 #include "metal-helpers.h"
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_IO_SURFACE_VULKAN_MEMORY);
