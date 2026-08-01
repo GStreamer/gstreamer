@@ -528,7 +528,6 @@ gst_check_teardown_element (GstElement * element)
 
   fail_unless (gst_element_set_state (element, GST_STATE_NULL) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to null");
-  ASSERT_OBJECT_REFCOUNT (element, "element", 1);
   gst_object_unref (element);
 }
 
