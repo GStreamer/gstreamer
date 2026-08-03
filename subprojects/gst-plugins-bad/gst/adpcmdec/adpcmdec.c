@@ -280,7 +280,7 @@ adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, const guint8 * data,
   int i, j;
   int sample;
 
-  if ((n_samples - dec->channels) % 8 != 0) {
+  if ((n_samples - dec->channels) % (8 * dec->channels) != 0) {
     GST_WARNING_OBJECT (dec, "Input not correct size");
     return FALSE;
   }
