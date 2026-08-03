@@ -4553,6 +4553,107 @@ GST_START_TEST (test_deserialize_set)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_homogeneous_list_ok)
+{
+  GValue value = { 0 };
+  const gchar *strings[] = {
+    "{ I420, NV12, YV12 }",     /* strings */
+    "{ 1, 2, 3 }",              /* ints */
+    "{ 30/1, 60/1 }",           /* fractions */
+    "{ 1.0, 2.5 }",             /* doubles */
+    "{ I420 }",                 /* single element */
+    "(string){ I420, 1 }",      /* cast pins the type, "1" becomes a string */
+  };
+  gint expected[] = { 3, 3, 2, 2, 1, 2 };
+  const gchar *arrays[] = {
+    "< 0, [ 5, 10 ] >",         /* int scalar next to an int range */
+    "< [ 5, 10 ], 0 >",         /* order swapped */
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    gchar *str = g_strdup (strings[i]);
+    g_value_init (&value, GST_TYPE_LIST);
+    fail_unless (gst_value_deserialize (&value, str),
+        "could not deserialize homogeneous list %s (%d)", str, i);
+    fail_unless (gst_value_list_get_size (&value) == expected[i],
+        "wrong list size for %s: %d, expected %d", str,
+        gst_value_list_get_size (&value), expected[i]);
+    g_value_unset (&value);
+    g_free (str);
+  }
+
+  /* A scalar and a range of the same base type are compatible. */
+  for (i = 0; i < G_N_ELEMENTS (arrays); ++i) {
+    gchar *str = g_strdup (arrays[i]);
+    g_value_init (&value, GST_TYPE_ARRAY);
+    fail_unless (gst_value_deserialize (&value, str),
+        "could not deserialize scalar+range array %s (%d)", str, i);
+    fail_unless (gst_value_array_get_size (&value) == 2,
+        "wrong array size for %s", str);
+    g_value_unset (&value);
+    g_free (str);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_compare_list_with_fraction_range)
+{
+  GValue a = { 0 };
+  GValue b = { 0 };
+  gchar *sa = g_strdup ("(fraction){ [30/1, 60/1], 30/1 }");
+  gchar *sb = g_strdup ("(fraction){ [30/1, 60/1], 45/1 }");
+
+  g_value_init (&a, GST_TYPE_LIST);
+  g_value_init (&b, GST_TYPE_LIST);
+  fail_unless (gst_value_deserialize (&a, sa));
+  fail_unless (gst_value_deserialize (&b, sb));
+
+  /* A list may mix a fraction range with a scalar, so the compare must
+   * type-check each pair. Otherwise the range's compare function would
+   * dereference the scalar's numerator as a pointer. */
+  fail_unless (gst_value_compare (&a, &b) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&a, &a) == GST_VALUE_EQUAL);
+
+  g_value_unset (&a);
+  g_value_unset (&b);
+  g_free (sa);
+  g_free (sb);
+
+  /* Same list built through the API, i.e. reachable without any parsing. */
+  {
+    GValue c = { 0 };
+    GValue d = { 0 };
+    GValue range = { 0 };
+    GValue scalar = { 0 };
+
+    g_value_init (&range, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range_full (&range, 30, 1, 60, 1);
+    g_value_init (&scalar, GST_TYPE_FRACTION);
+
+    g_value_init (&c, GST_TYPE_LIST);
+    gst_value_set_fraction (&scalar, 30, 1);
+    gst_value_list_append_value (&c, &range);
+    gst_value_list_append_value (&c, &scalar);
+
+    g_value_init (&d, GST_TYPE_LIST);
+    gst_value_set_fraction (&scalar, 45, 1);
+    gst_value_list_append_value (&d, &range);
+    gst_value_list_append_value (&d, &scalar);
+
+    fail_unless (gst_value_compare (&c, &d) == GST_VALUE_UNORDERED);
+    fail_unless (gst_value_compare (&c, &c) == GST_VALUE_EQUAL);
+
+    g_value_unset (&range);
+    g_value_unset (&scalar);
+    g_value_unset (&c);
+    g_value_unset (&d);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_caps_in_set_in_caps)
 {
   GstCaps *caps = gst_caps_from_string ("video/x-raw,"
@@ -5451,6 +5552,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_bitmask);
   tcase_add_test (tc_chain, test_deserialize_array);
   tcase_add_test (tc_chain, test_deserialize_set);
+  tcase_add_test (tc_chain, test_deserialize_homogeneous_list_ok);
+  tcase_add_test (tc_chain, test_compare_list_with_fraction_range);
   tcase_add_test (tc_chain, test_deserialize_caps_in_set_in_caps);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_serialize_flags_invalid);
