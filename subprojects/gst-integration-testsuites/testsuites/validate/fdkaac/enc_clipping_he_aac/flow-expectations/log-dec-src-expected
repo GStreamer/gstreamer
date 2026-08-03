@@ -1,0 +1,8 @@
+
+CHECKPOINT: HE-AACv1, 2000 samples in: 5058 SBR delay trimmed as 2048+2048+962, 1134 padding trimmed at the end; the decoder outputs exactly 2000 samples
+
+event caps: audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, format=(string)F32LE, layout=(string)non-interleaved, rate=(int)48000;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: pts=0:00:00.000000000, dur=0:00:00.022625000
+buffer: pts=0:00:00.022625000, dur=0:00:00.019041667
+event eos: (no structure)

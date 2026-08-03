@@ -1,0 +1,29 @@
+set-globals,
+    pipeline_desc="audiotestsrc num-buffers=5 samplesperbuffer=1000 ! audio/x-raw,format=S16LE,rate=48000,channels=2 ! fdkaacenc ! audio/mpeg,profile=lc ! aacparse name=parse ! avdec_aac name=dec ! fakesink"
+
+meta,
+    handles-states=true,
+    args={
+        "$(pipeline_desc)",
+    },
+    configs={
+        [validateflow,
+            pad=parse:src,
+            record-buffers=true,
+            ignored-fields="caps={codec_data}",
+            logged-fields="buffer={pts, dur, meta}",
+            ignored-event-types={
+                tag, stream-start,
+            }],
+        [validateflow,
+            pad=dec:src,
+            record-buffers=true,
+            logged-fields="buffer={pts, dur}",
+            ignored-event-types={
+                tag, stream-start,
+            }],
+    }
+
+checkpoint,
+    text="AAC-LC, 5000 samples in: 2048 priming trimmed as 1024+1024, 120 padding trimmed at the end; the decoder outputs exactly 5000 samples"
+play

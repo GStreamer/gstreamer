@@ -1,0 +1,10 @@
+
+CHECKPOINT: HE-AACv1, 2000 samples in: 5058 SBR delay trimmed as 2048+2048+962, 1134 padding trimmed at the end; the decoder outputs exactly 2000 samples
+
+event caps: audio/mpeg, channels=(int)2, framed=(boolean)true, level=(string)2, mpegversion=(int)4, profile=(string)he-aac-v1, rate=(int)48000, stream-format=(string)raw;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: pts=0:00:00.000000000, dur=0:00:00.000000000, meta=GstAudioClippingMeta[format=samples, start=2048, end=0]
+buffer: pts=0:00:00.000000000, dur=0:00:00.000000000, meta=GstAudioClippingMeta[format=samples, start=2048, end=0]
+buffer: pts=0:00:00.000000000, dur=0:00:00.022625000, meta=GstAudioClippingMeta[format=samples, start=962, end=0]
+buffer: pts=0:00:00.022625000, dur=0:00:00.042666666, meta=GstAudioClippingMeta[format=samples, start=0, end=1134]
+event eos: (no structure)
