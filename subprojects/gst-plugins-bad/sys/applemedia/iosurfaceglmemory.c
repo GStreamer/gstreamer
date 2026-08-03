@@ -45,7 +45,7 @@ static GstAllocator *_io_surface_gl_memory_allocator;
 
 static gboolean
 gst_io_surface_gl_memory_query_iosurface (GstMemory * gmem,
-    IOSurfaceRef * surface, guint * plane)
+    IOSurfaceRef * surface, guint * plane, G_GNUC_UNUSED gpointer user_data)
 {
   GstIOSurfaceGLMemory *mem = (GstIOSurfaceGLMemory *) gmem;
   GstGLMemory *gl_mem = (GstGLMemory *) gmem;
@@ -175,7 +175,7 @@ gst_ios_surface_gl_memory_init (void)
         gst_object_ref (_io_surface_gl_memory_allocator));
     gst_iosurface_memory_register_query_function
         (GST_TYPE_IO_SURFACE_GL_MEMORY_ALLOCATOR,
-        gst_io_surface_gl_memory_query_iosurface);
+        gst_io_surface_gl_memory_query_iosurface, NULL);
     g_once_init_leave (&_init, 1);
   }
 }

@@ -554,6 +554,10 @@ a borrowed reference owned by @mem and valid for as long as @mem is alive.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">location for the IOSurface plane index represented by @mem</doc>
           <type name="guint" c:type="guint*"/>
         </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="3">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.h">user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
       </parameters>
     </callback>
     <function-macro name="IS_DMABUF_ALLOCATOR" c:identifier="GST_IS_DMABUF_ALLOCATOR" introspectable="0">
@@ -922,10 +926,14 @@ return borrowed IOSurface references owned by the queried memory.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">a #GstAllocator type</doc>
           <type name="GType" c:type="GType"/>
         </parameter>
-        <parameter name="query" transfer-ownership="none">
+        <parameter name="query" transfer-ownership="none" scope="forever" closure="2">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">function used to query
     IOSurface backing for memory allocated by @allocator_type</doc>
           <type name="IOSurfaceMemoryQueryFunction" c:type="GstIOSurfaceMemoryQueryFunction"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstiosurface.c">user data to pass to @query</doc>
+          <type name="gpointer" c:type="gpointer"/>
         </parameter>
       </parameters>
     </function>

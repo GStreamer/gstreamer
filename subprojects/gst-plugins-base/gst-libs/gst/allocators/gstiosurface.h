@@ -32,6 +32,7 @@ typedef struct __IOSurface *IOSurfaceRef;
  * @mem: a #GstMemory
  * @surface: (out) (transfer none): location for the IOSurfaceRef
  * @plane: (out): location for the IOSurface plane index represented by @mem
+ * @user_data: user data
  *
  * Function used by memory implementations to expose IOSurface backing through
  * gst_iosurface_memory_peek_surface().
@@ -44,7 +45,7 @@ typedef struct __IOSurface *IOSurfaceRef;
  * Since: 1.30
  */
 typedef gboolean (*GstIOSurfaceMemoryQueryFunction) (GstMemory * mem,
-    IOSurfaceRef * surface, guint * plane);
+    IOSurfaceRef * surface, guint * plane, gpointer user_data);
 
 /**
  * GST_CAPS_FEATURE_MEMORY_IOSURFACE:
@@ -69,7 +70,8 @@ gboolean        gst_iosurface_memory_peek_surface          (GstMemory * mem,
 GST_ALLOCATORS_API
 void            gst_iosurface_memory_register_query_function
                                                            (GType allocator_type,
-                                                            GstIOSurfaceMemoryQueryFunction query);
+                                                            GstIOSurfaceMemoryQueryFunction query,
+                                                            gpointer user_data);
 
 G_END_DECLS
 

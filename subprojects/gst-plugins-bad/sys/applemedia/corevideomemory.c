@@ -255,7 +255,7 @@ static GstAppleCoreVideoAllocator *_apple_core_video_allocator;
 
 static gboolean
 gst_apple_core_video_memory_query_iosurface (GstMemory * gmem,
-    IOSurfaceRef * surface, guint * plane)
+    IOSurfaceRef * surface, guint * plane, G_GNUC_UNUSED gpointer user_data)
 {
   GstAppleCoreVideoMemory *mem = (GstAppleCoreVideoMemory *) gmem;
   IOSurfaceRef mem_surface;
@@ -300,7 +300,7 @@ gst_apple_core_video_memory_init (void)
         gst_object_ref (_apple_core_video_allocator));
     gst_iosurface_memory_register_query_function
         (GST_TYPE_APPLE_CORE_VIDEO_ALLOCATOR,
-        gst_apple_core_video_memory_query_iosurface);
+        gst_apple_core_video_memory_query_iosurface, NULL);
     g_once_init_leave (&_init, 1);
   }
 }

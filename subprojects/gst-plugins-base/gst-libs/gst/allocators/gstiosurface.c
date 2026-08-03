@@ -41,23 +41,28 @@ typedef struct
 {
   GType allocator_type;
   GstIOSurfaceMemoryQueryFunction query;
+  gpointer user_data;
 } GstIOSurfaceQueryEntry;
 
 G_LOCK_DEFINE_STATIC (iosurface_query_functions);
 static GArray *iosurface_query_functions;
 
-/* Returns a process-lifetime query function. There is intentionally no
- * unregister operation, so callers can safely invoke the returned function
- * after releasing the query-functions lock.
+/* Returns a process-lifetime query function and its user data. There is
+ * intentionally no unregister operation, so callers can safely use them after
+ * releasing the query-functions lock.
  */
-static GstIOSurfaceMemoryQueryFunction
-gst_iosurface_memory_find_query_function (GstMemory * mem)
+static gboolean
+gst_iosurface_memory_find_query_function (GstMemory * mem,
+    GstIOSurfaceMemoryQueryFunction * query, gpointer * user_data)
 {
   GType allocator_type;
-  GstIOSurfaceMemoryQueryFunction query = NULL;
+  GstIOSurfaceMemoryQueryFunction found_query = NULL;
+  gpointer found_user_data = NULL;
 
-  g_return_val_if_fail (mem != NULL, NULL);
-  g_return_val_if_fail (mem->allocator != NULL, NULL);
+  g_return_val_if_fail (mem != NULL, FALSE);
+  g_return_val_if_fail (mem->allocator != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (user_data != NULL, FALSE);
 
   allocator_type = G_OBJECT_TYPE (mem->allocator);
 
@@ -68,14 +73,21 @@ gst_iosurface_memory_find_query_function (GstMemory * mem)
           &g_array_index (iosurface_query_functions, GstIOSurfaceQueryEntry, i);
 
       if (g_type_is_a (allocator_type, entry->allocator_type)) {
-        query = entry->query;
+        found_query = entry->query;
+        found_user_data = entry->user_data;
         break;
       }
     }
   }
   G_UNLOCK (iosurface_query_functions);
 
-  return query;
+  if (!found_query)
+    return FALSE;
+
+  *query = found_query;
+  *user_data = found_user_data;
+
+  return TRUE;
 }
 
 /**
@@ -144,15 +156,15 @@ gboolean
 gst_iosurface_memory_peek_surface (GstMemory * mem, IOSurfaceRef * surface,
     guint * plane)
 {
-  GstIOSurfaceMemoryQueryFunction query =
-      gst_iosurface_memory_find_query_function (mem);
+  GstIOSurfaceMemoryQueryFunction query;
+  gpointer user_data;
   IOSurfaceRef queried_surface = NULL;
   guint queried_plane = G_MAXUINT;
 
-  if (!query)
+  if (!gst_iosurface_memory_find_query_function (mem, &query, &user_data))
     return FALSE;
 
-  if (!query (mem, &queried_surface, &queried_plane))
+  if (!query (mem, &queried_surface, &queried_plane, user_data))
     return FALSE;
 
   if (!queried_surface || queried_plane == G_MAXUINT)
@@ -169,8 +181,9 @@ gst_iosurface_memory_peek_surface (GstMemory * mem, IOSurfaceRef * surface,
 /**
  * gst_iosurface_memory_register_query_function:
  * @allocator_type: a #GstAllocator type
- * @query: function used to query IOSurface backing for memory allocated by
- *     @allocator_type
+ * @query: (scope forever) (closure user_data): function used to query
+ *     IOSurface backing for memory allocated by @allocator_type
+ * @user_data: user data to pass to @query
  *
  * Registers @query as the IOSurface query function for #GstMemory objects
  * allocated by @allocator_type.
@@ -183,7 +196,7 @@ gst_iosurface_memory_peek_surface (GstMemory * mem, IOSurfaceRef * surface,
  */
 void
 gst_iosurface_memory_register_query_function (GType allocator_type,
-    GstIOSurfaceMemoryQueryFunction query)
+    GstIOSurfaceMemoryQueryFunction query, gpointer user_data)
 {
   GstIOSurfaceQueryEntry entry;
 
@@ -201,6 +214,7 @@ gst_iosurface_memory_register_query_function (GType allocator_type,
 
     if (existing->allocator_type == allocator_type) {
       existing->query = query;
+      existing->user_data = user_data;
       G_UNLOCK (iosurface_query_functions);
       return;
     }
@@ -208,6 +222,7 @@ gst_iosurface_memory_register_query_function (GType allocator_type,
 
   entry.allocator_type = allocator_type;
   entry.query = query;
+  entry.user_data = user_data;
   g_array_append_val (iosurface_query_functions, entry);
   G_UNLOCK (iosurface_query_functions);
 }
