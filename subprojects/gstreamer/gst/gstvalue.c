@@ -3145,6 +3145,8 @@ _priv_gst_value_parse_value (gchar * str,
     }
     g_value_init (value, container_type);
     ret = _priv_gst_value_parse_list (s, &s, value, type, pspec);
+    if (G_UNLIKELY (!ret))
+      g_value_unset (value);
   } else if (*s == '<') {
     if (type == G_TYPE_STRV) {
       g_value_init (value, G_TYPE_STRV);
@@ -3153,6 +3155,8 @@ _priv_gst_value_parse_value (gchar * str,
       g_value_init (value, GST_TYPE_ARRAY);
       ret = _priv_gst_value_parse_array (s, &s, value, type, pspec);
     }
+    if (G_UNLIKELY (!ret))
+      g_value_unset (value);
   } else {
     value_s = s;
 
