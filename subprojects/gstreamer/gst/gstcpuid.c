@@ -40,8 +40,14 @@
 #if defined(__linux__) && defined(__ARM_ARCH)
 #include <asm/hwcap.h>
 #include <sys/auxv.h>
+#if defined(__aarch64__)
+#ifndef HWCAP_ASIMD
+#define HWCAP_ASIMD (1 << 1)
+#endif
+#else
 #ifndef HWCAP_NEON              // Some Android NDKs lack it.
 #define HWCAP_NEON (1 << 12)
+#endif
 #endif
 #endif
 
@@ -155,7 +161,11 @@ _get_supported_sets (void)
   // If Linux, rely on getauxval; otherwise search Arm macros
   // https://developer.arm.com/documentation/dui0774/b/other-compiler-specific-features/predefined-macros
 #if defined(__linux__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)
+#if defined(__aarch64__)
+  cpuid.neon = (getauxval (AT_HWCAP) & HWCAP_ASIMD) != 0 ? TRUE : FALSE;
+#else
   cpuid.neon = (getauxval (AT_HWCAP) & HWCAP_NEON) != 0 ? TRUE : FALSE;
+#endif
 #elif defined(__ARM_NEON) || defined(__aarch64__)
   cpuid.neon = TRUE;
 #endif
