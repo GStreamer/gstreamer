@@ -591,8 +591,8 @@ extract_bounding_boxes (GstSsdTensorDec * self, gsize w, gsize h,
 
     if (self->labels && classes_map.memory &&
         get_guint32_at_index (classes_tensor, &classes_map, i, &bclass)) {
-      if (bclass < self->labels->len)
-        label = g_array_index (self->labels, GQuark, bclass);
+      if (bclass > 0 && bclass - 1 < self->labels->len)
+        label = g_array_index (self->labels, GQuark, bclass - 1);
     }
 
     x_i = x * w;
