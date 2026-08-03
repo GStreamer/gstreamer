@@ -1500,7 +1500,8 @@ gst_amc_video_dec_clear_pending_ahardware_buffer_frame (GstAmcVideoDec * self)
 
 static gboolean
 gst_amc_video_dec_negotiate_ahardware_buffer_format (GstAmcVideoDec * self,
-    guint32 ahardware_buffer_format, GError ** err)
+    guint32 ahardware_buffer_format, guint display_width, guint display_height,
+    GError ** err)
 {
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstVideoCodecState *old_state;
@@ -1508,8 +1509,16 @@ gst_amc_video_dec_negotiate_ahardware_buffer_format (GstAmcVideoDec * self,
   gchar *format_str;
 
   if (self->ahardware_buffer_format != 0 &&
-      self->ahardware_buffer_format == ahardware_buffer_format)
-    return TRUE;
+      self->ahardware_buffer_format == ahardware_buffer_format) {
+    old_state = gst_video_decoder_get_output_state (decoder);
+    if (old_state && GST_VIDEO_INFO_WIDTH (&old_state->info) == display_width &&
+        GST_VIDEO_INFO_HEIGHT (&old_state->info) == display_height) {
+      gst_video_codec_state_unref (old_state);
+      return TRUE;
+    }
+    if (old_state)
+      gst_video_codec_state_unref (old_state);
+  }
 
   old_state = gst_video_decoder_get_output_state (decoder);
   if (!old_state) {
@@ -1520,8 +1529,7 @@ gst_amc_video_dec_negotiate_ahardware_buffer_format (GstAmcVideoDec * self,
 
   new_state = gst_video_decoder_set_output_state (decoder,
       GST_VIDEO_FORMAT_AHARDWARE_BUFFER,
-      GST_VIDEO_INFO_WIDTH (&old_state->info),
-      GST_VIDEO_INFO_HEIGHT (&old_state->info), old_state);
+      display_width, display_height, old_state);
   if (!new_state) {
     gst_video_codec_state_unref (old_state);
     g_set_error_literal (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
@@ -1579,8 +1587,11 @@ gst_amc_video_dec_try_finish_pending_ahardware_buffer_frame (GstAmcVideoDec *
   GstAmcAImage *image = NULL;
   AHardwareBuffer *ahardware_buffer = NULL;
   guint32 ahardware_buffer_format;
+  guint32 texture_width, texture_height;
+  gint32 crop_left, crop_top, crop_right, crop_bottom;
   gint acquire_fence_fd = -1;
   GstAmcAImageReaderAcquireResult acquire_result;
+  guint display_width, display_height;
   gsize size;
 
   g_return_val_if_fail (frame != NULL,
@@ -1600,13 +1611,33 @@ gst_amc_video_dec_try_finish_pending_ahardware_buffer_frame (GstAmcVideoDec *
     goto output_error;
 
   if (!gst_amc_image_get_hardware_buffer (image, &ahardware_buffer,
-          &ahardware_buffer_format, err)) {
+          &ahardware_buffer_format, &texture_width, &texture_height, err)) {
     gst_amc_aimage_memory_release_image (image, acquire_fence_fd);
     goto output_error;
   }
 
+  if (!gst_amc_image_get_crop_rect (image, &crop_left, &crop_top,
+          &crop_right, &crop_bottom, err)) {
+    gst_amc_aimage_memory_release_image (image, acquire_fence_fd);
+    goto output_error;
+  }
+
+  if (crop_left < 0 || crop_top < 0 || crop_right <= crop_left ||
+      crop_bottom <= crop_top || crop_right > texture_width ||
+      crop_bottom > texture_height) {
+    GST_WARNING_OBJECT (self, "Invalid AImage crop rectangle "
+        "(%d,%d)-(%d,%d) for %ux%u buffer; using the full buffer",
+        crop_left, crop_top, crop_right, crop_bottom, texture_width,
+        texture_height);
+    crop_left = crop_top = 0;
+    crop_right = texture_width;
+    crop_bottom = texture_height;
+  }
+  display_width = crop_right - crop_left;
+  display_height = crop_bottom - crop_top;
+
   if (!gst_amc_video_dec_negotiate_ahardware_buffer_format (self,
-          ahardware_buffer_format, err)) {
+          ahardware_buffer_format, display_width, display_height, err)) {
     gst_amc_aimage_memory_release_image (image, acquire_fence_fd);
     gst_amc_image_reader_notify_image_released (self->image_reader);
     goto output_error;
@@ -1627,6 +1658,30 @@ gst_amc_video_dec_try_finish_pending_ahardware_buffer_frame (GstAmcVideoDec *
   }
 
   gst_buffer_append_memory (outbuf, mem);
+
+  if (display_width < texture_width || display_height < texture_height ||
+      crop_left > 0 || crop_top > 0) {
+    GstVideoAffineTransformationMeta *af_meta;
+    gfloat matrix[16] = {
+      1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f
+    };
+
+    matrix[0] = (gfloat) texture_width / display_width;
+    matrix[5] = (gfloat) texture_height / display_height;
+    matrix[12] = matrix[0] - 1.0f - 2.0f * crop_left / display_width;
+    matrix[13] = 1.0f - matrix[5] + 2.0f * crop_top / display_height;
+
+    GST_INFO_ONCE_OBJECT (self, "Applying AHardwareBuffer crop transform: "
+        "texture %ux%u -> display %ux%u", texture_width, texture_height,
+        display_width, display_height);
+
+    af_meta = gst_buffer_add_video_affine_transformation_meta (outbuf);
+    if (af_meta)
+      gst_gl_set_affine_transformation_meta_from_ndc (af_meta, matrix);
+  }
 
   GST_DEBUG_OBJECT (self, "push AHardwareBuffer frame");
   frame->output_buffer = outbuf;

@@ -1154,10 +1154,21 @@ gst_amc_codec_jni_image_reader_acquire_next (GstAmcAImageReader * reader,
 
 static gboolean
 gst_amc_codec_jni_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, guint32 * format, GError ** err)
+    AHardwareBuffer ** buffer, guint32 * format, guint32 * width,
+    guint32 * height, GError ** err)
 {
   g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
       "AHardwareBuffer output is not supported by the JNI MediaCodec backend");
+  return FALSE;
+}
+
+static gboolean
+gst_amc_codec_jni_image_get_crop_rect (GstAmcAImage * image,
+    gint32 * crop_left, gint32 * crop_top, gint32 * crop_right,
+    gint32 * crop_bottom, GError ** err)
+{
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "AImage output is not supported by the JNI MediaCodec backend");
   return FALSE;
 }
 
@@ -1210,5 +1221,6 @@ GstAmcCodecVTable gst_amc_codec_jni_vtable = {
       gst_amc_codec_jni_image_reader_notify_image_released,
   .image_reader_acquire_next = gst_amc_codec_jni_image_reader_acquire_next,
   .image_get_hardware_buffer = gst_amc_codec_jni_image_get_hardware_buffer,
+  .image_get_crop_rect = gst_amc_codec_jni_image_get_crop_rect,
   .image_delete_async = gst_amc_codec_jni_image_delete_async,
 };

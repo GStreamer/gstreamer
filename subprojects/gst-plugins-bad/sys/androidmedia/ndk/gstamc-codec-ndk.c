@@ -126,6 +126,8 @@ static struct
     (AImageReader * reader, AImageReader_ImageListener * listener);
     media_status_t (*image_get_hardware_buffer) (const AImage * image,
       AHardwareBuffer ** buffer);
+    media_status_t (*image_get_crop_rect) (const AImage * image,
+      AImageCropRect * rect);
   void (*image_delete_async) (AImage * image, int releaseFenceFd);
 } a_media_codec;
 
@@ -196,6 +198,8 @@ gst_amc_codec_ndk_static_init (void)
       dlsym (a_media_codec.mediandk_handle, "AImageReader_setImageListener");
   a_media_codec.image_get_hardware_buffer =
       dlsym (a_media_codec.mediandk_handle, "AImage_getHardwareBuffer");
+  a_media_codec.image_get_crop_rect =
+      dlsym (a_media_codec.mediandk_handle, "AImage_getCropRect");
   a_media_codec.image_delete_async =
       dlsym (a_media_codec.mediandk_handle, "AImage_deleteAsync");
 
@@ -614,7 +618,7 @@ gst_amc_codec_ndk_have_ahardware_buffer_output (void)
       && a_media_codec.image_reader_acquire_next_image_async
       && a_media_codec.image_reader_set_image_listener
       && a_media_codec.image_get_hardware_buffer
-      && a_media_codec.image_delete_async;
+      && a_media_codec.image_get_crop_rect && a_media_codec.image_delete_async;
 }
 
 static gboolean
@@ -877,7 +881,8 @@ gst_amc_codec_ndk_image_reader_acquire_next (GstAmcAImageReader * reader,
 
 static gboolean
 gst_amc_codec_ndk_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, guint32 * format, GError ** err)
+    AHardwareBuffer ** buffer, guint32 * format, guint32 * width,
+    guint32 * height, GError ** err)
 {
   media_status_t result;
   AHardwareBuffer *ahardware_buffer = NULL;
@@ -886,6 +891,8 @@ gst_amc_codec_ndk_image_get_hardware_buffer (GstAmcAImage * image,
   g_return_val_if_fail (image != NULL, FALSE);
   g_return_val_if_fail (buffer != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (width != NULL, FALSE);
+  g_return_val_if_fail (height != NULL, FALSE);
 
   result = a_media_codec.image_get_hardware_buffer (image->image,
       &ahardware_buffer);
@@ -898,6 +905,36 @@ gst_amc_codec_ndk_image_get_hardware_buffer (GstAmcAImage * image,
   *buffer = ahardware_buffer;
   AHardwareBuffer_describe (ahardware_buffer, &desc);
   *format = desc.format;
+  *width = desc.width;
+  *height = desc.height;
+  return TRUE;
+}
+
+static gboolean
+gst_amc_codec_ndk_image_get_crop_rect (GstAmcAImage * image,
+    gint32 * crop_left, gint32 * crop_top, gint32 * crop_right,
+    gint32 * crop_bottom, GError ** err)
+{
+  AImageCropRect crop;
+  media_status_t result;
+
+  g_return_val_if_fail (image != NULL, FALSE);
+  g_return_val_if_fail (crop_left != NULL, FALSE);
+  g_return_val_if_fail (crop_top != NULL, FALSE);
+  g_return_val_if_fail (crop_right != NULL, FALSE);
+  g_return_val_if_fail (crop_bottom != NULL, FALSE);
+
+  result = a_media_codec.image_get_crop_rect (image->image, &crop);
+  if (result != AMEDIA_OK) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to get AImage crop rectangle: %d", result);
+    return FALSE;
+  }
+
+  *crop_left = crop.left;
+  *crop_top = crop.top;
+  *crop_right = crop.right;
+  *crop_bottom = crop.bottom;
   return TRUE;
 }
 
@@ -953,5 +990,6 @@ GstAmcCodecVTable gst_amc_codec_ndk_vtable = {
       gst_amc_codec_ndk_image_reader_notify_image_released,
   .image_reader_acquire_next = gst_amc_codec_ndk_image_reader_acquire_next,
   .image_get_hardware_buffer = gst_amc_codec_ndk_image_get_hardware_buffer,
+  .image_get_crop_rect = gst_amc_codec_ndk_image_get_crop_rect,
   .image_delete_async = gst_amc_codec_ndk_image_delete_async,
 };

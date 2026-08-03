@@ -243,11 +243,21 @@ gst_amc_image_reader_acquire_next (GstAmcAImageReader * reader,
 
 gboolean
 gst_amc_image_get_hardware_buffer (GstAmcAImage * image,
-    AHardwareBuffer ** buffer, guint32 * format, GError ** err)
+    AHardwareBuffer ** buffer, guint32 * format, guint32 * width,
+    guint32 * height, GError ** err)
 {
   g_assert (gst_amc_codec_vtable != NULL);
   return gst_amc_codec_vtable->image_get_hardware_buffer (image, buffer,
-      format, err);
+      format, width, height, err);
+}
+
+gboolean
+gst_amc_image_get_crop_rect (GstAmcAImage * image, gint32 * crop_left,
+    gint32 * crop_top, gint32 * crop_right, gint32 * crop_bottom, GError ** err)
+{
+  g_assert (gst_amc_codec_vtable != NULL);
+  return gst_amc_codec_vtable->image_get_crop_rect (image, crop_left,
+      crop_top, crop_right, crop_bottom, err);
 }
 
 void
