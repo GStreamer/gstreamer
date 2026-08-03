@@ -4553,6 +4553,58 @@ GST_START_TEST (test_deserialize_set)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_mixed_type_list_failures)
+{
+  GValue value = { 0 };
+  const gchar *lists[] = {
+    "{ I420, 1 }",              /* string then int */
+    "{ 1, I420 }",              /* int then string */
+    "{ 1, 2, foo }",            /* ints then string */
+    "{ true, 1 }",              /* boolean then int */
+    "{ 1, 1.5 }",               /* int then double */
+  };
+  const gchar *arrays[] = {
+    "< I420, 1 >",
+    "< 1, I420 >",
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (lists); ++i) {
+    gchar *str = g_strdup (lists[i]);
+    g_value_init (&value, GST_TYPE_LIST);
+    fail_if (gst_value_deserialize (&value, str),
+        "deserialized mixed-type list %s (%d), while it should have failed",
+        str, i);
+    g_value_unset (&value);
+    g_free (str);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (arrays); ++i) {
+    gchar *str = g_strdup (arrays[i]);
+    g_value_init (&value, GST_TYPE_ARRAY);
+    fail_if (gst_value_deserialize (&value, str),
+        "deserialized mixed-type array %s (%d), while it should have failed",
+        str, i);
+    g_value_unset (&value);
+    g_free (str);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deserialize_caps_mixed_type_list)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string ("video/x-raw, format = { I420, 1 }");
+  fail_unless (caps == NULL, "mixed-type list field must not parse");
+
+  caps = gst_caps_from_string ("video/x-raw, format = < I420, 1 >");
+  fail_unless (caps == NULL, "mixed-type array field must not parse");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_homogeneous_list_ok)
 {
   GValue value = { 0 };
@@ -5552,6 +5604,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_bitmask);
   tcase_add_test (tc_chain, test_deserialize_array);
   tcase_add_test (tc_chain, test_deserialize_set);
+  tcase_add_test (tc_chain, test_deserialize_mixed_type_list_failures);
+  tcase_add_test (tc_chain, test_deserialize_caps_mixed_type_list);
   tcase_add_test (tc_chain, test_deserialize_homogeneous_list_ok);
   tcase_add_test (tc_chain, test_compare_list_with_fraction_range);
   tcase_add_test (tc_chain, test_deserialize_caps_in_set_in_caps);

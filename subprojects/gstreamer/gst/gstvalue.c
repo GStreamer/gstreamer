@@ -657,7 +657,6 @@ gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
 #define IS_RANGE_COMPAT(type1,type2,t1,t2) \
   (((t1) == (type1) && (t2) == (type2)) || ((t2) == (type1) && (t1) == (type2)))
 
-#if !defined(G_DISABLE_ASSERT) || !defined(G_DISABLE_CHECKS)
 static gboolean
 gst_value_list_or_array_are_compatible (const GValue * value1,
     const GValue * value2)
@@ -686,7 +685,6 @@ gst_value_list_or_array_are_compatible (const GValue * value1,
 
   return FALSE;
 }
-#endif
 
 static inline void
 _gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
@@ -1359,10 +1357,6 @@ gst_value_compare_value_list (const GValue * value1, const GValue * value2)
   /* Empty lists are equal */
   if (len == 0)
     return GST_VALUE_EQUAL;
-
-  /* We know lists are not empty. do sanity check on first values */
-  if (G_VALUE_TYPE (&vlist1->fields[0]) != G_VALUE_TYPE (&vlist2->fields[0]))
-    return GST_VALUE_UNORDERED;
 
   /* place to mark removed value indices of array2 */
   removed = g_newa (guint8, len);
@@ -2979,6 +2973,17 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
       return FALSE;
 
     _gst_value_list_append_val (vlist, &list_value);
+
+    /* Reject an untyped list or array with incompatible elements (e.g. the
+     * string and int in "{ I420, 1 }"). With no cast each element is typed on
+     * its own. This enforces at parse time the same element compatibility that
+     * gst_value_list_append_value asserts, so a scalar and a range over it stay
+     * valid. It is only input validation, as comparison type-checks each pair.
+     * The value is freed by the caller on failure. */
+    if (type == G_TYPE_INVALID && element_spec == NULL && vlist->len > 1
+        && !gst_value_list_or_array_are_compatible (&vlist->fields[0],
+            &vlist->fields[vlist->len - 1]))
+      return FALSE;
 
     while (g_ascii_isspace (*s))
       s++;
