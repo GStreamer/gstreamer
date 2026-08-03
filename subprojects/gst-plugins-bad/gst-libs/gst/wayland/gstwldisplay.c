@@ -429,11 +429,14 @@ output_done (void *data, struct wl_output *wl_output)
   GST_INFO ("  Transform:  %i", gst_wl_output_get_transform (output));
   GST_INFO ("---");
 
+  if (!name) {
+    GST_WARNING ("Compositor has provided an unnamed output, releasing it.");
+    g_object_unref (output);
+    return;
+  }
+
   g_mutex_lock (&priv->outputs_mutex);
-  if (name)
-    g_hash_table_replace (priv->outputs, g_strdup (name), output);
-  else
-    GST_WARNING ("Compositor has provided an unnamed output, ignoring.");
+  g_hash_table_replace (priv->outputs, g_strdup (name), output);
   g_mutex_unlock (&priv->outputs_mutex);
 }
 
