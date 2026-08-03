@@ -359,6 +359,15 @@ buffer_get_meta_string (const ValidateFlowOverride * flow, GstBuffer * buffer)
           G_GUINT32_FORMAT ", width=%" G_GUINT32_FORMAT ", height=%"
           G_GUINT32_FORMAT "]", roi->x, roi->y, roi->w, roi->h);
 
+    } else if (meta->info->api == GST_AUDIO_CLIPPING_META_API_TYPE) {
+      GstAudioClippingMeta *cmeta = (GstAudioClippingMeta *) meta;
+      /* GST_FORMAT_DEFAULT means samples for audio */
+      const gchar *format = cmeta->format == GST_FORMAT_DEFAULT ?
+          "samples" : gst_format_get_name (cmeta->format);
+      g_string_append_printf (s,
+          "GstAudioClippingMeta[format=%s, start=%" G_GUINT64_FORMAT ", end=%"
+          G_GUINT64_FORMAT "]", format, cmeta->start, cmeta->end);
+
     } else if (meta->info->api == GST_AUDIO_META_API_TYPE) {
       GstAudioMeta *audio_meta = (GstAudioMeta *) meta;
 
