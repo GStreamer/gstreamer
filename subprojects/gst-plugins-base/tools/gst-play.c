@@ -117,6 +117,7 @@ typedef struct
   /* configuration */
   gboolean gapless;
   gboolean instant_uri;
+  gboolean repeat;
 
   GstPlayTrickMode trick_mode;
   gdouble rate;
@@ -575,6 +576,10 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
         play_next (play);
         break;
       }
+
+      /* if looping is enabled, then disable it else will keep looping forever */
+      play->repeat = FALSE;
+
       /* try next item in list then */
       if (!play_next (play)) {
         gst_print ("%s\n", _("Reached end of play list."));
@@ -875,8 +880,13 @@ play_uri (GstPlay * play, const gchar * next_uri)
 static gboolean
 play_next (GstPlay * play)
 {
-  if ((play->cur_idx + 1) >= play->num_uris)
-    return FALSE;
+  if ((play->cur_idx + 1) >= play->num_uris) {
+    if (play->repeat) {
+      gst_print ("Looping playlist \n");
+      play->cur_idx = -1;
+    } else
+      return FALSE;
+  }
 
   play_uri (play, play->uris[++play->cur_idx]);
   return TRUE;
@@ -1681,6 +1691,7 @@ real_main (int argc, char **argv)
   gboolean gapless = FALSE;
   gboolean instant_uri = FALSE;
   gboolean shuffle = FALSE;
+  gboolean repeat = FALSE;
   gdouble volume = -1;
   gdouble start_position = 0;
   gboolean accurate_seeks = FALSE;
@@ -1717,6 +1728,7 @@ real_main (int argc, char **argv)
         N_("Enable instantaneous uri changes (only with playbin3)"), NULL},
     {"shuffle", 0, 0, G_OPTION_ARG_NONE, &shuffle,
         N_("Shuffle playlist"), NULL},
+    {"loop", 0, 0, G_OPTION_ARG_NONE, &repeat, "Repeat all", NULL},
     {"no-interactive", 0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
           &interactive,
         N_("Disable interactive control via the keyboard"), NULL},
@@ -1877,6 +1889,7 @@ real_main (int argc, char **argv)
       play_new (uris, audio_sink, video_sink, gapless, instant_uri, volume,
       verbose, flags, use_playbin3, start_position, no_position,
       accurate_seeks);
+  play->repeat = repeat;
 
   if (play == NULL) {
     gst_printerr
