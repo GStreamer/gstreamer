@@ -173,6 +173,31 @@ create_gray8_buffer_with_layout (gsize offset, gint stride)
   return buffer;
 }
 
+static GstBuffer *
+create_gray8_4x4_buffer (void)
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+  gsize offsets[GST_VIDEO_MAX_PLANES] = { 0, 0, 0, 0 };
+  gint strides[GST_VIDEO_MAX_PLANES] = { 4, 0, 0, 0 };
+  const guint8 pixels[16] = {
+    0, 0, 255, 255,
+    0, 0, 255, 255,
+    255, 255, 255, 255,
+    255, 255, 255, 255
+  };
+
+  buffer = gst_buffer_new_allocate (NULL, sizeof (pixels), NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_WRITE));
+  memcpy (map.data, pixels, sizeof (pixels));
+  gst_buffer_unmap (buffer, &map);
+
+  gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_GRAY8, 4, 4, 1, offsets, strides);
+
+  return buffer;
+}
+
 static gboolean
 rgb_buffer_pixels_equal (GstBuffer * first, GstBuffer * second)
 {
@@ -231,6 +256,49 @@ GST_START_TEST (test_videometa_layout_changes)
 
 GST_END_TEST;
 
+/* Test that runtime converter configuration updates rebuild the converter */
+GST_START_TEST (test_converter_config_update)
+{
+  GstHarness *h;
+  GstBuffer *full_frame;
+  GstBuffer *configured;
+  GstBuffer *restored;
+  GstStructure *config;
+
+  h = gst_harness_new ("videoconvertscale");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=GRAY8,width=2,height=2,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,format=RGB,width=2,height=2,framerate=30/1");
+
+  full_frame = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
+  fail_unless (full_frame != NULL);
+
+  config = gst_structure_new ("GstVideoConverter",
+      GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, 0,
+      GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, 0,
+      GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, 2,
+      GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, 2, NULL);
+  g_object_set (h->element, "converter-config", config, NULL);
+  gst_structure_free (config);
+
+  configured = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
+  fail_unless (configured != NULL);
+  fail_if (rgb_buffer_pixels_equal (full_frame, configured));
+
+  g_object_set (h->element, "converter-config", NULL, NULL);
+  restored = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
+  fail_unless (restored != NULL);
+  fail_unless (rgb_buffer_pixels_equal (full_frame, restored));
+
+  gst_buffer_unref (restored);
+  gst_buffer_unref (configured);
+  gst_buffer_unref (full_frame);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 videoconvert_suite (void)
 {
@@ -242,6 +310,7 @@ videoconvert_suite (void)
   tcase_add_test (tc_chain, test_template_formats);
   tcase_add_test (tc_chain, test_negotiate_alternate);
   tcase_add_test (tc_chain, test_videometa_layout_changes);
+  tcase_add_test (tc_chain, test_converter_config_update);
 
   return s;
 }
