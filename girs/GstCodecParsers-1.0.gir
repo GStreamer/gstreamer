@@ -5427,6 +5427,18 @@ Shall be VPS, SPS, PPS, prefix SEI or suffix SEI</doc>
       <member name="l6_2" value="186" c:identifier="GST_H265_LEVEL_L6_2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">Level 6.2</doc>
       </member>
+      <member name="l6_3" value="189" c:identifier="GST_H265_LEVEL_L6_3" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">H.265 level 6.3</doc>
+      </member>
+      <member name="l7" value="210" c:identifier="GST_H265_LEVEL_L7" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">H.265 level 7</doc>
+      </member>
+      <member name="l7_1" value="213" c:identifier="GST_H265_LEVEL_L7_1" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">H.265 level 7.1</doc>
+      </member>
+      <member name="l7_2" value="216" c:identifier="GST_H265_LEVEL_L7_2" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">H.265 level 7.2</doc>
+      </member>
     </enumeration>
     <record name="H265MasteringDisplayColourVolume" c:type="GstH265MasteringDisplayColourVolume" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth265parser.h">The colour volume (primaries, white point and luminance range) of display

@@ -1773,25 +1773,24 @@ get_level_string (guint8 level_idc)
     switch (level_idc) {
       case GST_H265_LEVEL_L2_1:
         return "2.1";
-        break;
       case GST_H265_LEVEL_L3_1:
         return "3.1";
-        break;
       case GST_H265_LEVEL_L4_1:
         return "4.1";
-        break;
       case GST_H265_LEVEL_L5_1:
         return "5.1";
-        break;
       case GST_H265_LEVEL_L5_2:
         return "5.2";
-        break;
       case GST_H265_LEVEL_L6_1:
         return "6.1";
-        break;
       case GST_H265_LEVEL_L6_2:
         return "6.2";
-        break;
+      case GST_H265_LEVEL_L6_3:
+        return "6.3";
+      case GST_H265_LEVEL_L7_1:
+        return "7.1";
+      case GST_H265_LEVEL_L7_2:
+        return "7.2";
       default:
         return NULL;
     }

@@ -511,6 +511,10 @@ typedef enum
  * @GST_H265_LEVEL_L6: Level 6
  * @GST_H265_LEVEL_L6_1: Level 6.1
  * @GST_H265_LEVEL_L6_2: Level 6.2
+ * @GST_H265_LEVEL_L6_3: Level 6.3 (Since 1.30)
+ * @GST_H265_LEVEL_L7: Level 7 (Since: 1.30)
+ * @GST_H265_LEVEL_L7_1: Level 7.1 (Since: 1.30)
+ * @GST_H265_LEVEL_L7_2: Level 7.2 (Since: 1.30)
  *
  * H.265 level
  *
@@ -531,6 +535,42 @@ typedef enum
   GST_H265_LEVEL_L6 = 180,
   GST_H265_LEVEL_L6_1 = 183,
   GST_H265_LEVEL_L6_2 = 186,
+
+  /**
+   * GST_H265_LEVEL_L6_3:
+   *
+   * H.265 level 6.3
+   *
+   * Since: 1.30
+   */
+  GST_H265_LEVEL_L6_3 = 189,
+
+  /**
+   * GST_H265_LEVEL_L7:
+   *
+   * H.265 level 7
+   *
+   * Since: 1.30
+   */
+  GST_H265_LEVEL_L7 = 210,
+
+  /**
+   * GST_H265_LEVEL_L7_1:
+   *
+   * H.265 level 7.1
+   *
+   * Since: 1.30
+   */
+  GST_H265_LEVEL_L7_1 = 213,
+
+  /**
+   * GST_H265_LEVEL_L7_2:
+   *
+   * H.265 level 7.2
+   *
+   * Since: 1.30
+   */
+  GST_H265_LEVEL_L7_2 = 216,
 } GstH265Level;
 
 typedef struct _GstH265Parser                   GstH265Parser;

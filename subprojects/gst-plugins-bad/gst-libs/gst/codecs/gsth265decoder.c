@@ -466,6 +466,10 @@ static const GstH265LevelLimits level_limits[] = {
   {  "6",     GST_H265_LEVEL_L6,    35651584 },
   {  "6.1",   GST_H265_LEVEL_L6_1,  35651584 },
   {  "6.2",   GST_H265_LEVEL_L6_2,  35651584 },
+  {  "6.3",   GST_H265_LEVEL_L6_3,  80216064 },
+  {  "7",     GST_H265_LEVEL_L7,    142606336 },
+  {  "7.1",   GST_H265_LEVEL_L7_1,  142606336 },
+  {  "7.2",   GST_H265_LEVEL_L7_2,  142606336 },
 };
 /* *INDENT-ON* */
 
