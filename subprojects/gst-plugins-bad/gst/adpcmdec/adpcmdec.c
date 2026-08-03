@@ -108,7 +108,7 @@ adpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * in_caps)
     return FALSE;
 
   if (!gst_structure_get_int (structure, "block_align", &dec->blocksize))
-    dec->blocksize = -1;        /* Not provided */
+    return FALSE;
 
   if (!gst_structure_get_int (structure, "rate", &dec->rate))
     return FALSE;
