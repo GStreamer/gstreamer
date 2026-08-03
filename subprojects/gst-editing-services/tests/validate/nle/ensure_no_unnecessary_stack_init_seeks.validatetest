@@ -12,32 +12,32 @@ meta,
             pad=overlay:src,
             buffers-checksum=as-id,
             ignored-event-types={
-                tag,
+                tag, segment,
             },
             ignored-fields="buffer={meta}"],
         [validateflow,
             pad=source_L0:src,
             buffers-checksum=as-id,
             ignored-event-types={
-                tag,
+                tag, segment,
             }],
         [validateflow,
             pad=source_L1:src,
             buffers-checksum=as-id,
             ignored-event-types={
-                tag,
+                tag, segment,
             }],
         [validateflow,
             pad=source_L2:src,
             buffers-checksum=as-id,
             ignored-event-types={
-                tag,
+                tag, segment,
             }],
         [validateflow,
             pad=source_L3:src,
             buffers-checksum=as-id,
             ignored-event-types={
-                tag,
+                tag, segment,
             }],
     }
 
