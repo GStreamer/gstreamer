@@ -719,6 +719,7 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
   self->width_dim = -1;
   self->channels_dim = -1;
   self->batch_dim = -1;
+  self->planar = FALSE;
 
   if (dims_count < 2 || dims_count > 4) {
     GST_ERROR_OBJECT (self,
@@ -731,23 +732,29 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
       *gst_format = "GRAY8";
       self->height_dim = 0;
       self->width_dim = 1;
+      self->planar = TRUE;
       break;
     case 3:
       if (dims[0] == 1 || dims[0] == 3) {
         self->channels_dim = 0;
         if (dims[0] == 1) {
           *gst_format = "GRAY8";
+          self->planar = FALSE;
         } else {
           *gst_format = "RGBP";
+          self->planar = TRUE;
         }
         self->height_dim = 1;
         self->width_dim = 2;
       } else if (dims[2] == 1 || dims[2] == 3) {
         self->channels_dim = 2;
-        if (dims[2] == 1)
+        if (dims[2] == 1) {
           *gst_format = "GRAY";
-        else
+          self->planar = FALSE;
+        } else {
           *gst_format = "RGB";
+          self->planar = FALSE;
+        }
         self->height_dim = 0;
         self->width_dim = 1;
       } else {
@@ -762,10 +769,12 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
         self->channels_dim = 1;
         self->height_dim = 2;
         self->width_dim = 3;
+        self->planar = TRUE;
       } else if (dims[3] == 1 || dims[3] == 3) {
         self->height_dim = 1;
         self->width_dim = 2;
         self->channels_dim = 3;
+        self->planar = FALSE;
       } else {
         GST_ERROR_OBJECT (self, "Don't know how to interpret dims");
         return FALSE;
@@ -773,6 +782,7 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
 
       if (dims[self->channels_dim] == 1) {
         *gst_format = "GRAY8";
+        self->planar = FALSE;
       } else if (dims[self->channels_dim] == 3) {
         if (self->planar)
           *gst_format = "RGBP";
@@ -1083,7 +1093,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   self->width = gst_input_dims[self->width_dim];
   if (self->channels_dim >= 0) {
     self->channels = gst_input_dims[self->channels_dim];
-    self->planar = (self->channels_dim != num_input_dims - 1);
   } else {
     self->channels = 1;
   }
