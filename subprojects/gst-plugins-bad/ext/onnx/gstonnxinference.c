@@ -1459,10 +1459,8 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   size_t i;
 
   GST_OBJECT_LOCK (self);
-  if (!self->session)
-    goto done;
-  // Clean up output names
 
+  // Clean up output names
   if (self->output_names) {
     for (i = 0; i < self->output_count; i++) {
       if (self->output_names[i])
@@ -1482,14 +1480,14 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
     api->ReleaseMemoryInfo (self->memory_info);
   self->memory_info = NULL;
 
-  api->ReleaseSession (self->session);
+  if (self->session)
+    api->ReleaseSession (self->session);
   self->session = NULL;
 
   if (self->env)
     api->ReleaseEnv (self->env);
   self->env = NULL;
 
-done:
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
