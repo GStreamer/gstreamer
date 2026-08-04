@@ -1738,6 +1738,10 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     }
   }
 
+  /* Interleaved, multi-channel data is never passthrough but needs conversion */
+  if (!self->planar && self->channels != 1)
+    is_passthrough_transform = FALSE;
+
   switch (self->input_data_type) {
     case GST_TENSOR_DATA_TYPE_UINT8:{
       uint8_t *src_data;
