@@ -1588,7 +1588,7 @@ G_STMT_START {                                                                \
         }                                                                     \
       }                                                                       \
       /* correct for stride */                                                \
-      for (uint32_t k = 0; k < 3; ++k)                                        \
+      for (uint32_t k = 0; k < dstChannels; ++k)                              \
         srcPtr[k] += stride - pixel_stride * dstWidth;                  \
     }                                                                         \
   } else {                                                                    \
@@ -1604,7 +1604,7 @@ G_STMT_START {                                                                \
         destIndex++;                                                          \
       }                                                                       \
       /* correct for stride */                                                \
-      for (uint32_t k = 0; k < 3; ++k)                                        \
+      for (uint32_t k = 0; k < dstChannels; ++k)                              \
         srcPtr[k] += stride - pixel_stride * dstWidth;                  \
     }                                                                         \
   }                                                                           \
