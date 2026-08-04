@@ -1403,6 +1403,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     api->ReleaseTypeInfo (output_type_info);
   }
 
+  /* Setting output tensors caps */
+  self->output_tensors_caps =
+      gst_caps_make_writable (self->output_tensors_caps);
+
   if (!tensors_s)
     tensors_s = gst_structure_new_empty ("tensorgroups");
   GstStructure *output_caps_struct;
