@@ -1121,11 +1121,21 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   input_type_info = NULL;
 
   self->input_data_type = onnx_data_type_to_gst (element_type);
-  if (self->input_data_type == -1
-      || get_tensor_type_size (self->input_data_type) == 0) {
+  if (self->input_data_type == -1) {
     GST_ERROR_OBJECT (self, "Unsupported input tensor data type %d",
         element_type);
     goto error;
+  }
+
+  /* Only u8 / f32 inputs are supported right now */
+  switch (self->input_data_type) {
+    case GST_TENSOR_DATA_TYPE_UINT8:
+    case GST_TENSOR_DATA_TYPE_FLOAT32:
+      break;
+    default:
+      GST_ERROR_OBJECT (self, "Unsupported input tensor data type %d",
+          element_type);
+      goto error;
   }
 
   /* Get input tensor name from ONNX file */
