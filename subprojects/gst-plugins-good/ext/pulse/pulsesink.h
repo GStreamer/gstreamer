@@ -54,7 +54,6 @@ struct _GstPulseSink
   GstAudioBaseSink sink;
 
   gchar *server, *device, *stream_name, *client_name;
-  GstPulseDeviceInfo device_info;
 
   gdouble volume;
   gboolean volume_set;

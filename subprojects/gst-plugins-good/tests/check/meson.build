@@ -60,6 +60,7 @@ good_tests = [
   [ 'elements/splitmuxsink', get_option('multifile').disabled()],
   [ 'elements/splitmuxsinktimecode', get_option('multifile').disabled()],
   [ 'elements/splitmuxsrc', get_option('multifile').disabled()],
+  [ 'elements/pulse', not libpulse_dep.found() ],
   [ 'elements/qtmux', get_option('isomp4').disabled(), [gstriff_dep, zlib_dep] ],
   [ 'elements/qtdemux', get_option('isomp4').disabled(), [gstriff_dep, zlib_dep] ],
   [ 'elements/rganalysis', get_option('replaygain').disabled()],

@@ -371,10 +371,13 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
       type & PA_SUBSCRIPTION_EVENT_FACILITY_MASK;
   pa_subscription_event_type_t event_type =
       type & PA_SUBSCRIPTION_EVENT_TYPE_MASK;
+  pa_operation *o = NULL;
 
   if (facility == PA_SUBSCRIPTION_EVENT_SERVER ||
       facility != PA_SUBSCRIPTION_EVENT_CHANGE) {
-    pa_context_get_server_info (self->context, get_server_info_cb, self);
+    o = pa_context_get_server_info (self->context, get_server_info_cb, self);
+    if (o)
+      pa_operation_unref (o);
   }
 
   if (facility != PA_SUBSCRIPTION_EVENT_SOURCE &&
@@ -385,10 +388,13 @@ context_subscribe_cb (pa_context * context, pa_subscription_event_type_t type,
     /* Microphone in the source output has changed */
 
     if (facility == PA_SUBSCRIPTION_EVENT_SOURCE)
-      pa_context_get_source_info_by_index (context, idx, get_source_info_cb,
+      o = pa_context_get_source_info_by_index (context, idx,
+          get_source_info_cb, self);
+    else
+      o = pa_context_get_sink_info_by_index (context, idx, get_sink_info_cb,
           self);
-    else if (facility == PA_SUBSCRIPTION_EVENT_SINK)
-      pa_context_get_sink_info_by_index (context, idx, get_sink_info_cb, self);
+    if (o)
+      pa_operation_unref (o);
   } else if (event_type == PA_SUBSCRIPTION_EVENT_REMOVE) {
     GstPulseDevice *dev = NULL;
     GList *item;
@@ -464,7 +470,7 @@ gst_pulse_device_provider_probe (GstDeviceProvider * provider)
 
   if (pa_context_connect (c, self->server, 0, NULL) < 0) {
     GST_ERROR_OBJECT (self, "Failed to connect: %s",
-        pa_strerror (pa_context_errno (self->context)));
+        pa_strerror (pa_context_errno (c)));
     goto failed;
   }
 
@@ -490,27 +496,35 @@ gst_pulse_device_provider_probe (GstDeviceProvider * provider)
   GST_DEBUG_OBJECT (self, "connected");
 
   o = pa_context_get_sink_info_list (c, get_sink_info_list_cb, &data);
-  while (pa_operation_get_state (o) == PA_OPERATION_RUNNING &&
-      pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
-    if (pa_mainloop_iterate (m, TRUE, NULL) < 0)
-      break;
+  if (o) {
+    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+      if (pa_mainloop_iterate (m, TRUE, NULL) < 0)
+        break;
+    }
+    pa_operation_unref (o);
   }
-  pa_operation_unref (o);
 
   o = pa_context_get_source_info_list (c, get_source_info_list_cb, &data);
-  while (pa_operation_get_state (o) == PA_OPERATION_RUNNING &&
-      pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
-    if (pa_mainloop_iterate (m, TRUE, NULL) < 0)
-      break;
+  if (o) {
+    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+      if (pa_mainloop_iterate (m, TRUE, NULL) < 0)
+        break;
+    }
+    pa_operation_unref (o);
   }
-  pa_operation_unref (o);
 
   pa_context_disconnect (c);
+  pa_context_unref (c);
   pa_mainloop_free (m);
 
   return data.devices;
 
 failed:
+  if (c) {
+    pa_context_disconnect (c);
+    pa_context_unref (c);
+  }
+  pa_mainloop_free (m);
 
   return NULL;
 }
@@ -540,6 +554,7 @@ static gboolean
 gst_pulse_device_provider_start (GstDeviceProvider * provider)
 {
   GstPulseDeviceProvider *self = GST_PULSE_DEVICE_PROVIDER (provider);
+  pa_operation *o;
 
   if (!(self->mainloop = pa_threaded_mainloop_new ())) {
     GST_ERROR_OBJECT (self, "Could not create pulseaudio mainloop");
@@ -592,9 +607,11 @@ gst_pulse_device_provider_start (GstDeviceProvider * provider)
   }
   GST_DEBUG_OBJECT (self, "connected");
 
-  pa_context_subscribe (self->context,
+  o = pa_context_subscribe (self->context,
       PA_SUBSCRIPTION_MASK_SOURCE | PA_SUBSCRIPTION_MASK_SINK |
       PA_SUBSCRIPTION_EVENT_SERVER | PA_SUBSCRIPTION_EVENT_CHANGE, NULL, NULL);
+  if (o)
+    pa_operation_unref (o);
 
   if (!run_pulse_operation (self, pa_context_get_server_info (self->context,
               get_server_info_cb, self)))

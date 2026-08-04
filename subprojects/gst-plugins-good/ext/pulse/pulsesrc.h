@@ -43,6 +43,7 @@ struct _GstPulseSrc
   gchar *server, *device, *client_name;
 
   pa_threaded_mainloop *mainloop;
+  guint mainloop_ref_ct;
 
   pa_context *context;
   pa_stream *stream;
@@ -52,8 +53,6 @@ struct _GstPulseSrc
 
   const void *read_buffer;
   size_t read_buffer_length;
-
-  gchar *device_description;
 
   gdouble volume;
   gboolean volume_set;
