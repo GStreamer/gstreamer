@@ -1498,6 +1498,8 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
     api->ReleaseSession (self->session);
   self->session = NULL;
 
+  self->allocator = NULL;
+
   if (self->env)
     api->ReleaseEnv (self->env);
   self->env = NULL;
