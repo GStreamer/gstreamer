@@ -540,7 +540,6 @@ get_tensor_type_size (GstTensorDataType data_type)
     case GST_TENSOR_DATA_TYPE_FLOAT32:
       return sizeof (float);
     default:
-      g_error ("Data type %d not handled", data_type);
       return 0;
   };
 }
