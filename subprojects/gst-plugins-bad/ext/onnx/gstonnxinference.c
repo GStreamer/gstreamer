@@ -1704,7 +1704,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   GST_LOG_OBJECT (self, "Input dimensions: %" G_GINT64_FORMAT
       ":%" G_GINT64_FORMAT ":%" G_GINT64_FORMAT ":%" G_GINT64_FORMAT,
-      input_dims[0], input_dims[1], input_dims[2], input_dims[3]);
+      num_dims > 0 ? input_dims[0] : -1, num_dims > 1 ? input_dims[1] : -1,
+      num_dims > 2 ? input_dims[2] : -1, num_dims > 3 ? input_dims[3] : -1);
 
   // copy video frame
   switch (self->video_info.finfo->format) {
