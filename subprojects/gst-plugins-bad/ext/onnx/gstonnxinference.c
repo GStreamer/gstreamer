@@ -156,6 +156,7 @@ struct _GstOnnxInference
   gint channels_dim;
   gint batch_dim;
   uint8_t *dest;
+  gsize input_tensor_size;
   size_t output_count;
   gchar **output_names;
   GQuark *output_ids;
@@ -1503,6 +1504,7 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 
   g_free (self->dest);
   self->dest = NULL;
+  self->input_tensor_size = 0;
   g_free (self->scales);
   self->scales = NULL;
   g_free (self->offsets);
@@ -1538,25 +1540,31 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
+  gsize element_size = get_tensor_type_size (self->input_data_type);
+  gsize input_tensor_size;
+
+  g_assert (element_size != 0);
+
+  /* Use GLib's checked multiplication to prevent overflow */
+  if (!g_size_checked_mul (&input_tensor_size, self->video_info.width,
+          self->video_info.height) ||
+      !g_size_checked_mul (&input_tensor_size, input_tensor_size,
+          self->channels)
+      || !g_size_checked_mul (&input_tensor_size, input_tensor_size,
+          element_size)) {
+    GST_ERROR_OBJECT (self,
+        "Integer overflow in input tensor size: %dx%d pixels, %u channels, %zu bytes per element",
+        self->video_info.width, self->video_info.height, self->channels,
+        element_size);
+    return FALSE;
+  }
+
+  self->input_tensor_size = input_tensor_size;
+
   if (self->dest == NULL || self->width * self->height !=
       self->video_info.width * self->video_info.height) {
-    gsize element_size = get_tensor_type_size (self->input_data_type);
-    gsize alloc_size;
-
-    /* Use GLib's checked multiplication to prevent overflow */
-    if (!g_size_checked_mul (&alloc_size, self->video_info.width,
-            self->video_info.height) ||
-        !g_size_checked_mul (&alloc_size, alloc_size, self->channels) ||
-        !g_size_checked_mul (&alloc_size, alloc_size, element_size)) {
-      GST_ERROR_OBJECT (self,
-          "Integer overflow in buffer allocation: %dx%d pixels, %u channels, %zu bytes per element",
-          self->video_info.width, self->video_info.height, self->channels,
-          element_size);
-      return FALSE;
-    }
-
     g_free (self->dest);
-    self->dest = g_malloc (alloc_size);
+    self->dest = g_malloc (input_tensor_size);
   }
   self->width = self->video_info.width;
   self->height = self->video_info.height;
@@ -1633,7 +1641,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   size_t num_dims;
   int64_t *input_dims;
   uint8_t *srcPtr[3];
-  size_t inputTensorSize;
   char *input_names[1] = { NULL };
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
@@ -1750,9 +1757,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       break;
   }
 
-  inputTensorSize = self->width * self->height * self->channels *
-      get_tensor_type_size (self->input_data_type);
-
   /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
   gboolean is_passthrough_transform = TRUE;
   if (self->scales && self->offsets) {
@@ -1784,7 +1788,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       }
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info, src_data,
-          inputTensorSize, input_dims, num_dims,
+          self->input_tensor_size, input_dims, num_dims,
           ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8, &input_tensor);
       break;
     }
@@ -1798,7 +1802,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
           (float *) self->dest,
-          inputTensorSize, input_dims, num_dims,
+          self->input_tensor_size, input_dims, num_dims,
           ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor);
       break;
     }
