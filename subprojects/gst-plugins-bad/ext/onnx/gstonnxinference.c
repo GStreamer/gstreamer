@@ -1500,6 +1500,13 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
     api->ReleaseEnv (self->env);
   self->env = NULL;
 
+  g_free (self->dest);
+  self->dest = NULL;
+  g_free (self->scales);
+  self->scales = NULL;
+  g_free (self->offsets);
+  self->offsets = NULL;
+
   gst_caps_unref (self->input_tensors_caps);
   self->input_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
   gst_caps_unref (self->output_tensors_caps);
