@@ -1555,6 +1555,9 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
                 "%u to %u within Fragmentation Unit. Data was lost, dropping "
                 "stored.", rtph264depay->last_fu_seqnum,
                 gst_rtp_buffer_get_seq (rtp));
+            rtph264depay->wait_start = TRUE;
+            rtph264depay->current_fu_type = 0;
+            rtph264depay->last_fu_seqnum = 0;
             gst_rtp_base_depayload_flush (depayload, FALSE);
             gst_adapter_clear (rtph264depay->adapter);
             return NULL;
@@ -1591,6 +1594,9 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           if (gst_adapter_available (rtph264depay->adapter) > limit) {
             GST_WARNING_OBJECT (rtph264depay,
                 "Too big (> %u bytes) fragmentation unit, dropping.", limit);
+            rtph264depay->wait_start = TRUE;
+            rtph264depay->current_fu_type = 0;
+            rtph264depay->last_fu_seqnum = 0;
             gst_rtp_base_depayload_flush (depayload, FALSE);
             gst_adapter_clear (rtph264depay->adapter);
             return NULL;
