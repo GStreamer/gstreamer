@@ -1167,8 +1167,6 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     memset (&buffer_info, 0, sizeof (buffer_info));
     buffer_info.offset = 0;
     buffer_info.size = MIN (minfo.size - offset, buf->size);
-    gst_amc_buffer_set_position_and_limit (buf, NULL, buffer_info.offset,
-        buffer_info.size);
 
     orc_memcpy (buf->data, minfo.data + offset, buffer_info.size);
 
@@ -1324,7 +1322,6 @@ gst_amc_audio_dec_drain (GstAmcAudioDec * self)
           gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
       buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
 
-      gst_amc_buffer_set_position_and_limit (buf, NULL, 0, 0);
       gst_amc_buffer_free (buf);
       buf = NULL;
 

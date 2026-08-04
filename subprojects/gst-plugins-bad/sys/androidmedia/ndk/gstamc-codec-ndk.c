@@ -212,17 +212,6 @@ gst_amc_buffer_ndk_free (GstAmcBuffer * buffer)
   g_free (buffer);
 }
 
-static gboolean
-gst_amc_buffer_ndk_set_position_and_limit (GstAmcBuffer * buffer_,
-    GError ** err, gint position, gint limit)
-{
-/* FIXME: Do we need to do something?
-  buffer->data = buffer->data + position;
-  buffer->size = limit;
-*/
-  return TRUE;
-}
-
 static GstAmcCodec *
 gst_amc_codec_ndk_new (const gchar * name, gboolean is_encoder, GError ** err)
 {
@@ -950,7 +939,6 @@ gst_amc_codec_ndk_image_delete_async (GstAmcAImage * image,
 
 GstAmcCodecVTable gst_amc_codec_ndk_vtable = {
   .buffer_free = gst_amc_buffer_ndk_free,
-  .buffer_set_position_and_limit = gst_amc_buffer_ndk_set_position_and_limit,
 
   .create = gst_amc_codec_ndk_new,
   .free = gst_amc_codec_ndk_free,

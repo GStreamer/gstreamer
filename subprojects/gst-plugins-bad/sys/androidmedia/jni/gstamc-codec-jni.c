@@ -86,7 +86,6 @@ static struct
 {
   jclass klass;
   jmethodID get_limit, get_position;
-  jmethodID set_limit, set_position;
   jmethodID clear;
 } java_nio_buffer;
 
@@ -120,24 +119,6 @@ gst_amc_codec_jni_static_init (void)
       gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "position",
       "()I");
   if (!java_nio_buffer.get_position) {
-    GST_ERROR ("Failed to get java.nio.Buffer position(): %s", err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  java_nio_buffer.set_limit =
-      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "limit",
-      "(I)Ljava/nio/Buffer;");
-  if (!java_nio_buffer.set_limit) {
-    GST_ERROR ("Failed to get java.nio.Buffer limit(): %s", err->message);
-    g_clear_error (&err);
-    return FALSE;
-  }
-
-  java_nio_buffer.set_position =
-      gst_amc_jni_get_method_id (env, &err, java_nio_buffer.klass, "position",
-      "(I)Ljava/nio/Buffer;");
-  if (!java_nio_buffer.set_position) {
     GST_ERROR ("Failed to get java.nio.Buffer position(): %s", err->message);
     g_clear_error (&err);
     return FALSE;
@@ -466,34 +447,6 @@ gst_amc_buffer_get_position_and_limit (RealBuffer * buffer_, GError ** err,
   if (!gst_amc_jni_call_int_method (env, err, buffer->object,
           java_nio_buffer.get_limit, limit))
     return FALSE;
-
-  return TRUE;
-}
-
-static gboolean
-gst_amc_buffer_jni_set_position_and_limit (GstAmcBuffer * buffer_,
-    GError ** err, gint position, gint limit)
-{
-  RealBuffer *buffer = (RealBuffer *) buffer_;
-  JNIEnv *env;
-  jobject tmp;
-
-  g_return_val_if_fail (buffer != NULL, FALSE);
-  g_return_val_if_fail (buffer->object != NULL, FALSE);
-
-  env = gst_amc_jni_get_env ();
-
-  if (!gst_amc_jni_call_object_method (env, err, buffer->object,
-          java_nio_buffer.set_limit, &tmp, limit))
-    return FALSE;
-
-  gst_amc_jni_object_local_unref (env, tmp);
-
-  if (!gst_amc_jni_call_object_method (env, err, buffer->object,
-          java_nio_buffer.set_position, &tmp, position))
-    return FALSE;
-
-  gst_amc_jni_object_local_unref (env, tmp);
 
   return TRUE;
 }
@@ -1181,7 +1134,6 @@ gst_amc_codec_jni_image_delete_async (GstAmcAImage * image,
 
 GstAmcCodecVTable gst_amc_codec_jni_vtable = {
   .buffer_free = gst_amc_buffer_jni_free,
-  .buffer_set_position_and_limit = gst_amc_buffer_jni_set_position_and_limit,
 
   .create = gst_amc_codec_jni_new,
   .free = gst_amc_codec_jni_free,

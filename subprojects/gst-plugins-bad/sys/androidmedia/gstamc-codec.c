@@ -35,15 +35,6 @@ gst_amc_buffer_free (GstAmcBuffer * buffer)
   return gst_amc_codec_vtable->buffer_free (buffer);
 }
 
-gboolean
-gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
-    gint position, gint limit)
-{
-  g_assert (gst_amc_codec_vtable != NULL);
-  return gst_amc_codec_vtable->buffer_set_position_and_limit (buffer, err,
-      position, limit);
-}
-
 GstAmcCodec *
 gst_amc_codec_new (const gchar * name, gboolean is_encoder, GError ** err)
 {

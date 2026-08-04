@@ -497,7 +497,6 @@ gst_amc_format_jni_set_buffer (GstAmcFormat * format, const gchar * key,
   jstring key_str = NULL;
   jobject v = NULL;
   gboolean ret = FALSE;
-  RealBuffer buf = { 0, };
 
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (key != NULL, FALSE);
@@ -516,12 +515,6 @@ gst_amc_format_jni_set_buffer (GstAmcFormat * format, const gchar * key,
         GST_LIBRARY_ERROR_FAILED, "Failed create Java byte buffer");
     goto done;
   }
-
-  buf.object = v;
-  buf.data = data;
-  buf.size = size;
-
-  gst_amc_buffer_set_position_and_limit ((GstAmcBuffer *) & buf, NULL, 0, size);
 
   if (!gst_amc_jni_call_void_method (env, err, format->object,
           media_format.set_byte_buffer, key_str, v))

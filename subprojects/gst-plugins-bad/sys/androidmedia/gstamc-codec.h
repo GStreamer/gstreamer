@@ -60,11 +60,6 @@ struct _GstAmcCodecVTable
 {
   void           (* buffer_free)                   (GstAmcBuffer * buffer);
 
-  gboolean       (* buffer_set_position_and_limit) (GstAmcBuffer * buffer,
-                                                    GError ** err,
-                                                    gint position,
-                                                    gint limit);
-
   GstAmcCodec *  (* create)                        (const gchar * name,
                                                     gboolean is_encoder,
                                                     GError ** err);
@@ -178,8 +173,6 @@ struct _GstAmcCodecVTable
 extern GstAmcCodecVTable *gst_amc_codec_vtable;
 
 void gst_amc_buffer_free (GstAmcBuffer * buffer);
-gboolean gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
-    gint position, gint limit);
 
 GstAmcCodec * gst_amc_codec_new (const gchar *name, gboolean is_encoder, GError **err);
 void gst_amc_codec_free (GstAmcCodec * codec);

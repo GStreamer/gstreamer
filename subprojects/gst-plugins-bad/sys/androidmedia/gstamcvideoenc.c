@@ -1642,8 +1642,6 @@ again:
   memset (&buffer_info, 0, sizeof (buffer_info));
   buffer_info.offset = 0;
   buffer_info.size = MIN (self->color_format_info.frame_size, buf->size);
-  gst_amc_buffer_set_position_and_limit (buf, NULL, buffer_info.offset,
-      buffer_info.size);
 
   if (!gst_amc_video_enc_fill_buffer (self, frame->input_buffer, buf,
           &buffer_info)) {
@@ -1804,7 +1802,6 @@ gst_amc_video_enc_drain (GstAmcVideoEnc * self)
           gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
       buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
 
-      gst_amc_buffer_set_position_and_limit (buf, NULL, 0, 0);
       gst_amc_buffer_free (buf);
       buf = NULL;
 
