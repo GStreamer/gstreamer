@@ -1684,7 +1684,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (input_dims[self->height_dim] >= 0) {
     if (input_dims[self->height_dim] != self->height) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-          ("Buffer has height %d, but model expects %zu",
+          ("Buffer has height %d, but model expects %" G_GINT64_FORMAT,
               self->height, input_dims[self->height_dim]));
       goto error;
     }
@@ -1694,7 +1694,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (input_dims[self->width_dim] >= 0) {
     if (input_dims[self->width_dim] != self->width) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-          ("Buffer has width %d, but model expects %zu",
+          ("Buffer has width %d, but model expects %" G_GINT64_FORMAT,
               self->width, input_dims[self->width_dim]));
       goto error;
     }
