@@ -1494,8 +1494,7 @@ gst_amf_av1_enc_check_reconfigure (GstAmfEncoder * encoder)
 }
 
 static GstAmfAv1EncClassData *
-gst_amf_av1_enc_create_class_data (GST_AMF_PLATFORM_DEVICE * device,
-    AMFComponent * comp)
+gst_amf_av1_enc_create_class_data (GstObject * device, AMFComponent * comp)
 {
   AMF_RESULT result;
   GstAmfAv1EncDeviceCaps dev_caps = { 0, };
@@ -1777,7 +1776,7 @@ gst_amf_av1_enc_create_class_data (GST_AMF_PLATFORM_DEVICE * device,
 }
 
 void
-gst_amf_av1_enc_register (GstPlugin * plugin, GST_AMF_PLATFORM_DEVICE * device,
+gst_amf_av1_enc_register (GstPlugin * plugin, GstObject * device,
     gpointer context, guint rank)
 {
   GstAmfAv1EncClassData *cdata;

@@ -15,7 +15,6 @@ amf_headers = [
   'gstamfh264enc.h',
   'gstamfav1enc.h',
   'gstamfbasefilter.h',
-  'gstamfplatform.h',
 ]
 
 if host_system == 'windows'

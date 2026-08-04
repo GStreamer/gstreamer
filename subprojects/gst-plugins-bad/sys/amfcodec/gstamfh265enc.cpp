@@ -1690,8 +1690,7 @@ gst_amf_h265_enc_check_reconfigure (GstAmfEncoder * encoder)
 }
 
 static GstAmfH265EncClassData *
-gst_amf_h265_enc_create_class_data (GST_AMF_PLATFORM_DEVICE * device,
-    AMFComponent * comp)
+gst_amf_h265_enc_create_class_data (GstObject * device, AMFComponent * comp)
 {
   AMF_RESULT result;
   GstAmfH265EncDeviceCaps dev_caps = { 0, };
@@ -2006,7 +2005,7 @@ gst_amf_h265_enc_create_class_data (GST_AMF_PLATFORM_DEVICE * device,
 }
 
 void
-gst_amf_h265_enc_register (GstPlugin * plugin, GST_AMF_PLATFORM_DEVICE * device,
+gst_amf_h265_enc_register (GstPlugin * plugin, GstObject * device,
     gpointer context, guint rank)
 {
   GstAmfH265EncClassData *cdata;

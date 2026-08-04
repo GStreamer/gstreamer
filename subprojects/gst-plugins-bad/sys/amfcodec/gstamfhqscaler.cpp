@@ -992,7 +992,7 @@ gst_amf_hq_scaler_configure_component (GstAmfBaseFilter * filter,
   algorithm = gst_amf_hq_scaler_resolve_algorithm (self, in_info);
   from_srgb = gst_amf_hq_scaler_from_srgb_from_info (in_info);
 
-  if (gst_amf_base_filter_get_device (filter)) {
+  if (gst_amf_base_filter_get_d3d11_device (filter)) {
     result = comp->SetProperty (AMF_HQ_SCALER_ENGINE_TYPE,
 #ifdef G_OS_WIN32
         (amf_int64) amf::AMF_MEMORY_DX11);

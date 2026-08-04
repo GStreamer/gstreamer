@@ -28,8 +28,11 @@
 #endif
 
 #include <gst/gst.h>
-#include "gstamfplatform.h"
 #ifdef G_OS_WIN32
+#include <gst/d3d11/gstd3d11.h>
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
 #include <wrl.h>
 #include <versionhelpers.h>
 #endif //G_OS_WIN32
@@ -54,7 +57,7 @@ using namespace amf;
 
 #ifdef G_OS_WIN32
 static gboolean
-plugin_init_d3d11 (GstPlugin * plugin)
+plugin_init_windows (GstPlugin * plugin)
 {
   AMFFactory *amf_factory;
   ComPtr < IDXGIFactory1 > factory;
@@ -93,6 +96,9 @@ plugin_init_d3d11 (GstPlugin * plugin)
     AMF_RESULT result;
     D3D_FEATURE_LEVEL feature_level;
     AMF_DX_VERSION dx_ver = AMF_DX11_1;
+#ifdef HAVE_GST_D3D12
+    GstD3D12Device *d3d12_device = nullptr;
+#endif
 
     hr = factory->EnumAdapters1 (idx, &adapter);
     if (FAILED (hr))
@@ -124,12 +130,31 @@ plugin_init_d3d11 (GstPlugin * plugin)
     if (result == AMF_OK)
       result = context->InitDX11 (device_handle, dx_ver);
 
+#ifdef HAVE_GST_D3D12
+    /* DX11 support (checked above) does not imply this adapter/driver also
+     * supports AMF over DX12, so initialize DX12 on the same context right
+     * here, before any element gets registered against it. The per-codec
+     * *_create_class_data() / *_build_template_caps() functions below then
+     * query AMFContext2::GetDX12Device() on this same context themselves to
+     * decide whether to advertise D3D12Memory caps for this adapter */
     if (result == AMF_OK) {
-      gst_amf_h264_enc_register (plugin, device,
+      d3d12_device = gst_d3d12_device_new_for_adapter_luid (luid);
+
+      if (d3d12_device) {
+        ID3D12Device *d3d12_device_handle =
+            gst_d3d12_device_get_device_handle (d3d12_device);
+
+        AMFContext2Ptr (context)->InitDX12 (d3d12_device_handle, AMF_DX12);
+      }
+    }
+#endif
+
+    if (result == AMF_OK) {
+      gst_amf_h264_enc_register (plugin, GST_OBJECT_CAST (device),
           (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
-      gst_amf_h265_enc_register (plugin, device,
+      gst_amf_h265_enc_register (plugin, GST_OBJECT_CAST (device),
           (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
-      gst_amf_av1_enc_register (plugin, device,
+      gst_amf_av1_enc_register (plugin, GST_OBJECT_CAST (device),
           (gpointer) context.GetPtr (), GST_RANK_NONE);
       gst_amf_hq_scaler_register (plugin, GST_OBJECT_CAST (device),
           (gpointer) context.GetPtr (), GST_RANK_NONE);
@@ -138,6 +163,9 @@ plugin_init_d3d11 (GstPlugin * plugin)
     }
 
     gst_clear_object (&device);
+#ifdef HAVE_GST_D3D12
+    gst_clear_object (&d3d12_device);
+#endif
   }
 
   if (!have_amd_gpu) {
@@ -184,7 +212,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 #ifdef G_OS_WIN32
-  return plugin_init_d3d11 (plugin);
+  return plugin_init_windows (plugin);
 #else
   return plugin_init_vulkan (plugin);
 #endif // G_OS_WIN32

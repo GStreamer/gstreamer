@@ -197,17 +197,17 @@ gst_amf_base_filter_get_context (GstAmfBaseFilter * filter)
   return filter->priv->context;
 }
 
-GST_AMF_PLATFORM_DEVICE *
-gst_amf_base_filter_get_device (GstAmfBaseFilter * filter)
+#ifdef G_OS_WIN32
+/* Returns the active D3D11 device, or NULL if the filter hasn't opened
+ * one yet (or api is not dx11). Not reffed. Windows only. */
+GstD3D11Device *
+gst_amf_base_filter_get_d3d11_device (GstAmfBaseFilter * filter)
 {
   g_return_val_if_fail (GST_IS_AMF_BASE_FILTER (filter), nullptr);
 
-#ifdef G_OS_WIN32
   return filter->priv->d3d11_device;
-#else
-  return nullptr;
-#endif
 }
+#endif
 
 static void
 gst_amf_base_filter_set_context (GstElement * element, GstContext * context)

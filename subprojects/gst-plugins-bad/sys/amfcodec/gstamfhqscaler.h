@@ -20,7 +20,6 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gstamfplatform.h"
 
 G_BEGIN_DECLS
 

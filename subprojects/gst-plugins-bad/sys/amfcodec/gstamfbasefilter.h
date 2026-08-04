@@ -26,7 +26,9 @@
 #include <core/Context.h>
 #include <core/Surface.h>
 #include "gstamfutils.h"
-#include "gstamfplatform.h"
+#ifdef G_OS_WIN32
+#include <gst/d3d11/gstd3d11.h>
+#endif
 
 G_BEGIN_DECLS
 
@@ -101,9 +103,11 @@ void  gst_amf_base_filter_set_subclass_data (GstAmfBaseFilter * filter,
 /* Returns the live AMFContext (do not unref). NULL until start(). */
 amf::AMFContext * gst_amf_base_filter_get_context (GstAmfBaseFilter * filter);
 
-/* Returns the platform device (GstD3D11Device * on Windows,
- * GstVulkanDevice * on Linux). Not reffed. */
-GST_AMF_PLATFORM_DEVICE * gst_amf_base_filter_get_device (GstAmfBaseFilter * filter);
+#ifdef G_OS_WIN32
+/* Returns the active D3D11 device, or NULL if the filter hasn't opened
+ * one yet. Not reffed. Windows only. */
+GstD3D11Device * gst_amf_base_filter_get_d3d11_device (GstAmfBaseFilter * filter);
+#endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAmfBaseFilter, gst_object_unref)
 
