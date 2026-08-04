@@ -1212,12 +1212,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   /* Check if pixel conversion is needed based on scales/offsets */
   gboolean needs_conversion = FALSE;
-  if (self->scales && self->offsets) {
-    for (i = 0; i < self->channels; i++) {
-      if (self->scales[i] != 1.0 || self->offsets[i] != 0.0) {
-        needs_conversion = TRUE;
-        break;
-      }
+  for (i = 0; i < self->channels; i++) {
+    if (self->scales[i] != 1.0 || self->offsets[i] != 0.0) {
+      needs_conversion = TRUE;
+      break;
     }
   }
 
