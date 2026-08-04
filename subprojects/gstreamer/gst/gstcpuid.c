@@ -15,6 +15,10 @@
  * The full license is in the file LICENSE, distributed with this software. *
  ****************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstcpuid.h"
 
 // define G_ALWAYS_INLINE to force MSVC to get rid of the interstitial
@@ -42,7 +46,7 @@
 #if defined(__linux__) && (defined(__ARM_ARCH) || defined(__riscv))
 #include <asm/hwcap.h>
 #endif
-#if defined(__linux__)
+#if defined(__linux__) || defined(HAVE_ELF_AUX_INFO)
 #include <sys/auxv.h>
 #endif
 
@@ -173,15 +177,22 @@ _get_supported_sets (void)
   cpuid.neon = TRUE;
   cpuid.neon64 = TRUE;
 #elif defined(GST_CPUID_CHECK_ARM)
-  // If Linux, rely on getauxval; otherwise search Arm macros
-  // https://developer.arm.com/documentation/dui0774/b/other-compiler-specific-features/predefined-macros
+  // If Linux, rely on getauxval; otherwise try elf_aux_info
 #if defined(__linux__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)
 #if defined(__aarch64__)
   cpuid.neon = (getauxval (AT_HWCAP) & HWCAP_ASIMD) != 0 ? TRUE : FALSE;
 #else
   cpuid.neon = (getauxval (AT_HWCAP) & HWCAP_NEON) != 0 ? TRUE : FALSE;
 #endif
-#elif defined(__ARM_NEON) || defined(__aarch64__)
+#elif defined(HAVE_ELF_AUX_INFO)
+  unsigned long auxv = 0;
+  elf_aux_info (AT_HWCAP, &auxv, sizeof (auxv));
+#if defined(__aarch64__)
+  cpuid.neon = (auxv & HWCAP_ASIMD) != 0 ? TRUE : FALSE;
+#else
+  cpuid.neon = (auxv & HWCAP_NEON) != 0 ? TRUE : FALSE;
+#endif
+#elif defined(__ARM_NEON) || defined (__aarch64__)
   // If enabled unconditionally by compiler, use it
   // https://support.arm.com/documentation/102474/0100/Fundamentals-of-Armv8-Neon-technology
   // https://developer.arm.com/documentation/dui0774/b/other-compiler-specific-features/predefined-macros

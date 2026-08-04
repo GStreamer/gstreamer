@@ -412,6 +412,9 @@ if host_system == 'windows'
     cdata.set('HAVE__WFSOPEN', 1)
   endif
 endif
+if cc.has_function('elf_aux_info', prefix : '#include <sys/auxv.h>')
+  cdata.set('HAVE_ELF_AUX_INFO', 1)
+endif
 
 # Platform deps; only ws2_32 and execinfo for now
 platform_deps = []
