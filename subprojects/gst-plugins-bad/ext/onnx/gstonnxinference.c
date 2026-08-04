@@ -199,14 +199,14 @@ static GstStaticPadTemplate gst_onnx_inference_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB,RGBA,BGR,BGRA }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB }"))
     );
 
 static GstStaticPadTemplate gst_onnx_inference_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB,RGBA,BGR,BGRA }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB }"))
     );
 
 
@@ -1727,35 +1727,10 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   // copy video frame
   switch (self->video_info.finfo->format) {
-    case GST_VIDEO_FORMAT_RGBA:
-      srcPtr[0] = info.data;
-      srcPtr[1] = info.data + 1;
-      srcPtr[2] = info.data + 2;
-      break;
-    case GST_VIDEO_FORMAT_BGRA:
-      srcPtr[0] = info.data + 2;
-      srcPtr[1] = info.data + 1;
-      srcPtr[2] = info.data + 0;
-      break;
-    case GST_VIDEO_FORMAT_ARGB:
-      srcPtr[0] = info.data + 1;
-      srcPtr[1] = info.data + 2;
-      srcPtr[2] = info.data + 3;
-      break;
-    case GST_VIDEO_FORMAT_ABGR:
-      srcPtr[0] = info.data + 3;
-      srcPtr[1] = info.data + 2;
-      srcPtr[2] = info.data + 1;
-      break;
     case GST_VIDEO_FORMAT_RGB:
       srcPtr[0] = info.data;
       srcPtr[1] = info.data + 1;
       srcPtr[2] = info.data + 2;
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-      srcPtr[0] = info.data + 2;
-      srcPtr[1] = info.data + 1;
-      srcPtr[2] = info.data + 0;
       break;
     default:
       g_assert_not_reached ();
