@@ -1114,7 +1114,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   input_type_info = NULL;
 
   self->input_data_type = onnx_data_type_to_gst (element_type);
-  if (self->input_data_type == -1) {
+  if (self->input_data_type == -1
+      || get_tensor_type_size (self->input_data_type) == 0) {
     GST_ERROR_OBJECT (self, "Unsupported input tensor data type %d",
         element_type);
     goto error;
