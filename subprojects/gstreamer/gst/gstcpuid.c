@@ -39,7 +39,12 @@
 
 #if defined(__linux__) && defined(__ARM_ARCH)
 #include <asm/hwcap.h>
+#endif
+#if defined(__linux__)
 #include <sys/auxv.h>
+#endif
+
+#if defined(GST_CPUID_CHECK_ARM)
 #if defined(__aarch64__)
 #ifndef HWCAP_ASIMD
 #define HWCAP_ASIMD (1 << 1)
@@ -157,7 +162,7 @@ _get_supported_sets (void)
   // See https://gitlab.freedesktop.org/gstreamer/orc/-/commit/7a60e2074d425b7ad1192ff48ac87af4246a04c4
   cpuid.neon = TRUE;
   cpuid.neon64 = TRUE;
-#elif defined(__ARM_ARCH)
+#elif defined(GST_CPUID_CHECK_ARM)
   // If Linux, rely on getauxval; otherwise search Arm macros
   // https://developer.arm.com/documentation/dui0774/b/other-compiler-specific-features/predefined-macros
 #if defined(__linux__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)
@@ -167,6 +172,9 @@ _get_supported_sets (void)
   cpuid.neon = (getauxval (AT_HWCAP) & HWCAP_NEON) != 0 ? TRUE : FALSE;
 #endif
 #elif defined(__ARM_NEON) || defined(__aarch64__)
+  // If enabled unconditionally by compiler, use it
+  // https://support.arm.com/documentation/102474/0100/Fundamentals-of-Armv8-Neon-technology
+  // https://developer.arm.com/documentation/dui0774/b/other-compiler-specific-features/predefined-macros
   cpuid.neon = TRUE;
 #endif
 #if defined(__aarch64__)
