@@ -557,10 +557,12 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
 
   GST_OBJECT_LOCK (self);
   has_session = self->session != NULL;
+  restrictions = gst_caps_ref (self->input_tensors_caps);
   GST_OBJECT_UNLOCK (self);
 
   if (!has_session) {
     other_caps = gst_caps_ref (caps);
+    gst_caps_unref (restrictions);
     goto done;
   }
 
@@ -568,8 +570,6 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
 
   GST_DEBUG_OBJECT (self, "Applying model input tensors caps restrictions: %"
       GST_PTR_FORMAT, self->input_tensors_caps);
-
-  restrictions = gst_caps_ref (self->input_tensors_caps);
 
   if (direction == GST_PAD_SINK) {
     /* Create tensors_caps from output_tensor_caps and intersect with
