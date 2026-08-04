@@ -165,6 +165,11 @@ struct _GstOnnxInference
   bool fixedInputImageSize;
   double *scales;
   double *offsets;
+  gchar *input_name;
+  size_t input_dims_count;
+  int64_t *input_dims_model;
+  int64_t *input_dims_runtime;
+  gboolean needs_conversion;
 };
 
 static const OrtApi *api = NULL;
@@ -455,6 +460,8 @@ gst_onnx_inference_finalize (GObject * object)
   g_free (self->device);
   g_free (self->scales);
   g_free (self->offsets);
+  g_free (self->input_dims_model);
+  g_free (self->input_dims_runtime);
   gst_caps_unref (self->input_tensors_caps);
   gst_caps_unref (self->output_tensors_caps);
   G_OBJECT_CLASS (gst_onnx_inference_parent_class)->finalize (object);
@@ -1180,8 +1187,12 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   }
 
   g_free (tensor_name);
-  if (onnx_input_tensor_name)
-    self->allocator->Free (self->allocator, (char *) onnx_input_tensor_name);
+
+  self->input_name = (gchar *) onnx_input_tensor_name;
+  self->input_dims_count = num_input_dims;
+  self->input_dims_model =
+      g_memdup2 (input_dims, num_input_dims * sizeof (int64_t));
+  self->input_dims_runtime = g_new0 (int64_t, num_input_dims);
 
   /* Setting input tensor caps */
   self->input_tensors_caps = gst_caps_make_writable (self->input_tensors_caps);
@@ -1189,21 +1200,26 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   gst_caps_set_simple (self->input_tensors_caps, "pixel-aspect-ratio",
       GST_TYPE_FRACTION, 1, 1, NULL);
 
-  /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
-  gboolean is_passthrough = TRUE;
+  /* Check if pixel conversion is needed based on scales/offsets */
+  gboolean needs_conversion = FALSE;
   if (self->scales && self->offsets) {
     for (i = 0; i < self->channels; i++) {
       if (self->scales[i] != 1.0 || self->offsets[i] != 0.0) {
-        is_passthrough = FALSE;
+        needs_conversion = TRUE;
         break;
       }
     }
   }
 
   if (self->input_data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format &&
-      is_passthrough)
+      !needs_conversion)
     gst_caps_set_simple (self->input_tensors_caps, "format", G_TYPE_STRING,
         gst_format, NULL);
+
+  /* Cache whether pixel conversion is needed */
+  self->needs_conversion = needs_conversion || (!self->planar
+      && self->channels != 1);
+
   if (self->fixedInputImageSize)
     gst_caps_set_simple (self->input_tensors_caps, "width", G_TYPE_INT,
         self->width, "height", G_TYPE_INT, self->height, NULL);
@@ -1497,6 +1513,17 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
     api->ReleaseSession (self->session);
   self->session = NULL;
 
+  /* Free cached input tensor metadata */
+  if (self->input_name) {
+    self->allocator->Free (self->allocator, self->input_name);
+    self->input_name = NULL;
+  }
+  g_free (self->input_dims_model);
+  self->input_dims_model = NULL;
+  g_free (self->input_dims_runtime);
+  self->input_dims_runtime = NULL;
+  self->input_dims_count = 0;
+
   self->allocator = NULL;
 
   if (self->env)
@@ -1570,6 +1597,35 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   self->width = self->video_info.width;
   self->height = self->video_info.height;
 
+  /* Resolve dynamic input dimensions and validate fixed ones */
+  memcpy (self->input_dims_runtime, self->input_dims_model,
+      self->input_dims_count * sizeof (int64_t));
+
+  if (self->batch_dim >= 0)
+    self->input_dims_runtime[self->batch_dim] = 1;
+
+  if (self->input_dims_runtime[self->height_dim] >= 0) {
+    if (self->input_dims_runtime[self->height_dim] != self->height) {
+      GST_ERROR_OBJECT (self, "Caps have height %d, but model expects %"
+          G_GINT64_FORMAT, self->height,
+          self->input_dims_runtime[self->height_dim]);
+      return FALSE;
+    }
+  } else {
+    self->input_dims_runtime[self->height_dim] = self->height;
+  }
+
+  if (self->input_dims_runtime[self->width_dim] >= 0) {
+    if (self->input_dims_runtime[self->width_dim] != self->width) {
+      GST_ERROR_OBJECT (self, "Caps have width %d, but model expects %"
+          G_GINT64_FORMAT, self->width,
+          self->input_dims_runtime[self->width_dim]);
+      return FALSE;
+    }
+  } else {
+    self->input_dims_runtime[self->width_dim] = self->width;
+  }
+
   return TRUE;
 }
 
@@ -1635,14 +1691,9 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
   GstMapInfo info;
   OrtStatus *status = NULL;
-  OrtTypeInfo *input_type_info = NULL;
   OrtValue *input_tensor = NULL;
   OrtValue **output_tensors = NULL;
-  const OrtTensorTypeAndShapeInfo *input_tensor_info;
-  size_t num_dims;
-  int64_t *input_dims;
   uint8_t *srcPtr[3];
-  char *input_names[1] = { NULL };
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
 
@@ -1652,74 +1703,12 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  status =
-      api->SessionGetInputName (self->session, 0, self->allocator, input_names);
-  if (status) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("Failed to get input name"));
-    goto error;
-  }
-
-  status = api->SessionGetInputTypeInfo (self->session, 0, &input_type_info);
-  if (status) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("Failed to get input type info: %s", api->GetErrorMessage (status)));
-    goto error;
-  }
-
-  status = api->CastTypeInfoToTensorInfo (input_type_info, &input_tensor_info);
-  if (status) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("Failed to cast type info: %s", api->GetErrorMessage (status)));
-    goto error;
-  }
-
-  status = api->GetDimensionsCount (input_tensor_info, &num_dims);
-  if (status) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("Failed to get dimensions count: %s", api->GetErrorMessage (status)));
-    goto error;
-  }
-
-  input_dims = (int64_t *) g_alloca (num_dims * sizeof (int64_t));
-  status = api->GetDimensions (input_tensor_info, input_dims, num_dims);
-  if (status) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("Failed to get dimensions: %s", api->GetErrorMessage (status)));
-    goto error;
-  }
-
-  api->ReleaseTypeInfo (input_type_info);
-  input_type_info = NULL;
-
-  if (self->batch_dim >= 0)
-    input_dims[self->batch_dim] = 1;
-
-  if (input_dims[self->height_dim] >= 0) {
-    if (input_dims[self->height_dim] != self->height) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-          ("Buffer has height %d, but model expects %" G_GINT64_FORMAT,
-              self->height, input_dims[self->height_dim]));
-      goto error;
-    }
-  } else {
-    input_dims[self->height_dim] = self->height;
-  }
-  if (input_dims[self->width_dim] >= 0) {
-    if (input_dims[self->width_dim] != self->width) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-          ("Buffer has width %d, but model expects %" G_GINT64_FORMAT,
-              self->width, input_dims[self->width_dim]));
-      goto error;
-    }
-  } else {
-    input_dims[self->width_dim] = self->width;
-  }
-
   GST_LOG_OBJECT (self, "Input dimensions: %" G_GINT64_FORMAT
       ":%" G_GINT64_FORMAT ":%" G_GINT64_FORMAT ":%" G_GINT64_FORMAT,
-      num_dims > 0 ? input_dims[0] : -1, num_dims > 1 ? input_dims[1] : -1,
-      num_dims > 2 ? input_dims[2] : -1, num_dims > 3 ? input_dims[3] : -1);
+      self->input_dims_count > 0 ? self->input_dims_runtime[0] : -1,
+      self->input_dims_count > 1 ? self->input_dims_runtime[1] : -1,
+      self->input_dims_count > 2 ? self->input_dims_runtime[2] : -1,
+      self->input_dims_count > 3 ? self->input_dims_runtime[3] : -1);
 
   // copy video frame
   switch (self->video_info.finfo->format) {
@@ -1758,26 +1747,11 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       break;
   }
 
-  /* Check if all channels are passthrough (scale=1.0, offset=0.0) */
-  gboolean is_passthrough_transform = TRUE;
-  if (self->scales && self->offsets) {
-    for (gsize c = 0; c < self->channels; c++) {
-      if (self->scales[c] != 1.0 || self->offsets[c] != 0.0) {
-        is_passthrough_transform = FALSE;
-        break;
-      }
-    }
-  }
-
-  /* Interleaved, multi-channel data is never passthrough but needs conversion */
-  if (!self->planar && self->channels != 1)
-    is_passthrough_transform = FALSE;
-
   switch (self->input_data_type) {
     case GST_TENSOR_DATA_TYPE_UINT8:{
       uint8_t *src_data;
 
-      if (is_passthrough_transform) {
+      if (!self->needs_conversion) {
         src_data = info.data;
       } else {
         convert_image_scale_offset_u8 (self->dest, self->width, self->height,
@@ -1789,7 +1763,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       }
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info, src_data,
-          self->input_tensor_size, input_dims, num_dims,
+          self->input_tensor_size, self->input_dims_runtime,
+          self->input_dims_count,
           ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8, &input_tensor);
       break;
     }
@@ -1803,7 +1778,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
           (float *) self->dest,
-          self->input_tensor_size, input_dims, num_dims,
+          self->input_tensor_size, self->input_dims_runtime,
+          self->input_dims_count,
           ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor);
       break;
     }
@@ -1821,7 +1797,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   output_tensors = g_new0 (OrtValue *, self->output_count);
 
-  status = api->Run (self->session, NULL, (const char *const *) input_names,
+  status =
+      api->Run (self->session, NULL, (const char *const *) &self->input_name,
       (const OrtValue * const *) &input_tensor, 1,
       (const char *const *) self->output_names, self->output_count,
       output_tensors);
@@ -1832,7 +1809,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     goto error;
   }
 
-  self->allocator->Free (self->allocator, input_names[0]);
   api->ReleaseValue (input_tensor);
 
   if (!output_tensors || self->output_count == 0) {
@@ -1945,10 +1921,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 error:
   if (status)
     api->ReleaseStatus (status);
-  if (input_names[0])
-    self->allocator->Free (self->allocator, input_names[0]);
-  if (input_type_info)
-    api->ReleaseTypeInfo (input_type_info);
   if (input_tensor)
     api->ReleaseValue (input_tensor);
   if (output_tensors) {
