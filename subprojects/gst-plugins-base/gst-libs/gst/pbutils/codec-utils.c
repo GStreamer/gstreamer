@@ -1549,25 +1549,24 @@ gst_codec_utils_h265_get_level (const guint8 * profile_tier_level, guint len)
     switch (profile_tier_level[11]) {
       case 63:
         return "2.1";
-        break;
       case 93:
         return "3.1";
-        break;
       case 123:
         return "4.1";
-        break;
       case 153:
         return "5.1";
-        break;
       case 156:
         return "5.2";
-        break;
       case 183:
         return "6.1";
-        break;
       case 186:
         return "6.2";
-        break;
+      case 189:
+        return "6.3";
+      case 213:
+        return "7.1";
+      case 216:
+        return "7.2";
       default:
         return NULL;
     }
@@ -1615,6 +1614,14 @@ gst_codec_utils_h265_get_level_idc (const gchar * level)
     return 183;
   else if (!strcmp (level, "6.2"))
     return 186;
+  else if (!strcmp (level, "6.3"))
+    return 189;
+  else if (!strcmp (level, "7"))
+    return 210;
+  else if (!strcmp (level, "7.1"))
+    return 213;
+  else if (!strcmp (level, "7.2"))
+    return 216;
 
   GST_WARNING ("Invalid level %s", level);
   return 0;
