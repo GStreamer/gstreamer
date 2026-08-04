@@ -43,6 +43,8 @@ static struct
   const char *(*to_string) (AMediaFormat *);
 
   bool (*get_int32) (AMediaFormat *, const char *name, int32_t * out);
+  bool (*get_rect) (AMediaFormat *, const char *name, int32_t * left,
+      int32_t * top, int32_t * right, int32_t * bottom);
   bool (*get_float) (AMediaFormat *, const char *name, float *out);
   bool (*get_buffer) (AMediaFormat *, const char *name, void **data,
       size_t *size);
@@ -71,6 +73,8 @@ gst_amc_format_ndk_static_init (void)
       dlsym (a_media_format.mediandk_handle, "AMediaFormat_toString");
   a_media_format.get_int32 =
       dlsym (a_media_format.mediandk_handle, "AMediaFormat_getInt32");
+  a_media_format.get_rect =
+      dlsym (a_media_format.mediandk_handle, "AMediaFormat_getRect");
   a_media_format.get_float =
       dlsym (a_media_format.mediandk_handle, "AMediaFormat_getFloat");
   a_media_format.get_buffer =
@@ -241,6 +245,32 @@ gst_amc_format_ndk_set_int (GstAmcFormat * format, const gchar * key,
 }
 
 static gboolean
+gst_amc_format_ndk_get_rect (GstAmcFormat * format, const gchar * key,
+    gint * left, gint * top, gint * right, gint * bottom, GError ** err)
+{
+  int32_t rect_left, rect_top, rect_right, rect_bottom;
+
+  if (!a_media_format.get_rect) {
+    g_set_error_literal (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "AMediaFormat_getRect() is not available");
+    return FALSE;
+  }
+
+  if (!a_media_format.get_rect (format->ndk_media_format, key, &rect_left,
+          &rect_top, &rect_right, &rect_bottom)) {
+    g_set_error_literal (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to call AMediaFormat_getRect()");
+    return FALSE;
+  }
+
+  *left = rect_left;
+  *top = rect_top;
+  *right = rect_right;
+  *bottom = rect_bottom;
+  return TRUE;
+}
+
+static gboolean
 gst_amc_format_ndk_get_string (GstAmcFormat * format, const gchar * key,
     gchar ** value, GError ** err)
 {
@@ -302,6 +332,7 @@ GstAmcFormatVTable gst_amc_format_ndk_vtable = {
   .get_float = gst_amc_format_ndk_get_float,
   .set_float = gst_amc_format_ndk_set_float,
   .get_int = gst_amc_format_ndk_get_int,
+  .get_rect = gst_amc_format_ndk_get_rect,
   .set_int = gst_amc_format_ndk_set_int,
   .get_string = gst_amc_format_ndk_get_string,
   .set_string = gst_amc_format_ndk_set_string,

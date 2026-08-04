@@ -60,6 +60,14 @@ struct _GstAmcFormatVTable {
                                  gint *value,
                                  GError **err);
 
+  gboolean       (* get_rect)   (GstAmcFormat *format,
+                                 const gchar *key,
+                                 gint *left,
+                                 gint *top,
+                                 gint *right,
+                                 gint *bottom,
+                                 GError **err);
+
   gboolean       (* set_int)    (GstAmcFormat *format,
                                  const gchar *key,
                                  gint value,
@@ -99,6 +107,8 @@ gchar * gst_amc_format_to_string (GstAmcFormat * format, GError **err);
 gboolean gst_amc_format_get_float (GstAmcFormat *format, const gchar *key, gfloat *value, GError **err);
 gboolean gst_amc_format_set_float (GstAmcFormat *format, const gchar *key, gfloat value, GError **err);
 gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *value, GError **err);
+gboolean gst_amc_format_get_rect (GstAmcFormat *format, const gchar *key,
+    gint *left, gint *top, gint *right, gint *bottom, GError **err);
 gboolean gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value, GError **err);
 gboolean gst_amc_format_get_string (GstAmcFormat *format, const gchar *key, gchar **value, GError **err);
 gboolean gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value, GError **err);

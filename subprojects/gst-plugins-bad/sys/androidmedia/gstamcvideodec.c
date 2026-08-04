@@ -939,14 +939,40 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
-  if (gst_amc_format_get_int (format, "crop-left", &crop_left, NULL) &&
-      gst_amc_format_get_int (format, "crop-right", &crop_right, NULL)) {
+  /* Hardware decoders will generally set a crop for the padding, or specify
+   * the display width/height */
+  if (gst_amc_format_get_rect (format, "crop", &crop_left, &crop_top,
+          &crop_right, &crop_bottom, NULL)) {
+    GST_INFO_OBJECT (self, "crop rect found: crop-left=%i, crop-top=%i, "
+        "crop-right=%i, crop-bottom=%i", crop_left, crop_top, crop_right,
+        crop_bottom);
     width = crop_right + 1 - crop_left;
-  }
-
-  if (gst_amc_format_get_int (format, "crop-top", &crop_top, NULL) &&
-      gst_amc_format_get_int (format, "crop-bottom", &crop_bottom, NULL)) {
     height = crop_bottom + 1 - crop_top;
+  } else {
+    int display_width, display_height;
+
+    if (gst_amc_format_get_int (format, "display-width", &display_width, NULL)
+        && gst_amc_format_get_int (format, "display-height", &display_height,
+            NULL)) {
+      GST_INFO_OBJECT (self, "display-width=%i, display-height=%i",
+          display_width, display_height);
+      width = display_width;
+      height = display_height;
+    } else {
+      if (gst_amc_format_get_int (format, "crop-left", &crop_left, NULL) &&
+          gst_amc_format_get_int (format, "crop-right", &crop_right, NULL)) {
+        GST_INFO_OBJECT (self, "Set width using crop-left=%i, crop-right=%i",
+            crop_left, crop_right);
+        width = crop_right + 1 - crop_left;
+      }
+
+      if (gst_amc_format_get_int (format, "crop-top", &crop_top, NULL) &&
+          gst_amc_format_get_int (format, "crop-bottom", &crop_bottom, NULL)) {
+        GST_INFO_OBJECT (self, "Set height using crop-top=%i, crop-bottom=%i",
+            crop_top, crop_bottom);
+        height = crop_bottom + 1 - crop_top;
+      }
+    }
   }
 
   if (width == 0 || height == 0) {

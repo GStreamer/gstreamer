@@ -82,6 +82,15 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value,
 }
 
 gboolean
+gst_amc_format_get_rect (GstAmcFormat * format, const gchar * key, gint * left,
+    gint * top, gint * right, gint * bottom, GError ** err)
+{
+  g_assert (gst_amc_format_vtable != NULL);
+  return gst_amc_format_vtable->get_rect (format, key, left, top, right,
+      bottom, err);
+}
+
+gboolean
 gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value,
     GError ** err)
 {
