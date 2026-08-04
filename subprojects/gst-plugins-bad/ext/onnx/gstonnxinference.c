@@ -647,7 +647,7 @@ onnx_data_type_to_gst (ONNXTensorElementDataType dt)
     return ONNX_TO_GST_TENSOR_DATATYPE[dt];
   }
 
-  g_error ("Unexpected datatype: %d", dt);
+  return -1;
 }
 
 static gboolean
@@ -1116,6 +1116,11 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   input_type_info = NULL;
 
   self->input_data_type = onnx_data_type_to_gst (element_type);
+  if (self->input_data_type == -1) {
+    GST_ERROR_OBJECT (self, "Unsupported input tensor data type %d",
+        element_type);
+    goto error;
+  }
 
   /* Get input tensor name from ONNX file */
   status = api->SessionGetInputName (self->session, 0, self->allocator,
@@ -1273,6 +1278,11 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     }
 
     gst_data_type = onnx_data_type_to_gst (type);
+    if (gst_data_type == -1) {
+      GST_ERROR_OBJECT (self, "Unsupported output tensor data type %d", type);
+      api->ReleaseTypeInfo (output_type_info);
+      goto error;
+    }
 
     /* Get dimensions from ONNX */
     int64_t *shape = (int64_t *) g_alloca (card * sizeof (int64_t));
