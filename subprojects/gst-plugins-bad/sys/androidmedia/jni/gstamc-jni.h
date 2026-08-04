@@ -19,13 +19,7 @@
 
 #include <glib.h>
 
-#include "../gstamc-format.h"
 #include "../gstamc-codec.h"
 
-extern GstAmcFormatVTable gst_amc_format_jni_vtable;
-extern GstAmcCodecVTable gst_amc_codec_jni_vtable;
-
 gboolean gst_amc_codeclist_jni_static_init (void);
-gboolean gst_amc_format_jni_static_init (void);
-gboolean gst_amc_codec_jni_static_init (void);
 gboolean gst_amc_surface_texture_jni_static_init (void);

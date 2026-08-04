@@ -15,9 +15,7 @@ androidmedia_sources = [
   'gst-android-hardware-sensor.c',
   'gstjniutils.c',
   'jni/gstamc-jni.c',
-  'jni/gstamc-codec-jni.c',
   'jni/gstamc-codeclist-jni.c',
-  'jni/gstamc-format-jni.c',
   'jni/gstamcsurface.c',
   'jni/gstamcsurfacetexture-jni.c',
 ]
@@ -79,20 +77,24 @@ if amc_opt.disabled() or not have_jni_h or not have_asset_manager_jni_h
   subdir_done()
 endif
 
-extra_deps = [cc.find_library('android', required : true)]
 extra_cargs = [
   '-DHAVE_JNI_H',
   '-DPLUGIN_NAME=androidmedia',
   '-DPLUGIN_DESCRIPTION="Android Media plugin"'
 ]
 
-# Build an Ndk support if its headers exists. We don't actually link into it
-# but use only type definations (and then rely on dlopen and dlsym), so this
-# doesn't affect compatibility with older Android versions.
-if cc.check_header('media/NdkMediaCodec.h')
-  androidmedia_sources += ndk_sources
-  extra_cargs += [ '-DHAVE_NDKMEDIA' ]
+# We don't actually link to libmediandk but use only type definitions and use
+# dlopen/dlsym at runtime
+amc_opt = amc_opt.require(cc.has_header('media/NdkMediaCodec.h'),
+  error_message: 'androidmedia plugin requires NDK MediaCodec support',
+)
+
+if amc_opt.disabled()
+  subdir_done()
 endif
+
+androidmedia_sources += ndk_sources
+extra_deps = [cc.find_library('android')]
 
 gstandroidmedia = library('gstandroidmedia',
   androidmedia_sources,
