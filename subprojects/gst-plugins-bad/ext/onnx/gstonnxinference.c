@@ -1628,7 +1628,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   int64_t *input_dims;
   uint8_t *srcPtr[3];
   size_t inputTensorSize;
-  char *input_names[1];
+  char *input_names[1] = { NULL };
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
 
