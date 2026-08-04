@@ -1221,10 +1221,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     }
   }
 
-  if (self->input_data_type == GST_TENSOR_DATA_TYPE_UINT8 && gst_format &&
-      !needs_conversion)
-    gst_caps_set_simple (self->input_tensors_caps, "format", G_TYPE_STRING,
-        gst_format, NULL);
+  gst_caps_set_simple (self->input_tensors_caps, "format", G_TYPE_STRING,
+      gst_format, NULL);
 
   /* Cache whether pixel conversion is needed */
   self->needs_conversion = needs_conversion || (!self->planar
