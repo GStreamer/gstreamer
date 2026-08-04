@@ -402,6 +402,9 @@ if host_system != 'windows'
 elif cc.has_function('_pipe', prefix : '#include <io.h>')
   cdata.set('HAVE_PIPE', 1)
 endif
+if cc.has_function('elf_aux_info', prefix : '#include <sys/auxv.h>')
+  cdata.set('HAVE_ELF_AUX_INFO', 1)
+endif
 
 # Platform deps; only ws2_32 and execinfo for now
 platform_deps = []
