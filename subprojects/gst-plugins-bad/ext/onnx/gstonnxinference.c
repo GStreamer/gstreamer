@@ -199,14 +199,14 @@ static GstStaticPadTemplate gst_onnx_inference_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB, RGBP, GRAY8 }"))
     );
 
 static GstStaticPadTemplate gst_onnx_inference_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB, RGBP, GRAY8 }"))
     );
 
 
@@ -732,7 +732,7 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
       *gst_format = "GRAY8";
       self->height_dim = 0;
       self->width_dim = 1;
-      self->planar = TRUE;
+      self->planar = FALSE;
       break;
     case 3:
       if (dims[0] == 1 || dims[0] == 3) {
@@ -749,7 +749,7 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
       } else if (dims[2] == 1 || dims[2] == 3) {
         self->channels_dim = 2;
         if (dims[2] == 1) {
-          *gst_format = "GRAY";
+          *gst_format = "GRAY8";
           self->planar = FALSE;
         } else {
           *gst_format = "RGB";
