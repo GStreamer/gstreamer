@@ -15594,8 +15594,7 @@ These values are *NOT* automatically normalized.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <constructor name="new" c:identifier="gst_video_time_code_new" version="1.10">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.c">@field_count is 0 for progressive, 1 or 2 for interlaced.
-@latest_daiy_jam reference is stolen from caller.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.c">@field_count is 0 for progressive, 1 or 2 for interlaced.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.c">a new #GstVideoTimeCode with the given values.
@@ -15612,7 +15611,7 @@ timecode actually has valid content, use gst_video_time_code_is_valid().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.c">Denominator of the frame rate</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
-          <parameter name="latest_daily_jam" transfer-ownership="none">
+          <parameter name="latest_daily_jam" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.c">The latest daily jam of the #GstVideoTimeCode</doc>
             <type name="GLib.DateTime" c:type="GDateTime*"/>
           </parameter>
@@ -15865,7 +15864,6 @@ taken into account. Otherwise, it is assumed that the daily jam of both
       </method>
       <method name="init" c:identifier="gst_video_time_code_init" version="1.10">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.c">@field_count is 0 for progressive, 1 or 2 for interlaced.
-@latest_daiy_jam reference is stolen from caller.
 
 Initializes @tc with the given values.
 The values are not checked for being in a valid range. To see if your
@@ -17093,7 +17091,7 @@ parameters.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">framerate denominator</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
-        <parameter name="latest_daily_jam" transfer-ownership="none">
+        <parameter name="latest_daily_jam" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GDateTime for the latest daily jam</doc>
           <type name="GLib.DateTime" c:type="GDateTime*"/>
         </parameter>
