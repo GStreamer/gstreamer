@@ -1648,8 +1648,18 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 G_STMT_START {                                                                \
   size_t destIndex = 0;                                                       \
   Type tmp;                                                                   \
+  gsize dstHeight = GST_VIDEO_FRAME_HEIGHT (vframe);                          \
+  gsize dstWidth = GST_VIDEO_FRAME_WIDTH (vframe);                            \
+  gsize dstChannels = GST_VIDEO_FRAME_N_COMPONENTS (vframe);                            \
                                                                               \
-  if (!planar) {                                                              \
+  if (GST_VIDEO_FRAME_N_PLANES (vframe) == 1) {                               \
+    const guint8 *srcPtr[3] = {                                               \
+      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0) + GST_VIDEO_FRAME_COMP_OFFSET(vframe, 0), \
+      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0) + GST_VIDEO_FRAME_COMP_OFFSET(vframe, 1), \
+      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0) + GST_VIDEO_FRAME_COMP_OFFSET(vframe, 2), \
+    };                                                                        \
+    const gsize pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE(vframe, 0);       \
+    const gsize stride = GST_VIDEO_FRAME_PLANE_STRIDE(vframe, 0);             \
     for (int32_t j = 0; j < dstHeight; ++j) {                                 \
       for (int32_t i = 0; i < dstWidth; ++i) {                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
@@ -1663,6 +1673,11 @@ G_STMT_START {                                                                \
         srcPtr[k] += stride - pixel_stride * dstWidth;                  \
     }                                                                         \
   } else {                                                                    \
+    const guint8 *srcPtr[3] = {                                               \
+      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0), \
+      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 1), \
+      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 2), \
+    };                                                                        \
     size_t frameSize = dstWidth * dstHeight;                                  \
     Type *destPtr[3] = { dst, dst + frameSize, dst + 2 * frameSize };         \
     for (int32_t j = 0; j < dstHeight; ++j) {                                 \
@@ -1670,32 +1685,30 @@ G_STMT_START {                                                                \
         for (int32_t k = 0; k < dstChannels; ++k) {                           \
           tmp = *srcPtr[k];                                                   \
           destPtr[k][destIndex] = (Type)(tmp * scales[k] + offsets[k]);       \
-          srcPtr[k] += pixel_stride;                                    \
+          srcPtr[k]++;                                                        \
         }                                                                     \
         destIndex++;                                                          \
       }                                                                       \
       /* correct for stride */                                                \
-      for (uint32_t k = 0; k < dstChannels; ++k)                              \
-        srcPtr[k] += stride - pixel_stride * dstWidth;                  \
+      for (uint32_t k = 0; k < dstChannels; ++k) {                            \
+        const gsize stride = GST_VIDEO_FRAME_PLANE_STRIDE(vframe, k);         \
+        srcPtr[k] += stride - dstWidth;                                       \
+      }                                                                       \
     }                                                                         \
   }                                                                           \
 }                                                                             \
 G_STMT_END;
 
 static void
-convert_image_scale_offset_u8 (guint8 * dst, gint dstWidth, gint dstHeight,
-    gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 pixel_stride, guint32 stride, const gdouble * scales,
-    const gdouble * offsets)
+convert_image_scale_offset_u8 (guint8 * dst, const GstVideoFrame * vframe,
+    const gdouble * scales, const gdouble * offsets)
 {
   _convert_image_scale_offset (guint8);
 }
 
 static void
-convert_image_scale_offset_f32 (gfloat * dst, gint dstWidth, gint dstHeight,
-    gint dstChannels, gboolean planar, guint8 ** srcPtr,
-    guint8 pixel_stride, guint32 stride, const gdouble * scales,
-    const gdouble * offsets)
+convert_image_scale_offset_f32 (gfloat * dst, const GstVideoFrame * vframe,
+    const gdouble * scales, const gdouble * offsets)
 {
   _convert_image_scale_offset (gfloat);
 }
@@ -1704,15 +1717,15 @@ static GstFlowReturn
 gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
-  GstMapInfo info;
+  GstVideoFrame vframe = GST_VIDEO_FRAME_INIT;
   OrtStatus *status = NULL;
   OrtValue *input_tensor = NULL;
   OrtValue **output_tensors = NULL;
-  uint8_t *srcPtr[3];
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
 
-  if (!gst_buffer_map (buf, &info, GST_MAP_READ)) {
+  if (!gst_video_frame_map (&vframe, &self->video_info, buf,
+          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
     GST_ELEMENT_ERROR (trans, STREAM, FAILED, (NULL),
         ("Could not map input buffer"));
     return GST_FLOW_ERROR;
@@ -1725,29 +1738,14 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       self->input_dims_count > 2 ? self->input_dims_runtime[2] : -1,
       self->input_dims_count > 3 ? self->input_dims_runtime[3] : -1);
 
-  // copy video frame
-  switch (self->video_info.finfo->format) {
-    case GST_VIDEO_FORMAT_RGB:
-      srcPtr[0] = info.data;
-      srcPtr[1] = info.data + 1;
-      srcPtr[2] = info.data + 2;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
   switch (self->input_data_type) {
     case GST_TENSOR_DATA_TYPE_UINT8:{
       uint8_t *src_data;
 
       if (!self->needs_conversion) {
-        src_data = info.data;
+        src_data = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
       } else {
-        convert_image_scale_offset_u8 (self->dest, self->width, self->height,
-            self->channels, self->planar, srcPtr,
-            GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
-            GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
+        convert_image_scale_offset_u8 (self->dest, &vframe,
             self->scales, self->offsets);
         src_data = self->dest;
       }
@@ -1759,11 +1757,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       break;
     }
     case GST_TENSOR_DATA_TYPE_FLOAT32:{
-      convert_image_scale_offset_f32 ((float *) self->dest, self->width,
-          self->height,
-          self->channels, self->planar, srcPtr,
-          GST_VIDEO_INFO_COMP_PSTRIDE (&self->video_info, 0),
-          GST_VIDEO_INFO_PLANE_STRIDE (&self->video_info, 0),
+      convert_image_scale_offset_f32 ((float *) self->dest, &vframe,
           self->scales, self->offsets);
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
@@ -1904,7 +1898,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   g_free (output_tensors);
 
   GST_TRACE_OBJECT (trans, "Num tensors:%zu", self->output_count);
-  gst_buffer_unmap (buf, &info);
+  gst_video_frame_unmap (&vframe);
 
   return GST_FLOW_OK;
 
@@ -1928,7 +1922,7 @@ error:
     gst_buffer_remove_meta (buf, (GstMeta *) tmeta);
 
 
-  gst_buffer_unmap (buf, &info);
+  gst_video_frame_unmap (&vframe);
 
   return GST_FLOW_ERROR;
 }
