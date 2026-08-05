@@ -971,6 +971,24 @@ struct _GstH264PredWeightTable
   gint8 chroma_offset_l1[32][2];
 };
 
+/**
+ * GST_H264_MAX_REF_PIC_MARKINGS:
+ *
+ * Maximum number of memory management control operations one
+ * `dec_ref_pic_marking` can carry. The standard sets no explicit bound
+ * (7.3.3.3); what bounds it is the reference set those operations can
+ * address. A.3 bounds MaxDpbFrames at 16, and each reference frame has
+ * two fields, so 32 references - each of which may, in the worst case,
+ * be moved to the long-term list (type 3) and then discarded from it
+ * (type 2). Three more set the long-term maximum (type 4), mark the
+ * current picture as long-term (type 6) and end the process (type 0).
+ *
+ * The same bound libavcodec has used for years, as H264_MAX_MMCO_COUNT.
+ *
+ * Since: 1.30
+ */
+#define GST_H264_MAX_REF_PIC_MARKINGS 67
+
 struct _GstH264RefPicMarking
 {
   guint8 memory_management_control_operation;
@@ -988,7 +1006,7 @@ struct _GstH264DecRefPicMarking
   guint8 long_term_reference_flag;
 
   guint8 adaptive_ref_pic_marking_mode_flag;
-  GstH264RefPicMarking ref_pic_marking[10];
+  GstH264RefPicMarking ref_pic_marking[GST_H264_MAX_REF_PIC_MARKINGS];
   guint8 n_ref_pic_marking;
 
   /* Size of the dec_ref_pic_marking() syntax element in bits (Since: 1.18) */
