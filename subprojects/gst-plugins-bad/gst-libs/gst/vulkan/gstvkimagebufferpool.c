@@ -634,12 +634,11 @@ mem_create_failed:
 static gboolean
 gst_vulkan_image_buffer_pool_stop (GstBufferPool * pool)
 {
-#if defined(VK_KHR_synchronization2)
   GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+
   if (priv->exec)
     gst_vulkan_operation_wait (priv->exec);
-#endif
 
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
