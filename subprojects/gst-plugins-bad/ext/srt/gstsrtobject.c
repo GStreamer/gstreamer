@@ -1360,10 +1360,25 @@ err:
     return 0;
 
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
-    /* Caller has disappeared. */
+    /* Caller has disappeared: remove it and wait for the next one,
+     * rather than tearing down the whole listening connection. */
     ERROR_TO_WARNING (srtobject, internal_error, "");
     g_clear_error (&internal_error);
-    return 0;
+
+    g_mutex_lock (&srtobject->sock_lock);
+    for (GList * l = srtobject->callers; l; l = l->next) {
+      GstSRTCaller *dead_caller = l->data;
+
+      if (dead_caller->sock == sock) {
+        srtobject->callers = g_list_delete_link (srtobject->callers, l);
+        srt_caller_signal_removed (dead_caller, srtobject);
+        gst_srt_caller_close (dead_caller);
+        break;
+      }
+    }
+    g_mutex_unlock (&srtobject->sock_lock);
+
+    goto retry;
   }
 
   if (!auto_reconnect) {
