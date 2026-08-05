@@ -6025,7 +6025,7 @@ gst_vulkan_operation_add_frame_barrier().</doc>
             <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
           </instance-parameter>
           <parameter name="frame" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstBuffer to update after submit</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a Vulkan Image #GstBuffer to update after submit</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
           <parameter name="dst_stage" transfer-ownership="none">
