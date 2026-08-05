@@ -1216,23 +1216,27 @@ again:
   priv->callbacks.setup_codec_pic (pic, &encode_info,
       priv->callbacks_user_data);
 
-  gst_vulkan_operation_add_dependency_frame (priv->exec, pic->in_buffer,
-      VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-      VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR);
-  gst_vulkan_operation_add_frame_barrier (priv->exec, pic->in_buffer,
-      VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-      VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
-      VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
-      VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR, NULL);
+  if (!gst_vulkan_operation_add_dependency_frame (priv->exec, pic->in_buffer,
+          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR))
+    goto reset_and_error;
+  if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->in_buffer,
+          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
+          VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
+          VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR, NULL))
+    goto reset_and_error;
 
-  gst_vulkan_operation_add_dependency_frame (priv->exec, pic->dpb_buffer,
-      VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-      VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR);
-  gst_vulkan_operation_add_frame_barrier (priv->exec, pic->dpb_buffer,
-      VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-      VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
-      VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
-      VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL);
+  if (!gst_vulkan_operation_add_dependency_frame (priv->exec, pic->dpb_buffer,
+          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR))
+    goto reset_and_error;
+  if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->dpb_buffer,
+          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
+          VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
+          VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL))
+    goto reset_and_error;
 
   barriers = gst_vulkan_operation_get_barriers (priv->exec);
   gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf,
@@ -1296,6 +1300,12 @@ bail:
   {
     if (err)
       g_error_free (err);
+    return FALSE;
+  }
+reset_and_error:
+  {
+    GST_WARNING_OBJECT (self, "Failed barrier operation");
+    gst_vulkan_operation_reset (priv->exec);
     return FALSE;
   }
 }

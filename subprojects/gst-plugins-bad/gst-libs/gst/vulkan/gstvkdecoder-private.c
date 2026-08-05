@@ -673,23 +673,25 @@ again:
   if (!gst_vulkan_operation_add_dependency_frame (priv->exec, pic->out,
           VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
           VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR)) {
-    return FALSE;
+    goto reset_and_error;
   }
 
   new_layout = ((self->layered_dpb && self->dedicated_dpb) || pic->dpb) ?
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR :
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR;
-  gst_vulkan_operation_add_frame_barrier (priv->exec, pic->out,
-      VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
-      VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
-      VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR, new_layout, NULL);
+  if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->out,
+          VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+          VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+          VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR, new_layout, NULL)) {
+    goto reset_and_error;
+  }
 
   /* Reference for the current image, if existing and not layered */
   if (pic->dpb) {
     if (!gst_vulkan_operation_add_dependency_frame (priv->exec, pic->dpb,
             VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
             VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR)) {
-      return FALSE;
+      goto reset_and_error;
     }
   }
 
@@ -703,7 +705,7 @@ again:
       if (!gst_vulkan_operation_add_dependency_frame (priv->exec, ref_buf,
               VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
               VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR)) {
-        return FALSE;
+        goto reset_and_error;
       }
 
       if (!ref_pic->dpb) {
@@ -745,7 +747,7 @@ again:
     if (!gst_vulkan_operation_add_dependency_frame (priv->exec,
             self->layered_buffer, VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
             VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR)) {
-      return FALSE;
+      goto reset_and_error;
     }
   }
 
@@ -775,6 +777,13 @@ again:
   }
 
   return ret;
+
+reset_and_error:
+  {
+    GST_WARNING_OBJECT (self, "Failed barrier operation");
+    gst_vulkan_operation_reset (priv->exec);
+    return FALSE;
+  }
 }
 
 /**
