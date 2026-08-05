@@ -5769,7 +5769,7 @@ gst_vulkan_operation_update_frame().</doc>
             <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
           </parameter>
           <parameter name="stage" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination pipeline stage (VkPipelineStageFlags or VkPipelinStageFlags2)</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination pipeline stage (VkPipelineStageFlags or VkPipelineStageFlags2)</doc>
             <type name="guint64" c:type="guint64"/>
           </parameter>
         </parameters>
@@ -5790,7 +5790,7 @@ gst_vulkan_operation_update_frame().</doc>
             <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
           </parameter>
           <parameter name="stage" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">source pipeline stage (VkPipelineStageFlags or VkPipelinStageFlags2)</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">source pipeline stage (VkPipelineStageFlags or VkPipelineStageFlags2)</doc>
             <type name="guint64" c:type="guint64"/>
           </parameter>
         </parameters>

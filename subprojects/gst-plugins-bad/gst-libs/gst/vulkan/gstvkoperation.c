@@ -957,7 +957,7 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
  * gst_vulkan_operation_add_wait_semaphore:
  * @self: a #GstVulkanOperation
  * @semaphore: (transfer full): a semaphore
- * @stage: source pipeline stage (VkPipelineStageFlags or VkPipelinStageFlags2)
+ * @stage: source pipeline stage (VkPipelineStageFlags or VkPipelineStageFlags2)
  *
  * Adds @semaphore to the list of semaphores waited on in vkQueueSubmit/2.
  *
@@ -1005,7 +1005,7 @@ gst_vulkan_operation_add_wait_semaphore (GstVulkanOperation * self,
  * gst_vulkan_operation_add_signal_semaphore:
  * @self: a #GstVulkanOperation
  * @semaphore: (transfer full): a semaphore
- * @stage: destination pipeline stage (VkPipelineStageFlags or VkPipelinStageFlags2)
+ * @stage: destination pipeline stage (VkPipelineStageFlags or VkPipelineStageFlags2)
  *
  * Adds @semaphore to the list of semaphores signalled by vkQueueSubmit/2.
  *
