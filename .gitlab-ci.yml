@@ -261,6 +261,10 @@ windows amd64 docker:
     FDO_DISTRIBUTION_PACKAGES: 'libabigail'
     FDO_DISTRIBUTION_EXEC: 'bash ci/docker/abi-check/prepare.sh'
     ABI_CHECK_CACHE: '/abi-check-cache'
+    MESON_ARGS: >-
+      ${SIMPLE_BUILD}
+      -Dtests=disabled
+      -Dexamples=disabled
 
 abi-check docker:
   # kvm has very minimal CPU available and may overrun the job
