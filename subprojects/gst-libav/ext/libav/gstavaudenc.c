@@ -192,6 +192,7 @@ gst_ffmpegaudenc_start (GstAudioEncoder * encoder)
   avcodec_free_context (&ffmpegaudenc->context);
   av_frame_free (&ffmpegaudenc->frame);
   ffmpegaudenc->need_reopen = FALSE;
+  ffmpegaudenc->drained = FALSE;
 
   ffmpegaudenc->frame = av_frame_alloc ();
 
@@ -207,6 +208,7 @@ gst_ffmpegaudenc_stop (GstAudioEncoder * encoder)
   avcodec_free_context (&ffmpegaudenc->context);
   av_frame_free (&ffmpegaudenc->frame);
   ffmpegaudenc->need_reopen = FALSE;
+  ffmpegaudenc->drained = FALSE;
 
   return TRUE;
 }
@@ -219,6 +221,7 @@ gst_ffmpegaudenc_flush (GstAudioEncoder * encoder)
   if (ffmpegaudenc->context) {
     avcodec_flush_buffers (ffmpegaudenc->context);
   }
+  ffmpegaudenc->drained = FALSE;
 }
 
 static gboolean
@@ -233,6 +236,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
       (GstFFMpegAudEncClass *) G_OBJECT_GET_CLASS (ffmpegaudenc);
 
   ffmpegaudenc->need_reopen = FALSE;
+  ffmpegaudenc->drained = FALSE;
 
   /* close old session */
   avcodec_free_context (&ffmpegaudenc->context);
@@ -660,6 +664,14 @@ gst_ffmpegaudenc_drain (GstFFMpegAudEnc * ffmpegaudenc)
   if (!ffmpegaudenc->context)
     return GST_FLOW_OK;
 
+  /* A codec that advertises AV_CODEC_CAP_ENCODER_FLUSH accepts new input after
+   * avcodec_flush_buffers() below, so a second drain starts over and emits more
+   * packets. Every packet clears the drained flag of the base class, which then
+   * calls this function again, and the two never settle. The AudioToolbox
+   * encoders behave this way. Report one drain per run of input instead. */
+  if (ffmpegaudenc->drained)
+    return GST_FLOW_OK;
+
   ret = gst_ffmpegaudenc_send_frame (ffmpegaudenc, NULL);
 
   if (ret == GST_FLOW_OK) {
@@ -672,6 +684,7 @@ gst_ffmpegaudenc_drain (GstFFMpegAudEnc * ffmpegaudenc)
 
   /* NOTE: this may or may not work depending on capability */
   avcodec_flush_buffers (ffmpegaudenc->context);
+  ffmpegaudenc->drained = TRUE;
 
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
    * then we are translating it to GST_FLOW_EOS. However, because this behavior
@@ -698,6 +711,8 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
 
   if (!inbuf)
     return gst_ffmpegaudenc_drain (ffmpegaudenc);
+
+  ffmpegaudenc->drained = FALSE;
 
   /* endoder was drained or flushed, and ffmpeg encoder doesn't support
    * flushing. We need to re-open encoder then */
