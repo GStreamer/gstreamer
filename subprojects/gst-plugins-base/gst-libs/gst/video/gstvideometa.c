@@ -1695,7 +1695,7 @@ gst_buffer_add_video_time_code_meta (GstBuffer * buffer,
  * @buffer: a #GstBuffer
  * @fps_n: framerate numerator
  * @fps_d: framerate denominator
- * @latest_daily_jam: a #GDateTime for the latest daily jam
+ * @latest_daily_jam: (allow-none): a #GDateTime for the latest daily jam
  * @flags: a #GstVideoTimeCodeFlags
  * @hours: hours since the daily jam
  * @minutes: minutes since the daily jam
