@@ -124,6 +124,8 @@ report_mismatch_diff (ValidateFlowOverride * flow, gsize line_index,
   const gchar *reset = colored ? "\033[0m" : "";
   GString *diff = g_string_new (NULL);
   gsize ctx_start, ctx_end, i;
+  gsize n_expected =
+      flow->expected_lines ? g_strv_length (flow->expected_lines) : 0;
 
   g_string_append_printf (diff, "--- %s\n+++ %s\n",
       flow->expectations_file_path, flow->actual_results_file_path);
@@ -138,21 +140,15 @@ report_mismatch_diff (ValidateFlowOverride * flow, gsize line_index,
       ctx_start + 1, ctx_end - ctx_start + 1);
 
   /* Context before */
-  for (i = ctx_start; i < line_index; i++) {
-    if (flow->expected_lines[i] == NULL)
-      break;
+  for (i = ctx_start; i < line_index && i < n_expected; i++)
     g_string_append_printf (diff, " %s\n", flow->expected_lines[i]);
-  }
 
   g_string_append_printf (diff, "%s-%s%s\n%s+%s%s\n",
       red, expected, reset, green, actual, reset);
 
   /* Context after */
-  for (i = line_index + 1; i <= ctx_end; i++) {
-    if (flow->expected_lines[i] == NULL)
-      break;
+  for (i = line_index + 1; i <= ctx_end && i < n_expected; i++)
     g_string_append_printf (diff, " %s\n", flow->expected_lines[i]);
-  }
 
   GST_VALIDATE_REPORT (flow, VALIDATE_FLOW_MISMATCH,
       "Mismatch in pad %s, line %" G_GSIZE_FORMAT ":\n%s%s%s",
