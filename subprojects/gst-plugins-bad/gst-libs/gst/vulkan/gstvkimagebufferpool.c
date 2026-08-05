@@ -547,21 +547,28 @@ prepare_buffer (GstVulkanImageBufferPool * vk_pool, GstBuffer * buffer)
     return FALSE;
 
   if (!gst_vulkan_operation_begin (priv->exec, &error))
-    goto error;
+    goto reset_and_error;
 
   if (!gst_vulkan_operation_add_frame_barrier (priv->exec, buffer,
           VK_PIPELINE_STAGE_NONE_KHR, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
           priv->initial_access, priv->initial_layout, NULL))
-    goto error;
+    goto reset_and_error;
 
   GstVulkanBarrierState *barriers =
       gst_vulkan_operation_get_barriers (priv->exec);
   gst_vulkan_barrier_state_pipeline_barrier (barriers, priv->exec->cmd_buf, 0);
 
   if (!gst_vulkan_operation_end (priv->exec, &error))
-    goto error;
+    goto reset_and_error;
 
   return TRUE;
+
+reset_and_error:
+  {
+    gst_vulkan_operation_reset (priv->exec);
+    GST_WARNING_OBJECT (vk_pool, "Failed barrier operation");
+    /* fallback to error */
+  }
 
 error:
   {
@@ -592,7 +599,8 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (!gst_vulkan_image_buffer_pool_fill_buffer (vk_pool, tiling, offset, buf))
     goto mem_create_failed;
 
-  prepare_buffer (vk_pool, buf);
+  if (!prepare_buffer (vk_pool, buf))
+    goto mem_create_failed;
 
   if (priv->add_videometa) {
     gsize *off = (priv->n_imgs == 1) ? priv->v_info.offset : offset;
@@ -611,7 +619,7 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   /* ERROR */
 no_buffer:
   {
-    GST_WARNING_OBJECT (pool, "can't create image");
+    GST_WARNING_OBJECT (pool, "Could not create image");
     return GST_FLOW_ERROR;
   }
 mem_create_failed:
