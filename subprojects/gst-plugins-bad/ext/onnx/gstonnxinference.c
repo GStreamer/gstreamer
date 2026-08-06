@@ -221,6 +221,9 @@ static GstCaps *gst_onnx_inference_transform_caps (GstBaseTransform *
 static gboolean
 gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
+static gboolean
+gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query);
 static gboolean gst_onnx_inference_start (GstBaseTransform * trans);
 static gboolean gst_onnx_inference_stop (GstBaseTransform * trans);
 
@@ -415,6 +418,8 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       GST_DEBUG_FUNCPTR (gst_onnx_inference_transform_caps);
   basetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_onnx_inference_set_caps);
+  basetransform_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_onnx_inference_propose_allocation);
   basetransform_class->start = GST_DEBUG_FUNCPTR (gst_onnx_inference_start);
   basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_onnx_inference_stop);
 
@@ -1624,6 +1629,20 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   } else {
     self->input_dims_runtime[self->width_dim] = self->width;
   }
+
+  return TRUE;
+}
+
+static gboolean
+gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query)
+{
+  if (!GST_BASE_TRANSFORM_CLASS
+      (gst_onnx_inference_parent_class)->propose_allocation (trans,
+          decide_query, query))
+    return FALSE;
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   return TRUE;
 }
