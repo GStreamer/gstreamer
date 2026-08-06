@@ -456,13 +456,8 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   if (!gst_byte_reader_get_uint32_le (&reader, &id))
     return FALSE;
-#else
-  if (!gst_byte_reader_get_uint32_be (&reader, &id))
-    return FALSE;
-#endif
 
   if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF)
       && GST_MAKE_FOURCC ('J', 'F', 'I', 'F') == id) {
