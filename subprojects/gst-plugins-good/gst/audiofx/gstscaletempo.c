@@ -260,7 +260,7 @@ output_overlap_s16 (GstScaletempo * st, gpointer buf_out, guint bytes_off)
   gint16 *pin = (gint16 *) (st->buf_queue + bytes_off);
   gint i;
   for (i = 0; i < st->samples_overlap; i++) {
-    *pout++ = *po - ((*pb++ * (*po - *pin++)) >> 16);
+    *pout++ = *po - (gint32) (((gint64) (*pb++) * (*po - *pin++)) >> 16);
     po++;
   }
 }
