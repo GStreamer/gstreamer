@@ -66,6 +66,12 @@ guint64               gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * disp
                                                              GstVideoFormat format,
                                                              guint usage_hint);
 
+GST_VA_API
+gboolean              gst_va_dmabuf_try_modifier_for_format (GstVaDisplay * display,
+                                                              GstVideoFormat format,
+                                                              guint usage_hint,
+                                                              guint64 modifier);
+
 #define GST_TYPE_VA_ALLOCATOR (gst_va_allocator_get_type())
 #define GST_IS_VA_ALLOCATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_ALLOCATOR))
 #define GST_IS_VA_ALLOCATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_ALLOCATOR))

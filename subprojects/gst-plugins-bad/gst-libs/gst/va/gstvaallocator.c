@@ -684,6 +684,42 @@ gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * display,
   return desc.objects[0].drm_format_modifier;
 }
 
+/**
+ * gst_va_dmabuf_try_modifier_for_format:
+ * @display: a #GstVaDisplay
+ * @format: a #GstVideoFormat
+ * @usage_hint: VA usage hint
+ * @modifier: the DRM format modifier to try
+ *
+ * Tries to create a surface with the specified @modifier and exports
+ * it to DMABUF to verify the driver supports it.
+ *
+ * Returns: %TRUE if the driver supports the requested modifier.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_va_dmabuf_try_modifier_for_format (GstVaDisplay * display,
+    GstVideoFormat format, guint usage_hint, guint64 modifier)
+{
+  VADRMPRIMESurfaceDescriptor desc = { 0, };
+  VASurfaceID surface;
+  GstVideoInfo info;
+
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, format, 64, 64);
+
+  if (!_va_create_surface_and_export_to_dmabuf (display, usage_hint,
+          &modifier, 1, &info, &surface, &desc))
+    return FALSE;
+
+  /* Close the fds we won't be using */
+  _close_fds (&desc);
+  va_destroy_surfaces (display, &surface, 1);
+
+  return TRUE;
+}
+
 /* Creates an exported VASurfaceID and adds it as @buffer's memories
  * qdata
  *

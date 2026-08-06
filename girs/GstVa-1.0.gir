@@ -1020,6 +1020,33 @@ VASurfaceID and it's attached into every @mem.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="va_dmabuf_try_modifier_for_format" c:identifier="gst_va_dmabuf_try_modifier_for_format" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Tries to create a surface with the specified @modifier and exports
+it to DMABUF to verify the driver supports it.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the driver supports the requested modifier.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="display" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoFormat</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+        <parameter name="usage_hint" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="modifier" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the DRM format modifier to try</doc>
+          <type name="guint64" c:type="guint64"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="va_element_propagate_display_context" c:identifier="gst_va_element_propagate_display_context" version="1.22">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Propagate @display by posting it as #GstContext in the pipeline's bus.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
