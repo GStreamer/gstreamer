@@ -1054,13 +1054,11 @@ gst_x265_enc_close_encoder (GstX265Enc * encoder)
   }
 }
 
-static x265_nal *
-gst_x265_enc_bytestream_to_nal (x265_nal * input)
+static void
+gst_x265_enc_bytestream_to_nal (x265_nal * input, x265_nal * output)
 {
-  x265_nal *output;
   int i, j, zeros;
 
-  output = g_malloc (sizeof (x265_nal));
   output->payload = g_malloc (input->sizeBytes - 4);
   output->sizeBytes = input->sizeBytes - 4;
   output->type = input->type;
@@ -1079,21 +1077,12 @@ gst_x265_enc_bytestream_to_nal (x265_nal * input)
     }
     output->payload[j] = input->payload[i];
   }
-
-  return output;
-}
-
-static void
-x265_nal_free (x265_nal * nal)
-{
-  g_free (nal->payload);
-  g_free (nal);
 }
 
 static gboolean
 gst_x265_enc_set_level_tier_and_profile (GstX265Enc * encoder, GstCaps * caps)
 {
-  x265_nal *nal, *vps_nal;
+  x265_nal *nal, vps_nal;
   guint32 i_nal;
   int header_return;
   const x265_api *api = encoder->api;
@@ -1117,13 +1106,13 @@ gst_x265_enc_set_level_tier_and_profile (GstX265Enc * encoder, GstCaps * caps)
   GST_DEBUG_OBJECT (encoder, "%d nal units in header", i_nal);
 
   g_assert (nal[0].type == NAL_UNIT_VPS);
-  vps_nal = gst_x265_enc_bytestream_to_nal (&nal[0]);
+  gst_x265_enc_bytestream_to_nal (&nal[0], &vps_nal);
 
-  GST_MEMDUMP ("VPS", vps_nal->payload, vps_nal->sizeBytes);
+  GST_MEMDUMP ("VPS", vps_nal.payload, vps_nal.sizeBytes);
 
   gst_codec_utils_h265_caps_set_level_tier_and_profile (caps,
-      vps_nal->payload + 6, vps_nal->sizeBytes - 6);
-  x265_nal_free (vps_nal);
+      vps_nal.payload + 6, vps_nal.sizeBytes - 6);
+  g_free (vps_nal.payload);
 
   /* relaxing the profile condition since libx265 can select lower profile than
    * requested one via param_apply_profile()
