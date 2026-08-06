@@ -1602,15 +1602,13 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
-  self->input_tensor_size = input_tensor_size;
-
-  if (self->dest == NULL || self->width * self->height !=
-      self->video_info.width * self->video_info.height) {
+  if (self->dest == NULL || self->input_tensor_size != input_tensor_size) {
     g_free (self->dest);
     self->dest = g_malloc (input_tensor_size);
   }
   self->width = self->video_info.width;
   self->height = self->video_info.height;
+  self->input_tensor_size = input_tensor_size;
 
   /* Resolve dynamic input dimensions and validate fixed ones */
   memcpy (self->input_dims_runtime, self->input_dims_model,
