@@ -108,6 +108,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include <math.h>
 #include <gst/analytics/analytics.h>
 
 #include <onnxruntime_c_api.h>
@@ -1749,7 +1750,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
       /* Check if conversion is needed based on scales/offsets */
       for (int32_t i = 0; i < self->channels; i++) {
-        if (self->scales[i] != 1.0 || self->offsets[i] != 0.0) {
+        if (fabs (self->scales[i] - 1.0) > 0.001
+            || fabs (self->offsets[i]) > 0.001) {
           needs_conversion = TRUE;
           break;
         }
