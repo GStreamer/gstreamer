@@ -113,6 +113,12 @@ GstVulkanImageView *    gst_vulkan_video_image_create_view     (GstBuffer * buf,
                                                                 GstVulkanHandle * sampler);
 
 GST_VULKAN_API
+gboolean                gst_vulkan_video_get_capabilities      (GstVulkanPhysicalDevice * device,
+                                                                GstVulkanVideoProfile * profile,
+                                                                GstVulkanVideoCapabilities * vkcaps,
+                                                                GError ** error);
+
+GST_VULKAN_API
 gboolean                gst_vulkan_video_try_configuration     (GstVulkanPhysicalDevice * device,
                                                                 GstVulkanVideoProfile * profile,
                                                                 GstVulkanVideoCapabilities * out_vkcaps,
