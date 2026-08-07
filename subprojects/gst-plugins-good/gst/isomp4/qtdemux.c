@@ -6508,7 +6508,7 @@ error:
 }
 
 static guint8 *
-convert_to_s334_1a (const guint8 * ccpair, guint8 ccpair_size, guint field,
+convert_to_s334_1a (const guint8 * ccpair, gsize ccpair_size, guint field,
     gsize * res)
 {
   guint8 *storage;
@@ -6582,7 +6582,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
       /* Check for another atom ? */
       if (size > atom_length + 8) {
         guint32 new_atom_length = QT_UINT32 (data + atom_length);
-        if (size >= atom_length + new_atom_length) {
+        if (new_atom_length > 8 && size - atom_length >= new_atom_length) {
           fourcc = QT_FOURCC (data + atom_length + 4);
           if (fourcc == FOURCC_cdat) {
             if (cdat == NULL)
