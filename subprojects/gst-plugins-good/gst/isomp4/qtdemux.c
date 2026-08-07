@@ -7021,7 +7021,7 @@ gst_qtdemux_split_and_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (stream->subtype == FOURCC_clcp
+  if (stream->subtype == FOURCC_clcp && CUR_STREAM (stream)->fps_d
       && CUR_STREAM (stream)->fourcc == FOURCC_c608 && stream->need_split) {
     GstMapInfo map;
     guint n_output_buffers, n_field1 = 0, n_field2 = 0;
@@ -10320,6 +10320,9 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       gst_caps_set_simple (CUR_STREAM (stream)->caps,
           "framerate", GST_TYPE_FRACTION, CUR_STREAM (stream)->fps_n,
           CUR_STREAM (stream)->fps_d, NULL);
+    } else {
+      GST_WARNING_OBJECT (qtdemux,
+          "Can't handle CEA608 captions without framerate correctly");
     }
   }
 
