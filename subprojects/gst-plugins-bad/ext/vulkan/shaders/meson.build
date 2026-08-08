@@ -10,6 +10,8 @@ gst_vulkan_shader_sources = [
   'rgb_to_ayuv.frag',
   'nv12_to_rgb.frag',
   'rgb_to_nv12.frag',
+  'i420_to_rgb.frag',
+  'rgb_to_i420.frag',
   'av12_to_rgb.frag',
   'rgb_to_av12.frag',
   'rgbx_to_av12.frag',
