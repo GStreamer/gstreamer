@@ -1055,6 +1055,7 @@ gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime time)
       stream->gap_ref_pts = time;
       if (stream->last_ts != GST_CLOCK_TIME_NONE && stream->last_ts > time)
         stream->gap_ref_pts = stream->last_ts;
+      stream->gap_ref_buffers = stream->nb_out_buffers;
     }
   }
 }
