@@ -127,6 +127,28 @@ struct GstHipFuncTableAmd
   hipError_t (*hipGraphicsGLRegisterBuffer) (hipGraphicsResource** resource,
       unsigned int buffer, unsigned int flags);
 #endif
+
+#ifndef G_OS_WIN32
+/* TODO: for DMABUF import, add Windows support too */
+  hipError_t (*hipImportExternalMemory) (hipExternalMemory_t* extMem_out,
+    const hipExternalMemoryHandleDesc* memHandleDesc);
+  hipError_t (*hipDestroyExternalMemory) (hipExternalMemory_t extMem);
+  hipError_t (*hipExternalMemoryGetMappedBuffer) (void** devPtr,
+      hipExternalMemory_t extMem, const hipExternalMemoryBufferDesc* bufferDesc);
+  hipError_t (*hipMemGetAllocationGranularity) (size_t* granularity,
+      const hipMemAllocationProp* prop, hipMemAllocationGranularity_flags option);
+  hipError_t (*hipMemCreate) (hipMemGenericAllocationHandle_t* handle,
+      size_t size, const hipMemAllocationProp* prop, unsigned long long flags);
+  hipError_t (*hipMemRelease) (hipMemGenericAllocationHandle_t handle);
+  hipError_t (*hipMemAddressReserve) (void** ptr, size_t size, size_t alignment,
+      void* addr, unsigned long long flags);
+  hipError_t (*hipMemAddressFree) (void* devPtr, size_t size);
+  hipError_t (*hipMemMap) (void* ptr, size_t size, size_t offset,
+      hipMemGenericAllocationHandle_t handle, unsigned long long flags);
+  hipError_t (*hipMemUnmap) (void* ptr, size_t size);
+  hipError_t (*hipMemSetAccess) (void* ptr, size_t size,
+      const hipMemAccessDesc* desc, size_t count);
+#endif
 };
 
 struct GstHipFuncTableCuda
@@ -316,6 +338,19 @@ load_amd_func_table (void)
 #ifdef HAVE_GST_GL
   LOAD_SYMBOL (hipGLGetDevices);
   LOAD_SYMBOL (hipGraphicsGLRegisterBuffer);
+#endif
+#ifndef G_OS_WIN32
+  LOAD_SYMBOL (hipImportExternalMemory);
+  LOAD_SYMBOL (hipDestroyExternalMemory);
+  LOAD_SYMBOL (hipExternalMemoryGetMappedBuffer);
+  LOAD_SYMBOL (hipMemGetAllocationGranularity);
+  LOAD_SYMBOL (hipMemCreate);
+  LOAD_SYMBOL (hipMemRelease);
+  LOAD_SYMBOL (hipMemAddressReserve);
+  LOAD_SYMBOL (hipMemAddressFree);
+  LOAD_SYMBOL (hipMemMap);
+  LOAD_SYMBOL (hipMemUnmap);
+  LOAD_SYMBOL (hipMemSetAccess);
 #endif
 
   table->loaded = TRUE;
@@ -1472,4 +1507,166 @@ HipMemcpyHtoDAsync (GstHipVendor vendor, hipDeviceptr_t dstDevice,
   auto cuda_ret = cuda_ftable.cuMemcpyHtoDAsync ((CUdeviceptr) dstDevice,
       srcHost, ByteCount, (CUstream) hStream);
   return hipCUResultTohipError (cuda_ret);
+}
+
+hipError_t
+HipImportExternalMemory (GstHipVendor vendor, hipExternalMemory_t * extMem_out,
+    const hipExternalMemoryHandleDesc * memHandleDesc)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipImportExternalMemory (extMem_out, memHandleDesc);
+#endif
+}
+
+hipError_t
+HipDestroyExternalMemory (GstHipVendor vendor, hipExternalMemory_t extMem)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipDestroyExternalMemory (extMem);
+#endif
+}
+
+hipError_t
+HipExternalMemoryGetMappedBuffer (GstHipVendor vendor, void **devPtr,
+    hipExternalMemory_t extMem, const hipExternalMemoryBufferDesc * bufferDesc)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipExternalMemoryGetMappedBuffer (devPtr,
+      extMem, bufferDesc);
+#endif
+}
+
+hipError_t
+HipMemGetAllocationGranularity (GstHipVendor vendor, size_t *granularity,
+    const hipMemAllocationProp * prop, hipMemAllocationGranularity_flags option)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemGetAllocationGranularity (granularity, prop, option);
+#endif
+}
+
+hipError_t
+HipMemCreate (GstHipVendor vendor, hipMemGenericAllocationHandle_t * handle,
+    size_t size, const hipMemAllocationProp * prop, unsigned long long flags)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemCreate (handle, size, prop, flags);
+#endif
+}
+
+hipError_t
+HipMemRelease (GstHipVendor vendor, hipMemGenericAllocationHandle_t handle)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemRelease (handle);
+#endif
+}
+
+hipError_t
+HipMemAddressReserve (GstHipVendor vendor, void **ptr, size_t size,
+    size_t alignment, void *addr, unsigned long long flags)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemAddressReserve (ptr, size, alignment, addr, flags);
+#endif
+}
+
+hipError_t
+HipMemAddressFree (GstHipVendor vendor, void *devPtr, size_t size)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemAddressFree (devPtr, size);
+#endif
+}
+
+hipError_t
+HipMemMap (GstHipVendor vendor, void *ptr, size_t size, size_t offset,
+    hipMemGenericAllocationHandle_t handle, unsigned long long flags)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemMap (ptr, size, offset, handle, flags);
+#endif
+}
+
+hipError_t
+HipMemUnmap (GstHipVendor vendor, void *ptr, size_t size)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemUnmap (ptr, size);
+#endif
+}
+
+hipError_t
+HipMemSetAccess (GstHipVendor vendor, void *ptr, size_t size,
+    const hipMemAccessDesc * desc, size_t count)
+{
+#ifdef G_OS_WIN32
+  return hipErrorNotSupported;
+#else
+  /* TODO: add CUDA backend implementation */
+  if (vendor != GST_HIP_VENDOR_AMD)
+    return hipErrorNotSupported;
+
+  return amd_ftable.hipMemSetAccess (ptr, size, desc, count);
+#endif
 }

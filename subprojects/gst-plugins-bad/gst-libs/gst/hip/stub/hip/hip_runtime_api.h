@@ -508,3 +508,117 @@ typedef struct ihipEvent_t* hipEvent_t;
 /** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
+typedef void* hipExternalMemory_t;
+
+typedef enum hipExternalMemoryHandleType_enum {
+  hipExternalMemoryHandleTypeOpaqueFd = 1,
+  hipExternalMemoryHandleTypeOpaqueWin32 = 2,
+  hipExternalMemoryHandleTypeOpaqueWin32Kmt = 3,
+  hipExternalMemoryHandleTypeD3D12Heap = 4,
+  hipExternalMemoryHandleTypeD3D12Resource = 5,
+  hipExternalMemoryHandleTypeD3D11Resource = 6,
+  hipExternalMemoryHandleTypeD3D11ResourceKmt = 7,
+  hipExternalMemoryHandleTypeNvSciBuf = 8
+} hipExternalMemoryHandleType;
+
+typedef struct hipExternalMemoryHandleDesc_st {
+  hipExternalMemoryHandleType type;
+  union {
+    int fd;
+    struct {
+      void* handle;
+      const void* name;
+    } win32;
+    const void* nvSciBufObject;
+  } handle;
+  unsigned long long size;
+  unsigned int flags;
+  unsigned int reserved[16];
+} hipExternalMemoryHandleDesc;
+
+typedef struct hipExternalMemoryBufferDesc_st {
+  unsigned long long offset;
+  unsigned long long size;
+  unsigned int flags;
+  unsigned int reserved[16];
+} hipExternalMemoryBufferDesc;
+
+typedef enum hipMemAllocationHandleType {
+  hipMemHandleTypeNone = 0x0,  ///< Does not allow any export mechanism
+  hipMemHandleTypePosixFileDescriptor =
+      0x1,  ///< Allows a file descriptor for exporting. Permitted only on POSIX systems
+  hipMemHandleTypeWin32 = 0x2,    ///< Allows a Win32 NT handle for exporting. (HANDLE)
+  hipMemHandleTypeWin32Kmt = 0x4,  ///< Allows a Win32 KMT handle for exporting. (D3DKMT_HANDLE)
+  hipMemHandleTypeFabric   = 0x8   ///< Allows a fabric handle to be used for exporting.
+} hipMemAllocationHandleType;
+
+typedef enum hipMemAllocationType {
+  hipMemAllocationTypeInvalid = 0x0,
+  /** This allocation type is 'pinned', i.e. cannot migrate from its current
+   * location while the application is actively using it
+   */
+  hipMemAllocationTypePinned = 0x1,
+  hipMemAllocationTypeManaged = 0x2,
+  hipMemAllocationTypeUncached = 0x40000000,
+  hipMemAllocationTypeMax = 0x7FFFFFFF
+} hipMemAllocationType;
+
+/**
+ * Specifies the type of location
+ */
+typedef enum hipMemLocationType {
+  hipMemLocationTypeInvalid = 0,
+  hipMemLocationTypeNone = 0,
+  hipMemLocationTypeDevice = 1,    ///< Device location, thus it's HIP device ID
+  hipMemLocationTypeHost = 2,      ///< Host location, id is ignored
+  hipMemLocationTypeHostNuma = 3,  ///< Host NUMA node location, id is host NUMA node id
+  hipMemLocationTypeHostNumaCurrent =
+      4  ///< Host NUMA node closest to current thread’s CPU, id is ignored
+} hipMemLocationType;
+/**
+ * Specifies a memory location.
+ *
+ * To specify a gpu, set type = @p hipMemLocationTypeDevice and set id = the gpu's device ID
+ */
+typedef struct hipMemLocation {
+  hipMemLocationType type;  ///< Specifies the location type, which describes the meaning of id
+  int id;                   ///< Identifier for the provided location type @p hipMemLocationType
+} hipMemLocation;
+
+typedef struct hipMemAllocationProp {
+  hipMemAllocationType type;  ///< Memory allocation type
+  union {
+    hipMemAllocationHandleType requestedHandleType;   ///< Requested handle type
+    hipMemAllocationHandleType requestedHandleTypes;  ///< Requested handle types
+  };
+  hipMemLocation location;    ///< Memory location
+  void* win32HandleMetaData;  ///< Metadata for Win32 handles
+  struct {
+    unsigned char compressionType;       ///< Compression type
+    unsigned char gpuDirectRDMACapable;  ///< RDMA capable
+    unsigned short usage;                ///< Usage
+  } allocFlags;
+} hipMemAllocationProp;
+
+typedef enum hipMemAccessFlags {
+  hipMemAccessFlagsProtNone = 0,      ///< Default, make the address range not accessible
+  hipMemAccessFlagsProtRead = 1,      ///< Set the address range read accessible
+  hipMemAccessFlagsProtReadWrite = 3  ///< Set the address range read-write accessible
+} hipMemAccessFlags;
+/**
+ * Memory access descriptor structure is used to specify memory access
+ * permissions for a virtual memory region in Virtual Memory Management API.
+ * This structure changes read, and write permissions for
+ * specific memory regions.
+ */
+typedef struct hipMemAccessDesc {
+  hipMemLocation location;  ///< Location on which the accessibility has to change
+  hipMemAccessFlags flags;  ///< Accessibility flags to set
+} hipMemAccessDesc;
+
+typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
+
+typedef enum hipMemAllocationGranularity_flags {
+  hipMemAllocationGranularityMinimum = 0x0,     ///< Minimum granularity
+  hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
+} hipMemAllocationGranularity_flags;
