@@ -81,7 +81,7 @@ gsthip = library('gsthip', hip_sources + hip_amd_precompiled + hip_nvidia_precom
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, hipstub_incdir],
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gsthip_dep] + extra_deps,
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gsthip_dep, gstallocators_dep] + extra_deps,
   install : true,
   install_dir : plugins_install_dir,
 )
