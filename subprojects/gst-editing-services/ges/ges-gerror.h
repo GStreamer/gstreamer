@@ -54,6 +54,31 @@ GQuark ges_error_quark (void);
  * desired operation. (Since: 1.18)
  * @GES_ERROR_INVALID_OVERLAP_IN_TRACK: The operation would break one of
  * the overlap conditions for the #GESTimeline. (Since: 1.18)
+ * @GES_ERROR_SENSITIVE_PROPERTY: An effect description
+ * tried to set a property marked %GST_PARAM_UNTRUSTED_SENSITIVE, which is
+ * refused when the effect is created from untrusted input (for example a
+ * loaded project file). (Since: 1.30)
+ * @GES_ERROR_UNTRUSTED_ELEMENT: An effect description used an element that is
+ * not marked untrusted-aware, which is refused when the effect is created
+ * from untrusted input (for example a loaded project file). (Since: 1.30)
+ */
+/**
+ * GES_ERROR_SENSITIVE_PROPERTY:
+ *
+ * An effect description tried to set a property marked
+ * %GST_PARAM_UNTRUSTED_SENSITIVE, which is refused when the effect is created
+ * from untrusted input (for example a loaded project file).
+ *
+ * Since: 1.30
+ */
+/**
+ * GES_ERROR_UNTRUSTED_ELEMENT:
+ *
+ * An effect description used an element that is not marked untrusted-aware,
+ * see gst_element_class_mark_as_untrusted_aware(), which is refused when the
+ * effect is created from untrusted input (for example a loaded project file).
+ *
+ * Since: 1.30
  */
 typedef enum
 {
@@ -66,6 +91,8 @@ typedef enum
   GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
   GES_ERROR_INVALID_OVERLAP_IN_TRACK,
   GES_ERROR_INVALID_EFFECT_BIN_DESCRIPTION,
+  GES_ERROR_SENSITIVE_PROPERTY,
+  GES_ERROR_UNTRUSTED_ELEMENT,
 } GESError;
 
 G_END_DECLS

@@ -386,7 +386,8 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_source          (GESBaseXmlForma
                                                                  GstStructure *children_properties,
                                                                  GstStructure *properties,
                                                                  const gchar *metadatas,
-                                                                 gint stream_number);
+                                                                 gint stream_number,
+                                                                 GError **error);
 
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_group           (GESBaseXmlFormatter *self,
                                                                  const gchar *name,

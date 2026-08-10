@@ -752,7 +752,7 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
   }
 
   ges_base_xml_formatter_add_source (GES_BASE_XML_FORMATTER (self), track_id,
-      children_props, props, metadatas, stream_number);
+      children_props, props, metadatas, stream_number, error);
 
 done:
   if (children_props)

@@ -4077,6 +4077,16 @@ the overlap conditions for the #GESTimeline. (Since: 1.18)</doc>
       </member>
       <member name="invalid_effect_bin_description" value="8" c:identifier="GES_ERROR_INVALID_EFFECT_BIN_DESCRIPTION">
       </member>
+      <member name="sensitive_property" value="9" c:identifier="GES_ERROR_SENSITIVE_PROPERTY" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-gerror.h">An effect description tried to set a property marked
+%GST_PARAM_UNTRUSTED_SENSITIVE, which is refused when the effect is created
+from untrusted input (for example a loaded project file).</doc>
+      </member>
+      <member name="untrusted_element" value="10" c:identifier="GES_ERROR_UNTRUSTED_ELEMENT" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-gerror.h">An effect description used an element that is not marked untrusted-aware,
+see gst_element_class_mark_as_untrusted_aware(), which is refused when the
+effect is created from untrusted input (for example a loaded project file).</doc>
+      </member>
     </enumeration>
     <interface name="Extractable" c:symbol-prefix="extractable" c:type="GESExtractable" glib:type-name="GESExtractable" glib:get-type="ges_extractable_get_type" glib:type-struct="ExtractableInterface">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-extractable.c">A #GObject that implements the #GESExtractable interface can be

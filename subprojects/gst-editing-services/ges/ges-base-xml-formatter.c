@@ -90,6 +90,11 @@ struct _GESBaseXmlFormatterPrivate
 
   GError *asset_error;
 
+  /* Set by _set_child_property() when it refuses a child property marked
+   * GST_PARAM_UNTRUSTED_SENSITIVE. Owned here; consumed (moved) by the caller
+   * that has a GError ** so the load fails closed. */
+  GstStructure *untrusted_sensitive_blocked;
+
   /* current track element */
   GESTrackElement *current_track_element;
 
@@ -381,6 +386,7 @@ _dispose (GObject * object)
   g_clear_pointer (&priv->containers, g_hash_table_unref);
   g_clear_pointer (&priv->tracks, g_hash_table_unref);
   g_clear_pointer (&priv->layers, g_hash_table_unref);
+  gst_clear_structure (&priv->untrusted_sensitive_blocked);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -551,12 +557,20 @@ _loading_done_cb (GESFormatter * self)
   return FALSE;
 }
 
+typedef struct
+{
+  GESBaseXmlFormatter *formatter;
+  GESTimelineElement *tlelement;
+} SetChildPropertyData;
+
 static gboolean
 _set_child_property (const GstIdStr * fieldname, const GValue * value,
-    GESTimelineElement * tlelement)
+    SetChildPropertyData * data)
 {
   GParamSpec *pspec;
   GObject *object;
+  GESTimelineElement *tlelement = data->tlelement;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (data->formatter);
 
   /* FIXME: error handling? */
   if (!ges_timeline_element_lookup_child (tlelement,
@@ -570,9 +584,55 @@ _set_child_property (const GstIdStr * fieldname, const GValue * value,
     return TRUE;
   }
 
+  /* Children properties are applied verbatim from the (potentially untrusted)
+   * serialized timeline. Refuse security-sensitive ones just like the effect
+   * bin-description parser does, and fail the load closed. This is the second
+   * property channel: an attacker can put the payload here even with an inert
+   * bin-description. */
+  if (pspec->flags & GST_PARAM_UNTRUSTED_SENSITIVE) {
+    gchar *field = g_strdup_printf ("%s:%s",
+        GES_TIMELINE_ELEMENT_NAME (tlelement), pspec->name);
+
+    if (!priv->untrusted_sensitive_blocked) {
+      priv->untrusted_sensitive_blocked =
+          gst_structure_new_empty ("untrusted-sensitive-properties");
+    }
+    gst_structure_set_value (priv->untrusted_sensitive_blocked, field, value);
+    g_free (field);
+    g_param_spec_unref (pspec);
+    gst_object_unref (object);
+    return FALSE;
+  }
+
   g_object_set_property (G_OBJECT (object), pspec->name, value);
   g_param_spec_unref (pspec);
   gst_object_unref (object);
+  return TRUE;
+}
+
+/* Move a pending untrusted-sensitive block (if any) into @error, returning
+ * TRUE if the load must fail closed. */
+static gboolean
+_take_untrusted_sensitive_error (GESBaseXmlFormatter * self, GError ** error)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GstStructure *report;
+  gchar *blocked;
+
+  if (!priv->untrusted_sensitive_blocked)
+    return FALSE;
+
+  report = gst_structure_new ("untrusted-content", "properties",
+      GST_TYPE_STRUCTURE, priv->untrusted_sensitive_blocked, NULL);
+  blocked = gst_structure_to_string (report);
+  g_set_error (error, GES_ERROR,
+      GES_ERROR_SENSITIVE_PROPERTY,
+      "Refusing to set security-sensitive child properties from untrusted "
+      "content: %s", blocked);
+  g_free (blocked);
+  gst_structure_free (report);
+  gst_clear_structure (&priv->untrusted_sensitive_blocked);
+
   return TRUE;
 }
 
@@ -585,13 +645,14 @@ set_property_foreach (const GstIdStr * fieldname, const GValue * value,
 }
 
 static inline GESClip *
-_add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
+_add_object_to_layer (GESBaseXmlFormatter * self, const gchar * id,
     GESLayer * layer, GESAsset * asset, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration,
     GESTrackType track_types, const gchar * metadatas,
     GstStructure * properties, GstStructure * children_properties,
     GError ** error)
 {
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESClip *clip = ges_layer_add_asset (layer,
       asset, start, inpoint, duration, track_types);
 
@@ -612,9 +673,13 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
     gst_structure_foreach_id_str (properties,
         (GstStructureForeachIdStrFunc) set_property_foreach, clip);
 
-  if (children_properties)
+  if (children_properties) {
+    SetChildPropertyData data = { self, GES_TIMELINE_ELEMENT (clip) };
     gst_structure_foreach_id_str (children_properties,
-        (GstStructureForeachIdStrFunc) _set_child_property, clip);
+        (GstStructureForeachIdStrFunc) _set_child_property, &data);
+    if (_take_untrusted_sensitive_error (self, error))
+      return NULL;
+  }
 
   g_hash_table_insert (priv->containers, g_strdup (id), gst_object_ref (clip));
   return clip;
@@ -642,8 +707,13 @@ _add_track_element (GESFormatter * self, GESClip * clip,
           GES_TIMELINE_ELEMENT (trackelement)))
     GST_ERROR ("%" GES_FORMAT " could not add child %p while"
         " reloading, this should never happen", GES_ARGS (clip), trackelement);
-  gst_structure_foreach_id_str (children_properties,
-      (GstStructureForeachIdStrFunc) _set_child_property, trackelement);
+  {
+    SetChildPropertyData data = { GES_BASE_XML_FORMATTER (self),
+      GES_TIMELINE_ELEMENT (trackelement)
+    };
+    gst_structure_foreach_id_str (children_properties,
+        (GstStructureForeachIdStrFunc) _set_child_property, &data);
+  }
 
   if (properties) {
     gboolean has_internal_source;
@@ -902,7 +972,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     return;
   }
 
-  nclip = _add_object_to_layer (priv, id, entry->layer,
+  nclip = _add_object_to_layer (self, id, entry->layer,
       asset, start, inpoint, duration, track_types, metadatas, properties,
       children_properties, error);
 
@@ -1144,7 +1214,8 @@ _get_source_by_stream_number (GESClip * clip, gint stream_number)
 void
 ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     const gchar * track_id, GstStructure * children_properties,
-    GstStructure * properties, const gchar * metadatas, gint stream_number)
+    GstStructure * properties, const gchar * metadatas, gint stream_number,
+    GError ** error)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
@@ -1204,9 +1275,13 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     gst_structure_foreach_id_str (properties,
         (GstStructureForeachIdStrFunc) set_property_foreach, element);
 
-  if (children_properties)
+  if (children_properties) {
+    SetChildPropertyData data = { self, GES_TIMELINE_ELEMENT (element) };
     gst_structure_foreach_id_str (children_properties,
-        (GstStructureForeachIdStrFunc) _set_child_property, element);
+        (GstStructureForeachIdStrFunc) _set_child_property, &data);
+    if (_take_untrusted_sensitive_error (self, error))
+      return;
+  }
 
   if (metadatas)
     ges_meta_container_add_metas_from_string (GES_META_CONTAINER
@@ -1245,6 +1320,16 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
 
   asset = ges_asset_request (track_element_type, asset_id, &err);
   if (asset == NULL) {
+    /* An effect the untrusted-input rules refuse must fail the load, not be
+     * silently dropped from the project. */
+    if (err && err->domain == GES_ERROR
+        && (err->code == GES_ERROR_UNTRUSTED_ELEMENT
+            || err->code == GES_ERROR_SENSITIVE_PROPERTY)) {
+      g_propagate_error (error, err);
+      err = NULL;
+      goto out;
+    }
+
     GST_DEBUG_OBJECT (self, "Can not create trackelement %s", asset_id);
     GST_FIXME_OBJECT (self, "Check if missing plugins etc %s",
         err ? err->message : "");
@@ -1262,6 +1347,10 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
     clip = g_hash_table_lookup (priv->containers, timeline_obj_id);
     _add_track_element (GES_FORMATTER (self), clip, trackelement, track_id,
         children_properties, properties);
+    if (_take_untrusted_sensitive_error (self, error)) {
+      gst_object_unref (asset);
+      return;
+    }
     priv->current_track_element = trackelement;
   }
 

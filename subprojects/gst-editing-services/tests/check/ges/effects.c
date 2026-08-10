@@ -889,6 +889,170 @@ GST_START_TEST (test_move_time_effect)
 
 GST_END_TEST;
 
+GST_START_TEST (test_effect_untrusted_sensitive_property)
+{
+  GESEffect *effect;
+
+  ges_init ();
+
+  /* An element that was not reviewed for untrusted input must be refused
+   * before it is even created. */
+  effect = ges_effect_new ("fdsink");
+  fail_unless (effect == NULL,
+      "effect using an element that is not untrusted-aware should not be "
+      "created");
+
+  /* An effect whose description sets a GST_PARAM_UNTRUSTED_SENSITIVE property
+   * (queue2::temp-template writes a file) must be refused: effects are
+   * created from potentially untrusted serialized timelines. */
+  effect = ges_effect_new ("queue2 temp-template=/tmp/should-not-load");
+  fail_unless (effect == NULL,
+      "effect with a sensitive property should not be created");
+
+  /* The same element without the sensitive property is fine. */
+  effect = ges_effect_new ("queue2");
+  fail_unless (effect != NULL,
+      "effect without a sensitive property should be created");
+  gst_object_unref (effect);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+/* The API channel is trusted, the file channel is not: set a sensitive child
+ * property through the API, save, and check the result cannot be loaded back.
+ * Then patch the saved file to use an element that is not untrusted-aware and
+ * check that this is refused too. */
+typedef struct
+{
+  GMainLoop *mainloop;
+  GError *error;
+} LoadResult;
+
+static void
+_error_loading_cb (GESProject * project, GESTimeline * timeline, GError * error,
+    LoadResult * res)
+{
+  if (!res->error)
+    res->error = g_error_copy (error);
+}
+
+static void
+_error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
+    GType extractable_type, LoadResult * res)
+{
+  if (!res->error)
+    res->error = g_error_copy (error);
+  g_main_loop_quit (res->mainloop);
+}
+
+static void
+_loaded_cb (GESProject * project, GESTimeline * timeline, LoadResult * res)
+{
+  g_main_loop_quit (res->mainloop);
+}
+
+/* Load @uri and return the error the project reported, if any. */
+static GError *
+load_xges_file (const gchar * uri)
+{
+  GESProject *project = ges_project_new (uri);
+  LoadResult res = { g_main_loop_new (NULL, FALSE), NULL };
+  GESTimeline *timeline;
+
+  g_signal_connect (project, "error-loading", (GCallback) _error_loading_cb,
+      &res);
+  g_signal_connect (project, "error-loading-asset",
+      (GCallback) _error_loading_asset_cb, &res);
+  g_signal_connect (project, "loaded", (GCallback) _loaded_cb, &res);
+
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  fail_unless (timeline != NULL);
+  g_main_loop_run (res.mainloop);
+
+  g_main_loop_unref (res.mainloop);
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+
+  return res.error;
+}
+
+GST_START_TEST (test_load_xges_untrusted)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESEffect *effect;
+  GESProject *project;
+  GESAsset *formatter;
+  GError *error = NULL;
+  GValue v = G_VALUE_INIT;
+  gchar *uri, *path, *content, **parts;
+
+  ges_init ();
+
+  /* the timeline must be extracted from the project for it to be saveable */
+  project = ges_project_new (NULL);
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &error));
+  fail_unless (timeline != NULL, "%s", error ? error->message : "");
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip),
+      2 * GST_SECOND);
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  effect = ges_effect_new ("queue2");
+  fail_unless (effect != NULL);
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+
+  /* through the API this is allowed, it does not come from untrusted content */
+  g_value_init (&v, G_TYPE_STRING);
+  g_value_set_string (&v, "/tmp/gstreamer-should-not-XXXXXX");
+  fail_unless (ges_timeline_element_set_child_property (GES_TIMELINE_ELEMENT
+          (effect), "temp-template", &v));
+  g_value_unset (&v);
+
+  formatter = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
+  uri = ges_test_get_tmp_uri ("untrusted-children-properties.xges");
+  fail_unless (ges_project_save (project, timeline, uri, formatter, TRUE,
+          &error), "could not save: %s", error ? error->message : "");
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+
+  /* the same project read back from a file is untrusted content */
+  error = load_xges_file (uri);
+  fail_unless (error != NULL, "loading a sensitive child property must fail");
+  fail_unless_equals_int (error->code, GES_ERROR_SENSITIVE_PROPERTY);
+  g_clear_error (&error);
+
+  /* same file, with the effect replaced by an element that is not
+   * untrusted-aware */
+  path = g_filename_from_uri (uri, NULL, NULL);
+  fail_unless (g_file_get_contents (path, &content, NULL, NULL));
+  fail_unless (g_strstr_len (content, -1, "queue2") != NULL);
+  parts = g_strsplit (content, "queue2", -1);
+  g_free (content);
+  content = g_strjoinv ("fdsink", parts);
+  g_strfreev (parts);
+  fail_unless (g_file_set_contents (path, content, -1, NULL));
+  g_free (content);
+
+  error = load_xges_file (uri);
+  fail_unless (error != NULL, "loading an untrusted element must fail");
+  g_clear_error (&error);
+
+  g_free (path);
+  g_free (uri);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -898,6 +1062,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_effect_basic);
+  tcase_add_test (tc_chain, test_effect_untrusted_sensitive_property);
   tcase_add_test (tc_chain, test_add_effect_to_clip);
   tcase_add_test (tc_chain, test_get_effects_from_tl);
   tcase_add_test (tc_chain, test_effect_clip);
@@ -906,6 +1071,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_clip_signals);
   tcase_add_test (tc_chain, test_split_clip_effect_priorities);
   tcase_add_test (tc_chain, test_move_time_effect);
+  tcase_add_test (tc_chain, test_load_xges_untrusted);
 
   return s;
 }

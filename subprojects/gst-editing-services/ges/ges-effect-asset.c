@@ -296,6 +296,47 @@ ghost:
   return TRUE;
 }
 
+/* Parse an effect bin-description coming from a (potentially untrusted) effect
+ * asset id. Effects loaded from a serialized timeline may only use elements
+ * that are marked untrusted-aware, and may not set any
+ * GST_PARAM_UNTRUSTED_SENSITIVE property (file/uri/host/shader/script/...), so
+ * we always parse with GST_PARSE_FLAG_NO_UNTRUSTED.
+ * Both refusals are translated into GES errors naming what was refused, so an
+ * editor can surface them to the user. */
+static GstElement *
+ges_effect_parse_bin_from_description (const gchar * bin_desc,
+    gboolean ghost_unlinked_pads, GstParseFlags extra_flags, GError ** error)
+{
+  GstParseContext *ctx = gst_parse_context_new ();
+  GError *parse_error = NULL;
+  GstElement *effect;
+
+  effect = gst_parse_bin_from_description_full (bin_desc, ghost_unlinked_pads,
+      ctx, extra_flags | GST_PARSE_FLAG_NO_UNTRUSTED, &parse_error);
+
+  if (!effect && parse_error && parse_error->domain == GST_PARSE_ERROR
+      && (parse_error->code == GST_PARSE_ERROR_SENSITIVE_PROPERTY
+          || parse_error->code == GST_PARSE_ERROR_UNTRUSTED_ELEMENT)) {
+    GstStructure *report = gst_parse_context_get_untrusted_report (ctx);
+    gchar *report_str = report ? gst_structure_to_string (report) : NULL;
+    gint code = parse_error->code == GST_PARSE_ERROR_UNTRUSTED_ELEMENT ?
+        GES_ERROR_UNTRUSTED_ELEMENT : GES_ERROR_SENSITIVE_PROPERTY;
+
+    g_clear_error (&parse_error);
+    g_set_error (error, GES_ERROR, code,
+        "Effect description '%s' is not allowed when loading untrusted "
+        "content: %s", bin_desc, report_str ? report_str : "(unknown)");
+    g_free (report_str);
+    gst_clear_structure (&report);
+  } else if (parse_error) {
+    g_propagate_error (error, parse_error);
+  }
+
+  gst_parse_context_free (ctx);
+
+  return effect;
+}
+
 GstElement *
 ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
     GError ** error)
@@ -309,8 +350,7 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
   gchar *converter_str_heap = NULL;
   GList *tmp, *sinkpads = NULL, *elems_with_reqsink = NULL,
       *elems_with_reqsrc = NULL;
-  GstElement *effect =
-      gst_parse_bin_from_description_full (bin_desc, FALSE, NULL,
+  GstElement *effect = ges_effect_parse_bin_from_description (bin_desc, FALSE,
       GST_PARSE_FLAG_PLACE_IN_BIN | GST_PARSE_FLAG_FATAL_ERRORS, error);
 
   if (!effect) {
@@ -414,7 +454,8 @@ ges_effect_asset_id_get_type_and_bindesc (const char *id,
   bindesc = g_strdup (user_bindesc);
   g_strfreev (typebin_desc);
 
-  effect = gst_parse_bin_from_description (bindesc, TRUE, error);
+  effect = ges_effect_parse_bin_from_description (bindesc, TRUE,
+      GST_PARSE_FLAG_NONE, error);
   if (effect == NULL) {
     GST_ERROR ("Could not create element from: %s", bindesc);
     g_free (bindesc);
