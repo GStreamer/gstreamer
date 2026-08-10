@@ -141,6 +141,7 @@ gst_valve_class_init (GstValveClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Valve element",
       "Filter", "Drops buffers and events or lets them through",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_VALVE_DROP_MODE, 0);
 }

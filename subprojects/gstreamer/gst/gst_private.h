@@ -68,6 +68,17 @@ G_BEGIN_DECLS
 /* used by gstparse.c and grammar.y */
 struct _GstParseContext {
   GList * missing_elements;
+  /* Assignments blocked by GST_PARSE_FLAG_NO_UNTRUSTED: a GstStructure named
+   * "untrusted-sensitive-properties" with one "element-name:property" field
+   * per blocked assignment, or NULL. */
+  GstStructure * blocked_sensitive_properties;
+  /* Blocked assignments to a child that never materialized during the parse
+   * (demuxer pads and other runtime-only children): same field shape, but the
+   * value is always the string as written since the property type is unknown.
+   * A GstStructure named "untrusted-unresolved-properties", or NULL. */
+  GstStructure * unresolved_properties;
+  /* Factory names refused by GST_PARSE_FLAG_NO_UNTRUSTED (GList of gchar*). */
+  GList * untrusted_elements;
 };
 
 /* used by gstplugin.c and gstregistrybinary.c */

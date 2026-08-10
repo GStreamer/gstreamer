@@ -15874,6 +15874,13 @@ for more details and common types. E.g: "Sink/File"</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstelementmetadata.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="ELEMENT_METADATA_UNTRUSTED_AWARE" value="untrusted-aware" c:type="GST_ELEMENT_METADATA_UNTRUSTED_AWARE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelementmetadata.h">Set to "true" on elements that have been reviewed for use with untrusted
+input, see gst_element_class_mark_as_untrusted_aware(). Elements without it
+are refused when parsing with %GST_PARSE_FLAG_NO_UNTRUSTED.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelementmetadata.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="ELEMENT_NAME" c:identifier="GST_ELEMENT_NAME" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Gets the name of this element. This is not thread-safe by default
 (i.e. you will have to make sure the object lock is taken yourself).
@@ -19468,6 +19475,46 @@ list must not be modified by the calling code.
           </instance-parameter>
         </parameters>
       </method>
+      <method name="is_untrusted_aware" c:identifier="gst_element_class_is_untrusted_aware" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">Checks whether @klass was marked with
+gst_element_class_mark_as_untrusted_aware().
+
+Use gst_element_factory_is_untrusted_aware() to check this without loading
+the plugin the element lives in.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">%TRUE if @klass was reviewed for use with untrusted input.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="klass" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">class to check</doc>
+            <type name="ElementClass" c:type="GstElementClass*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="mark_as_untrusted_aware" c:identifier="gst_element_class_mark_as_untrusted_aware" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">Declares that @klass was reviewed for being instantiated and configured from
+an untrusted pipeline description, for example a gst_parse_launch() string
+that came from an untrusted source: instantiating it cannot by itself reach
+outside media processing, and every property whose value can is marked
+%GST_PARAM_UNTRUSTED_SENSITIVE.
+
+Parsing a description with %GST_PARSE_FLAG_NO_UNTRUSTED refuses to create
+elements that are not marked this way, so an element that was never reviewed,
+including any third-party element, cannot be instantiated from such a
+description.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="klass" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">class to mark</doc>
+            <type name="ElementClass" c:type="GstElementClass*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="set_metadata" c:identifier="gst_element_class_set_metadata">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">Sets the detailed information for a #GstElementClass.
 &gt; This function is for use in _class_init functions only.</doc>
@@ -20075,6 +20122,24 @@ make a copy of the protocol string array if you need to.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelementfactory.c">an interface name</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="is_untrusted_aware" c:identifier="gst_element_factory_is_untrusted_aware" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelementfactory.c">Checks whether the element @factory produces was reviewed for use with
+untrusted input, see gst_element_class_mark_as_untrusted_aware(). The check
+reads the factory metadata, so it does not load the plugin nor create an
+element.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstelementfactory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelementfactory.c">%TRUE if elements from @factory may be created from an untrusted
+description.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="factory" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelementfactory.c">a #GstElementFactory</doc>
+            <type name="ElementFactory" c:type="GstElementFactory*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="list_is_type" c:identifier="gst_element_factory_list_is_type">
@@ -32508,6 +32573,26 @@ they can be changed when the element is in the READY or lower state.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="PARAM_UNTRUSTED_SENSITIVE" value="32768" c:type="GST_PARAM_UNTRUSTED_SENSITIVE" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Use this flag on GObject properties whose value can make the element reach
+outside its media processing: read or write a file, open a network
+connection, select a device or IPC endpoint, load a plugin or library, or
+run externally supplied code (shader or script source). Setting such a
+property from data that comes from an untrusted source (for example a
+serialized pipeline or project file that was downloaded or received from a
+third party) is a security risk.
+
+Consumers that build pipelines from untrusted descriptions can ask
+gst_parse_launch_full() to refuse these properties with
+%GST_PARSE_FLAG_NO_UNTRUSTED.
+
+This flag only takes effect on elements whose class is also marked with
+gst_element_class_mark_as_untrusted_aware(): an unmarked element is never
+instantiated from an untrusted description in the first place, so an element
+that sets this flag on a property must also mark its class.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
     <constant name="PARAM_USER_SHIFT" value="65536" c:type="GST_PARAM_USER_SHIFT">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">Bits based on GST_PARAM_USER_SHIFT can be used by 3rd party applications.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
@@ -36542,6 +36627,48 @@ of %GST_PARSE_ERROR_NO_SUCH_ELEMENT was returned.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_untrusted_report" c:identifier="gst_parse_context_get_untrusted_report" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">Retrieve what a previous run of gst_parse_launch_full() or
+gst_parse_launchv_full() refused because %GST_PARSE_FLAG_NO_UNTRUSTED was
+set, so an application can tell the user exactly what a description was
+refused for and decide whether to build it in a trusted mode.
+
+Everything that was refused is listed, whichever error the parse reported.
+The result is a #GstStructure named `untrusted-content` with:
+
+* `elements`: a list of the factory names that are not marked
+  untrusted-aware, see gst_element_class_mark_as_untrusted_aware(). Absent
+  when no element was refused.
+* `properties`: a #GstStructure named `untrusted-sensitive-properties`, with
+  one field per refused assignment named `element-name:property`, where
+  `element-name` is the unique name of the element instance and `property`
+  is the property as written in the description, possibly a
+  `child::property` path. The field holds the refused value, parsed into the
+  property's own type when that type is known and parsing the value cannot
+  have side effects, and the string as written otherwise. A refused value is
+  never handed to the property setter. Absent when no property was refused.
+* `unresolved-properties`: a #GstStructure named
+  `untrusted-unresolved-properties`, same field shape, for assignments to a
+  child that never materialized during the parse (demuxer pads and other
+  runtime-only children). The value is always the string as written, since
+  the property type is not known. Absent when no such assignment was
+  refused.
+
+gst_parse_untrusted_report() unpacks these fields without knowing the
+layout.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstparse.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">a structure describing what was
+    refused, or %NULL if nothing was. Free with gst_structure_free().</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">a #GstParseContext</doc>
+            <type name="ParseContext" c:type="GstParseContext*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
     </record>
     <enumeration name="ParseError" glib:type-name="GstParseError" glib:get-type="gst_parse_error_get_type" c:type="GstParseError" glib:error-domain="gst_parse_error">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.h">The different parsing errors that can occur.</doc>
@@ -36569,6 +36696,16 @@ of %GST_PARSE_ERROR_NO_SUCH_ELEMENT was returned.</doc>
       <member name="delayed_link" value="7" c:identifier="GST_PARSE_ERROR_DELAYED_LINK" glib:nick="delayed-link" glib:name="GST_PARSE_ERROR_DELAYED_LINK">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.h">A delayed link did not get resolved.</doc>
       </member>
+      <member name="sensitive_property" value="8" c:identifier="GST_PARSE_ERROR_SENSITIVE_PROPERTY" version="1.30" glib:nick="sensitive-property" glib:name="GST_PARSE_ERROR_SENSITIVE_PROPERTY">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.h">A property marked %GST_PARAM_UNTRUSTED_SENSITIVE was set, or a property was
+aimed at a child that still did not exist when parsing finished, while
+%GST_PARSE_FLAG_NO_UNTRUSTED was in effect.</doc>
+      </member>
+      <member name="untrusted_element" value="9" c:identifier="GST_PARSE_ERROR_UNTRUSTED_ELEMENT" version="1.30" glib:nick="untrusted-element" glib:name="GST_PARSE_ERROR_UNTRUSTED_ELEMENT">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.h">The description used an element that is not marked untrusted-aware, see
+gst_element_class_mark_as_untrusted_aware(), while
+%GST_PARSE_FLAG_NO_UNTRUSTED was in effect.</doc>
+      </member>
       <function name="quark" c:identifier="gst_parse_error_quark">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">Get the error quark used by the parsing subsystem.</doc>
         <return-value transfer-ownership="none">
@@ -36595,6 +36732,22 @@ of %GST_PARSE_ERROR_NO_SUCH_ELEMENT was returned.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.h">If more than one toplevel element is described
     by the pipeline description string, put them in a #GstBin instead of a
     #GstPipeline. (Since: 1.10)</doc>
+      </member>
+      <member name="no_untrusted" value="8" c:identifier="GST_PARSE_FLAG_NO_UNTRUSTED" version="1.30" glib:nick="no-untrusted" glib:name="GST_PARSE_FLAG_NO_UNTRUSTED">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.h">Refuse to set any property marked %GST_PARAM_UNTRUSTED_SENSITIVE, failing the
+parse with %GST_PARSE_ERROR_SENSITIVE_PROPERTY before the property is set, so
+a setter that performs I/O never runs. A property aimed at a child that does
+not exist yet is checked at the moment the child appears while parsing, as
+happens for request pads created by links in the description. A child that
+still has not appeared when parsing finishes (a pad only added once the
+pipeline is running, for example a demuxer pad) can never be checked, so the
+parse is refused. Use this when building a pipeline from an untrusted
+description; what was refused is recorded in the #GstParseContext, see
+gst_parse_context_get_untrusted_report().
+
+The refused setter never runs, but as with any parse error the partially
+built pipeline is still returned unless %GST_PARSE_FLAG_FATAL_ERRORS is also
+set, so check the error, not only the return value.</doc>
       </member>
     </bitfield>
     <class name="Pipeline" c:symbol-prefix="pipeline" c:type="GstPipeline" parent="Bin" glib:type-name="GstPipeline" glib:get-type="gst_pipeline_get_type" glib:type-struct="PipelineClass">
@@ -60364,6 +60517,46 @@ An error does not mean that the pipeline could not be constructed.</doc>
         <parameter name="flags" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">parsing options, or #GST_PARSE_FLAG_NONE</doc>
           <type name="ParseFlags" c:type="GstParseFlags"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="parse_untrusted_report" c:identifier="gst_parse_untrusted_report" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">Unpacks an `untrusted-content` report into its parts, so a caller does not
+have to know the field names and nesting the structure uses. Each output is
+filled with the corresponding part when it is present, and set to %NULL when
+it is not; pass %NULL for the parts you do not care about.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstparse.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">%TRUE if @report is an `untrusted-content` report.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="report" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">an `untrusted-content` #GstStructure, as returned by
+    gst_parse_context_get_untrusted_report()</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="elements" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">
+    the factory names refused because they are not untrusted-aware, or %NULL</doc>
+          <array c:type="gchar***">
+            <type name="utf8"/>
+          </array>
+        </parameter>
+        <parameter name="properties" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">the refused sensitive
+    property assignments, a #GstStructure named
+    `untrusted-sensitive-properties` with one `element-name:property` field
+    per assignment holding the refused value (in the property's own type
+    when known, the string as written otherwise), or %NULL</doc>
+          <type name="Structure" c:type="GstStructure**"/>
+        </parameter>
+        <parameter name="unresolved_properties" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparse.c">the refused
+    assignments to children that never materialized, a #GstStructure named
+    `untrusted-unresolved-properties` of the same shape but with the value
+    always the string as written, since the type is not known, or %NULL</doc>
+          <type name="Structure" c:type="GstStructure**"/>
         </parameter>
       </parameters>
     </function>

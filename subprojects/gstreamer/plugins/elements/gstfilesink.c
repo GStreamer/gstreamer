@@ -271,7 +271,8 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to write", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
       g_param_spec_enum ("buffer-mode", "Buffering mode",
@@ -336,6 +337,8 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
       "File Sink",
       "Sink/File", "Write stream to a file",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);

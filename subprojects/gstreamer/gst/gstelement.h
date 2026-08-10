@@ -1147,6 +1147,12 @@ GST_API
 void                    gst_element_class_add_static_metadata   (GstElementClass * klass,
                                                                  const gchar * key, const gchar * value);
 GST_API
+void                    gst_element_class_mark_as_untrusted_aware (GstElementClass * klass);
+
+GST_API
+gboolean                gst_element_class_is_untrusted_aware    (GstElementClass * klass);
+
+GST_API
 const gchar *           gst_element_class_get_metadata          (GstElementClass * klass,
                                                                  const gchar * key);
 

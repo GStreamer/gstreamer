@@ -257,6 +257,94 @@ static void  add_missing_element(graph_t *graph,gchar *name){
     }
 }
 
+/*******************************************************************************************
+*** untrusted-sensitive property enforcement
+*******************************************************************************************/
+
+/* Returns TRUE if setting @pspec must be refused because the parse was asked
+ * to disallow GST_PARAM_UNTRUSTED_SENSITIVE properties. */
+static gboolean
+is_untrusted_sensitive (graph_t *graph, GParamSpec *pspec)
+{
+  return (graph->flags & GST_PARSE_FLAG_NO_UNTRUSTED) != 0 &&
+      pspec != NULL && (pspec->flags & GST_PARAM_UNTRUSTED_SENSITIVE) != 0;
+}
+
+/* Record one blocked assignment as an "element-name:property" field of the
+ * context's "untrusted-sensitive-properties" structure. @prop_name is the full
+ * property path as written in the description (may include a child-proxy
+ * path). The value is stored in the property's own type when @pspec is known
+ * and parsing the value cannot have side effects, as the string written in the
+ * description otherwise; it is never handed to the property setter. */
+static void
+record_blocked_property (GstParseContext *ctx, const gchar *element_name,
+    const gchar *prop_name, const gchar *value, GParamSpec *pspec)
+{
+  GValue v = { 0, };
+  gchar *field;
+
+  if (!ctx)
+    return;
+
+  if (!ctx->blocked_sensitive_properties)
+    ctx->blocked_sensitive_properties =
+        gst_structure_new_empty ("untrusted-sensitive-properties");
+
+  if (pspec && pspec->value_type != G_TYPE_STRING &&
+      !g_type_is_a (pspec->value_type, G_TYPE_OBJECT)) {
+    g_value_init (&v, pspec->value_type);
+    if (!gst_value_deserialize_with_pspec (&v, value, pspec))
+      g_value_unset (&v);
+  }
+  if (!G_IS_VALUE (&v)) {
+    g_value_init (&v, G_TYPE_STRING);
+    g_value_set_string (&v, value ? value : "");
+  }
+
+  field = g_strdup_printf ("%s:%s", element_name ? element_name : "",
+      prop_name);
+  gst_structure_take_value (ctx->blocked_sensitive_properties, field, &v);
+  g_free (field);
+}
+
+/* Record one blocked assignment to a child that never materialized during the
+ * parse as a field of the context's "untrusted-unresolved-properties"
+ * structure. The value is kept as the string written since the property type
+ * is not known; it is never handed to a setter. */
+static void
+record_unresolved_property (GstParseContext *ctx, const gchar *element_name,
+    const gchar *prop_name, const gchar *value)
+{
+  gchar *field;
+
+  if (!ctx)
+    return;
+
+  if (!ctx->unresolved_properties)
+    ctx->unresolved_properties =
+        gst_structure_new_empty ("untrusted-unresolved-properties");
+
+  field = g_strdup_printf ("%s:%s", element_name ? element_name : "",
+      prop_name);
+  gst_structure_set (ctx->unresolved_properties, field, G_TYPE_STRING,
+      value ? value : "", NULL);
+  g_free (field);
+}
+
+/* Refuse one untrusted-sensitive assignment: record it in the parse context
+ * and set a GST_PARSE_ERROR_SENSITIVE_PROPERTY error, before the setter is
+ * ever called. */
+static void
+report_blocked_property (graph_t *graph, const gchar *element_name,
+    const gchar *prop_name, const gchar *value, GParamSpec *pspec)
+{
+  record_blocked_property (graph->ctx, element_name, prop_name, value, pspec);
+
+  SET_ERROR (graph, GST_PARSE_ERROR_SENSITIVE_PROPERTY,
+      _("property \"%s\" in element \"%s\" is not allowed when parsing "
+          "untrusted input"), prop_name, element_name);
+}
+
 static gchar *
 str_unwrap (const gchar * s)
 {
@@ -351,6 +439,10 @@ typedef struct {
   gchar *name;
   gchar *value_str;
   gulong signal_id;
+  /* the proxy this set is connected to, no reference taken: the set dies with
+   * the handler, which dies with the proxy */
+  GstChildProxy *proxy;
+  graph_t *graph; /* non-NULL only under GST_PARSE_FLAG_NO_UNTRUSTED */
 } DelayedSet;
 
 static int  gst_resolve_reference(reference_t *rr, GstElement *pipeline){
@@ -372,6 +464,8 @@ static int  gst_resolve_reference(reference_t *rr, GstElement *pipeline){
 
 static void gst_parse_free_delayed_set (DelayedSet *set)
 {
+  if (set->graph)
+    set->graph->delayed_sets = g_slist_remove (set->graph->delayed_sets, set);
   g_free(set->name);
   g_free(set->value_str);
   g_free(set);
@@ -380,7 +474,11 @@ static void gst_parse_free_delayed_set (DelayedSet *set)
 static void gst_parse_new_child (GstChildProxy *child_proxy, GObject *object,
     const gchar * name, gpointer data);
 
-static void gst_parse_add_delayed_set (GstChildProxy *proxy, gchar *name, gchar *value_str)
+static gboolean collect_value (graph_t *graph, GParamSpec *pspec,
+    gchar *value_str, GValue *v);
+
+static void gst_parse_add_delayed_set (GstChildProxy *proxy, gchar *name,
+    gchar *value_str, graph_t *graph)
 {
   DelayedSet *data = g_new0 (DelayedSet, 1);
   gchar **names, **current;
@@ -391,6 +489,11 @@ static void gst_parse_add_delayed_set (GstChildProxy *proxy, gchar *name, gchar 
 
   data->name = g_strdup (name);
   data->value_str = g_strdup (value_str);
+  data->proxy = proxy;
+  if (graph && (graph->flags & GST_PARSE_FLAG_NO_UNTRUSTED)) {
+    data->graph = graph;
+    graph->delayed_sets = g_slist_prepend (graph->delayed_sets, data);
+  }
   data->signal_id = g_signal_connect_data (proxy, "child-added",
       G_CALLBACK (gst_parse_new_child), data, (GClosureNotify)
       gst_parse_free_delayed_set, (GConnectFlags) 0);
@@ -409,7 +512,8 @@ static void gst_parse_add_delayed_set (GstChildProxy *proxy, gchar *name, gchar 
     if (!child && current[1]) {
       char *sub_name = g_strjoinv ("::", &current[0]);
 
-      gst_parse_add_delayed_set (GST_CHILD_PROXY (parent), sub_name, value_str);
+      gst_parse_add_delayed_set (GST_CHILD_PROXY (parent), sub_name, value_str,
+          graph);
       g_free (sub_name);
     }
 
@@ -463,25 +567,27 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
       name, set->name);
 
   if (gst_child_proxy_lookup (child_proxy, set->name, &target, &pspec)) {
-    gboolean got_value = FALSE;
+    gboolean got_value;
+
+    if (set->graph && is_untrusted_sensitive (set->graph, pspec)) {
+      report_blocked_property (set->graph,
+          GST_STR_NULL (GST_OBJECT_NAME (child_proxy)), set->name,
+          set->value_str, pspec);
+      /* disconnecting frees @set */
+      g_signal_handler_disconnect (child_proxy, set->signal_id);
+      goto out;
+    }
 
     value_type = pspec->value_type;
 
     GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "parsing delayed property %s as a %s from %s",
       pspec->name, g_type_name (value_type), set->value_str);
-    g_value_init (&v, value_type);
-    if (gst_value_deserialize_with_pspec (&v, set->value_str, pspec))
-      got_value = TRUE;
-    else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
-       GstElement *bin;
-
-       bin = gst_parse_bin_from_description_full (set->value_str, TRUE, NULL,
-           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN, NULL);
-       if (bin) {
-         g_value_set_object (&v, bin);
-         got_value = TRUE;
-       }
-    }
+    got_value = collect_value (set->graph, pspec, set->value_str, &v);
+    if (!got_value && set->graph)
+      SET_ERROR (set->graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+          _("could not set property \"%s\" in element \"%s\" to \"%s\""),
+          set->name, GST_STR_NULL (GST_OBJECT_NAME (child_proxy)),
+          set->value_str);
     g_signal_handler_disconnect (child_proxy, set->signal_id);
     if (!got_value)
       goto error;
@@ -524,7 +630,8 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
 
       /* Case 1: A child in the hierarchy does not exist yet, add a new delayed set */
       if (NULL == child) {
-        gst_parse_add_delayed_set (child_proxy, set->name, set->value_str);
+        gst_parse_add_delayed_set (child_proxy, set->name, set->value_str,
+            set->graph);
       }
       /* Case 2: The target child exists already but there's no such property */
       else {
@@ -579,25 +686,35 @@ gst_parse_split_assignment (gchar *value) {
 }
 
 static gboolean
-collect_value (GParamSpec *pspec, gchar *value_str, GValue *v)
+collect_value (graph_t *graph, GParamSpec *pspec, gchar *value_str, GValue *v)
 {
   gboolean got_value = FALSE;
+  gboolean untrusted = graph && (graph->flags & GST_PARSE_FLAG_NO_UNTRUSTED);
+  GstParseFlags bin_flags =
+      GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN;
+  GError *bin_err = NULL;
+  GstElement *bin;
 
   GST_CAT_LOG (GST_CAT_PIPELINE, "parsing property %s as a %s",
       pspec->name, g_type_name (pspec->value_type));
 
   g_value_init (v, pspec->value_type);
-  if (gst_value_deserialize_with_pspec (v, value_str, pspec))
+  if (gst_value_deserialize_with_pspec (v, value_str, pspec)) {
     got_value = TRUE;
-  else if (g_type_is_a (pspec->value_type, GST_TYPE_ELEMENT)) {
-     GstElement *bin;
+  } else if (g_type_is_a (pspec->value_type, GST_TYPE_ELEMENT)) {
+    if (untrusted)
+      bin_flags |= GST_PARSE_FLAG_NO_UNTRUSTED | GST_PARSE_FLAG_FATAL_ERRORS;
 
-     bin = gst_parse_bin_from_description_full (value_str, TRUE, NULL,
-         GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN, NULL);
-     if (bin) {
-       g_value_set_object (v, bin);
-       got_value = TRUE;
-     }
+    bin = gst_parse_bin_from_description_full (value_str, TRUE,
+        untrusted ? graph->ctx : NULL, bin_flags,
+        untrusted ? &bin_err : NULL);
+    if (bin) {
+      g_value_set_object (v, bin);
+      got_value = TRUE;
+    } else if (bin_err && bin_err->domain == GST_PARSE_ERROR) {
+      SET_ERROR (graph, (GstParseError) bin_err->code, "%s", bin_err->message);
+    }
+    g_clear_error (&bin_err);
   }
 
   return got_value;
@@ -605,6 +722,10 @@ collect_value (GParamSpec *pspec, gchar *value_str, GValue *v)
 
 static void gst_parse_element_preset (gchar *value, GstElement *element, graph_t *graph)
 {
+  /* Presets stay allowed under GST_PARSE_FLAG_NO_UNTRUSTED: they load only from
+   * .prs files already installed on disk, so untrusted content cannot choose a
+   * value here, nor create the file (filesink location is UNTRUSTED_SENSITIVE). */
+
   /* do nothing if preset is for missing element or its not a preset element */
   if (element == NULL)
     goto out;
@@ -655,6 +776,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
   GSList *tmp;
   gboolean is_proxy;
   GSList *proxied = NULL;
+  GSList *blocked = NULL;
   guint n_params = 0;
   guint n_params_alloc = 16;
   const gchar **names_array;
@@ -663,6 +785,22 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
 
   if (!factory) {
     SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), data->factory_name);
+    return NULL;
+  }
+
+  /* An element that was never reviewed for untrusted input may not even be
+   * created: its defaults alone can reach outside media processing. */
+  if ((graph->flags & GST_PARSE_FLAG_NO_UNTRUSTED) &&
+      !gst_element_factory_is_untrusted_aware (factory)) {
+    if (graph->ctx) {
+      graph->ctx->untrusted_elements =
+          g_list_append (graph->ctx->untrusted_elements,
+          g_strdup (data->factory_name));
+    }
+    SET_ERROR (graph, GST_PARSE_ERROR_UNTRUSTED_ELEMENT,
+        _("element \"%s\" is not allowed when parsing untrusted input"),
+        data->factory_name);
+    gst_object_unref (factory);
     return NULL;
   }
 
@@ -694,6 +832,18 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
     pspec = g_object_class_find_property (klass, name);
 
     if (pspec != NULL) {
+      if (is_untrusted_sensitive (graph, pspec)) {
+        /* refused: kept out of the construct properties, and reported only
+         * once the element exists so the record carries its unique instance
+         * name */
+        proxied_property_t *bp = g_new (proxied_property_t, 1);
+
+        bp->name = name;
+        bp->value = value;
+        blocked = g_slist_prepend (blocked, bp);
+        continue;
+      }
+
       if (G_UNLIKELY (n_params == n_params_alloc)) {
         n_params_alloc *= 2u;
         names_array =
@@ -703,7 +853,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
             sizeof (GValue) * (n_params_alloc - n_params));
       }
 
-      if (!collect_value (pspec, value, &values_array[n_params])) {
+      if (!collect_value (graph, pspec, value, &values_array[n_params])) {
         SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
                _("could not set property \"%s\" in element \"%s\" to \"%s\""),
          name, data->factory_name, value);
@@ -724,6 +874,14 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
 
   ret = gst_element_factory_create_with_properties (factory, n_params, names_array,
       values_array);
+
+  for (tmp = blocked; tmp; tmp = tmp->next) {
+    proxied_property_t *bp = tmp->data;
+
+    report_blocked_property (graph,
+        ret ? GST_ELEMENT_NAME (ret) : data->factory_name, bp->name, bp->value,
+        g_object_class_find_property (klass, bp->name));
+  }
 
   for (tmp = proxied; tmp; tmp = tmp->next) {
     GObject *target = NULL;
@@ -746,7 +904,8 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
       g_free (property);
 
       if (target == NULL) {
-        gst_parse_add_delayed_set (GST_CHILD_PROXY (ret), pp->name, pp->value);
+        gst_parse_add_delayed_set (GST_CHILD_PROXY (ret), pp->name, pp->value,
+            graph);
       } else {
         gst_object_unref (target);
         SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
@@ -757,7 +916,14 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
     } else {
       GValue v = { 0, };
 
-      if (!collect_value (pspec, pp->value, &v)) {
+      if (is_untrusted_sensitive (graph, pspec)) {
+        report_blocked_property (graph, GST_ELEMENT_NAME (ret), pp->name,
+            pp->value, pspec);
+        gst_object_unref (target);
+        goto done;
+      }
+
+      if (!collect_value (graph, pspec, pp->value, &v)) {
         SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
                _("could not set property \"%s\" in child of element \"%s\" to \"%s\""),
          pp->name, data->factory_name, pp->value);
@@ -778,6 +944,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
 
 done:
   g_slist_free_full (proxied, (GDestroyNotify) proxied_property_free);
+  g_slist_free_full (blocked, (GDestroyNotify) proxied_property_free);
   gst_object_unref (loaded_factory);
   g_type_class_unref (klass);
   g_free (names_array);
@@ -852,7 +1019,8 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
          the child was found, we fail since the property doesn't exist.
       */
       if (!gst_parse_child_proxy_find_child (GST_CHILD_PROXY (element), value)) {
-        gst_parse_add_delayed_set (GST_CHILD_PROXY (element), value, pos);
+        gst_parse_add_delayed_set (GST_CHILD_PROXY (element), value, pos,
+            graph);
       } else {
         goto error;
       }
@@ -870,7 +1038,12 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
   }
 
   if (pspec != NULL && target != NULL) {
-    if (!collect_value (pspec, pos, &v)) {
+    if (is_untrusted_sensitive (graph, pspec)) {
+      report_blocked_property (graph, GST_ELEMENT_NAME (element), value, pos,
+          pspec);
+      goto out;
+    }
+    if (!collect_value (graph, pspec, pos, &v)) {
       goto error;
     } else {
       g_object_set_property (target, pspec->name, &v);
@@ -1719,6 +1892,7 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   g.ctx = ctx;
   g.flags = flags;
   g.error_probable_reason_receiver = NULL;
+  g.delayed_sets = NULL;
 
 #ifdef __GST_PARSE_TRACE
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: tracing enabled");
@@ -1836,6 +2010,25 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     gst_parse_perform_link (l, &g);
   }
   g_slist_free (g.links);
+
+  /* Under GST_PARSE_FLAG_NO_UNTRUSTED delayed property sets are vetted at the
+   * moment their target child appears; performing the links above was the last
+   * chance for that (request pads). A set still pending now targets a child
+   * that only materializes at runtime and can never be vetted, so it is
+   * refused. Disconnecting every remaining handler also guarantees that no
+   * delayed set survives an untrusted parse. */
+  while (g.delayed_sets) {
+    DelayedSet *set = g.delayed_sets->data;
+
+    record_unresolved_property (g.ctx,
+        GST_STR_NULL (GST_OBJECT_NAME (set->proxy)), set->name,
+        set->value_str);
+    SET_ERROR (&g, GST_PARSE_ERROR_SENSITIVE_PROPERTY,
+        _("property \"%s\" cannot be set on a child that does not exist yet "
+            "when parsing untrusted input"), set->name);
+    /* disconnecting frees @set and removes it from the list */
+    g_signal_handler_disconnect (set->proxy, set->signal_id);
+  }
 
 out:
 #ifdef __GST_PARSE_TRACE

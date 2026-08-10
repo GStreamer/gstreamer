@@ -48,6 +48,9 @@ struct _graph_t {
   reason_receiver_t *error_probable_reason_receiver;
   GstParseContext *ctx; /* may be NULL */
   GstParseFlags flags;
+  GSList *delayed_sets; /* DelayedSet* still pending; only tracked under
+                         * GST_PARSE_FLAG_NO_UNTRUSTED, all entries are
+                         * resolved or refused before the parse returns */
 };
 
 

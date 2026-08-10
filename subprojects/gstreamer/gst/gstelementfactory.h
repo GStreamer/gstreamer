@@ -66,6 +66,9 @@ GST_API
 gchar **                gst_element_factory_get_metadata_keys   (GstElementFactory *factory) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
+gboolean                gst_element_factory_is_untrusted_aware  (GstElementFactory *factory);
+
+GST_API
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 
 GST_API

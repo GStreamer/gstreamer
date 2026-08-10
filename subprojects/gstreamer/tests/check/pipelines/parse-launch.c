@@ -736,6 +736,107 @@ GST_START_TEST (test_parsing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_untrusted_properties)
+{
+  GstParseContext *ctx;
+  GstElement *element;
+  GError *err = NULL;
+  GstStructure *blocked, *report, *unresolved;
+  gchar **refused_elements;
+  const gchar *field;
+
+  if (!g_getenv ("GST_DEBUG"))
+    gst_debug_set_default_threshold (GST_LEVEL_NONE);
+
+  /* filesink::location is marked GST_PARAM_UNTRUSTED_SENSITIVE. With the flag
+   * set the parse must fail before the property is applied, and the blocked
+   * assignment must be recorded in the context. */
+  ctx = gst_parse_context_new ();
+  element = gst_parse_launch_full ("fakesrc ! filesink location=/tmp/x", ctx,
+      GST_PARSE_FLAG_FATAL_ERRORS | GST_PARSE_FLAG_NO_UNTRUSTED, &err);
+  fail_unless (err != NULL, "expected error");
+  fail_unless_equals_int (err->code, GST_PARSE_ERROR_SENSITIVE_PROPERTY);
+  fail_unless (element == NULL, "expected NULL return with FATAL_ERRORS");
+  report = gst_parse_context_get_untrusted_report (ctx);
+  fail_unless (report != NULL, "expected a report");
+  fail_unless (gst_structure_has_name (report, "untrusted-content"));
+  fail_unless (gst_structure_get (report, "properties", GST_TYPE_STRUCTURE,
+          &blocked, NULL), "expected the refused properties");
+  fail_unless (gst_structure_has_name (blocked,
+          "untrusted-sensitive-properties"));
+  fail_unless_equals_int (gst_structure_n_fields (blocked), 1);
+  /* keyed by the unique instance name, auto-assigned here */
+  field = gst_structure_nth_field_name (blocked, 0);
+  fail_unless (g_str_has_prefix (field, "filesink"));
+  fail_unless (g_str_has_suffix (field, ":location"));
+  fail_unless_equals_string (gst_structure_get_string (blocked, field),
+      "/tmp/x");
+  gst_structure_free (blocked);
+  gst_structure_free (report);
+  gst_parse_context_free (ctx);
+  g_clear_error (&err);
+
+  /* An element that is not untrusted-aware is refused before it is created,
+   * and every refusal is recorded, not only the one the error reports.
+   * gst_parse_untrusted_report() unpacks the report without knowing its
+   * layout. */
+  ctx = gst_parse_context_new ();
+  element = gst_parse_launch_full ("fdsrc ! filesink location=/tmp/x", ctx,
+      GST_PARSE_FLAG_FATAL_ERRORS | GST_PARSE_FLAG_NO_UNTRUSTED, &err);
+  fail_unless (err != NULL, "expected error");
+  fail_unless_equals_int (err->code, GST_PARSE_ERROR_UNTRUSTED_ELEMENT);
+  fail_unless (element == NULL, "expected NULL return with FATAL_ERRORS");
+  report = gst_parse_context_get_untrusted_report (ctx);
+  fail_unless (report != NULL, "expected a report");
+  fail_unless (gst_parse_untrusted_report (report, &refused_elements, &blocked,
+          &unresolved), "expected an untrusted-content report");
+  fail_unless (refused_elements != NULL, "expected the refused element listed");
+  fail_unless_equals_int (g_strv_length (refused_elements), 1);
+  fail_unless_equals_string (refused_elements[0], "fdsrc");
+  /* the sensitive property of the other element is reported too */
+  fail_unless (blocked != NULL, "expected the refused property");
+  fail_unless_equals_int (gst_structure_n_fields (blocked), 1);
+  /* no child failed to materialize here */
+  fail_unless (unresolved == NULL, "did not expect unresolved properties");
+  g_strfreev (refused_elements);
+  gst_structure_free (blocked);
+  gst_structure_free (report);
+  gst_parse_context_free (ctx);
+  g_clear_error (&err);
+
+  /* gst_parse_untrusted_report() refuses a structure that is not a report and
+   * leaves nothing to free. */
+  {
+    GstStructure *not_a_report = gst_structure_new_empty ("banana");
+
+    blocked = unresolved = (GstStructure *) 0x1;
+    refused_elements = (gchar **) 0x1;
+    fail_if (gst_parse_untrusted_report (not_a_report, &refused_elements,
+            &blocked, &unresolved));
+    fail_unless (refused_elements == NULL);
+    fail_unless (blocked == NULL);
+    fail_unless (unresolved == NULL);
+    gst_structure_free (not_a_report);
+  }
+
+  /* Without the flag the same pipeline parses fine. */
+  element = gst_parse_launch_full ("fakesrc ! filesink location=/tmp/x", NULL,
+      GST_PARSE_FLAG_FATAL_ERRORS, &err);
+  fail_unless (err == NULL, "unexpected error: %s", err ? err->message : "");
+  fail_unless (element != NULL, "expected a pipeline without the flag");
+  gst_object_unref (element);
+
+  /* A non-sensitive property is unaffected by the flag. */
+  element = gst_parse_launch_full ("fakesrc num-buffers=1 ! fakesink", NULL,
+      GST_PARSE_FLAG_FATAL_ERRORS | GST_PARSE_FLAG_NO_UNTRUSTED, &err);
+  fail_unless (err == NULL, "unexpected error: %s", err ? err->message : "");
+  fail_unless (element != NULL,
+      "expected non-sensitive property to be allowed");
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
 static Suite *
 parse_suite (void)
 {
@@ -754,6 +855,7 @@ parse_suite (void)
   tcase_add_test (tc_chain, test_flags);
   tcase_add_test (tc_chain, test_missing_elements);
   tcase_add_test (tc_chain, test_parsing);
+  tcase_add_test (tc_chain, test_untrusted_properties);
   tcase_add_test (tc_chain, test_preset);
   return s;
 }

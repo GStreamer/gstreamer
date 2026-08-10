@@ -148,6 +148,8 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
       "Generic",
       "Pass data without modification, limiting formats",
       "David Schleef <ds@schleef.org>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 

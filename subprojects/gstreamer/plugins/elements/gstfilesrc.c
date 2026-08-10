@@ -173,6 +173,8 @@ gst_file_src_class_init (GstFileSrcClass * klass)
       "Source/File",
       "Read from arbitrary point in a file",
       "Erik Walthinsen <omega@cse.ogi.edu>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_file_src_start);

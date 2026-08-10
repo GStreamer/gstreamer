@@ -293,6 +293,8 @@ gst_tee_class_init (GstTeeClass * klass)
       "Generic",
       "1-to-N pipe fitting",
       "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 

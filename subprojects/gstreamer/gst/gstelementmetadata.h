@@ -73,6 +73,16 @@ G_BEGIN_DECLS
  * identifying specific elements.
  */
 #define GST_ELEMENT_METADATA_ICON_NAME     "icon-name"
+/**
+ * GST_ELEMENT_METADATA_UNTRUSTED_AWARE:
+ *
+ * Set to "true" on elements that have been reviewed for use with untrusted
+ * input, see gst_element_class_mark_as_untrusted_aware(). Elements without it
+ * are refused when parsing with %GST_PARSE_FLAG_NO_UNTRUSTED.
+ *
+ * Since: 1.30
+ */
+#define GST_ELEMENT_METADATA_UNTRUSTED_AWARE "untrusted-aware"
 
 G_END_DECLS
 

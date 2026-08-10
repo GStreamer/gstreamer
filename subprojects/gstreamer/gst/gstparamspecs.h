@@ -84,6 +84,30 @@ G_BEGIN_DECLS
 #define GST_PARAM_CONDITIONALLY_AVAILABLE  (1 << (G_PARAM_USER_SHIFT + 6))
 
 /**
+ * GST_PARAM_UNTRUSTED_SENSITIVE: (value 32768)
+ *
+ * Use this flag on GObject properties whose value can make the element reach
+ * outside its media processing: read or write a file, open a network
+ * connection, select a device or IPC endpoint, load a plugin or library, or
+ * run externally supplied code (shader or script source). Setting such a
+ * property from data that comes from an untrusted source (for example a
+ * serialized pipeline or project file that was downloaded or received from a
+ * third party) is a security risk.
+ *
+ * Consumers that build pipelines from untrusted descriptions can ask
+ * gst_parse_launch_full() to refuse these properties with
+ * %GST_PARSE_FLAG_NO_UNTRUSTED.
+ *
+ * This flag only takes effect on elements whose class is also marked with
+ * gst_element_class_mark_as_untrusted_aware(): an unmarked element is never
+ * instantiated from an untrusted description in the first place, so an element
+ * that sets this flag on a property must also mark its class.
+ *
+ * Since: 1.30
+ */
+#define GST_PARAM_UNTRUSTED_SENSITIVE  (1 << (G_PARAM_USER_SHIFT + 7))
+
+/**
  * GST_PARAM_USER_SHIFT: (value 65536)
  *
  * Bits based on GST_PARAM_USER_SHIFT can be used by 3rd party applications.

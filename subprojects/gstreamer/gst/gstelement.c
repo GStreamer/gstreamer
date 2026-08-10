@@ -1582,6 +1582,59 @@ gst_element_class_add_metadata (GstElementClass * klass,
 }
 
 /**
+ * gst_element_class_mark_as_untrusted_aware:
+ * @klass: class to mark
+ *
+ * Declares that @klass was reviewed for being instantiated and configured from
+ * an untrusted pipeline description, for example a gst_parse_launch() string
+ * that came from an untrusted source: instantiating it cannot by itself reach
+ * outside media processing, and every property whose value can is marked
+ * %GST_PARAM_UNTRUSTED_SENSITIVE.
+ *
+ * Parsing a description with %GST_PARSE_FLAG_NO_UNTRUSTED refuses to create
+ * elements that are not marked this way, so an element that was never reviewed,
+ * including any third-party element, cannot be instantiated from such a
+ * description.
+ *
+ * Since: 1.30
+ */
+void
+gst_element_class_mark_as_untrusted_aware (GstElementClass * klass)
+{
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+
+  gst_element_class_add_static_metadata (klass,
+      GST_ELEMENT_METADATA_UNTRUSTED_AWARE, "true");
+}
+
+/**
+ * gst_element_class_is_untrusted_aware:
+ * @klass: class to check
+ *
+ * Checks whether @klass was marked with
+ * gst_element_class_mark_as_untrusted_aware().
+ *
+ * Use gst_element_factory_is_untrusted_aware() to check this without loading
+ * the plugin the element lives in.
+ *
+ * Returns: %TRUE if @klass was reviewed for use with untrusted input.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_element_class_is_untrusted_aware (GstElementClass * klass)
+{
+  const gchar *aware;
+
+  g_return_val_if_fail (GST_IS_ELEMENT_CLASS (klass), FALSE);
+
+  aware = gst_element_class_get_metadata (klass,
+      GST_ELEMENT_METADATA_UNTRUSTED_AWARE);
+
+  return g_strcmp0 (aware, "true") == 0;
+}
+
+/**
  * gst_element_class_add_static_metadata:
  * @klass: class to set metadata for
  * @key: the key to set

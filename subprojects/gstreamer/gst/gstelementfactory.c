@@ -877,6 +877,33 @@ gst_element_factory_get_metadata (GstElementFactory * factory,
 }
 
 /**
+ * gst_element_factory_is_untrusted_aware:
+ * @factory: a #GstElementFactory
+ *
+ * Checks whether the element @factory produces was reviewed for use with
+ * untrusted input, see gst_element_class_mark_as_untrusted_aware(). The check
+ * reads the factory metadata, so it does not load the plugin nor create an
+ * element.
+ *
+ * Returns: %TRUE if elements from @factory may be created from an untrusted
+ * description.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_element_factory_is_untrusted_aware (GstElementFactory * factory)
+{
+  const gchar *aware;
+
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), FALSE);
+
+  aware = gst_element_factory_get_metadata (factory,
+      GST_ELEMENT_METADATA_UNTRUSTED_AWARE);
+
+  return aware != NULL && !g_strcmp0 (aware, "true");
+}
+
+/**
  * gst_element_factory_get_metadata_keys:
  * @factory: a #GstElementFactory
  *

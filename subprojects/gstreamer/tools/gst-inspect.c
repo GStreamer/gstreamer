@@ -488,7 +488,8 @@ flags_to_string (GFlagsValue * vals, guint flags)
   G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_DEPRECATED | \
   GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | \
   GST_PARAM_MUTABLE_PAUSED | GST_PARAM_MUTABLE_READY | \
-  GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_DOC_SHOW_DEFAULT)
+  GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_DOC_SHOW_DEFAULT | \
+  GST_PARAM_UNTRUSTED_SENSITIVE)
 
 static int
 sort_gparamspecs (GParamSpec ** a, GParamSpec ** b)
@@ -571,6 +572,12 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
     }
     if (param->flags & GST_PARAM_CONDITIONALLY_AVAILABLE) {
       g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR, _("conditionally available"),
+          RESET_COLOR);
+      first_flag = FALSE;
+    }
+    if (param->flags & GST_PARAM_UNTRUSTED_SENSITIVE) {
+      g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR,
+          _("sensitive when set from an untrusted pipeline description"),
           RESET_COLOR);
       first_flag = FALSE;
     }
