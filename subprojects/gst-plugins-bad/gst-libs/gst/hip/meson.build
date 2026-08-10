@@ -74,7 +74,8 @@ configure_file(
 hipstub_incdir = include_directories('./stub')
 
 pkg_name = 'gstreamer-hip-' + api_version
-gsthip = library('gsthip', hip_sources,
+gsthip = library('gsthip-' + api_version,
+  hip_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, libsinc, hipstub_incdir],
