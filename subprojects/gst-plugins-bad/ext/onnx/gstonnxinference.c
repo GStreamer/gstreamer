@@ -1648,74 +1648,62 @@ gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
   return TRUE;
 }
 
-#define _convert_image_scale_offset(Type)                               \
-G_STMT_START {                                                                \
-  size_t destIndex = 0;                                                       \
-  Type tmp;                                                                   \
-  gsize dstHeight = GST_VIDEO_FRAME_HEIGHT (vframe);                          \
-  gsize dstWidth = GST_VIDEO_FRAME_WIDTH (vframe);                            \
-  gsize dstChannels = GST_VIDEO_FRAME_N_COMPONENTS (vframe);                            \
-                                                                              \
-  if (GST_VIDEO_FRAME_N_PLANES (vframe) == 1) {                               \
-    const guint8 *srcPtr[3] = {                                               \
-      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0) + GST_VIDEO_FRAME_COMP_OFFSET(vframe, 0), \
-      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0) + GST_VIDEO_FRAME_COMP_OFFSET(vframe, 1), \
-      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0) + GST_VIDEO_FRAME_COMP_OFFSET(vframe, 2), \
-    };                                                                        \
-    const gsize pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE(vframe, 0);       \
-    const gsize stride = GST_VIDEO_FRAME_PLANE_STRIDE(vframe, 0);             \
-    for (int32_t j = 0; j < dstHeight; ++j) {                                 \
-      for (int32_t i = 0; i < dstWidth; ++i) {                                \
-        for (int32_t k = 0; k < dstChannels; ++k) {                           \
-          tmp = *srcPtr[k];                                                   \
-          dst[destIndex++] = (Type)(tmp * scales[k] + offsets[k]);            \
-          srcPtr[k] += pixel_stride;                                    \
-        }                                                                     \
-      }                                                                       \
-      /* correct for stride */                                                \
-      for (uint32_t k = 0; k < dstChannels; ++k)                              \
-        srcPtr[k] += stride - pixel_stride * dstWidth;                  \
-    }                                                                         \
-  } else {                                                                    \
-    const guint8 *srcPtr[3] = {                                               \
-      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 0), \
-      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 1), \
-      (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (vframe, 2), \
-    };                                                                        \
-    size_t frameSize = dstWidth * dstHeight;                                  \
-    Type *destPtr[3] = { dst, dst + frameSize, dst + 2 * frameSize };         \
-    for (int32_t j = 0; j < dstHeight; ++j) {                                 \
-      for (int32_t i = 0; i < dstWidth; ++i) {                                \
-        for (int32_t k = 0; k < dstChannels; ++k) {                           \
-          tmp = *srcPtr[k];                                                   \
-          destPtr[k][destIndex] = (Type)(tmp * scales[k] + offsets[k]);       \
-          srcPtr[k]++;                                                        \
-        }                                                                     \
-        destIndex++;                                                          \
-      }                                                                       \
-      /* correct for stride */                                                \
-      for (uint32_t k = 0; k < dstChannels; ++k) {                            \
-        const gsize stride = GST_VIDEO_FRAME_PLANE_STRIDE(vframe, k);         \
-        srcPtr[k] += stride - dstWidth;                                       \
-      }                                                                       \
-    }                                                                         \
-  }                                                                           \
-}                                                                             \
-G_STMT_END;
-
-static void
-convert_image_scale_offset_u8 (guint8 * dst, const GstVideoFrame * vframe,
-    const gdouble * scales, const gdouble * offsets)
-{
-  _convert_image_scale_offset (guint8);
+#define CONVERT_INTERLEAVED_FUNC(name, type, ncomps, clamp)                 \
+static void                                                                 \
+convert_image_ ##name##_##type (type * dst, const GstVideoFrame * vframe,   \
+    const gdouble * scales, const gdouble * offsets)                        \
+{                                                                           \
+  const guint8 *src = GST_VIDEO_FRAME_PLANE_DATA (vframe, 0);               \
+  gsize height = GST_VIDEO_FRAME_HEIGHT (vframe);                           \
+  gsize width = GST_VIDEO_FRAME_WIDTH (vframe);                             \
+  gsize stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0);                  \
+  gsize row_size = width * ncomps;                                          \
+                                                                            \
+  for (size_t y = 0; y < height; y++) {                                     \
+    for (size_t x = 0; x < width; x++) {                                    \
+      for (size_t c = 0; c < ncomps; c++) {                                 \
+        dst[c] = clamp (src[c] * scales[c] + offsets[c]);                   \
+      }                                                                     \
+      src += ncomps;                                                        \
+      dst += ncomps;                                                        \
+    }                                                                       \
+    src += stride - row_size;                                               \
+  }                                                                         \
 }
 
-static void
-convert_image_scale_offset_f32 (gfloat * dst, const GstVideoFrame * vframe,
-    const gdouble * scales, const gdouble * offsets)
-{
-  _convert_image_scale_offset (gfloat);
+#define CONVERT_PLANAR_FUNC(name, type, ncomps, clamp)                      \
+static void                                                                 \
+convert_image_ ##name##_##type (type * dst, const GstVideoFrame * vframe,   \
+    const gdouble * scales, const gdouble * offsets)                        \
+{                                                                           \
+  gsize height = GST_VIDEO_FRAME_HEIGHT (vframe);                           \
+  gsize width = GST_VIDEO_FRAME_WIDTH (vframe);                             \
+                                                                            \
+  for (size_t c = 0; c < ncomps; c++) {                                     \
+    gsize stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, c);                \
+    const guint8 *src = GST_VIDEO_FRAME_PLANE_DATA (vframe, c);             \
+    gsize row_size = width;                                                 \
+    for (size_t y = 0; y < height; y++) {                                   \
+      for (size_t x = 0; x < width; x++) {                                  \
+        *dst = clamp (*src * scales[c] + offsets[c]);                       \
+        dst++;                                                              \
+        src++;                                                              \
+      }                                                                     \
+      src += stride - row_size;                                             \
+    }                                                                       \
+  }                                                                         \
 }
+
+#define CLAMP_U8(x) ((uint8_t) CLAMP((x), 0.0, 255.0))
+#define CLAMP_F32(x) (x)
+
+CONVERT_INTERLEAVED_FUNC (gray, uint8_t, 1, CLAMP_U8);
+CONVERT_INTERLEAVED_FUNC (gray, float, 1, CLAMP_F32);
+CONVERT_INTERLEAVED_FUNC (rgb, uint8_t, 3, CLAMP_U8);
+CONVERT_INTERLEAVED_FUNC (rgb, float, 3, CLAMP_F32);
+
+CONVERT_PLANAR_FUNC (rgbp, uint8_t, 3, CLAMP_U8);
+CONVERT_PLANAR_FUNC (rgbp, float, 3, CLAMP_F32);
 
 static GstFlowReturn
 gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
@@ -1758,10 +1746,13 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       }
       /* Check if conversion is needed based on strides / plane offsets.
        * ONNX needs tightly packed data */
+      void (*convert) (guint8 * dst, const GstVideoFrame * vframe,
+          const gdouble * scales, const gdouble * offsets) = NULL;
       switch (GST_VIDEO_FRAME_FORMAT (&vframe)) {
         case GST_VIDEO_FORMAT_RGB:
           needs_conversion = needs_conversion
               || GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0) != self->width * 3;
+          convert = convert_image_rgb_uint8_t;
           break;
         case GST_VIDEO_FORMAT_RGBP:
           needs_conversion = needs_conversion ||
@@ -1774,10 +1765,12 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
               || GST_VIDEO_FRAME_PLANE_DATA (&vframe,
               2) != (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe,
               1) + self->width * self->height;
+          convert = convert_image_rgbp_uint8_t;
           break;
         case GST_VIDEO_FORMAT_GRAY8:
           needs_conversion = needs_conversion
               || GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0) != self->width;
+          convert = convert_image_gray_uint8_t;
           break;
         default:
           g_assert_not_reached ();
@@ -1787,8 +1780,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       if (!needs_conversion) {
         src_data = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
       } else {
-        convert_image_scale_offset_u8 (self->dest, &vframe,
-            self->scales, self->offsets);
+        convert (self->dest, &vframe, self->scales, self->offsets);
         src_data = self->dest;
       }
 
@@ -1801,8 +1793,23 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     case GST_TENSOR_DATA_TYPE_FLOAT32:{
       /* F32 always needs conversion for now until we get suitable
        * GstVideoFormats */
-      convert_image_scale_offset_f32 ((float *) self->dest, &vframe,
-          self->scales, self->offsets);
+      switch (GST_VIDEO_FRAME_FORMAT (&vframe)) {
+        case GST_VIDEO_FORMAT_RGB:
+          convert_image_rgb_float ((float *) self->dest, &vframe, self->scales,
+              self->offsets);
+          break;
+        case GST_VIDEO_FORMAT_RGBP:
+          convert_image_rgbp_float ((float *) self->dest, &vframe, self->scales,
+              self->offsets);
+          break;
+        case GST_VIDEO_FORMAT_GRAY8:
+          convert_image_gray_float ((float *) self->dest, &vframe, self->scales,
+              self->offsets);
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
 
       status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
           (float *) self->dest,
