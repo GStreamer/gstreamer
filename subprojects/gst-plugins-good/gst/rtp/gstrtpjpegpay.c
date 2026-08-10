@@ -54,18 +54,11 @@ static GstStaticPadTemplate gst_rtp_jpeg_pay_sink_template =
     );
 
 static GstStaticPadTemplate gst_rtp_jpeg_pay_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "  media = (string) \"video\", "
-        "  payload = (int) " GST_RTP_PAYLOAD_JPEG_STRING ", "
-        "  clock-rate = (int) 90000,   "
-        "  encoding-name = (string) \"JPEG\", "
-        "  width = (int) [ 1, 65536 ], " "  height = (int) [ 1, 65536 ]; "
-        " application/x-rtp, "
-        "  media = (string) \"video\", "
-        "  payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "  clock-rate = (int) 90000,   "
         "  encoding-name = (string) \"JPEG\", "
         "  width = (int) [ 1, 65536 ], " "  height = (int) [ 1, 65536 ]")

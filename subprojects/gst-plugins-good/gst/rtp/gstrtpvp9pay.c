@@ -89,7 +89,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ","
         "clock-rate = (int) 90000, encoding-name = (string) { \"VP9\", \"VP9-DRAFT-IETF-01\" }"));
 
 static GstStaticPadTemplate gst_rtp_vp9_pay_sink_template =

@@ -72,7 +72,6 @@ static GstStaticPadTemplate gst_rtp_ldac_pay_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) audio,"
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) { 44100, 48000, 88200, 96000 },"
         "encoding-name = (string) \"X-GST-LDAC\"")
     );

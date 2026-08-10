@@ -76,7 +76,6 @@ static GstStaticPadTemplate gst_rtp_amr_pay_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"AMR\", "
         "encoding-params = (string) \"1\", "
@@ -90,7 +89,6 @@ static GstStaticPadTemplate gst_rtp_amr_pay_src_template =
         "maxptime = (int) [ 20, MAX ], " "ptime = (int) [ 20, MAX ];"
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 16000, "
         "encoding-name = (string) \"AMR-WB\", "
         "encoding-params = (string) \"1\", "

@@ -64,16 +64,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_rtp_h261_depay_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_H261_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H261\"; "
-        "application/x-rtp, "
-        "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H261\"")
     );
 #define parent_class gst_rtp_h261_depay_parent_class

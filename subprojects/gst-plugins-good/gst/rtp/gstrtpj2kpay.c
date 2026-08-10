@@ -59,7 +59,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "  media = (string) \"video\", "
-        "  payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "  clock-rate = (int) 90000, "
         GST_RTP_J2K_SAMPLING_LIST "," "  encoding-name = (string) \"JPEG2000\"")
     );

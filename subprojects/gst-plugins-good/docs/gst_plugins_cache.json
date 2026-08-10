@@ -14046,7 +14046,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: L8\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: L8\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14102,7 +14102,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)32000, (int)44100, (int)48000 }\n  encoding-name: AC3\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: { (int)32000, (int)44100, (int)48000 }\n  encoding-name: AC3\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14158,7 +14158,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: AMR\nencoding-params: 1\n    octet-align: 1\n            crc: 0\n robust-sorting: 0\n   interleaving: 0\n       mode-set: [ 0, 7 ]\nmode-change-period: [ 1, 2147483647 ]\nmode-change-neighbor: { (string)0, (string)1 }\n       maxptime: [ 20, 2147483647 ]\n          ptime: [ 20, 2147483647 ]\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 16000\n  encoding-name: AMR-WB\nencoding-params: 1\n    octet-align: 1\n            crc: 0\n robust-sorting: 0\n   interleaving: 0\n       mode-set: [ 0, 7 ]\nmode-change-period: [ 1, 2147483647 ]\nmode-change-neighbor: { (string)0, (string)1 }\n       maxptime: [ 20, 2147483647 ]\n          ptime: [ 20, 2147483647 ]\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: AMR\nencoding-params: 1\n    octet-align: 1\n            crc: 0\n robust-sorting: 0\n   interleaving: 0\n       mode-set: [ 0, 7 ]\nmode-change-period: [ 1, 2147483647 ]\nmode-change-neighbor: { (string)0, (string)1 }\n       maxptime: [ 20, 2147483647 ]\n          ptime: [ 20, 2147483647 ]\napplication/x-rtp:\n          media: audio\n     clock-rate: 16000\n  encoding-name: AMR-WB\nencoding-params: 1\n    octet-align: 1\n            crc: 0\n robust-sorting: 0\n   interleaving: 0\n       mode-set: [ 0, 7 ]\nmode-change-period: [ 1, 2147483647 ]\nmode-change-neighbor: { (string)0, (string)1 }\n       maxptime: [ 20, 2147483647 ]\n          ptime: [ 20, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14215,7 +14215,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: BV16\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 16000\n  encoding-name: BV32\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: BV16\napplication/x-rtp:\n          media: audio\n     clock-rate: 16000\n  encoding-name: BV32\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14271,7 +14271,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: { (string)video, (string)audio }\n        payload: [ 96, 127 ]\n  encoding-name: DV\n     clock-rate: 90000\n         encode: { (string)SD-VCR/525-60, (string)SD-VCR/625-50, (string)HD-VCR/1125-60, (string)HD-VCR/1250-50, (string)SDL-VCR/525-60, (string)SDL-VCR/625-50, (string)306M/525-60, (string)306M/625-50, (string)314M-25/525-60, (string)314M-25/625-50, (string)314M-50/525-60, (string)314M-50/625-50 }\n",
+                        "caps": "application/x-rtp:\n          media: { (string)video, (string)audio }\n  encoding-name: DV\n     clock-rate: 90000\n         encode: { (string)SD-VCR/525-60, (string)SD-VCR/625-50, (string)HD-VCR/1125-60, (string)HD-VCR/1250-50, (string)SDL-VCR/525-60, (string)SDL-VCR/625-50, (string)306M/525-60, (string)306M/625-50, (string)314M-25/525-60, (string)314M-25/625-50, (string)314M-50/525-60, (string)314M-50/625-50 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14341,7 +14341,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n  encoding-name: G722\n        payload: 9\nencoding-params: 1\n     clock-rate: 8000\napplication/x-rtp:\n          media: audio\n  encoding-name: G722\n        payload: [ 96, 127 ]\nencoding-params: 1\n     clock-rate: 8000\n",
+                        "caps": "application/x-rtp:\n          media: audio\n  encoding-name: G722\nencoding-params: 1\n     clock-rate: 8000\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14397,7 +14397,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: 4\n     clock-rate: 8000\n  encoding-name: G723\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: G723\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: G723\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14467,7 +14467,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: { (string)G726-16, (string)G726-24, (string)G726-32, (string)G726-40, (string)AAL2-G726-16, (string)AAL2-G726-24, (string)AAL2-G726-32, (string)AAL2-G726-40 }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: { (string)G726-16, (string)G726-24, (string)G726-32, (string)G726-40, (string)AAL2-G726-16, (string)AAL2-G726-24, (string)AAL2-G726-32, (string)AAL2-G726-40 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14536,7 +14536,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: 18\n     clock-rate: 8000\n  encoding-name: G729\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: G729\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: G729\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14592,7 +14592,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: 3\n     clock-rate: 8000\n  encoding-name: GSM\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: GSM\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: GSM\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14648,7 +14648,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: application\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: X-GST\n",
+                        "caps": "application/x-rtp:\n          media: application\n     clock-rate: 90000\n  encoding-name: X-GST\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14686,7 +14686,7 @@
                 "long-name": "RTP H261 depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: 31\n     clock-rate: 90000\n  encoding-name: H261\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H261\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H261\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -14719,7 +14719,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: 31\n     clock-rate: 90000\n  encoding-name: H261\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H261\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H261\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14775,7 +14775,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: 34\n     clock-rate: 90000\n  encoding-name: H263\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H263\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H263\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14844,7 +14844,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H263-1998\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H263-2000\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H263-1998\napplication/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H263-2000\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14952,7 +14952,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H264\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H264\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15086,7 +15086,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: H265\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: H265\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15199,7 +15199,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 8000\n  encoding-name: ILBC\n           mode: { (string)20, (string)30 }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 8000\n  encoding-name: ILBC\n           mode: { (string)20, (string)30 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15222,7 +15222,7 @@
                 "long-name": "RTP iSAC depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)16000, (int)32000 }\n  encoding-name: ISAC\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: { (int)16000, (int)32000 }\n  encoding-name: ISAC\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -15254,7 +15254,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)16000, (int)32000 }\n  encoding-name: ISAC\nencoding-params: 1\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: { (int)16000, (int)32000 }\n  encoding-name: ISAC\nencoding-params: 1\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15309,7 +15309,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n       sampling: { (string)RGB, (string)BGR, (string)RGBA, (string)BGRA, (string)YCbCrA, (string)YCbCr-4:4:4, (string)YCbCr-4:2:2, (string)YCbCr-4:2:0, (string)YCbCr-4:1:1, (string)GRAYSCALE }\n  encoding-name: JPEG2000\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n       sampling: { (string)RGB, (string)BGR, (string)RGBA, (string)BGRA, (string)YCbCrA, (string)YCbCr-4:4:4, (string)YCbCr-4:2:2, (string)YCbCr-4:2:0, (string)YCbCr-4:1:1, (string)GRAYSCALE }\n  encoding-name: JPEG2000\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15365,7 +15365,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: 26\n     clock-rate: 90000\n  encoding-name: JPEG\n          width: [ 1, 65536 ]\n         height: [ 1, 65536 ]\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: JPEG\n          width: [ 1, 65536 ]\n         height: [ 1, 65536 ]\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: JPEG\n          width: [ 1, 65536 ]\n         height: [ 1, 65536 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15478,7 +15478,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)44100, (int)48000, (int)88200, (int)96000 }\n  encoding-name: X-GST-LDAC\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: { (int)44100, (int)48000, (int)88200, (int)96000 }\n  encoding-name: X-GST-LDAC\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15576,7 +15576,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: 33\n     clock-rate: 90000\n  encoding-name: MP2T\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: MP2T\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: MP2T\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15632,7 +15632,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MP4A-LATM\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MP4A-LATM\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15688,7 +15688,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: { (string)video, (string)audio, (string)application }\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MPEG4-GENERIC\n     streamtype: { (string)4, (string)5 }\n           mode: { (string)generic, (string)CELP-cbr, (string)CELP-vbr, (string)AAC-lbr, (string)AAC-hbr }\n",
+                        "caps": "application/x-rtp:\n          media: { (string)video, (string)audio, (string)application }\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MPEG4-GENERIC\n     streamtype: { (string)4, (string)5 }\n           mode: { (string)generic, (string)CELP-cbr, (string)CELP-vbr, (string)AAC-lbr, (string)AAC-hbr }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15744,7 +15744,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MP4V-ES\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: MP4V-ES\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15815,7 +15815,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: 14\n     clock-rate: 90000\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: MPA\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: 14\n     clock-rate: 90000\napplication/x-rtp:\n          media: audio\n     clock-rate: 90000\n  encoding-name: MPA\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15899,7 +15899,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: 32\n     clock-rate: 90000\n  encoding-name: MPV\napplication/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: MPV\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: MPV\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15922,7 +15922,7 @@
                 "long-name": "RTP Opus packet depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)MULTIOPUS }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)MULTIOPUS }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -15955,7 +15955,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)MULTIOPUS }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)MULTIOPUS }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16160,7 +16160,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: 8\n     clock-rate: 8000\n  encoding-name: PCMA\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: PCMA\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: 8\n     clock-rate: 8000\n  encoding-name: PCMA\napplication/x-rtp:\n          media: audio\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: PCMA\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16217,7 +16217,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: 0\n     clock-rate: 8000\n  encoding-name: PCMU\napplication/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: PCMU\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: 0\n     clock-rate: 8000\n  encoding-name: PCMU\napplication/x-rtp:\n          media: audio\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: PCMU\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16417,7 +16417,7 @@
                 "long-name": "RTP SBC audio depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)16000, (int)32000, (int)44100, (int)48000 }\n  encoding-name: SBC\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: { (int)16000, (int)32000, (int)44100, (int)48000 }\n  encoding-name: SBC\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -16463,7 +16463,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: { (int)16000, (int)32000, (int)44100, (int)48000 }\n  encoding-name: SBC\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: { (int)16000, (int)32000, (int)44100, (int)48000 }\n  encoding-name: SBC\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16535,7 +16535,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 16000\n  encoding-name: SIREN\n        bitrate: 16000\n     dct-length: 320\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: 16000\n  encoding-name: SIREN\n        bitrate: 16000\n     dct-length: 320\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16591,7 +16591,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: [ 6000, 48000 ]\n  encoding-name: SPEEX\nencoding-params: 1\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: [ 6000, 48000 ]\n  encoding-name: SPEEX\nencoding-params: 1\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16782,7 +16782,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: THEORA\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: THEORA\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -17042,7 +17042,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: VORBIS\n",
+                        "caps": "application/x-rtp:\n          media: audio\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: VORBIS\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -17138,7 +17138,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: { (string)VP8, (string)VP8-DRAFT-IETF-01 }\n",
+                        "caps": "application/x-rtp:\n     clock-rate: 90000\n  encoding-name: { (string)VP8, (string)VP8-DRAFT-IETF-01 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -17260,7 +17260,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: { (string)VP9, (string)VP9-DRAFT-IETF-01 }\n",
+                        "caps": "application/x-rtp:\n     clock-rate: 90000\n  encoding-name: { (string)VP9, (string)VP9-DRAFT-IETF-01 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -17357,7 +17357,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: video\n        payload: [ 96, 127 ]\n     clock-rate: 90000\n  encoding-name: RAW\n       sampling: { (string)RGB, (string)RGBA, (string)BGR, (string)BGRA, (string)YCbCr-4:4:4, (string)YCbCr-4:2:2, (string)YCbCr-4:2:0, (string)YCbCr-4:1:1 }\n          depth: { (string)8, (string)10, (string)12, (string)16 }\n    colorimetry: { (string)BT601-5, (string)BT709-2, (string)SMPTE240M }\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: RAW\n       sampling: { (string)RGB, (string)RGBA, (string)BGR, (string)BGRA, (string)YCbCr-4:4:4, (string)YCbCr-4:2:2, (string)YCbCr-4:2:0, (string)YCbCr-4:1:1 }\n          depth: { (string)8, (string)10, (string)12, (string)16 }\n    colorimetry: { (string)BT601-5, (string)BT709-2, (string)SMPTE240M }\n",
                         "direction": "src",
                         "presence": "always"
                     }

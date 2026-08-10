@@ -64,7 +64,6 @@ static GstStaticPadTemplate gst_rtp_sbc_pay_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) audio,"
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) { 16000, 32000, 44100, 48000 },"
         "encoding-name = (string) SBC")
     );

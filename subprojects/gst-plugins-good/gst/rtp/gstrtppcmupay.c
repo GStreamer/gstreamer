@@ -47,7 +47,6 @@ static GstStaticPadTemplate gst_rtp_pcmu_pay_src_template =
         "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMU\"; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"PCMU\"")
     );
 

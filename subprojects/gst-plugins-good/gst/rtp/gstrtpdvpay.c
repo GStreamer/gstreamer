@@ -54,7 +54,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) { \"video\", \"audio\" } ,"
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "encoding-name = (string) \"DV\", "
         "clock-rate = (int) 90000,"
         "encode = (string) { \"SD-VCR/525-60\", \"SD-VCR/625-50\", \"HD-VCR/1125-60\","

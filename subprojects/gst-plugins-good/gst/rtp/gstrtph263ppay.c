@@ -89,11 +89,9 @@ static GstStaticPadTemplate gst_rtp_h263p_pay_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"; "
         "application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-2000\"")
     );
 

@@ -38,16 +38,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_rtp_mp2t_pay_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_MP2T_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"MP2T\" ; "
-        "application/x-rtp, "
-        "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"MP2T\"")
     );
 
