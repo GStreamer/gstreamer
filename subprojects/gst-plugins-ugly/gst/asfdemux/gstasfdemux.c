@@ -534,7 +534,11 @@ gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
     return FALSE;
   }
 
-  *packet = demux->sidx_entries[idx].packet;
+  if (seek_time == 0)
+    *packet = 0;
+  else
+    *packet = demux->sidx_entries[idx].packet;
+
   if (speed)
     *speed = demux->sidx_entries[idx].count;
 
