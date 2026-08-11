@@ -256,6 +256,7 @@ struct PtrInfo
     stride_ = width_ * 4;
     UINT pstride = 4;
     auto size = height_ * stride_;
+    auto mask_offset = height_ * shape_info.Pitch;
     texture_.resize (size);
     xor_texture_.resize (size);
 
@@ -267,7 +268,7 @@ struct PtrInfo
       for (UINT col = 0; col < width_; col++) {
         auto src_pos = (row * shape_info.Pitch) + (col / 8);
         auto and_mask = (shape_buffer[src_pos] >> (7 - (col % 8))) & 0x1;
-        auto xor_mask = (shape_buffer[src_pos + size] >> (7 - (col % 8))) & 0x1;
+        auto xor_mask = (shape_buffer[src_pos + mask_offset] >> (7 - (col % 8))) & 0x1;
         auto dst_pos = (row * stride_) + (col * pstride);
 
         if (and_mask) {
