@@ -443,7 +443,7 @@ static const struct shader_templ templ_AV12_to_RGB =
     "  int tile_index = tile_coord.y * tiles_per_row + tile_coord.x;\n" \
     "  int linear_index = tile_index * tile_size + delta_coord.y * dim.x + delta_coord.x;\n" \
     "  linear_index += need_offset * tile_size / 2;\n" \
-    "  return ivec2(linear_index % width, linear_index / width);\n" \
+    "  return ivec2(int(mod(float(linear_index), float(width))), linear_index / width);\n" \
     "}\n"
 
 /* TILED semi-planar to RGB conversion */
@@ -460,12 +460,12 @@ static const gchar templ_TILED_SEMI_PLANAR_to_RGB_BODY[] =
     "\n"
     "  ivec2 coord = ivec2(gl_FragCoord.xy);\n"
     "  ivec2 tile_coord = coord / luma_dim;\n"
-    "  ivec2 delta_coord = coord %% luma_dim;\n" \
+    "  ivec2 delta_coord = ivec2(mod(vec2(coord), vec2(luma_dim)));\n" \
     "  texel = frag_to_tile(tile_coord, delta_coord, luma_dim, iwidth, tiles_per_row, 0);\n"
     "  yuva.x = texelFetch(Ytex, texel, 0).r;\n"
     "\n"
     "  ivec2 chroma_tcoord = ivec2(tile_coord.x, tile_coord.y / fy);\n"
-    "  texel = frag_to_tile(chroma_tcoord, delta_coord / 2, chroma_dim, iwidth / 2, tiles_per_row, tile_coord.y %% fy);\n"
+    "  texel = frag_to_tile(chroma_tcoord, delta_coord / 2, chroma_dim, iwidth / 2, tiles_per_row, ivec2(mod(float(tile_coord.y), float(fy))));\n"
     "  yuva.yz = texelFetch(UVtex, texel, 0).%c%c;\n"
     "  yuva.a = 1.0;\n"
     "\n"
@@ -513,8 +513,8 @@ static const gchar glsl_func_YUY2_UYVY_unpack[] =
     "  yuva.x = texture2D(tex, v_texcoord * vert_to_tex * tex_scale0)[input_swizzle[0]];\n"
     /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
     "  vec2 half_poffset = vec2(poffset_x / 2.0, poffset_y / 2.0);\n"
-    "  int inorder = int(((v_texcoord.x * vert_to_tex.x - half_poffset.x) * chroma_sampling.x + half_poffset.x) * width / vert_to_tex) % 2;\n"
-    "  if (inorder == 0) {\n"
+    "  float inorder = mod(float(int(((v_texcoord.x * vert_to_tex.x - half_poffset.x) * chroma_sampling.x + half_poffset.x) * width / vert_to_tex.x)), 2.0);\n"
+    "  if (inorder < 1.0) {\n"
     "    dx2 = -dx1;\n"
     "    dx1 = 0.0;\n"
     "  }\n"
@@ -627,7 +627,7 @@ static const struct shader_templ templ_PLANAR_YUV_to_YUY2_UYVY =
 static const char glsl_func_v210_unpack[] =
     "ivec2 v210_component_to_texel(int comp) {\n"
     // (the texel index in the row, the swizzle index in that texel)
-    "  return ivec2(comp / 3, comp % 3);\n"
+    "  return ivec2(comp / 3, int(mod(float(comp), 3.0)));\n"
     "}\n"
     "ivec2 v210_y_xoffset(int xpos) {\n"
     // 1 3 5 7 9 ...
@@ -715,9 +715,9 @@ static const char glsl_func_v210_pack[] =
     // factor of 2/3 (4/6) different
     "  vec2 half_x_offset = vec2(poffset_x * 0.66666 / 2.0, 0.0);\n"
     "  int xpos = int(texcoord.x * out_width);\n"
-    "  ivec2 sub_idx0 = block_indices[(xpos % 4) * 3 + 0];\n"
-    "  ivec2 sub_idx1 = block_indices[(xpos % 4) * 3 + 1];\n"
-    "  ivec2 sub_idx2 = block_indices[(xpos % 4) * 3 + 2];\n"
+    "  ivec2 sub_idx0 = block_indices[int(mod(float(xpos), 4.0)) * 3 + 0];\n"
+    "  ivec2 sub_idx1 = block_indices[int(mod(float(xpos), 4.0)) * 3 + 1];\n"
+    "  ivec2 sub_idx2 = block_indices[int(mod(float(xpos), 4.0)) * 3 + 2];\n"
     "  vec2 block_offset = vec2(float((xpos / 4) * 6) * poffset_x, texcoord.y * vert_to_tex.y) + half_x_offset;\n"
     "  texcoord0 = block_offset + vec2(float(sub_idx0[0]) * poffset_x, 0.0);\n"
     "  texcoord1 = block_offset + vec2(float(sub_idx1[0]) * poffset_x, 0.0);\n"
