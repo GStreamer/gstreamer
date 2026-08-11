@@ -1016,8 +1016,20 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   }
 
   // Create session
-  status = api->CreateSession (self->env, self->model_file, session_options,
-      &self->session);
+  {
+    ORTCHAR_T *model_file;
+#ifdef G_OS_WIN32
+    model_file = (ORTCHAR_T *) g_utf8_to_utf16 (self->model_file, -1, NULL,
+        NULL, NULL);
+#else
+    model_file = self->model_file;
+#endif
+    status = api->CreateSession (self->env, model_file, session_options,
+        &self->session);
+#ifdef G_OS_WIN32
+    g_free (model_file);
+#endif
+  }
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to create session: %s",
         api->GetErrorMessage (status));
