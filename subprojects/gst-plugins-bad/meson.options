@@ -265,6 +265,9 @@ option('nvds-include-path', type: 'string', value : '',
 option('nvds-lib-path', type: 'string', value : '',
        description : 'DeepStream SDK library directory')
 
+# onnx plugin options
+option('onnx-winml', type : 'feature', value : 'disabled', description : 'Use Microsoft.Windows.AI.MachineLearning package')
+
 # QSV plugin options
 option('mfx-modules-dir', type: 'string', value : '',
        description : 'libmfx runtime module dir, linux only')
