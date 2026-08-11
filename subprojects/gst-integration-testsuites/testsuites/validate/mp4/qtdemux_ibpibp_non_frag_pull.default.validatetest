@@ -12,5 +12,5 @@ meta,
             logged-event-types={
                 segment,
             }],
-        "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore",
+        [change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore],
     }

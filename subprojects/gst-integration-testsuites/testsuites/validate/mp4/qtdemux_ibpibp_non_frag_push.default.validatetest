@@ -12,7 +12,7 @@ meta,
             logged-event-types={
                 segment, eos,
             }],
-        "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore",
+        [change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore],
     }
 
 # Note that sending the file this way ensures qtdemux doesn't receive an EOS
