@@ -22,6 +22,7 @@
 
 #include "gstvideometa.h"
 
+#include <math.h>
 #include <string.h>
 #include <gst/base/base.h>
 
@@ -936,23 +937,12 @@ _gst_video_meta_transform_matrix_point (const GstVideoMetaTransformMatrix *
   gdouble w_prime = transform->matrix[2][0] * x_in +
       transform->matrix[2][1] * y_in + transform->matrix[2][2];
 
-  if (w_prime == 0.0f) {
-    *x = transform->out_rectangle.x;
-    *y = transform->out_rectangle.y;
-    g_return_val_if_fail (w_prime != 0.0, FALSE);
-  }
+  g_return_val_if_fail (fabs (w_prime) >= 1e-9, FALSE);
 
-  if (w_prime == 1.0f) {
-    x_temp = transform->matrix[0][0] * x_in +
-        transform->matrix[0][1] * y_in + transform->matrix[0][2];
-    y_temp = transform->matrix[1][0] * x_in +
-        transform->matrix[1][1] * y_in + transform->matrix[1][2];
-  } else {
-    x_temp = (transform->matrix[0][0] * x_in +
-        transform->matrix[0][1] * y_in + transform->matrix[0][2]) / w_prime;
-    y_temp = (transform->matrix[1][0] * x_in +
-        transform->matrix[1][1] * y_in + transform->matrix[1][2]) / w_prime;
-  }
+  x_temp = (transform->matrix[0][0] * x_in +
+      transform->matrix[0][1] * y_in + transform->matrix[0][2]) / w_prime;
+  y_temp = (transform->matrix[1][0] * x_in +
+      transform->matrix[1][1] * y_in + transform->matrix[1][2]) / w_prime;
 
   *x = x_temp + 0.5f + transform->out_rectangle.x;
   *y = y_temp + 0.5f + transform->out_rectangle.y;
@@ -1040,13 +1030,16 @@ _gst_video_meta_transform_matrix_rectangle (const
   gint x2, y2;
 
   /* If the transformation is not affine, can't do it on a rectangle */
-  if (transform->matrix[2][0] != 0 ||
-      transform->matrix[2][1] != 0 || transform->matrix[2][2] != 1)
+  if (!G_APPROX_VALUE (transform->matrix[2][0], 0.0f, 1e-6f) ||
+      !G_APPROX_VALUE (transform->matrix[2][1], 0.0f, 1e-6f) ||
+      !G_APPROX_VALUE (transform->matrix[2][2], 1.0f, 1e-6f))
     return FALSE;
 
   /* If there is shearing, it won't preserve the rectangle either */
-  if ((transform->matrix[0][0] != 0 || transform->matrix[1][1] != 0) &&
-      (transform->matrix[0][1] != 0 || transform->matrix[1][0] != 0))
+  if ((!G_APPROX_VALUE (transform->matrix[0][0], 0.0f, 1e-6f) ||
+          !G_APPROX_VALUE (transform->matrix[1][1], 0.0f, 1e-6f)) &&
+      (!G_APPROX_VALUE (transform->matrix[0][1], 0.0f, 1e-6f) ||
+          !G_APPROX_VALUE (transform->matrix[1][0], 0.0f, 1e-6f)))
     return FALSE;
 
   x1 = rect->x;

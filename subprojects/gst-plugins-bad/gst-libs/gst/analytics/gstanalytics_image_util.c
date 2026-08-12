@@ -218,7 +218,7 @@ gst_analytics_image_util_iou_float (gfloat bb1_x, gfloat bb1_y, gfloat bb1_w,
       const gfloat bb2_area = bb2_w * bb2_h;
       const gfloat intersect_area = x_intersection * y_intersection;
       const gfloat union_area = bb1_area + bb2_area - intersect_area;
-      return union_area == 0.0f ? 0.0f : intersect_area / union_area;
+      return union_area <= 0.0f ? 0.0f : intersect_area / union_area;
     }
   }
 

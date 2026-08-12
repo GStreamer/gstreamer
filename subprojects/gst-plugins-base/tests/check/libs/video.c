@@ -4977,6 +4977,36 @@ GST_START_TEST (test_video_meta_transform_matrix_identity)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_meta_transform_matrix_nearly_affine)
+{
+  GstVideoMetaTransformMatrix trans;
+  GstVideoInfo in_info, out_info;
+  const GstVideoRectangle in_rect = { 0, 0, 100, 100 };
+  const GstVideoRectangle out_rect = { 0, 0, 100, 100 };
+  GstVideoRectangle rect = { 10, 10, 20, 20 };
+
+  gst_video_info_init (&in_info);
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 100, 100);
+  gst_video_info_init (&out_info);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  gst_video_meta_transform_matrix_init (&trans, &in_info, &in_rect, &out_info,
+      &out_rect);
+  trans.matrix[0][1] = 1e-7f;
+  trans.matrix[1][0] = -1e-7f;
+  trans.matrix[2][0] = 1e-7f;
+  trans.matrix[2][1] = -1e-7f;
+  trans.matrix[2][2] = 1.0f + 1e-7f;
+
+  fail_unless (gst_video_meta_transform_matrix_rectangle (&trans, &rect));
+  fail_unless_equals_int (rect.x, 10);
+  fail_unless_equals_int (rect.y, 10);
+  fail_unless_equals_int (rect.w, 20);
+  fail_unless_equals_int (rect.h, 20);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_meta_transform_matrix_translation)
 {
   GstVideoMetaTransformMatrix trans;
@@ -5690,6 +5720,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_convert_with_config_update);
   tcase_add_test (tc_chain, test_dma_drm_big_engian);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_identity);
+  tcase_add_test (tc_chain, test_video_meta_transform_matrix_nearly_affine);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_translation);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_scaling);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_clamping);
