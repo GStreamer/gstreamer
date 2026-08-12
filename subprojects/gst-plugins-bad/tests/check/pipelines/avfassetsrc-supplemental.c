@@ -41,6 +41,7 @@ typedef struct
   gboolean error;
   gboolean timeout;
   gchar *error_message;
+  gchar *error_debug_message;
 } PipelineResult;
 
 typedef struct
@@ -95,6 +96,7 @@ on_bus_message (GstBus * bus, GstMessage * msg, gpointer user_data)
     }
     if (debug)
       GST_WARNING ("Pipeline debug details: %s", debug);
+    ctx->result->error_debug_message = g_strdup (debug);
     g_clear_error (&err);
     g_free (debug);
     ctx->result->error = TRUE;
@@ -138,12 +140,12 @@ pipeline_error_is_cannot_decode (const PipelineResult * result)
   if (result->error_message == NULL)
     return FALSE;
 
-  if (g_strrstr (result->error_message, "Cannot Decode") != NULL)
+  if (g_strrstr (result->error_debug_message, "Cannot Decode") != NULL)
     return TRUE;
-  if (g_strrstr (result->error_message,
+  if (g_strrstr (result->error_debug_message,
           "AVFoundationErrorDomain Code=-11821") != NULL)
     return TRUE;
-  if (g_strrstr (result->error_message,
+  if (g_strrstr (result->error_debug_message,
           "NSOSStatusErrorDomain Code=-12911") != NULL)
     return TRUE;
 
@@ -287,16 +289,20 @@ run_supplemental_codec_test (const gchar * filename,
 
   if (result.buffers > 0) {
     g_free (result.error_message);
+    g_free (result.error_debug_message);
     g_free (uri);
     return;
   }
 
   if (result.error && pipeline_error_is_cannot_decode (&result)) {
     g_free (result.error_message);
+    g_free (result.error_debug_message);
     g_free (uri);
     return;
   }
 
+  GST_INFO ("pre-supported %u post-supported %u", pre_supported,
+      post_supported);
   if (result.error && (pre_supported || post_supported)) {
     fail_unless (FALSE, "Codec supported but pipeline failed");
   }
@@ -310,6 +316,7 @@ run_supplemental_codec_test (const gchar * filename,
     }
   }
   g_free (result.error_message);
+  g_free (result.error_debug_message);
   g_free (uri);
 }
 
