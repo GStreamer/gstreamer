@@ -35,6 +35,9 @@
 #define gst_soup_uri_new ad2_gst_soup_uri_new
 #define gst_soup_uri_free ad2_gst_soup_uri_free
 #define gst_soup_uri_to_string ad2_gst_soup_uri_to_string
+#define gst_soup_uri_get_scheme ad2_gst_soup_uri_get_scheme
+#define gst_soup_uri_get_host ad2_gst_soup_uri_get_host
+#define gst_soup_uri_get_port ad2_gst_soup_uri_get_port
 #define gst_soup_message_uri_to_string ad2_gst_soup_message_uri_to_string
 #define _soup_get_major_version _ad2_soup_get_major_version
 #define _soup_get_minor_version _ad2_soup_get_minor_version
@@ -100,6 +103,9 @@ typedef struct _GstSoupUri {
 GstSoupUri *gst_soup_uri_new (const char *uri_string);
 void gst_soup_uri_free (GstSoupUri *uri);
 char *gst_soup_uri_to_string (GstSoupUri *uri);
+const gchar *gst_soup_uri_get_scheme (GstSoupUri *uri);
+const gchar *gst_soup_uri_get_host (GstSoupUri *uri);
+guint gst_soup_uri_get_port (GstSoupUri *uri);
 
 char *gst_soup_message_uri_to_string (SoupMessage* msg);
 

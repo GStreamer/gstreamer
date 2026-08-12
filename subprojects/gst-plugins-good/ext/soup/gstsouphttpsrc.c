@@ -204,6 +204,7 @@ enum
   PROP_TLS_INTERACTION,
   PROP_RETRY_BACKOFF_FACTOR,
   PROP_RETRY_BACKOFF_MAX,
+  PROP_LOCATION_TRUSTED,
 };
 
 enum
@@ -550,6 +551,24 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Maximum backoff delay in seconds", 0.0, G_MAXDOUBLE,
           DEFAULT_RETRY_BACKOFF_MAX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSoupHTTPSrc:location-trusted:
+   *
+   * When set to %TRUE, the original location is considered trusted and
+   * extra-headers, cookies, and authentication credentials are preserved
+   * on cross-origin redirects.
+   * When set to %FALSE (default), extra-headers, cookies, and
+   * authentication credentials are stripped when following a redirect
+   * to a different origin (scheme + host + port).
+   *
+   * Since: 1.28.7
+   */
+  g_object_class_install_property (gobject_class, PROP_LOCATION_TRUSTED,
+      g_param_spec_boolean ("location-trusted", "Location Trusted",
+          "Whether the original location is trusted (preserve headers/cookies/auth on cross-origin redirects)",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstSoupHTTPSrc::accept-certificate:
    * @souphttpsrc: a #GstSoupHTTPSrc
@@ -644,6 +663,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->location = NULL;
   src->redirection_uri = NULL;
   src->automatic_redirect = TRUE;
+  src->location_trusted = FALSE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->user_id = NULL;
   src->user_pw = NULL;
@@ -859,6 +879,11 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       src->retry.backoff_max = g_value_get_double (value);
       GST_OBJECT_UNLOCK (src);
       break;
+    case PROP_LOCATION_TRUSTED:
+      GST_OBJECT_LOCK (src);
+      src->location_trusted = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (src);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -961,6 +986,11 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
     case PROP_RETRY_BACKOFF_MAX:
       GST_OBJECT_LOCK (src);
       g_value_set_double (value, src->retry.backoff_max);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case PROP_LOCATION_TRUSTED:
+      GST_OBJECT_LOCK (src);
+      g_value_set_boolean (value, src->location_trusted);
       GST_OBJECT_UNLOCK (src);
       break;
     default:
@@ -1075,6 +1105,51 @@ _append_extra_headers (const GstIdStr * fieldname, const GValue * value,
   return TRUE;
 }
 
+static gboolean
+_remove_extra_header (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
+{
+  SoupMessageHeaders *headers = user_data;
+  const gchar *field_name = gst_id_str_as_str (fieldname);
+
+  _soup_message_headers_remove (headers, field_name);
+  return TRUE;
+}
+
+static gboolean
+_is_cross_origin (const gchar * uri1, const gchar * uri2)
+{
+  GstSoupUri *u1 = gst_soup_uri_new (uri1);
+  GstSoupUri *u2 = gst_soup_uri_new (uri2);
+
+  const gchar *s1 = gst_soup_uri_get_scheme (u1);
+  const gchar *s2 = gst_soup_uri_get_scheme (u2);
+  const gchar *h1 = gst_soup_uri_get_host (u1);
+  const gchar *h2 = gst_soup_uri_get_host (u2);
+
+  /* If we can't parse either URI consider it as cross-origin */
+  if (!s1 || !s2 || !h1 || !h2) {
+    gst_soup_uri_free (u1);
+    gst_soup_uri_free (u2);
+    return TRUE;
+  }
+
+  guint p1 = gst_soup_uri_get_port (u1);
+  guint p2 = gst_soup_uri_get_port (u2);
+
+  if (p1 == 0)
+    p1 = g_ascii_strcasecmp (s1, "https") == 0 ? 443 : 80;
+  if (p2 == 0)
+    p2 = g_ascii_strcasecmp (s2, "https") == 0 ? 443 : 80;
+
+  gboolean ret = g_ascii_strcasecmp (s1, s2) != 0
+      || g_ascii_strcasecmp (h1, h2) != 0 || p1 != p2;
+
+  gst_soup_uri_free (u1);
+  gst_soup_uri_free (u2);
+
+  return ret;
+}
 
 static gboolean
 gst_soup_http_src_add_extra_headers (GstSoupHTTPSrc * src)
@@ -1394,6 +1469,21 @@ gst_soup_http_src_authenticate_cb (SoupMessage * msg, SoupAuth * auth,
   /* Might be from another user of the shared session */
   if (!GST_IS_SOUP_HTTP_SRC (src) || msg != src->msg)
     return FALSE;
+
+  /* Fail authentication on cross-origin redirects unless the location is trusted */
+  if (!src->location_trusted && src->location) {
+    gchar *msg_uri_str = gst_soup_message_uri_to_string (msg);
+
+    if (_is_cross_origin (src->location, msg_uri_str)) {
+      if ((src->user_id && src->user_pw) || (src->proxy_id && src->proxy_pw)) {
+        GST_WARNING_OBJECT (src, "Cross-origin redirect detected, not sending "
+            "authentication credentials");
+      }
+      g_free (msg_uri_str);
+      return FALSE;
+    }
+    g_free (msg_uri_str);
+  }
 
   status_code = _soup_message_get_status (msg);
 
@@ -1877,6 +1967,29 @@ gst_soup_http_src_restarted_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 
   GST_DEBUG_OBJECT (src, "%u redirect to \"%s\" (permanent %d)",
       status, src->redirection_uri, src->redirection_permanent);
+
+  if (!src->location_trusted) {
+    if (src->location && _is_cross_origin (src->location, src->redirection_uri)) {
+      SoupMessageHeaders *headers = _soup_message_get_request_headers (msg);
+
+      /* Remove all extra headers */
+      if (src->extra_headers) {
+        GST_WARNING_OBJECT (src, "Cross-origin redirect detected, stripping "
+            "extra headers");
+        gst_structure_foreach_id_str (src->extra_headers,
+            _remove_extra_header, headers);
+      }
+
+      /* Remove all Cookie headers. If the cookies property is set we will not
+       * enable the cookie jar feature so libsoup does not handle any cookies
+       * itself and all cookies are the ones provided by us before. */
+      if (src->cookies) {
+        GST_WARNING_OBJECT (src, "Cross-origin redirect detected, stripping "
+            "cookies");
+        _soup_message_headers_remove (headers, "Cookie");
+      }
+    }
+  }
 }
 
 static gboolean
