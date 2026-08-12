@@ -134,6 +134,8 @@ struct _GstSoupHTTPSrc {
   gint64 last_socket_read_time;
 
   Retry retry;
+
+  gboolean location_trusted;
 };
 
 struct _GstSoupHTTPSrcClass {

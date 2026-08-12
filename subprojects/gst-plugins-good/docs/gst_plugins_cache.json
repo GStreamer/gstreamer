@@ -23921,6 +23921,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "location-trusted": {
+                        "blurb": "Whether the original location is trusted (preserve headers/cookies/auth on cross-origin redirects)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "method": {
                         "blurb": "The HTTP method to use (GET, HEAD, OPTIONS, etc)",
                         "conditionally-available": false,
