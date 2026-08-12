@@ -2453,13 +2453,12 @@ search_in_segment:
           delta_entry->element_delta);
 
       /* Apply offset from slice/delta if needed */
-      if (delta_entry->slice)
+      if (delta_entry->slice) {
         stream_offset +=
             segment_index_entry->slice_offset[delta_entry->slice - 1];
-      stream_offset += delta_entry->element_delta;
-      if (delta_entry->pos_table_index == -1) {
-        entry->keyframe = (segment_index_entry->flags & 0x80) == 0x80;
       }
+      stream_offset += delta_entry->element_delta;
+      entry->keyframe = (segment_index_entry->flags & 0x80) == 0x80;
       /* FIXME : Handle fractional offset position (delta_entry->pos_table_offset > 0) */
     }
 
