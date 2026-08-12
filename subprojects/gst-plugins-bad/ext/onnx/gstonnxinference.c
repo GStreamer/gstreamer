@@ -131,6 +131,7 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_CUDA,
   GST_ONNX_EXECUTION_PROVIDER_VSI,
   GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
+  GST_ONNX_EXECUTION_PROVIDER_HIP,
 } GstOnnxExecutionProvider;
 
 struct _GstOnnxInference
@@ -318,6 +319,24 @@ gst_onnx_execution_provider_get_type (void)
             "AMD MIGraphX execution provider (compiled out, will use CPU)",
           "migraphx"},
 #endif
+
+#ifdef HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+      /**
+       * GstOnnxExecutionProvider::hip
+       *
+       * AMD HIP execution provider
+       *
+       * Since: 1.30
+       */
+
+      {GST_ONNX_EXECUTION_PROVIDER_HIP,
+            "AMD HIP execution provider",
+          "hip"},
+#else
+      {GST_ONNX_EXECUTION_PROVIDER_HIP,
+            "AMD HIP execution provider (requires ONNX Runtime >= 1.22)",
+          "hip"},
+#endif
       {0, NULL, NULL},
     };
 
@@ -393,7 +412,7 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
    * GstOnnxInference:device
    *
    * Device identifier to use for inference, interpreted per execution provider.
-   * For CUDA and MIGraphX this is the integer device index (e.g. "0").
+   * For CUDA, MIGraphX and HIP this is the integer device index (e.g. "0").
    * When NULL (the default) the execution provider default is used.
    *
    * Since: 1.30
@@ -1017,6 +1036,110 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
 #endif
       break;
+    case GST_ONNX_EXECUTION_PROVIDER_HIP:
+#ifdef HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+    {
+      const gchar *ep_lib_path = g_getenv ("MORPHIZEN_EP_LIB");
+
+      if (!ep_lib_path || !*ep_lib_path) {
+        GST_ERROR_OBJECT (self,
+            "MORPHIZEN_EP_LIB environment variable not set");
+        goto error;
+      }
+      // First register the EP library.
+#ifdef G_OS_WIN32
+      {
+        ORTCHAR_T *lib_path_w =
+            (ORTCHAR_T *) g_utf8_to_utf16 (ep_lib_path, -1, NULL, NULL, NULL);
+        status = api->RegisterExecutionProviderLibrary (self->env, "hipgpu",
+            lib_path_w);
+        g_free (lib_path_w);
+      }
+#else
+      status = api->RegisterExecutionProviderLibrary (self->env, "hipgpu",
+          ep_lib_path);
+#endif
+      if (status) {
+        GST_ERROR_OBJECT (self, "Failed to register HIP EP library (%s): %s",
+            ep_lib_path, api->GetErrorMessage (status));
+        goto error;
+      }
+      // Then enumerate EP devices and filter for "hipgpu", and select all or
+      // the one the user explicitly requested.
+      {
+        const OrtEpDevice *const *ep_devices = NULL;
+        const OrtEpDevice **hip_devices = NULL;
+        size_t num_ep_devices = 0;
+        size_t num_hip_devices = 0;
+        size_t i;
+
+        status = api->GetEpDevices (self->env, &ep_devices, &num_ep_devices);
+        if (status) {
+          GST_ERROR_OBJECT (self, "Failed to get EP devices: %s",
+              api->GetErrorMessage (status));
+          goto error;
+        }
+
+        hip_devices = g_new (const OrtEpDevice *, num_ep_devices);
+        for (i = 0; i < num_ep_devices; i++) {
+          const char *dev_name = api->EpDevice_EpName (ep_devices[i]);
+          if (g_strcmp0 (dev_name, "hipgpu") == 0) {
+            // Apply card_idx filter if specified, otherwise pass all devices to
+            // the EP and let it select whatever makes sense.
+            if (self->device) {
+              const OrtHardwareDevice *hwdev =
+                  api->EpDevice_Device (ep_devices[i]);
+              const OrtKeyValuePairs *metadata =
+                  api->HardwareDevice_Metadata (hwdev);
+              const char *card_idx_str = NULL;
+              gint64 requested;
+              gint64 actual;
+
+              if (metadata)
+                card_idx_str = api->GetKeyValue (metadata, "card_idx");
+              if (!card_idx_str)
+                continue;
+
+              requested = g_ascii_strtoll (self->device, NULL, 10);
+              actual = g_ascii_strtoll (card_idx_str, NULL, 10);
+              GST_DEBUG_OBJECT (self,
+                  "card_idx=%" G_GINT64_FORMAT " for device %" G_GSIZE_FORMAT,
+                  actual, i);
+              if (requested != actual)
+                continue;
+            }
+            hip_devices[num_hip_devices++] = ep_devices[i];
+          }
+        }
+
+        if (num_hip_devices == 0) {
+          if (self->device)
+            GST_ERROR_OBJECT (self,
+                "No HIP GPU devices found matching card_idx %s", self->device);
+          else
+            GST_ERROR_OBJECT (self, "No HIP GPU devices found");
+          g_free (hip_devices);
+          goto error;
+        }
+        // Finally, append EP to session options.
+        status =
+            api->SessionOptionsAppendExecutionProvider_V2 (session_options,
+            self->env, hip_devices, num_hip_devices, NULL, NULL, 0);
+        g_free (hip_devices);
+
+        if (status) {
+          GST_ERROR_OBJECT (self, "Failed to append HIP EP: %s",
+              api->GetErrorMessage (status));
+          goto error;
+        }
+      }
+    }
+#else
+      GST_ERROR_OBJECT (self,
+          "HIP execution provider requires ONNX Runtime >= 1.22");
+      goto error;
+#endif
+      break;
     default:
       break;
   }
@@ -1551,8 +1674,13 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 
   self->allocator = NULL;
 
-  if (self->env)
+  if (self->env) {
+#ifdef HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+    if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP)
+      (void) api->UnregisterExecutionProviderLibrary (self->env, "hipgpu");
+#endif
     api->ReleaseEnv (self->env);
+  }
   self->env = NULL;
 
   g_free (self->dest);

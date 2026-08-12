@@ -89,6 +89,16 @@ if not use_windows_ml
     message('Enabled ONNX MIGraphX execution provider')
     extra_args += ['-DHAVE_MIGRAPHX']
   endif
+
+  # Check if OrtApi::RegisterExecutionProviderLibrary is available as needed
+  # for dynamically loaded execution providers.
+  if cc.has_member('OrtApi', 'RegisterExecutionProviderLibrary',
+          prefix: '#include <onnxruntime_c_api.h>',
+          dependencies: onnxrt_dep,
+          include_directories: extra_incs)
+    message('Found ONNX Runtime >= 1.22, enabling dynamically loaded execution providers')
+    extra_args += ['-DHAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY']
+  endif
 endif
 
 gstonnx = library('gstonnx',
