@@ -633,6 +633,57 @@ GST_START_TEST (test_add_od_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_od_mtd_transform_nearly_diagonal)
+{
+  GstBuffer *src_buf, *dst_buf;
+  GstAnalyticsRelationMeta *src_rmeta, *dst_rmeta;
+  GstAnalyticsODMtd od_mtd, transformed_od_mtd;
+  GstVideoInfo vinfo;
+  GstVideoRectangle rect = { 0, 0, 100, 100 };
+  GstVideoMetaTransformMatrix trans;
+  GstMeta *src_meta;
+  gint x, y, w, h;
+
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 100, 100);
+
+  src_buf = gst_buffer_new ();
+  src_rmeta = gst_buffer_add_analytics_relation_meta (src_buf);
+  fail_unless (gst_analytics_relation_meta_add_od_mtd (src_rmeta,
+          g_quark_from_static_string ("person"), 10, 20, 30, 40, 0.9f,
+          &od_mtd));
+
+  dst_buf = gst_buffer_new ();
+  gst_video_meta_transform_matrix_init (&trans, &vinfo, &rect, &vinfo, &rect);
+  trans.matrix[0][1] = 1e-7f;
+  trans.matrix[1][0] = -1e-7f;
+  trans.matrix[2][0] = 1e-7f;
+  trans.matrix[2][1] = -1e-7f;
+  trans.matrix[2][2] = 1.0f + 1e-7f;
+
+  src_meta =
+      gst_buffer_get_meta (src_buf, GST_ANALYTICS_RELATION_META_API_TYPE);
+  fail_unless (src_meta != NULL);
+  fail_unless (src_meta->info->transform_func (dst_buf, src_meta, src_buf,
+          gst_video_meta_transform_matrix_get_quark (), &trans));
+
+  dst_rmeta = gst_buffer_get_analytics_relation_meta (dst_buf);
+  fail_unless (dst_rmeta != NULL);
+  fail_unless (gst_analytics_relation_meta_get_od_mtd (dst_rmeta, od_mtd.id,
+          &transformed_od_mtd));
+  fail_unless (gst_analytics_od_mtd_get_location (&transformed_od_mtd, &x, &y,
+          &w, &h, NULL));
+  fail_unless_equals_int (x, 10);
+  fail_unless_equals_int (y, 20);
+  fail_unless_equals_int (w, 30);
+  fail_unless_equals_int (h, 40);
+
+  gst_buffer_unref (dst_buf);
+  gst_buffer_unref (src_buf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_add_oriented_od_meta)
 {
   /* Verity we can add Oriented Object Detection relatable metadata to a relation
@@ -3440,6 +3491,7 @@ analyticmeta_suite (void)
   tc_chain_od = tcase_create ("Object Detection Mtd");
   suite_add_tcase (s, tc_chain_od);
   tcase_add_test (tc_chain_od, test_add_od_meta);
+  tcase_add_test (tc_chain_od, test_od_mtd_transform_nearly_diagonal);
   tcase_add_test (tc_chain_od, test_add_oriented_od_meta);
   tcase_add_test (tc_chain_od, test_od_meta_fields);
   tcase_add_test (tc_chain_od, test_oriented_od_meta_fields);
