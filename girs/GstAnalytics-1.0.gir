@@ -2262,6 +2262,7 @@ Ids must have been obtained a call to
  region_ids is fill during segmentation post-processing
 
  region_ids:
+
  |region-index | region-id |
  |-------------|-----------|
  | 0           | 0         |
@@ -2311,7 +2312,8 @@ Ids must have been obtained a call to
  a semantic segmentation is performed, therefore region-id-12 and region-id-7
  are now represented by the same region-id-12
 
- region_ids: (here
+ region_ids:
+
  |region-index | region-id |
  |-------------|-----------|
  | 0           | 0         |

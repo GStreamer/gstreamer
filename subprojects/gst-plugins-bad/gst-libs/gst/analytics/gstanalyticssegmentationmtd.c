@@ -72,6 +72,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_analytics_relation_meta_debug);
  *  region_ids is fill during segmentation post-processing
  *
  *  region_ids:
+ *
  *  |region-index | region-id |
  *  |-------------|-----------|
  *  | 0           | 0         |
@@ -121,7 +122,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_analytics_relation_meta_debug);
  *  a semantic segmentation is performed, therefore region-id-12 and region-id-7
  *  are now represented by the same region-id-12
  *
- *  region_ids: (here
+ *  region_ids:
+ *
  *  |region-index | region-id |
  *  |-------------|-----------|
  *  | 0           | 0         |
