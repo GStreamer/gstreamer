@@ -1847,6 +1847,15 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
         || status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
       SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, NOT_AUTHORIZED, (reason_phrase));
     } else {
+      if (SOUP_STATUS_IS_REDIRECTION (status_code)) {
+        g_free (src->redirection_uri);
+        SoupMessageHeaders *response_headers =
+            _soup_message_get_response_headers (msg);
+        src->redirection_uri =
+            g_strdup (_soup_message_headers_get_one (response_headers,
+                "Location"));
+      }
+
       SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ, (reason_phrase));
     }
     return GST_FLOW_ERROR;
