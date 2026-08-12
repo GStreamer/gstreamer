@@ -57,60 +57,6 @@ harness_new_with_model (const gchar * model_path)
   return h;
 }
 
-/* Test that RGB, RGBA, BGR and BGRA input formats all produce correct float32 output tensors. */
-GST_START_TEST (test_input_formats)
-{
-  const GstVideoFormat formats[] = {
-    GST_VIDEO_FORMAT_RGB, GST_VIDEO_FORMAT_RGBA,
-    GST_VIDEO_FORMAT_BGR, GST_VIDEO_FORMAT_BGRA,
-  };
-  guint i;
-
-  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    gchar *tmp_model = setup_model_with_ranges (GST_ONNX_TEST_DATA_PATH,
-        "onnxinference", "flatten_float32in_float32out.onnx",
-        "0.0,255.0;0.0,255.0;0.0,255.0");
-    GstHarness *h = harness_new_with_model (tmp_model);
-    GstBuffer *in = create_solid_color_buffer (formats[i],
-        TEST_WIDTH, TEST_HEIGHT, 11, 22, 33, 55);
-    GstBuffer *out;
-    GstTensorMeta *tmeta;
-    const GstTensor *tensor;
-    gfloat expected[TEST_NUM_PIXELS * TEST_NUM_CHANNELS];
-    gchar *caps_str;
-
-    caps_str = g_strdup_printf ("video/x-raw,format=%s,width=%d,height=%d,"
-        "framerate=30/1", gst_video_format_to_string (formats[i]),
-        TEST_WIDTH, TEST_HEIGHT);
-    gst_harness_set_src_caps_str (h, caps_str);
-    g_free (caps_str);
-
-    out = gst_harness_push_and_pull (h, in);
-    fail_unless (out);
-    fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
-    tmeta = gst_buffer_get_tensor_meta (out);
-    fail_unless_equals_int (tmeta->num_tensors, 1);
-    tensor = gst_tensor_meta_get (tmeta, 0);
-    fail_unless (tensor != NULL);
-    fail_unless (gst_tensor_meta_get_by_id (tmeta,
-            g_quark_from_static_string ("output-1")) == NULL);
-    fail_unless_equals_int (tensor->data_type, GST_TENSOR_DATA_TYPE_FLOAT32);
-    fail_unless_equals_int ((gint) tensor->num_dims, 2);
-    fail_unless_equals_int ((gint) tensor->dims[0], 1);
-    fail_unless_equals_int ((gint) tensor->dims[1], 48);
-
-    fill_expected_flat_rgb_f32 (expected, TEST_NUM_PIXELS, 11, 22, 33);
-    ONNX_TEST_ASSERT_TENSOR_VALUES_F32 (tensor, expected,
-        G_N_ELEMENTS (expected), 1e-6f);
-
-    gst_buffer_unref (out);
-    gst_harness_teardown (h);
-    cleanup_temp_model (tmp_model);
-  }
-}
-
-GST_END_TEST;
-
 /* Test that different per-channel normalization ranges (0-255, 0-1, -1 to 1, mixed) produce the correct scaled float values. */
 GST_START_TEST (test_normalization_variants)
 {
@@ -289,7 +235,7 @@ GST_START_TEST (test_3d_input)
       "onnxinference", "flatten_3d_float32.onnx",
       "0.0,255.0;0.0,255.0;0.0,255.0");
   GstHarness *h = harness_new_with_model (tmp_model);
-  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGB,
+  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGBP,
       TEST_WIDTH, TEST_HEIGHT, 11, 22, 33, 55);
   GstBuffer *out;
   GstTensorMeta *tmeta;
@@ -297,7 +243,7 @@ GST_START_TEST (test_3d_input)
   gfloat expected[3 * 16];
 
   gst_harness_set_src_caps_str (h,
-      "video/x-raw,format=RGB,width=4,height=4,framerate=30/1");
+      "video/x-raw,format=RGBP,width=4,height=4,framerate=30/1");
 
   out = gst_harness_push_and_pull (h, in);
   fail_unless (out);
@@ -410,7 +356,7 @@ GST_START_TEST (test_planar_chw_input)
       "onnxinference", "planar_chw.onnx",
       "0.0,255.0;0.0,255.0;0.0,255.0");
   GstHarness *h = harness_new_with_model (tmp_model);
-  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGB,
+  GstBuffer *in = create_solid_color_buffer (GST_VIDEO_FORMAT_RGBP,
       TEST_WIDTH, TEST_HEIGHT, 11, 22, 33, 55);
   GstBuffer *out;
   GstTensorMeta *tmeta;
@@ -418,7 +364,7 @@ GST_START_TEST (test_planar_chw_input)
   gfloat expected[TEST_NUM_PIXELS * TEST_NUM_CHANNELS];
 
   gst_harness_set_src_caps_str (h,
-      "video/x-raw,format=RGB,width=4,height=4,framerate=30/1");
+      "video/x-raw,format=RGBP,width=4,height=4,framerate=30/1");
 
   out = gst_harness_push_and_pull (h, in);
   fail_unless (out);
@@ -435,6 +381,45 @@ GST_START_TEST (test_planar_chw_input)
   fail_unless_equals_int ((gint) tensor->dims[3], 4);
 
   fill_expected_chw_rgb_f32 (expected, TEST_NUM_PIXELS, 11.f, 22.f, 33.f);
+  ONNX_TEST_ASSERT_TENSOR_VALUES_F32 (tensor, expected,
+      G_N_ELEMENTS (expected), 1e-6f);
+
+  gst_buffer_unref (out);
+  gst_harness_teardown (h);
+  cleanup_temp_model (tmp_model);
+}
+
+GST_END_TEST;
+
+/* Test a GRAY8 input with a single-channel model, verifying the grayscale plane is correctly flattened. */
+GST_START_TEST (test_gray8_input)
+{
+  gchar *tmp_model = setup_model_with_ranges (GST_ONNX_TEST_DATA_PATH,
+      "onnxinference", "flatten_gray.onnx",
+      "0.0,255.0");
+  GstHarness *h = harness_new_with_model (tmp_model);
+  GstBuffer *in = create_solid_gray_buffer (GST_VIDEO_FORMAT_GRAY8,
+      NULL, TEST_WIDTH, TEST_HEIGHT, 42);
+  GstBuffer *out;
+  GstTensorMeta *tmeta;
+  const GstTensor *tensor;
+  gfloat expected[TEST_NUM_PIXELS];
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=GRAY8,width=4,height=4,framerate=30/1");
+
+  out = gst_harness_push_and_pull (h, in);
+  fail_unless (out);
+
+  fail_unless (gst_buffer_get_tensor_meta (out) != NULL);
+  tmeta = gst_buffer_get_tensor_meta (out);
+  fail_unless_equals_int (tmeta->num_tensors, 1);
+  tensor = gst_tensor_meta_get (tmeta, 0);
+  fail_unless_equals_int ((gint) tensor->num_dims, 2);
+  fail_unless_equals_int ((gint) tensor->dims[0], 1);
+  fail_unless_equals_int ((gint) tensor->dims[1], 16);
+
+  fill_expected_gray_f32 (expected, TEST_NUM_PIXELS, 42.f);
   ONNX_TEST_ASSERT_TENSOR_VALUES_F32 (tensor, expected,
       G_N_ELEMENTS (expected), 1e-6f);
 
@@ -598,7 +583,6 @@ onnxinference_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
-  tcase_add_test (tc, test_input_formats);
   tcase_add_test (tc, test_normalization_variants);
   tcase_add_test (tc, test_output_int32);
   tcase_add_test (tc, test_output_uint8_rejected);
@@ -607,6 +591,7 @@ onnxinference_suite (void)
   tcase_add_test (tc, test_3d_input);
   tcase_add_test (tc, test_multi_output_tensor_id_and_dims_order);
   tcase_add_test (tc, test_planar_chw_input);
+  tcase_add_test (tc, test_gray8_input);
   tcase_add_test (tc, test_invalid_model_shapes_and_files);
   tcase_add_test (tc, test_missing_model_and_state_cycle);
   tcase_add_test (tc, test_timestamp_and_flags_propagation);

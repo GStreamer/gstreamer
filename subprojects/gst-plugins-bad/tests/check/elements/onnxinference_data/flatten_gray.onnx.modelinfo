@@ -1,0 +1,16 @@
+[modelinfo]
+version=1.0
+group-id=flatten_gray-group
+
+[input_gray]
+id=input-0
+type=float32
+dims=1,1,4,4
+dir=input
+ranges=0.0,255.0
+
+[output_flat]
+id=output-0
+type=float32
+dims=1,16
+dir=output
