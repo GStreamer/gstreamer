@@ -28,6 +28,7 @@ have_vsi_npu = false
 have_migraphx = false
 have_ort_register_execution_provider_library = false
 have_cuda = false
+have_directml = false
 
 fsmod = import('fs')
 
@@ -43,6 +44,15 @@ if host_system == 'windows' and not onnx_winml_opt.disabled()
     have_winml = true
     have_ort_register_execution_provider_library = true
     onnx_sources += ['gstonnx-winml.c']
+    if gstd3d12_dep.found() and cc.has_header('d3d12.h') and cc.has_header('directml.h')
+      dml_dep = cc.find_library('directml', required: false)
+      if dml_dep.found()
+        have_directml = true
+        extra_args += ['-DGST_USE_UNSTABLE_API']
+        extra_deps += [gstd3d12_dep, dml_dep]
+        onnx_sources += ['gstonnx-dml.cpp']
+      endif
+    endif
   endif
 endif
 
@@ -125,7 +135,11 @@ features = {
   'ort_register_execution_provider_library': {
     'enabled': have_ort_register_execution_provider_library,
     'message': 'Found ONNX Runtime >= 1.22, enabling dynamically loaded execution providers',
-  }
+  },
+  'directml': {
+    'enabled': have_directml,
+    'message': 'Enabled DirectML execution provider'
+  },
 }
 
 onnx_config = configuration_data()
@@ -145,10 +159,12 @@ configure_file(
 gstonnx = library('gstonnx',
   onnx_sources,
   c_args : gst_plugins_bad_args + extra_args,
+  cpp_args : gst_plugins_bad_args + extra_args,
   link_args : noseh_link_args,
   include_directories : [configinc, libsinc, cuda_stubinc] + extra_incs,
   dependencies : [gstbase_dep, gstvideo_dep, gstanalytics_dep, onnxrt_dep,
       libm] + extra_deps,
+  override_options : ['cpp_std=c++17'],
   install : true,
   install_dir : plugins_install_dir,
 )

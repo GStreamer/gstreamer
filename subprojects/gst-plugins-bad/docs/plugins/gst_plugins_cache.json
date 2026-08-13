@@ -237138,6 +237138,11 @@
                         "desc": "AMD HIP execution provider (requires ONNX Runtime >= 1.22)",
                         "name": "hip",
                         "value": "4"
+                    },
+                    {
+                        "desc": "Microsoft DirectML execution provider (compiled out, will use CPU)",
+                        "name": "dml",
+                        "value": "5"
                     }
                 ]
             },

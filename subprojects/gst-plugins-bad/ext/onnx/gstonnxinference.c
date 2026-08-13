@@ -122,6 +122,10 @@
 #include "gstonnx-winml.h"
 #endif
 
+#if HAVE_DIRECTML
+#include "gstonnx-dml.h"
+#endif
+
 typedef enum
 {
   GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
@@ -137,6 +141,7 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_VSI,
   GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
   GST_ONNX_EXECUTION_PROVIDER_HIP,
+  GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
 } GstOnnxExecutionProvider;
 
 struct _GstOnnxInference
@@ -177,6 +182,9 @@ struct _GstOnnxInference
   int64_t *input_dims_model;
   int64_t *input_dims_runtime;
   const gchar *registered_ep_name;
+#if HAVE_DIRECTML
+  GstOnnxDmlCtx *dml_ctx;
+#endif
 };
 
 static const OrtApi *api = NULL;
@@ -342,6 +350,21 @@ gst_onnx_execution_provider_get_type (void)
       {GST_ONNX_EXECUTION_PROVIDER_HIP,
             "AMD HIP execution provider (requires ONNX Runtime >= 1.22)",
           "hip"},
+#endif
+#if HAVE_DIRECTML
+      /**
+       * GstOnnxExecutionProvider::dml
+       *
+       * Microsoft DirectML execution provider
+       *
+       * Since: 1.30
+       */
+      {GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
+          "Microsoft DirectML execution provider", "dml"},
+#else
+      {GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
+            "Microsoft DirectML execution provider (compiled out, will use CPU)",
+          "dml"},
 #endif
       {0, NULL, NULL},
     };
@@ -1208,6 +1231,38 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
 #endif
       break;
+    case GST_ONNX_EXECUTION_PROVIDER_DIRECTML:
+#if HAVE_DIRECTML
+    {
+      guint device_id = 0;
+      GstD3D12Device *device12;
+      GstOnnxDmlCtx *dml_ctx;
+
+      if (self->device)
+        device_id = (guint) g_ascii_strtoll (self->device, NULL, 10);
+
+      device12 = gst_d3d12_device_new (device_id);
+      if (!device12) {
+        GST_ERROR_OBJECT (self,
+            "Couldn't create D3D12 device with adapter index %d", device_id);
+        goto error;
+      }
+
+      dml_ctx = gst_onnx_dml_create_context (device12, session_options);
+      gst_object_unref (device12);
+      if (!dml_ctx) {
+        GST_ERROR_OBJECT (self,
+            "Couldn't create DML context with adapter index %d", device_id);
+        goto error;
+      }
+
+      self->dml_ctx = dml_ctx;
+    }
+#else
+      GST_ERROR_OBJECT (self, "Compiled without DirectML support");
+      goto error;
+#endif
+      break;
     default:
       break;
   }
@@ -1766,6 +1821,10 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   self->input_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
   gst_caps_unref (self->output_tensors_caps);
   self->output_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
+
+#if HAVE_DIRECTML
+  g_clear_pointer (&self->dml_ctx, gst_onnx_dml_free_context);
+#endif
 
   GST_OBJECT_UNLOCK (self);
 
