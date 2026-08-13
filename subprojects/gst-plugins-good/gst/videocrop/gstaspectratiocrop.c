@@ -193,6 +193,7 @@ gst_aspect_ratio_crop_class_init (GstAspectRatioCropClass * klass)
       "Filter/Effect/Video",
       "Crops video into a user-defined aspect-ratio",
       "Thijs Vermeir <thijsvermeir@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);

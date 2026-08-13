@@ -316,6 +316,7 @@ gst_d3d12_interlace_class_init (GstD3D12InterlaceClass * klass)
       "Filter/Interlace/Effect/Video/Hardware",
       "A Direct3D12 interlacer element",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = TRUE;
 

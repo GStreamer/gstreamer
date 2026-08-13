@@ -170,6 +170,7 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
       "Transform/Effect/Video",
       "Applies cvSobel OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

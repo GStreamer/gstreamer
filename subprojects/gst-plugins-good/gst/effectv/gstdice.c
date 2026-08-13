@@ -295,6 +295,8 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
       "'Dices' the screen up into many small squares",
       "Wim Taymans <wim.taymans@gmail.be>");
 
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
+
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_dicetv_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,

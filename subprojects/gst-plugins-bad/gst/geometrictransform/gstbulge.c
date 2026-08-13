@@ -190,6 +190,7 @@ gst_bulge_class_init (GstBulgeClass * klass)
       "Transform/Effect/Video",
       "Adds a protuberance in the center point",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_bulge_set_property;
   gobject_class->get_property = gst_bulge_get_property;

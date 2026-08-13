@@ -127,6 +127,7 @@ gst_tunnel_class_init (GstTunnelClass * klass)
       "tunnel",
       "Transform/Effect/Video",
       "Light tunnel effect", "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gstgt_class->map_func = tunnel_map;
 }

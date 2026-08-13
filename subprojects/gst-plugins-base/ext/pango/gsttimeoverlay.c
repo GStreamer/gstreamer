@@ -315,6 +315,7 @@ gst_time_overlay_class_init (GstTimeOverlayClass * klass)
       "Filter/Editor/Video",
       "Overlays buffer time stamps on a video stream",
       "Tim-Philipp Müller <tim@centricular.net>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gsttextoverlay_class->get_text = gst_time_overlay_get_text;
 

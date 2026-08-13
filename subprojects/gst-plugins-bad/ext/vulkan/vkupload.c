@@ -1044,6 +1044,7 @@ gst_vulkan_upload_class_init (GstVulkanUploadClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Vulkan Uploader",
       "Filter/Video/Uploader", "A Vulkan data uploader",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   {
     GstCaps *caps;

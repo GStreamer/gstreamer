@@ -538,6 +538,7 @@ gst_gl_alpha_class_init (GstGLAlphaClass * klass)
       "OpenGL Alpha Filter", "Filter/Effect/Video",
       "Adds an alpha channel to video using OpenGL - uniform or chroma-keying",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gl_alpha_before_transform);

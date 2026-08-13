@@ -141,6 +141,7 @@ gst_dilate_class_init (GstDilateClass * klass)
       "Filter/Effect/Video",
       "Dilate copies the brightest pixel around.",
       "Luis de Bethencourt <luis@debethencourt.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_dilate_sink_template);

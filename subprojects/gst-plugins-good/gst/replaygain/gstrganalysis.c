@@ -269,6 +269,7 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
       "Filter/Analyzer/Audio",
       "Perform the ReplayGain analysis",
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_DEBUG_CATEGORY_INIT (gst_rg_analysis_debug, "rganalysis", 0,
       "ReplayGain analysis element");

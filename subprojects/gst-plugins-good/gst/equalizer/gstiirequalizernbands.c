@@ -122,6 +122,7 @@ gst_iir_equalizer_nbands_class_init (GstIirEqualizerNBandsClass * klass)
       "Filter/Effect/Audio",
       "Direct Form IIR equalizer",
       "Benjamin Otte <otte@gnome.org>," " Stefan Kost <ensonic@users.sf.net>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

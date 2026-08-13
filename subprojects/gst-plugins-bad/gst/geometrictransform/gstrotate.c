@@ -197,6 +197,7 @@ gst_rotate_class_init (GstRotateClass * klass)
       "Transform/Effect/Video",
       "Rotates the picture by an arbitrary angle",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_rotate_set_property;
   gobject_class->get_property = gst_rotate_get_property;

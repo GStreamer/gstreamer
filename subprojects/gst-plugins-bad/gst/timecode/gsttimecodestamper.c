@@ -257,6 +257,7 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
   gst_element_class_set_static_metadata (element_class, "Timecode stamper",
       "Filter/Video", "Attaches a timecode meta into each video frame",
       "Vivia Nikolaidou <vivia@toolsonair.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gobject_class->set_property = gst_timecodestamper_set_property;
   gobject_class->get_property = gst_timecodestamper_get_property;

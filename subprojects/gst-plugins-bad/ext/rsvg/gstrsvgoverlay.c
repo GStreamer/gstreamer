@@ -475,6 +475,7 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
       "Filter/Editor/Video",
       "Overlays SVG graphics over a video stream",
       "Olivier Aubert <olivier.aubert@liris.cnrs.fr>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gobject_class->set_property = gst_rsvg_overlay_set_property;
   gobject_class->get_property = gst_rsvg_overlay_get_property;
@@ -485,7 +486,8 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LOCATION,
       g_param_spec_string ("location", "location", "SVG file location.", "",
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FIT_TO_FRAME,
       g_param_spec_boolean ("fit-to-frame", "fit to frame",
           "Fit the SVG to fill the whole frame.", TRUE,

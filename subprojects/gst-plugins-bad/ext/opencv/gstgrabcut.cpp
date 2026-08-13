@@ -200,6 +200,7 @@ NOTE: larger values of alpha (notably 255) are interpreted as PR_FGD too. \n\
 IN CASE OF no alpha mask input (all 0's or all 1's), the 'face' \
 downstream event is used to create a bbox of PR_FG elements.\n\
 IF nothing is present, then nothing is done.", "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);

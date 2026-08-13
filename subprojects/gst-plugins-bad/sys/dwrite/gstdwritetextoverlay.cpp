@@ -114,6 +114,7 @@ gst_dwrite_text_overlay_class_init (GstDWriteTextOverlayClass * klass)
       "DirectWrite Text Overlay", "Filter/Editor/Video",
       "Adds text strings on top of a video buffer",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_dwrite_text_overlay_start);
   trans_class->sink_event =

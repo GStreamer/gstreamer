@@ -269,7 +269,8 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
   g_object_class_install_property (gobject_class, PROP_DATAFILE,
       g_param_spec_string ("datafile", "DataFile",
           "Location of motioncells data file (empty string means no saving)",
-          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              GST_PARAM_UNTRUSTED_SENSITIVE)));
   g_object_class_install_property (gobject_class, PROP_DATAFILE_EXT,
       g_param_spec_string ("datafileextension", "DataFile Extension",
           "Extension of datafile", DEF_DATAFILEEXT,
@@ -311,6 +312,7 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
       "Filter/Effect/Video",
       "Performs motion detection on videos and images, providing detected motion cells index via bus messages",
       "Robert Jobbagy <jobbagy dot robert at gmail dot com>, Nicola Murino <nicola dot murino at gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);

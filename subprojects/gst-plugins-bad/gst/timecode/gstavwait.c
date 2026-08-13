@@ -165,6 +165,7 @@ gst_avwait_class_init (GstAvWaitClass * klass)
       "Timecode Wait", "Filter/Audio/Video",
       "Drops all audio/video until a specific timecode or running time has been reached",
       "Vivia Nikolaidou <vivia@toolsonair.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_avwait_set_property;
   gobject_class->get_property = gst_avwait_get_property;

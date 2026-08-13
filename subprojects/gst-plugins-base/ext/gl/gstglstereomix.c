@@ -185,6 +185,7 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "OpenGL stereo video combiner", "Filter/Effect/Video",
       "OpenGL stereo video combiner", "Jan Schmidt <jan@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   g_object_class_install_property (gobject_class, PROP_DOWNMIX_MODE,
       g_param_spec_enum ("downmix-mode", "Mode for mono downmixed output",

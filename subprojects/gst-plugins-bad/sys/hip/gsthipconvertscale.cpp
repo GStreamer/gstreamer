@@ -1600,6 +1600,7 @@ gst_hip_convert_scale_class_init (GstHipConvertScaleClass * klass)
       "Filter/Converter/Video/Scaler/Colorspace/Effect/Hardware",
       "Resizes video and allow color conversion using HIP",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = FALSE;
   trans_class->before_transform =
@@ -1744,6 +1745,7 @@ gst_hip_convert_class_init (GstHipConvertClass * klass)
       "Filter/Converter/Video/Colorspace/Hardware",
       "Converts video from one colorspace to another using HIP",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_hip_convert_transform_caps);
@@ -1844,6 +1846,7 @@ gst_hip_scale_class_init (GstHipScaleClass * klass)
       "HIP video scaler",
       "Filter/Converter/Video/Scaler/Hardware",
       "Resize video using HIP", "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_hip_scale_transform_caps);

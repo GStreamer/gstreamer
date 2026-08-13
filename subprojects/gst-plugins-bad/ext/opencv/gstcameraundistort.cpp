@@ -172,6 +172,7 @@ gst_camera_undistort_class_init (GstCameraUndistortClass * klass)
       "cameraundistort",
       "Filter/Effect/Video",
       "Performs camera undistort", "Philippe Renon <philippe_renon@yahoo.fr>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   /* add sink and source pad templates */
   caps = gst_opencv_caps_from_cv_image_type (CV_16UC1);

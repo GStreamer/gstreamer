@@ -86,6 +86,7 @@ gst_tflite_edgetpu_inference_class_init (GstTFliteEdgeTpuInferenceClass * klass)
       "Apply neural network to video frames and create tensor output"
       " using the Google Edge TPU",
       "Olivier Crête <olivier.crete@collabora.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   basetransform_class->stop = gst_tflite_edgetpu_inference_stop;
 

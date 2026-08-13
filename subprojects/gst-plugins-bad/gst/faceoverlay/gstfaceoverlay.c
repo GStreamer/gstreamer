@@ -297,7 +297,8 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location",
           "Location of SVG file to use for face overlay",
-          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_X,
       g_param_spec_float ("x", "face x offset",
           "Specify image x relative to detected face x.", -G_MAXFLOAT,
@@ -320,6 +321,7 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
       "Filter/Editor/Video",
       "Overlays SVG graphics over a detected face in a video stream",
       "Laura Lucas Alday <lauralucas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));

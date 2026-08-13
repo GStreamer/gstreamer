@@ -158,6 +158,7 @@ gst_cutter_class_init (GstCutterClass * klass)
   gst_element_class_set_static_metadata (element_class, "Audio cutter",
       "Filter/Editor/Audio", "Audio Cutter to split audio into non-silent bits",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
   element_class->change_state = gst_cutter_change_state;
 }
 

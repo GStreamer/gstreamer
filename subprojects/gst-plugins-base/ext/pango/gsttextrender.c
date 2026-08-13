@@ -200,6 +200,7 @@ gst_text_render_class_init (GstTextRenderClass * klass)
       "Renders a text string to an image bitmap",
       "David Schleef <ds@schleef.org>, "
       "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",

@@ -1057,6 +1057,7 @@ gst_cuda_upload_class_init (GstCudaUploadClass * klass, gpointer data)
       "CUDA uploader", "Filter/Video/Uploader",
       "Uploads data into NVIDA GPU via CUDA APIs",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_transform);
 
@@ -1121,6 +1122,7 @@ gst_cuda_download_class_init (GstCudaDownloadClass * klass, gpointer data)
       "CUDA downloader", "Filter/Video/Downloader",
       "Downloads data from NVIDA GPU via CUDA APIs",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_cuda_download_before_transform);

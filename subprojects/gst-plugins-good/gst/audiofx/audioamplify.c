@@ -293,6 +293,7 @@ gst_audio_amplify_class_init (GstAudioAmplifyClass * klass)
       "Filter/Effect/Audio",
       "Amplifies an audio stream by a given factor",
       "Sebastian Dröge <slomo@circular-chaos.org>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),

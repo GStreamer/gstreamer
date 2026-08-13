@@ -1340,6 +1340,7 @@ gst_d3d12_compositor_class_init (GstD3D12CompositorClass * klass)
   gst_element_class_set_static_metadata (element_class, "Direct3D12 Compositor",
       "Filter/Editor/Video/Compositor", "A Direct3D12 compositor",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_COMPOSITOR_BACKGROUND,
       (GstPluginAPIFlags) 0);

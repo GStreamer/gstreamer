@@ -109,6 +109,7 @@ gst_dsd_convert_class_init (GstDsdConvertClass * klass)
       "Filter/Converter/Audio",
       "Convert between different DSD grouping formats",
       "Carlos Rafael Giani <crg7475@mailbox.org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

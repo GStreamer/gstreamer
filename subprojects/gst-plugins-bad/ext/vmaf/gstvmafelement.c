@@ -1189,7 +1189,8 @@ gst_vmaf_class_init (GstVmafClass * klass)
           "results-filename",
           "VMAF results filename for scores",
           DEFAULT_VMAF_RESULTS_FILENAME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_VMAF_RESULTS_FORMAT,
       g_param_spec_enum ("results-format", "results-format",
@@ -1206,6 +1207,7 @@ gst_vmaf_class_init (GstVmafClass * klass)
       "Filter/Analyzer/Video",
       "Provides Video Multi-Method Assessment Fusion metric",
       "Casey Bateman <casey.bateman@hudl.com>, Andoni Morales <amorales@fluendo.com>, Diego Nieto <dnieto@fluendo.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   GST_DEBUG_CATEGORY_INIT (gst_vmaf_debug, "vmaf", 0, "vmaf");
 
   gst_type_mark_as_plugin_api (GST_VMAF_RESULTS_FORMAT_TYPE, 0);

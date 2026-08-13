@@ -216,6 +216,7 @@ gst_aes_dec_class_init (GstAesDecClass * klass)
       "Generic/Filter",
       "AES buffer decryption",
       "Rabindra Harlalka <Rabindra.Harlalka@nice.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));

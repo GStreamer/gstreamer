@@ -190,11 +190,12 @@ gst_qml6_gl_overlay_class_init (GstQml6GLOverlayClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Qt Video Overlay",
       "Filter/QML/Overlay", "A filter that renders a QML scene onto a video stream",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   g_object_class_install_property (gobject_class, PROP_QML_SCENE,
       g_param_spec_string ("qml-scene", "QML Scene",
           "The contents of the QML scene", NULL,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_UNTRUSTED_SENSITIVE)));
 
   g_object_class_install_property (gobject_class, PROP_WIDGET,
       g_param_spec_pointer ("widget", "QQuickItem",

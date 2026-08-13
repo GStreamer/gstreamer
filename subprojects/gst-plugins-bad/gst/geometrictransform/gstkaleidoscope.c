@@ -213,6 +213,7 @@ gst_kaleidoscope_class_init (GstKaleidoscopeClass * klass)
       "Transform/Effect/Video",
       "Applies 'kaleidoscope' geometric transform to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_kaleidoscope_set_property;
   gobject_class->get_property = gst_kaleidoscope_get_property;

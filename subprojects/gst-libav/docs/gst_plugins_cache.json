@@ -13550,7 +13550,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "avdemux_4xm": {
                 "author": "Wim Taymans <wim@fluendo.com>, Ronald Bultje <rbultje@ronald.bitfreak.net>, Edward Hervey <bilboed@bilboed.com>",
@@ -88355,7 +88356,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstlibav",

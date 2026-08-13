@@ -201,6 +201,7 @@ gst_audio_wsinclimit_class_init (GstAudioWSincLimitClass * klass)
       "Steven W. Smith, "
       "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_wsinclimit_setup);
 

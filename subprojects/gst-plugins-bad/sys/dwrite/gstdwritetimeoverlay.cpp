@@ -181,6 +181,7 @@ gst_dwrite_time_overlay_class_init (GstDWriteTimeOverlayClass * klass)
       "DirectWrite Time Overlay", "Filter/Editor/Video",
       "Overlays buffer time stamps on a video stream",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_dwrite_time_overlay_sink_event);

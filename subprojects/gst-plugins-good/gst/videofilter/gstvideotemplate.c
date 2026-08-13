@@ -126,6 +126,7 @@ gst_videotemplate_base_init (gpointer g_class)
   gst_element_class_set_static_metadata (element_class, "Video filter template",
       "Filter/Effect/Video",
       "Template for a video filter", "David Schleef <ds@schleef.org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   for (i = 0; i < G_N_ELEMENTS (gst_videotemplate_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,

@@ -133,6 +133,7 @@ gst_scene_change_class_init (GstSceneChangeClass * klass)
       "Scene change detector",
       "Video/Filter", "Detects scene changes in video",
       "David Schleef <ds@entropywave.com>");
+  gst_element_class_mark_as_untrusted_aware (GST_ELEMENT_CLASS (klass));
 
   video_filter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_scene_change_transform_frame_ip);

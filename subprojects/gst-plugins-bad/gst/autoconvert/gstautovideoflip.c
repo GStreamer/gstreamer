@@ -222,6 +222,7 @@ gst_auto_video_flip_class_init (GstAutoVideoFlipClass * klass)
       "Bin/Filter/Effect/Video",
       "Selects the right video flip element based on the caps",
       "Thibault Saunier <tsaunier@igalia.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gstbin_class->deep_element_added = gst_auto_video_flip_deep_element_added;
   gstbin_class->deep_element_removed = gst_auto_video_flip_deep_element_removed;

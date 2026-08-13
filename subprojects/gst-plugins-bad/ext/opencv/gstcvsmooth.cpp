@@ -228,6 +228,7 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
       "Transform/Effect/Video",
       "Applies cvSmooth OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   /* add sink and source pad templates */
   caps = gst_opencv_caps_from_cv_image_type (CV_8UC3);

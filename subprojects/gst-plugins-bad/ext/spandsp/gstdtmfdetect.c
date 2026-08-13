@@ -118,6 +118,7 @@ gst_dtmf_detect_class_init (GstDtmfDetectClass * klass)
       "DTMF detector element", "Filter/Analyzer/Audio",
       "This element detects DTMF tones",
       "Olivier Crete <olivier.crete@collabora.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gstbasetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_dtmf_detect_set_caps);

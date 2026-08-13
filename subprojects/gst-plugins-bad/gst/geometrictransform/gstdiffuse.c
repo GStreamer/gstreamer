@@ -204,6 +204,7 @@ gst_diffuse_class_init (GstDiffuseClass * klass)
       "Transform/Effect/Video",
       "Diffuses the image by moving its pixels in random directions",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->finalize = gst_diffuse_finalize;
   gobject_class->set_property = gst_diffuse_set_property;

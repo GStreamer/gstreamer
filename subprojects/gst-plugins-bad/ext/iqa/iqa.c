@@ -505,6 +505,7 @@ gst_iqa_class_init (GstIqaClass * klass)
       "Filter/Analyzer/Video",
       "Provides various Image Quality Assessment metrics",
       "Mathieu Duponchelle <mathieu.duponchelle@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

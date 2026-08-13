@@ -353,6 +353,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
       "Gstreamer OpenGL Effects", "Filter/Effect/Video",
       "GL Shading Language effects",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;

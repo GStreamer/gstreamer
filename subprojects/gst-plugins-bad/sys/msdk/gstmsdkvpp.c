@@ -2034,6 +2034,7 @@ gst_msdkvpp_class_init (gpointer klass, gpointer data)
       "Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
       "Video Postprocessing Filter based on " MFX_API_SDK,
       "Sreerenj Balachandrn <sreerenj.balachandran@intel.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_msdkcaps_pad_template_init (element_class,
       cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);

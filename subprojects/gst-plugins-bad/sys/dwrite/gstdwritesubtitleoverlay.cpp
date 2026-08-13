@@ -105,6 +105,7 @@ gst_dwrite_subtitle_overlay_class_init (GstDWriteSubtitleOverlayClass * klass)
       "Filter/Editor/Video/Overlay/Subtitle",
       "Adds subtitle strings on top of a video buffer",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &video_templ);
   gst_element_class_add_static_pad_template (element_class, &text_templ);

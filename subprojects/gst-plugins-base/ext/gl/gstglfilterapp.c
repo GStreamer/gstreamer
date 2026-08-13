@@ -118,6 +118,7 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
       "OpenGL application filter", "Filter/Effect",
       "Use client callbacks to define the scene",
       "Julien Isorce <julien.isorce@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;

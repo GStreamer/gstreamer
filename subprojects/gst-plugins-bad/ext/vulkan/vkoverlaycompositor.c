@@ -418,6 +418,7 @@ gst_vulkan_overlay_compositor_class_init (GstVulkanOverlayCompositorClass *
       "Vulkan Overlay Compositor", "Filter/Video",
       "Vulkan Overlay Composition element",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_vulkan_sink_template);

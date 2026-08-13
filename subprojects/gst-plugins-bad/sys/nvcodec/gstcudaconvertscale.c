@@ -1742,6 +1742,7 @@ gst_cuda_convert_scale_class_init (GstCudaConvertScaleClass * klass)
       "Filter/Converter/Video/Scaler/Colorspace/Effect/Hardware",
       "Resizes video and allow color conversion using CUDA",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   transform_class->passthrough_on_same_caps = FALSE;
   transform_class->before_transform =
@@ -1901,6 +1902,7 @@ gst_cuda_convert_class_init (GstCudaConvertClass * klass)
       "Filter/Converter/Video/Colorspace/Hardware",
       "Converts video from one colorspace to another using CUDA",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_convert_transform_caps);
@@ -2025,6 +2027,7 @@ gst_cuda_scale_class_init (GstCudaScaleClass * klass)
       "CUDA video scaler",
       "Filter/Converter/Video/Scaler/Hardware",
       "Resize video using CUDA", "Seungha Yang <seungha.yang@navercorp.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_scale_transform_caps);

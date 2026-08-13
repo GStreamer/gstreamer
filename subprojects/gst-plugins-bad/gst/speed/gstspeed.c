@@ -402,6 +402,7 @@ gst_speed_class_init (GstSpeedClass * klass)
       "Set speed/pitch on audio/raw streams (resampler)",
       "Andy Wingo <apwingo@eos.ncsu.edu>, "
       "Tim-Philipp Müller <tim@centricular.net>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_speed_src_template);

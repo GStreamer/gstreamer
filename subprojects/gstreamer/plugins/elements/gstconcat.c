@@ -178,6 +178,8 @@ gst_concat_class_init (GstConcatClass * klass)
       "Concat", "Generic", "Concatenate multiple streams",
       "Sebastian Dröge <sebastian@centricular.com>");
 
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
+
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 

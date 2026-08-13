@@ -338,6 +338,7 @@ gst_rtp_onvif_timestamp_class_init (GstRtpOnvifTimestampClass * klass)
       "ONVIF NTP timestamps RTP extension", "Effect/RTP",
       "Add absolute timestamps and flags of recorded data in a playback "
       "session", "Guillaume Desmottes <guillaume.desmottes@collabora.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_onvif_timestamp_change_state);

@@ -141,6 +141,7 @@ gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
       "Audio IIR filter", "Filter/Effect/Audio",
       "Generic audio IIR filter with custom filter kernel",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

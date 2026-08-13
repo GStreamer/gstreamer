@@ -138,6 +138,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
       "Converts stream into video frames (deprecated: use rawvideoparse instead)",
       "David Schleef <ds@schleef.org>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&static_sink_template));

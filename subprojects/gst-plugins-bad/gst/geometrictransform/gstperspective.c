@@ -225,6 +225,7 @@ gst_perspective_class_init (GstPerspectiveClass * klass)
       "Transform/Effect/Video",
       "Apply a 2D perspective transform",
       "Antonio Ospite <ospite@studenti.unina.it>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_perspective_set_property;
   gobject_class->get_property = gst_perspective_get_property;

@@ -396,6 +396,7 @@ gst_optv_class_init (GstOpTVClass * klass)
       "Optical art meets real-time video effect",
       "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_optv_sink_template);

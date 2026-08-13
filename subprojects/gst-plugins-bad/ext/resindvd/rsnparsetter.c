@@ -62,6 +62,7 @@ rsn_parsetter_class_init (RsnParSetterClass * klass)
       "Resin Aspect Ratio Setter", "Filter/Video",
       "Overrides caps on video buffers to force a particular display ratio",
       "Jan Schmidt <thaytan@noraisin.net>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

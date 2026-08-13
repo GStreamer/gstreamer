@@ -179,6 +179,7 @@ gst_compare_class_init (GstCompareClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Compare buffers",
       "Filter/Debug", "Compares incoming buffers",
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_type_mark_as_plugin_api (GST_COMPARE_METHOD_TYPE, 0);
 }

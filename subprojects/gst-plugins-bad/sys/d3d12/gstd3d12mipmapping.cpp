@@ -202,6 +202,7 @@ gst_d3d12_mip_mapping_class_init (GstD3D12MipMappingClass * klass)
       "Filter/Converter/Video/Hardware",
       "Generates RGBA MipMap texture from input",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = FALSE;
 

@@ -1052,6 +1052,7 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
       "Filter/Effect/Rate/Audio",
       "Sync audio tempo with playback rate",
       "Rov Juvano <rovjuvano@users.sourceforge.net>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   basetransform_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_scaletempo_sink_event);

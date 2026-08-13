@@ -212,6 +212,7 @@ gst_lcms_class_init (GstLcmsClass * klass)
       "LCMS2 ICC correction", "Filter/Effect/Video",
       "Uses LittleCMS 2 to perform ICC profile correction",
       "Andreas Frisch <fraxinas@opendreambox.org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_lcms_sink_template));

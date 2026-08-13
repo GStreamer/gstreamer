@@ -656,6 +656,10 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
       extra_ladspa_class_tags ? extra_ladspa_class_tags : ladspa_class_tags,
       longname, author);
 
+  /* LADSPA plugins only expose float control ports, and the element does no
+   * I/O of its own */
+  gst_element_class_mark_as_untrusted_aware (elem_class);
+
   g_free (extra_ladspa_class_tags);
   g_free (author);
   g_free (longname);

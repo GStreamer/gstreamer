@@ -2086,6 +2086,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Video flipper",
       "Filter/Effect/Video",
       "Flips and rotates video", "David Schleef <ds@schleef.org>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_video_flip_sink_template);

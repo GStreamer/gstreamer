@@ -135,6 +135,7 @@ gst_iir_equalizer_10bands_class_init (GstIirEqualizer10BandsClass * klass)
       "Filter/Effect/Audio",
       "Direct Form 10 band IIR equalizer",
       "Stefan Kost <ensonic@users.sf.net>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

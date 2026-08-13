@@ -88,6 +88,7 @@ gst_cv_dilate_class_init (GstCvDilateClass * klass)
       "Transform/Effect/Video",
       "Applies cvDilate OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 /* initialize the new element

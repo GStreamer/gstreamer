@@ -704,6 +704,7 @@ gst_cuda_compositor_class_init (GstCudaCompositorClass * klass)
   gst_element_class_set_static_metadata (element_class, "CUDA Compositor",
       "Filter/Editor/Video/Compositor/Hardware", "A CUDA compositor",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_CUDA_COMPOSITOR_PAD,
       (GstPluginAPIFlags) 0);

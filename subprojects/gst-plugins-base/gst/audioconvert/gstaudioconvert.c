@@ -444,6 +444,7 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   gst_element_class_set_static_metadata (element_class, "Audio converter",
       "Filter/Converter/Audio", "Convert audio to different formats",
       "Benjamin Otte <otte@gnome.org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_convert_get_unit_size);

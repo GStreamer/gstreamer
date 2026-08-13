@@ -824,6 +824,7 @@ gst_hip_compositor_class_init (GstHipCompositorClass * klass)
   gst_element_class_set_static_metadata (element_class, "HIP Compositor",
       "Filter/Editor/Video/Compositor/Hardware", "A HIP compositor",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_HIP_COMPOSITOR_PAD,
       (GstPluginAPIFlags) 0);

@@ -161,6 +161,7 @@ gst_amf_vq_enhancer_class_init (GstAmfVQEnhancerClass * klass, gpointer data)
       "Filter/Effect/Video/Hardware",
       "Reduces AVC/HEVC compression (blocking) artifacts while preserving "
       "details using AMD AMF", "GStreamer AMF contributors");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   base_class->get_component_id =
       GST_DEBUG_FUNCPTR (gst_amf_vq_enhancer_get_component_id);

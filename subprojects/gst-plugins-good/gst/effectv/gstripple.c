@@ -587,6 +587,7 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
       "RippleTV does ripple mark effect on the video input",
       "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_rippletv_sink_template);

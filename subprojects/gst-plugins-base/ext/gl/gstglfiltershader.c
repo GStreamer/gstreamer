@@ -127,17 +127,20 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
   g_object_class_install_property (gobject_class, PROP_SHADER,
       g_param_spec_object ("shader", "Shader object",
           "GstGLShader to use", GST_TYPE_GL_SHADER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_VERTEX,
       g_param_spec_string ("vertex", "Vertex Source",
           "GLSL vertex source", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_FRAGMENT,
       g_param_spec_string ("fragment", "Fragment Source",
           "GLSL fragment source", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
   /* FIXME: add other stages */
 
   g_object_class_install_property (gobject_class, PROP_UNIFORMS,
@@ -166,6 +169,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "OpenGL fragment shader filter", "Filter/Effect",
       "Perform operations with a GLSL shader", "<matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtershader_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =

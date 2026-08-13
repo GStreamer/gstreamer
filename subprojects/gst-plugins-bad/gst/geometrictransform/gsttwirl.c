@@ -179,6 +179,7 @@ gst_twirl_class_init (GstTwirlClass * klass)
       "Transform/Effect/Video",
       "Twists the image from the center out",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_twirl_set_property;
   gobject_class->get_property = gst_twirl_get_property;

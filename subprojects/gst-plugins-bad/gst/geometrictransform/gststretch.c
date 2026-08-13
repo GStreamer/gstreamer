@@ -191,6 +191,7 @@ gst_stretch_class_init (GstStretchClass * klass)
       "Transform/Effect/Video",
       "Stretch the image in a circle around the center point",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_stretch_set_property;
   gobject_class->get_property = gst_stretch_get_property;

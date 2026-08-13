@@ -227,6 +227,7 @@ gst_bs2b_class_init (GstBs2bClass * klass)
       "Filter/Effect/Audio",
       "Improve headphone listening of stereo audio records using the bs2b "
       "library.", "Christoph Reiter <reiter.christoph@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   caps = gst_caps_from_string (PAD_CAPS);
   gst_audio_filter_class_add_pad_templates (filter_class, caps);

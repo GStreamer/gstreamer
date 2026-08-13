@@ -215,6 +215,7 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
       "Filter/Editor/Video",
       "Apply the standard SMPTE transitions as alpha on video images",
       "Wim Taymans <wim.taymans@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_SMPTE_TRANSITION_TYPE, 0);
 }

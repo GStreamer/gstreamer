@@ -124,6 +124,7 @@ gst_span_plc_class_init (GstSpanPlcClass * klass)
       "Filter/Effect/Audio",
       "Adds packet loss concealment to audio",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->get_property = gst_span_plc_get_property;
   gobject_class->dispose = gst_span_plc_dispose;

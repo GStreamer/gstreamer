@@ -114,6 +114,7 @@ gst_rg_limiter_class_init (GstRgLimiterClass * klass)
       "Filter/Effect/Audio",
       "Apply signal compression to raw audio data",
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_DEBUG_CATEGORY_INIT (gst_rg_limiter_debug, "rglimiter", 0,
       "ReplayGain limiter element");

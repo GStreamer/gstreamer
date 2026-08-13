@@ -108,6 +108,7 @@ gst_bpm_detect_class_init (GstBPMDetectClass * klass)
   gst_element_class_set_static_metadata (element_class, "BPM Detector",
       "Filter/Analyzer/Audio", "Detect the BPM of an audio stream",
       "Sebastian Dröge <slomo@circular-chaos.org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),

@@ -615,6 +615,7 @@ gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "OpenGL video_mixer bin", "Bin/Filter/Effect/Video/Compositor",
       "OpenGL video_mixer bin", "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_type_mark_as_plugin_api (gst_gl_video_mixer_input_get_type (), 0);
 }
@@ -1310,6 +1311,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   gst_element_class_set_static_metadata (element_class, "OpenGL video_mixer",
       "Filter/Effect/Video/Compositor", "OpenGL video_mixer",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_gl_mixer_class_add_rgba_pad_templates (GST_GL_MIXER_CLASS (klass));
   gst_element_class_add_static_pad_template_with_gtype (element_class,

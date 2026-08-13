@@ -9289,7 +9289,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       PROP_STUN_SERVER,
       g_param_spec_string ("stun-server", "STUN Server",
           "The STUN server of the form stun://hostname:port",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class,
       PROP_TURN_SERVER,
@@ -9301,7 +9302,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           "be escaped to be parsed properly. "
           "This is a convenience property, use #GstWebRTCBin::add-turn-server "
           "if you wish to use multiple TURN servers",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class,
       PROP_CONNECTION_STATE,
@@ -9386,7 +9388,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       g_param_spec_string ("http-proxy", "HTTP Proxy",
           "A HTTP proxy for use with TURN/TCP of the form "
           "http://[username:password@]hostname[:port][?alpn=<alpn>]",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   /**
    * GstWebRTCBin:sctp-transport:

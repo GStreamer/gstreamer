@@ -113,6 +113,7 @@ gst_comb_detect_class_init (GstCombDetectClass * klass)
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Comb Detect", "Video/Filter", "Detect combing artifacts in video stream",
       "David Schleef <ds@schleef.org>");
+  gst_element_class_mark_as_untrusted_aware (GST_ELEMENT_CLASS (klass));
 
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_comb_detect_transform_caps);

@@ -508,6 +508,7 @@ gst_gl_color_balance_class_init (GstGLColorBalanceClass * klass)
       "Filter/Effect/Video",
       "Adjusts brightness, contrast, hue, saturation on a video stream",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gl_color_balance_before_transform);

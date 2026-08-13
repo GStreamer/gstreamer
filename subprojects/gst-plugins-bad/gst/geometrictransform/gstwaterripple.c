@@ -210,6 +210,7 @@ gst_water_ripple_class_init (GstWaterRippleClass * klass)
       "Transform/Effect/Video",
       "Creates a water ripple effect on the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_water_ripple_set_property;
   gobject_class->get_property = gst_water_ripple_get_property;

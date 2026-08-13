@@ -310,6 +310,7 @@ gst_d3d12_deinterlace_class_init (GstD3D12DeinterlaceClass * klass)
       "Filter/Deinterlace/Effect/Video/Hardware",
       "A Direct3D12 deinterlacer element",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = TRUE;
 

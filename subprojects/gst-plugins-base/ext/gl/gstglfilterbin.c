@@ -109,6 +109,7 @@ gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
       "GL Filter Bin", "Filter/Video",
       "Infrastructure to process GL textures",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

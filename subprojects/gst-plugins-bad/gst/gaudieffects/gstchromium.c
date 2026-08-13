@@ -153,6 +153,7 @@ gst_chromium_class_init (GstChromiumClass * klass)
       "Filter/Effect/Video",
       "Chromium breaks the colors of the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_chromium_sink_template);

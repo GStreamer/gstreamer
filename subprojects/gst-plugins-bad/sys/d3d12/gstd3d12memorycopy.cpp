@@ -1859,6 +1859,7 @@ gst_d3d12_upload_class_init (GstD3D12UploadClass * klass)
       "Direct3D12 Uploader", "Filter/Video/Uploader",
       "Uploads system memory into Direct3D12 texture memory",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void
@@ -1885,6 +1886,7 @@ gst_d3d12_download_class_init (GstD3D12DownloadClass * klass)
       "Direct3D12 Downloader", "Filter/Video/Downloader",
       "Downloads Direct3D12 texture memory into system memory",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

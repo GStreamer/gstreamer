@@ -122,6 +122,7 @@ gst_rgb2bayer_class_init (GstRGB2BayerClass * klass)
       "Filter/Converter/Video",
       "Converts video/x-raw to video/x-bayer",
       "David Schleef <ds@entropywave.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_rgb2bayer_transform_caps);

@@ -211,6 +211,7 @@ gst_audio_mix_matrix_class_init (GstAudioMixMatrixClass * klass)
       "Filter/Audio",
       "Mixes a number of input channels into a number of output channels according to a transformation matrix",
       "Vivia Nikolaidou <vivia@toolsonair.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gobject_class->set_property = gst_audio_mix_matrix_set_property;
   gobject_class->get_property = gst_audio_mix_matrix_get_property;

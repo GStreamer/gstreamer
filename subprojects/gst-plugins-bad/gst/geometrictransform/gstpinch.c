@@ -189,6 +189,7 @@ gst_pinch_class_init (GstPinchClass * klass)
       "Transform/Effect/Video",
       "Applies 'pinch' geometric transform to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_pinch_set_property;
   gobject_class->get_property = gst_pinch_get_property;

@@ -166,7 +166,7 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
       g_param_spec_string ("location", "location",
           "Location of image file to overlay", NULL, GST_PARAM_CONTROLLABLE
           | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
-          | G_PARAM_STATIC_STRINGS));
+          | G_PARAM_STATIC_STRINGS | GST_PARAM_UNTRUSTED_SENSITIVE));
   g_object_class_install_property (gobject_class, PROP_OFFSET_X,
       g_param_spec_int ("offset-x", "X Offset",
           "For positive value, horizontal offset of overlay image in pixels from"
@@ -287,6 +287,8 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
       "GdkPixbuf Overlay", "Filter/Effect/Video",
       "Overlay an image onto a video stream",
       "Tim-Philipp Müller <tim centricular net>");
+
+  gst_element_class_mark_as_untrusted_aware (element_class);
   GST_DEBUG_CATEGORY_INIT (gdkpixbufoverlay_debug, "gdkpixbufoverlay", 0,
       "debug category for gdkpixbufoverlay element");
 

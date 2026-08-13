@@ -290,6 +290,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
       "Interlace filter", "Filter/Video",
       "Creates an interlaced video from progressive frames",
       "David Schleef <ds@schleef.org>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_interlace_sink_template);

@@ -2144,6 +2144,8 @@ gst_compositor_class_init (GstCompositorClass * klass)
       "Composite multiple video streams", "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
+
   /**
    * compositor:ignore-inactive-pads:
    *

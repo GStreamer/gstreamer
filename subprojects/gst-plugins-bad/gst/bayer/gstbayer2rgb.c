@@ -207,6 +207,7 @@ gst_bayer2rgb_class_init (GstBayer2RGBClass * klass)
       "Bayer to RGB decoder for cameras", "Filter/Converter/Video",
       "Converts video/x-bayer to video/x-raw",
       "William Brack <wbrack@mmm.com.hk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,

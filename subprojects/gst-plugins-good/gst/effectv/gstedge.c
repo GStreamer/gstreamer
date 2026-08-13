@@ -238,6 +238,8 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
       "Filter/Effect/Video",
       "Apply edge detect on video", "Wim Taymans <wim.taymans@chello.be>");
 
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
+
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_edgetv_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,

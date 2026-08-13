@@ -90,6 +90,7 @@ gst_iir_equalizer_3bands_class_init (GstIirEqualizer3BandsClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "3 Band Equalizer",
       "Filter/Effect/Audio",
       "Direct Form 3 band IIR equalizer", "Stefan Kost <ensonic@users.sf.net>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

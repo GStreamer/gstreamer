@@ -76,6 +76,7 @@ gst_video_diff_class_init (GstVideoDiffClass * klass)
       "Video Diff", "Video/Filter",
       "Visualize differences between adjacent video frames",
       "David Schleef <ds@schleef.org>");
+  gst_element_class_mark_as_untrusted_aware (GST_ELEMENT_CLASS (klass));
 
   video_filter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_diff_transform_frame);

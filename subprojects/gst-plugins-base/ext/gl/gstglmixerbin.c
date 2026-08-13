@@ -281,6 +281,7 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
       "OpenGL video_mixer empty bin", "Bin/Filter/Effect/Video/Mixer",
       "OpenGL video_mixer empty bin",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER_BIN_START_TIME_SELECTION, 0);
 }

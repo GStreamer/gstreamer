@@ -1860,6 +1860,7 @@ gst_cc_converter_class_init (GstCCConverterClass * klass)
       "Filter/ClosedCaption",
       "Converts Closed Captions between different formats",
       "Sebastian Dröge <sebastian@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);

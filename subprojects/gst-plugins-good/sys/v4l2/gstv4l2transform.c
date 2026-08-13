@@ -1182,6 +1182,7 @@ gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
       "Filter/Converter/Video/Scaler",
       "Transform streams via V4L2 API",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_v4l2_transform_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_v4l2_transform_finalize);

@@ -960,7 +960,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstalpha",
@@ -1027,7 +1028,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstalphacolor",
@@ -1333,7 +1335,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiochebband": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -1446,7 +1449,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiocheblimit": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -1545,7 +1549,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiodynamic": {
                 "author": "Sebastian Dröge <slomo@circular-chaos.org>",
@@ -1627,7 +1632,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audioecho": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -1739,7 +1745,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiofirfilter": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -1807,7 +1814,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "audioiirfilter": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -1872,7 +1880,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "audioinvert": {
                 "author": "Sebastian Dröge <slomo@circular-chaos.org>",
@@ -1916,7 +1925,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiokaraoke": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
@@ -2002,7 +2012,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiopanorama": {
                 "author": "Stefan Kost <ensonic@users.sf.net>",
@@ -2057,7 +2068,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiowsincband": {
                 "author": "Thomas Vander Stichele <thomas at apestaart dot org>, Steven W. Smith, Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -2154,7 +2166,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "audiowsinclimit": {
                 "author": "Thomas Vander Stichele <thomas at apestaart dot org>, Steven W. Smith, Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -2237,7 +2250,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "scaletempo": {
                 "author": "Rov Juvano <rovjuvano@users.sourceforge.net>",
@@ -2334,7 +2348,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "stereo": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>",
@@ -2390,7 +2405,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaudiofx",
@@ -3332,7 +3348,8 @@
                         ],
                         "return-type": "void"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstcairo",
@@ -3452,7 +3469,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstcutter",
@@ -3697,7 +3715,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "progressreport": {
                 "author": "Jan Schmidt <thaytan@mad.scientist.com>",
@@ -4289,7 +4308,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstdeinterlace",
@@ -4994,7 +5014,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dicetv": {
                 "author": "Wim Taymans <wim.taymans@gmail.be>",
@@ -5038,7 +5059,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "edgetv": {
                 "author": "Wim Taymans <wim.taymans@chello.be>",
@@ -5067,7 +5089,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "optv": {
                 "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -5137,7 +5160,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "quarktv": {
                 "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>",
@@ -5181,7 +5205,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "radioactv": {
                 "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -5261,7 +5286,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "revtv": {
                 "author": "Wim Taymans <wim.taymans@gmail.be>",
@@ -5333,7 +5359,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "rippletv": {
                 "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -5387,7 +5414,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "shagadelictv": {
                 "author": "Wim Taymans <wim.taymans@chello.be>",
@@ -5416,7 +5444,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "streaktv": {
                 "author": "Kentaro Fukuchi <fukuchi@users.sourceforge.net>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -5458,7 +5487,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vertigotv": {
                 "author": "Wim Taymans <wim.taymans@gmail.be>",
@@ -5516,7 +5546,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "warptv": {
                 "author": "Sam Lantinga <slouken@devolution.com>",
@@ -5545,7 +5576,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gsteffectv",
@@ -5823,7 +5855,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "equalizer-3bands": {
                 "author": "Stefan Kost <ensonic@users.sf.net>",
@@ -5900,7 +5933,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "equalizer-nbands": {
                 "author": "Benjamin Otte <otte@gnome.org>, Stefan Kost <ensonic@users.sf.net>",
@@ -5949,7 +5983,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstequalizer",
@@ -6947,7 +6982,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gdkpixbufsink": {
                 "author": "Tim-Philipp Müller <tim centricular net>",
@@ -7449,7 +7485,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstimagefreeze",
@@ -7502,7 +7539,8 @@
                     }
                 },
                 "rank": "none",
-                "signals": {}
+                "signals": {},
+                "untrusted-aware": "true"
             },
             "interleave": {
                 "author": "Andy Wingo <wingo at pobox.com>, Sebastian Dröge <slomo@circular-chaos.org>",
@@ -7553,7 +7591,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstinterleave",
@@ -9086,7 +9125,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstlevel",
@@ -10674,7 +10714,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstnavigationtest",
@@ -11779,7 +11820,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "qml6glrendersrc": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -12128,7 +12170,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "qmlglsink": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -12567,7 +12610,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "rglimiter": {
                 "author": "René Stadler <mail@renestadler.de>",
@@ -12608,7 +12652,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "rgvolume": {
                 "author": "René Stadler <mail@renestadler.de>",
@@ -12722,7 +12767,8 @@
                         "writable": false
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstreplaygain",
@@ -22432,7 +22478,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstshapewipe",
@@ -22787,7 +22834,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "smptealpha": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
@@ -22883,7 +22931,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstsmpte",
@@ -24280,7 +24329,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstspectrum",
@@ -26809,7 +26859,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideobox",
@@ -26903,7 +26954,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videocrop": {
                 "author": "Tim-Philipp Müller <tim centricular net>",
@@ -26989,7 +27041,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideocrop",
@@ -27045,7 +27098,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videobalance": {
                 "author": "David Schleef <ds@schleef.org>",
@@ -27134,7 +27188,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videoflip": {
                 "author": "David Schleef <ds@schleef.org>",
@@ -27179,7 +27234,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videomedian": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
@@ -27233,7 +27289,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideofilter",
@@ -27354,7 +27411,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideomixer",

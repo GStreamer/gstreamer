@@ -161,6 +161,7 @@ gst_image_freeze_class_init (GstImageFreezeClass * klass)
       "Filter/Video",
       "Generates a still frame stream from an image",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &sink_pad_template);

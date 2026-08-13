@@ -358,6 +358,7 @@ gst_face_detect_class_init (GstFaceDetectClass * klass)
       "Filter/Effect/Video",
       "Performs face detection on videos and images, providing detected positions via bus messages",
       "Michael Sheldon <mike@mikeasoft.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);

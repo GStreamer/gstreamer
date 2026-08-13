@@ -414,7 +414,8 @@ gst_queue2_class_init (GstQueue2Class * klass)
       "Temporary File Template",
       "File template to store temporary files in, should contain directory "
       "and XXXXXX. (NULL == disabled)",
-      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+      GST_PARAM_UNTRUSTED_SENSITIVE);
 
   obj_props[PROP_TEMP_LOCATION] = g_param_spec_string ("temp-location",
       "Temporary File Location",
@@ -483,6 +484,8 @@ gst_queue2_class_init (GstQueue2Class * klass)
       "Simple data queue",
       "Erik Walthinsen <omega@cse.ogi.edu>, "
       "Wim Taymans <wim.taymans@gmail.com>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_queue2_change_state);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_queue2_handle_query);

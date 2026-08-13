@@ -173,6 +173,7 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
       "Transform/Effect/Video",
       "Applies cvLaplace OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

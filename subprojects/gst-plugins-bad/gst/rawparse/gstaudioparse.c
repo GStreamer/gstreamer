@@ -178,6 +178,7 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
       "Filter/Audio",
       "Converts stream into audio frames (deprecated: use rawaudioparse instead)",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&static_sink_template));

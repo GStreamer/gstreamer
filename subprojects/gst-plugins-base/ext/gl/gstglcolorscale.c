@@ -110,6 +110,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
       "Colorspace converter and video scaler",
       "Julien Isorce <julien.isorce@gmail.com>, "
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   basetransform_class->passthrough_on_same_caps = TRUE;
   basetransform_class->transform_meta =

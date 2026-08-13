@@ -584,6 +584,8 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
   gst_caps_unref (doc_caps);
   gst_caps_unref (templ_caps);
 
+  gst_element_class_mark_as_untrusted_aware (element_class);
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_onnx_inference_set_context);
 

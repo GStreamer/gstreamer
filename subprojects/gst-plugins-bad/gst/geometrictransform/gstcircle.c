@@ -204,6 +204,7 @@ gst_circle_class_init (GstCircleClass * klass)
       "Transform/Effect/Video",
       "Warps the picture into an arc shaped form",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_circle_set_property;
   gobject_class->get_property = gst_circle_get_property;

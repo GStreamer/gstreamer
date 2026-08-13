@@ -173,6 +173,8 @@ gst_pitch_class_init (GstPitchClass * klass)
   gst_element_class_set_static_metadata (element_class, "Pitch controller",
       "Filter/Effect/Audio", "Control the pitch of an audio stream",
       "Wouter Paesen <wouter@blue-gate.be>");
+
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

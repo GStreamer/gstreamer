@@ -207,6 +207,7 @@ gst_square_class_init (GstSquareClass * klass)
       "Transform/Effect/Video",
       "Distort center part of the image into a square",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_square_set_property;
   gobject_class->get_property = gst_square_get_property;

@@ -155,6 +155,7 @@ gst_tflite_xnnpack_inference_class_init (GstTFliteXnnpackInferenceClass * klass)
       "Apply neural network to video frames and create tensor output"
       " using a XNNPACK CPU delegate",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gobject_class->set_property = gst_tflite_xnnpack_inference_set_property;
   gobject_class->get_property = gst_tflite_xnnpack_inference_get_property;

@@ -179,6 +179,7 @@ gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "libav Deinterlace element", "Filter/Effect/Video/Deinterlace",
       "Deinterlace video", "Luca Ognibene <luogni@tin.it>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gobject_class->dispose = gst_ffmpegdeinterlace_dispose;
 

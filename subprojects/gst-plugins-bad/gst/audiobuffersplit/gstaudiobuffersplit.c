@@ -161,6 +161,7 @@ gst_audio_buffer_split_class_init (GstAudioBufferSplitClass * klass)
       "Audio Buffer Split", "Audio/Filter",
       "Splits raw audio buffers into equal sized chunks",
       "Sebastian Dröge <sebastian@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));

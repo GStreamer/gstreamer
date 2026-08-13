@@ -164,7 +164,7 @@ gst_file_src_class_init (GstFileSrcClass * klass)
       g_param_spec_string ("location", "File Location",
           "Location of the file to read", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_READY));
+          GST_PARAM_MUTABLE_READY | GST_PARAM_UNTRUSTED_SENSITIVE));
 
   gobject_class->finalize = gst_file_src_finalize;
 

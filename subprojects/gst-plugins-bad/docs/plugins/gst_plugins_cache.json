@@ -54,7 +54,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaccurip",
@@ -276,7 +277,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             },
             "aesenc": {
                 "author": "Rabindra Harlalka <Rabindra.Harlalka@nice.com>",
@@ -365,7 +367,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaes",
@@ -6260,7 +6263,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaudiobuffersplit",
@@ -6562,7 +6566,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaudiomixmatrix",
@@ -6990,7 +6995,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstautoconvert",
@@ -7685,7 +7691,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "rgb2bayer": {
                 "author": "David Schleef <ds@entropywave.com>",
@@ -7713,7 +7720,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstbayer",
@@ -7971,7 +7979,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstbs2b",
@@ -8661,7 +8670,8 @@
                         "writable": false
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstchromaprint",
@@ -8883,7 +8893,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ccconverter": {
                 "author": "Sebastian Dröge <sebastian@centricular.com>",
@@ -8924,7 +8935,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ccextractor": {
                 "author": "Edward Hervey <edward@centricular.com>",
@@ -8970,7 +8982,8 @@
                     }
                 },
                 "rank": "none",
-                "signals": {}
+                "signals": {},
+                "untrusted-aware": "true"
             },
             "cea608mux": {
                 "author": "Mathieu Duponchelle <mathieu@centricular.com>",
@@ -9444,7 +9457,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "line21encoder": {
                 "author": "Mathieu Duponchelle <mathieu@centricular.com>",
@@ -9486,7 +9500,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstclosedcaption",
@@ -10046,7 +10061,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "coloreffects": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -10088,7 +10104,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstcoloreffects",
@@ -10238,7 +10255,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstcolormanagement",
@@ -18805,7 +18823,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "debugspy": {
                 "author": "Guillaume Emont <gemont@igalia.com>",
@@ -18858,7 +18877,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "errorignore": {
                 "author": "Vivia Nikolaidou <vivia@toolsonair.com>",
@@ -26908,7 +26928,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstfaceoverlay",
@@ -27365,7 +27386,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstfieldanalysis",
@@ -27675,7 +27697,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstfreeverb",
@@ -39267,7 +39290,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "chromium": {
                 "author": "Luis de Bethencourt <luis@debethencourt.com>",
@@ -39325,7 +39349,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dilate": {
                 "author": "Luis de Bethencourt <luis@debethencourt.com>",
@@ -39367,7 +39392,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dodge": {
                 "author": "Luis de Bethencourt <luis@debethencourt.com>",
@@ -39396,7 +39422,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "exclusion": {
                 "author": "Luis de Bethencourt <luis@debethencourt.com>",
@@ -39440,7 +39467,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gaussianblur": {
                 "author": "Jan Schmidt <thaytan@noraisin.net>",
@@ -39484,7 +39512,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "solarize": {
                 "author": "Luis de Bethencourt <luis@debethencourt.com>",
@@ -39556,7 +39585,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstgaudieffects",
@@ -39720,7 +39750,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "circle": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -39794,7 +39825,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "diffuse": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -39839,7 +39871,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "fisheye": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -39869,7 +39902,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "kaleidoscope": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -39943,7 +39977,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "marble": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -40030,7 +40065,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "mirror": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -40073,7 +40109,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "perspective": {
                 "author": "Antonio Ospite <ospite@studenti.unina.it>",
@@ -40115,7 +40152,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "pinch": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -40161,7 +40199,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "rotate": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -40206,7 +40245,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "sphere": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -40252,7 +40292,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "square": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -40325,7 +40366,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "stretch": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -40371,7 +40413,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "tunnel": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -40402,7 +40445,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "twirl": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -40448,7 +40492,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "waterripple": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -40522,7 +40567,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstgeometrictransform",
@@ -42070,7 +42116,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstinsertbin",
@@ -42445,7 +42492,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstinterlace",
@@ -43039,7 +43087,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ivtc": {
                 "author": "David Schleef <ds@schleef.org>",
@@ -43067,7 +43116,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstivtc",
@@ -43135,7 +43185,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstjp2kdecimator",
@@ -43477,7 +43528,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-amp-so-amp-stereo": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -43522,7 +43574,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-delay-so-delay-5s": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -43581,7 +43634,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-filter-so-hpf": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -43626,7 +43680,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-filter-so-lpf": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -43671,7 +43726,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-ladspa-rubberband-so-rubberband-pitchshifter-mono": {
                 "author": "Breakfast Quay, Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -44177,7 +44233,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-sine-so-sine-faac": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -44222,7 +44279,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspa-sine-so-sine-fcaa": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -44267,7 +44325,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspasrc-noise-so-noise-white": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -44370,7 +44429,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "ladspasrc-sine-so-sine-fcac": {
                 "author": "Richard Furse (LADSPA example plugins), Juan Manuel Borges Caño <juanmabcmail@gmail.com>, Andy Wingo <wingo at pobox.com>, Steve Baker <stevebaker_org@yahoo.co.uk>, Erik Walthinsen <omega@cse.ogi.edu>, Stefan Sauer <ensonic@users.sf.net>, Wim Taymans <wim@fluendo.com>",
@@ -44487,7 +44547,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstladspa",
@@ -44785,7 +44846,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videoparse": {
                 "author": "David Schleef <ds@schleef.org>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -44947,7 +45009,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstlegacyrawparse",
@@ -237126,7 +237189,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstonnx",
@@ -237717,7 +237781,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cvdilate": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -237748,7 +237813,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cvequalizehist": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -237778,7 +237844,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cverode": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -237809,7 +237876,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cvlaplace": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -237894,7 +237962,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cvsmooth": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -238049,7 +238118,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cvsobel": {
                 "author": "Thiago Santos<thiago.sousa.santos@collabora.co.uk>",
@@ -238134,7 +238204,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "cvtracker": {
                 "author": "Vivek R <123vivekr@gmail.com>",
@@ -238245,7 +238316,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dewarp": {
                 "author": "Nicola Murino <nicola.murino@gmail.com>",
@@ -238384,7 +238456,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "disparity": {
                 "author": "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>",
@@ -238424,7 +238497,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "edgedetect": {
                 "author": "Michael Sheldon <mike@mikeasoft.com>",
@@ -238509,7 +238583,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "faceblur": {
                 "author": "Michael Sheldon <mike@mikeasoft.com>,Robert Jobbagy <jobbagy.robert@gmail.com>",
@@ -238620,7 +238695,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "facedetect": {
                 "author": "Michael Sheldon <mike@mikeasoft.com>",
@@ -238805,7 +238881,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "grabcut": {
                 "author": "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>",
@@ -238862,7 +238939,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "handdetect": {
                 "author": "Andol Li <andol@andol.info>",
@@ -238988,7 +239066,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "motioncells": {
                 "author": "Robert Jobbagy <jobbagy dot robert at gmail dot com>, Nicola Murino <nicola dot murino at gmail.com>",
@@ -239251,7 +239330,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "opencvtextoverlay": {
                 "author": "sreerenj<bsreerenj@gmail.com>",
@@ -239406,7 +239486,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "retinex": {
                 "author": "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>",
@@ -239505,7 +239586,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "segmentation": {
                 "author": "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>",
@@ -239574,7 +239656,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "skindetect": {
                 "author": "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>",
@@ -239629,7 +239712,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "templatematch": {
                 "author": "Noam Lewis <jones.noamle@gmail.com>",
@@ -239698,7 +239782,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstopencv",
@@ -243371,7 +243456,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstremovesilence",
@@ -244628,7 +244714,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstrsvg",
@@ -245475,7 +245562,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "rtponviftimestamp": {
                 "author": "Guillaume Desmottes <guillaume.desmottes@collabora.com>",
@@ -245579,7 +245667,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstrtponvif",
@@ -246085,7 +246174,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videosegmentclip": {
                 "author": "Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -246112,7 +246202,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstsegmentclip",
@@ -246473,7 +246564,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstsmooth",
@@ -246617,7 +246709,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "pitch": {
                 "author": "Wouter Paesen <wouter@blue-gate.be>",
@@ -246701,7 +246794,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstsoundtouch",
@@ -246754,7 +246848,8 @@
                         "writable": true
                     }
                 },
-                "rank": "marginal"
+                "rank": "marginal",
+                "untrusted-aware": "true"
             },
             "spanplc": {
                 "author": "Youness Alaoui <youness.alaoui@collabora.co.uk>",
@@ -246793,7 +246888,8 @@
                         "writable": false
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             },
             "tonegeneratesrc": {
                 "author": "Iskratel <www.iskratel.com>",
@@ -247062,7 +247158,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstspeed",
@@ -250706,7 +250803,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "timecodestamper": {
                 "author": "Vivia Nikolaidou <vivia@toolsonair.com>",
@@ -250940,7 +251038,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gsttimecode",
@@ -255597,7 +255696,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videodiff": {
                 "author": "David Schleef <ds@schleef.org>",
@@ -255626,7 +255726,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "zebrastripe": {
                 "author": "David Schleef <ds@entropywave.com>",
@@ -255670,7 +255771,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideofiltersbad",
@@ -255718,7 +255820,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideoframe_audiolevel",
@@ -256324,7 +256427,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "simplevideomarkdetect": {
                 "author": "Wim Taymans <wim@fluendo.com>",
@@ -256478,7 +256582,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "videoanalyse": {
                 "author": "Wim Taymans <wim@fluendo.com>",
@@ -256520,7 +256625,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideosignal",
@@ -256753,7 +256859,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvmaf",
@@ -257162,7 +257269,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkandownload": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -257190,7 +257298,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkanh264dec": {
                 "author": "Víctor Jáquez <vjaquez@igalia.com>",
@@ -257427,7 +257536,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkanoverlaycompositor": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -257455,7 +257565,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkanshaderspv": {
                 "author": "Martin Reboredo <yakoyoku@gmail.com>",
@@ -257531,7 +257642,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkansink": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -257625,7 +257737,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkanviewconvert": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -257715,7 +257828,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "vulkanvp9dec": {
                 "author": "Stephane Cerveau <scerveau@igalia.com>",
@@ -257742,7 +257856,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvulkan",
@@ -261220,7 +261335,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstzbar",

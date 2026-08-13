@@ -138,6 +138,7 @@ gst_fisheye_class_init (GstFisheyeClass * klass)
       "Transform/Effect/Video",
       "Simulate a fisheye lens by zooming on the center of the image and compressing the edges",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gstgt_class->map_func = fisheye_map;
 }

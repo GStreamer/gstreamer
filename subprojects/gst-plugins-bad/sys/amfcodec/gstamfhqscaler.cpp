@@ -210,6 +210,7 @@ gst_amf_hq_scaler_class_init (GstAmfHQScalerClass * klass, gpointer data)
       "Filter/Converter/Video/Scaler/Hardware",
       "High-quality video upscaling using AMD AMF (VSR / FSR / Bicubic)",
       "GStreamer AMF contributors");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = FALSE;
   trans_class->transform_caps =

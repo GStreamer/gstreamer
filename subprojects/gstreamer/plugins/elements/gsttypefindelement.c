@@ -286,6 +286,8 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       "Generic",
       "Finds the media type of a stream",
       "Benjamin Otte <in7y118@public.uni-hamburg.de>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   gst_element_class_add_static_pad_template (gstelement_class,
       &type_find_element_src_template);
   gst_element_class_add_static_pad_template (gstelement_class,

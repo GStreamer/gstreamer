@@ -116,6 +116,7 @@ gst_gl_view_convert_element_class_init (GstGLViewConvertElementClass * klass)
       "Convert stereoscopic/multiview video formats",
       "Jan Schmidt <jan@centricular.com>, "
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_view_convert_element_set_caps;
 

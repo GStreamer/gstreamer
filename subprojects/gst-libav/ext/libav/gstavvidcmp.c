@@ -211,7 +211,7 @@ gst_ffmpegvidcmp_class_init (GstFFMpegVidCmpClass * klass)
       g_param_spec_string ("stats-file", "Stats File Location",
           "Set file where to store per-frame difference information"
           ", '-' for stdout", DEFAULT_STATS_FILE, G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          G_PARAM_STATIC_STRINGS | GST_PARAM_UNTRUSTED_SENSITIVE));
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "Method", "Method to compare video frames",
           GST_FFMPEGVIDCMP_METHOD_TYPE, DEFAULT_METHOD,
@@ -231,6 +231,7 @@ gst_ffmpegvidcmp_class_init (GstFFMpegVidCmpClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "A libav video compare element", "Filter/Compare/Video",
       "Compare Video", "U. Artie Eoff <ullysses.a.eoff@intel.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

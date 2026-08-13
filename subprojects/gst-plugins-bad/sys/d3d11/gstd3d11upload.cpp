@@ -108,6 +108,7 @@ gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
       "Direct3D11 Uploader", "Filter/Video/Uploader",
       "Uploads data into Direct3D11 texture memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = TRUE;
 

@@ -1820,6 +1820,7 @@ gst_hip_upload_class_init (GstHipUploadClass * klass)
       "HIP Uploader", "Filter/Video/Uploader",
       "Uploads system memory into HIP device memory",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   auto sys_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_HIP_FORMATS)
       ";" GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -1936,6 +1937,7 @@ gst_hip_download_class_init (GstHipDownloadClass * klass)
       "HIP Downloader", "Filter/Video/Downloader",
       "Downloads HIP device memory into system memory",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   auto sys_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_HIP_FORMATS)
       ";" GST_VIDEO_CAPS_MAKE_WITH_FEATURES

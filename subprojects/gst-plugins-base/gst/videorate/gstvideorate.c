@@ -347,6 +347,8 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       "Drops/duplicates/adjusts timestamps on video frames to make a perfect stream",
       "Wim Taymans <wim@fluendo.com>");
 
+  gst_element_class_mark_as_untrusted_aware (element_class);
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_video_rate_sink_template);
   gst_element_class_add_static_pad_template (element_class,

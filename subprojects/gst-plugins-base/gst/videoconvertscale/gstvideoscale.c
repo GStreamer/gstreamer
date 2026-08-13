@@ -123,6 +123,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Video scaler", "Filter/Video/Scaler",
       "Resizes video", "Wim Taymans <wim.taymans@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   convertscale_class->converts = FALSE;
   convertscale_class->scales = TRUE;

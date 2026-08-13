@@ -251,12 +251,14 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
       g_param_spec_string ("location",
           "Background image location",
           "Background image location", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   gst_element_class_set_static_metadata (element_class,
       "Gstreamer OpenGL DifferenceMatte", "Filter/Effect/Video",
       "Saves a background frame and replace it with a pixbuf",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;

@@ -197,6 +197,7 @@ gst_tflite_inference_class_init (GstTFliteInferenceClass * klass)
       "Denis Shimizu <denis.shimizu@collabora.com>, "
       "Aaron Boxer <aaron.boxer@collabora.com>,"
       "Daniel Morin <daniel.morin@collabora.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_tflite_inference_sink_template));
   gst_element_class_add_pad_template (element_class,

@@ -108,6 +108,7 @@ gst_gl_overlay_compositor_element_class_init (GstGLOverlayCompositorElementClass
       "OpenGL overlaying filter", "Filter/Effect",
       "Flatten a stream containing GstVideoOverlayCompositionMeta",
       "<matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class,
       &overlay_src_pad_template);

@@ -195,6 +195,7 @@ gst_gl_alpha_combine_class_init (GstGLAlphaCombineClass * klass)
       "OpenGL alpha combiner", "Filter/Editor/Video/Compositor",
       "Combines RGBA GL textures by replacing color alpha from an alpha input",
       "GStreamer contributors");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &src_factory, GST_TYPE_AGGREGATOR_PAD);

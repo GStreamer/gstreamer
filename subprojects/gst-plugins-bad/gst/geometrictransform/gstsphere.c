@@ -201,6 +201,7 @@ gst_sphere_class_init (GstSphereClass * klass)
       "Transform/Effect/Video",
       "Applies 'sphere' geometric transform to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_sphere_set_property;
   gobject_class->get_property = gst_sphere_get_property;

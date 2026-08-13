@@ -2246,6 +2246,7 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
       "Deprecated by compositor. Mix multiple video streams",
       "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_VIDEO_MIXER2_PAD);

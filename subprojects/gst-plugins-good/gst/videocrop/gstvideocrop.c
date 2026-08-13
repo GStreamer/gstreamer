@@ -198,6 +198,7 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
       "Filter/Effect/Video",
       "Crops video into a user-defined region",
       "Tim-Philipp Müller <tim centricular net>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
 

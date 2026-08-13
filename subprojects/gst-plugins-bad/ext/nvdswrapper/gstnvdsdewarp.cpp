@@ -429,6 +429,7 @@ gst_nv_ds_dewarp_class_init (GstNvDsDewarpClass * klass)
       "Filter/Effect/Video/Hardware",
       "Performs dewraping using NVIDIA DeepStream NVWarp360 API",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (elem_class);
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_nv_ds_dewarp_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_nv_ds_dewarp_stop);

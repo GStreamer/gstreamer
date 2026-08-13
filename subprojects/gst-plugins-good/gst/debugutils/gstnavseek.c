@@ -109,6 +109,7 @@ gst_navseek_class_init (GstNavSeekClass * klass)
       "Seek based on left-right arrows", "Filter/Video",
       "Seek based on navigation keys left-right",
       "Jan Schmidt <thaytan@mad.scientist.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gstbasetrans_class->src_event = GST_DEBUG_FUNCPTR (gst_navseek_src_event);
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_navseek_sink_event);

@@ -86,6 +86,7 @@ gst_dwrite_clock_overlay_class_init (GstDWriteClockOverlayClass * klass)
       "DirectWrite Clock Overlay", "Filter/Editor/Video",
       "Overlays the current clock time on a video stream",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   overlay_class->get_text =
       GST_DEBUG_FUNCPTR (gst_dwrite_clock_overlay_get_text);

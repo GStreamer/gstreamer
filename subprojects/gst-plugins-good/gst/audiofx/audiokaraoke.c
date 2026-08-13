@@ -137,6 +137,7 @@ gst_audio_karaoke_class_init (GstAudioKaraokeClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "AudioKaraoke",
       "Filter/Effect/Audio",
       "Removes voice from sound", "Wim Taymans <wim.taymans@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),

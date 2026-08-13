@@ -242,6 +242,7 @@ gst_marble_class_init (GstMarbleClass * klass)
       "Transform/Effect/Video",
       "Applies a marbling effect to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->finalize = gst_marble_finalize;
   gobject_class->set_property = gst_marble_set_property;

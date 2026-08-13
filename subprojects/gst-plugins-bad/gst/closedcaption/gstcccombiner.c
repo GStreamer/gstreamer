@@ -1335,6 +1335,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
       "Filter",
       "Combines GstVideoCaptionMeta with video input stream",
       "Sebastian Dröge <sebastian@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   /**
    * GstCCCombiner:schedule:

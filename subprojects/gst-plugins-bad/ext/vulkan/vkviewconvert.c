@@ -613,6 +613,7 @@ gst_vulkan_view_convert_class_init (GstVulkanViewConvertClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Vulkan View Convert", "Filter/Video/Convert", "A Vulkan View Convert",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_type_mark_as_plugin_api (GST_TYPE_VULKAN_STEREO_DOWNMIX, 0);
   gst_element_class_add_static_pad_template (gstelement_class,

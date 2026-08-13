@@ -104,6 +104,7 @@ gst_cv_equalize_hist_class_init (GstCvEqualizeHistClass * klass)
       "Transform/Effect/Video",
       "Applies cvEqualizeHist OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

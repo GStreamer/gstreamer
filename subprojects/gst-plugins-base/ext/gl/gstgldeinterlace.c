@@ -251,6 +251,7 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
       "OpenGL deinterlacing filter", "Filter/Converter/Video/Deinterlace",
       "Deinterlacing based on fragment shaders",
       "Julien Isorce <julien.isorce@mail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   g_object_class_install_property (gobject_class,
       PROP_METHOD,

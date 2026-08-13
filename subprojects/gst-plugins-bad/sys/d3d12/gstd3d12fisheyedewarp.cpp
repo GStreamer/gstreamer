@@ -484,6 +484,7 @@ gst_d3d12_fisheye_dewarp_class_init (GstD3D12FisheyeDewarpClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Fisheye Dewarp", "Filter/Converter/Video/Hardware",
       "Dewarping fisheye image", "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = FALSE;
 

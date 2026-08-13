@@ -143,6 +143,7 @@ gst_audio_fir_filter_class_init (GstAudioFIRFilterClass * klass)
       "Audio FIR filter", "Filter/Effect/Audio",
       "Generic audio FIR filter with custom filter kernel",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 }
 
 static void

@@ -282,6 +282,7 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
       "Filter/Effect/Audio",
       "Apply ReplayGain volume adjustment",
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_DEBUG_CATEGORY_INIT (gst_rg_volume_debug, "rgvolume", 0,
       "ReplayGain volume element");

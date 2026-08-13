@@ -53,7 +53,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "clocksync": {
                 "author": "Jan Schmidt <jan@centricular.com>",
@@ -204,7 +205,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dataurisrc": {
                 "author": "Philippe Normand <pnormand@igalia.com>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
@@ -363,7 +365,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "fakesink": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>, Mr. 'frag-me-more' Vanderwingo <wingo@fluendo.com>",
@@ -527,7 +530,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "fakesrc": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>",
@@ -779,7 +783,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "fdsink": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>",
@@ -1015,7 +1020,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             },
             "filesrc": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>",
@@ -1054,7 +1060,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             },
             "funnel": {
                 "author": "Olivier Crete <olivier.crete@collabora.co.uk>",
@@ -1094,7 +1101,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "identity": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>",
@@ -1351,7 +1359,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "input-selector": {
                 "author": "Julien Moutte <julien@moutte.net>, Jan Schmidt <thaytan@mad.scientist.com>, Wim Taymans <wim.taymans@gmail.com>",
@@ -1453,7 +1462,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "multiqueue": {
                 "author": "Edward Hervey <edward@fluendo.com>",
@@ -1711,7 +1721,8 @@
                         "return-type": "void",
                         "when": "first"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "output-selector": {
                 "author": "Stefan Kost <stefan.kost@nokia.com>",
@@ -1774,7 +1785,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "queue": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>",
@@ -1998,7 +2010,8 @@
                         "return-type": "void",
                         "when": "first"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "queue2": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim.taymans@gmail.com>",
@@ -2292,7 +2305,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "streamiddemux": {
                 "author": "HoonHee Lee <hoonhee.lee@lge.com>",
@@ -2332,7 +2346,8 @@
                     }
                 },
                 "rank": "primary",
-                "signals": {}
+                "signals": {},
+                "untrusted-aware": "true"
             },
             "tee": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>",
@@ -2445,7 +2460,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "typefind": {
                 "author": "Benjamin Otte <in7y118@public.uni-hamburg.de>",
@@ -2525,7 +2541,8 @@
                         "return-type": "void",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "valve": {
                 "author": "Olivier Crete <olivier.crete@collabora.co.uk>",
@@ -2577,7 +2594,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstcoreelements",

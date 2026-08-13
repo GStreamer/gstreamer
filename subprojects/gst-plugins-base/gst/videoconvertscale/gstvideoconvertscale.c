@@ -474,6 +474,7 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
       "Filter/Converter/Video/Scaler/Colorspace",
       "Resizes video and converts from one colorspace to another",
       "Wim Taymans <wim.taymans@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_video_convert_scale_sink_template_factory ());

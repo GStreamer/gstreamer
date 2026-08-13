@@ -118,6 +118,7 @@ gst_video_median_class_init (GstVideoMedianClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Median effect",
       "Filter/Effect/Video", "Apply a median filter to an image",
       "Wim Taymans <wim.taymans@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_median_transform_frame);

@@ -1075,7 +1075,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaudioconvert",
@@ -1496,7 +1497,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaudiorate",
@@ -1601,7 +1603,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstaudioresample",
@@ -2251,7 +2254,8 @@
                         "writable": true
                     }
                 },
-                "rank": "primary + 1"
+                "rank": "primary + 1",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstcompositor",
@@ -2461,7 +2465,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "secondary"
+                "rank": "secondary",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstdsd",
@@ -4038,7 +4043,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glalphacombine": {
                 "author": "GStreamer contributors",
@@ -4089,7 +4095,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glcolorbalance": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -4179,7 +4186,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glcolorconvert": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -4208,7 +4216,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glcolorscale": {
                 "author": "Julien Isorce <julien.isorce@gmail.com>, Matthew Waters <matthew@centricular.com>",
@@ -4238,7 +4247,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gldeinterlace": {
                 "author": "Julien Isorce <julien.isorce@mail.com>",
@@ -4281,7 +4291,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gldifferencematte": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4324,7 +4335,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gldownload": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -4353,7 +4365,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4421,7 +4434,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_blur": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4465,7 +4479,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_bulge": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4509,7 +4524,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_fisheye": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4553,7 +4569,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_glow": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4597,7 +4614,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_heat": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4641,7 +4659,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_identity": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4685,7 +4704,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_laplacian": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4741,7 +4761,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_lumaxpro": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4785,7 +4806,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_mirror": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4829,7 +4851,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_sepia": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4873,7 +4896,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_sin": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4917,7 +4941,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_sobel": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -4973,7 +4998,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_square": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5017,7 +5043,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_squeeze": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5061,7 +5088,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_stretch": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5105,7 +5133,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_tunnel": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5149,7 +5178,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_twirl": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5193,7 +5223,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_xpro": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5237,7 +5268,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gleffects_xray": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>",
@@ -5281,7 +5313,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glfilterapp": {
                 "author": "Julien Isorce <julien.isorce@gmail.com>",
@@ -5331,7 +5364,8 @@
                         "return-type": "gboolean",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "glfilterbin": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -5381,7 +5415,8 @@
                         "return-type": "GstElement",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "glfiltercube": {
                 "author": "Julien Isorce <julien.isorce@gmail.com>",
@@ -5510,7 +5545,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glfilterglass": {
                 "author": "Julien Isorce <julien.isorce@gmail.com>",
@@ -5540,7 +5576,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glimagesink": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -6047,7 +6084,8 @@
                         "return-type": "GstElement",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "glmosaic": {
                 "author": "Julien Isorce <julien.isorce@gmail.com>",
@@ -6083,7 +6121,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gloverlay": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>, Matthew Waters <matthew@centricular.com>",
@@ -6224,7 +6263,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "gloverlaycompositor": {
                 "author": "<matthew@centricular.com>",
@@ -6254,7 +6294,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glshader": {
                 "author": "<matthew@centricular.com>",
@@ -6350,7 +6391,8 @@
                         "return-type": "GstGLShader",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "glsinkbin": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -6703,7 +6745,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glstereosplit": {
                 "author": "Jan Schmidt <jan@centricular.com>, Matthew Waters <matthew@centricular.com>",
@@ -7006,7 +7049,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glupload": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -7035,7 +7079,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glvideoflip": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -7080,7 +7125,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glvideomixer": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -7127,7 +7173,8 @@
                     }
                 },
                 "rank": "none",
-                "signals": {}
+                "signals": {},
+                "untrusted-aware": "true"
             },
             "glvideomixerelement": {
                 "author": "Matthew Waters <matthew@centricular.com>",
@@ -7176,7 +7223,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "glviewconvert": {
                 "author": "Jan Schmidt <jan@centricular.com>, Matthew Waters <matthew@centricular.com>",
@@ -7267,7 +7315,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstopengl",
@@ -9149,7 +9198,8 @@
                         ],
                         "return-type": "GstVideoOverlayComposition"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstoverlaycomposition",
@@ -9202,7 +9252,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "textoverlay": {
                 "author": "David Schleef <ds@schleef.org>, Zeeshan Ali <zeeshan.ali@nokia.com>",
@@ -9235,7 +9286,8 @@
                     }
                 },
                 "properties": {},
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "textrender": {
                 "author": "David Schleef <ds@schleef.org>, GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>",
@@ -9339,7 +9391,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "timeoverlay": {
                 "author": "Tim-Philipp Müller <tim@centricular.net>",
@@ -9427,7 +9480,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstpango",
@@ -14864,7 +14918,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "marginal"
+                "rank": "marginal",
+                "untrusted-aware": "true"
             },
             "videoconvertscale": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
@@ -15121,7 +15176,8 @@
                         "writable": true
                     }
                 },
-                "rank": "secondary"
+                "rank": "secondary",
+                "untrusted-aware": "true"
             },
             "videoscale": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
@@ -15164,7 +15220,8 @@
                         "writable": true
                     }
                 },
-                "rank": "marginal"
+                "rank": "marginal",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideoconvertscale",
@@ -15730,7 +15787,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideorate",
@@ -16051,7 +16109,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvideotestsrc",
@@ -16312,7 +16371,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstvolume",

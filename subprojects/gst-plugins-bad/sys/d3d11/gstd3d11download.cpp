@@ -113,6 +113,7 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
       "Direct3D11 Downloader", "Filter/Video/Downloader",
       "Downloads Direct3D11 texture memory into system memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = TRUE;
 

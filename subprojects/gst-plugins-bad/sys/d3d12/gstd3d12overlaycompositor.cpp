@@ -173,6 +173,7 @@ gst_d3d12_overlay_compositor_class_init (GstD3D12OverlayCompositorClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Overlay Compositor", "Filter/Effect/Video/Hardware",
       "Blend overlay into stream", "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_add_static_pad_template (element_class, &sink_template);

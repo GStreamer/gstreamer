@@ -218,6 +218,7 @@ gst_mirror_class_init (GstMirrorClass * klass)
       "Transform/Effect/Video",
       "Split the image into two halves and reflect one over each other",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gobject_class->set_property = gst_mirror_set_property;
   gobject_class->get_property = gst_mirror_get_property;

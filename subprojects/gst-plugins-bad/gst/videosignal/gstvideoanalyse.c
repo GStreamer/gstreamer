@@ -106,6 +106,7 @@ gst_video_analyse_class_init (GstVideoAnalyseClass * klass)
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Video analyser", "Filter/Analyzer/Video",
       "Analyse video signal", "Wim Taymans <wim@fluendo.com>");
+  gst_element_class_mark_as_untrusted_aware (GST_ELEMENT_CLASS (klass));
 
   gobject_class->set_property = gst_video_analyse_set_property;
   gobject_class->get_property = gst_video_analyse_get_property;

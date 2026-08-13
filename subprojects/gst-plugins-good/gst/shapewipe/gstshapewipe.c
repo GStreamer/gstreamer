@@ -158,6 +158,7 @@ gst_shape_wipe_class_init (GstShapeWipeClass * klass)
       "Filter/Editor/Video",
       "Adds a shape wipe transition to a video stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &video_sink_pad_template);

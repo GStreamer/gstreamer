@@ -137,6 +137,8 @@ gst_dodge_class_init (GstDodgeClass * klass)
       "Dodge saturates the colors in the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");
 
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
+
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_dodge_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,

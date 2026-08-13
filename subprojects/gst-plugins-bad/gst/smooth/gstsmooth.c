@@ -97,6 +97,7 @@ gst_smooth_class_init (GstSmoothClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Smooth effect",
       "Filter/Effect/Video", "Apply a smooth filter to an image",
       "Wim Taymans <wim.taymans@chello.be>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   vfilter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_smooth_transform_frame);

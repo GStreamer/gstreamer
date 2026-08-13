@@ -191,6 +191,7 @@ gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
       "Band pass & band reject filter", "Filter/Effect/Audio",
       "Chebyshev band pass and band reject filter",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_cheb_band_setup);
 

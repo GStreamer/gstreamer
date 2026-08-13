@@ -214,6 +214,7 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
       "opencvtextoverlay",
       "Filter/Effect/Video",
       "Write text on the top of video", "sreerenj<bsreerenj@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);

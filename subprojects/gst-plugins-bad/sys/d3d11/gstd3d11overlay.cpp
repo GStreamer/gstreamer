@@ -133,6 +133,7 @@ gst_d3d11_overlay_class_init (GstD3D11OverlayClass * klass)
       "Direct3D11 Overlay", "Filter/Video",
       "Provides application renderable Direct3D11 render target view",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->passthrough_on_same_caps = FALSE;
 

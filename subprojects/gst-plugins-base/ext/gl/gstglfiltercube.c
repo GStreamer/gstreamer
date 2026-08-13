@@ -182,6 +182,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   gst_element_class_set_static_metadata (element_class, "OpenGL cube filter",
       "Filter/Effect/Video", "Map input texture on the 6 cube faces",
       "Julien Isorce <julien.isorce@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_GLES2 | GST_GL_API_OPENGL3;

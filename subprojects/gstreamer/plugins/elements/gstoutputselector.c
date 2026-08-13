@@ -139,6 +139,8 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Output selector",
       "Generic", "1-to-N output stream selector",
       "Stefan Kost <stefan.kost@nokia.com>");
+
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_output_selector_sink_factory);
   gst_element_class_add_static_pad_template (gstelement_class,

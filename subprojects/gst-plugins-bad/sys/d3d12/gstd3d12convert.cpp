@@ -2418,6 +2418,7 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
       "Performs resizing, colorspace conversion, cropping, flipping/rotating "
       "and adjusts hue/saturation/brightness/contrast using Direct3D12",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_convert_sink_event);
 
@@ -2654,6 +2655,7 @@ gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
       "Filter/Converter/Video/Colorspace/Hardware",
       "Converts colorspace and adjusts hue/saturation/brightness/contrast "
       "using Direct3D12", "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_color_convert_transform_caps);
@@ -2856,6 +2858,7 @@ gst_d3d12_scale_class_init (GstD3D12ScaleClass * klass)
       "Filter/Converter/Video/Scaler/Hardware",
       "Resizes video using Direct3D12",
       "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_scale_transform_caps);

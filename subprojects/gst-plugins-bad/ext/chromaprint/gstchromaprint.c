@@ -114,6 +114,7 @@ gst_chromaprint_class_init (GstChromaprintClass * klass)
       "Filter/Analyzer/Audio",
       "Find an audio fingerprint using the Chromaprint library",
       "Lukáš Lalinský <lalinsky@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (GST_ELEMENT_CLASS (klass));
 
   caps = gst_caps_from_string (PAD_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),

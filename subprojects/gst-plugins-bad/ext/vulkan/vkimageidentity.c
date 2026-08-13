@@ -100,6 +100,7 @@ gst_vulkan_image_identity_class_init (GstVulkanImageIdentityClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Vulkan Image Identity", "Filter/Video", "A Vulkan image copier",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_vulkan_sink_template);

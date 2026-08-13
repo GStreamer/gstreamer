@@ -101,6 +101,8 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
       "Filter/Editor/Video",
       "Adds text strings on top of a video buffer",
       "David Schleef <ds@schleef.org>, " "Zeeshan Ali <zeeshan.ali@nokia.com>");
+
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 static void

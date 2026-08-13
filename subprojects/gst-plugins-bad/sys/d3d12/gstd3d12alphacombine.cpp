@@ -251,6 +251,7 @@ gst_d3d12_alpha_combine_class_init (GstD3D12AlphaCombineClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Alpha Combine", "Filter/Editor/Video/Compositor",
       "A Direct3D12 alpha combiner", "Seungha Yang <seungha@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_alpha_combine_debug,
       "d3d12alphacombine", 0, "d3d12alphacombine");

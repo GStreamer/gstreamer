@@ -88,6 +88,7 @@ gst_cv_erode_class_init (GstCvErodeClass * klass)
       "Transform/Effect/Video",
       "Applies cvErode OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 }
 
 /* initialize the new element

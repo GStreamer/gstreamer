@@ -149,6 +149,7 @@ gst_video_detect_class_init (GstSimpleVideoMarkDetectClass * klass)
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Video detecter", "Filter/Effect/Video",
       "Detect patterns in a video signal", "Wim Taymans <wim@fluendo.com>");
+  gst_element_class_mark_as_untrusted_aware (GST_ELEMENT_CLASS (klass));
 
   gobject_class->set_property = gst_video_detect_set_property;
   gobject_class->get_property = gst_video_detect_get_property;

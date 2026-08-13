@@ -88,6 +88,7 @@ gst_stereo_class_init (GstStereoClass * klass)
       "Filter/Effect/Audio",
       "Muck with the stereo signal to enhance its 'stereo-ness'",
       "Erik Walthinsen <omega@cse.ogi.edu>");
+  gst_element_class_mark_as_untrusted_aware (element_class);
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (audiofilter_class, caps);

@@ -592,6 +592,8 @@ gst_color_effects_class_init (GstColorEffectsClass * klass)
       "Color Look-up Table filter",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
+  gst_element_class_mark_as_untrusted_aware (element_class);
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_color_effects_sink_template);
   gst_element_class_add_static_pad_template (element_class,

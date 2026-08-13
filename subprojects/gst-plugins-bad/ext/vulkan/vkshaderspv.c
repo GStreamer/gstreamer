@@ -145,26 +145,31 @@ gst_vulkan_shader_spv_class_init (GstVulkanShaderSpvClass * klass)
   g_object_class_install_property (gobject_class, PROP_VERTEX,
       g_param_spec_boxed ("vertex", "Vertex Binary",
           "SPIRV vertex binary", G_TYPE_BYTES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_FRAGMENT,
       g_param_spec_boxed ("fragment", "Fragment Binary",
           "SPIRV fragment binary", G_TYPE_BYTES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_VERTEX_PATH,
       g_param_spec_string ("vertex-location", "Vertex Source",
           "SPIRV vertex source", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   g_object_class_install_property (gobject_class, PROP_FRAGMENT_PATH,
       g_param_spec_string ("fragment-location", "Fragment Source",
           "SPIRV fragment source", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_UNTRUSTED_SENSITIVE));
 
   gst_element_class_set_static_metadata (gstelement_class, "Vulkan Shader SPV",
       "Filter/Video", "Performs operations with SPIRV shaders in Vulkan",
       "Martin Reboredo <yakoyoku@gmail.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_vulkan_sink_template);

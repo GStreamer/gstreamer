@@ -540,6 +540,7 @@ gst_vulkan_download_class_init (GstVulkanDownloadClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "Vulkan Downloader",
       "Filter/Video/Downloader", "A Vulkan data downloader",
       "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_mark_as_untrusted_aware (gstelement_class);
 
   {
     GstCaps *caps;
