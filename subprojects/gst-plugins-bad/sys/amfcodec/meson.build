@@ -4,6 +4,7 @@ amf_sources = [
   'gstamfh265enc.cpp',
   'gstamfav1enc.cpp',
   'gstamfbasefilter.cpp',
+  'gstamfd3dcommon.cpp',
   'gstamfutils.cpp',
   'plugin.cpp',
 ]
@@ -15,6 +16,7 @@ amf_headers = [
   'gstamfh264enc.h',
   'gstamfav1enc.h',
   'gstamfbasefilter.h',
+  'gstamfd3dcommon.h',
 ]
 
 if host_system == 'windows'
@@ -91,6 +93,11 @@ if host_system == 'windows'
   endif
 
   platform_deps += [gstd3d11_dep, winmm_lib]
+
+  if gstd3d12_dep.found()
+    platform_deps += [gstd3d12_dep]
+    extra_args += ['-DHAVE_GST_D3D12=1']
+  endif
 endif
 
 if cxx.get_id() != 'msvc'

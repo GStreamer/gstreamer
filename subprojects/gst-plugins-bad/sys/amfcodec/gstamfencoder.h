@@ -112,6 +112,10 @@ void  gst_amf_encoder_set_subclass_data (GstAmfEncoder * encoder,
                                          gint64 adapter_luid,
                                          const wchar_t * codec_id);
 
+#ifdef G_OS_WIN32
+GstAmfApi gst_amf_encoder_get_api (GstAmfEncoder * encoder);
+#endif
+
 AMF_RESULT gst_amf_encoder_set_pre_analysis_options (GstAmfEncoder * self,
                                                      amf::AMFComponent * comp,
                                                      const GstAmfEncoderPreAnalysis * pa,

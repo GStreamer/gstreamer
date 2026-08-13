@@ -318,6 +318,7 @@ enum
     "width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ]"
 
 #define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D12Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw, " DOC_SINK_CAPS_COMM
 
@@ -1146,18 +1147,22 @@ gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
   GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
   GstCaps *template_caps;
-  GstCaps *supported_caps;
+  GstCaps *caps;
   std::set < std::string > downstream_profiles;
   std::set < std::string > allowed_formats;
+  GValue formats = G_VALUE_INIT;
 
   gst_amf_h265_enc_get_downstream_profiles (self, downstream_profiles);
 
   GST_DEBUG_OBJECT (self, "Downstream specified %" G_GSIZE_FORMAT " profiles",
       downstream_profiles.size ());
 
-  if (downstream_profiles.size () == 0)
-    return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+  if (downstream_profiles.size () == 0) {
+    caps = gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+    goto done;
+  }
 
+  g_value_init (&formats, GST_TYPE_LIST);
   /* *INDENT-OFF* */
   for (const auto &iter : downstream_profiles) {
     if (iter == "main") {
@@ -1166,15 +1171,6 @@ gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
       allowed_formats.insert("P010_10LE");
     }
   }
-  /* *INDENT-ON* */
-  template_caps = gst_pad_get_pad_template_caps (encoder->sinkpad);
-  template_caps = gst_caps_make_writable (template_caps);
-
-  GValue formats = G_VALUE_INIT;
-
-  g_value_init (&formats, GST_TYPE_LIST);
-
-  /* *INDENT-OFF* */
   for (const auto &iter: allowed_formats) {
     GValue val = G_VALUE_INIT;
     g_value_init (&val, G_TYPE_STRING);
@@ -1183,16 +1179,19 @@ gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
     gst_value_list_append_and_take_value (&formats, &val);
   }
   /* *INDENT-ON* */
+  template_caps = gst_pad_get_pad_template_caps (encoder->sinkpad);
+  template_caps = gst_caps_make_writable (template_caps);
 
   gst_caps_set_value (template_caps, "format", &formats);
   g_value_unset (&formats);
-  supported_caps = gst_video_encoder_proxy_getcaps (encoder,
-      template_caps, filter);
+
+  caps = gst_video_encoder_proxy_getcaps (encoder, template_caps, filter);
   gst_caps_unref (template_caps);
 
-  GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, supported_caps);
+done:
+  GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, caps);
 
-  return supported_caps;
+  return caps;
 }
 
 static gboolean
@@ -1980,6 +1979,15 @@ gst_amf_h265_enc_create_class_data (GstObject * device, AMFComponent * comp)
   gst_caps_set_features (sink_caps, 0,
       gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
           nullptr));
+#ifdef HAVE_GST_D3D12
+  if (AMFContext2Ptr (comp->GetContext ())->GetDX12Device ()) {
+    GstCaps *d3d12_caps = gst_caps_copy (system_caps);
+    gst_caps_set_features (d3d12_caps, 0,
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+            nullptr));
+    gst_caps_append (sink_caps, d3d12_caps);
+  }
+#endif
   gst_caps_append (sink_caps, system_caps);
 #else
   sink_caps = gst_caps_from_string (sink_caps_str.c_str ());

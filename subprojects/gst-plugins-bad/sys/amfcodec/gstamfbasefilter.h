@@ -28,6 +28,9 @@
 #include "gstamfutils.h"
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
 #endif
 
 G_BEGIN_DECLS
@@ -93,20 +96,20 @@ struct _GstAmfBaseFilterClass
 
 GType gst_amf_base_filter_get_type (void);
 
-/* Set by registrators: which adapter / Vulkan device to bind to and
- * what the cdata-derived pad templates look like. Mirrors
- * gst_amf_encoder_set_subclass_data(). */
 void  gst_amf_base_filter_set_subclass_data (GstAmfBaseFilter * filter,
                                              gint64 adapter_luid,
                                              guint device_index);
 
-/* Returns the live AMFContext (do not unref). NULL until start(). */
 amf::AMFContext * gst_amf_base_filter_get_context (GstAmfBaseFilter * filter);
 
 #ifdef G_OS_WIN32
-/* Returns the active D3D11 device, or NULL if the filter hasn't opened
- * one yet. Not reffed. Windows only. */
 GstD3D11Device * gst_amf_base_filter_get_d3d11_device (GstAmfBaseFilter * filter);
+
+#ifdef HAVE_GST_D3D12
+GstD3D12Device * gst_amf_base_filter_get_d3d12_device (GstAmfBaseFilter * filter);
+#endif
+
+GstAmfApi gst_amf_base_filter_get_api (GstAmfBaseFilter * filter);
 #endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAmfBaseFilter, gst_object_unref)

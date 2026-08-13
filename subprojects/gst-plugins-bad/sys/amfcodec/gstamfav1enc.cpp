@@ -301,6 +301,7 @@ enum
     "width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ]"
 
 #define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D12Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw, " DOC_SINK_CAPS_COMM
 
@@ -1751,6 +1752,15 @@ gst_amf_av1_enc_create_class_data (GstObject * device, AMFComponent * comp)
   gst_caps_set_features (sink_caps, 0,
       gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
           nullptr));
+#ifdef HAVE_GST_D3D12
+  if (AMFContext2Ptr (comp->GetContext ())->GetDX12Device ()) {
+    GstCaps *d3d12_caps = gst_caps_copy (system_caps);
+    gst_caps_set_features (d3d12_caps, 0,
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+            nullptr));
+    gst_caps_append (sink_caps, d3d12_caps);
+  }
+#endif
   gst_caps_append (sink_caps, system_caps);
 #else
   sink_caps = gst_caps_from_string (sink_caps_str.c_str ());

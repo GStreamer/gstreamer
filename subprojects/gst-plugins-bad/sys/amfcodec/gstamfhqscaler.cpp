@@ -298,6 +298,10 @@ gst_amf_hq_scaler_is_supported_caps_features (const GstCapsFeatures * features)
 #ifdef G_OS_WIN32
     if (!g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY))
       continue;
+#ifdef HAVE_GST_D3D12
+    if (!g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY))
+      continue;
+#endif
 #endif
 
     return FALSE;
@@ -423,6 +427,14 @@ gst_amf_hq_scaler_transform_size_info (GstBaseTransform * trans,
           1, G_MAXINT, G_MAXINT, 1, NULL);
     }
 #ifdef G_OS_WIN32
+#ifdef HAVE_GST_D3D12
+    if (feat
+        && gst_caps_features_contains (feat,
+            GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
+      gst_caps_append_structure_full (res, st,
+          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, NULL));
+    } else
+#endif
     if (feat
         && gst_caps_features_contains (feat,
             GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
@@ -992,13 +1004,17 @@ gst_amf_hq_scaler_configure_component (GstAmfBaseFilter * filter,
   algorithm = gst_amf_hq_scaler_resolve_algorithm (self, in_info);
   from_srgb = gst_amf_hq_scaler_from_srgb_from_info (in_info);
 
-  if (gst_amf_base_filter_get_d3d11_device (filter)) {
-    result = comp->SetProperty (AMF_HQ_SCALER_ENGINE_TYPE,
-#ifdef G_OS_WIN32
-        (amf_int64) amf::AMF_MEMORY_DX11);
-#else
-        (amf_int64) amf::AMF_MEMORY_VULKAN);
+  {
+    /* amfhqscaler is Windows-only for now. */
+    amf::AMF_MEMORY_TYPE engine_type = amf::AMF_MEMORY_DX11;
+
+#ifdef HAVE_GST_D3D12
+    if (gst_amf_base_filter_get_api (filter) == GST_AMF_API_D3D12)
+      engine_type = amf::AMF_MEMORY_DX12;
 #endif
+
+    result = comp->SetProperty (AMF_HQ_SCALER_ENGINE_TYPE,
+        (amf_int64) engine_type);
     if (result != AMF_OK)
       GST_WARNING_OBJECT (self, "Failed to set HQ scaler engine type");
   }
@@ -1130,6 +1146,16 @@ gst_amf_hq_scaler_build_template_caps (AMFComponent * comp, gboolean is_input)
       gst_caps_set_features (d3d11_caps, j,
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
     }
+#ifdef HAVE_GST_D3D12
+    if (AMFContext2Ptr (comp->GetContext ())->GetDX12Device ()) {
+      GstCaps *d3d12_caps = gst_caps_copy (caps);
+      for (guint j = 0; j < gst_caps_get_size (d3d12_caps); j++) {
+        gst_caps_set_features (d3d12_caps, j,
+            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, NULL));
+      }
+      gst_caps_append (d3d11_caps, d3d12_caps);
+    }
+#endif
     gst_caps_append (d3d11_caps, caps);
     return d3d11_caps;
   }

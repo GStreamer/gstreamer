@@ -217,14 +217,22 @@ gst_amf_vq_enhancer_configure_component (GstAmfBaseFilter * filter,
   GstAmfVQEnhancer *self = GST_AMF_VQE (filter);
   AMF_RESULT result;
 
-  result = comp->SetProperty (AMF_VIDEO_ENHANCER_ENGINE_TYPE,
-#ifdef G_OS_WIN32
-      (amf_int64) amf::AMF_MEMORY_DX11);
-#else
-      (amf_int64) amf::AMF_MEMORY_VULKAN);
+  {
+    /* This whole file only builds on Windows (see meson.build), so the
+     * only real choices are the api-property-selected D3D11/D3D12
+     * backends -- no Vulkan case here (mirrors gstamfhqscaler.cpp). */
+    amf::AMF_MEMORY_TYPE engine_type = amf::AMF_MEMORY_DX11;
+
+#ifdef HAVE_GST_D3D12
+    if (gst_amf_base_filter_get_api (filter) == GST_AMF_API_D3D12)
+      engine_type = amf::AMF_MEMORY_DX12;
 #endif
-  if (result != AMF_OK)
-    GST_WARNING_OBJECT (self, "Failed to set engine type");
+
+    result = comp->SetProperty (AMF_VIDEO_ENHANCER_ENGINE_TYPE,
+        (amf_int64) engine_type);
+    if (result != AMF_OK)
+      GST_WARNING_OBJECT (self, "Failed to set engine type");
+  }
 
   result = comp->SetProperty (AMF_VE_FCR_ATTENUATION,
       (amf_double) self->attenuation);
@@ -324,6 +332,16 @@ gst_amf_vq_enhancer_build_template_caps (AMFComponent * comp, gboolean is_input)
       gst_caps_set_features (d3d11_caps, j,
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
     }
+#ifdef HAVE_GST_D3D12
+    if (AMFContext2Ptr (comp->GetContext ())->GetDX12Device ()) {
+      GstCaps *d3d12_caps = gst_caps_copy (caps);
+      for (guint j = 0; j < gst_caps_get_size (d3d12_caps); j++) {
+        gst_caps_set_features (d3d12_caps, j,
+            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, NULL));
+      }
+      gst_caps_append (d3d11_caps, d3d12_caps);
+    }
+#endif
     gst_caps_append (d3d11_caps, caps);
     return d3d11_caps;
   }

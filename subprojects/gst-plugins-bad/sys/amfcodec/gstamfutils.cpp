@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2026 Azat Nurgaliev <azat.nurg@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,8 +25,36 @@
 #include <core/Factory.h>
 #include "gstamfutils.h"
 #include <gmodule.h>
+#include <mutex>
+
+/* Only for the GST_CAPS_FEATURE_MEMORY_D3D11/D3D12_MEMORY strings below;
+ * this file has no other D3D dependency and builds on every platform. */
+#ifdef G_OS_WIN32
+#include <gst/d3d11/gstd3d11.h>
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
+#endif
 
 using namespace amf;
+
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category ()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+  static std::once_flag once_flag;
+
+  /* *INDENT-OFF* */
+  std::call_once (once_flag, [&]() {
+    cat = _gst_debug_category_new ("amfutils", 0, "amf utility functions");
+  });
+  /* *INDENT-ON* */
+
+  return cat;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static AMFFactory *_factory = nullptr;
 static amf_uint64 _version = 0;
@@ -93,6 +122,187 @@ guint64
 gst_amf_get_version (void)
 {
   return (guint64) _version;
+}
+
+/* Creates a fresh, uninitialized AMFContext (amf::AMFFactory::CreateContext())
+ * as a gpointer, avoiding an AMF core header dependency here -- callers cast
+ * back to amf::AMFContext* */
+gboolean
+gst_amf_context_new (GstElement * element, gpointer * context)
+{
+  AMFContext *ctx = nullptr;
+  AMF_RESULT result;
+
+  if (!_factory) {
+    GST_ERROR_OBJECT (element, "AMF factory is not available");
+    return FALSE;
+  }
+
+  result = _factory->CreateContext (&ctx);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (element, "Failed to create AMF context, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    return FALSE;
+  }
+
+  *context = (gpointer) ctx;
+  return TRUE;
+}
+
+/**
+ * GstAmfApi:
+ *
+ * Native graphics API the AMF context is opened with.
+ *
+ * Since: 1.30
+ */
+GType
+gst_amf_api_get_type (void)
+{
+  static GType api_type = 0;
+  static const GEnumValue api_types[] = {
+    {GST_AMF_API_AUTO, "Automatic (resolved from negotiated caps)", "auto"},
+#ifdef G_OS_WIN32
+    {GST_AMF_API_D3D11, "Direct3D 11", "d3d11"},
+#ifdef HAVE_GST_D3D12
+    {GST_AMF_API_D3D12, "Direct3D 12", "d3d12"},
+#endif
+#endif
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&api_type)) {
+    GType type = g_enum_register_static ("GstAmfApi", api_types);
+    g_once_init_leave (&api_type, type);
+  }
+
+  return api_type;
+}
+
+/* Pipeline-wide (there is no per-element override) default from the
+ * GST_AMF_API env var (d3d11/d3d12/auto). Falls back to
+ * GST_AMF_DEFAULT_API when unset or invalid. */
+GstAmfApi
+gst_amf_get_default_api (void)
+{
+  const gchar *env = g_getenv ("GST_AMF_API");
+  GEnumClass *enum_class;
+  GEnumValue *val;
+  GstAmfApi ret = GST_AMF_DEFAULT_API;
+
+  if (!env)
+    return ret;
+
+  enum_class = (GEnumClass *) g_type_class_ref (GST_TYPE_AMF_API);
+  val = g_enum_get_value_by_nick (enum_class, env);
+  if (val) {
+    ret = (GstAmfApi) val->value;
+  } else {
+    GST_WARNING ("Unknown value \"%s\" for GST_AMF_API environment "
+        "variable, ignoring", env);
+  }
+  g_type_class_unref (enum_class);
+
+  return ret;
+}
+
+/* Like gst_amf_get_default_api(), but never returns AUTO -- "auto" or an
+ * unset env var resolve to GST_AMF_API_D3D11 here. Used to resolve a
+ * configured AUTO to a concrete backend when nothing else (e.g.
+ * negotiated caps) determines one. */
+GstAmfApi
+gst_amf_get_concrete_default_api (void)
+{
+  GstAmfApi ret = gst_amf_get_default_api ();
+
+  if (ret == GST_AMF_API_AUTO)
+    return GST_AMF_API_D3D11;
+
+  return ret;
+}
+
+typedef struct
+{
+  GstAmfApi api;
+  const gchar *feature;
+  const gchar *nick;
+} GstAmfFeatureMapEntry;
+
+/* Maps each concrete backend to its caps memory feature and property
+ * nick. */
+static const GstAmfFeatureMapEntry k_amf_feature_map[] = {
+#ifdef G_OS_WIN32
+  {GST_AMF_API_D3D11, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "d3d11"},
+#ifdef HAVE_GST_D3D12
+  {GST_AMF_API_D3D12, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, "d3d12"},
+#endif
+#endif
+  /* Sentinel, not a real entry: on a non-Windows build the two entries
+   * above vanish under #ifdef G_OS_WIN32, and this file builds there too
+   * (it's cross-platform), so without this the array would be empty --
+   * not valid array-size deduction. Loops below skip it via the NULL
+   * feature check rather than relying on a separate bound. */
+  {GST_AMF_API_AUTO, nullptr, nullptr},
+};
+
+/* Returns the concrete backend whose feature @features carries, or
+ * GST_AMF_API_AUTO if none of the known backends' features are present
+ * (e.g. plain system memory, or @features is NULL). */
+static GstAmfApi
+gst_amf_api_for_features (GstCapsFeatures * features)
+{
+  if (!features)
+    return GST_AMF_API_AUTO;
+
+  for (guint i = 0; i < G_N_ELEMENTS (k_amf_feature_map); i++) {
+    if (!k_amf_feature_map[i].feature)
+      continue;
+    if (gst_caps_features_contains (features, k_amf_feature_map[i].feature))
+      return k_amf_feature_map[i].api;
+  }
+
+  return GST_AMF_API_AUTO;
+}
+
+void
+gst_amf_api_state_init (GstAmfApiState * state)
+{
+  state->configured = gst_amf_get_default_api ();
+  gst_amf_resolve_active_api (state);
+}
+
+/* Recomputes @state->active from @state->configured (AUTO resolves via
+ * gst_amf_get_concrete_default_api()). The "no caps yet" resolution --
+ * call from a property setter; see gst_amf_resolve_active_api_from_caps()
+ * for the caps-aware version used to actually open a backend. */
+void
+gst_amf_resolve_active_api (GstAmfApiState * state)
+{
+  state->active = (state->configured == GST_AMF_API_AUTO) ?
+      gst_amf_get_concrete_default_api () : state->configured;
+}
+
+/* Like gst_amf_resolve_active_api(), but resolves AUTO from @caps's
+ * negotiated memory feature instead of the concrete default (falls back
+ * to it if @caps has no known feature, or is NULL). Call from
+ * set_caps()/set_format() once caps are known, before opening the
+ * backend context. */
+void
+gst_amf_resolve_active_api_from_caps (GstAmfApiState * state, GstCaps * caps)
+{
+  GstAmfApi from_caps;
+
+  if (state->configured != GST_AMF_API_AUTO) {
+    state->active = state->configured;
+    return;
+  }
+
+  from_caps =
+      gst_amf_api_for_features (caps ? gst_caps_get_features (caps,
+          0) : nullptr);
+
+  state->active = (from_caps != GST_AMF_API_AUTO) ?
+      from_caps : gst_amf_get_concrete_default_api ();
 }
 
 const gchar *

@@ -337,12 +337,13 @@ enum
     "width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ]"
 
 #define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D12Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw, " DOC_SINK_CAPS_COMM
 
 #define DOC_SRC_CAPS \
     "video/x-h264, width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ], " \
-    "profile = (string) { main, high, constrained-baseline, baseline }, " \
+    "profile = (string) { main, high, constrained-high, constrained-baseline, baseline }, " \
     "stream-format = (string) { avc, byte-stream }, alignment = (string) au"
 
 
@@ -1301,11 +1302,13 @@ gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   GstAmfH264Enc *self = GST_AMF_H264_ENC (encoder);
   GstAmfH264EncClass *klass = GST_AMF_H264_ENC_GET_CLASS (self);
   GstCaps *template_caps;
-  GstCaps *supported_caps;
+  GstCaps *caps;
   std::set < std::string > downstream_profiles;
 
-  if (!klass->dev_caps.interlace_supported)
-    return gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
+  if (!klass->dev_caps.interlace_supported) {
+    caps = gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
+    goto done;
+  }
 
   gst_amf_h264_enc_get_downstream_profiles_and_format (self,
       downstream_profiles, nullptr);
@@ -1313,27 +1316,32 @@ gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   GST_DEBUG_OBJECT (self, "Downstream specified %" G_GSIZE_FORMAT " profiles",
       downstream_profiles.size ());
 
-  if (downstream_profiles.size () == 0)
-    return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+  if (downstream_profiles.size () == 0) {
+    caps = gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+    goto done;
+  }
 
   /* Profile allows interlaced? */
   /* *INDENT-OFF* */
-  gboolean can_support_interlaced = FALSE;
-  for (const auto &iter: downstream_profiles) {
-    if (iter == "high" || iter == "main" || iter == "constrained-high") {
-      can_support_interlaced = TRUE;
-      break;
+  {
+    gboolean can_support_interlaced = FALSE;
+    for (const auto &iter: downstream_profiles) {
+      if (iter == "high" || iter == "main" || iter == "constrained-high") {
+        can_support_interlaced = TRUE;
+        break;
+      }
+    }
+
+    GST_DEBUG_OBJECT (self, "Downstream %s support interlaced format",
+        can_support_interlaced ? "can" : "cannot");
+
+    if (can_support_interlaced) {
+      /* No special handling is needed */
+      caps = gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
+      goto done;
     }
   }
   /* *INDENT-ON* */
-
-  GST_DEBUG_OBJECT (self, "Downstream %s support interlaced format",
-      can_support_interlaced ? "can" : "cannot");
-
-  if (can_support_interlaced) {
-    /* No special handling is needed */
-    return gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
-  }
 
   template_caps = gst_pad_get_pad_template_caps (encoder->sinkpad);
   template_caps = gst_caps_make_writable (template_caps);
@@ -1341,13 +1349,13 @@ gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   gst_caps_set_simple (template_caps, "interlace-mode", G_TYPE_STRING,
       "progressive", nullptr);
 
-  supported_caps = gst_video_encoder_proxy_getcaps (encoder,
-      template_caps, filter);
+  caps = gst_video_encoder_proxy_getcaps (encoder, template_caps, filter);
   gst_caps_unref (template_caps);
 
-  GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, supported_caps);
+done:
+  GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, caps);
 
-  return supported_caps;
+  return caps;
 }
 
 static gboolean
@@ -2288,6 +2296,15 @@ gst_amf_h264_enc_create_class_data (GstObject * device, AMFComponent * comp)
   gst_caps_set_features (sink_caps, 0,
       gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
           nullptr));
+#ifdef HAVE_GST_D3D12
+  if (AMFContext2Ptr (comp->GetContext ())->GetDX12Device ()) {
+    GstCaps *d3d12_caps = gst_caps_copy (system_caps);
+    gst_caps_set_features (d3d12_caps, 0,
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+            nullptr));
+    gst_caps_append (sink_caps, d3d12_caps);
+  }
+#endif
   gst_caps_append (sink_caps, system_caps);
 #else
   sink_caps = gst_caps_from_string (sink_caps_str.c_str ());
