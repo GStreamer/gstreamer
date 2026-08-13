@@ -1127,8 +1127,11 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
    * be _released */
   GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
       GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
-  GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
-      GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+  /* keep the frame as decode-only if the upstream buffer was marked as such */
+  if (!GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
+          GST_BUFFER_FLAG_DECODE_ONLY))
+    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
+        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
   if (G_UNLIKELY (frame->output_buffer != NULL))
     goto duplicate_frame;
