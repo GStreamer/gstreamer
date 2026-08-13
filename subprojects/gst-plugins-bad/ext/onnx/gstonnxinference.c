@@ -730,6 +730,12 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   gchar *tensor_name = NULL;
 
 
+  if (!api) {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+        ("ORT_API_VERSION %d not supported by ONNX runtime", ORT_API_VERSION));
+    return FALSE;
+  }
+
   GST_OBJECT_LOCK (self);
   if (self->session) {
     ret = TRUE;
