@@ -221,7 +221,8 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
             if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
               none_layout = TRUE;
           }
-        } else if (channel_layout->order == AV_CHANNEL_ORDER_CUSTOM) {
+        } else if (channel_layout->order == AV_CHANNEL_ORDER_CUSTOM
+            && i < channel_layout->nb_channels) {
           if (_ff_to_gst_layout[i].ff == (1ULL << channel_layout->u.map[i].id)) {
             pos[j++] = _ff_to_gst_layout[i].gst;
 
@@ -708,7 +709,8 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         av_channel_layout_compare (&context->ch_layout, &mono) != 0) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
       needs_mask = TRUE;
-    } else if (context->ch_layout.nb_channels > 1) {
+    } else if (context->ch_layout.nb_channels > 1
+        && context->ch_layout.nb_channels <= 64) {
       gst_ffmpeg_channel_layout_to_gst (&context->ch_layout,
           context->ch_layout.nb_channels, pos);
       needs_mask = TRUE;
