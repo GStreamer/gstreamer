@@ -97,11 +97,14 @@ gst_ffmpeg_channel_positions_to_layout (const GstAudioChannelPosition *
   g_assert (layout);
 
   if (!pos) {
-    memset (layout, 0, sizeof (AVChannelLayout));
+    av_channel_layout_uninit (layout);
+    layout->order = AV_CHANNEL_ORDER_UNSPEC;
+    layout->nb_channels = channels;
     return;
   }
 
   if (channels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
+    av_channel_layout_uninit (layout);
     *layout = (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
     return;
   }
@@ -133,17 +136,16 @@ gst_ffmpeg_channel_positions_to_layout (const GstAudioChannelPosition *
 beach:
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
   if (none_channels > 0) {
-    layout->order = AV_CHANNEL_ORDER_CUSTOM;
+    av_channel_layout_uninit (layout);
+    layout->order = AV_CHANNEL_ORDER_UNSPEC;
     layout->nb_channels = channels;
-    layout->u.map = av_calloc (channels, sizeof (*layout->u.map));
-    for (i = 0; i < channels; i++)
-      layout->u.map[i].id = AV_CHAN_UNKNOWN;
     return;
   } else if (channels_found != channels && av_channel_layout_check (layout)) {
-    memset (layout, 0, sizeof (AVChannelLayout));
+    av_channel_layout_uninit (layout);
     return;
   }
 
+  av_channel_layout_uninit (layout);
   layout->u.mask = ret;
   layout->nb_channels = channels_found;
   layout->order = AV_CHANNEL_ORDER_NATIVE;
