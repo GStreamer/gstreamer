@@ -37,11 +37,13 @@ else
 endif
 
 cc = meson.get_compiler('c')
+abs_libdir = meson.current_source_dir() / libdir
 vulkan_dep = declare_dependency(
   include_directories: include_directories(sdk_dir / 'include'),
   dependencies: [
-    cc.find_library('MoltenVK', dirs: meson.current_source_dir() / libdir),
-  ]
+    cc.find_library('MoltenVK', dirs: abs_libdir),
+  ],
+  variables: {'libdir': abs_libdir},
 )
 if subsystem == 'macos'
   install_data(libdir / 'libMoltenVK.dylib', install_dir: get_option('libdir'), install_tag: 'runtime')

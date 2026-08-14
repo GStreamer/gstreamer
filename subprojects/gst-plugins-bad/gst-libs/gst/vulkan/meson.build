@@ -121,16 +121,32 @@ foreach option : vulkan_conf_options
 endforeach
 
 vulkan_plugin_kwargs = {}
+gir_vulkan_extra_args = gir_init_section + ['--c-include=gst/vulkan/vulkan.h']
 if host_system == 'darwin'
-  # Prefer a MoltenVK provided by the system or toolchain (e.g. the one Cerbero
-  # ships); fall back to the downloaded moltenvk subproject so builds don't
-  # depend on the local setup.
+  # Look up MoltenVK in order: the VULKAN_SDK, the system/toolchain, then the
+  # downloaded moltenvk subproject. When the lib dir is known we pass it to
+  # g-ir-scanner as a -L so its introspection dumper gets an rpath to load
+  # @rpath/libMoltenVK.dylib. The bare system lookup has no retrievable path,
+  # but that is only reached in cross builds (Cerbero), where introspection is
+  # disabled and no dumper runs.
   objcpp = meson.get_compiler('objcpp')
-  vulkan_dep = objcpp.find_library('MoltenVK', required: false)
+  vulkan_sdk = run_command(python3, '-c',
+    'import os; print(os.environ.get("VULKAN_SDK", ""))', check: false).stdout().strip()
+  if vulkan_sdk != ''
+    vulkan_dep = objcpp.find_library('MoltenVK',
+      dirs: vulkan_sdk / 'lib', required: false)
+    if vulkan_dep.found()
+      vulkan_plugin_kwargs += {'install_rpath': vulkan_sdk / 'lib'}
+      gir_vulkan_extra_args += ['-L' + vulkan_sdk / 'lib']
+    endif
+  endif
+  if not vulkan_dep.found()
+    vulkan_dep = objcpp.find_library('MoltenVK', required: false)
+  endif
   if not vulkan_dep.found()
     vulkan_dep = dependency('MoltenVK', fallback: 'moltenvk', required: vulkan_opt)
-    # We need this to find libMoltenVK.dylib when installed
     vulkan_plugin_kwargs += {'install_rpath': '@loader_path/..'}
+    gir_vulkan_extra_args += ['-L' + vulkan_dep.get_variable('libdir', default_value: '')]
   endif
 else
   # Meson's built-in 'vulkan' dependency handles pkg-config (Linux),
@@ -395,7 +411,7 @@ if build_gir
     'export_packages' : pkg_name,
     'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'] + extra_gir_includes,
     'install' : true,
-    'extra_args' : gir_init_section + ['--c-include=gst/vulkan/vulkan.h'],
+    'extra_args' : gir_vulkan_extra_args,
     'dependencies' : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
   }
 
