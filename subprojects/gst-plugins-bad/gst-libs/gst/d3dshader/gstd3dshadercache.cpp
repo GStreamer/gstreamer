@@ -746,6 +746,8 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_RGBA64_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBA_F32LE:
+    case GST_VIDEO_FORMAT_RGBA_F16LE:
       if (premul)
         return "RGBAPremul";
       return "RGBA";
@@ -754,6 +756,7 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
       return "RGBx";
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ARGB64_LE:
+    case GST_VIDEO_FORMAT_ARGB_F32:
       if (premul)
         return "ARGBPremul";
       return "ARGB";
@@ -808,6 +811,8 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_GRAY16_LE:
       return "GRAY";
     case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_RGBP_F16LE:
+    case GST_VIDEO_FORMAT_RGBP_F32LE:
       return "RGBP";
     case GST_VIDEO_FORMAT_BGRP:
       return "BGRP";
@@ -886,6 +891,8 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_RGBA64_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBA_F32LE:
+    case GST_VIDEO_FORMAT_RGBA_F16LE:
       if (premul)
         ret.push_back({PS_OUTPUT::PACKED, "RGBAPremul"});
       else
@@ -897,6 +904,7 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
       break;
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ARGB64_LE:
+    case GST_VIDEO_FORMAT_ARGB_F32:
       if (premul)
         ret.push_back({PS_OUTPUT::PACKED, "ARGBPremul"});
       else
@@ -996,6 +1004,8 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
       ret.push_back({PS_OUTPUT::LUMA, "Luma"});
       break;
     case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_RGBP_F16LE:
+    case GST_VIDEO_FORMAT_RGBP_F32LE:
       ret.push_back({PS_OUTPUT::PLANAR, "RGBP"});
       break;
     case GST_VIDEO_FORMAT_BGRP:

@@ -1550,6 +1550,8 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_Y444_12LE:
     case GST_VIDEO_FORMAT_Y444_16LE:
     case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_RGBP_F16LE:
+    case GST_VIDEO_FORMAT_RGBP_F32LE:
     case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_GBR_10LE:
@@ -1759,6 +1761,7 @@ is_custom_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RBGA:
     case GST_VIDEO_FORMAT_ARGB64_LE:
+    case GST_VIDEO_FORMAT_ARGB_F32:
       return TRUE;
     default:
       break;
@@ -1862,6 +1865,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
       case GST_VIDEO_FORMAT_ARGB:
       case GST_VIDEO_FORMAT_xRGB:
       case GST_VIDEO_FORMAT_ARGB64_LE:
+      case GST_VIDEO_FORMAT_ARGB_F32:
         priv->clear_color[0][0] = a;
         priv->clear_color[0][1] = converted[0];
         priv->clear_color[0][2] = converted[1];
@@ -1958,6 +1962,8 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         priv->clear_color[3][0] = a;
         break;
       case GST_VIDEO_FORMAT_RGBP:
+      case GST_VIDEO_FORMAT_RGBP_F16LE:
+      case GST_VIDEO_FORMAT_RGBP_F32LE:
         priv->clear_color[0][0] = converted[0];
         priv->clear_color[1][0] = converted[1];
         priv->clear_color[2][0] = converted[2];

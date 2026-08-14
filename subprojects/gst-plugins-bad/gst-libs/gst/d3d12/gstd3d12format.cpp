@@ -425,6 +425,25 @@ static const GstD3D12Format g_format_map[] = {
   FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y416_LE,
       DXGI_FORMAT_Y416, DXGI_FORMAT_R16G16B16A16_UNORM),
   FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y416_BE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GRAY10_LE16),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV16_10LE40),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_BGR10x2_LE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGB10x2_LE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_AHARDWARE_BUFFER),
+  FormatBuilder::RgbPacked(GST_VIDEO_FORMAT_RGBA_F16LE,
+      DXGI_FORMAT_R16G16B16A16_FLOAT),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGBA_F16BE),
+  FormatBuilder::RgbPacked(GST_VIDEO_FORMAT_RGBA_F32LE,
+      DXGI_FORMAT_R32G32B32A32_FLOAT),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGBA_F32BE),
+  FormatBuilder::RgbPacked(GST_VIDEO_FORMAT_ARGB_F32,
+      DXGI_FORMAT_R32G32B32A32_FLOAT),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_RGBP_F16LE,
+      DXGI_FORMAT_R16_FLOAT),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGBP_F16BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_RGBP_F32LE,
+      DXGI_FORMAT_R32_FLOAT),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGBP_F32BE),
 };
 /* *INDENT-ON* */
 
@@ -452,6 +471,10 @@ gst_d3d12_dxgi_format_to_gst (DXGI_FORMAT format)
       return GST_VIDEO_FORMAT_P010_10LE;
     case DXGI_FORMAT_P016:
       return GST_VIDEO_FORMAT_P016_LE;
+    case DXGI_FORMAT_R16G16B16A16_FLOAT:
+      return GST_VIDEO_FORMAT_RGBA_F16LE;
+    case DXGI_FORMAT_R32G32B32A32_FLOAT:
+      return GST_VIDEO_FORMAT_RGBA_F32LE;
     default:
       break;
   }
