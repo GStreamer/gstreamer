@@ -254,7 +254,8 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 #endif
   }
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
-  if (ffmpegaudenc->context->ch_layout.order != AV_CHANNEL_ORDER_UNSPEC) {
+  if (ffmpegaudenc->context->ch_layout.order != AV_CHANNEL_ORDER_UNSPEC
+      && ffmpegaudenc->context->ch_layout.nb_channels <= 64) {
     gst_ffmpeg_channel_layout_to_gst (&ffmpegaudenc->context->ch_layout,
         ffmpegaudenc->context->ch_layout.nb_channels,
         ffmpegaudenc->ffmpeg_layout);
@@ -262,15 +263,20 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
         (memcmp (ffmpegaudenc->ffmpeg_layout, info->position,
             sizeof (GstAudioChannelPosition) *
             ffmpegaudenc->context->ch_layout.nb_channels) != 0);
+  } else {
+    ffmpegaudenc->needs_reorder = FALSE;
   }
 #else
-  if (ffmpegaudenc->context->channel_layout) {
+  if (ffmpegaudenc->context->channel_layout
+      && ffmpegaudenc->context->channels <= 64) {
     gst_ffmpeg_channel_layout_to_gst (ffmpegaudenc->context->channel_layout,
         ffmpegaudenc->context->channels, ffmpegaudenc->ffmpeg_layout);
     ffmpegaudenc->needs_reorder =
         (memcmp (ffmpegaudenc->ffmpeg_layout, info->position,
             sizeof (GstAudioChannelPosition) *
             ffmpegaudenc->context->channels) != 0);
+  } else {
+    ffmpegaudenc->needs_reorder = FALSE;
   }
 #endif
 
