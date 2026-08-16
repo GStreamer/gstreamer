@@ -11775,9 +11775,11 @@ components are packed in the plane.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">a plane number</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
-          <parameter name="components" direction="out" caller-allocates="0" transfer-ownership="full">
+          <parameter name="components" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">array used to store component numbers</doc>
-            <type name="gint" c:type="gint*"/>
+            <array zero-terminated="0" c:type="gint*" fixed-size="4">
+              <type name="gint" c:type="gint"/>
+            </array>
           </parameter>
         </parameters>
       </method>
