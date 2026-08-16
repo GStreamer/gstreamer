@@ -23,9 +23,12 @@
 
 #include "gsthip.h"
 #include "gsthip-private.h"
+#include <gst/allocators/gstdmabuf.h>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <memory>
+#include <unordered_map>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -46,12 +49,15 @@ ensure_debug_category (void)
 static GstHipAllocator *_hip_memory_allocator = nullptr;
 #define N_TEX_ADDR_MODES 4
 #define N_TEX_FILTER_MODES 2
+
 struct _GstHipMemoryPrivate
 {
   ~_GstHipMemoryPrivate ()
   {
     gst_clear_hip_event (&event);
     gst_clear_hip_stream (&stream);
+    if (external_mem)
+      gst_memory_unref (external_mem);
   }
 
   GstHipVendor vendor;
@@ -61,6 +67,7 @@ struct _GstHipMemoryPrivate
   hipTextureObject_t texture[4][N_TEX_ADDR_MODES][N_TEX_FILTER_MODES] = { };
   GstHipStream *stream = nullptr;
   GstHipEvent *event = nullptr;
+  GstMemory *external_mem = nullptr;
 
   std::mutex lock;
 };
@@ -243,7 +250,9 @@ gst_hip_allocator_free (GstAllocator * allocator, GstMemory * mem)
     }
   }
 
-  HipFree (priv->vendor, priv->data);
+  /* The mapped pointer is owned by external mem. Don't free it here */
+  if (!priv->external_mem)
+    HipFree (priv->vendor, priv->data);
 
   if (priv->staging)
     HipHostFree (priv->vendor, priv->staging);
@@ -664,6 +673,253 @@ gst_hip_allocator_set_active (GstHipAllocator * allocator, gboolean active)
     return klass->set_active (allocator, active);
 
   return TRUE;
+}
+
+#ifndef G_OS_WIN32
+static GQuark
+gst_hip_allocator_quark_dmabuf_import (void)
+{
+  static GQuark quark = 0;
+  static std::once_flag once;
+
+  std::call_once (once,[&] {
+        quark = g_quark_from_static_string ("GstHipQuarkDmaBufImport");
+      });
+
+  return quark;
+}
+#endif
+
+/**
+ * gst_hip_allocator_import_external_memory:
+ * @allocator: (allow-none): a #GstHipAllocator
+ * @device: a #GstHipDevice
+ * @external: external #GstMemory to import
+ * @info: a #GstVideoInfo describing @external
+ *
+ * Imports @external into @device and creates a #GstHipMemory referencing
+ * the imported device memory.
+ *
+ * If @external is already a #GstHipMemory associated with the same physical
+ * device, this function returns a new reference to @external.
+ *
+ * On Linux, DMA-BUF memory can be imported using HIP external memory
+ * interoperability. The imported mapping will be cached for the lifetime of
+ * @external and reused by subsequent calls for the same device.
+ *
+ * Returns: (transfer full) (nullable): a #GstHipMemory, or %NULL if the
+ *    memory cannot be imported
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
+    GstHipDevice * device, GstMemory * external, const GstVideoInfo * info)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), nullptr);
+  g_return_val_if_fail (external, nullptr);
+  g_return_val_if_fail (info, nullptr);
+
+  if (!allocator) {
+    gst_hip_memory_init_once ();
+    allocator = _hip_memory_allocator;
+  }
+
+  if (gst_is_hip_memory (external)) {
+    auto hmem = GST_HIP_MEMORY_CAST (external);
+    auto mem_dev = hmem->device;
+    if (gst_hip_device_get_vendor (device) ==
+        gst_hip_device_get_vendor (mem_dev) &&
+        gst_hip_device_get_device_id (device) ==
+        gst_hip_device_get_device_id (mem_dev)) {
+      return gst_memory_ref (external);
+    }
+
+    /* Cross-device/API copy is not supported.
+     * Caller should fallback to CPU copy */
+    return nullptr;
+  }
+#ifdef G_OS_WIN32
+  /* TODO: add d3d12 support */
+  return nullptr;
+#else
+  /* *INDENT-OFF* */
+  struct GstHipImportCacheDmaBuf
+  {
+    ~GstHipImportCacheDmaBuf ()
+    {
+      if (device) {
+        auto vendor = gst_hip_device_get_vendor (device);
+
+        gst_hip_device_set_current (device);
+        if (mapped_ptr)
+          HipFree (vendor, mapped_ptr);
+        if (mem_handle)
+          HipDestroyExternalMemory (vendor, mem_handle);
+
+        gst_object_unref (device);
+      }
+    }
+
+    GstHipDevice *device = nullptr;
+    hipExternalMemory_t mem_handle = nullptr;
+    gpointer mapped_ptr = nullptr;
+  };
+
+  struct GstHipMemoryDmabufImportData
+  {
+    std::mutex lock;
+    /* Per-device import cache for the same dmabuf */
+    std::unordered_map<guint, std::shared_ptr<GstHipImportCacheDmaBuf>> amd_cache;
+  };
+  /* *INDENT-ON* */
+
+  auto vendor = gst_hip_device_get_vendor (device);
+  if (vendor != GST_HIP_VENDOR_AMD) {
+    GST_WARNING_OBJECT (allocator, "Only AMD backend is supported");
+    return nullptr;
+  }
+
+  if (!gst_is_dmabuf_memory (external)) {
+    GST_WARNING_OBJECT (allocator, "Non-DMABUF memory");
+    return nullptr;
+  }
+
+  auto fd = gst_dmabuf_memory_get_fd (external);
+  if (fd < 0) {
+    GST_ERROR_OBJECT (allocator, "Couldn't get fd");
+    return nullptr;
+  }
+
+  gint texture_align = 0;
+  GstHipFormat hip_format = { };
+  gboolean texture_support = FALSE;
+  if (!gst_hip_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+          &hip_format)) {
+    GST_WARNING_OBJECT (allocator, "Unexpected format %s, assume buffer format",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+  } else if ((hip_format.format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D)
+      == GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
+    texture_support = TRUE;
+
+    gst_hip_device_get_attribute (device,
+        hipDeviceAttributeTextureAlignment, &texture_align);
+    if (texture_align <= 0) {
+      texture_support = FALSE;
+      texture_align = 0;
+    }
+  }
+
+  /* Check stride to ensure texture support */
+  if (texture_support) {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      if ((GST_VIDEO_INFO_PLANE_STRIDE (info, i) % texture_align) != 0) {
+        GST_LOG_OBJECT (allocator,
+            "Stride of plane %u is not aligned to %d, disable texture support",
+            i, texture_align);
+        texture_support = FALSE;
+        break;
+      }
+    }
+  }
+
+  std::shared_ptr < GstHipImportCacheDmaBuf > import_cache;
+
+  {
+    auto quark = gst_hip_allocator_quark_dmabuf_import ();
+    GstHipMemoryDmabufImportData *import_data = nullptr;
+
+    {
+      /* Protect qdata */
+      static std::mutex import_lock;
+      std::lock_guard < std::mutex > lk (import_lock);
+
+      import_data = (GstHipMemoryDmabufImportData *)
+          gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (external), quark);
+      if (!import_data) {
+        import_data = new GstHipMemoryDmabufImportData ();
+        /* *INDENT-OFF* */
+        gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (external), quark,
+            import_data, [](gpointer user_data)-> void
+            {
+              auto import_data = (GstHipMemoryDmabufImportData *) user_data;
+              if (import_data)
+                delete import_data;
+            }
+        );
+        /* *INDENT-ON* */
+      }
+    }
+
+    std::lock_guard < std::mutex > lk (import_data->lock);
+    auto device_id = gst_hip_device_get_device_id (device);
+    auto cache_iter = import_data->amd_cache.find (device_id);
+    if (cache_iter != import_data->amd_cache.end ()) {
+      import_cache = cache_iter->second;
+      GST_DEBUG_OBJECT (allocator, "Found imported data");
+    } else {
+      hipExternalMemoryHandleDesc mem_desc = { };
+      mem_desc.type = hipExternalMemoryHandleTypeOpaqueFd;
+      mem_desc.handle.fd = fd;
+      mem_desc.size = external->size;
+
+      if (!gst_hip_device_set_current (device)) {
+        GST_ERROR_OBJECT (allocator, "Couldn't set HIP device");
+        return nullptr;
+      }
+
+      hipExternalMemory_t mem_handle = nullptr;
+      auto hip_ret = HipImportExternalMemory (vendor, &mem_handle, &mem_desc);
+      if (!gst_hip_result (hip_ret, vendor)) {
+        GST_WARNING_OBJECT (allocator, "Couldn't import dmabuf");
+        return nullptr;
+      }
+
+      void *mapped_ptr = nullptr;
+      hipExternalMemoryBufferDesc buf_desc = { };
+      buf_desc.size = external->size;
+
+      hip_ret = HipExternalMemoryGetMappedBuffer (vendor,
+          &mapped_ptr, mem_handle, &buf_desc);
+
+      if (!gst_hip_result (hip_ret, vendor)) {
+        GST_WARNING_OBJECT (allocator, "Couldn't map external memory object");
+        HipDestroyExternalMemory (vendor, mem_handle);
+        return nullptr;
+      }
+
+      import_cache = std::make_shared < GstHipImportCacheDmaBuf > ();
+      import_cache->device = (GstHipDevice *) gst_object_ref (device);
+      import_cache->mem_handle = mem_handle;
+      import_cache->mapped_ptr = mapped_ptr;
+
+      import_data->amd_cache[device_id] = import_cache;
+    }
+  }
+
+  auto mem = g_new0 (GstHipMemory, 1);
+  mem->device = (GstHipDevice *) gst_object_ref (device);
+  mem->info = *info;
+
+  auto priv = new GstHipMemoryPrivate ();
+  mem->priv = priv;
+
+  priv->external_mem = gst_memory_ref (external);
+  priv->data = import_cache->mapped_ptr;
+  priv->vendor = vendor;
+  priv->stream = gst_hip_device_get_stream (device);
+  if (priv->stream)
+    gst_hip_stream_ref (priv->stream);
+
+  if (texture_support)
+    g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
+
+  gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_READONLY,
+      GST_ALLOCATOR_CAST (allocator), nullptr, external->size, 0, 0,
+      external->size);
+
+  return GST_MEMORY_CAST (mem);
+#endif
 }
 
 struct _GstHipPoolAllocatorPrivate

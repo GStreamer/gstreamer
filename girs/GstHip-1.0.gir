@@ -204,6 +204,41 @@ or %NULL if allocation failed</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="import_external_memory" c:identifier="gst_hip_allocator_import_external_memory" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Imports @external into @device and creates a #GstHipMemory referencing
+the imported device memory.
+
+If @external is already a #GstHipMemory associated with the same physical
+device, this function returns a new reference to @external.
+
+On Linux, DMA-BUF memory can be imported using HIP external memory
+interoperability. The imported mapping will be cached for the lifetime of
+@external and reused by subsequent calls for the same device.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipMemory, or %NULL if the
+   memory cannot be imported</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipAllocator</doc>
+            <type name="HipAllocator" c:type="GstHipAllocator*"/>
+          </instance-parameter>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+          <parameter name="external" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">external #GstMemory to import</doc>
+            <type name="Gst.Memory" c:type="GstMemory*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstVideoInfo describing @external</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_active" c:identifier="gst_hip_allocator_set_active" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Controls the active state of @allocator.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>

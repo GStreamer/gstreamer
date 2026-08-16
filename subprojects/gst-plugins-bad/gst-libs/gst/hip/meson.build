@@ -80,7 +80,7 @@ gsthip = library('gsthip-' + api_version,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, libsinc, hipstub_incdir],
-  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gmodule_dep] + extra_deps,
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstallocators_dep, gmodule_dep] + extra_deps,
   version : libversion,
   soversion : soversion,
   install : true,
@@ -105,7 +105,7 @@ if build_gir
     'includes' : gir_includes,
     'install' : true,
     'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API', '-I' + stub_path],
-    'dependencies' : [gst_dep, gstbase_dep, gstvideo_dep],
+    'dependencies' : [gst_dep, gstbase_dep, gstvideo_dep, gstallocators_dep],
   }
 
   library_def += {'gir': [gir]}
@@ -119,8 +119,8 @@ if build_gir
 endif
 gst_libraries += [[pkg_name, library_def]]
 
-pkgconfig.generate(
-  libraries : [gst_dep, gstbase_dep, gstvideo_dep, gsthip],
+pkgconfig.generate(gsthip,
+  libraries : [gst_dep, gstbase_dep, gstvideo_dep, gstallocators_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,

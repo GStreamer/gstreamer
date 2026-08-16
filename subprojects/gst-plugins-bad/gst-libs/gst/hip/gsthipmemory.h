@@ -142,6 +142,12 @@ GST_HIP_API
 gboolean    gst_hip_allocator_set_active (GstHipAllocator * allocator,
                                           gboolean active);
 
+GST_HIP_API
+GstMemory * gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
+                                                      GstHipDevice * device,
+                                                      GstMemory * external,
+                                                      const GstVideoInfo * info);
+
 /**
  * GstHipPoolAllocator:
  *
