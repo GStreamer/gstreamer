@@ -23,20 +23,26 @@ endif
 extra_args = []
 extra_deps = []
 extra_incs = []
+have_winml = false
+have_vsi_npu = false
+have_migraphx = false
+have_ort_register_execution_provider_library = false
+have_cuda = false
 
 fsmod = import('fs')
 
 onnxrt_dep = dependency('', required : false)
 
 onnx_winml_opt = get_option('onnx-winml')
-use_windows_ml = false
 if host_system == 'windows' and not onnx_winml_opt.disabled()
   onnxrt_dep = dependency('microsoft.windows.ai.machinelearning',
       version: '>= 2.2.12',
       allow_fallback: true,
       required: onnx_winml_opt)
   if onnxrt_dep.found()
-    use_windows_ml = true
+    have_winml = true
+    have_ort_register_execution_provider_library = true
+    onnx_sources += ['gstonnx-winml.c']
   endif
 endif
 
@@ -66,11 +72,11 @@ if not onnxrt_dep.found()
 endif
 
 if gstcuda_dep.found()
-    extra_args += ['-DHAVE_CUDA']
+    have_cuda = true
     extra_deps += [gstcuda_dep]
 endif
 
-if not use_windows_ml
+if not have_winml
   onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
 
   if cc.has_function('OrtSessionOptionsAppendExecutionProvider_VSINPU',
@@ -78,16 +84,14 @@ if not use_windows_ml
     cc.has_header('core/providers/vsinpu/vsinpu_provider_factory.h',
           dependencies: onnxrt_dep,
           include_directories: extra_incs)
-    message('Enabled VSI Onnx VSI NPU provider')
-    extra_args += ['-DHAVE_VSI_NPU']
+    have_vsi_npu = true
   endif
 
   migraphx_dep = cc.find_library('onnxruntime_providers_migraphx',
       dirs: [onnxrt_libdir],
       required: false)
   if migraphx_dep.found()
-    message('Enabled ONNX MIGraphX execution provider')
-    extra_args += ['-DHAVE_MIGRAPHX']
+    have_migraphx = true
   endif
 
   # Check if OrtApi::RegisterExecutionProviderLibrary is available as needed
@@ -96,10 +100,47 @@ if not use_windows_ml
           prefix: '#include <onnxruntime_c_api.h>',
           dependencies: onnxrt_dep,
           include_directories: extra_incs)
-    message('Found ONNX Runtime >= 1.22, enabling dynamically loaded execution providers')
-    extra_args += ['-DHAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY']
+    have_ort_register_execution_provider_library = true
   endif
 endif
+
+
+features = {
+  'cuda': {
+    'enabled': have_cuda,
+    'message': 'Enabled CUDA execution provider',
+  },
+  'winml': {
+    'enabled': have_winml,
+    'message': 'Enabled Windows ML',
+  },
+  'vsi_npu': {
+    'enabled': have_vsi_npu,
+    'message': 'Enabled VSI Onnx VSI NPU provider',
+  },
+  'migraphx': {
+    'enabled': have_migraphx,
+    'message': 'Enabled ONNX MIGraphX execution provider'
+  },
+  'ort_register_execution_provider_library': {
+    'enabled': have_ort_register_execution_provider_library,
+    'message': 'Found ONNX Runtime >= 1.22, enabling dynamically loaded execution providers',
+  }
+}
+
+onnx_config = configuration_data()
+foreach name, feature : features
+  enabled = feature['enabled']
+  onnx_config.set10('HAVE_' + name.underscorify().to_upper(), enabled)
+  if enabled
+    message(feature['message'])
+  endif
+endforeach
+
+configure_file(
+  output: 'gstonnx-config.h',
+  configuration: onnx_config,
+)
 
 gstonnx = library('gstonnx',
   onnx_sources,
