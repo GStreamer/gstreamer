@@ -1165,18 +1165,15 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
     /* Get dimensions from ONNX */
     int64_t *shape = (int64_t *) g_alloca (card * sizeof (int64_t));
-    output_dims = (gsize *) g_malloc0 (card * sizeof (gsize));
     status = api->GetDimensions (output_tensor_info, shape, card);
     if (status) {
       GST_ERROR_OBJECT (self, "Failed to get output tensor (%s) dimensions",
           self->output_names[i]);
-      api->ReleaseStatus (status);
-      status = NULL;
-      g_free (output_dims);
       api->ReleaseTypeInfo (output_type_info);
       goto error;
     }
 
+    output_dims = (gsize *) g_malloc0 (card * sizeof (gsize));
     for (j = 0; j < card; j++) {
       output_dims[j] = shape[j] > 0 ? shape[j] : G_MAXSIZE;
     }
