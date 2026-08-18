@@ -33,7 +33,7 @@ if not ONNX_AVAILABLE and not TFLITE_AVAILABLE:
 
 
 # Current modelinfo format version
-MODELINFO_VERSION = "1.0"
+MODELINFO_VERSION = "1.1"
 
 # ONNX type mapping (only define if ONNX is available)
 if ONNX_AVAILABLE:
@@ -84,6 +84,138 @@ def parse_nominal_pixel_range(nominal_range_str):
         'NominalRange_16_235': '16.0,235.0',
     }
     return mapping.get(nominal_range_str)
+
+
+def detect_media_type(model):
+    """Attempt to detect the input media-type from model metadata.
+
+    The only signal currently available is ONNX's Image.NominalPixelRange
+    metadata property. Returns "video/x-raw" if found, else None since
+    media-type cannot otherwise be reliably inferred from ONNX/TFLite graph
+    metadata.
+    """
+    if model and hasattr(model, 'metadata_props'):
+        for prop in model.metadata_props:
+            if prop.key == 'Image.NominalPixelRange':
+                return 'video/x-raw'
+    return None
+
+
+# Mapping for non-float video format name to its float32 counterpart
+_BASE_TO_FLOAT32_FORMAT = {
+    'GRAY8': 'GRAY_F32',
+    'RGB': 'RGB_F32',
+    'RGBP': 'RGBP_F32',
+}
+
+
+def _to_float32_format(base_format, byteorder):
+    """Map a base video format name to its float32 variant. Returns None if
+    there isn't one."""
+    prefix = _BASE_TO_FLOAT32_FORMAT.get(base_format)
+    if prefix is None:
+        return None
+    return prefix + ('LE' if byteorder == 'little' else 'BE')
+
+
+def guess_video_format(dims_str, data_type=None, is_onnx=False, byteorder=None):
+    """Guess a video format string from tensor dims, mirroring the
+    channel-count/dims-position heuristic.
+
+    byteorder ('little' or 'big') picks the endianness suffix for a float32
+    format (e.g. 'RGB_F32LE'); defaults to this host's own byte order, which
+    is only correct when the generated modelinfo is used on this same host.
+
+    Returns None when the format can't be reliably determined.
+    """
+    if byteorder is None:
+        byteorder = sys.byteorder
+
+    try:
+        dims = [int(d) for d in dims_str.split(',')]
+    except ValueError:
+        return None
+
+    want_float32 = is_onnx and data_type == 'float32'
+
+    def format_for_channels(channels, planar):
+        if channels == 1:
+            base = 'GRAY8'
+        elif channels == 3:
+            base = 'RGBP' if planar else 'RGB'
+        else:
+            return None
+        if want_float32:
+            return _to_float32_format(base, byteorder)
+        return base
+
+    if len(dims) == 2:
+        return _to_float32_format('GRAY8', byteorder) if want_float32 else 'GRAY8'
+    if len(dims) == 3:
+        if dims[0] in (1, 3):
+            return format_for_channels(dims[0], planar=True)
+        if dims[2] in (1, 3):
+            return format_for_channels(dims[2], planar=False)
+        return None
+    if len(dims) == 4:
+        # Assumes dims[0] is a batch dimension
+        if dims[1] in (1, 3):
+            return format_for_channels(dims[1], planar=True)
+        if dims[3] in (1, 3):
+            return format_for_channels(dims[3], planar=False)
+        return None
+    return None
+
+
+def add_caps_input_field(tensor, prompt_mode, detected_media_type=None,
+                         is_onnx=False):
+    """Populate the 'caps' field on an input tensor dict.
+
+    Only fills in the field if not already present (used both for fresh
+    generation and for --upgrade, where a tensor may already carry it).
+    """
+    if tensor.get('dir') != 'input':
+        return
+
+    if 'caps' in tensor:
+        return
+
+    byteorder = None
+    if (prompt_mode and is_onnx and tensor.get('type') == 'float32'
+            and detected_media_type == 'video/x-raw'):
+        byteorder = prompt_endianness()
+
+    detected_format = None
+    if detected_media_type == 'video/x-raw':
+        detected_format = guess_video_format(
+            tensor.get('dims', ''), data_type=tensor.get('type'),
+            is_onnx=is_onnx, byteorder=byteorder)
+
+    detected_caps = None
+    if detected_media_type and detected_format:
+        detected_caps = f"{detected_media_type}, format={detected_format}"
+
+    if prompt_mode:
+        if detected_caps:
+            if prompt_yes_no(
+                    f"  Detected caps '{detected_caps}' from model metadata "
+                    "and tensor dims, use it?", default=True):
+                tensor['caps'] = detected_caps
+                return
+        elif detected_media_type:
+            print(f"  Detected media-type from model metadata: "
+                  f"{detected_media_type} (format could not be determined "
+                  "from dims, please include one)")
+        tensor['caps'] = prompt_for_value(
+            "  Enter caps (e.g. 'video/x-raw, format=RGB', 'audio/x-raw', "
+            "'text/x-raw')",
+            default=detected_caps or detected_media_type)
+    else:
+        if detected_caps:
+            print(f"  Warning: caps '{detected_caps}' was guessed from "
+                  "model metadata and tensor dims for input tensor "
+                  f"'{tensor.get('name')}', please verify it is correct")
+        tensor['caps'] = detected_caps or "PLACEHOLDER-CAPS-REQUIRED"
 
 
 def get_tensor_type(elem_type):
@@ -159,7 +291,27 @@ def prompt_yes_no(prompt, default=True):
         print("  Please enter 'y' or 'n'")
 
 
-def get_tensor_info(tensor, direction, group_id=None, prompt_mode=False, model=None):
+def prompt_endianness():
+    """Prompt for the byte order of the system the modelinfo file will
+    actually be used on, which may differ from this host's. Defaults to
+    this host's own byte order, since that's the common case."""
+    default = sys.byteorder
+    default_str = "little/BIG" if default == 'big' else "LITTLE/big"
+    while True:
+        value = input(
+            "  Byte order of the system where this modelinfo will run "
+            f"[{default_str}]: ").strip().lower()
+        if not value:
+            return default
+        if value in ('little', 'l'):
+            return 'little'
+        if value in ('big', 'b'):
+            return 'big'
+        print("  Please enter 'little' or 'big'")
+
+
+def get_tensor_info(tensor, direction, group_id=None, prompt_mode=False, model=None,
+                    is_onnx=False):
     """Extract tensor information with optional user prompting.
 
     Args:
@@ -168,6 +320,7 @@ def get_tensor_info(tensor, direction, group_id=None, prompt_mode=False, model=N
         group_id: Pre-defined group-id (for output tensors in v1.0+)
         prompt_mode: If True, prompt user for metadata. If False, use auto-generated values.
         model: The ONNX model (optional, for reading Image.NominalPixelRange)
+        is_onnx: Whether tensor comes from an ONNX model (as opposed to TFLite)
     """
     info = {
         'name': tensor.name,
@@ -200,6 +353,10 @@ def get_tensor_info(tensor, direction, group_id=None, prompt_mode=False, model=N
                 print("  Please enter 'row-major' or 'col-major'")
 
         if direction == 'input':
+            add_caps_input_field(info, prompt_mode=True,
+                                 detected_media_type=detect_media_type(model),
+                                 is_onnx=is_onnx)
+
             # Try to read Image.NominalPixelRange from ONNX metadata
             ranges_from_onnx = None
             if model and hasattr(model, 'metadata_props'):
@@ -241,6 +398,10 @@ def get_tensor_info(tensor, direction, group_id=None, prompt_mode=False, model=N
         info['id'] = "PLACEHOLDER-ID-REQUIRED"
 
         if direction == 'input':
+            add_caps_input_field(info, prompt_mode=False,
+                                 detected_media_type=detect_media_type(model),
+                                 is_onnx=is_onnx)
+
             # Try to read Image.NominalPixelRange from ONNX metadata
             if model and hasattr(model, 'metadata_props'):
                 for prop in model.metadata_props:
@@ -455,7 +616,8 @@ def generate_modelinfo(model_path, output_path=None, prompt_mode=False):
             # TFLite: wrap dict with adapter to provide ONNX-like interface
             tensor = TFLiteTensorAdapter(tensor_detail)
 
-        tensor_info = get_tensor_info(tensor, 'input', prompt_mode=prompt_mode, model=model if is_onnx else None)
+        tensor_info = get_tensor_info(tensor, 'input', prompt_mode=prompt_mode,
+                                      model=model if is_onnx else None, is_onnx=is_onnx)
         all_tensors.append(tensor_info)
 
     # Ask for group-id
@@ -532,6 +694,7 @@ def write_modelinfo(tensors, output_path, version=None, group_id=None, prompt_mo
             f.write("#   - id: Tensor identifier (use from registry)\n")
             f.write("#   - group-id: Model identifier grouping related tensors\n")
             f.write("#   - ranges: Input normalization ranges (min,max per channel)\n")
+            f.write("#   - caps: (e.g. video/x-raw, format=RGB)\n")
             f.write("#\n")
 
         # Write version header section first
@@ -566,6 +729,10 @@ def write_modelinfo(tensors, output_path, version=None, group_id=None, prompt_mo
             f.write(f"type={tensor['type']}\n")
             f.write(f"dims={tensor['dims']}\n")
             f.write(f"dir={tensor['dir']}\n")
+
+            # Mandatory as of v1.1 for input tensors
+            if 'caps' in tensor:
+                f.write(f"caps={tensor['caps']}\n")
 
             # Optional fields
             if 'dims-order' in tensor:
@@ -619,12 +786,14 @@ def parse_modelinfo(input_path):
     return version, tensors
 
 
-def upgrade_modelinfo(input_path, output_path=None):
+def upgrade_modelinfo(input_path, output_path=None, prompt_mode=False):
     """Upgrade a modelinfo file to the current version.
 
     Args:
         input_path: Path to existing modelinfo file
         output_path: Path to output (default: overwrite input)
+        prompt_mode: If True, prompt for fields that can't be determined
+            automatically. If False, use PLACEHOLDER-*-REQUIRED values.
     """
     if output_path is None:
         output_path = input_path
@@ -664,7 +833,18 @@ def upgrade_modelinfo(input_path, output_path=None):
     global_group_id = None
     if old_minor < new_minor:
         print(f"\nMinor version upgrade: {old_version} -> {MODELINFO_VERSION}")
-        # No format changes within same major version
+
+        for tensor in tensors:
+            if tensor.get('dir') != 'input':
+                continue
+            if 'caps' in tensor:
+                continue
+            if prompt_mode:
+                print(f"\n{'=' * 70}")
+                print(f"Input tensor: {tensor.get('name')}")
+                print(f"Dims: {tensor.get('dims', '')}")
+                print(f"{'=' * 70}")
+            add_caps_input_field(tensor, prompt_mode=prompt_mode)
 
     # Write upgraded file
     print(f"\nWriting upgraded file to: {output_path}")
@@ -740,7 +920,7 @@ Modes:
 
     # Handle upgrade mode
     if args.upgrade:
-        upgrade_modelinfo(args.input_path, args.output)
+        upgrade_modelinfo(args.input_path, args.output, prompt_mode=args.prompt)
     else:
         # Generate modelinfo from ONNX model
         generate_modelinfo(args.input_path, args.output, prompt_mode=args.prompt)
