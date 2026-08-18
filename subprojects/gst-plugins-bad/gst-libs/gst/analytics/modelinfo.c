@@ -25,6 +25,8 @@
 #include "config.h"
 #endif
 
+#include <gst/video/video.h>
+
 #include "modelinfo.h"
 
 /**
@@ -88,6 +90,24 @@
  *    `-1.0,1.0` - Normalized to [-1,1] range (scale≈0.00784, offset=-1.0)
  *    `16.0,235.0` - TV/limited range (scale≈0.859, offset=16.0)
  *
+ * Since format version 1.1, the following field is required on every input
+ * tensor section:
+ *  `caps`: A #GstCaps string describing the expected input media, e.g.
+ *   `video/x-raw, format=RGB`. Uses the same vocabulary and syntax as
+ *   GstCaps, this library does not validate the media-type or format
+ *   against a fixed enum, but the caps string must resolve to exactly one
+ *   structure (the media-type) and that structure must carry a `format`
+ *   field.
+ *
+ * Files declaring `version=1.0` predate `caps` and are expected to omit it
+ * entirely, caller (inference element) must fall back to their own heuristics
+ * in that case. Files declaring `version=1.1` (or any 1.x with minor >= 1) must
+ * provide `caps` on every input tensor section. Regardless of version,
+ * gst_analytics_modelinfo_load() will fail if `caps` is present but fails to
+ * parse or lacks `format`, so a `caps` field is either fully absent (version
+ * 1.0 only) or complete, a caller never has to handle a partially-declared
+ * `caps`.
+ *
  * Other fields are ignored for now.
  *
  * The API is meant to be used by inference elements
@@ -123,17 +143,14 @@ G_DEFINE_BOXED_TYPE (GstAnalyticsModelInfo, gst_analytics_modelinfo,
   return matches;
 }
 
-/**
- * modelinfo_check_version:
- * @kf: The loaded GKeyFile
+/* Checks if the modelinfo version is supported. Files without version
+ * are treated as version 1.0 for backward compatibility. @out_minor is
+ * set to the parsed minor version, only valid when this returns TRUE.
  *
- * Checks if the modelinfo version is supported. Files without version
- * are treated as version 1.0 for backward compatibility.
- *
- * Returns: TRUE if version is supported, FALSE otherwise
+ * Returns TRUE if version is supported, FALSE otherwise.
  */
 static gboolean
-modelinfo_check_version (GKeyFile * kf)
+modelinfo_check_version (GKeyFile * kf, gint * out_minor)
 {
   gchar *file_version;
   gboolean has_version_section;
@@ -206,6 +223,9 @@ modelinfo_check_version (GKeyFile * kf)
     /* Same major, same or older minor - fully supported */
     supported = TRUE;
   }
+
+  if (supported)
+    *out_minor = minor;
 
   g_strfreev (version_parts);
   g_free (file_version);
@@ -361,6 +381,63 @@ modelinfo_check_direction (GKeyFile * kf,
   return ret;
 }
 
+/* Since format version 1.1, input tensor sections must declare `caps`.
+ * Files older than 1.1 predate that field and are exempt from requiring
+ * it, but if an older file declares `caps` anyway, it is held to the same
+ * "media-type plus `format`" rule as a 1.1+ file, consumers rely on both
+ * being present whenever `caps` is present at all, regardless of version.
+ *
+ * Returns TRUE if the mandatory fields are present (or not required),
+ * FALSE otherwise.
+ */
+static gboolean
+modelinfo_check_mandatory_input_fields (GKeyFile * kf, gint minor)
+{
+  gchar **groups;
+  gsize i;
+  gboolean ok = TRUE;
+
+  groups = g_key_file_get_groups (kf, NULL);
+  for (i = 0; groups[i]; i++) {
+    gchar *caps_str;
+    GstCaps *caps;
+
+    if (!g_strcmp0 (groups[i], GST_MODELINFO_SECTION_NAME))
+      continue;
+
+    if (!modelinfo_check_direction (kf, groups[i], MODELINFO_DIRECTION_INPUT))
+      continue;
+
+    caps_str = g_key_file_get_string (kf, groups[i], "caps", NULL);
+    if (!caps_str || g_str_has_prefix (caps_str, "PLACEHOLDER")) {
+      if (minor >= 1) {
+        GST_ERROR ("Input tensor '%s' is missing mandatory 'caps' field",
+            groups[i]);
+        ok = FALSE;
+      }
+      g_free (caps_str);
+      continue;
+    }
+
+    caps = gst_caps_from_string (caps_str);
+    if (!caps || gst_caps_is_empty (caps) || gst_caps_get_size (caps) != 1) {
+      GST_ERROR ("Input tensor '%s' has an invalid 'caps' field: %s",
+          groups[i], caps_str);
+      ok = FALSE;
+    } else if (!gst_structure_get_string (gst_caps_get_structure (caps, 0),
+            "format")) {
+      GST_ERROR ("Input tensor '%s' declares 'caps' without a mandatory "
+          "string 'format' field: %s", groups[i], caps_str);
+      ok = FALSE;
+    }
+    g_clear_pointer (&caps, gst_caps_unref);
+    g_free (caps_str);
+  }
+  g_strfreev (groups);
+
+  return ok;
+}
+
 static gboolean
 modelinfo_validate_internal (GKeyFile * kf, const gchar * tensor_name,
     GstAnalyticsModelInfoTensorDirection dir, GstTensorDataType data_type,
@@ -512,6 +589,7 @@ gst_analytics_modelinfo_load (const gchar * model_filename)
   gchar *filename;
   gboolean ret;
   gchar *last_dot;
+  gint minor;
 
   g_key_file_set_list_separator (kf, ',');
 
@@ -528,8 +606,13 @@ gst_analytics_modelinfo_load (const gchar * model_filename)
   g_free (filename);
   if (ret) {
     /* Version check */
-    if (!modelinfo_check_version (kf)) {
+    if (!modelinfo_check_version (kf, &minor)) {
       GST_ERROR ("Unsupported modelinfo version in file");
+      g_key_file_free (kf);
+      return NULL;
+    }
+    if (!modelinfo_check_mandatory_input_fields (kf, minor)) {
+      GST_ERROR ("Modelinfo file failed mandatory input field validation");
       g_key_file_free (kf);
       return NULL;
     }
@@ -545,8 +628,13 @@ gst_analytics_modelinfo_load (const gchar * model_filename)
     g_free (filename);
     if (ret) {
       /* Version check */
-      if (!modelinfo_check_version (kf)) {
+      if (!modelinfo_check_version (kf, &minor)) {
         GST_ERROR ("Unsupported modelinfo version in file");
+        g_key_file_free (kf);
+        return NULL;
+      }
+      if (!modelinfo_check_mandatory_input_fields (kf, minor)) {
+        GST_ERROR ("Modelinfo file failed mandatory input field validation");
         g_key_file_free (kf);
         return NULL;
       }
@@ -875,6 +963,129 @@ gst_analytics_modelinfo_get_dims_order (GstAnalyticsModelInfo * modelinfo,
 
   g_free (dims_order_str);
   return dims_order;
+}
+
+/**
+ * gst_analytics_modelinfo_get_input_caps:
+ * @modelinfo: Instance of #GstAnalyticsModelInfo
+ * @tensor_name: The name of the tensor
+ *
+ * Parse the tensor's declared `caps` field into a #GstCaps. This field is
+ * only present on input tensors in modelinfo files declaring format
+ * version 1.1 or later, files at version 1.0 predate it.
+ *
+ * Returns: (nullable) (transfer full): A new #GstCaps, or %NULL if `caps`
+ *    is not present, or fails to parse, for this tensor.
+ *
+ * Since: 1.30
+ */
+GstCaps *
+gst_analytics_modelinfo_get_input_caps (GstAnalyticsModelInfo * modelinfo,
+    const gchar * tensor_name)
+{
+  GKeyFile *kf = (GKeyFile *) modelinfo;
+  gchar *caps_str = g_key_file_get_string (kf, tensor_name, "caps", NULL);
+  GstCaps *caps = NULL;
+
+  if (caps_str)
+    caps = gst_caps_from_string (caps_str);
+
+  g_free (caps_str);
+
+  return caps;
+}
+
+/**
+ * gst_analytics_modelinfo_validate_video_caps_resolution:
+ * @caps_structure: (transfer none): The tensor's declared modelinfo caps
+ *    structure, as returned by gst_caps_get_structure() on the result of
+ *    gst_analytics_modelinfo_get_input_caps().
+ * @dims_width: The tensor's own width, as derived from its dims.
+ * @dims_height: The tensor's own height, as derived from its dims.
+ *
+ * Validates any `width`/`height` declared in @caps_structure against
+ * @dims_width/@dims_height.
+ *
+ * Returns: %FALSE if the declared caps is not video or disagree with dims,
+ * or over-constrain a dynamic axis, %TRUE otherwise.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_analytics_modelinfo_validate_video_caps_resolution (const GstStructure *
+    caps_structure, gint dims_width, gint dims_height)
+{
+  gboolean has_width = gst_structure_has_field (caps_structure, "width");
+  gboolean has_height = gst_structure_has_field (caps_structure, "height");
+  gboolean is_video = gst_structure_has_name (caps_structure, "video/x-raw");
+  gint caps_width = dims_width;
+  gint caps_height = dims_height;
+  gboolean resolution_valid = TRUE;
+
+  if (!is_video)
+    return FALSE;
+
+  if (!has_width && !has_height)
+    return TRUE;
+
+  if (dims_width <= 0 || dims_height <= 0)
+    return FALSE;
+
+  if (has_width
+      && !gst_structure_get_int (caps_structure, "width", &caps_width))
+    resolution_valid = FALSE;
+
+  if (has_height
+      && !gst_structure_get_int (caps_structure, "height", &caps_height))
+    resolution_valid = FALSE;
+
+  return resolution_valid && caps_width == dims_width
+      && caps_height == dims_height;
+}
+
+/**
+ * gst_analytics_modelinfo_validate_caps_datatype:
+ * @caps_structure: (transfer none): The tensor's declared modelinfo
+ *    input tensor caps structure.
+ * @data_type: Input tensor's data type, as declared by the modelinfo `type`.
+ *
+ * Validates that any `format` declared in @caps_structure agrees with the
+ * tensor's @data_type, both in numeric family (float vs integer) and in
+ * per-component bit depth.
+ *
+ * Returns: %TRUE if @caps_structure declares a video format whose type
+ * and bit depth agree with @data_type, %FALSE otherwise.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_analytics_modelinfo_validate_caps_datatype (const GstStructure *
+    caps_structure, GstTensorDataType data_type)
+{
+  const gchar *format;
+  GstVideoFormat vfmt;
+  const GstVideoFormatInfo *info;
+
+  /* FIXME: validate other media-type */
+  if (!gst_structure_has_name (caps_structure, "video/x-raw"))
+    return TRUE;
+
+  format = gst_structure_get_string (caps_structure, "format");
+  if (!format)
+    return TRUE;
+
+  vfmt = gst_video_format_from_string (format);
+  if (vfmt == GST_VIDEO_FORMAT_UNKNOWN)
+    return TRUE;
+
+  info = gst_video_format_get_info (vfmt);
+
+  if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (info) !=
+      gst_tensor_data_type_is_float (data_type))
+    return FALSE;
+
+  return GST_VIDEO_FORMAT_INFO_BITS (info) ==
+      gst_tensor_data_type_get_bit_depth (data_type);
 }
 
 /**

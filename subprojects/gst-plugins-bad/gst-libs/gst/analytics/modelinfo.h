@@ -23,6 +23,7 @@
 
 
 #include <glib.h>
+#include <gst/gst.h>
 #include <gst/analytics/analytics-meta-prelude.h>
 #include <gst/analytics/gsttensor.h>
 
@@ -44,7 +45,7 @@
  *
  * Since: 1.28
  */
-#define GST_MODELINFO_VERSION_MINOR (0)
+#define GST_MODELINFO_VERSION_MINOR (1)
 
 /**
  * GST_MODELINFO_VERSION_STR:
@@ -54,7 +55,7 @@
  *
  * Since: 1.28
  */
-#define GST_MODELINFO_VERSION_STR "1.0"
+#define GST_MODELINFO_VERSION_STR "1.1"
 
 /**
  * GST_MODELINFO_SECTION_NAME:
@@ -146,6 +147,21 @@ GST_ANALYTICS_META_API
 GstTensorDimOrder
 gst_analytics_modelinfo_get_dims_order (GstAnalyticsModelInfo * modelinfo,
     const gchar * tensor_name);
+
+GST_ANALYTICS_META_API
+GstCaps *
+gst_analytics_modelinfo_get_input_caps (GstAnalyticsModelInfo * modelinfo,
+    const gchar * tensor_name);
+
+GST_ANALYTICS_META_API
+gboolean
+gst_analytics_modelinfo_validate_video_caps_resolution (const GstStructure * caps_structure,
+    gint dims_width, gint dims_height);
+
+GST_ANALYTICS_META_API
+gboolean
+gst_analytics_modelinfo_validate_caps_datatype (const GstStructure * caps_structure,
+    GstTensorDataType data_type);
 
 GST_ANALYTICS_META_API
 gchar *
