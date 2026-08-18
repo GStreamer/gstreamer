@@ -1128,11 +1128,63 @@ gst_onnx_log_function (void *param, OrtLoggingLevel severity,
  */
 
 static gboolean
+gst_onnx_inference_resolve_format (GstOnnxInference * self,
+    GstVideoFormat base_format, GstVideoFormat * gst_format)
+{
+  const GstOnnxImporterConfig *config = &self->importer_config;
+
+  switch (base_format) {
+    case GST_VIDEO_FORMAT_GRAY8:
+      if (config->data_type == GST_TENSOR_DATA_TYPE_UINT8) {
+        *gst_format = GST_VIDEO_FORMAT_GRAY8;
+      } else if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
+        *gst_format = GST_ONNX_FORMAT_GRAY_F32;
+      } else {
+        goto unsupported;
+      }
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      if (config->data_type == GST_TENSOR_DATA_TYPE_UINT8) {
+        *gst_format = GST_VIDEO_FORMAT_RGB;
+      } else if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
+        *gst_format = GST_ONNX_FORMAT_RGB_F32;
+      } else {
+        goto unsupported;
+      }
+      break;
+    case GST_VIDEO_FORMAT_RGBP:
+      if (config->data_type == GST_TENSOR_DATA_TYPE_UINT8) {
+        *gst_format = GST_VIDEO_FORMAT_RGBP;
+      } else if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
+        *gst_format = GST_ONNX_FORMAT_RGBP_F32;
+      } else {
+        goto unsupported;
+      }
+      break;
+    case GST_ONNX_FORMAT_GRAY_F32:
+    case GST_ONNX_FORMAT_RGB_F32:
+    case GST_ONNX_FORMAT_RGBP_F32:
+      if (config->data_type != GST_TENSOR_DATA_TYPE_FLOAT32)
+        goto unsupported;
+      *gst_format = base_format;
+      break;
+    default:
+      goto unsupported;
+  }
+
+  return TRUE;
+
+unsupported:
+  GST_ERROR_OBJECT (self, "Unsupported format '%s' for tensor data type",
+      gst_video_format_to_string (base_format));
+  return FALSE;
+}
+
+static gboolean
 _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
     gsize * dims, GstVideoFormat * gst_format)
 {
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  const GstOnnxImporterConfig *config = &self->importer_config;
   self->height_dim = -1;
   self->width_dim = -1;
   self->channels_dim = -1;
@@ -1208,43 +1260,105 @@ _guess_tensor_data_type (GstOnnxInference * self, gsize dims_count,
       break;
   }
 
-  switch (format) {
-    case GST_VIDEO_FORMAT_GRAY8:
-      if (config->data_type == GST_TENSOR_DATA_TYPE_UINT8) {
-        *gst_format = GST_VIDEO_FORMAT_GRAY8;
-      } else if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
-        *gst_format = GST_ONNX_FORMAT_GRAY_F32;
-      } else {
-        g_assert_not_reached ();
-        return FALSE;
-      }
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-      if (config->data_type == GST_TENSOR_DATA_TYPE_UINT8) {
-        *gst_format = GST_VIDEO_FORMAT_RGB;
-      } else if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
-        *gst_format = GST_ONNX_FORMAT_RGB_F32;
-      } else {
-        g_assert_not_reached ();
-        return FALSE;
-      }
-      break;
-    case GST_VIDEO_FORMAT_RGBP:
-      if (config->data_type == GST_TENSOR_DATA_TYPE_UINT8) {
-        *gst_format = GST_VIDEO_FORMAT_RGBP;
-      } else if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
-        *gst_format = GST_ONNX_FORMAT_RGBP_F32;
-      } else {
-        g_assert_not_reached ();
-        return FALSE;
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
+  return gst_onnx_inference_resolve_format (self, format, gst_format);
+}
+
+/* Same dim-position inference as _guess_tensor_data_type(), but driven by a
+ * video format already known from modelinfo. Also validates caps from modelinfo
+ * agains dims.
+ *
+ * @s: The "video/x-raw" structure from the tensor's declared modelinfo caps.
+ * @out_format: (out): Set to the concrete format resolved from the declared
+ *    format and the tensor's data type when @s declares one, left untouched
+ *    otherwise.
+ *
+ * Returns: FALSE only on a unknown format, incompatible caps and dims,
+ *    TRUE otherwise
+ */
+static gboolean
+derive_details_from_tensor_dims_and_video_caps (GstOnnxInference * self,
+    gsize dims_count, gsize * dims, const GstStructure * s,
+    GstVideoFormat * out_format)
+{
+  const gchar *format = gst_structure_get_string (s, "format");
+  GstVideoFormat vfmt;
+  const GstVideoFormatInfo *info;
+  guint channels;
+
+  if (!format)
+    return TRUE;
+
+  vfmt = gst_video_format_from_string (format);
+  if (vfmt == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Unknown video format '%s' declared by modelinfo",
+        format);
+    return FALSE;
   }
 
-  return TRUE;
+  info = gst_video_format_get_info (vfmt);
+  channels = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (info);
+
+  self->height_dim = -1;
+  self->width_dim = -1;
+  self->channels_dim = -1;
+  self->batch_dim = -1;
+  self->planar = GST_VIDEO_FORMAT_INFO_N_PLANES (info) > 1;
+
+  if (dims_count < 2 || dims_count > 4) {
+    GST_ERROR_OBJECT (self,
+        "Don't know how to interpret tensors with %zu dimensions", dims_count);
+    return FALSE;
+  }
+
+  switch (dims_count) {
+    case 2:
+      self->height_dim = 0;
+      self->width_dim = 1;
+      break;
+    case 3:
+      if (self->planar) {
+        self->channels_dim = 0;
+        self->height_dim = 1;
+        self->width_dim = 2;
+      } else {
+        self->channels_dim = 2;
+        self->height_dim = 0;
+        self->width_dim = 1;
+      }
+      if (dims[self->channels_dim] != channels) {
+        GST_ERROR_OBJECT (self, "Dims don't have %u channels in the "
+            "dimension expected for format '%s'", channels, format);
+        return FALSE;
+      }
+      break;
+    case 4:
+      /* Assuming dims[0] is a batch */
+      self->batch_dim = 0;
+      if (self->planar) {
+        self->channels_dim = 1;
+        self->height_dim = 2;
+        self->width_dim = 3;
+      } else {
+        self->height_dim = 1;
+        self->width_dim = 2;
+        self->channels_dim = 3;
+      }
+      if (dims[self->channels_dim] != channels) {
+        GST_ERROR_OBJECT (self, "Dims don't have %u channels in the "
+            "dimension expected for format '%s'", channels, format);
+        return FALSE;
+      }
+      break;
+  }
+
+  if (!gst_analytics_modelinfo_validate_video_caps_resolution (s,
+          (gint) dims[self->width_dim], (gint) dims[self->height_dim])) {
+    GST_ERROR_OBJECT (self, "Modelinfo caps declared width/height "
+        "inconsistent with the tensor's dims");
+    return FALSE;
+  }
+
+  return gst_onnx_inference_resolve_format (self, vfmt, out_format);
 }
 
 static gchar *
@@ -1550,6 +1664,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   gdouble *scales = NULL;
   gdouble *offsets = NULL;
   gsize gst_input_dims[GST_ONNX_IMPORTER_MAX_DIMS];
+  GstCaps *mi_caps = NULL;
 
   if (!gst_onnx_inference_load_library (self)) {
     GST_ERROR_OBJECT (self, "ONNX Runtime failed to load");
@@ -2052,25 +2167,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       goto error;
   }
 
-  if (!_guess_tensor_data_type (self, config->dims_count, gst_input_dims,
-          &gst_format))
-    goto error;
-
-  self->height = gst_input_dims[self->height_dim];
-  self->width = gst_input_dims[self->width_dim];
-  if (self->channels_dim >= 0) {
-    self->channels = gst_input_dims[self->channels_dim];
-  } else {
-    self->channels = 1;
-  }
-
-  GST_DEBUG_OBJECT (self, "height dim[%d]=%d, width dim[%d]=%d,"
-      " channels dim[%d]=%d, batch_dim[%d]=%zu planar=%d",
-      self->height_dim, self->height, self->width_dim, self->width,
-      self->channels_dim, self->channels, self->batch_dim,
-      self->batch_dim >= 0 ? gst_input_dims[self->batch_dim] : 0, self->planar);
-
-  self->fixedInputImageSize = self->width > 0 && self->height > 0;
 
   status = api->SessionGetOutputCount (self->session, &self->output_count);
   if (status) {
@@ -2125,6 +2221,98 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       onnx_input_tensor_name,
       gst_tensor_data_type_get_name (config->data_type));
 
+  /* Modelinfo v1.1+ provide the input caps explicitly, only fall back to
+   * guessing the tensor layout from its shape when modelinfo doesn't
+   * declare a format */
+  mi_caps = gst_analytics_modelinfo_get_input_caps (modelinfo, tensor_name);
+
+  /* FIXME: Currently inference element does part of the pre-processing, like
+   * scale/offset normalization and buffer layout normalization, for this
+   * reason we need to consider this while calculating the sinkpad caps. Once
+   * this pre-processing has been removed from the inference element, we
+   * should remove the static pad template of the sinkpad and directly use
+   * the caps retrieved from modelinfo for the sinkpad. */
+  if (mi_caps) {
+    GstCaps *tmpl_caps =
+        gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS));
+    GstCaps *supported_caps = gst_caps_intersect (mi_caps, tmpl_caps);
+
+    gst_caps_unref (tmpl_caps);
+
+    if (!gst_analytics_modelinfo_validate_caps_datatype
+        (gst_caps_get_structure (mi_caps, 0), config->data_type)) {
+      GST_ERROR_OBJECT (self, "Modelinfo declares caps %" GST_PTR_FORMAT
+          " for input tensor '%s', which disagrees with its declared type %s",
+          mi_caps, tensor_name,
+          gst_tensor_data_type_get_name (config->data_type));
+      gst_caps_unref (supported_caps);
+      gst_caps_unref (mi_caps);
+      g_free (tensor_name);
+      if (onnx_input_tensor_name)
+        self->allocator->Free (self->allocator,
+            (char *) onnx_input_tensor_name);
+      goto error;
+    }
+
+    if (gst_caps_is_empty (supported_caps)) {
+      GST_ERROR_OBJECT (self, "Modelinfo declares caps %" GST_PTR_FORMAT
+          " for input tensor '%s', which onnxinference does not support",
+          mi_caps, tensor_name);
+      gst_caps_unref (supported_caps);
+      gst_caps_unref (mi_caps);
+      g_free (tensor_name);
+      if (onnx_input_tensor_name)
+        self->allocator->Free (self->allocator,
+            (char *) onnx_input_tensor_name);
+      goto error;
+    }
+    gst_caps_unref (supported_caps);
+
+    /* Resolves gst_format from the tensor's declared caps, erroring for a
+     * dims/format combination onnxinference can't handle. */
+    if (!derive_details_from_tensor_dims_and_video_caps (self,
+            config->dims_count, gst_input_dims,
+            gst_caps_get_structure (mi_caps, 0), &gst_format)) {
+      gst_caps_unref (mi_caps);
+      g_free (tensor_name);
+      if (onnx_input_tensor_name)
+        self->allocator->Free (self->allocator,
+            (char *) onnx_input_tensor_name);
+      goto error;
+    }
+  }
+
+  if (gst_format) {
+    GST_INFO_OBJECT (self, "Input tensor '%s' format '%s' taken from "
+        "modelinfo", tensor_name, gst_video_format_to_string (gst_format));
+  } else if (!_guess_tensor_data_type (self, config->dims_count,
+          gst_input_dims, &gst_format)) {
+    g_clear_pointer (&mi_caps, gst_caps_unref);
+    g_free (tensor_name);
+    if (onnx_input_tensor_name)
+      self->allocator->Free (self->allocator, (char *) onnx_input_tensor_name);
+    goto error;
+  } else {
+    GST_INFO_OBJECT (self, "Input tensor '%s' format '%s' guessed from "
+        "tensor dims", tensor_name, gst_video_format_to_string (gst_format));
+  }
+
+  self->height = gst_input_dims[self->height_dim];
+  self->width = gst_input_dims[self->width_dim];
+  if (self->channels_dim >= 0) {
+    self->channels = gst_input_dims[self->channels_dim];
+  } else {
+    self->channels = 1;
+  }
+
+  GST_DEBUG_OBJECT (self, "height dim[%d]=%d, width dim[%d]=%d,"
+      " channels dim[%d]=%d, batch_dim[%d]=%zu planar=%d",
+      self->height_dim, self->height, self->width_dim, self->width,
+      self->channels_dim, self->channels, self->batch_dim,
+      self->batch_dim >= 0 ? gst_input_dims[self->batch_dim] : 0, self->planar);
+
+  self->fixedInputImageSize = self->width > 0 && self->height > 0;
+
   /* Get per-channel scales and offsets from modelinfo */
   /* For video input, we assume uint8 pixel values in range [0, 255]
    * or f32 in range [0, 1] */
@@ -2156,6 +2344,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
           NULL, &scales, &offsets)) {
     GST_ERROR_OBJECT (self, "Failed to get scales/offsets for tensor %s",
         tensor_name);
+    g_clear_pointer (&mi_caps, gst_caps_unref);
     g_free (tensor_name);
     if (onnx_input_tensor_name)
       self->allocator->Free (self->allocator, (char *) onnx_input_tensor_name);
@@ -2181,19 +2370,36 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   self->input_name = (gchar *) onnx_input_tensor_name;
 
-  /* Setting input tensor caps */
-  self->input_tensors_caps = gst_caps_make_writable (self->input_tensors_caps);
+  /* Setting input tensor caps: when modelinfo declares caps, keep them as
+   * the base so any field beyond format
+   * is preserved, dims/heuristics only complete fields modelinfo left unset,
+   * they never override what modelinfo already pins down. */
+  gst_caps_unref (self->input_tensors_caps);
+  if (mi_caps) {
+    self->input_tensors_caps = gst_caps_make_writable (mi_caps);
+    mi_caps = NULL;
+  } else {
+    self->input_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
+  }
 
-  gst_caps_set_simple (self->input_tensors_caps, "pixel-aspect-ratio",
-      GST_TYPE_FRACTION, 1, 1, NULL);
+  GstStructure *in_caps_s =
+      gst_caps_get_structure (self->input_tensors_caps, 0);
 
   gst_caps_set_simple (self->input_tensors_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (gst_format), NULL);
 
-  if (self->fixedInputImageSize)
-    gst_caps_set_simple (self->input_tensors_caps, "width", G_TYPE_INT,
-        self->width, "height", G_TYPE_INT, self->height, NULL);
+  if (!gst_structure_has_field (in_caps_s, "pixel-aspect-ratio"))
+    gst_caps_set_simple (self->input_tensors_caps, "pixel-aspect-ratio",
+        GST_TYPE_FRACTION, 1, 1, NULL);
 
+  if (self->fixedInputImageSize) {
+    if (!gst_structure_has_field (in_caps_s, "width"))
+      gst_caps_set_simple (self->input_tensors_caps, "width", G_TYPE_INT,
+          self->width, NULL);
+    if (!gst_structure_has_field (in_caps_s, "height"))
+      gst_caps_set_simple (self->input_tensors_caps, "height", G_TYPE_INT,
+          self->height, NULL);
+  }
   // Get output names
   self->output_names = g_new0 (char *, self->output_count);
   for (i = 0; i < self->output_count; ++i) {
