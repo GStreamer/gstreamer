@@ -20,6 +20,7 @@
 #if defined(__NVCC__) || defined(__HIPCC__)
 #ifdef __HIPCC__
 #include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
 #define TextureObject_t hipTextureObject_t
 #else
 #define TextureObject_t cudaTextureObject_t
@@ -1410,6 +1411,74 @@ struct OutputYUY2 : public IOutput
       dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);
       dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);
     }
+  }
+};
+
+__device__ inline float
+blend_float (float dst, float src, float src_alpha)
+{
+  return src * src_alpha + dst * (1.0f - src_alpha);
+}
+
+struct OutputRGBA_F32 : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    float4 *target = (float4 *) &dst0[x * sizeof (float4) + y * stride0];
+    *target = sample;
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    float4 *target = (float4 *) &dst0[x * sizeof (float4) + y * stride0];
+
+    target->x = blend_float (target->x, sample.x, sample.w);
+    target->y = blend_float (target->y, sample.y, sample.w);
+    target->z = blend_float (target->z, sample.z, sample.w);
+    target->w = blend_float (target->w, 1.0f, sample.w);
+  }
+};
+
+__device__ inline __half
+blend_half (__half dst, float src, float src_alpha)
+{
+  float dst_val = __half2float (dst);
+  return __float2half_rn (
+      src * src_alpha + dst_val * (1.0f - src_alpha));
+}
+
+struct OutputRGBA_F16 : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    __half *target = (__half *) &dst0[x * 8 + y * stride0];
+
+    target[0] = __float2half_rn (sample.x);
+    target[1] = __float2half_rn (sample.y);
+    target[2] = __float2half_rn (sample.z);
+    target[3] = __float2half_rn (sample.w);
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    __half *target = (__half *) &dst0[x * 8 + y * stride0];
+
+    target[0] = blend_half (target[0], sample.x, sample.w);
+    target[1] = blend_half (target[1], sample.y, sample.w);
+    target[2] = blend_half (target[2], sample.z, sample.w);
+    target[3] = blend_half (target[3], 1.0f, sample.w);
   }
 };
 
@@ -2920,6 +2989,74 @@ static const char ConverterMain_str[] =
 "      dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
 "      dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);\n"
 "    }\n"
+"  }\n"
+"};\n"
+"\n"
+"__device__ inline float\n"
+"blend_float (float dst, float src, float src_alpha)\n"
+"{\n"
+"  return src * src_alpha + dst * (1.0f - src_alpha);\n"
+"}\n"
+"\n"
+"struct OutputRGBA_F32 : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    float4 *target = (float4 *) &dst0[x * sizeof (float4) + y * stride0];\n"
+"    *target = sample;\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    float4 *target = (float4 *) &dst0[x * sizeof (float4) + y * stride0];\n"
+"\n"
+"    target->x = blend_float (target->x, sample.x, sample.w);\n"
+"    target->y = blend_float (target->y, sample.y, sample.w);\n"
+"    target->z = blend_float (target->z, sample.z, sample.w);\n"
+"    target->w = blend_float (target->w, 1.0f, sample.w);\n"
+"  }\n"
+"};\n"
+"\n"
+"__device__ inline __half\n"
+"blend_half (__half dst, float src, float src_alpha)\n"
+"{\n"
+"  float dst_val = __half2float (dst);\n"
+"  return __float2half_rn (\n"
+"      src * src_alpha + dst_val * (1.0f - src_alpha));\n"
+"}\n"
+"\n"
+"struct OutputRGBA_F16 : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    __half *target = (__half *) &dst0[x * 8 + y * stride0];\n"
+"\n"
+"    target[0] = __float2half_rn (sample.x);\n"
+"    target[1] = __float2half_rn (sample.y);\n"
+"    target[2] = __float2half_rn (sample.z);\n"
+"    target[3] = __float2half_rn (sample.w);\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    __half *target = (__half *) &dst0[x * 8 + y * stride0];\n"
+"\n"
+"    target[0] = blend_half (target[0], sample.x, sample.w);\n"
+"    target[1] = blend_half (target[1], sample.y, sample.w);\n"
+"    target[2] = blend_half (target[2], sample.z, sample.w);\n"
+"    target[3] = blend_half (target[3], 1.0f, sample.w);\n"
 "  }\n"
 "};\n"
 "\n"

@@ -689,6 +689,8 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_RGBP (GBR_16LE, UNSIGNED_INT16, SAMPLE_GBR),
   MAKE_FORMAT_RGBAP (GBRA, UNSIGNED_INT8, SAMPLE_GBRA),
   MAKE_FORMAT_RGB (VUYA, UNSIGNED_INT8, SAMPLE_VUYA),
+  MAKE_FORMAT_RGB (RGBA_F16LE, HALF, SAMPLE_RGBA),
+  MAKE_FORMAT_RGB (RGBA_F32LE, FLOAT, SAMPLE_RGBA),
 };
 
 struct TextureBuffer
@@ -1166,6 +1168,12 @@ gst_hip_converter_setup (GstHipConverter * self)
       break;
     case GST_VIDEO_FORMAT_YUY2:
       output_name = "YUY2";
+      break;
+    case GST_VIDEO_FORMAT_RGBA_F32LE:
+      output_name = "RGBA_F32";
+      break;
+    case GST_VIDEO_FORMAT_RGBA_F16LE:
+      output_name = "RGBA_F16";
       break;
     default:
       break;

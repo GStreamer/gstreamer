@@ -56,6 +56,8 @@ conv_output_formats = [
   'GBR_12',
   'GBR_16',
   'GBRA',
+  'RGBA_F32',
+  'RGBA_F16',
 ]
 
 if have_hipcc
