@@ -1580,6 +1580,29 @@ ges_asset_request_async (GType extractable_type,
     const gchar * id, GCancellable * cancellable, GAsyncReadyCallback callback,
     gpointer user_data)
 {
+  ges_asset_request_async_full (extractable_type, id,
+      GES_ASSET_REQUEST_FLAG_NONE, cancellable, callback, user_data);
+}
+
+/**
+ * ges_asset_request_async_full: (finish-func ges_asset_request_finish)
+ * @extractable_type: The #GESExtractable type to retrieve an asset for
+ * @id: (allow-none): The Identifier of the asset we want to retrieve
+ * @flags: options for this request
+ * @cancellable: (allow-none): optional %GCancellable object, %NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the initialization is finished
+ * @user_data: The user data to pass when @callback is called
+ *
+ * Same as ges_asset_request_async(), with @flags, see
+ * ges_asset_request_full(). Get the result with ges_asset_request_finish().
+ *
+ * Since: 1.30
+ */
+void
+ges_asset_request_async_full (GType extractable_type,
+    const gchar * id, GESAssetRequestFlags flags, GCancellable * cancellable,
+    GAsyncReadyCallback callback, gpointer user_data)
+{
   gchar *real_id;
   GESAsset *asset;
   GError *error = NULL;
@@ -1592,9 +1615,20 @@ ges_asset_request_async (GType extractable_type,
   GST_DEBUG ("Creating asset with extractable type %s and ID=%s",
       g_type_name (extractable_type), id);
 
-  real_id = _check_and_update_parameters (&extractable_type, id,
-      GES_ASSET_REQUEST_FLAG_NONE, &error);
+  real_id = _check_and_update_parameters (&extractable_type, id, flags, &error);
   if (error) {
+    if (_is_untrusted_refusal (error)) {
+      GESAsset *tmpasset = g_object_new (GES_TYPE_ASSET, "id", id,
+          "extractable-type", extractable_type, NULL);
+
+      task = g_task_new (tmpasset, cancellable, callback, user_data);
+      g_task_return_error (task, error);
+      g_object_unref (task);
+      gst_object_unref (tmpasset);
+      g_free (real_id);
+      return;
+    }
+
     _ensure_asset_for_wrong_id (id, extractable_type, error);
     real_id = g_strdup (id);
   }

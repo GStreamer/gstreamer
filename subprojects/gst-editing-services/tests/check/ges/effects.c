@@ -960,7 +960,7 @@ _loaded_cb (GESProject * project, GESTimeline * timeline, LoadResult * res)
 /* Load @uri and return the error the project reported, if any. */
 static GError *
 load_xges_file (const gchar * uri, gboolean accept, GstStructure ** report,
-    gint * n_asked, GESTimeline ** timeline_out)
+    gint * n_asked, GESTimeline ** timeline_out, GESProject ** project_out)
 {
   GESProject *project = ges_project_new (uri);
   LoadResult res = { g_main_loop_new (NULL, FALSE), NULL, accept, 0, NULL };
@@ -988,7 +988,10 @@ load_xges_file (const gchar * uri, gboolean accept, GstStructure ** report,
     *timeline_out = timeline;
   else
     gst_object_unref (timeline);
-  gst_object_unref (project);
+  if (project_out)
+    *project_out = project;
+  else
+    gst_object_unref (project);
 
   if (report)
     *report = res.report;
@@ -1048,7 +1051,7 @@ GST_START_TEST (test_load_xges_untrusted)
   gst_object_unref (project);
 
   /* the same project read back from a file is untrusted content */
-  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL);
+  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL, NULL);
   fail_unless (error != NULL, "loading a sensitive child property must fail");
   fail_unless_equals_int (error->code, GES_ERROR_SENSITIVE_PROPERTY);
   fail_unless_equals_int (n_asked, 1);
@@ -1066,7 +1069,7 @@ GST_START_TEST (test_load_xges_untrusted)
   fail_unless (g_file_set_contents (path, content, -1, NULL));
   g_free (content);
 
-  error = load_xges_file (uri, FALSE, &report, &n_asked, NULL);
+  error = load_xges_file (uri, FALSE, &report, &n_asked, NULL, NULL);
   fail_unless (error != NULL, "loading an untrusted element must fail");
   fail_unless_equals_int (error->code, GES_ERROR_UNTRUSTED_ELEMENT);
   fail_unless_equals_int (n_asked, 1);
@@ -1077,7 +1080,7 @@ GST_START_TEST (test_load_xges_untrusted)
   g_clear_error (&error);
 
   /* the application accepts it: the same content loads */
-  error = load_xges_file (uri, TRUE, NULL, &n_asked, NULL);
+  error = load_xges_file (uri, TRUE, NULL, &n_asked, NULL, NULL);
   fail_unless (error == NULL, "accepted content must load: %s",
       error ? error->message : "");
   fail_unless_equals_int (n_asked, 1);
@@ -1145,14 +1148,14 @@ GST_START_TEST (test_load_xges_untrusted_property_dedup)
   gst_object_unref (project);
 
   /* refusing fails the load at the first decision: one emission only */
-  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL);
+  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL, NULL);
   fail_unless (error != NULL, "loading a sensitive child property must fail");
   fail_unless_equals_int (error->code, GES_ERROR_SENSITIVE_PROPERTY);
   fail_unless_equals_int (n_asked, 1);
   g_clear_error (&error);
 
   /* accepting: the shared value is one decision, the other value a second */
-  error = load_xges_file (uri, TRUE, NULL, &n_asked, &loaded);
+  error = load_xges_file (uri, TRUE, NULL, &n_asked, &loaded, NULL);
   fail_unless (error == NULL, "accepted content must load: %s",
       error ? error->message : "");
   fail_unless_equals_int (n_asked, 2);
@@ -1178,11 +1181,97 @@ GST_START_TEST (test_load_xges_untrusted_property_dedup)
   gst_object_unref (loaded);
 
   /* acceptance is remembered: nothing to ask on a later load */
-  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL);
+  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL, NULL);
   fail_unless (error == NULL, "accepted content must load: %s",
       error ? error->message : "");
   fail_unless_equals_int (n_asked, 0);
 
+  g_free (uri);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+/* The same decisions through the asynchronous request path: effect assets
+ * listed in the ressources are vetted too, and the same description requested
+ * twice is a single decision. */
+GST_START_TEST (test_load_xges_untrusted_asset)
+{
+  GESTimeline *timeline;
+  GESProject *project;
+  GESAsset *formatter;
+  GError *error = NULL;
+  GstStructure *report = NULL;
+  GList *assets, *tmp;
+  gboolean has_netsim_asset = FALSE;
+  gchar *uri, *path, *content, **parts;
+  gint n_asked = 0;
+
+  ges_init ();
+
+  project = ges_project_new (NULL);
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &error));
+  fail_unless (timeline != NULL, "%s", error ? error->message : "");
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  formatter = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
+  uri = ges_test_get_tmp_uri ("untrusted-asset.xges");
+  fail_unless (ges_project_save (project, timeline, uri, formatter, TRUE,
+          &error), "could not save: %s", error ? error->message : "");
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+
+  /* list the same refused effect asset twice in the ressources */
+  path = g_filename_from_uri (uri, NULL, NULL);
+  fail_unless (g_file_get_contents (path, &content, NULL, NULL));
+  parts = g_strsplit (content, "<ressources>", 2);
+  fail_unless (parts[1] != NULL);
+  g_free (content);
+  content = g_strconcat (parts[0], "<ressources>",
+      "<asset id='netsim' extractable-type-name='GESEffect' "
+      "properties='properties;' metadatas='metadatas;' ></asset>",
+      "<asset id='netsim' extractable-type-name='GESEffect' "
+      "properties='properties;' metadatas='metadatas;' ></asset>",
+      parts[1], NULL);
+  g_strfreev (parts);
+  fail_unless (g_file_set_contents (path, content, -1, NULL));
+  g_free (content);
+
+  error = load_xges_file (uri, FALSE, &report, &n_asked, NULL, NULL);
+  fail_unless (error != NULL, "loading an untrusted element must fail");
+  fail_unless_equals_int (error->code, GES_ERROR_UNTRUSTED_ELEMENT);
+  fail_unless_equals_int (n_asked, 1);
+  fail_unless (report != NULL, "the application must be told what was refused");
+  fail_unless (gst_structure_has_name (report, "untrusted-content"));
+  fail_unless (gst_structure_has_field (report, "elements"));
+  gst_clear_structure (&report);
+  g_clear_error (&error);
+
+  /* accepted: the netsim asset is really created, not just the load
+   * succeeding */
+  error = load_xges_file (uri, TRUE, NULL, &n_asked, NULL, &project);
+  fail_unless (error == NULL, "accepted content must load: %s",
+      error ? error->message : "");
+  fail_unless_equals_int (n_asked, 1);
+  assets = ges_project_list_assets (project, GES_TYPE_EFFECT);
+  for (tmp = assets; tmp; tmp = tmp->next) {
+    if (g_strrstr (ges_asset_get_id (tmp->data), "netsim"))
+      has_netsim_asset = TRUE;
+  }
+  fail_unless (has_netsim_asset,
+      "the accepted effect asset must be created, not dropped");
+  g_list_free_full (assets, gst_object_unref);
+  gst_object_unref (project);
+
+  /* acceptance is remembered */
+  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL, NULL);
+  fail_unless (error == NULL, "accepted content must load: %s",
+      error ? error->message : "");
+  fail_unless_equals_int (n_asked, 0);
+
+  g_free (path);
   g_free (uri);
 
   ges_deinit ();
@@ -1246,7 +1335,7 @@ GST_START_TEST (test_load_xges_untrusted_effect_clip)
 
   /* refused, one decision, and it must be about the refused (video)
    * description, not the clean audio one parsed before it */
-  error = load_xges_file (uri, FALSE, &report, &n_asked, NULL);
+  error = load_xges_file (uri, FALSE, &report, &n_asked, NULL, NULL);
   fail_unless (error != NULL, "loading an untrusted element must fail");
   fail_unless_equals_int (error->code, GES_ERROR_UNTRUSTED_ELEMENT);
   fail_unless_equals_int (n_asked, 1);
@@ -1262,7 +1351,7 @@ GST_START_TEST (test_load_xges_untrusted_effect_clip)
 
   /* accepted: the same content loads, and the refused (video) effect is
    * really created, not silently dropped */
-  error = load_xges_file (uri, TRUE, NULL, &n_asked, &loaded);
+  error = load_xges_file (uri, TRUE, NULL, &n_asked, &loaded, NULL);
   fail_unless (error == NULL, "accepted content must load: %s",
       error ? error->message : "");
   fail_unless_equals_int (n_asked, 1);
@@ -1283,7 +1372,7 @@ GST_START_TEST (test_load_xges_untrusted_effect_clip)
   gst_object_unref (loaded);
 
   /* acceptance is remembered */
-  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL);
+  error = load_xges_file (uri, FALSE, NULL, &n_asked, NULL, NULL);
   fail_unless (error == NULL, "accepted content must load: %s",
       error ? error->message : "");
   fail_unless_equals_int (n_asked, 0);
@@ -1316,6 +1405,8 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_move_time_effect);
   tcase_add_test (tc_chain, test_load_xges_untrusted);
   tcase_add_test (tc_chain, test_load_xges_untrusted_property_dedup);
+  if (gst_element_factory_find ("netsim"))
+    tcase_add_test (tc_chain, test_load_xges_untrusted_asset);
   if (gst_element_factory_find ("netsim")
       && gst_element_factory_find ("audioecho")
       && gst_element_factory_find ("videobalance"))

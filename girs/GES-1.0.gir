@@ -265,6 +265,40 @@ asset request, or %NULL to ignore</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="request_async_full" c:identifier="ges_asset_request_async_full" version="1.30" glib:finish-func="ges_asset_request_finish">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Same as ges_asset_request_async(), with @flags, see
+ges_asset_request_full(). Get the result with ges_asset_request_finish().</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="extractable_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The #GESExtractable type to retrieve an asset for</doc>
+            <type name="GType" c:type="GType"/>
+          </parameter>
+          <parameter name="id" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The Identifier of the asset we want to retrieve</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">options for this request</doc>
+            <type name="AssetRequestFlags" c:type="GESAssetRequestFlags"/>
+          </parameter>
+          <parameter name="cancellable" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">optional %GCancellable object, %NULL to ignore.</doc>
+            <type name="Gio.Cancellable" c:type="GCancellable*"/>
+          </parameter>
+          <parameter name="callback" transfer-ownership="none" nullable="1" allow-none="1" scope="async" closure="5">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">a #GAsyncReadyCallback to call when the initialization is finished</doc>
+            <type name="Gio.AsyncReadyCallback" c:type="GAsyncReadyCallback"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">The user data to pass when @callback is called</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="request_finish" c:identifier="ges_asset_request_finish" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Fetches an asset requested by ges_asset_request_async(), which
 finalises the request.</doc>

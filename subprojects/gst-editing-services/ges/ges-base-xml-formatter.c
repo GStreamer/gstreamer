@@ -203,7 +203,8 @@ _parse (GESBaseXmlFormatter * self, GError ** error, LoadingState state)
     for (tmp = priv->pending_assets; tmp; tmp = tmp->next) {
       PendingAsset *passet = tmp->data;
 
-      ges_asset_request_async (passet->extractable_type, passet->id, NULL,
+      ges_asset_request_async_full (passet->extractable_type, passet->id,
+          GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION, NULL,
           (GAsyncReadyCallback) new_asset_cb, passet);
       ges_project_add_loading_asset (GES_FORMATTER (self)->project,
           passet->extractable_type, passet->id);
@@ -882,6 +883,31 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
   if (error) {
     GST_INFO_OBJECT (self, "Error %s creating asset id: %s", error->message,
         id);
+
+    /* The untrusted-input rules refused the asset: ask the application right
+     * away and retry the request if it accepts, otherwise fail the load with
+     * that error. */
+    if (error->domain == GES_ERROR
+        && (error->code == GES_ERROR_UNTRUSTED_ELEMENT
+            || error->code == GES_ERROR_SENSITIVE_PROPERTY)) {
+      if (_ask_untrusted_effect (GES_BASE_XML_FORMATTER (self), id,
+              ges_asset_get_extractable_type (source), error)) {
+        /* The flag marks the id as coming from the file; approval is consulted
+         * per description during the parse, so the accepted description passes
+         * while any other in the same id (an effect clip's other bin) is still
+         * vetted. */
+        ges_asset_request_async_full (ges_asset_get_extractable_type (source),
+            id, GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION, NULL,
+            (GAsyncReadyCallback) new_asset_cb, passet);
+        goto done;
+      }
+
+      gst_object_unref (self);
+      _free_pending_asset (priv, passet);
+      if (!priv->asset_error)
+        priv->asset_error = g_error_copy (error);
+      goto done;
+    }
 
     /* We set the metas on the Asset to give hints to the user */
     if (passet->metadatas)
