@@ -80,6 +80,52 @@ gst_amc_accel_to_string (GstAmcCodecAccel accel)
   }
 }
 
+/* Whether a video codec is hardware-accelerated. Used for both the element
+ * rank and the "Hardware" element klass. */
+gboolean
+gst_amc_codec_info_is_hardware (const GstAmcCodecInfo * codec_info)
+{
+  switch (codec_info->accel) {
+    case AMC_CODEC_ACCEL_IS_HW:
+      return TRUE;
+    case AMC_CODEC_ACCEL_IS_SW:
+      return FALSE;
+    case AMC_CODEC_ACCEL_IS_UNKNOWN:
+      /* Android version is too old, could not auto-detect hw-accel status.
+       * Try guessing from the name.
+       *
+       * Amlogic/Exynos hardware video codecs end in .encoder/.decoder:
+       *  c2.amlogic.avc.decoder
+       *  c2.amlogic.avc.encoder
+       *  c2.amlogic.hevc.decoder
+       *  c2.amlogic.av1.decoder
+       *  c2.exynos.h264.decoder
+       *  c2.exynos.h264.encoder
+       *  c2.exynos.hevc.decoder
+       *  c2.exynos.hevc.encoder
+       *  c2.exynos.vp9.decoder
+       *  c2.exynos.vp9.encoder
+       * NOTE: c2.google.av1.decoder can be a hw decoder, but it's only
+       *       available in newer Android versions and codec_info->accel
+       *       will work reliably there.
+       * Software video codecs end in .sw or .secure (usually?):
+       *  c2.amlogic.vp8.decoder.sw
+       *  c2.amlogic.wmv3.decoder.sw
+       *  c2.amlogic.avc.decoder.secure
+       * As an aside, software audio codecs look like this:
+       *  c2.amlogic.audio.decoder.mp2
+       *  c2.amlogic.audio.decoder.eac3
+       * But this guess is only used for video.
+       */
+      return (g_str_has_prefix (codec_info->name, "c2.amlogic") ||
+          g_str_has_prefix (codec_info->name, "c2.exynos")) &&
+          (g_str_has_suffix (codec_info->name, "decoder") ||
+          g_str_has_suffix (codec_info->name, "encoder"));
+  }
+
+  return FALSE;
+}
+
 static gboolean
 scan_codecs (GstPlugin * plugin)
 {
@@ -1996,50 +2042,10 @@ register_codecs (GstPlugin * plugin)
         /* Give PRIMARY+1 rank to all hardware-accelerated video codecs and
          * MARGINAL to sw video codecs, because any gstreamer-native codecs
          * compiled-in may be higher quality */
-        switch (codec_info->accel) {
-          case AMC_CODEC_ACCEL_IS_HW:
-            rank = GST_RANK_PRIMARY + 1;
-            break;
-          case AMC_CODEC_ACCEL_IS_SW:
-            rank = GST_RANK_MARGINAL;
-            break;
-          case AMC_CODEC_ACCEL_IS_UNKNOWN:
-            /* Android version is too old, could not auto-detect hw-accel
-             * status. Try guessing from the name.
-             *
-             * Amlogic/Exynos hardware video codecs end in .encoder/.decoder:
-             *  c2.amlogic.avc.decoder
-             *  c2.amlogic.avc.encoder
-             *  c2.amlogic.hevc.decoder
-             *  c2.amlogic.av1.decoder
-             *  c2.exynos.h264.decoder
-             *  c2.exynos.h264.encoder
-             *  c2.exynos.hevc.decoder
-             *  c2.exynos.hevc.encoder
-             *  c2.exynos.vp9.decoder
-             *  c2.exynos.vp9.encoder
-             * NOTE: c2.google.av1.decoder can be a hw decoder, but it's only
-             *       available in newer Android versions and codec_info->accel
-             *       will work reliably there.
-             * Software video codecs end in .sw or .secure (usually?):
-             *  c2.amlogic.vp8.decoder.sw
-             *  c2.amlogic.wmv3.decoder.sw
-             *  c2.amlogic.avc.decoder.secure
-             * As an aside, software audio codecs look like this:
-             *  c2.amlogic.audio.decoder.mp2
-             *  c2.amlogic.audio.decoder.eac3
-             * But we only rank video here.
-             */
-            if ((g_str_has_prefix (codec_info->name, "c2.amlogic") ||
-                    g_str_has_prefix (codec_info->name, "c2.exynos")) &&
-                (g_str_has_suffix (codec_info->name, "decoder") ||
-                    g_str_has_suffix (codec_info->name, "encoder"))) {
-              rank = GST_RANK_PRIMARY + 1;
-            } else {
-              rank = GST_RANK_MARGINAL;
-            }
-            break;
-        }
+        if (gst_amc_codec_info_is_hardware (codec_info))
+          rank = GST_RANK_PRIMARY + 1;
+        else
+          rank = GST_RANK_MARGINAL;
       } else if (g_str_has_prefix (codec_info->name, "OMX.google.") ||
           g_str_has_prefix (codec_info->name, "c2.android.") ||
           g_str_has_prefix (codec_info->name, "c2.amlogic.") ||
