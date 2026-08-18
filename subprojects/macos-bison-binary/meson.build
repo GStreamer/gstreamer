@@ -1,6 +1,6 @@
 project('macos-bison-binary', version : '3.8.2')
 
-arch = host_machine.cpu_family()
+arch = build_machine.cpu_family()
 
 message('Downloading and extracting bison for macOS @0@...'.format(arch))
 
