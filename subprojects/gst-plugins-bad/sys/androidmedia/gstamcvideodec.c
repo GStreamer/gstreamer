@@ -393,7 +393,8 @@ gst_amc_video_dec_base_init (gpointer g_class)
   longname = g_strdup_printf ("Android MediaCodec %s", codec_info->name);
   gst_element_class_set_metadata (element_class,
       codec_info->name,
-      "Codec/Decoder/Video/Hardware",
+      gst_amc_codec_info_is_hardware (codec_info) ?
+      "Codec/Decoder/Video/Hardware" : "Codec/Decoder/Video",
       longname, "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
   g_free (longname);
 }

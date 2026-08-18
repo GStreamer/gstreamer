@@ -63,6 +63,8 @@ extern GQuark gst_amc_codec_info_quark;
 
 gboolean gst_amc_static_init (void);
 
+gboolean gst_amc_codec_info_is_hardware (const GstAmcCodecInfo * codec_info);
+
 GstVideoFormat gst_amc_color_format_to_video_format (const GstAmcCodecInfo * codec_info, const gchar * mime, gint color_format);
 gint gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info, const gchar * mime, GstVideoFormat video_format);
 
