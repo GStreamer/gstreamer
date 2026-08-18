@@ -34,6 +34,25 @@
 G_BEGIN_DECLS
 
 /**
+ * GESAssetRequestFlags:
+ * @GES_ASSET_REQUEST_FLAG_NONE: no flag
+ * @GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION: the id is a bin
+ * description that the application does not control, typically read from a
+ * project file. It may only use elements marked untrusted-aware and may not
+ * set properties marked %GST_PARAM_UNTRUSTED_SENSITIVE, the way
+ * %GST_PARSE_FLAG_NO_UNTRUSTED does. Only affects assets whose id is a bin
+ * description, which today means effect assets.
+ *
+ * Since: 1.30
+ */
+typedef enum
+{
+  GES_ASSET_REQUEST_FLAG_NONE = 0,
+  GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION = (1 << 0),
+} GESAssetRequestFlags;
+
+
+/**
  * GES_PADDING: (attributes doc.skip=true)
  */
 #define GES_PADDING         4

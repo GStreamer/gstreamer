@@ -252,6 +252,37 @@ G_GNUC_INTERNAL gchar *
 ges_effect_asset_id_get_type_and_bindesc (const char    *id,
                                           GESTrackType  *track_type,
                                           GError       **error);
+G_GNUC_INTERNAL gchar *
+ges_effect_asset_id_get_type_and_bindesc_full (const char *id,
+                                               GESTrackType *track_type,
+                                               GESAssetRequestFlags flags,
+                                               GError **error);
+G_GNUC_INTERNAL gchar *
+ges_effect_asset_id_get_bindesc (const char   *id,
+                                 GESTrackType *track_type);
+
+/* Process-wide record of refused untrusted content and what the application
+ * accepted. */
+G_GNUC_INTERNAL gchar * ges_extractable_type_check_id_full (GType type, const gchar *id,
+                                                            GESAssetRequestFlags flags,
+                                                            GError **error);
+G_GNUC_INTERNAL void          ges_untrusted_content_record   (const gchar *bin_desc,
+                                                              GstStructure *report);
+G_GNUC_INTERNAL GstStructure *ges_untrusted_content_get_report (const gchar *bin_desc);
+G_GNUC_INTERNAL void          ges_untrusted_content_approve  (const gchar *bin_desc);
+G_GNUC_INTERNAL gboolean      ges_untrusted_content_is_approved (const gchar *bin_desc);
+G_GNUC_INTERNAL void          ges_untrusted_property_approve (const gchar *type_name,
+                                                              const gchar *property,
+                                                              const GValue *value);
+G_GNUC_INTERNAL gboolean      ges_untrusted_property_is_approved (const gchar *type_name,
+                                                               const gchar *property,
+                                                               const GValue *value);
+
+G_GNUC_INTERNAL gboolean ges_project_ask_untrusted_content (GESProject   *project,
+                                                            const gchar  *id,
+                                                            GType         extractable_type,
+                                                            GstStructure *report,
+                                                            GError       *error);
 
 G_GNUC_INTERNAL void _ges_uri_asset_cleanup (void);
 

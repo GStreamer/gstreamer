@@ -111,6 +111,13 @@ void ges_asset_request_async         (GType extractable_type,
                                       GCancellable *cancellable,
                                       GAsyncReadyCallback callback,
                                       gpointer user_data);
+
+GES_API
+GESAsset * ges_asset_request_full    (GType extractable_type,
+                                      const gchar *id,
+                                      GESAssetRequestFlags flags,
+                                      GError **error);
+
 GES_API
 GESAsset * ges_asset_request         (GType extractable_type,
                                       const gchar * id,

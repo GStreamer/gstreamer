@@ -296,6 +296,130 @@ ghost:
   return TRUE;
 }
 
+
+/* Descriptions and property assignments the application accepted, and the
+ * report of what was refused for the descriptions it has not (yet).
+ * Process-wide: effect assets are cached globally by their id, so an
+ * acceptance cannot be scoped to one project. */
+G_LOCK_DEFINE_STATIC (untrusted_content);
+static GHashTable *untrusted_reports = NULL;
+static GHashTable *untrusted_approved = NULL;
+static GHashTable *untrusted_approved_properties = NULL;
+
+void
+ges_untrusted_content_record (const gchar * bin_desc, GstStructure * report)
+{
+  G_LOCK (untrusted_content);
+  if (!untrusted_reports) {
+    untrusted_reports = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+        (GDestroyNotify) gst_structure_free);
+  }
+  g_hash_table_insert (untrusted_reports, g_strdup (bin_desc), report);
+  G_UNLOCK (untrusted_content);
+}
+
+GstStructure *
+ges_untrusted_content_get_report (const gchar * bin_desc)
+{
+  GstStructure *report = NULL;
+
+  G_LOCK (untrusted_content);
+  if (untrusted_reports) {
+    GstStructure *found = g_hash_table_lookup (untrusted_reports, bin_desc);
+
+    if (found)
+      report = gst_structure_copy (found);
+  }
+  G_UNLOCK (untrusted_content);
+
+  return report;
+}
+
+void
+ges_untrusted_content_approve (const gchar * bin_desc)
+{
+  GST_INFO ("Application accepted untrusted content: %s", bin_desc);
+
+  G_LOCK (untrusted_content);
+  if (!untrusted_approved) {
+    untrusted_approved = g_hash_table_new_full (g_str_hash, g_str_equal,
+        g_free, NULL);
+  }
+  g_hash_table_add (untrusted_approved, g_strdup (bin_desc));
+  G_UNLOCK (untrusted_content);
+}
+
+gboolean
+ges_untrusted_content_is_approved (const gchar * bin_desc)
+{
+  gboolean approved = FALSE;
+
+  G_LOCK (untrusted_content);
+  if (untrusted_approved)
+    approved = g_hash_table_contains (untrusted_approved, bin_desc);
+  G_UNLOCK (untrusted_content);
+
+  return approved;
+}
+
+/* One key per accepted assignment: the element type, the property and the
+ * value, so the same value set on another element of the same type is not a
+ * new decision, while the same property with another value is. */
+static gchar *
+ges_untrusted_property_key (const gchar * type_name, const gchar * property,
+    const GValue * value)
+{
+  gchar *serialized = gst_value_serialize (value);
+  gchar *key;
+
+  if (serialized == NULL)
+    return NULL;
+
+  key = g_strdup_printf ("%s::%s=%s", type_name, property, serialized);
+  g_free (serialized);
+
+  return key;
+}
+
+void
+ges_untrusted_property_approve (const gchar * type_name,
+    const gchar * property, const GValue * value)
+{
+  gchar *key = ges_untrusted_property_key (type_name, property, value);
+
+  if (key == NULL)
+    return;
+
+  GST_INFO ("Application accepted untrusted property: %s", key);
+
+  G_LOCK (untrusted_content);
+  if (!untrusted_approved_properties) {
+    untrusted_approved_properties = g_hash_table_new_full (g_str_hash,
+        g_str_equal, g_free, NULL);
+  }
+  g_hash_table_add (untrusted_approved_properties, key);
+  G_UNLOCK (untrusted_content);
+}
+
+gboolean
+ges_untrusted_property_is_approved (const gchar * type_name,
+    const gchar * property, const GValue * value)
+{
+  gchar *key = ges_untrusted_property_key (type_name, property, value);
+  gboolean approved = FALSE;
+
+  if (key == NULL)
+    return FALSE;
+
+  G_LOCK (untrusted_content);
+  if (untrusted_approved_properties)
+    approved = g_hash_table_contains (untrusted_approved_properties, key);
+  G_UNLOCK (untrusted_content);
+  g_free (key);
+
+  return approved;
+}
+
 /* Parse an effect bin-description coming from a (potentially untrusted) effect
  * asset id. Effects loaded from a serialized timeline may only use elements
  * that are marked untrusted-aware, and may not set any
@@ -311,14 +435,23 @@ ges_effect_parse_bin_from_description (const gchar * bin_desc,
   GError *parse_error = NULL;
   GstElement *effect;
 
+  /* The caller says whether this description is trusted, see
+   * ges_asset_request_full(); an accepted one is not restricted again. */
+  if (ges_untrusted_content_is_approved (bin_desc))
+    extra_flags &= ~GST_PARSE_FLAG_NO_UNTRUSTED;
+
   effect = gst_parse_bin_from_description_full (bin_desc, ghost_unlinked_pads,
-      ctx, extra_flags | GST_PARSE_FLAG_NO_UNTRUSTED, &parse_error);
+      ctx, extra_flags, &parse_error);
 
   if (!effect && parse_error && parse_error->domain == GST_PARSE_ERROR
       && (parse_error->code == GST_PARSE_ERROR_SENSITIVE_PROPERTY
           || parse_error->code == GST_PARSE_ERROR_UNTRUSTED_ELEMENT)) {
     GstStructure *report = gst_parse_context_get_untrusted_report (ctx);
     gchar *report_str = report ? gst_structure_to_string (report) : NULL;
+
+    /* keep it so the application can be asked about this exact description */
+    if (report)
+      ges_untrusted_content_record (bin_desc, gst_structure_copy (report));
     gint code = parse_error->code == GST_PARSE_ERROR_UNTRUSTED_ELEMENT ?
         GES_ERROR_UNTRUSTED_ELEMENT : GES_ERROR_SENSITIVE_PROPERTY;
 
@@ -335,6 +468,14 @@ ges_effect_parse_bin_from_description (const gchar * bin_desc,
   gst_parse_context_free (ctx);
 
   return effect;
+}
+
+gchar *
+ges_effect_asset_id_get_type_and_bindesc (const char *id,
+    GESTrackType * track_type, GError ** error)
+{
+  return ges_effect_asset_id_get_type_and_bindesc_full (id, track_type,
+      GES_ASSET_REQUEST_FLAG_NONE, error);
 }
 
 GstElement *
@@ -428,34 +569,43 @@ err:
   goto done;
 }
 
+/* The bin description carried by an effect asset id: the id with its
+ * optional track-type prefix stripped. Does not parse anything. */
 gchar *
-ges_effect_asset_id_get_type_and_bindesc (const char *id,
-    GESTrackType * track_type, GError ** error)
+ges_effect_asset_id_get_bindesc (const char *id, GESTrackType * track_type)
 {
-  GList *tmp;
-  GstElement *effect;
-  gchar **typebin_desc = NULL;
-  const gchar *user_bindesc;
-  gchar *bindesc = NULL;
+  gchar **typebin_desc;
+  gchar *bindesc;
 
-  *track_type = GES_TRACK_TYPE_UNKNOWN;
   typebin_desc = g_strsplit (id, " ", 2);
   if (!g_strcmp0 (typebin_desc[0], "audio")) {
     *track_type = GES_TRACK_TYPE_AUDIO;
-    user_bindesc = typebin_desc[1];
+    bindesc = g_strdup (typebin_desc[1]);
   } else if (!g_strcmp0 (typebin_desc[0], "video")) {
     *track_type = GES_TRACK_TYPE_VIDEO;
-    user_bindesc = typebin_desc[1];
+    bindesc = g_strdup (typebin_desc[1]);
   } else {
     *track_type = GES_TRACK_TYPE_UNKNOWN;
-    user_bindesc = id;
+    bindesc = g_strdup (id);
   }
-
-  bindesc = g_strdup (user_bindesc);
   g_strfreev (typebin_desc);
 
+  return bindesc;
+}
+
+gchar *
+ges_effect_asset_id_get_type_and_bindesc_full (const char *id,
+    GESTrackType * track_type, GESAssetRequestFlags flags, GError ** error)
+{
+  GList *tmp;
+  GstElement *effect;
+  gchar *bindesc;
+
+  bindesc = ges_effect_asset_id_get_bindesc (id, track_type);
+
   effect = ges_effect_parse_bin_from_description (bindesc, TRUE,
-      GST_PARSE_FLAG_NONE, error);
+      (flags & GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION) ?
+      GST_PARSE_FLAG_NO_UNTRUSTED : GST_PARSE_FLAG_NONE, error);
   if (effect == NULL) {
     GST_ERROR ("Could not create element from: %s", bindesc);
     g_free (bindesc);

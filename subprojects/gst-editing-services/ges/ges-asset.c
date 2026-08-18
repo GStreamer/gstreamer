@@ -234,7 +234,7 @@ static GRecMutex asset_cache_lock;
 
 static gchar *
 _check_and_update_parameters (GType * extractable_type, const gchar * id,
-    GError ** error)
+    GESAssetRequestFlags flags, GError ** error)
 {
   gchar *real_id;
   GType old_type = *extractable_type;
@@ -252,7 +252,8 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
     return NULL;
   }
 
-  real_id = ges_extractable_type_check_id (*extractable_type, id, error);
+  real_id = ges_extractable_type_check_id_full (*extractable_type, id, flags,
+      error);
   if (real_id == NULL) {
     GST_WARNING ("Wrong ID %s, can not create asset", id);
 
@@ -266,9 +267,24 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
   return real_id;
 }
 
+/* An untrusted-input refusal is a per-request decision: the application may
+ * accept it and request again, and the same id requested without
+ * GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION is not refused at all.
+ * It must not end up cached as a wrong-id asset. */
+static gboolean
+_is_untrusted_refusal (const GError * error)
+{
+  return error && error->domain == GES_ERROR
+      && (error->code == GES_ERROR_UNTRUSTED_ELEMENT
+      || error->code == GES_ERROR_SENSITIVE_PROPERTY);
+}
+
 /* FIXME: why are we not accepting a GError ** error argument, which we
  * could pass to ges_asset_cache_set_loaded ()? Which would allow the
  * error to be set for the GInitable init method below */
+static GESAsset *_ges_asset_request (GType extractable_type, const gchar * id,
+    GESAssetRequestFlags flags, GError ** error);
+
 static gboolean
 start_loading (GESAsset * asset)
 {
@@ -1322,6 +1338,32 @@ ges_asset_get_extractable_type (GESAsset * self)
 }
 
 /**
+ * ges_asset_request_full:
+ * @extractable_type: The #GESExtractable object type to retrieve an asset for
+ * @id: (allow-none): The Identifier of the asset we want to retrieve
+ * @flags: options for this request
+ * @error: (allow-none) (transfer full): An error to be set if something wrong
+ * happens or %NULL
+ *
+ * Same as ges_asset_request(), with @flags. Pass
+ * %GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION when @id was read from
+ * content the application does not control, such as a project file: the asset
+ * is then only created if it uses elements marked untrusted-aware and sets no
+ * property marked %GST_PARAM_UNTRUSTED_SENSITIVE.
+ *
+ * Returns: (transfer full) (allow-none): A reference to the wanted #GESAsset
+ * or %NULL
+ *
+ * Since: 1.30
+ */
+GESAsset *
+ges_asset_request_full (GType extractable_type, const gchar * id,
+    GESAssetRequestFlags flags, GError ** error)
+{
+  return _ges_asset_request (extractable_type, id, flags, error);
+}
+
+/**
  * ges_asset_request:
  * @extractable_type: The #GESAsset:extractable-type of the asset
  * @id: (allow-none): The #GESAsset:id of the asset
@@ -1367,6 +1409,14 @@ ges_asset_get_extractable_type (GESAsset * self)
 GESAsset *
 ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
 {
+  return _ges_asset_request (extractable_type, id,
+      GES_ASSET_REQUEST_FLAG_NONE, error);
+}
+
+static GESAsset *
+_ges_asset_request (GType extractable_type, const gchar * id,
+    GESAssetRequestFlags flags, GError ** error)
+{
   gchar *real_id;
 
   GError *lerr = NULL;
@@ -1378,8 +1428,13 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
       NULL);
 
-  real_id = _check_and_update_parameters (&extractable_type, id, &lerr);
+  real_id = _check_and_update_parameters (&extractable_type, id, flags, &lerr);
   if (real_id == NULL) {
+    if (_is_untrusted_refusal (lerr)) {
+      g_propagate_error (error, lerr);
+      return NULL;
+    }
+
     /* We create an asset for that wrong ID so we have a reference that the
      * user requested it */
     _ensure_asset_for_wrong_id (id, extractable_type, lerr);
@@ -1537,7 +1592,8 @@ ges_asset_request_async (GType extractable_type,
   GST_DEBUG ("Creating asset with extractable type %s and ID=%s",
       g_type_name (extractable_type), id);
 
-  real_id = _check_and_update_parameters (&extractable_type, id, &error);
+  real_id = _check_and_update_parameters (&extractable_type, id,
+      GES_ASSET_REQUEST_FLAG_NONE, &error);
   if (error) {
     _ensure_asset_for_wrong_id (id, extractable_type, error);
     real_id = g_strdup (id);
@@ -1648,7 +1704,8 @@ ges_asset_needs_reload (GType extractable_type, const gchar * id)
   g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
       FALSE);
 
-  real_id = _check_and_update_parameters (&extractable_type, id, &error);
+  real_id = _check_and_update_parameters (&extractable_type, id,
+      GES_ASSET_REQUEST_FLAG_NONE, &error);
   if (error) {
     _ensure_asset_for_wrong_id (id, extractable_type, error);
     real_id = g_strdup (id);

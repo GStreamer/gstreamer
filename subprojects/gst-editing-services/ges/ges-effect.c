@@ -80,12 +80,14 @@ G_DEFINE_TYPE_WITH_CODE (GESEffect,
         ges_extractable_interface_init));
 
 static gchar *
-extractable_check_id (GType type, const gchar * id, GError ** error)
+extractable_check_id_full (GType type, const gchar * id,
+    GESAssetRequestFlags flags, GError ** error)
 {
   gchar *bin_desc, *real_id;
   GESTrackType ttype;
 
-  bin_desc = ges_effect_asset_id_get_type_and_bindesc (id, &ttype, error);
+  bin_desc = ges_effect_asset_id_get_type_and_bindesc_full (id, &ttype, flags,
+      error);
 
   if (bin_desc == NULL)
     return NULL;
@@ -138,7 +140,7 @@ static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_EFFECT_ASSET;
-  iface->check_id = (GESExtractableCheckId) extractable_check_id;
+  iface->check_id_full = extractable_check_id_full;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
 }

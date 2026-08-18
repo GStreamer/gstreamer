@@ -90,10 +90,13 @@ struct _GESBaseXmlFormatterPrivate
 
   GError *asset_error;
 
-  /* Set by _set_child_property() when it refuses a child property marked
-   * GST_PARAM_UNTRUSTED_SENSITIVE. Owned here; consumed (moved) by the caller
-   * that has a GError ** so the load fails closed. */
-  GstStructure *untrusted_sensitive_blocked;
+  /* Set by _set_child_property() when the application refuses a child
+   * property marked GST_PARAM_UNTRUSTED_SENSITIVE. Owned here; consumed
+   * (moved) by the caller that has a GError ** so the load fails closed. */
+  GError *untrusted_error;
+  /* Bin descriptions the application refused during this load, so it is not
+   * asked again about the same one. */
+  GHashTable *untrusted_refused;
 
   /* current track element */
   GESTrackElement *current_track_element;
@@ -386,7 +389,8 @@ _dispose (GObject * object)
   g_clear_pointer (&priv->containers, g_hash_table_unref);
   g_clear_pointer (&priv->tracks, g_hash_table_unref);
   g_clear_pointer (&priv->layers, g_hash_table_unref);
-  gst_clear_structure (&priv->untrusted_sensitive_blocked);
+  g_clear_error (&priv->untrusted_error);
+  g_clear_pointer (&priv->untrusted_refused, g_hash_table_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -563,6 +567,88 @@ typedef struct
   GESTimelineElement *tlelement;
 } SetChildPropertyData;
 
+/* Ask the application, through GESProject::untrusted-content, whether the
+ * effect asset @id that the untrusted-input rules refused with @err may be
+ * created after all. Acceptance is remembered process-wide, refusal for the
+ * rest of this load. */
+static gboolean
+_ask_untrusted_effect (GESBaseXmlFormatter * self, const gchar * id,
+    GType extractable_type, GError * err)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESProject *project = GES_FORMATTER (self)->project;
+  GstStructure *report = NULL;
+  gchar **descriptions = g_strsplit (id, "||", -1);
+  gchar *refused = NULL, *fallback = NULL;
+  gboolean accepted = FALSE;
+  gint i;
+
+  /* The id may carry more than one description (an effect clip's audio and
+   * video bins). check_id_full refuses at the first description that is not
+   * allowed, so the one to ask about is the first not-yet-approved
+   * description that has a recorded refusal report; the first unapproved one
+   * is only a fallback should the report be missing. */
+  for (i = 0; descriptions[i]; i++) {
+    GESTrackType ttype;
+    gchar *bin_desc;
+
+    if (!*g_strstrip (descriptions[i]))
+      continue;
+
+    bin_desc = ges_effect_asset_id_get_bindesc (descriptions[i], &ttype);
+    if (ges_untrusted_content_is_approved (bin_desc)) {
+      g_free (bin_desc);
+      continue;
+    }
+
+    if (!fallback)
+      fallback = g_strdup (bin_desc);
+
+    report = ges_untrusted_content_get_report (bin_desc);
+    if (report) {
+      refused = bin_desc;
+      break;
+    }
+    g_free (bin_desc);
+  }
+  g_strfreev (descriptions);
+
+  if (!refused) {
+    refused = fallback;
+    fallback = NULL;
+  }
+  g_free (fallback);
+
+  if (!refused) {
+    /* No description left to refuse: every one was already approved (the same
+     * effect requested twice, accepted on the first request). Retry. */
+    accepted = TRUE;
+    goto done;
+  }
+
+  if (!project || (priv->untrusted_refused
+          && g_hash_table_contains (priv->untrusted_refused, refused)))
+    goto done;
+
+  accepted = ges_project_ask_untrusted_content (project, id, extractable_type,
+      report, err);
+
+  if (accepted) {
+    ges_untrusted_content_approve (refused);
+  } else {
+    if (!priv->untrusted_refused) {
+      priv->untrusted_refused = g_hash_table_new_full (g_str_hash, g_str_equal,
+          g_free, NULL);
+    }
+    g_hash_table_add (priv->untrusted_refused, g_strdup (refused));
+  }
+
+done:
+  gst_clear_structure (&report);
+  g_free (refused);
+  return accepted;
+}
+
 static gboolean
 _set_child_property (const GstIdStr * fieldname, const GValue * value,
     SetChildPropertyData * data)
@@ -585,23 +671,72 @@ _set_child_property (const GstIdStr * fieldname, const GValue * value,
   }
 
   /* Children properties are applied verbatim from the (potentially untrusted)
-   * serialized timeline. Refuse security-sensitive ones just like the effect
-   * bin-description parser does, and fail the load closed. This is the second
-   * property channel: an attacker can put the payload here even with an inert
-   * bin-description. */
-  if (pspec->flags & GST_PARAM_UNTRUSTED_SENSITIVE) {
-    gchar *field = g_strdup_printf ("%s:%s",
-        GES_TIMELINE_ELEMENT_NAME (tlelement), pspec->name);
+   * serialized timeline. This is the second property channel: an attacker can
+   * put the payload here even with an inert bin-description. Security
+   * sensitive ones need the application to accept them, one signal emission
+   * per element type, property and value; a refusal fails the load closed.
+   *
+   * Only effect elements carry untrusted content: their bin description comes
+   * from the file. A source's elements are the application's own (its asset),
+   * so their properties are not vetted. tlelement is the effect (track
+   * element) or the effect clip whose core children are effects; a source or
+   * a plain clip resolves this channel to source elements. */
+  if ((GES_IS_BASE_EFFECT (tlelement) || GES_IS_BASE_EFFECT_CLIP (tlelement))
+      && (pspec->flags & GST_PARAM_UNTRUSTED_SENSITIVE)
+      && !ges_untrusted_property_is_approved (G_OBJECT_TYPE_NAME (object),
+          pspec->name, value)) {
+    GESProject *project = GES_FORMATTER (data->formatter)->project;
+    GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (tlelement));
+    GstStructure *props, *report;
+    GError *err = NULL;
+    gchar *field;
+    gboolean accepted;
 
-    if (!priv->untrusted_sensitive_blocked) {
-      priv->untrusted_sensitive_blocked =
-          gst_structure_new_empty ("untrusted-sensitive-properties");
+    if (!asset) {
+      GST_ERROR_OBJECT (tlelement, "Effect has no asset, cannot vet its "
+          "untrusted property \"%s\"", pspec->name);
+      if (!priv->untrusted_error)
+        g_set_error (&priv->untrusted_error, GES_ERROR,
+            GES_ERROR_SENSITIVE_PROPERTY,
+            "property \"%s\" in element \"%s\" is not allowed when loading "
+            "untrusted content", pspec->name,
+            GES_TIMELINE_ELEMENT_NAME (tlelement));
+      g_param_spec_unref (pspec);
+      gst_object_unref (object);
+      return FALSE;
     }
-    gst_structure_set_value (priv->untrusted_sensitive_blocked, field, value);
+
+    field = g_strdup_printf ("%s:%s",
+        GES_TIMELINE_ELEMENT_NAME (tlelement), pspec->name);
+    props = gst_structure_new_empty ("untrusted-sensitive-properties");
+    gst_structure_set_value (props, field, value);
+    report = gst_structure_new ("untrusted-content",
+        "properties", GST_TYPE_STRUCTURE, props, NULL);
+    g_set_error (&err, GES_ERROR, GES_ERROR_SENSITIVE_PROPERTY,
+        "property \"%s\" in element \"%s\" is not allowed when loading "
+        "untrusted content", pspec->name,
+        GES_TIMELINE_ELEMENT_NAME (tlelement));
+
+    accepted = project && ges_project_ask_untrusted_content (project,
+        ges_asset_get_id (asset), G_OBJECT_TYPE (tlelement), report, err);
+
+    gst_structure_free (report);
+    gst_structure_free (props);
     g_free (field);
-    g_param_spec_unref (pspec);
-    gst_object_unref (object);
-    return FALSE;
+
+    if (accepted) {
+      ges_untrusted_property_approve (G_OBJECT_TYPE_NAME (object),
+          pspec->name, value);
+      g_error_free (err);
+    } else {
+      if (!priv->untrusted_error)
+        priv->untrusted_error = err;
+      else
+        g_error_free (err);
+      g_param_spec_unref (pspec);
+      gst_object_unref (object);
+      return FALSE;
+    }
   }
 
   g_object_set_property (G_OBJECT (object), pspec->name, value);
@@ -610,28 +745,18 @@ _set_child_property (const GstIdStr * fieldname, const GValue * value,
   return TRUE;
 }
 
-/* Move a pending untrusted-sensitive block (if any) into @error, returning
+/* Move a pending untrusted-input refusal (if any) into @error, returning
  * TRUE if the load must fail closed. */
 static gboolean
-_take_untrusted_sensitive_error (GESBaseXmlFormatter * self, GError ** error)
+_take_untrusted_error (GESBaseXmlFormatter * self, GError ** error)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
-  GstStructure *report;
-  gchar *blocked;
 
-  if (!priv->untrusted_sensitive_blocked)
+  if (!priv->untrusted_error)
     return FALSE;
 
-  report = gst_structure_new ("untrusted-content", "properties",
-      GST_TYPE_STRUCTURE, priv->untrusted_sensitive_blocked, NULL);
-  blocked = gst_structure_to_string (report);
-  g_set_error (error, GES_ERROR,
-      GES_ERROR_SENSITIVE_PROPERTY,
-      "Refusing to set security-sensitive child properties from untrusted "
-      "content: %s", blocked);
-  g_free (blocked);
-  gst_structure_free (report);
-  gst_clear_structure (&priv->untrusted_sensitive_blocked);
+  g_propagate_error (error, priv->untrusted_error);
+  priv->untrusted_error = NULL;
 
   return TRUE;
 }
@@ -677,7 +802,7 @@ _add_object_to_layer (GESBaseXmlFormatter * self, const gchar * id,
     SetChildPropertyData data = { self, GES_TIMELINE_ELEMENT (clip) };
     gst_structure_foreach_id_str (children_properties,
         (GstStructureForeachIdStrFunc) _set_child_property, &data);
-    if (_take_untrusted_sensitive_error (self, error))
+    if (_take_untrusted_error (self, error))
       return NULL;
   }
 
@@ -964,7 +1089,35 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     gst_structure_remove_fields (properties, "supported-formats",
         "inpoint", "start", "duration", NULL);
 
-  asset = ges_asset_request (type, asset_id, NULL);
+  {
+    GError *err = NULL;
+
+    asset = ges_asset_request_full (type, asset_id,
+        GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION, &err);
+    /* An effect clip the untrusted-input rules refuse: ask the application
+     * right away and retry if it accepts. An effect clip carries several
+     * descriptions (audio and video), so keep asking until they are all
+     * accepted or one is refused. */
+    while (asset == NULL && err && err->domain == GES_ERROR
+        && (err->code == GES_ERROR_UNTRUSTED_ELEMENT
+            || err->code == GES_ERROR_SENSITIVE_PROPERTY)) {
+      if (!_ask_untrusted_effect (self, asset_id, type, err)) {
+        g_propagate_error (error, err);
+        return;
+      }
+      g_clear_error (&err);
+      asset = ges_asset_request_full (type, asset_id,
+          GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION, &err);
+    }
+    if (asset == NULL && err) {
+      /* A non-untrusted failure (e.g. a missing plugin) is the description's
+       * own problem, not a refusal: keep the lenient behavior and let the
+       * clip load without that effect, as an unflagged request would. */
+      g_clear_error (&err);
+      asset = ges_asset_request (type, asset_id, NULL);
+    }
+  }
+
   if (!asset) {
     g_set_error (error, GES_ERROR, GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE,
         "Clip references asset %s of type %s which was not present in the list of ressource,"
@@ -1279,7 +1432,7 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     SetChildPropertyData data = { self, GES_TIMELINE_ELEMENT (element) };
     gst_structure_foreach_id_str (children_properties,
         (GstStructureForeachIdStrFunc) _set_child_property, &data);
-    if (_take_untrusted_sensitive_error (self, error))
+    if (_take_untrusted_error (self, error))
       return;
   }
 
@@ -1318,18 +1471,27 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
     goto out;
   }
 
-  asset = ges_asset_request (track_element_type, asset_id, &err);
-  if (asset == NULL) {
+  asset = ges_asset_request_full (track_element_type, asset_id,
+      GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION, &err);
+  if (asset == NULL && err && err->domain == GES_ERROR
+      && (err->code == GES_ERROR_UNTRUSTED_ELEMENT
+          || err->code == GES_ERROR_SENSITIVE_PROPERTY)) {
     /* An effect the untrusted-input rules refuse must fail the load, not be
-     * silently dropped from the project. */
-    if (err && err->domain == GES_ERROR
-        && (err->code == GES_ERROR_UNTRUSTED_ELEMENT
-            || err->code == GES_ERROR_SENSITIVE_PROPERTY)) {
+     * silently dropped: ask the application right away and retry the request
+     * if it accepts. */
+    if (_ask_untrusted_effect (GES_BASE_XML_FORMATTER (self), asset_id,
+            track_element_type, err)) {
+      g_clear_error (&err);
+      asset = ges_asset_request_full (track_element_type, asset_id,
+          GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION, &err);
+    } else {
       g_propagate_error (error, err);
       err = NULL;
       goto out;
     }
+  }
 
+  if (asset == NULL) {
     GST_DEBUG_OBJECT (self, "Can not create trackelement %s", asset_id);
     GST_FIXME_OBJECT (self, "Check if missing plugins etc %s",
         err ? err->message : "");
@@ -1347,7 +1509,7 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
     clip = g_hash_table_lookup (priv->containers, timeline_obj_id);
     _add_track_element (GES_FORMATTER (self), clip, trackelement, track_id,
         children_properties, properties);
-    if (_take_untrusted_sensitive_error (self, error)) {
+    if (_take_untrusted_error (self, error)) {
       gst_object_unref (asset);
       return;
     }

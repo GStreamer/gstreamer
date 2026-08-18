@@ -113,6 +113,42 @@ extractable_check_id (GType type, const gchar * id, GError ** error)
 }
 
 static gchar *
+extractable_check_id_full (GType type, const gchar * id,
+    GESAssetRequestFlags flags, GError ** error)
+{
+  gchar **descriptions;
+  gint i;
+
+  if (!(flags & GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION))
+    return g_strdup (id);
+
+  /* The id carries the effect bin descriptions (audio and/or video). When it
+   * comes from a project file each must pass the untrusted-input rules, just
+   * like a plain effect: only untrusted-aware elements and no sensitive
+   * property. Parsing with the flag records a refusal report per description,
+   * which the formatter uses to ask the application. */
+  descriptions = g_strsplit (id, "||", -1);
+  for (i = 0; descriptions[i]; i++) {
+    GESTrackType ttype;
+    gchar *bin_desc;
+
+    if (!*g_strstrip (descriptions[i]))
+      continue;
+
+    bin_desc = ges_effect_asset_id_get_type_and_bindesc_full (descriptions[i],
+        &ttype, flags, error);
+    if (bin_desc == NULL) {
+      g_strfreev (descriptions);
+      return NULL;
+    }
+    g_free (bin_desc);
+  }
+  g_strfreev (descriptions);
+
+  return g_strdup (id);
+}
+
+static gchar *
 extractable_get_id (GESExtractable * self)
 {
   GString *id = g_string_new (NULL);
@@ -131,6 +167,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_ASSET;
   iface->check_id = extractable_check_id;
+  iface->check_id_full = extractable_check_id_full;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
 }

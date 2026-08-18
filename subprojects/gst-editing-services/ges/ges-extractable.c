@@ -325,6 +325,25 @@ ges_extractable_type_check_id (GType type, const gchar * id, GError ** error)
   return iface->check_id (type, id, error);
 }
 
+gchar *
+ges_extractable_type_check_id_full (GType type, const gchar * id,
+    GESAssetRequestFlags flags, GError ** error)
+{
+  GObjectClass *klass;
+  GESExtractableInterface *iface;
+
+  g_return_val_if_fail (g_type_is_a (type, GES_TYPE_EXTRACTABLE), NULL);
+
+  klass = g_type_class_ref (type);
+  iface = g_type_interface_peek (klass, GES_TYPE_EXTRACTABLE);
+  g_type_class_unref (klass);
+
+  if (iface->check_id_full)
+    return iface->check_id_full (type, id, flags, error);
+
+  return ges_extractable_type_check_id (type, id, error);
+}
+
 /**
  * ges_extractable_get_real_extractable_type:
  * @type: The #GType implementing #GESExtractable
