@@ -48,7 +48,6 @@ setup_appsrc (void)
   GstElement *appsrc;
 
   GST_DEBUG ("setup_appsrc");
-  g_mutex_init (&expected_mutex);
   appsrc = gst_check_setup_element ("appsrc");
   mysinkpad = gst_check_setup_sink_pad (appsrc, &sinktemplate);
 
@@ -65,7 +64,6 @@ cleanup_appsrc (GstElement * appsrc)
   gst_check_drop_buffers ();
   gst_check_teardown_sink_pad (appsrc);
   gst_check_teardown_element (appsrc);
-  g_mutex_clear (&expected_mutex);
 }
 
 /*
@@ -827,6 +825,7 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
   GList *expected = NULL;
   SegmentTestData test_data;
 
+  g_mutex_init (&expected_mutex);
   g_mutex_init (&test_data.lock);
   g_cond_init (&test_data.cond);
   test_data.last_buf_count = 0;
@@ -993,6 +992,7 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
 
   g_mutex_clear (&test_data.lock);
   g_cond_clear (&test_data.cond);
+  g_mutex_clear (&expected_mutex);
 }
 
 GST_END_TEST;
@@ -1012,6 +1012,8 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
   GList *expected = NULL;
   GstSegment segment;
   GstBuffer *buffer;
+
+  g_mutex_init (&expected_mutex);
 
   for (tc = 0; tc < 4; tc++) {
     /* Case 0: Push segment1 without buffer,
@@ -1152,6 +1154,8 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
       g_mutex_unlock (&expected_mutex);
     }
   }
+
+  g_mutex_clear (&expected_mutex);
 }
 
 GST_END_TEST;
