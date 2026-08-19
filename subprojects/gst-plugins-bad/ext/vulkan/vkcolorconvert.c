@@ -285,17 +285,13 @@ convert_to_RGB (ConvertInfo * conv, Matrix4 * m)
 
   {
     const GstVideoFormatInfo *uinfo;
-    gint offset[4], scale[4], depth[4];
-    int i;
+    gdouble offset[4], scale[4], depth[4];
 
     uinfo = gst_video_format_get_info (GST_VIDEO_INFO_FORMAT (info));
 
     /* bring color components to [0..1.0] range */
-    gst_video_color_range_offsets (info->colorimetry.range, uinfo, offset,
-        scale);
-
-    for (i = 0; i < uinfo->n_components; i++)
-      depth[i] = (1 << uinfo->depth[i]) - 1;
+    gst_video_color_range_offsets_full (info->colorimetry.range, uinfo,
+        offset, scale, depth);
 
     matrix_offset_components (m, -offset[0] / (float) depth[0],
         -offset[1] / (float) depth[1], -offset[2] / (float) depth[2]);
@@ -363,17 +359,13 @@ convert_to_YUV (ConvertInfo * conv, Matrix4 * m)
 
   {
     const GstVideoFormatInfo *uinfo;
-    gint offset[4], scale[4], depth[4];
-    int i;
+    gdouble offset[4], scale[4], depth[4];
 
     uinfo = gst_video_format_get_info (GST_VIDEO_INFO_FORMAT (info));
 
     /* bring color components to nominal range */
-    gst_video_color_range_offsets (info->colorimetry.range, uinfo, offset,
-        scale);
-
-    for (i = 0; i < uinfo->n_components; i++)
-      depth[i] = (1 << uinfo->depth[i]) - 1;
+    gst_video_color_range_offsets_full (info->colorimetry.range,
+        uinfo, offset, scale, depth);
 
     matrix_scale_components (m, scale[0] / (float) depth[0],
         scale[1] / (float) depth[1], scale[2] / (float) depth[2]);

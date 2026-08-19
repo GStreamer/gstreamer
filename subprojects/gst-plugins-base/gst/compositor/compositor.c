@@ -814,8 +814,8 @@ GST_ELEMENT_REGISTER_DEFINE (compositor, "compositor", GST_RANK_PRIMARY + 1,
 static gboolean
 set_functions (GstCompositor * self, const GstVideoInfo * info)
 {
-  gint offset[GST_VIDEO_MAX_COMPONENTS] = { 0, };
-  gint scale[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  gdouble offset[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  gdouble scale[GST_VIDEO_MAX_COMPONENTS] = { 0, };
   gint i;
 
   gst_clear_buffer (&self->intermediate_frame);
@@ -1130,8 +1130,8 @@ set_functions (GstCompositor * self, const GstVideoInfo * info)
   }
 
   /* calculate black and white colors */
-  gst_video_color_range_offsets (self->intermediate_info.colorimetry.range,
-      self->intermediate_info.finfo, offset, scale);
+  gst_video_color_range_offsets_full (self->intermediate_info.colorimetry.range,
+      self->intermediate_info.finfo, offset, scale, NULL);
   if (GST_VIDEO_INFO_IS_YUV (info)) {
     /* black color [0.0, 0.0, 0.0] */
     self->black_color[0] = offset[0];

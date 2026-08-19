@@ -1379,13 +1379,13 @@ compute_matrix_to_RGB (GstVideoConverter * convert, MatrixData * data)
 
   {
     const GstVideoFormatInfo *uinfo;
-    gint offset[4], scale[4];
+    gdouble offset[4], scale[4];
 
     uinfo = gst_video_format_get_info (convert->unpack_format);
 
     /* bring color components to [0..1.0] range */
-    gst_video_color_range_offsets (info->colorimetry.range, uinfo, offset,
-        scale);
+    gst_video_color_range_offsets_full (info->colorimetry.range,
+        uinfo, offset, scale, NULL);
 
     color_matrix_offset_components (data, -offset[0], -offset[1], -offset[2]);
     color_matrix_scale_components (data, 1 / ((float) scale[0]),
@@ -1425,13 +1425,13 @@ compute_matrix_to_YUV (GstVideoConverter * convert, MatrixData * data,
 
   {
     const GstVideoFormatInfo *uinfo;
-    gint offset[4], scale[4];
+    gdouble offset[4], scale[4];
 
     uinfo = gst_video_format_get_info (convert->pack_format);
 
     /* bring color components to nominal range */
-    gst_video_color_range_offsets (info->colorimetry.range, uinfo, offset,
-        scale);
+    gst_video_color_range_offsets_full (info->colorimetry.range,
+        uinfo, offset, scale, NULL);
 
     color_matrix_scale_components (data, (float) scale[0], (float) scale[1],
         (float) scale[2]);

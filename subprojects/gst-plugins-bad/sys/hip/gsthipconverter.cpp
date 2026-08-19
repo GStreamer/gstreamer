@@ -139,10 +139,12 @@ gst_hip_color_range_adjust_matrix_unorm (const GstVideoInfo * in_info,
     const GstVideoInfo * out_info, GstHipColorMatrix * matrix)
 {
   gboolean in_rgb, out_rgb;
-  gint in_offset[GST_VIDEO_MAX_COMPONENTS];
-  gint in_scale[GST_VIDEO_MAX_COMPONENTS];
-  gint out_offset[GST_VIDEO_MAX_COMPONENTS];
-  gint out_scale[GST_VIDEO_MAX_COMPONENTS];
+  gdouble in_offset[GST_VIDEO_MAX_COMPONENTS];
+  gdouble in_scale[GST_VIDEO_MAX_COMPONENTS];
+  gdouble out_offset[GST_VIDEO_MAX_COMPONENTS];
+  gdouble out_scale[GST_VIDEO_MAX_COMPONENTS];
+  gdouble in_depth[GST_VIDEO_MAX_COMPONENTS];
+  gdouble out_depth[GST_VIDEO_MAX_COMPONENTS];
   GstVideoColorRange in_range;
   GstVideoColorRange out_range;
   gdouble src_fullscale, dst_fullscale;
@@ -182,12 +184,13 @@ gst_hip_color_range_adjust_matrix_unorm (const GstVideoInfo * in_info,
       out_range = GST_VIDEO_COLOR_RANGE_16_235;
   }
 
-  src_fullscale = (gdouble) ((1 << in_info->finfo->depth[0]) - 1);
-  dst_fullscale = (gdouble) ((1 << out_info->finfo->depth[0]) - 1);
+  gst_video_color_range_offsets_full (in_range,
+      in_info->finfo, in_offset, in_scale, in_depth);
+  gst_video_color_range_offsets_full (out_range,
+      out_info->finfo, out_offset, out_scale, out_depth);
 
-  gst_video_color_range_offsets (in_range, in_info->finfo, in_offset, in_scale);
-  gst_video_color_range_offsets (out_range,
-      out_info->finfo, out_offset, out_scale);
+  src_fullscale = in_depth[0];
+  dst_fullscale = out_depth[0];
 
   matrix->min[0] = matrix->min[1] = matrix->min[2] =
       (gdouble) out_offset[0] / dst_fullscale;
@@ -239,7 +242,7 @@ static gboolean
 gst_hip_yuv_to_rgb_matrix_unorm (const GstVideoInfo * in_yuv_info,
     const GstVideoInfo * out_rgb_info, GstHipColorMatrix * matrix)
 {
-  gint offset[4], scale[4];
+  gdouble offset[4], scale[4], depth[4];
   gdouble Kr, Kb, Kg;
 
   /*
@@ -326,12 +329,12 @@ gst_hip_yuv_to_rgb_matrix_unorm (const GstVideoInfo * in_yuv_info,
   for (guint i = 0; i < 3; i++)
     matrix->max[i] = 1.0;
 
-  gst_video_color_range_offsets (in_yuv_info->colorimetry.range,
-      in_yuv_info->finfo, offset, scale);
+  gst_video_color_range_offsets_full (in_yuv_info->colorimetry.range,
+      in_yuv_info->finfo, offset, scale, depth);
 
   if (gst_video_color_matrix_get_Kr_Kb (in_yuv_info->colorimetry.matrix,
           &Kr, &Kb)) {
-    guint S;
+    gdouble S;
     gdouble Sy, Suv;
     gdouble Oy, Ouv;
     gdouble vecR[3], vecG[3], vecB[3];
@@ -351,7 +354,7 @@ gst_hip_yuv_to_rgb_matrix_unorm (const GstVideoInfo * in_yuv_info,
     vecB[2] = 0;
 
     /* Assume all components has the same bitdepth */
-    S = (1 << in_yuv_info->finfo->depth[0]) - 1;
+    S = depth[0];
     Sy = (gdouble) S / scale[0];
     Suv = (gdouble) S / scale[1];
     Oy = -((gdouble) offset[0] / scale[0]);
@@ -419,7 +422,7 @@ static gboolean
 gst_hip_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_info,
     const GstVideoInfo * out_yuv_info, GstHipColorMatrix * matrix)
 {
-  gint offset[4], scale[4];
+  gdouble offset[4], scale[4], depth[4];
   gdouble Kr, Kb, Kg;
 
   /*
@@ -484,12 +487,12 @@ gst_hip_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_info,
   for (guint i = 0; i < 3; i++)
     matrix->max[i] = 1.0;
 
-  gst_video_color_range_offsets (out_yuv_info->colorimetry.range,
-      out_yuv_info->finfo, offset, scale);
+  gst_video_color_range_offsets_full (out_yuv_info->colorimetry.range,
+      out_yuv_info->finfo, offset, scale, depth);
 
   if (gst_video_color_matrix_get_Kr_Kb (out_yuv_info->colorimetry.matrix,
           &Kr, &Kb)) {
-    guint S;
+    gdouble S;
     gdouble Sy, Suv;
     gdouble Oy, Ouv;
     gdouble vecY[3], vecU[3], vecV[3];
@@ -509,7 +512,7 @@ gst_hip_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_info,
     vecV[2] = -0.5 * Kb / (1 - Kr);
 
     /* Assume all components has the same bitdepth */
-    S = (1 << out_yuv_info->finfo->depth[0]) - 1;
+    S = depth[0];
     Sy = (gdouble) scale[0] / S;
     Suv = (gdouble) scale[1] / S;
     Oy = (gdouble) offset[0] / S;
