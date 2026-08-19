@@ -38,6 +38,7 @@
 #define OPUS_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=OPUS,media=audio,clock-rate=48000,ssrc=(uint)3384078950"
 #define VP8_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=VP8,media=video,clock-rate=90000,ssrc=(uint)3484078951"
 #define H264_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=H264,media=video,clock-rate=90000,ssrc=(uint)3484078952"
+#define KLV_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=SMPTE336M,media=application,clock-rate=90000,ssrc=(uint)3484078953"
 
 #define TEST_IS_OFFER_ELEMENT(t, e) ((((t)->offerror == 1 && (e) == (t)->webrtc1) || ((t)->offerror == 2 && (e) == (t)->webrtc2)) ? TRUE : FALSE)
 #define TEST_GET_OFFEROR(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc1 : t->webrtc2)
@@ -1172,6 +1173,18 @@ add_fake_video_src_harness (GstHarness * h, gint pt, guint ssrc)
   gst_harness_add_src_parse (h, "fakesrc is-live=true", TRUE);
 }
 
+static void
+add_fake_klv_src_harness (GstHarness * h, gint pt, guint ssrc)
+{
+  GstCaps *caps = gst_caps_from_string (KLV_RTP_CAPS (pt));
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  if (ssrc != 0)
+    gst_structure_set (s, "ssrc", G_TYPE_UINT, ssrc, NULL);
+  gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
+  gst_harness_set_src_caps (h, caps);
+  gst_harness_add_src_parse (h, "fakesrc is-live=true", TRUE);
+}
+
 static struct test_webrtc *
 create_audio_test (void)
 {
@@ -1185,6 +1198,24 @@ create_audio_test (void)
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
   add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  return t;
+}
+
+static struct test_webrtc *
+create_klv_test (void)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstHarness *h;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+  t->on_prepare_data_channel = have_prepare_data_channel;
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  add_fake_klv_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   return t;
@@ -1225,6 +1256,45 @@ GST_START_TEST (test_audio)
   VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
       &answer_setup);
   GstWebRTCKind expected_kind = GST_WEBRTC_KIND_AUDIO;
+
+  /* check that a single stream connection creates the associated number
+   * of media sections */
+
+  g_signal_connect (t->webrtc1, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_expected_kind),
+      GUINT_TO_POINTER (expected_kind));
+  g_signal_connect (t->webrtc2, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_expected_kind),
+      GUINT_TO_POINTER (expected_kind));
+
+  test_validate_sdp (t, &offer, &answer);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_klv)
+{
+  struct test_webrtc *t = create_klv_test ();
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
+  const gchar *expected_answer_setup[] = { "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &count);
+  const gchar *expected_offer_direction[] = { "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstWebRTCKind expected_kind = GST_WEBRTC_KIND_APPLICATION;
 
   /* check that a single stream connection creates the associated number
    * of media sections */
@@ -1349,6 +1419,52 @@ GST_START_TEST (test_audio_video)
   VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
       &offer_setup);
   const gchar *expected_answer_direction[] = { "recvonly", "recvonly" };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+
+  /* check that a dual stream connection creates the associated number
+   * of media sections */
+
+  test_validate_sdp (t, &offer, &answer);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+static struct test_webrtc *
+create_audio_video_klv_test (void)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  GstHarness *h;
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
+  add_fake_klv_src_harness (h, 98, 0xBAADF00D);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  return t;
+}
+
+GST_START_TEST (test_audio_video_klv)
+{
+  struct test_webrtc *t = create_audio_video_klv_test ();
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 1, 1, 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (3),
+      &media_formats);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass", "actpass" };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
+  const gchar *expected_answer_setup[] = { "active", "active", "active" };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &count);
+  const gchar *expected_offer_direction[] =
+      { "sendrecv", "sendrecv", "sendrecv" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] =
+      { "recvonly", "recvonly", "recvonly" };
   VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
       &answer_setup);
 
@@ -3364,41 +3480,45 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_none)
 
 GST_END_TEST;
 
-GST_START_TEST (test_bundle_audio_video_data)
+GST_START_TEST (test_bundle_audio_video_klv_data)
 {
-  struct test_webrtc *t = create_audio_video_test ();
-  const gchar *mids[] = { "audio0", "video1", "application2", NULL };
-  const gchar *offer_bundle_only[] = { "video1", "application2", NULL };
+  struct test_webrtc *t = create_audio_video_klv_test ();
+  const gchar *mids[] =
+      { "audio0", "video1", "application2", "application3", NULL };
+  const gchar *offer_bundle_only[] =
+      { "video1", "application2", "application3", NULL };
   const gchar *answer_bundle_only[] = { NULL };
   GObject *channel = NULL;
 
-  guint media_format_count[] = { 1, 1, 1 };
+  guint media_format_count[] = { 1, 1, 1, 1 };
   VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
       media_format_count, NULL);
-  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (3),
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (4),
       &media_formats);
   VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, &count);
   VAL_SDP_INIT (bundle_tag, _check_bundle_tag, mids, &payloads);
   VAL_SDP_INIT (offer_non_reject, _count_non_rejected_media,
       GUINT_TO_POINTER (1), &bundle_tag);
   VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
-      GUINT_TO_POINTER (3), &bundle_tag);
+      GUINT_TO_POINTER (4), &bundle_tag);
   VAL_SDP_INIT (offer_bundle, _check_bundle_only_media, &offer_bundle_only,
       &offer_non_reject);
   VAL_SDP_INIT (answer_bundle, _check_bundle_only_media, &answer_bundle_only,
       &answer_non_reject);
-  const gchar *expected_offer_setup[] = { "actpass", "actpass", "actpass" };
+  const gchar *expected_offer_setup[] =
+      { "actpass", "actpass", "actpass", "actpass" };
   VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
       &offer_bundle);
-  const gchar *expected_answer_setup[] = { "active", "active", "active" };
+  const gchar *expected_answer_setup[] =
+      { "active", "active", "active", "active" };
   VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
       &answer_bundle);
   const gchar *expected_offer_direction[] =
-      { "sendrecv", "sendrecv", "sendrecv" };
+      { "sendrecv", "sendrecv", "sendrecv", "sendrecv" };
   VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
       &offer_setup);
   const gchar *expected_answer_direction[] =
-      { "recvonly", "recvonly", "recvonly" };
+      { "recvonly", "recvonly", "recvonly", "recvonly" };
   VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
       &answer_setup);
 
@@ -7298,7 +7418,9 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_audio);
     tcase_add_test (tc, test_audio_sendrecv);
     tcase_add_test (tc, test_ice_port_restriction);
+    tcase_add_test (tc, test_klv);
     tcase_add_test (tc, test_audio_video);
+    tcase_add_test (tc, test_audio_video_klv);
     tcase_add_test (tc, test_media_direction);
     tcase_add_test (tc, test_add_transceiver);
     tcase_add_test (tc, test_get_transceivers);
@@ -7358,7 +7480,7 @@ webrtcbin_suite (void)
       tcase_add_test (tc, test_data_channel_low_threshold);
       tcase_add_test (tc, test_data_channel_max_message_size);
       tcase_add_test (tc, test_data_channel_pre_negotiated);
-      tcase_add_test (tc, test_bundle_audio_video_data);
+      tcase_add_test (tc, test_bundle_audio_video_klv_data);
       tcase_add_test (tc, test_renego_stream_add_data_channel);
       tcase_add_test (tc, test_renego_data_channel_add_stream);
       tcase_add_test (tc, test_renego_stream_data_channel_add_stream);

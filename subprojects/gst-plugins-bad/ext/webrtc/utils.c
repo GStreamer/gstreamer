@@ -265,6 +265,9 @@ webrtc_kind_from_caps (const GstCaps * caps)
   if (!g_strcmp0 (media, "video"))
     return GST_WEBRTC_KIND_VIDEO;
 
+  if (!g_strcmp0 (media, "application"))
+    return GST_WEBRTC_KIND_APPLICATION;
+
   return GST_WEBRTC_KIND_UNKNOWN;
 }
 

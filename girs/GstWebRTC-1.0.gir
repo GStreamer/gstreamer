@@ -2713,6 +2713,9 @@ for more information.</doc>
       <member name="video" value="2" c:identifier="GST_WEBRTC_KIND_VIDEO" glib:nick="video" glib:name="GST_WEBRTC_KIND_VIDEO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is video</doc>
       </member>
+      <member name="application" value="3" c:identifier="GST_WEBRTC_KIND_APPLICATION" version="1.30" glib:nick="application" glib:name="GST_WEBRTC_KIND_APPLICATION">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is application</doc>
+      </member>
     </enumeration>
     <enumeration name="WebRTCPeerConnectionState" glib:type-name="GstWebRTCPeerConnectionState" glib:get-type="gst_webrtc_peer_connection_state_get_type" c:type="GstWebRTCPeerConnectionState">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate&gt;</doc>

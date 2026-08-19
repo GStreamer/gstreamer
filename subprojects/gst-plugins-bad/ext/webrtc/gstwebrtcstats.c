@@ -1047,6 +1047,9 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
     case GST_WEBRTC_KIND_VIDEO:
       ts_stats.kind = "video";
       break;
+    case GST_WEBRTC_KIND_APPLICATION:
+      ts_stats.kind = "application";
+      break;
     case GST_WEBRTC_KIND_UNKNOWN:
       ts_stats.kind = NULL;
       break;

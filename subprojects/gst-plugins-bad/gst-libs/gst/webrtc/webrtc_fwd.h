@@ -528,6 +528,7 @@ typedef enum /*<underscore_name=gst_webrtc_ice_transport_policy>*/
  * @GST_WEBRTC_KIND_UNKNOWN: Kind has not yet been set
  * @GST_WEBRTC_KIND_AUDIO: Kind is audio
  * @GST_WEBRTC_KIND_VIDEO: Kind is video
+ * @GST_WEBRTC_KIND_APPLICATION: Kind is application
  *
  * https://w3c.github.io/mediacapture-main/#dom-mediastreamtrack-kind
  *
@@ -538,6 +539,14 @@ typedef enum /*<underscore_name=gst_webrtc_kind>*/
   GST_WEBRTC_KIND_UNKNOWN,
   GST_WEBRTC_KIND_AUDIO,
   GST_WEBRTC_KIND_VIDEO,
+  /**
+   * GST_WEBRTC_KIND_APPLICATION:
+   *
+   * Kind is application
+   *
+   * Since: 1.30
+   */
+  GST_WEBRTC_KIND_APPLICATION,
 } GstWebRTCKind;
 
 

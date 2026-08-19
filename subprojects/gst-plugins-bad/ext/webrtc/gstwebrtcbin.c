@@ -2168,6 +2168,10 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
         gst_caps_set_simple (filter, "media", G_TYPE_STRING, "audio", NULL);
       else if (rtp_trans->kind == GST_WEBRTC_KIND_VIDEO)
         gst_caps_set_simple (filter, "media", G_TYPE_STRING, "video", NULL);
+      else if (rtp_trans->kind == GST_WEBRTC_KIND_APPLICATION) {
+        gst_caps_set_simple (filter, "media", G_TYPE_STRING, "application",
+            NULL);
+      }
 
       caps = _query_pad_caps (webrtc, rtp_trans, pad, filter, error);
     }
@@ -2490,6 +2494,7 @@ _nicesink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
                 case GST_WEBRTC_KIND_VIDEO:
                   dscp = 38;    /* AF43 *//* TODO: differentiate non-interactive */
                   break;
+                case GST_WEBRTC_KIND_APPLICATION:
                 case GST_WEBRTC_KIND_UNKNOWN:
                   dscp = 0;
                   break;
@@ -2503,6 +2508,7 @@ _nicesink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
                 case GST_WEBRTC_KIND_VIDEO:
                   dscp = 36;    /* AF42 *//* TODO: differentiate non-interactive */
                   break;
+                case GST_WEBRTC_KIND_APPLICATION:
                 case GST_WEBRTC_KIND_UNKNOWN:
                   dscp = 0;
                   break;

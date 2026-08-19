@@ -437,6 +437,8 @@ _get_kind_from_media (const GstSDPMedia * media)
     kind = GST_WEBRTC_KIND_AUDIO;
   else if (!g_strcmp0 (gst_sdp_media_get_media (media), "video"))
     kind = GST_WEBRTC_KIND_VIDEO;
+  else if (!g_strcmp0 (gst_sdp_media_get_media (media), "application"))
+    kind = GST_WEBRTC_KIND_APPLICATION;
   return kind;
 }
 
