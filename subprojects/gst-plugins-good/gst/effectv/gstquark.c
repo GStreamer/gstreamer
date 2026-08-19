@@ -51,6 +51,7 @@
 /* number of frames of time-buffer. It should be as a configurable parameter */
 /* This number also must be 2^n just for the speed. */
 #define PLANES 16
+#define MAX_PLANES 64
 
 enum
 {
@@ -133,18 +134,33 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
     gst_buffer_unref (planetable[current_plane]);
   planetable[current_plane] = gst_buffer_ref (in_frame->buffer);
 
+  GstMapInfo map_infos[MAX_PLANES];
+  guint32 *map_ptrs[MAX_PLANES] = { NULL };
+  gint i;
+
+  for (i = 0; i < planes; i++) {
+    if (planetable[i]) {
+      gst_buffer_map (planetable[i], &map_infos[i], GST_MAP_READ);
+      map_ptrs[i] = (guint32 *) map_infos[i].data;
+    }
+  }
+
   /* For each pixel */
   while (--area) {
-    GstBuffer *rand;
-
     /* pick a random buffer */
-    rand = planetable[(current_plane + (fastrand () >> 24)) % planes];
+    gint rand = (current_plane + (fastrand () >> 24)) % planes;
 
-    /* Copy the pixel from the random buffer to dest, FIXME, slow */
-    if (rand)
-      gst_buffer_extract (rand, area * 4, &dest[area], 4);
+    /* Copy the pixel from a random mapped buffer to dest */
+    if (map_ptrs[rand])
+      dest[area] = map_ptrs[rand][area];
     else
       dest[area] = src[area];
+  }
+
+  for (i = 0; i < planes; i++) {
+    if (planetable[i]) {
+      gst_buffer_unmap (planetable[i], &map_infos[i]);
+    }
   }
 
   filter->current_plane--;
@@ -274,7 +290,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PLANES,
       g_param_spec_int ("planes", "Planes",
-          "Number of planes", 1, 64, PLANES,
+          "Number of planes", 1, MAX_PLANES, PLANES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   gst_element_class_set_static_metadata (gstelement_class, "QuarkTV effect",
