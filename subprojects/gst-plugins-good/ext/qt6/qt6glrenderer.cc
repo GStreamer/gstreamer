@@ -206,6 +206,7 @@ GstQt6QuickRenderer::GstQt6QuickRenderer()
       gl_allocator(NULL),
       gl_params(NULL),
       gl_mem(NULL),
+      previous_gl_mem(NULL),
       m_sharedRenderData(NULL),
       m_needsGenerateCallback(NULL),
       m_needsGenerateCallbackData(NULL),
@@ -518,6 +519,9 @@ void GstQt6QuickRenderer::stopAfterGL ()
 
 void GstQt6QuickRenderer::cleanup()
 {
+    if (previous_gl_mem)
+        gst_memory_unref (GST_MEMORY_CAST(previous_gl_mem));
+    previous_gl_mem = NULL;
     if (gl_context)
         gst_gl_context_thread_add (gl_context,
             (GstGLContextThreadFunc) GstQt6QuickRenderer::stop_c, this);
@@ -614,6 +618,10 @@ GstQt6QuickRenderer::renderGstGL ()
     m_renderControl->render();
     m_renderControl->endFrame();
     gst_memory_unmap (GST_MEMORY_CAST (gl_mem), &map_info);
+
+    if (previous_gl_mem)
+      gst_memory_unref (GST_MEMORY_CAST (previous_gl_mem));
+    previous_gl_mem = gst_memory_ref (GST_MEMORY_CAST(gl_mem));
 
     QQuickOpenGLUtils::resetOpenGLState ();
     /* Qt doesn't seem to reset this, breaking glimagesink */
