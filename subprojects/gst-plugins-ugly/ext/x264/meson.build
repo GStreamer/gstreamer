@@ -25,20 +25,11 @@ x264_dep = dependency('x264', version : '>=0.156', required : x264_opt,
     allow_fallback: true)
 
 if x264_dep.found()
-  x264_libraries = get_option('x264_libraries')
-  x264_args = []
-  if x264_libraries != ''
-    x264_args += ['-DHAVE_X264_ADDITIONAL_LIBRARIES="@0@"'.format(x264_libraries)]
-    extra_gmodule_dep = [gmodule_dep]
-  else
-    extra_gmodule_dep = []
-  endif
-
   gstx264 = library('gstx264',
     x264_sources,
-    c_args : ugly_args + x264_args,
+    c_args : ugly_args,
     include_directories : [configinc],
-    dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, x264_dep] + extra_gmodule_dep,
+    dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, x264_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

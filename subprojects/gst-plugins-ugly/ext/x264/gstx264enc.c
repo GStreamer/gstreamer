@@ -128,9 +128,6 @@ struct _GstX264EncVTable
 {
   GModule *module;
 
-#if X264_BUILD < 153
-  const int *x264_bit_depth;
-#endif
   const int *x264_chroma_format;
   void (*x264_encoder_close) (x264_t *);
   int (*x264_encoder_delayed_frames) (x264_t *);
@@ -152,72 +149,6 @@ struct _GstX264EncVTable
 static GstX264EncVTable default_vtable;
 
 static GstX264EncVTable *vtable_8bit = NULL, *vtable_10bit = NULL;
-
-#if X264_BUILD < 153
-#define LOAD_SYMBOL(name) G_STMT_START { \
-  if (!g_module_symbol (module, #name, (gpointer *) &vtable->name)) { \
-    GST_ERROR ("Failed to load '" #name "' from '%s'", filename); \
-    goto error; \
-  } \
-} G_STMT_END;
-
-#ifdef HAVE_X264_ADDITIONAL_LIBRARIES
-static GstX264EncVTable *
-load_x264 (const gchar * filename)
-{
-  GModule *module;
-  GstX264EncVTable *vtable;
-
-  module = g_module_open (filename, G_MODULE_BIND_LOCAL);
-  if (!module) {
-    GST_ERROR ("Failed to load '%s'", filename);
-    return NULL;
-  }
-
-  vtable = g_new0 (GstX264EncVTable, 1);
-  vtable->module = module;
-
-  if (!g_module_symbol (module, G_STRINGIFY (x264_encoder_open),
-          (gpointer *) & vtable->x264_encoder_open)) {
-    GST_ERROR ("Failed to load '" G_STRINGIFY (x264_encoder_open)
-        "' from '%s'. Incompatible version?", filename);
-    goto error;
-  }
-  LOAD_SYMBOL (x264_bit_depth);
-  LOAD_SYMBOL (x264_chroma_format);
-  LOAD_SYMBOL (x264_encoder_close);
-  LOAD_SYMBOL (x264_encoder_delayed_frames);
-  LOAD_SYMBOL (x264_encoder_encode);
-  LOAD_SYMBOL (x264_encoder_headers);
-  LOAD_SYMBOL (x264_encoder_intra_refresh);
-  LOAD_SYMBOL (x264_encoder_maximum_delayed_frames);
-  LOAD_SYMBOL (x264_encoder_reconfig);
-  LOAD_SYMBOL (x264_levels);
-  LOAD_SYMBOL (x264_param_apply_fastfirstpass);
-  LOAD_SYMBOL (x264_param_apply_profile);
-  LOAD_SYMBOL (x264_param_default_preset);
-  LOAD_SYMBOL (x264_param_parse);
-
-  return vtable;
-
-error:
-  g_module_close (vtable->module);
-  g_free (vtable);
-  return NULL;
-}
-
-static void
-unload_x264 (GstX264EncVTable * vtable)
-{
-  if (vtable->module) {
-    g_module_close (vtable->module);
-    g_free (vtable);
-  }
-}
-#endif
-
-#undef LOAD_SYMBOL
-#endif
 
 static gboolean
 gst_x264_enc_add_x264_chroma_format (GstStructure * s,
@@ -308,51 +239,6 @@ gst_x264_enc_add_x264_chroma_format (GstStructure * s,
   return ret;
 }
 
-#if X264_BUILD < 153
-static gboolean
-load_x264_libraries (void)
-{
-  if (*default_vtable.x264_bit_depth == 8) {
-    vtable_8bit = &default_vtable;
-    GST_INFO ("8-bit depth supported");
-  } else if (*default_vtable.x264_bit_depth == 10) {
-    vtable_10bit = &default_vtable;
-    GST_INFO ("10-bit depth supported");
-  }
-#ifdef HAVE_X264_ADDITIONAL_LIBRARIES
-  {
-    gchar **libraries = g_strsplit (HAVE_X264_ADDITIONAL_LIBRARIES, ":", -1);
-    gchar **p = libraries;
-
-    while (*p && (!vtable_8bit || !vtable_10bit)) {
-      GstX264EncVTable *vtable = load_x264 (*p);
-
-      if (vtable) {
-        if (!vtable_8bit && *vtable->x264_bit_depth == 8) {
-          GST_INFO ("8-bit depth support loaded from %s", *p);
-          vtable_8bit = vtable;
-        } else if (!vtable_10bit && *vtable->x264_bit_depth == 10) {
-          GST_INFO ("10-bit depth support loaded from %s", *p);
-          vtable_10bit = vtable;
-        } else {
-          unload_x264 (vtable);
-        }
-      }
-
-      p++;
-    }
-    g_strfreev (libraries);
-  }
-#endif
-
-  if (!vtable_8bit && !vtable_10bit)
-    return FALSE;
-
-  return TRUE;
-}
-
-#else /* X264_BUILD >= 153 */
-
 static gboolean
 load_x264_libraries (void)
 {
@@ -378,8 +264,6 @@ load_x264_libraries (void)
 
   return TRUE;
 }
-
-#endif
 
 enum
 {
@@ -1677,9 +1561,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   /* set up encoder parameters */
-#if X264_BUILD >= 153
   encoder->x264param.i_bitdepth = GST_VIDEO_INFO_COMP_DEPTH (info, 0);
-#endif
   encoder->x264param.i_csp =
       gst_x264_enc_gst_to_x264_video_format (info->finfo->format,
       &encoder->x264_nplanes);
@@ -2211,7 +2093,6 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   ok &= gst_byte_writer_put_uint16_be (&bw, nal_size);
   ok &= gst_byte_writer_put_data (&bw, nal[pps_ni].p_payload + 4, nal_size);
 
-#if X264_BUILD >= 153
   // if we use an earlier API version, we can really only output old format and hope the receiver can work it out
   //
   // See ISO/IEC 14496-15:2024 Section 5.3.2.1.2 for the syntax encoding used here.
@@ -2258,7 +2139,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
     ok &= gst_byte_writer_put_uint8 (&bw, 0xf8 | bit_depth_chroma_minus8);
     ok &= gst_byte_writer_put_uint8 (&bw, 0);   // numOfSequenceParameterSetExt
   }
-#endif
+
 return_what_we_have:
   if (ok) {
     return gst_byte_writer_reset_and_get_buffer (&bw);
@@ -3210,9 +3091,6 @@ x264_element_init (GstPlugin * plugin)
    * if needed. We can't initialize statically because these values are not
    * constant on Windows. */
   default_vtable.module = NULL;
-#if X264_BUILD < 153
-  default_vtable.x264_bit_depth = &x264_bit_depth;
-#endif
   default_vtable.x264_chroma_format = &x264_chroma_format;
   default_vtable.x264_encoder_close = x264_encoder_close;
   default_vtable.x264_encoder_delayed_frames = x264_encoder_delayed_frames;
