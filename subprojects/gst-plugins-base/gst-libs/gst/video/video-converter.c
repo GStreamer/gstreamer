@@ -315,6 +315,7 @@ struct _GammaData
 {
   gpointer gamma_table;
   gint width;
+  GstVideoTransferFunction tr_func;
   void (*gamma_func) (GammaData * data, gpointer dest, gpointer src);
 };
 
@@ -373,7 +374,7 @@ struct _GstVideoConverter
 
   gboolean fill_border;
   gpointer borderline;
-  guint64 borders[4];
+  guint8 borders[GST_VIDEO_MAX_PLANES][16];
   guint32 border_argb;
   guint32 alpha_value;
   AlphaMode alpha_mode;
@@ -419,6 +420,8 @@ struct _GstVideoConverter
   MatrixData convert_matrix;
   gint in_bits;
   gint out_bits;
+  gboolean convert_in_float;
+  gboolean convert_out_float;
 
   /* alpha correction */
   GstLineCache **alpha_lines;
@@ -1256,6 +1259,21 @@ is_identity_matrix (MatrixData * data)
 }
 
 static gboolean
+is_identity_matrix_float (MatrixData * data)
+{
+  gint i, j;
+
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      if (data->dm[i][j] != (i == j ? 1.0 : 0.0))
+        return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 is_no_clip_matrix (MatrixData * data)
 {
   gint i;
@@ -1319,17 +1337,52 @@ video_converter_matrix16 (MatrixData * data, gpointer pixels)
   }
 }
 
+static void
+video_converter_matrix_float (MatrixData * data, gpointer pixels)
+{
+  gfloat *p = pixels;
+  gint i;
+
+  for (i = 0; i < data->width; i++) {
+    gdouble r = p[i * 4 + 1];
+    gdouble g = p[i * 4 + 2];
+    gdouble b = p[i * 4 + 3];
+
+    p[i * 4 + 1] = data->dm[0][0] * r + data->dm[0][1] * g +
+        data->dm[0][2] * b + data->dm[0][3];
+    p[i * 4 + 2] = data->dm[1][0] * r + data->dm[1][1] * g +
+        data->dm[1][2] * b + data->dm[1][3];
+    p[i * 4 + 3] = data->dm[2][0] * r + data->dm[2][1] * g +
+        data->dm[2][2] * b + data->dm[2][3];
+  }
+}
+
+static gboolean
+is_float_format (GstVideoFormat format)
+{
+  const GstVideoFormatInfo *finfo = gst_video_format_get_info (format);
+
+  return GST_VIDEO_FORMAT_INFO_IS_FLOAT (finfo);
+}
 
 static void
 prepare_matrix (GstVideoConverter * convert, MatrixData * data)
 {
+  data->width = convert->current_width;
+
+  if (is_float_format (convert->current_format)) {
+    if (!is_identity_matrix_float (data)) {
+      GST_LOG ("use float matrix");
+      data->matrix_func = video_converter_matrix_float;
+    }
+    return;
+  }
+
   if (is_identity_matrix (data))
     return;
 
   color_matrix_scale_components (data, SCALE_F, SCALE_F, SCALE_F);
   color_matrix_convert (data);
-
-  data->width = convert->current_width;
 
   if (convert->current_bits == 8) {
     if (!convert->unpack_rgb && convert->pack_rgb
@@ -1493,18 +1546,143 @@ gamma_convert_u16_u16 (GammaData * data, gpointer dest, gpointer src)
   }
 }
 
+/* float unpack format is already in [0, 1], so we can use
+ * transfer_function_{decode,encode} directly */
+static void
+gamma_decode_float (GammaData * data, gpointer dest, gpointer src)
+{
+  gfloat *s = src;
+  gfloat *d = dest;
+  gint i;
+
+  for (i = 0; i < data->width; i++) {
+    d[i * 4 + 0] = s[i * 4 + 0];
+    d[i * 4 + 1] =
+        gst_video_transfer_function_decode (data->tr_func, s[i * 4 + 1]);
+    d[i * 4 + 2] =
+        gst_video_transfer_function_decode (data->tr_func, s[i * 4 + 2]);
+    d[i * 4 + 3] =
+        gst_video_transfer_function_decode (data->tr_func, s[i * 4 + 3]);
+  }
+}
+
+static void
+gamma_encode_float (GammaData * data, gpointer dest, gpointer src)
+{
+  gfloat *s = src;
+  gfloat *d = dest;
+  gint i;
+
+  for (i = 0; i < data->width; i++) {
+    d[i * 4 + 0] = s[i * 4 + 0];
+    d[i * 4 + 1] =
+        gst_video_transfer_function_encode (data->tr_func, s[i * 4 + 1]);
+    d[i * 4 + 2] =
+        gst_video_transfer_function_encode (data->tr_func, s[i * 4 + 2]);
+    d[i * 4 + 3] =
+        gst_video_transfer_function_encode (data->tr_func, s[i * 4 + 3]);
+  }
+}
+
+static void
+gamma_encode_float_u8 (GammaData * data, gpointer dest, gpointer src)
+{
+  gfloat *s = src;
+  guint8 *d = dest;
+  gint i;
+
+  for (i = 0; i < data->width; i++) {
+    gdouble val;
+
+    val = s[i * 4 + 0] * 255.0;
+    val = rint (val);
+    d[i * 4 + 0] = CLAMP (val, 0, 255);
+
+    val = gst_video_transfer_function_encode (data->tr_func,
+        s[i * 4 + 1]) * 255.0;
+    val = rint (val);
+    d[i * 4 + 1] = CLAMP (val, 0, 255);
+
+    val = gst_video_transfer_function_encode (data->tr_func,
+        s[i * 4 + 2]) * 255.0;
+    val = rint (val);
+    d[i * 4 + 2] = CLAMP (val, 0, 255);
+
+    val = gst_video_transfer_function_encode (data->tr_func,
+        s[i * 4 + 3]) * 255.0;
+    val = rint (val);
+    d[i * 4 + 3] = CLAMP (val, 0, 255);
+  }
+}
+
+static void
+gamma_encode_float_u16 (GammaData * data, gpointer dest, gpointer src)
+{
+  gfloat *s = src;
+  guint16 *d = dest;
+  gint i;
+
+  for (i = 0; i < data->width; i++) {
+    gdouble val;
+
+    val = s[i * 4 + 0] * 65535.0;
+    val = rint (val);
+    d[i * 4 + 0] = CLAMP (val, 0, 65535);
+
+    val = gst_video_transfer_function_encode (data->tr_func,
+        s[i * 4 + 1]) * 65535.0;
+    val = rint (val);
+    d[i * 4 + 1] = CLAMP (val, 0, 65535);
+
+    val = gst_video_transfer_function_encode (data->tr_func,
+        s[i * 4 + 2]) * 65535.0;
+    val = rint (val);
+    d[i * 4 + 2] = CLAMP (val, 0, 65535);
+
+    val = gst_video_transfer_function_encode (data->tr_func,
+        s[i * 4 + 3]) * 65535.0;
+    val = rint (val);
+    d[i * 4 + 3] = CLAMP (val, 0, 65535);
+  }
+}
+
+/* input is still 16-bit here, so table lookup would be cheaper than doing
+ * transfer function for each pixel */
+static void
+gamma_encode_u16_float (GammaData * data, gpointer dest, gpointer src)
+{
+  guint16 *s = src;
+  gfloat *d = dest;
+  gfloat *table = data->gamma_table;
+  gint i;
+
+  for (i = 0; i < data->width; i++) {
+    d[i * 4 + 0] = s[i * 4 + 0] / 65535.0;
+    d[i * 4 + 1] = table[s[i * 4 + 1]];
+    d[i * 4 + 2] = table[s[i * 4 + 2]];
+    d[i * 4 + 3] = table[s[i * 4 + 3]];
+  }
+}
+
 static void
 setup_gamma_decode (GstVideoConverter * convert)
 {
   GstVideoTransferFunction func;
   guint16 *t;
   gint i;
+  gboolean is_float;
 
   func = convert->in_info.colorimetry.transfer;
+  is_float = is_float_format (convert->current_format);
 
   convert->gamma_dec.width = convert->current_width;
-  if (convert->gamma_dec.gamma_table) {
+  convert->gamma_dec.tr_func = func;
+
+  if (convert->gamma_dec.gamma_func) {
     GST_LOG ("gamma decode already set up");
+  } else if (is_float) {
+    GST_LOG ("gamma decode float: %d", func);
+    convert->gamma_dec.gamma_func = gamma_decode_float;
   } else if (convert->current_bits == 8) {
     GST_LOG ("gamma decode 8->16: %d", func);
     convert->gamma_dec.gamma_func = gamma_convert_u8_u16;
@@ -1523,22 +1701,59 @@ setup_gamma_decode (GstVideoConverter * convert)
           rint (gst_video_transfer_function_decode (func,
               i / 65535.0) * 65535.0);
   }
-  convert->current_bits = 16;
-  convert->current_pstride = 8;
-  convert->current_format = GST_VIDEO_FORMAT_ARGB64;
+
+  /* gamma decoded data is still in float domain if input is float.
+   * And integer path uses ARGB64 as intermediate format
+   */
+  if (is_float) {
+    convert->current_bits = 32;
+    convert->current_pstride = 16;
+    convert->current_format = GST_VIDEO_FORMAT_ARGB_F32;
+  } else {
+    convert->current_bits = 16;
+    convert->current_pstride = 8;
+    convert->current_format = GST_VIDEO_FORMAT_ARGB64;
+  }
 }
 
 static void
 setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
 {
   GstVideoTransferFunction func;
+  gboolean src_float, dst_float;
   gint i;
 
   func = convert->out_info.colorimetry.transfer;
 
+  src_float = is_float_format (convert->current_format);
+  dst_float = is_float_format (convert->pack_format);
+
   convert->gamma_enc.width = convert->current_width;
-  if (convert->gamma_enc.gamma_table) {
+  convert->gamma_enc.tr_func = func;
+
+  if (convert->gamma_enc.gamma_func) {
     GST_LOG ("gamma encode already set up");
+  } else if (src_float) {
+    if (dst_float) {
+      GST_LOG ("gamma encode float->float: %d", func);
+      convert->gamma_enc.gamma_func = gamma_encode_float;
+    } else if (target_bits == 8) {
+      GST_LOG ("gamma encode float->8: %d", func);
+      convert->gamma_enc.gamma_func = gamma_encode_float_u8;
+    } else {
+      GST_LOG ("gamma encode float->16: %d", func);
+      convert->gamma_enc.gamma_func = gamma_encode_float_u16;
+    }
+  } else if (dst_float) {
+    gfloat *t;
+
+    GST_LOG ("gamma encode 16->float: %d", func);
+    convert->gamma_enc.gamma_func = gamma_encode_u16_float;
+
+    t = convert->gamma_enc.gamma_table = g_malloc (sizeof (gfloat) * 65536);
+    for (i = 0; i < 65536; i++) {
+      t[i] = gst_video_transfer_function_encode (func, i / 65535.0);
+    }
   } else if (target_bits == 8) {
     guint8 *t;
 
@@ -1561,6 +1776,20 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
           rint (gst_video_transfer_function_encode (func,
               i / 65535.0) * 65535.0);
   }
+
+  if (dst_float) {
+    convert->current_bits = 32;
+    convert->current_pstride = 16;
+    convert->current_format = GST_VIDEO_FORMAT_ARGB_F32;
+  } else {
+    convert->current_bits = target_bits;
+    convert->current_pstride = target_bits >> 1;
+
+    if (target_bits == 8)
+      convert->current_format = GST_VIDEO_FORMAT_ARGB;
+    else
+      convert->current_format = GST_VIDEO_FORMAT_ARGB64;
+  }
 }
 
 static GstLineCache *
@@ -1576,21 +1805,29 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev,
 
     /* Set up conversion matrices if needed, but only for the first thread */
     if (idx == 0 && !convert->unpack_rgb) {
+      gboolean is_float = is_float_format (convert->current_format);
+
       color_matrix_set_identity (&convert->to_RGB_matrix);
       compute_matrix_to_RGB (convert, &convert->to_RGB_matrix);
 
-      /* matrix is in 0..1 range, scale to current bits */
       GST_LOG ("chain RGB convert");
-      scale = 1 << convert->current_bits;
-      color_matrix_scale_components (&convert->to_RGB_matrix,
-          (float) scale, (float) scale, (float) scale);
+      if (!is_float) {
+        /* matrix is in 0..1 range, scale to current bits */
+        scale = 1 << convert->current_bits;
+        color_matrix_scale_components (&convert->to_RGB_matrix,
+            (float) scale, (float) scale, (float) scale);
+      }
 
       prepare_matrix (convert, &convert->to_RGB_matrix);
 
-      if (convert->current_bits == 8)
+      if (is_float) {
+        /* keep ARGB_F32 */
+        g_assert (convert->current_format == GST_VIDEO_FORMAT_ARGB_F32);
+      } else if (convert->current_bits == 8) {
         convert->current_format = GST_VIDEO_FORMAT_ARGB;
-      else
+      } else {
         convert->current_format = GST_VIDEO_FORMAT_ARGB64;
+      }
     }
 
     prev = convert->to_RGB_lines[idx] = gst_line_cache_new (prev);
@@ -1801,13 +2038,28 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 
   do_gamma = CHECK_GAMMA_REMAP (convert);
   if (!do_gamma) {
+    gboolean in_float, out_float;
+    gboolean use_float = FALSE;
+
+    in_float = is_float_format (convert->unpack_format);
+    out_float = is_float_format (convert->pack_format);
+    if (in_float || out_float)
+      use_float = TRUE;
 
     convert->in_bits = convert->unpack_bits;
     convert->out_bits = convert->pack_bits;
 
+    /* These are input/output domain of this conversion stage. With gamma
+     * conversion they can be different from actual unpack/pack format. */
+    convert->convert_in_float = in_float;
+    convert->convert_out_float = out_float;
+
     if (!same_bits || !same_matrix || !same_primaries) {
-      /* no gamma, combine all conversions into 1 */
-      if (convert->in_bits < convert->out_bits) {
+      /* float is already represented in [0, 1], so do not need to do scaling
+       * below. Matrix conversion below will handle conversion between
+       * normalized and integer range if needed. */
+      if (!use_float && convert->in_bits < convert->out_bits) {
+        /* no gamma, combine all conversions into 1 */
         gint scale = 1 << (convert->out_bits - convert->in_bits);
         color_matrix_scale_components (&convert->convert_matrix,
             1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
@@ -1821,19 +2073,28 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
       compute_matrix_to_YUV (convert, &convert->convert_matrix, FALSE);
       GST_LOG ("current matrix");
       color_matrix_debug (&convert->convert_matrix);
-      if (convert->in_bits > convert->out_bits) {
+      if (!use_float && convert->in_bits > convert->out_bits) {
         gint scale = 1 << (convert->in_bits - convert->out_bits);
         color_matrix_scale_components (&convert->convert_matrix,
             (float) scale, (float) scale, (float) scale);
       }
-      convert->current_bits = MAX (convert->in_bits, convert->out_bits);
+
+      /* If input and/or output is float, do matrix operation in float domain */
+      if (use_float) {
+        convert->current_bits = 32;
+        convert->current_pstride = 16;
+        convert->current_format = GST_VIDEO_FORMAT_ARGB_F32;
+      } else {
+        convert->current_bits = MAX (convert->in_bits, convert->out_bits);
+      }
 
       do_conversion = TRUE;
-      if (!same_matrix || !same_primaries) {
+      if (!same_matrix || !same_primaries || use_float) {
         if (idx == 0)
           prepare_matrix (convert, &convert->convert_matrix);
       }
-      if (convert->in_bits == convert->out_bits)
+
+      if (!use_float && convert->in_bits == convert->out_bits)
         pass_alloc = TRUE;
     } else
       do_conversion = FALSE;
@@ -1846,9 +2107,18 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     if (same_primaries) {
       do_conversion = FALSE;
     } else {
+      gboolean is_float = is_float_format (convert->current_format);
+
+      /* gamma encode happens later, so primaries conversion stays in same
+       * intermediate domain on both side here */
+      convert->convert_in_float = is_float;
+      convert->convert_out_float = is_float;
+
       if (idx == 0)
         prepare_matrix (convert, &convert->convert_matrix);
-      convert->in_bits = convert->out_bits = 16;
+
+      g_assert (convert->current_bits == 16 || convert->current_bits == 32);
+      convert->in_bits = convert->out_bits = convert->current_bits;
       pass_alloc = TRUE;
       do_conversion = TRUE;
     }
@@ -1893,6 +2163,18 @@ convert_set_alpha_u16 (GstVideoConverter * convert, gpointer pixels, gint width)
 }
 
 static void
+convert_set_alpha_float (GstVideoConverter * convert, gpointer pixels,
+    gint width)
+{
+  gfloat *p = pixels;
+  gfloat alpha = convert->alpha_value / 255.0f;
+  gint i;
+
+  for (i = 0; i < width; i++)
+    p[i * 4] = alpha;
+}
+
+static void
 convert_mult_alpha_u8 (GstVideoConverter * convert, gpointer pixels, gint width)
 {
   guint8 *p = pixels;
@@ -1919,6 +2201,18 @@ convert_mult_alpha_u16 (GstVideoConverter * convert, gpointer pixels,
   }
 }
 
+static void
+convert_mult_alpha_float (GstVideoConverter * convert, gpointer pixels,
+    gint width)
+{
+  gfloat *p = pixels;
+  gfloat alpha = convert->alpha_value / 255.0f;
+  gint i;
+
+  for (i = 0; i < width; i++)
+    p[i * 4] *= alpha;
+}
+
 static GstLineCache *
 chain_alpha (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
@@ -1928,13 +2222,17 @@ chain_alpha (GstVideoConverter * convert, GstLineCache * prev, gint idx)
       return prev;
 
     case ALPHA_MODE_SET:
-      if (convert->current_bits == 8)
+      if (is_float_format (convert->current_format))
+        convert->alpha_func = convert_set_alpha_float;
+      else if (convert->current_bits == 8)
         convert->alpha_func = convert_set_alpha_u8;
       else
         convert->alpha_func = convert_set_alpha_u16;
       break;
     case ALPHA_MODE_MULT:
-      if (convert->current_bits == 8)
+      if (is_float_format (convert->current_format))
+        convert->alpha_func = convert_mult_alpha_float;
+      else if (convert->current_bits == 8)
         convert->alpha_func = convert_mult_alpha_u8;
       else
         convert->alpha_func = convert_mult_alpha_u16;
@@ -1966,26 +2264,21 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
     GST_LOG ("chain gamma encode");
     setup_gamma_encode (convert, convert->pack_bits);
 
-    convert->current_bits = convert->pack_bits;
-    convert->current_pstride = convert->current_bits >> 1;
-
     if (idx == 0 && !convert->pack_rgb) {
       color_matrix_set_identity (&convert->to_YUV_matrix);
 
       /* When gamma remap is enabled, we do
-       * 1) converts to ARGB64 linear RGB
+       * 1) converts to linear RGB
        *   - if input is 8bits, convert to ARGB and scaled to 16bits with gamma
        *     decoding at once
+       *   - if input is float, keep float format and gamma decode
        *   - otherwise converted ARGB64 and gamma decoded
        * 2) scale/convert etc,
        * 3) and gamma encode
        *
-       * So source data to the do_convert_to_YUV_lines() method is always
-       * ARGB64
-       *
        * Then, if output unpack format is 8bits, setup_gamma_encode() will scale
-       * ARGB64 down to ARGB as a part of gamma encoding, otherwise it's still
-       * ARGB64
+       * ARGB64 down to ARGB as a part of gamma encoding, float output stays in
+       * float format, otherwise it's still ARGB64
        *
        * Finally this to_YUV_matrix is applied. Since compute_matrix_to_YUV()
        * expects [0, 1.0] range RGB as an input, scale down identity matrix
@@ -1993,9 +2286,18 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
        * very wrong
        */
       GST_LOG ("chain YUV convert");
-      scale = 1 << convert->pack_bits;
-      color_matrix_scale_components (&convert->to_YUV_matrix,
-          1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
+
+      /* compute_matrix_to_YUV() expects RGB in [0, 1]. Integer intermediate
+       * needs scaling here but float is already in the [0, 1]
+       *
+       * NOTE: This also needs scaling if non-[0, 1] float range is defined
+       * later
+       */
+      if (!is_float_format (convert->current_format)) {
+        scale = 1 << convert->current_bits;
+        color_matrix_scale_components (&convert->to_YUV_matrix,
+            1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
+      }
 
       compute_matrix_to_YUV (convert, &convert->to_YUV_matrix, FALSE);
       prepare_matrix (convert, &convert->to_YUV_matrix);
@@ -2039,6 +2341,10 @@ chain_dither (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   GstVideoDitherFlags flags = 0;
   GstVideoDitherMethod method;
   guint quant[4], target_quant;
+
+  /* No need to dither float formats */
+  if (is_float_format (convert->current_format))
+    return prev;
 
   method = GET_OPT_DITHER_METHOD (convert);
   if (method == GST_VIDEO_DITHER_NONE)
@@ -2121,9 +2427,15 @@ setup_allocators (GstVideoConverter * convert)
   GDestroyNotify notify;
   gint width;
   gint i;
+  gsize alloc_stride;
 
   width = MAX (convert->in_maxwidth, convert->out_maxwidth);
   width += convert->out_x;
+
+  if (convert->unpack_bits > 16 || convert->pack_bits > 16)
+    alloc_stride = sizeof (guint32) * 4 * width;
+  else
+    alloc_stride = sizeof (guint16) * 4 * width;
 
   for (i = 0; i < convert->conversion_runner->n_threads; i++) {
     /* start with using dest lines if we can directly write into it */
@@ -2134,8 +2446,7 @@ setup_allocators (GstVideoConverter * convert)
       notify = NULL;
     } else {
       user_data =
-          converter_alloc_new (sizeof (guint16) * width * 4, 4 + BACKLOG,
-          convert, NULL);
+          converter_alloc_new (alloc_stride, 4 + BACKLOG, convert, NULL);
       setup_border_alloc (convert, user_data);
       notify = (GDestroyNotify) converter_alloc_free;
       alloc_line = get_border_temp_line;
@@ -2168,7 +2479,7 @@ setup_allocators (GstVideoConverter * convert)
       if (!cache->pass_alloc) {
         /* can't pass allocator, make new temp line allocator */
         user_data =
-            converter_alloc_new (sizeof (guint16) * width * 4,
+            converter_alloc_new (alloc_stride,
             cache->n_lines + cache->backlog, convert, NULL);
         notify = (GDestroyNotify) converter_alloc_free;
         alloc_line = get_temp_line;
@@ -2201,8 +2512,14 @@ setup_borderline (GstVideoConverter * convert)
     const GstVideoFormatInfo *out_pack_finfo;
     gpointer planes[GST_VIDEO_MAX_PLANES];
     gint strides[GST_VIDEO_MAX_PLANES];
+    gsize alloc_stride;
 
-    convert->borderline = g_malloc0 (sizeof (guint16) * width * 4);
+    if (convert->unpack_bits > 16 || convert->pack_bits > 16)
+      alloc_stride = sizeof (guint32) * 4 * width;
+    else
+      alloc_stride = sizeof (guint16) * 4 * width;
+
+    convert->borderline = g_malloc0 (alloc_stride);
 
     out_finfo = convert->out_info.finfo;
     out_pack_finfo = gst_video_format_get_info (convert->pack_format);
@@ -2248,15 +2565,32 @@ setup_borderline (GstVideoConverter * convert)
     } else {
       border_val = GINT32_FROM_BE (convert->border_argb);
     }
-    if (convert->pack_bits == 8)
+
+    if (convert->pack_bits == 8) {
       video_orc_splat_u32 (convert->borderline, border_val, width);
-    else
+    } else if (convert->pack_bits == 16) {
       video_orc_splat2_u64 (convert->borderline, border_val, width);
+    } else if (convert->pack_bits == 32) {
+      gfloat argb[4];
+      guint8 *d = convert->borderline;
+
+      g_assert (GST_VIDEO_FORMAT_INFO_IS_FLOAT (out_finfo));
+
+      argb[0] = (border_val & 0xff) / 255.0f;
+      argb[1] = ((border_val >> 8) & 0xff) / 255.0f;
+      argb[2] = ((border_val >> 16) & 0xff) / 255.0f;
+      argb[3] = ((border_val >> 24) & 0xff) / 255.0f;
+
+      for (i = 0; i < width; i++)
+        memcpy (d + i * sizeof (argb), argb, sizeof (argb));
+    } else {
+      g_assert_not_reached ();
+    }
 
     /* convert pixels */
     for (i = 0; i < out_finfo->n_planes; i++) {
-      planes[i] = &convert->borders[i];
-      strides[i] = sizeof (guint64);
+      planes[i] = convert->borders[i];
+      strides[i] = sizeof (convert->borders[i]);
     }
     w_sub = 0;
     if (out_finfo->n_planes == 1) {
@@ -3105,6 +3439,80 @@ do_vscale_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
   return TRUE;
 }
 
+/* RGB values are kept in integer range here since matrix will normalize
+ * them later, but alpha is not handled by matrix, so normalize it here */
+static void
+convert_u8_float (gfloat * d, const guint8 * s, gint width)
+{
+  gint i;
+
+  for (i = 0; i < width; i++) {
+    d[i * 4 + 0] = s[i * 4 + 0] / 255.0f;
+    d[i * 4 + 1] = s[i * 4 + 1];
+    d[i * 4 + 2] = s[i * 4 + 2];
+    d[i * 4 + 3] = s[i * 4 + 3];
+  }
+}
+
+static void
+convert_u16_float (gfloat * d, const guint16 * s, gint width)
+{
+  gint i;
+
+  for (i = 0; i < width; i++) {
+    d[i * 4 + 0] = s[i * 4 + 0] / 65535.0f;
+    d[i * 4 + 1] = s[i * 4 + 1];
+    d[i * 4 + 2] = s[i * 4 + 2];
+    d[i * 4 + 3] = s[i * 4 + 3];
+  }
+}
+
+/* matrix output is already scaled to integer range for RGB, but alpha
+ * is still in [0, 1]. So scale only alpha here */
+static void
+convert_float_u8 (guint8 * d, const gfloat * s, gint width)
+{
+  gint i;
+
+  for (i = 0; i < width; i++) {
+    gdouble val;
+
+    val = rint (s[i * 4 + 0] * 255.0);
+    d[i * 4 + 0] = CLAMP (val, 0, 255);
+
+    val = rint (s[i * 4 + 1]);
+    d[i * 4 + 1] = CLAMP (val, 0, 255);
+
+    val = rint (s[i * 4 + 2]);
+    d[i * 4 + 2] = CLAMP (val, 0, 255);
+
+    val = rint (s[i * 4 + 3]);
+    d[i * 4 + 3] = CLAMP (val, 0, 255);
+  }
+}
+
+static void
+convert_float_u16 (guint16 * d, const gfloat * s, gint width)
+{
+  gint i;
+
+  for (i = 0; i < width; i++) {
+    gdouble val;
+
+    val = rint (s[i * 4 + 0] * 65535.0);
+    d[i * 4 + 0] = CLAMP (val, 0, 65535);
+
+    val = rint (s[i * 4 + 1]);
+    d[i * 4 + 1] = CLAMP (val, 0, 65535);
+
+    val = rint (s[i * 4 + 2]);
+    d[i * 4 + 2] = CLAMP (val, 0, 65535);
+
+    val = rint (s[i * 4 + 3]);
+    d[i * 4 + 3] = CLAMP (val, 0, 65535);
+  }
+}
+
 static gboolean
 do_convert_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
     gpointer user_data)
@@ -3113,6 +3521,7 @@ do_convert_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
   MatrixData *data = &convert->convert_matrix;
   gpointer *lines, destline;
   guint in_bits, out_bits;
+  gboolean in_float, out_float;
   gint width;
 
   lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
@@ -3122,9 +3531,57 @@ do_convert_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
   in_bits = convert->in_bits;
   out_bits = convert->out_bits;
 
+  in_float = convert->convert_in_float;
+  out_float = convert->convert_out_float;
+
   width = MIN (convert->in_width, convert->out_width);
 
-  if (out_bits == 16 || in_bits == 16) {
+  if (in_float || out_float) {
+    if (in_float && out_float) {
+      if (data->matrix_func) {
+        GST_LOG ("matrix float line %d %p", in_line, destline);
+        data->matrix_func (data, destline);
+      }
+    } else if (out_float) {
+      /* convert integer input to float before applying float matrix */
+      destline = gst_line_cache_alloc_line (cache, out_line);
+
+      if (in_bits == 8) {
+        GST_LOG ("8->float line %d %p->%p", in_line, lines[0], destline);
+        convert_u8_float (destline, lines[0], width);
+      } else {
+        g_assert (in_bits == 16);
+
+        GST_LOG ("16->float line %d %p->%p", in_line, lines[0], destline);
+        convert_u16_float (destline, lines[0], width);
+      }
+
+      if (data->matrix_func) {
+        GST_LOG ("matrix float line %d %p", in_line, destline);
+        data->matrix_func (data, destline);
+      }
+    } else {
+      gpointer srcline = lines[0];
+
+      /* apply float matrix first, then convert back to integer */
+      if (data->matrix_func) {
+        GST_LOG ("matrix float line %d %p", in_line, srcline);
+        data->matrix_func (data, srcline);
+      }
+
+      destline = gst_line_cache_alloc_line (cache, out_line);
+
+      if (out_bits == 8) {
+        GST_LOG ("float->8 line %d %p->%p", in_line, srcline, destline);
+        convert_float_u8 (destline, srcline, width);
+      } else {
+        g_assert (out_bits == 16);
+
+        GST_LOG ("float->16 line %d %p->%p", in_line, srcline, destline);
+        convert_float_u16 (destline, srcline, width);
+      }
+    }
+  } else if (out_bits == 16 || in_bits == 16) {
     gpointer srcline = lines[0];
 
     if (out_bits != in_bits)
@@ -7184,6 +7641,17 @@ memset_u32_16 (guint8 * data, guint8 col[4], unsigned int n)
   }
 }
 
+static void
+memset_u128 (guint8 * data, guint8 col[16], unsigned int n)
+{
+  unsigned int i;
+
+  for (i = 0; i < n; i++) {
+    memcpy (data, col, 16);
+    data += 16;
+  }
+}
+
 #define MAKE_BORDER_FUNC(func)                                                  \
         for (i = 0; i < out_y; i++)                                             \
           func (FRAME_GET_PLANE_LINE (dest, k, i), col, out_maxwidth);          \
@@ -7251,7 +7719,7 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
     rb_width = out_maxwidth - r_border;
     lb_width = out_x;
 
-    borders = &convert->borders[k];
+    borders = convert->borders[k];
 
     switch (pgroup) {
       case 1:
@@ -7285,6 +7753,13 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
       {
         guint64 col = ((guint64 *) borders)[0];
         MAKE_BORDER_FUNC (video_orc_splat_u64);
+        break;
+      }
+      case 16:
+      {
+        guint8 col[16];
+        memcpy (col, borders, sizeof (col));
+        MAKE_BORDER_FUNC (memset_u128);
         break;
       }
       case 42:
@@ -7865,6 +8340,7 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_RGBA_F16BE:
     case GST_VIDEO_FORMAT_RGBA_F32LE:
     case GST_VIDEO_FORMAT_RGBA_F32BE:
+    case GST_VIDEO_FORMAT_ARGB_F32:
     case GST_VIDEO_FORMAT_UYVP:
     case GST_VIDEO_FORMAT_RGB8P:
     case GST_VIDEO_FORMAT_IYU1:

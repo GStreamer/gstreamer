@@ -1105,6 +1105,93 @@ video_scale_v_ntap_u16 (GstVideoScaler * scale,
   video_orc_resample_scaletaps_u16 (d, temp, count);
 }
 
+static void
+video_scale_h_near_f32 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
+{
+  gfloat *s = src;
+  gfloat *d = dest;
+  guint32 *offset = scale->resampler.offset + dest_offset;
+  gint i, j;
+
+  d += dest_offset * n_elems;
+
+  for (i = 0; i < width; i++) {
+    guint soff = offset[i] * n_elems;
+
+    for (j = 0; j < n_elems; j++)
+      d[i * n_elems + j] = s[soff + j];
+  }
+}
+
+static void
+video_scale_h_ntap_f32 (GstVideoScaler * scale,
+    gpointer src, gpointer dest, guint dest_offset, guint width, guint n_elems)
+{
+  GstVideoResampler *r = &scale->resampler;
+  gfloat *s = src;
+  gfloat *d = dest;
+  gint i, j, k;
+
+  d += dest_offset * n_elems;
+
+  for (i = 0; i < width; i++) {
+    guint out = dest_offset + i;
+    guint offset = r->offset[out];
+    guint phase = r->phase[out];
+    gdouble *taps = r->taps + phase * r->max_taps;
+
+    for (j = 0; j < n_elems; j++) {
+      gdouble v = 0.0;
+
+      for (k = 0; k < r->max_taps; k++)
+        v += s[(offset + k) * n_elems + j] * taps[k];
+
+      d[i * n_elems + j] = v;
+    }
+  }
+}
+
+static void
+video_scale_v_near_f32 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width,
+    guint n_elems)
+{
+  if (dest != srcs[0])
+    memcpy (dest, srcs[0], sizeof (gfloat) * n_elems * width);
+}
+
+static void
+video_scale_v_ntap_f32 (GstVideoScaler * scale,
+    gpointer srcs[], gpointer dest, guint dest_offset, guint width,
+    guint n_elems)
+{
+  gfloat *d = dest;
+  gdouble *taps;
+  gint max_taps, src_inc;
+  gint i, j;
+
+  max_taps = scale->resampler.max_taps;
+  taps = scale->resampler.taps +
+      (scale->resampler.phase[dest_offset] * max_taps);
+
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    src_inc = 2;
+  else
+    src_inc = 1;
+
+  for (i = 0; i < width * n_elems; i++) {
+    gdouble v = 0.0;
+
+    for (j = 0; j < max_taps; j++) {
+      gfloat *s = srcs[j * src_inc];
+      v += s[i] * taps[j];
+    }
+
+    d[i] = v;
+  }
+}
+
 static gint
 get_y_offset (GstVideoFormat format)
 {
@@ -1265,6 +1352,10 @@ get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
       *bits = 8;
       *n_elems = 2;
       break;
+    case GST_VIDEO_FORMAT_ARGB_F32:
+      *bits = 32;
+      *n_elems = 4;
+      break;
     default:
       return FALSE;
   }
@@ -1337,7 +1428,30 @@ get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
         *vfunc = video_scale_v_ntap_u16;
         break;
     }
+  } else if (*bits == 32) {
+    switch (hscale ? hscale->resampler.max_taps : 0) {
+      case 0:
+        break;
+      case 1:
+        *hfunc = video_scale_h_near_f32;
+        break;
+      default:
+        *hfunc = video_scale_h_ntap_f32;
+        break;
+    }
+
+    switch (vscale ? vscale->resampler.max_taps : 0) {
+      case 0:
+        break;
+      case 1:
+        *vfunc = video_scale_v_near_f32;
+        break;
+      default:
+        *vfunc = video_scale_v_ntap_f32;
+        break;
+    }
   }
+
   return TRUE;
 }
 
