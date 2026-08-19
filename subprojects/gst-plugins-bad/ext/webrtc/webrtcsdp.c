@@ -901,6 +901,12 @@ _message_media_is_datachannel (const GstSDPMessage * msg, guint media_id)
 
   media = gst_sdp_message_get_media (msg, media_id);
 
+  return _media_is_datachannel (media);
+}
+
+gboolean
+_media_is_datachannel (const GstSDPMedia * media)
+{
   if (g_strcmp0 (gst_sdp_media_get_media (media), "application") != 0)
     return FALSE;
 

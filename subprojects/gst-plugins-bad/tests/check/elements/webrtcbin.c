@@ -1046,8 +1046,10 @@ on_sdp_media_direction (struct test_webrtc *t, GstElement * element,
   for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
 
-    if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0
-        || g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+    if (_media_is_datachannel (media))
+      continue;
+
+    if (_get_kind_from_media (media) != GST_WEBRTC_KIND_UNKNOWN) {
       gboolean have_direction = FALSE;
       int j;
 
@@ -5129,8 +5131,11 @@ on_sdp_media_rtp_header_extensions (struct test_webrtc *t, GstElement * element,
 
   for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
-    if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0
-        || g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+
+    if (_media_is_datachannel (media))
+      continue;
+
+    if (_get_kind_from_media (media) != GST_WEBRTC_KIND_UNKNOWN) {
       int extension_idx = 0;
       int j;
       for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
