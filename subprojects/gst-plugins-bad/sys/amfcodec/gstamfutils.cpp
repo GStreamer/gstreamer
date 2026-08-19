@@ -25,6 +25,7 @@
 #include <core/Factory.h>
 #include "gstamfutils.h"
 #include <gmodule.h>
+#include <cstring>
 #include <mutex>
 
 /* Only for the GST_CAPS_FEATURE_MEMORY_D3D11/D3D12_MEMORY strings below;
@@ -37,6 +38,14 @@
 #endif
 
 using namespace amf;
+
+GST_DEBUG_CATEGORY_STATIC (gst_amf_runtime_debug);
+
+#define GST_AMF_TRACE_WRITER_ID L"GStreamer"
+
+static AMFFactory *_factory = nullptr;
+static amf_uint64 _version = 0;
+static gboolean loaded = FALSE;
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category ()
@@ -54,11 +63,115 @@ ensure_debug_category (void)
 
   return cat;
 }
-#endif /* GST_DISABLE_GST_DEBUG */
 
-static AMFFactory *_factory = nullptr;
-static amf_uint64 _version = 0;
-static gboolean loaded = FALSE;
+/* wchar_t's encoding differs by platform: UTF-16 on Windows, UCS-4
+ * elsewhere. Returns a newly-allocated UTF-8 string, or NULL if @str is
+ * NULL. */
+static gchar *
+gst_amf_wchar_to_utf8 (const wchar_t *str)
+{
+  if (!str)
+    return nullptr;
+
+#ifdef G_OS_WIN32
+  return g_utf16_to_utf8 ((const gunichar2 *) str, -1, NULL, NULL, NULL);
+#else
+  return g_ucs4_to_utf8 ((const gunichar *) str, -1, NULL, NULL, NULL);
+#endif
+}
+
+/* Forwards AMF's internal trace output into the GStreamer debug system
+ * instead of dumping it to the console. The "amfruntime" category threshold
+ * controls what AMF forwards to Write() at all (see
+ * gst_amf_init_amf_runtime_logs()); every forwarded message is logged at
+ * GST_LEVEL_DEBUG. */
+/* *INDENT-OFF* */
+class GstAmfTraceWriter : public AMFTraceWriter
+{
+public:
+  virtual ~GstAmfTraceWriter () = default;
+
+  void AMF_CDECL_CALL Write (const wchar_t * scope,
+      const wchar_t * message) override
+  {
+    gchar *msg_str = gst_amf_wchar_to_utf8 (message);
+
+    if (msg_str)
+      g_strchomp (msg_str);
+
+    GST_CAT_LEVEL_LOG (gst_amf_runtime_debug, GST_LEVEL_DEBUG, NULL, "%s",
+        GST_STR_NULL (msg_str));
+
+    g_free (msg_str);
+  }
+
+  void AMF_CDECL_CALL Flush () override
+  {
+  }
+};
+/* *INDENT-ON* */
+
+static amf_int32
+gst_amf_trace_level_from_gst (GstDebugLevel level)
+{
+  switch (level) {
+    case GST_LEVEL_NONE:
+      return AMF_TRACE_NOLOG;
+    case GST_LEVEL_ERROR:
+      return AMF_TRACE_ERROR;
+    case GST_LEVEL_WARNING:
+    case GST_LEVEL_FIXME:
+      return AMF_TRACE_WARNING;
+    case GST_LEVEL_INFO:
+      return AMF_TRACE_INFO;
+    case GST_LEVEL_DEBUG:
+      return AMF_TRACE_DEBUG;
+    case GST_LEVEL_LOG:
+    case GST_LEVEL_TRACE:
+      return AMF_TRACE_TRACE;
+    default:
+      break;
+  }
+
+  return AMF_TRACE_TRACE;
+}
+
+static void
+gst_amf_init_amf_runtime_logs (void)
+{
+  static gsize init_once = 0;
+
+  if (g_once_init_enter (&init_once)) {
+    AMFTrace *trace = nullptr;
+
+    GST_DEBUG_CATEGORY_INIT (gst_amf_runtime_debug, "amfruntime", 0,
+        "AMF runtime trace messages");
+
+    if (_factory && _factory->GetTrace (&trace) == AMF_OK && trace) {
+      GstDebugLevel gst_level =
+          gst_debug_category_get_threshold (gst_amf_runtime_debug);
+
+      if (gst_level > GST_LEVEL_NONE) {
+        static GstAmfTraceWriter writer;
+        amf_int32 amf_level = gst_amf_trace_level_from_gst (gst_level);
+
+        /* Route AMF's own logging through the GStreamer debug system
+         * (category "amfruntime") rather than the console; AMF only emits
+         * up to the level matching the category threshold, and each
+         * message is then logged at GST_LEVEL_DEBUG. */
+        trace->EnableWriter (AMF_TRACE_WRITER_CONSOLE, false);
+        trace->EnableWriter (AMF_TRACE_WRITER_DEBUG_OUTPUT, false);
+        trace->RegisterWriter (GST_AMF_TRACE_WRITER_ID, &writer, true);
+        trace->SetWriterLevel (GST_AMF_TRACE_WRITER_ID, amf_level);
+      }
+    }
+
+    g_once_init_leave (&init_once, 1);
+  }
+}
+#else
+#define gst_amf_init_amf_runtime_logs() G_STMT_START{ }G_STMT_END
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static gboolean
 gst_amf_load_library (void)
@@ -91,6 +204,8 @@ gst_amf_load_library (void)
   if (result != AMF_OK) {
     goto fail;
   }
+
+  gst_amf_init_amf_runtime_logs ();
 
   return TRUE;
 fail:
