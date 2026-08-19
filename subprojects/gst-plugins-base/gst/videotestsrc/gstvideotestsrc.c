@@ -1030,6 +1030,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   guint i;
   guint n_lines;
   gint offset;
+  gsize line_size;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
@@ -1068,9 +1069,14 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     offset = 0;
   }
 
+  if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (info.finfo))
+    line_size = (info.width + 16) * 16;
+  else
+    line_size = (info.width + 16) * 8;
+
   videotestsrc->lines = g_malloc (sizeof (gpointer) * n_lines);
   for (i = 0; i < n_lines; i++)
-    videotestsrc->lines[i] = g_malloc ((info.width + 16) * 8);
+    videotestsrc->lines[i] = g_malloc (line_size);
   videotestsrc->n_lines = n_lines;
   videotestsrc->offset = offset;
 

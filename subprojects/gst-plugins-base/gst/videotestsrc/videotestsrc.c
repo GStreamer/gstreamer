@@ -1644,7 +1644,16 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
   line = y % n_lines;
   dest = p->lines[line];
 
-  if (bits == 16) {
+  if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (uinfo)) {
+    gfloat *d = dest;
+
+    for (i = 0; i < width; i++) {
+      d[i * 4 + 0] = p->tmpline[i * 4 + 0] / 255.0f;
+      d[i * 4 + 1] = p->tmpline[i * 4 + 1] / 255.0f;
+      d[i * 4 + 2] = p->tmpline[i * 4 + 2] / 255.0f;
+      d[i * 4 + 3] = p->tmpline[i * 4 + 3] / 255.0f;
+    }
+  } else if (bits == 16) {
     /* 16 bits */
     for (i = 0; i < width; i++) {
       p->tmpline_u16[i * 4 + 0] = TO_16 (p->tmpline[i * 4 + 0]);
