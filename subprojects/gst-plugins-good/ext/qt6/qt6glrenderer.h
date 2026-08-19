@@ -112,6 +112,7 @@ private:
     GstGLAllocationParams *gl_params;
     GstVideoInfo v_info;
     GstGLMemory *gl_mem;
+    GstMemory* previous_gl_mem;
 
     QString m_errorString;
     struct SharedRenderData *m_sharedRenderData;
