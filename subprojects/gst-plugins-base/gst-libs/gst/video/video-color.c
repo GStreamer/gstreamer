@@ -199,56 +199,136 @@ gst_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
  * The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
  * the component values in range [0.0 .. 1.0] back to their representation in
  * @info and @range.
+ *
+ * Deprecated: 1.30: Use gst_video_color_range_offsets_full() instead.
  */
 void
 gst_video_color_range_offsets (GstVideoColorRange range,
     const GstVideoFormatInfo * info, gint offset[GST_VIDEO_MAX_COMPONENTS],
     gint scale[GST_VIDEO_MAX_COMPONENTS])
 {
+  gdouble offset_d[GST_VIDEO_MAX_COMPONENTS] = { 0, 0, 0, 0 };
+  gdouble scale_d[GST_VIDEO_MAX_COMPONENTS] = { 1, 1, 1, 1 };
+  guint i;
+
+  gst_video_color_range_offsets_full (range, info, offset_d, scale_d, NULL);
+  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
+    offset[i] = (gint) offset_d[i];
+    scale[i] = (gint) scale_d[i];
+  }
+}
+
+/**
+ * gst_video_color_range_offsets_full:
+ * @range: a #GstVideoColorRange
+ * @info: a #GstVideoFormatInfo
+ * @offset: (out caller-allocates) (array fixed-size=4): output offsets
+ * @scale: (out caller-allocates) (array fixed-size=4): output scale
+ * @fullscale: (out caller-allocates) (array fixed-size=4) (optional):
+ *   full-scale values for each component
+ *
+ * Compute the offset and scale values for each component of @info. For each
+ * component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
+ * range [0.0 .. 1.0].
+ *
+ * The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
+ * the component values in range [0.0 .. 1.0] back to their representation in
+ * @info and @range.
+ *
+ * If @fullscale is provided, it will contain the maximum full-range value for
+ * each component. For integer formats, the value is `(1 << depth) - 1`, where
+ * `depth` is the bit depth of each component. For floating-point formats, the
+ * value is 1.0
+ *
+ * Since: 1.30
+ */
+void
+gst_video_color_range_offsets_full (GstVideoColorRange range,
+    const GstVideoFormatInfo * info, gdouble offset[GST_VIDEO_MAX_COMPONENTS],
+    gdouble scale[GST_VIDEO_MAX_COMPONENTS],
+    gdouble fullscale[GST_VIDEO_MAX_COMPONENTS])
+{
   gboolean yuv;
+  gboolean is_float;
+  guint i;
+
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (offset != NULL);
+  g_return_if_fail (scale != NULL);
 
   yuv = GST_VIDEO_FORMAT_INFO_IS_YUV (info);
+  is_float = GST_VIDEO_FORMAT_INFO_IS_FLOAT (info);
+
+  if (is_float) {
+    if (range != GST_VIDEO_COLOR_RANGE_0_1 &&
+        range != GST_VIDEO_COLOR_RANGE_UNKNOWN) {
+      GST_WARNING ("Invalid color range %d for float format %s",
+          range, info->name);
+    }
+    range = GST_VIDEO_COLOR_RANGE_0_1;
+  } else if (range == GST_VIDEO_COLOR_RANGE_0_1) {
+    GST_WARNING ("Invalid [0, 1] color range for integer format %s",
+        info->name);
+    range = GST_VIDEO_COLOR_RANGE_0_255;
+  }
 
   switch (range) {
+    case GST_VIDEO_COLOR_RANGE_0_1:
+      offset[0] = offset[1] = offset[2] = 0.0;
+      scale[0] = scale[1] = scale[2] = 1.0;
+      break;
     default:
     case GST_VIDEO_COLOR_RANGE_0_255:
-      /* GST_VIDEO_COLOR_RANGE_0_1: float formats unpack to full-range
-       * integer code values, so the offsets are the same as 0_255 */
-    case GST_VIDEO_COLOR_RANGE_0_1:
-      offset[0] = 0;
+      offset[0] = 0.0;
       if (yuv) {
-        offset[1] = 1 << (info->depth[1] - 1);
-        offset[2] = 1 << (info->depth[2] - 1);
+        offset[1] = ldexp (1.0, info->depth[1] - 1);
+        offset[2] = ldexp (1.0, info->depth[2] - 1);
       } else {
-        offset[1] = 0;
-        offset[2] = 0;
+        offset[1] = 0.0;
+        offset[2] = 0.0;
       }
-      scale[0] = (1 << info->depth[0]) - 1;
-      scale[1] = (1 << info->depth[1]) - 1;
-      scale[2] = (1 << info->depth[2]) - 1;
+      scale[0] = ldexp (1.0, info->depth[0]) - 1.0;
+      scale[1] = ldexp (1.0, info->depth[1]) - 1.0;
+      scale[2] = ldexp (1.0, info->depth[2]) - 1.0;
       break;
     case GST_VIDEO_COLOR_RANGE_16_235:
-      offset[0] = 1 << (info->depth[0] - 4);
-      scale[0] = 219 << (info->depth[0] - 8);
+      offset[0] = ldexp (1.0, info->depth[0] - 4);
+      scale[0] = ldexp (219.0, info->depth[0] - 8);
+
       if (yuv) {
-        offset[1] = 1 << (info->depth[1] - 1);
-        offset[2] = 1 << (info->depth[2] - 1);
-        scale[1] = 224 << (info->depth[1] - 8);
-        scale[2] = 224 << (info->depth[2] - 8);
+        offset[1] = ldexp (1.0, info->depth[1] - 1);
+        offset[2] = ldexp (1.0, info->depth[2] - 1);
+        scale[1] = ldexp (224.0, info->depth[1] - 8);
+        scale[2] = ldexp (224.0, info->depth[2] - 8);
       } else {
-        offset[1] = 1 << (info->depth[1] - 4);
-        offset[2] = 1 << (info->depth[2] - 4);
-        scale[1] = 219 << (info->depth[1] - 8);
-        scale[2] = 219 << (info->depth[2] - 8);
+        offset[1] = ldexp (1.0, info->depth[1] - 4);
+        offset[2] = ldexp (1.0, info->depth[2] - 4);
+        scale[1] = ldexp (219.0, info->depth[1] - 8);
+        scale[2] = ldexp (219.0, info->depth[2] - 8);
       }
       break;
   }
-  /* alpha channel is always full range */
-  offset[3] = 0;
-  scale[3] = (1 << info->depth[3]) - 1;
 
-  GST_DEBUG ("scale: %d %d %d %d", scale[0], scale[1], scale[2], scale[3]);
-  GST_DEBUG ("offset: %d %d %d %d", offset[0], offset[1], offset[2], offset[3]);
+  /* alpha channel is always full range */
+  offset[3] = 0.0;
+  if (range == GST_VIDEO_COLOR_RANGE_0_1)
+    scale[3] = 1.0;
+  else
+    scale[3] = ldexp (1.0, info->depth[3]) - 1.0;
+
+  if (fullscale) {
+    for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
+      if (is_float)
+        fullscale[i] = 1.0;
+      else
+        fullscale[i] = ldexp (1.0, info->depth[i]) - 1.0;
+    }
+  }
+
+  GST_DEBUG ("scale: %.1f %.1f %.1f %.1f",
+      scale[0], scale[1], scale[2], scale[3]);
+  GST_DEBUG ("offset: %.1f %.1f %.1f %.1f",
+      offset[0], offset[1], offset[2], offset[3]);
 }
 
 /**

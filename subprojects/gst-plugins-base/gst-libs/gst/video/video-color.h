@@ -291,11 +291,18 @@ gboolean     gst_video_colorimetry_is_equivalent (const GstVideoColorimetry *cin
 
 /* compute offset and scale */
 
-GST_VIDEO_API
+GST_VIDEO_DEPRECATED_FOR(gst_video_color_range_offsets_full)
 void         gst_video_color_range_offsets     (GstVideoColorRange range,
                                                 const GstVideoFormatInfo *info,
                                                 gint offset[GST_VIDEO_MAX_COMPONENTS],
                                                 gint scale[GST_VIDEO_MAX_COMPONENTS]);
+
+GST_VIDEO_API
+void         gst_video_color_range_offsets_full (GstVideoColorRange range,
+                                                 const GstVideoFormatInfo *info,
+                                                 gdouble offset[GST_VIDEO_MAX_COMPONENTS],
+                                                 gdouble scale[GST_VIDEO_MAX_COMPONENTS],
+                                                 gdouble fullscale[GST_VIDEO_MAX_COMPONENTS]);
 
 /* conversion between GStreamer color{matrix,transfer,primaries} enum and
  * values defined by ISO/IEC 23001-8 and ITU-T H.273 specification.
