@@ -289,6 +289,46 @@ G_STMT_START { \
   cb = MIN(c, (max)); \
 } G_STMT_END
 
+static inline void
+blend_float (gfloat * dest, const guint8 * src, gfloat src_scale,
+    gfloat global_alpha, gboolean src_premultiplied,
+    gboolean dest_premultiplied)
+{
+  gfloat asrc, adst, final_alpha;
+  gfloat s1, s2, s3;
+
+  asrc = (src[0] / src_scale) * global_alpha;
+  if (asrc == 0.0f)
+    return;
+
+  adst = dest[0];
+  final_alpha = asrc + adst * (1.0f - asrc);
+  dest[0] = final_alpha;
+
+  s1 = src[1] / src_scale;
+  s2 = src[2] / src_scale;
+  s3 = src[3] / src_scale;
+
+  if (src_premultiplied) {
+    s1 *= global_alpha;
+    s2 *= global_alpha;
+    s3 *= global_alpha;
+  } else {
+    s1 *= asrc;
+    s2 *= asrc;
+    s3 *= asrc;
+  }
+
+  if (dest_premultiplied) {
+    dest[1] = s1 + dest[1] * (1.0f - asrc);
+    dest[2] = s2 + dest[2] * (1.0f - asrc);
+    dest[3] = s3 + dest[3] * (1.0f - asrc);
+  } else {
+    dest[1] = (s1 + dest[1] * adst * (1.0f - asrc)) / final_alpha;
+    dest[2] = (s2 + dest[2] * adst * (1.0f - asrc)) / final_alpha;
+    dest[3] = (s3 + dest[3] * adst * (1.0f - asrc)) / final_alpha;
+  }
+}
 
 /**
  * gst_video_blend:
@@ -305,13 +345,15 @@ gboolean
 gst_video_blend (GstVideoFrame * dest,
     GstVideoFrame * src, gint x, gint y, gfloat global_alpha)
 {
-  gint i, j, global_alpha_val, src_width, src_height, dest_width, dest_height;
+  gint global_alpha_val = 0;
+  gint i, j, src_width, src_height, dest_width, dest_height;
   gint src_xoff = 0, src_yoff = 0;
   guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
   gboolean src_premultiplied_alpha, dest_premultiplied_alpha;
   gint bpp;
   void (*matrix) (guint8 * tmpline, guint width);
   const GstVideoFormatInfo *sinfo, *dinfo, *dunpackinfo, *sunpackinfo;
+  gboolean is_float;
 
   g_assert (dest != NULL);
   g_assert (src != NULL);
@@ -352,14 +394,22 @@ gst_video_blend (GstVideoFrame * dest,
 
   g_assert (GST_VIDEO_FORMAT_INFO_BITS (sunpackinfo) == 8);
 
-  if (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) != 8
-      && GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) != 16)
-    goto unpack_format_not_supported;
+  is_float = GST_VIDEO_FORMAT_INFO_IS_FLOAT (dunpackinfo);
+  if (is_float) {
+    if (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) != 32)
+      goto unpack_format_not_supported;
+    bpp = 16;
+  } else {
+    if (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) != 8
+        && GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) != 16)
+      goto unpack_format_not_supported;
 
-  /* Source is always 8 bit but destination might be 8 or 16 bit */
-  bpp = 4 * (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) / 8);
+    /* Source is always 8 bit but destination might be 8 or 16 bit */
+    bpp = 4 * (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) / 8);
+    global_alpha_val =
+        (bpp == 4) ? 255.0 * global_alpha : 65535.0 * global_alpha;
+  }
 
-  global_alpha_val = (bpp == 4) ? 255.0 * global_alpha : 65535.0 * global_alpha;
 
   matrix = matrix_identity;
   if (GST_VIDEO_INFO_IS_RGB (&src->info) != GST_VIDEO_INFO_IS_RGB (&dest->info)) {
@@ -439,7 +489,14 @@ gst_video_blend (GstVideoFrame * dest,
     }                                                                                         \
   } G_STMT_END
 
-    if (bpp == 4) {
+    if (is_float) {
+      gfloat *d = (gfloat *) tmpdestline;
+
+      for (j = 0; j < src_width; j++) {
+        blend_float (d + j * 4, tmpsrcline + j * 4, 255.0f,
+            global_alpha, src_premultiplied_alpha, dest_premultiplied_alpha);
+      }
+    } else if (bpp == 4) {
       if (G_LIKELY (global_alpha_val == 255)) {
         if (src_premultiplied_alpha && dest_premultiplied_alpha) {
           BLENDLOOP (OVER11, guint8, 255, 0, 255);
