@@ -274,7 +274,14 @@ gst_video_color_range_offsets_full (GstVideoColorRange range,
 
   switch (range) {
     case GST_VIDEO_COLOR_RANGE_0_1:
-      offset[0] = offset[1] = offset[2] = 0.0;
+      offset[0] = 0;
+      if (yuv) {
+        offset[1] = 0.5;
+        offset[2] = 0.5;
+      } else {
+        offset[1] = 0.0;
+        offset[2] = 0.0;
+      }
       scale[0] = scale[1] = scale[2] = 1.0;
       break;
     default:

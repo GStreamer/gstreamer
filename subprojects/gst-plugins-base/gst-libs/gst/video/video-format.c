@@ -8318,6 +8318,28 @@ pack_RGB_F32BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_AYUV_F32 GST_VIDEO_FORMAT_AYUV_F32, unpack_AYUV_F32, 1, pack_AYUV_F32
+static void
+unpack_AYUV_F32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *s = GET_LINE (y);
+
+  memcpy (dest, s + x * 16, width * 16);
+}
+
+static void
+pack_AYUV_F32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  guint8 *d = GET_LINE (y);
+
+  memcpy (d, src, width * 16);
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -8452,6 +8474,10 @@ typedef struct
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX | GST_VIDEO_FORMAT_FLAG_TILED, depth, pstride, plane, offs, sub, pack, tile } }
 #define MAKE_YUV_ST_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack, tile) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX | GST_VIDEO_FORMAT_FLAG_TILED | GST_VIDEO_FORMAT_FLAG_SUBTILES, depth, pstride, plane, offs, sub, pack, tile } }
+#define MAKE_YUVA_FLOAT_PACK_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_FLOAT | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_YUVA_LE_FLOAT_PACK_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_FLOAT | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 
 #define MAKE_RGB_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB, depth, pstride, plane, offs, sub, pack } }
@@ -8846,6 +8872,15 @@ static const VideoFormat formats[] = {
       PSTR121212, PLANE0, OFFS048, SUB444, PACK_RGB_F32LE),
   MAKE_RGB_FLOAT_FORMAT (RGB_F32BE, "raw video", DPTH32_32_32,
       PSTR121212, PLANE0, OFFS048, SUB444, PACK_RGB_F32BE),
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  MAKE_YUVA_LE_FLOAT_PACK_FORMAT (AYUV_F32, "raw video", 0x00000000,
+      DPTH32_32_32_32, PSTR16161616, PLANE0, OFFS4_8_12_0, SUB4444,
+      PACK_AYUV_F32),
+#else
+  MAKE_YUVA_FLOAT_PACK_FORMAT (AYUV_F32, "raw video", 0x00000000,
+      DPTH32_32_32_32, PSTR16161616, PLANE0, OFFS4_8_12_0, SUB4444,
+      PACK_AYUV_F32),
+#endif
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (formats) == GST_VIDEO_FORMAT_LAST);

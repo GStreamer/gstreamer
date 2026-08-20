@@ -991,6 +991,7 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
     case GST_VIDEO_FORMAT_RGBA_F32LE:
     case GST_VIDEO_FORMAT_RGBA_F32BE:
     case GST_VIDEO_FORMAT_ARGB_F32:
+    case GST_VIDEO_FORMAT_AYUV_F32:
       info->stride[0] = width * 16;
       info->offset[0] = 0;
       info->size = info->stride[0] * height;

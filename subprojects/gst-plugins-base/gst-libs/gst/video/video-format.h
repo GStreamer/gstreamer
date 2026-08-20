@@ -194,6 +194,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_RGB_F16BE: packed 4:4:4 RGB, 16-bit floating point per channel (Since: 1.30)
  * @GST_VIDEO_FORMAT_RGB_F32LE: packed 4:4:4 RGB, 32-bit floating point per channel (Since: 1.30)
  * @GST_VIDEO_FORMAT_RGB_F32BE: packed 4:4:4 RGB, 32-bit floating point per channel (Since: 1.30)
+ * @GST_VIDEO_FORMAT_AYUV_F32: packed 4:4:4 YUV with alpha channel first, 32-bit (native endianness) floating point per channel (A-Y-U-V) (Since: 1.30)
  *
  * Enum value describing the most common video formats.
  *
@@ -864,6 +865,17 @@ typedef enum {
    */
   GST_VIDEO_FORMAT_RGB_F32BE,
 
+  /**
+   * GST_VIDEO_FORMAT_AYUV_F32:
+   *
+   * packed YUV with alpha channel first, 32-bit floating point
+   * per channel (A-Y-U-V), native endian.
+   * See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_AYUV_F32,
+
   /* Update GST_VIDEO_FORMAT_LAST below when adding more formats here */
 } GstVideoFormat;
 
@@ -874,7 +886,7 @@ typedef enum {
  *
  * Since: 1.26
  */
-#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_RGB_F32BE + 1)
+#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_AYUV_F32 + 1)
 
 #define GST_VIDEO_MAX_PLANES 4
 #define GST_VIDEO_MAX_COMPONENTS 4
@@ -1369,7 +1381,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  * Since: 1.24
  */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-#define GST_VIDEO_FORMATS_ALL_STR "RGBA_F32BE, RGBA_F32LE, ARGB_F32, " \
+#define GST_VIDEO_FORMATS_ALL_STR "RGBA_F32BE, AYUV_F32, RGBA_F32LE, ARGB_F32, " \
     "A444_16BE, A444_16LE, AYUV64, ARGB64, Y416_BE, RGBA64_BE, ARGB64_BE, " \
     "BGRA64_BE, ABGR64_BE, Y416_LE, RGBA64_LE, ARGB64_LE, BGRA64_LE, " \
     "ABGR64_LE, A422_16BE, A422_16LE, A420_16BE, A420_16LE, A444_12BE, " \
@@ -1391,7 +1403,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, " \
     "GRAY16_BE, GRAY16_LE, GRAY10_LE16, GRAY10_LE32, GRAY8"
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_VIDEO_FORMATS_ALL_STR "RGBA_F32LE, ARGB_F32, RGBA_F32BE, " \
+#define GST_VIDEO_FORMATS_ALL_STR "AYUV_F32, RGBA_F32LE, ARGB_F32, RGBA_F32BE, " \
     "A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, " \
     "BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, " \
     "ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, " \

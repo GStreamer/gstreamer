@@ -1821,8 +1821,7 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev,
       prepare_matrix (convert, &convert->to_RGB_matrix);
 
       if (is_float) {
-        /* keep ARGB_F32 */
-        g_assert (convert->current_format == GST_VIDEO_FORMAT_ARGB_F32);
+        convert->current_format = GST_VIDEO_FORMAT_ARGB_F32;
       } else if (convert->current_bits == 8) {
         convert->current_format = GST_VIDEO_FORMAT_ARGB;
       } else {
@@ -2513,6 +2512,7 @@ setup_borderline (GstVideoConverter * convert)
     gpointer planes[GST_VIDEO_MAX_PLANES];
     gint strides[GST_VIDEO_MAX_PLANES];
     gsize alloc_stride;
+    gfloat border_float[4] = { 0, };
 
     if (convert->unpack_bits > 16 || convert->pack_bits > 16)
       alloc_stride = sizeof (guint32) * 4 * width;
@@ -2524,12 +2524,11 @@ setup_borderline (GstVideoConverter * convert)
     out_finfo = convert->out_info.finfo;
     out_pack_finfo = gst_video_format_get_info (convert->pack_format);
 
+    border_val = GINT32_FROM_BE (convert->border_argb);
+
     if (GST_VIDEO_FORMAT_INFO_IS_YUV (out_pack_finfo)) {
       MatrixData cm;
       gint64 a, r, g, b;
-      gint64 y, u, v;
-
-      border_val = GINT32_FROM_BE (convert->border_argb);
 
       b = (0xFF000000 & border_val) >> 24;
       g = (0x00FF0000 & border_val) >> 16;
@@ -2545,25 +2544,35 @@ setup_borderline (GstVideoConverter * convert)
 
       compute_matrix_to_YUV (convert, &cm, TRUE);
 
-      /* convert to integer scale, same as prepare_matrix() */
-      color_matrix_scale_components (&cm, SCALE_F, SCALE_F, SCALE_F);
-      color_matrix_convert (&cm);
+      if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (out_pack_finfo)) {
+        border_float[0] = a / 255.0f;
+        border_float[1] = r * cm.dm[0][0] + g * cm.dm[0][1] +
+            b * cm.dm[0][2] + cm.dm[0][3];
+        border_float[2] = r * cm.dm[1][0] + g * cm.dm[1][1] +
+            b * cm.dm[1][2] + cm.dm[1][3];
+        border_float[3] = r * cm.dm[2][0] + g * cm.dm[2][1] +
+            b * cm.dm[2][2] + cm.dm[2][3];
+      } else {
+        gint64 y, u, v;
 
-      y = (r * cm.im[0][0] + g * cm.im[0][1] + b * cm.im[0][2] +
-          cm.im[0][3]) >> SCALE;
-      u = (r * cm.im[1][0] + g * cm.im[1][1] + b * cm.im[1][2] +
-          cm.im[1][3]) >> SCALE;
-      v = (r * cm.im[2][0] + g * cm.im[2][1] + b * cm.im[2][2] +
-          cm.im[2][3]) >> SCALE;
+        /* convert to integer scale, same as prepare_matrix() */
+        color_matrix_scale_components (&cm, SCALE_F, SCALE_F, SCALE_F);
+        color_matrix_convert (&cm);
 
-      a = CLAMP (a, 0, 255);
-      y = CLAMP (y, 0, 255);
-      u = CLAMP (u, 0, 255);
-      v = CLAMP (v, 0, 255);
+        y = (r * cm.im[0][0] + g * cm.im[0][1] + b * cm.im[0][2] +
+            cm.im[0][3]) >> SCALE;
+        u = (r * cm.im[1][0] + g * cm.im[1][1] + b * cm.im[1][2] +
+            cm.im[1][3]) >> SCALE;
+        v = (r * cm.im[2][0] + g * cm.im[2][1] + b * cm.im[2][2] +
+            cm.im[2][3]) >> SCALE;
 
-      border_val = (guint32) (a | (y << 8) | (u << 16) | v << 24);
-    } else {
-      border_val = GINT32_FROM_BE (convert->border_argb);
+        a = CLAMP (a, 0, 255);
+        y = CLAMP (y, 0, 255);
+        u = CLAMP (u, 0, 255);
+        v = CLAMP (v, 0, 255);
+
+        border_val = (guint32) (a | (y << 8) | (u << 16) | (v << 24));
+      }
     }
 
     if (convert->pack_bits == 8) {
@@ -2574,12 +2583,16 @@ setup_borderline (GstVideoConverter * convert)
       gfloat argb[4];
       guint8 *d = convert->borderline;
 
-      g_assert (GST_VIDEO_FORMAT_INFO_IS_FLOAT (out_finfo));
+      g_assert (GST_VIDEO_FORMAT_INFO_IS_FLOAT (out_pack_finfo));
 
-      argb[0] = (border_val & 0xff) / 255.0f;
-      argb[1] = ((border_val >> 8) & 0xff) / 255.0f;
-      argb[2] = ((border_val >> 16) & 0xff) / 255.0f;
-      argb[3] = ((border_val >> 24) & 0xff) / 255.0f;
+      if (GST_VIDEO_FORMAT_INFO_IS_YUV (out_pack_finfo)) {
+        memcpy (argb, border_float, sizeof (argb));
+      } else {
+        argb[0] = (border_val & 0xff) / 255.0f;
+        argb[1] = ((border_val >> 8) & 0xff) / 255.0f;
+        argb[2] = ((border_val >> 16) & 0xff) / 255.0f;
+        argb[3] = ((border_val >> 24) & 0xff) / 255.0f;
+      }
 
       for (i = 0; i < width; i++)
         memcpy (d + i * sizeof (argb), argb, sizeof (argb));
@@ -8430,6 +8443,7 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_RGB_F16BE:
     case GST_VIDEO_FORMAT_RGB_F32LE:
     case GST_VIDEO_FORMAT_RGB_F32BE:
+    case GST_VIDEO_FORMAT_AYUV_F32:
       res = format;
       g_assert_not_reached ();
       break;
