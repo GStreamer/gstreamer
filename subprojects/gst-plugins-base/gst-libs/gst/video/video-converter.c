@@ -8444,6 +8444,10 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_RGB_F32LE:
     case GST_VIDEO_FORMAT_RGB_F32BE:
     case GST_VIDEO_FORMAT_AYUV_F32:
+    case GST_VIDEO_FORMAT_GRAY_F16LE:
+    case GST_VIDEO_FORMAT_GRAY_F16BE:
+    case GST_VIDEO_FORMAT_GRAY_F32LE:
+    case GST_VIDEO_FORMAT_GRAY_F32BE:
       res = format;
       g_assert_not_reached ();
       break;

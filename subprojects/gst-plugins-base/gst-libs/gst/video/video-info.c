@@ -1462,6 +1462,18 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
       info->offset[0] = 0;
       info->size = info->stride[0] * height;
       break;
+    case GST_VIDEO_FORMAT_GRAY_F16LE:
+    case GST_VIDEO_FORMAT_GRAY_F16BE:
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_GRAY_F32LE:
+    case GST_VIDEO_FORMAT_GRAY_F32BE:
+      info->stride[0] = width * 4;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_UNKNOWN:
       GST_ERROR ("invalid format");
       g_warning ("invalid format");

@@ -195,6 +195,10 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_RGB_F32LE: packed 4:4:4 RGB, 32-bit floating point per channel (Since: 1.30)
  * @GST_VIDEO_FORMAT_RGB_F32BE: packed 4:4:4 RGB, 32-bit floating point per channel (Since: 1.30)
  * @GST_VIDEO_FORMAT_AYUV_F32: packed 4:4:4 YUV with alpha channel first, 32-bit (native endianness) floating point per channel (A-Y-U-V) (Since: 1.30)
+ * @GST_VIDEO_FORMAT_GRAY_F16LE: 16-bit floating-point grayscale (Since: 1.30)
+ * @GST_VIDEO_FORMAT_GRAY_F16BE: 16-bit floating-point grayscale (Since: 1.30)
+ * @GST_VIDEO_FORMAT_GRAY_F32LE: 32-bit floating-point grayscale (Since: 1.30)
+ * @GST_VIDEO_FORMAT_GRAY_F32BE: 32-bit floating-point grayscale (Since: 1.30)
  *
  * Enum value describing the most common video formats.
  *
@@ -876,6 +880,46 @@ typedef enum {
    */
   GST_VIDEO_FORMAT_AYUV_F32,
 
+  /**
+   * GST_VIDEO_FORMAT_GRAY_F16LE:
+   *
+   * 16-bit floating-point grayscale, little endian.
+   * See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_GRAY_F16LE,
+
+  /**
+   * GST_VIDEO_FORMAT_GRAY_F16BE:
+   *
+   * 16-bit floating-point grayscale, big endian.
+   * See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_GRAY_F16BE,
+
+  /**
+   * GST_VIDEO_FORMAT_GRAY_F32LE:
+   *
+   * 32-bit floating-point grayscale, little endian.
+   * See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_GRAY_F32LE,
+
+  /**
+   * GST_VIDEO_FORMAT_GRAY_F32BE:
+   *
+   * 32-bit floating-point grayscale, big endian.
+   * See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_FORMAT_GRAY_F32BE,
+
   /* Update GST_VIDEO_FORMAT_LAST below when adding more formats here */
 } GstVideoFormat;
 
@@ -886,7 +930,7 @@ typedef enum {
  *
  * Since: 1.26
  */
-#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_AYUV_F32 + 1)
+#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_GRAY_F32BE + 1)
 
 #define GST_VIDEO_MAX_PLANES 4
 #define GST_VIDEO_MAX_COMPONENTS 4
@@ -1401,7 +1445,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, " \
     "I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, " \
     "NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, " \
-    "GRAY16_BE, GRAY16_LE, GRAY10_LE16, GRAY10_LE32, GRAY8"
+    "GRAY_F32BE, GRAY_F32LE, GRAY16_BE, GRAY16_LE, GRAY_F16BE, GRAY_F16LE, " \
+    "GRAY10_LE16, GRAY10_LE32, GRAY8"
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GST_VIDEO_FORMATS_ALL_STR "AYUV_F32, RGBA_F32LE, ARGB_F32, RGBA_F32BE, " \
     "A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, " \
@@ -1423,8 +1468,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, " \
     "YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, " \
     "NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, " \
-    "BGR15, RGB15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE16, GRAY10_LE32, " \
-    "GRAY8"
+    "BGR15, RGB15, RGB8P, GRAY_F32LE, GRAY_F32BE, GRAY16_LE, GRAY16_BE, " \
+    "GRAY_F16LE, GRAY_F16BE, GRAY10_LE16, GRAY10_LE32, GRAY8"
 #endif
 
 /**
