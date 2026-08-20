@@ -8422,6 +8422,14 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_AHARDWARE_BUFFER:
     case GST_VIDEO_FORMAT_MT2110T:
     case GST_VIDEO_FORMAT_MT2110R:
+    case GST_VIDEO_FORMAT_RGBP_F16LE:
+    case GST_VIDEO_FORMAT_RGBP_F16BE:
+    case GST_VIDEO_FORMAT_RGBP_F32LE:
+    case GST_VIDEO_FORMAT_RGBP_F32BE:
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+    case GST_VIDEO_FORMAT_RGB_F16BE:
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+    case GST_VIDEO_FORMAT_RGB_F32BE:
       res = format;
       g_assert_not_reached ();
       break;

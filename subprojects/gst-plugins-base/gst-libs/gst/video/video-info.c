@@ -1429,6 +1429,38 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
     case GST_VIDEO_FORMAT_DMA_DRM:
     case GST_VIDEO_FORMAT_AHARDWARE_BUFFER:
       break;
+    case GST_VIDEO_FORMAT_RGBP_F16LE:
+    case GST_VIDEO_FORMAT_RGBP_F16BE:
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->stride[1] = info->stride[0];
+      info->stride[2] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] * 2;
+      info->size = info->stride[0] * height * 3;
+      break;
+    case GST_VIDEO_FORMAT_RGBP_F32LE:
+    case GST_VIDEO_FORMAT_RGBP_F32BE:
+      info->stride[0] = width * 4;
+      info->stride[1] = info->stride[0];
+      info->stride[2] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] * 2;
+      info->size = info->stride[0] * height * 3;
+      break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+    case GST_VIDEO_FORMAT_RGB_F16BE:
+      info->stride[0] = GST_ROUND_UP_4 (width * 6);
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+    case GST_VIDEO_FORMAT_RGB_F32BE:
+      info->stride[0] = width * 12;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
     case GST_VIDEO_FORMAT_UNKNOWN:
       GST_ERROR ("invalid format");
       g_warning ("invalid format");
