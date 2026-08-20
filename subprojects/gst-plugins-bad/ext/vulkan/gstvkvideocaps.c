@@ -119,20 +119,31 @@ build_profile (GstVulkanVideoProfile * profile,
   *profile = (GstVulkanVideoProfile) {
     .profile = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
-      .pNext = &profile->usage,
+      .pNext = &profile->codec,
       .videoCodecOperation = codec,
     }
   };
 
+  /* The codec-specific profile info is chained right after the generic profile
+   * info and the chain is terminated by the usage info. Intel's driver fails
+   * to walk the chain when the usage info sits in between, so every profile
+   * query fails and the codec goes undetected. pNext order is not significant
+   * per the Vulkan specification, hence the FIXME.
+   * The codec union is only populated later, by the per-codec caps functions,
+   * but those assign individual fields, so this pNext survives. */
+  GST_FIXME_ONCE ("Chaining the usage info last to work around Intel's "
+      "driver; this should not be needed");
+  profile->codec.base.pNext = (const VkBaseInStructure *) &profile->usage;
+
   if (GST_VULKAN_VIDEO_CODEC_OPERATION_IS_DECODE (codec)) {
     profile->usage.decode = (VkVideoDecodeUsageInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR,
-      .pNext = &profile->codec,
+      .pNext = NULL,
       .videoUsageHints = VK_VIDEO_DECODE_USAGE_DEFAULT_KHR,};
   } else if (GST_VULKAN_VIDEO_CODEC_OPERATION_IS_ENCODE (codec)) {
     profile->usage.encode = (VkVideoEncodeUsageInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR,
-      .pNext = &profile->codec,
+      .pNext = NULL,
       .videoUsageHints = VK_VIDEO_ENCODE_USAGE_DEFAULT_KHR,
       .videoContentHints = VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR,
       .tuningMode = VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR,
