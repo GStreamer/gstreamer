@@ -769,9 +769,18 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
 {
   GstVideoConvertScale *self = GST_VIDEO_CONVERT_SCALE (filter);
   GstVideoConvertScalePrivate *priv = PRIV (self);
+  GstVideoConvertScaleClass *klass = GST_VIDEO_CONVERT_SCALE_GET_CLASS (self);
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   GstVideoInfo tmp_info;
   GstStructure *options;
+
+  /* A scale-only element keeps the input colorimetry. With no colorimetry
+   * field on the output caps, out_info holds the resolution-derived default,
+   * so take the input's instead. */
+  if (!klass->converts
+      && !gst_structure_has_field (gst_caps_get_structure (out, 0),
+          "colorimetry"))
+    out_info->colorimetry = in_info->colorimetry;
 
   if (priv->convert) {
     gst_video_converter_free (priv->convert);
