@@ -110,6 +110,8 @@ GstD3D12Device * gst_amf_base_filter_get_d3d12_device (GstAmfBaseFilter * filter
 #endif
 
 GstAmfApi gst_amf_base_filter_get_api (GstAmfBaseFilter * filter);
+
+GstAmfApi gst_amf_base_filter_get_configured_api (GstAmfBaseFilter * filter);
 #endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAmfBaseFilter, gst_object_unref)

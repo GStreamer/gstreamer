@@ -423,6 +423,8 @@ static void gst_amf_encoder_dispose (GObject * object);
 static void gst_amf_encoder_finalize (GObject * object);
 static void gst_amf_encoder_set_context (GstElement * element,
     GstContext * context);
+static GstCaps *gst_amf_encoder_getcaps (GstVideoEncoder * encoder,
+    GstCaps * filter);
 static gboolean gst_amf_encoder_open (GstVideoEncoder * encoder);
 static gboolean gst_amf_encoder_stop (GstVideoEncoder * encoder);
 static gboolean gst_amf_encoder_close (GstVideoEncoder * encoder);
@@ -451,6 +453,7 @@ gst_amf_encoder_class_init (GstAmfEncoderClass * klass)
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_amf_encoder_set_context);
 
+  videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_amf_encoder_getcaps);
   videoenc_class->open = GST_DEBUG_FUNCPTR (gst_amf_encoder_open);
   videoenc_class->stop = GST_DEBUG_FUNCPTR (gst_amf_encoder_stop);
   videoenc_class->close = GST_DEBUG_FUNCPTR (gst_amf_encoder_close);
@@ -556,6 +559,30 @@ gst_amf_encoder_set_context (GstElement * element, GstContext * context)
 #endif // G_OS_WIN32
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+/* Encoder-side equivalent of GstAmfBaseFilter's transform_caps: without
+ * this, a peer could negotiate the "wrong" API's memory feature
+ * regardless of api.configured, silently defeating zero-copy (see
+ * gst_amf_check_caps_api_mismatch()). */
+static GstCaps *
+gst_amf_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
+{
+  GstCaps *caps = gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
+
+#if defined(G_OS_WIN32) && defined(HAVE_GST_D3D12)
+  {
+    GstAmfEncoder *self = GST_AMF_ENCODER (encoder);
+    GstAmfEncoderPrivate *priv = self->priv;
+    GstCaps *filtered = gst_amf_filter_caps_by_api (caps,
+        priv->api.configured);
+
+    gst_caps_unref (caps);
+    caps = filtered;
+  }
+#endif
+
+  return caps;
 }
 
 #ifdef G_OS_WIN32
@@ -982,6 +1009,11 @@ gst_amf_encoder_set_format (GstVideoEncoder * encoder,
      * Both priv->d3d.d3d11_device/d3d12_device stay open regardless. */
     gst_amf_resolve_active_api_from_caps (&priv->api, state->caps);
   }
+
+#ifdef HAVE_GST_D3D12
+  gst_amf_check_caps_api_mismatch (GST_ELEMENT (self), &priv->api,
+      state->caps, nullptr);
+#endif
 #endif
 
   return gst_amf_encoder_open_component (self);
@@ -1581,7 +1613,8 @@ gst_amf_encoder_set_subclass_data (GstAmfEncoder * encoder, gint64 adapter_luid,
 /* *INDENT-ON* */
 
 #ifdef G_OS_WIN32
-/* Concrete api in use -- never AUTO. */
+/* Concrete api in use -- never AUTO. Subclasses overriding getcaps need
+ * this to reapply the same filtering via gst_amf_filter_caps_by_api(). */
 GstAmfApi
 gst_amf_encoder_get_api (GstAmfEncoder * encoder)
 {
@@ -1589,6 +1622,18 @@ gst_amf_encoder_get_api (GstAmfEncoder * encoder)
       gst_amf_get_concrete_default_api ());
 
   return encoder->priv->api.active;
+}
+
+/* Raw configured api (from the GST_AMF_API env var, see
+ * gst_amf_get_default_api()) -- may be AUTO, unlike get_api(). Subclasses
+ * overriding getcaps need this to reapply the same AUTO-skip via
+ * gst_amf_filter_caps_by_api(). */
+GstAmfApi
+gst_amf_encoder_get_configured_api (GstAmfEncoder * encoder)
+{
+  g_return_val_if_fail (GST_IS_AMF_ENCODER (encoder), GST_AMF_DEFAULT_API);
+
+  return encoder->priv->api.configured;
 }
 #endif
 

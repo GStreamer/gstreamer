@@ -462,6 +462,19 @@ gst_amf_hq_scaler_transform_caps (GstBaseTransform * trans,
    * so we keep the format/colorimetry untouched. */
   tmp = gst_amf_hq_scaler_transform_size_info (trans, caps, direction);
 
+#if defined(G_OS_WIN32) && defined(HAVE_GST_D3D12)
+  {
+    /* Overrides (doesn't chain to) GstAmfBaseFilter's transform_caps, so
+     * its api-based filtering has to be reapplied here too. */
+    GstAmfBaseFilter *self = GST_AMF_BASE_FILTER (trans);
+    GstCaps *filtered = gst_amf_filter_caps_by_api (tmp,
+        gst_amf_base_filter_get_configured_api (self));
+
+    gst_caps_unref (tmp);
+    tmp = filtered;
+  }
+#endif
+
   if (filter) {
     result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);

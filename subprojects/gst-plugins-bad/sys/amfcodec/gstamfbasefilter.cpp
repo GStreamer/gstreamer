@@ -89,6 +89,8 @@ static gboolean gst_amf_base_filter_start (GstBaseTransform * trans);
 static gboolean gst_amf_base_filter_stop (GstBaseTransform * trans);
 static gboolean gst_amf_base_filter_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
+static GstCaps *gst_amf_base_filter_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_amf_base_filter_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
 static gboolean gst_amf_base_filter_query (GstBaseTransform * trans,
@@ -131,6 +133,8 @@ gst_amf_base_filter_class_init (GstAmfBaseFilterClass * klass)
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_amf_base_filter_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_amf_base_filter_stop);
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_amf_base_filter_transform_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_amf_base_filter_set_caps);
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_amf_base_filter_get_unit_size);
@@ -239,6 +243,18 @@ gst_amf_base_filter_get_api (GstAmfBaseFilter * filter)
       gst_amf_get_concrete_default_api ());
 
   return filter->priv->api.active;
+}
+
+/* Raw configured api (from the GST_AMF_API env var, see
+ * gst_amf_get_default_api()) -- may be AUTO, unlike *get_api(). Subclasses
+ * overriding transform_caps need this to reapply the same AUTO-skip via
+ * gst_amf_filter_caps_by_api(). */
+GstAmfApi
+gst_amf_base_filter_get_configured_api (GstAmfBaseFilter * filter)
+{
+  g_return_val_if_fail (GST_IS_AMF_BASE_FILTER (filter), GST_AMF_DEFAULT_API);
+
+  return filter->priv->api.configured;
 }
 #endif
 
@@ -438,6 +454,32 @@ gst_amf_base_filter_stop (GstBaseTransform * trans)
   return TRUE;
 }
 
+/* Restricts negotiable caps to the memory feature api.configured can
+ * back, so negotiation can't settle on the mismatch
+ * gst_amf_check_caps_api_mismatch() warns about after the fact. No-op
+ * when api == AUTO -- both features stay negotiable and set_caps()
+ * resolves the backend from whatever's settled on. */
+static GstCaps *
+gst_amf_base_filter_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *result = GST_BASE_TRANSFORM_CLASS (parent_class)->transform_caps
+      (trans, direction, caps, filter);
+
+#if defined(G_OS_WIN32) && defined(HAVE_GST_D3D12)
+  {
+    GstAmfBaseFilter *self = GST_AMF_BASE_FILTER (trans);
+    GstCaps *filtered = gst_amf_filter_caps_by_api (result,
+        self->priv->api.configured);
+
+    gst_caps_unref (result);
+    result = filtered;
+  }
+#endif
+
+  return result;
+}
+
 static gboolean
 gst_amf_base_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
@@ -479,6 +521,11 @@ gst_amf_base_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
 
 #ifdef G_OS_WIN32
+#ifdef HAVE_GST_D3D12
+  gst_amf_check_caps_api_mismatch (GST_ELEMENT (self), &priv->api,
+      incaps, outcaps);
+#endif
+
   if (priv->input_pool) {
     gst_buffer_pool_set_active (priv->input_pool, FALSE);
     gst_clear_object (&priv->input_pool);

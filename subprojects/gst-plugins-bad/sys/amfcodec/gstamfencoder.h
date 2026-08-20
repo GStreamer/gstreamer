@@ -114,6 +114,8 @@ void  gst_amf_encoder_set_subclass_data (GstAmfEncoder * encoder,
 
 #ifdef G_OS_WIN32
 GstAmfApi gst_amf_encoder_get_api (GstAmfEncoder * encoder);
+
+GstAmfApi gst_amf_encoder_get_configured_api (GstAmfEncoder * encoder);
 #endif
 
 AMF_RESULT gst_amf_encoder_set_pre_analysis_options (GstAmfEncoder * self,

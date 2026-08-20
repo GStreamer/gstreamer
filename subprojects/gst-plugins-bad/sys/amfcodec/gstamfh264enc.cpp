@@ -1353,6 +1353,18 @@ gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   gst_caps_unref (template_caps);
 
 done:
+#if defined(G_OS_WIN32) && defined(HAVE_GST_D3D12)
+  {
+    /* Overrides (doesn't chain to) GstAmfEncoder's getcaps, so its
+     * api-based filtering has to be reapplied here too. */
+    GstCaps *filtered = gst_amf_filter_caps_by_api (caps,
+        gst_amf_encoder_get_configured_api (GST_AMF_ENCODER (encoder)));
+
+    gst_caps_unref (caps);
+    caps = filtered;
+  }
+#endif
+
   GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, caps);
 
   return caps;

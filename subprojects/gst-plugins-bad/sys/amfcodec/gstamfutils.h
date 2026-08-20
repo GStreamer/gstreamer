@@ -79,6 +79,11 @@ void gst_amf_resolve_active_api (GstAmfApiState * state);
 void gst_amf_resolve_active_api_from_caps (GstAmfApiState * state,
     GstCaps * caps);
 
+void gst_amf_check_caps_api_mismatch (GstElement * element,
+    GstAmfApiState * state, GstCaps * in_caps, GstCaps * out_caps);
+
+GstCaps *     gst_amf_filter_caps_by_api (GstCaps * caps, GstAmfApi api);
+
 gboolean      gst_amf_init_once (void);
 
 gpointer      gst_amf_get_factory (void);

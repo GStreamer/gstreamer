@@ -245,6 +245,18 @@ static const GstAmfFeatureMapEntry k_amf_feature_map[] = {
   {GST_AMF_API_AUTO, nullptr, nullptr},
 };
 
+static const GstAmfFeatureMapEntry *
+gst_amf_feature_map_find_by_api (GstAmfApi api)
+{
+  for (guint i = 0; i < G_N_ELEMENTS (k_amf_feature_map); i++) {
+    if (!k_amf_feature_map[i].feature)
+      continue;
+    if (k_amf_feature_map[i].api == api)
+      return &k_amf_feature_map[i];
+  }
+  return nullptr;
+}
+
 /* Returns the concrete backend whose feature @features carries, or
  * GST_AMF_API_AUTO if none of the known backends' features are present
  * (e.g. plain system memory, or @features is NULL). */
@@ -303,6 +315,75 @@ gst_amf_resolve_active_api_from_caps (GstAmfApiState * state, GstCaps * caps)
 
   state->active = (from_caps != GST_AMF_API_AUTO) ?
       from_caps : gst_amf_get_concrete_default_api ();
+}
+
+/* Warns when @in_caps/@out_caps (either nullable) negotiated a different
+ * backend's memory feature than @state->active -- that combination
+ * silently defeats zero-copy with nothing else logging why. */
+void
+gst_amf_check_caps_api_mismatch (GstElement * element, GstAmfApiState * state,
+    GstCaps * in_caps, GstCaps * out_caps)
+{
+  GstAmfApi in_api =
+      gst_amf_api_for_features (in_caps ? gst_caps_get_features (in_caps,
+          0) : nullptr);
+  GstAmfApi out_api =
+      gst_amf_api_for_features (out_caps ? gst_caps_get_features (out_caps,
+          0) : nullptr);
+  GstAmfApi mismatched_api = GST_AMF_API_AUTO;
+
+  if (in_api != GST_AMF_API_AUTO && in_api != state->active)
+    mismatched_api = in_api;
+  else if (out_api != GST_AMF_API_AUTO && out_api != state->active)
+    mismatched_api = out_api;
+
+  if (mismatched_api != GST_AMF_API_AUTO) {
+    const GstAmfFeatureMapEntry *mismatched_entry =
+        gst_amf_feature_map_find_by_api (mismatched_api);
+    const GstAmfFeatureMapEntry *active_entry =
+        gst_amf_feature_map_find_by_api (state->active);
+
+    GST_WARNING_OBJECT (element, "Negotiated caps use %s memory but api=%s "
+        "is active (incaps %" GST_PTR_FORMAT ", outcaps %" GST_PTR_FORMAT
+        "); zero-copy is unavailable on the mismatched pad(s) and every "
+        "buffer will go through a host-memory copy instead. Set api to "
+        "match, or let upstream/downstream negotiate the matching memory "
+        "feature.", mismatched_entry ? mismatched_entry->feature : "?",
+        active_entry ? active_entry->nick : "?", in_caps, out_caps);
+  }
+}
+
+/* Drops caps structures carrying a different known backend's memory
+ * feature than @api, so negotiation can never settle on a mismatch (see
+ * gst_amf_check_caps_api_mismatch(), which only detects it after the
+ * fact). @api == GST_AMF_API_AUTO is a deliberate no-op -- call from
+ * transform_caps/getcaps with the *configured* api, not the resolved
+ * one. */
+GstCaps *
+gst_amf_filter_caps_by_api (GstCaps * caps, GstAmfApi api)
+{
+  GstCaps *result;
+  guint i, n;
+
+  if (api == GST_AMF_API_AUTO)
+    return gst_caps_ref (caps);
+
+  result = gst_caps_new_empty ();
+  n = gst_caps_get_size (caps);
+
+  for (i = 0; i < n; i++) {
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+    GstAmfApi structure_api = gst_amf_api_for_features (features);
+
+    if (structure_api != GST_AMF_API_AUTO && structure_api != api)
+      continue;
+
+    gst_caps_append_structure_full (result,
+        gst_structure_copy (gst_caps_get_structure (caps, i)),
+        features ? gst_caps_features_copy (features) : nullptr);
+  }
+
+  return result;
 }
 
 const gchar *
