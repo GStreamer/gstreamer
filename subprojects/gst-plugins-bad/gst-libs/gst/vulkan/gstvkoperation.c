@@ -372,6 +372,8 @@ gst_vulkan_operation_reset (GstVulkanOperation * self)
 
   priv = GET_PRIV (self);
 
+  priv->op_submitted = FALSE;
+
   gst_clear_vulkan_command_buffer (&self->cmd_buf);
 
   gst_vulkan_operation_discard_dependencies (self);
