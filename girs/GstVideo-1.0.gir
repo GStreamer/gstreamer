@@ -3249,7 +3249,7 @@ Formats are sorted by decreasing "quality", using these criteria by priority:
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <constant name="VIDEO_FORMATS_ALL_STR" value="RGBA_F32BE, RGBA_F32LE, A444_16BE, A444_16LE, AYUV64, ARGB64, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, Y416_LE, RGBA64_LE, ARGB64_LE, BGRA64_LE, ABGR64_LE, A422_16BE, A422_16LE, A420_16BE, A420_16LE, A444_12BE, GBRA_12BE, A444_12LE, GBRA_12LE, Y412_BE, Y412_LE, A422_12BE, A422_12LE, A420_12BE, A420_12LE, RGBA_F16BE, RGBA_F16LE, A444_10BE, GBRA_10BE, A444_10LE, GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, BGR10A2_LE, RGB10A2_LE, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16BE, GBR_16BE, Y444_16LE, GBR_16LE, Y216_BE, v216, Y216_LE, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, BGR10x2_LE, RGB10x2_LE, I422_10BE, I422_10LE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10BE, I420_10LE, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, P010_10LE, NV12_10LE40, NV12_10LE32, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE16, GRAY10_LE32, GRAY8" c:type="GST_VIDEO_FORMATS_ALL_STR" version="1.24">
+    <constant name="VIDEO_FORMATS_ALL_STR" value="RGBA_F32BE, AYUV_F32, RGBA_F32LE, ARGB_F32, A444_16BE, A444_16LE, AYUV64, ARGB64, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, Y416_LE, RGBA64_LE, ARGB64_LE, BGRA64_LE, ABGR64_LE, A422_16BE, A422_16LE, A420_16BE, A420_16LE, A444_12BE, GBRA_12BE, A444_12LE, GBRA_12LE, Y412_BE, Y412_LE, A422_12BE, A422_12LE, A420_12BE, A420_12LE, RGBA_F16BE, RGBA_F16LE, A444_10BE, GBRA_10BE, A444_10LE, GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, BGR10A2_LE, RGB10A2_LE, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, RGBP_F32BE, RGBP_F32LE, RGB_F32BE, RGB_F32LE, Y444_16BE, GBR_16BE, Y444_16LE, GBR_16LE, Y216_BE, v216, Y216_LE, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, P012_BE, P012_LE, RGBP_F16BE, RGBP_F16LE, RGB_F16BE, RGB_F16LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, BGR10x2_LE, RGB10x2_LE, I422_10BE, I422_10LE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10BE, I420_10LE, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, P010_10LE, NV12_10LE40, NV12_10LE32, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY_F32BE, GRAY_F32LE, GRAY16_BE, GRAY16_LE, GRAY_F16BE, GRAY_F16LE, GRAY10_LE16, GRAY10_LE32, GRAY8" c:type="GST_VIDEO_FORMATS_ALL_STR" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Declare all video formats as a string.
 
 Formats are sorted by decreasing "quality", using these criteria by priority:
@@ -3635,7 +3635,7 @@ Return the width of one tile in pixels, zero if its not an integer.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <constant name="VIDEO_FORMAT_LAST" value="147" c:type="GST_VIDEO_FORMAT_LAST" version="1.26">
+    <constant name="VIDEO_FORMAT_LAST" value="161" c:type="GST_VIDEO_FORMAT_LAST" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Number of video formats in #GstVideoFormat.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="gint" c:type="gint"/>
@@ -6492,7 +6492,7 @@ represent colors outside the gamut of the primaries). Elements
 processing floats natively should preserve out-of-range values;
 converting to an integer format clamps them.</doc>
       </member>
-      <function name="offsets" c:identifier="gst_video_color_range_offsets">
+      <function name="offsets" c:identifier="gst_video_color_range_offsets" deprecated="1" deprecated-version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">Compute the offset and scale values for each component of @info. For each
 component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
 range [0.0 .. 1.0].
@@ -6500,6 +6500,7 @@ range [0.0 .. 1.0].
 The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
 the component values in range [0.0 .. 1.0] back to their representation in
 @info and @range.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_video_color_range_offsets_full() instead.</doc-deprecated>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -6523,6 +6524,53 @@ the component values in range [0.0 .. 1.0] back to their representation in
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">output scale</doc>
             <array zero-terminated="0" c:type="gint*" fixed-size="4">
               <type name="gint" c:type="gint"/>
+            </array>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="offsets_full" c:identifier="gst_video_color_range_offsets_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">Compute the offset and scale values for each component of @info. For each
+component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
+range [0.0 .. 1.0].
+
+The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
+the component values in range [0.0 .. 1.0] back to their representation in
+@info and @range.
+
+If @fullscale is provided, it will contain the maximum full-range value for
+each component. For integer formats, the value is `(1 &lt;&lt; depth) - 1`, where
+`depth` is the bit depth of each component. For floating-point formats, the
+value is 1.0</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="range" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">a #GstVideoColorRange</doc>
+            <type name="VideoColorRange" c:type="GstVideoColorRange"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">a #GstVideoFormatInfo</doc>
+            <type name="VideoFormatInfo" c:type="const GstVideoFormatInfo*"/>
+          </parameter>
+          <parameter name="offset" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">output offsets</doc>
+            <array zero-terminated="0" c:type="gdouble*" fixed-size="4">
+              <type name="gdouble" c:type="gdouble"/>
+            </array>
+          </parameter>
+          <parameter name="scale" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">output scale</doc>
+            <array zero-terminated="0" c:type="gdouble*" fixed-size="4">
+              <type name="gdouble" c:type="gdouble"/>
+            </array>
+          </parameter>
+          <parameter name="fullscale" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">
+  full-scale values for each component</doc>
+            <array zero-terminated="0" c:type="gdouble*" fixed-size="4">
+              <type name="gdouble" c:type="gdouble"/>
             </array>
           </parameter>
         </parameters>
@@ -11338,6 +11386,64 @@ conventions.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed RGB with alpha, 32-bit floating point per channel (R-G-B-A),
 big endian. See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value
 conventions.</doc>
+      </member>
+      <member name="argb_f32" value="147" c:identifier="GST_VIDEO_FORMAT_ARGB_F32" version="1.30" glib:nick="argb-f32" glib:name="GST_VIDEO_FORMAT_ARGB_F32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed RGB with alpha channel first, 32-bit floating point
+per channel (A-R-G-B), native endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgbp_f16le" value="148" c:identifier="GST_VIDEO_FORMAT_RGBP_F16LE" version="1.30" glib:nick="rgbp-f16le" glib:name="GST_VIDEO_FORMAT_RGBP_F16LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 16-bit floating point per channel little endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgbp_f16be" value="149" c:identifier="GST_VIDEO_FORMAT_RGBP_F16BE" version="1.30" glib:nick="rgbp-f16be" glib:name="GST_VIDEO_FORMAT_RGBP_F16BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 16-bit floating point per channel big endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgbp_f32le" value="150" c:identifier="GST_VIDEO_FORMAT_RGBP_F32LE" version="1.30" glib:nick="rgbp-f32le" glib:name="GST_VIDEO_FORMAT_RGBP_F32LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 32-bit floating point per channel little endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgbp_f32be" value="151" c:identifier="GST_VIDEO_FORMAT_RGBP_F32BE" version="1.30" glib:nick="rgbp-f32be" glib:name="GST_VIDEO_FORMAT_RGBP_F32BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">planar 4:4:4 RGB, 32-bit floating point per channel big endian
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgb_f16le" value="152" c:identifier="GST_VIDEO_FORMAT_RGB_F16LE" version="1.30" glib:nick="rgb-f16le" glib:name="GST_VIDEO_FORMAT_RGB_F16LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed 4:4:4 RGB, 16-bit floating point per channel little endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgb_f16be" value="153" c:identifier="GST_VIDEO_FORMAT_RGB_F16BE" version="1.30" glib:nick="rgb-f16be" glib:name="GST_VIDEO_FORMAT_RGB_F16BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed 4:4:4 RGB, 16-bit floating point per channel big endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgb_f32le" value="154" c:identifier="GST_VIDEO_FORMAT_RGB_F32LE" version="1.30" glib:nick="rgb-f32le" glib:name="GST_VIDEO_FORMAT_RGB_F32LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed 4:4:4 RGB, 32-bit floating point per channel little endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="rgb_f32be" value="155" c:identifier="GST_VIDEO_FORMAT_RGB_F32BE" version="1.30" glib:nick="rgb-f32be" glib:name="GST_VIDEO_FORMAT_RGB_F32BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed 4:4:4 RGB, 32-bit floating point per channel big endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="ayuv_f32" value="156" c:identifier="GST_VIDEO_FORMAT_AYUV_F32" version="1.30" glib:nick="ayuv-f32" glib:name="GST_VIDEO_FORMAT_AYUV_F32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">packed YUV with alpha channel first, 32-bit floating point
+per channel (A-Y-U-V), native endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="gray_f16le" value="157" c:identifier="GST_VIDEO_FORMAT_GRAY_F16LE" version="1.30" glib:nick="gray-f16le" glib:name="GST_VIDEO_FORMAT_GRAY_F16LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">16-bit floating-point grayscale, little endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="gray_f16be" value="158" c:identifier="GST_VIDEO_FORMAT_GRAY_F16BE" version="1.30" glib:nick="gray-f16be" glib:name="GST_VIDEO_FORMAT_GRAY_F16BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">16-bit floating-point grayscale, big endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="gray_f32le" value="159" c:identifier="GST_VIDEO_FORMAT_GRAY_F32LE" version="1.30" glib:nick="gray-f32le" glib:name="GST_VIDEO_FORMAT_GRAY_F32LE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">32-bit floating-point grayscale, little endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
+      </member>
+      <member name="gray_f32be" value="160" c:identifier="GST_VIDEO_FORMAT_GRAY_F32BE" version="1.30" glib:nick="gray-f32be" glib:name="GST_VIDEO_FORMAT_GRAY_F32BE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">32-bit floating-point grayscale, big endian.
+See %GST_VIDEO_FORMAT_FLAG_FLOAT for the component value conventions.</doc>
       </member>
       <function name="from_fourcc" c:identifier="gst_video_format_from_fourcc">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Converts a FOURCC value into the corresponding #GstVideoFormat.
@@ -19735,7 +19841,7 @@ and "ITU-T H.273 Table 2".
         </parameter>
       </parameters>
     </function>
-    <function name="video_color_range_offsets" c:identifier="gst_video_color_range_offsets" moved-to="VideoColorRange.offsets">
+    <function name="video_color_range_offsets" c:identifier="gst_video_color_range_offsets" moved-to="VideoColorRange.offsets" deprecated="1" deprecated-version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">Compute the offset and scale values for each component of @info. For each
 component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
 range [0.0 .. 1.0].
@@ -19743,6 +19849,7 @@ range [0.0 .. 1.0].
 The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
 the component values in range [0.0 .. 1.0] back to their representation in
 @info and @range.</doc>
+      <doc-deprecated xml:space="preserve">Use gst_video_color_range_offsets_full() instead.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
@@ -19766,6 +19873,53 @@ the component values in range [0.0 .. 1.0] back to their representation in
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">output scale</doc>
           <array zero-terminated="0" c:type="gint*" fixed-size="4">
             <type name="gint" c:type="gint"/>
+          </array>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_color_range_offsets_full" c:identifier="gst_video_color_range_offsets_full" moved-to="VideoColorRange.offsets_full" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">Compute the offset and scale values for each component of @info. For each
+component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
+range [0.0 .. 1.0].
+
+The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
+the component values in range [0.0 .. 1.0] back to their representation in
+@info and @range.
+
+If @fullscale is provided, it will contain the maximum full-range value for
+each component. For integer formats, the value is `(1 &lt;&lt; depth) - 1`, where
+`depth` is the bit depth of each component. For floating-point formats, the
+value is 1.0</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="range" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">a #GstVideoColorRange</doc>
+          <type name="VideoColorRange" c:type="GstVideoColorRange"/>
+        </parameter>
+        <parameter name="info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">a #GstVideoFormatInfo</doc>
+          <type name="VideoFormatInfo" c:type="const GstVideoFormatInfo*"/>
+        </parameter>
+        <parameter name="offset" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">output offsets</doc>
+          <array zero-terminated="0" c:type="gdouble*" fixed-size="4">
+            <type name="gdouble" c:type="gdouble"/>
+          </array>
+        </parameter>
+        <parameter name="scale" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">output scale</doc>
+          <array zero-terminated="0" c:type="gdouble*" fixed-size="4">
+            <type name="gdouble" c:type="gdouble"/>
+          </array>
+        </parameter>
+        <parameter name="fullscale" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.c">
+  full-scale values for each component</doc>
+          <array zero-terminated="0" c:type="gdouble*" fixed-size="4">
+            <type name="gdouble" c:type="gdouble"/>
           </array>
         </parameter>
       </parameters>
