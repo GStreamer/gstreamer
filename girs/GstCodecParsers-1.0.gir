@@ -3231,7 +3231,7 @@ D.2.31</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <field name="ref_pic_marking" writable="1">
-        <array zero-terminated="0" fixed-size="10">
+        <array zero-terminated="0" fixed-size="67">
           <type name="H264RefPicMarking" c:type="GstH264RefPicMarking"/>
         </array>
       </field>
@@ -4981,6 +4981,20 @@ motion vector component</doc>
       </parameters>
     </function-macro>
     <constant name="H264_MAX_PPS_COUNT" value="256" c:type="GST_H264_MAX_PPS_COUNT">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264parser.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="H264_MAX_REF_PIC_MARKINGS" value="67" c:type="GST_H264_MAX_REF_PIC_MARKINGS" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264parser.h">Maximum number of memory management control operations one
+`dec_ref_pic_marking` can carry. The standard sets no explicit bound
+(7.3.3.3); what bounds it is the reference set those operations can
+address. A.3 bounds MaxDpbFrames at 16, and each reference frame has
+two fields, so 32 references - each of which may, in the worst case,
+be moved to the long-term list (type 3) and then discarded from it
+(type 2). Three more set the long-term maximum (type 4), mark the
+current picture as long-term (type 6) and end the process (type 0).
+
+The same bound libavcodec has used for years, as H264_MAX_MMCO_COUNT.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth264parser.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
