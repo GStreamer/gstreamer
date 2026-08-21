@@ -21,6 +21,7 @@ conv_input_formats = [
   'GBR_10',
   'GBR_12',
   'GBRA',
+  'GRAY',
 ]
 
 conv_output_formats = [
@@ -62,6 +63,10 @@ conv_output_formats = [
   'RGBP_F16',
   'RGB_F32',
   'RGB_F16',
+  'GRAY8',
+  'GRAY16',
+  'GRAY_F32',
+  'GRAY_F16',
 ]
 
 if have_hipcc

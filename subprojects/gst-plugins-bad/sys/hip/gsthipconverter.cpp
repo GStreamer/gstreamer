@@ -656,6 +656,9 @@ typedef struct _TextureFormat
 #define MAKE_FORMAT_RGBAP(f,cf,sample_func) \
   { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf, \
       HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf }, {1, 1, 1, 1}, sample_func }
+#define MAKE_FORMAT_GRAY(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_NONE, \
+      HIP_AD_FORMAT_NONE, HIP_AD_FORMAT_NONE },  {1, 0, 0, 0}, "GRAY" }
 
 static const TextureFormat format_map[] = {
   MAKE_FORMAT_YUV_PLANAR (I420, UNSIGNED_INT8, SAMPLE_YUV_PLANAR),
@@ -693,6 +696,10 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_RGB (RGBA_F32LE, FLOAT, SAMPLE_RGBA),
   MAKE_FORMAT_RGBP (RGBP_F16LE, HALF, SAMPLE_RGBP),
   MAKE_FORMAT_RGBP (RGBP_F32LE, FLOAT, SAMPLE_RGBP),
+  MAKE_FORMAT_GRAY (GRAY8, UNSIGNED_INT8),
+  MAKE_FORMAT_GRAY (GRAY16_LE, UNSIGNED_INT16),
+  MAKE_FORMAT_GRAY (GRAY_F16LE, HALF),
+  MAKE_FORMAT_GRAY (GRAY_F32LE, FLOAT),
 };
 
 struct TextureBuffer
@@ -1042,6 +1049,43 @@ do_align (size_t value, size_t align)
   return ((value + align - 1) / align) * align;
 }
 
+static void
+convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
+{
+  GstVideoInfo tmp;
+
+  if (!GST_VIDEO_INFO_IS_GRAY (gray)) {
+    *yuv = *gray;
+    return;
+  }
+
+  if (gray->finfo->depth[0] == 8) {
+    gst_video_info_set_format (&tmp,
+        GST_VIDEO_FORMAT_Y444, gray->width, gray->height);
+  } else {
+    gst_video_info_set_format (&tmp,
+        GST_VIDEO_FORMAT_Y444_16LE, gray->width, gray->height);
+  }
+
+  tmp.colorimetry.range = gray->colorimetry.range;
+  if (tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN)
+    tmp.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+
+  tmp.colorimetry.primaries = gray->colorimetry.primaries;
+  if (tmp.colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
+    tmp.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+
+  tmp.colorimetry.transfer = gray->colorimetry.transfer;
+  if (tmp.colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN)
+    tmp.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+
+  tmp.colorimetry.matrix = gray->colorimetry.matrix;
+  if (tmp.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN)
+    tmp.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+
+  *yuv = tmp;
+}
+
 static gboolean
 gst_hip_converter_setup (GstHipConverter * self)
 {
@@ -1059,12 +1103,20 @@ gst_hip_converter_setup (GstHipConverter * self)
   hipError_t ret;
   std::string output_name;
   std::string unpack_name;
+  GstVideoInfo matrix_in_info;
+  GstVideoInfo matrix_out_info;
 
   in_info = &priv->in_info;
   out_info = &priv->out_info;
   texture_info = &priv->texture_info;
   in_color = &in_info->colorimetry;
   out_color = &out_info->colorimetry;
+
+  convert_info_gray_to_yuv (in_info, &matrix_in_info);
+  convert_info_gray_to_yuv (out_info, &matrix_out_info);
+
+  const GstVideoInfo *matrix_in = &matrix_in_info;
+  const GstVideoInfo *matrix_out = &matrix_out_info;
 
   memset (&convert_matrix, 0, sizeof (GstHipColorMatrix));
   color_matrix_identity (&convert_matrix);
@@ -1189,6 +1241,18 @@ gst_hip_converter_setup (GstHipConverter * self)
     case GST_VIDEO_FORMAT_RGB_F16LE:
       output_name = "RGB_F16";
       break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      output_name = "GRAY8";
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      output_name = "GRAY16";
+      break;
+    case GST_VIDEO_FORMAT_GRAY_F32LE:
+      output_name = "GRAY_F32";
+      break;
+    case GST_VIDEO_FORMAT_GRAY_F16LE:
+      output_name = "GRAY_F16";
+      break;
     default:
       break;
   }
@@ -1298,7 +1362,7 @@ gst_hip_converter_setup (GstHipConverter * self)
       if (in_color->range == out_color->range) {
         GST_DEBUG_OBJECT (self, "RGB -> RGB conversion without matrix");
       } else {
-        if (!gst_hip_color_range_adjust_matrix_unorm (in_info, out_info,
+        if (!gst_hip_color_range_adjust_matrix_unorm (matrix_in, matrix_out,
                 &convert_matrix)) {
           GST_ERROR_OBJECT (self, "Failed to get RGB range adjust matrix");
           return FALSE;
@@ -1313,8 +1377,9 @@ gst_hip_converter_setup (GstHipConverter * self)
         priv->const_buf->do_convert = 1;
       }
     } else {
-      /* RGB -> YUV */
-      if (!gst_hip_rgb_to_yuv_matrix_unorm (in_info, out_info, &convert_matrix)) {
+      /* RGB -> YUV/GRAY */
+      if (!gst_hip_rgb_to_yuv_matrix_unorm (matrix_in,
+              matrix_out, &convert_matrix)) {
         GST_ERROR_OBJECT (self, "Failed to get RGB -> YUV transform matrix");
         return FALSE;
       }
@@ -1327,8 +1392,9 @@ gst_hip_converter_setup (GstHipConverter * self)
     }
   } else {
     if (GST_VIDEO_INFO_IS_RGB (out_info)) {
-      /* YUV -> RGB */
-      if (!gst_hip_yuv_to_rgb_matrix_unorm (in_info, out_info, &convert_matrix)) {
+      /* YUV/GRAY -> RGB */
+      if (!gst_hip_yuv_to_rgb_matrix_unorm (matrix_in,
+              matrix_out, &convert_matrix)) {
         GST_ERROR_OBJECT (self, "Failed to get YUV -> RGB transform matrix");
         return FALSE;
       }
@@ -1339,11 +1405,11 @@ gst_hip_converter_setup (GstHipConverter * self)
 
       priv->const_buf->do_convert = 1;
     } else {
-      /* YUV -> YUV */
+      /* YUV/GRAY -> YUV/GRAY */
       if (in_color->range == out_color->range) {
-        GST_DEBUG_OBJECT (self, "YUV -> YU conversion without matrix");
+        GST_DEBUG_OBJECT (self, "YUV conversion without matrix");
       } else {
-        if (!gst_hip_color_range_adjust_matrix_unorm (in_info, out_info,
+        if (!gst_hip_color_range_adjust_matrix_unorm (matrix_in, matrix_out,
                 &convert_matrix)) {
           GST_ERROR_OBJECT (self, "Failed to get GRAY range adjust matrix");
           return FALSE;
