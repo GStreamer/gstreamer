@@ -691,6 +691,8 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_RGB (VUYA, UNSIGNED_INT8, SAMPLE_VUYA),
   MAKE_FORMAT_RGB (RGBA_F16LE, HALF, SAMPLE_RGBA),
   MAKE_FORMAT_RGB (RGBA_F32LE, FLOAT, SAMPLE_RGBA),
+  MAKE_FORMAT_RGBP (RGBP_F16LE, HALF, SAMPLE_RGBP),
+  MAKE_FORMAT_RGBP (RGBP_F32LE, FLOAT, SAMPLE_RGBP),
 };
 
 struct TextureBuffer
@@ -1175,6 +1177,18 @@ gst_hip_converter_setup (GstHipConverter * self)
     case GST_VIDEO_FORMAT_RGBA_F16LE:
       output_name = "RGBA_F16";
       break;
+    case GST_VIDEO_FORMAT_RGBP_F32LE:
+      output_name = "RGBP_F32";
+      break;
+    case GST_VIDEO_FORMAT_RGBP_F16LE:
+      output_name = "RGBP_F16";
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+      output_name = "RGB_F32";
+      break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+      output_name = "RGB_F16";
+      break;
     default:
       break;
   }
@@ -1218,6 +1232,18 @@ gst_hip_converter_setup (GstHipConverter * self)
           GST_VIDEO_FORMAT_VUYA, GST_VIDEO_INFO_WIDTH (in_info),
           GST_VIDEO_INFO_HEIGHT (in_info));
       unpack_name = "GstHipConverterUnpack_YUY2_VUYA";
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+      gst_video_info_set_format (&priv->texture_info,
+          GST_VIDEO_FORMAT_RGBA_F32LE, GST_VIDEO_INFO_WIDTH (in_info),
+          GST_VIDEO_INFO_HEIGHT (in_info));
+      unpack_name = "GstHipConverterUnpack_RGB_F32_RGBA_F32";
+      break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+      gst_video_info_set_format (&priv->texture_info,
+          GST_VIDEO_FORMAT_RGBA_F16LE, GST_VIDEO_INFO_WIDTH (in_info),
+          GST_VIDEO_INFO_HEIGHT (in_info));
+      unpack_name = "GstHipConverterUnpack_RGB_F16_RGBA_F16";
       break;
     default:
       break;

@@ -58,6 +58,10 @@ conv_output_formats = [
   'GBRA',
   'RGBA_F32',
   'RGBA_F16',
+  'RGBP_F32',
+  'RGBP_F16',
+  'RGB_F32',
+  'RGB_F16',
 ]
 
 if have_hipcc

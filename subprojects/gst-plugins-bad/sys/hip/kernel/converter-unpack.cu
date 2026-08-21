@@ -20,6 +20,7 @@
 #if defined(__NVCC__) || defined(__HIPCC__)
 #ifdef __HIPCC__
 #include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
 #endif
 
 extern "C" {
@@ -108,6 +109,44 @@ GstHipConverterUnpack_YUY2_VUYA
     dst[dst_pos + 1] = src[src_pos + 1];
     dst[dst_pos + 2] = src[src_pos + ((x_pos & 1) ? 2 : 0)];
     dst[dst_pos + 3] = 0xff;
+  }
+}
+
+__global__ void
+GstHipConverterUnpack_RGB_F32_RGBA_F32
+(unsigned char *src, unsigned char *dst, int width, int height,
+    int src_stride, int dst_stride)
+{
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (x < width && y < height) {
+    float *s = (float *) &src[x * 12 + y * src_stride];
+    float *d = (float *) &dst[x * 16 + y * dst_stride];
+
+    d[0] = s[0];
+    d[1] = s[1];
+    d[2] = s[2];
+    d[3] = 1.0f;
+  }
+}
+
+__global__ void
+GstHipConverterUnpack_RGB_F16_RGBA_F16
+(unsigned char *src, unsigned char *dst, int width, int height,
+    int src_stride, int dst_stride)
+{
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (x < width && y < height) {
+    __half *s = (__half *) &src[x * 6 + y * src_stride];
+    __half *d = (__half *) &dst[x * 8 + y * dst_stride];
+
+    d[0] = s[0];
+    d[1] = s[1];
+    d[2] = s[2];
+    d[3] = __float2half_rn (1.0f);
   }
 }
 }
@@ -199,6 +238,44 @@ static const char ConverterUnpack_str[] =
 "    dst[dst_pos + 1] = src[src_pos + 1];\n"
 "    dst[dst_pos + 2] = src[src_pos + ((x_pos & 1) ? 2 : 0)];\n"
 "    dst[dst_pos + 3] = 0xff;\n"
+"  }\n"
+"}\n"
+"\n"
+"__global__ void\n"
+"GstHipConverterUnpack_RGB_F32_RGBA_F32\n"
+"(unsigned char *src, unsigned char *dst, int width, int height,\n"
+"    int src_stride, int dst_stride)\n"
+"{\n"
+"  int x = blockIdx.x * blockDim.x + threadIdx.x;\n"
+"  int y = blockIdx.y * blockDim.y + threadIdx.y;\n"
+"\n"
+"  if (x < width && y < height) {\n"
+"    float *s = (float *) &src[x * 12 + y * src_stride];\n"
+"    float *d = (float *) &dst[x * 16 + y * dst_stride];\n"
+"\n"
+"    d[0] = s[0];\n"
+"    d[1] = s[1];\n"
+"    d[2] = s[2];\n"
+"    d[3] = 1.0f;\n"
+"  }\n"
+"}\n"
+"\n"
+"__global__ void\n"
+"GstHipConverterUnpack_RGB_F16_RGBA_F16\n"
+"(unsigned char *src, unsigned char *dst, int width, int height,\n"
+"    int src_stride, int dst_stride)\n"
+"{\n"
+"  int x = blockIdx.x * blockDim.x + threadIdx.x;\n"
+"  int y = blockIdx.y * blockDim.y + threadIdx.y;\n"
+"\n"
+"  if (x < width && y < height) {\n"
+"    __half *s = (__half *) &src[x * 6 + y * src_stride];\n"
+"    __half *d = (__half *) &dst[x * 8 + y * dst_stride];\n"
+"\n"
+"    d[0] = s[0];\n"
+"    d[1] = s[1];\n"
+"    d[2] = s[2];\n"
+"    d[3] = __float2half_rn (1.0f);\n"
 "  }\n"
 "}\n"
 "}\n"
