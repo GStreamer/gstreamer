@@ -483,7 +483,7 @@ _destroy_wrapped_user_data (GstEGLImage * image, gpointer user_data)
  * @client_buffer: an EGLClientBuffer
  * @attribs: additional attributes to add to the `eglCreateImage`() call.
  * @user_data: user data
- * @user_data_destroy: (destroy user_data) (scope async): called when @user_data is no longer needed
+ * @destroy_notify: (destroy user_data) (scope async): called when @user_data is no longer needed
  *
  * Returns: (transfer full) (nullable): a #GstEGLImage wrapping @client_buffer or %NULL on failure
  *

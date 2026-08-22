@@ -150,11 +150,12 @@ external-only or not at all.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">additional attributes to add to the `eglCreateImage`() call.</doc>
             <type name="guintptr" c:type="guintptr*"/>
           </parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" scope="notified">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">user data</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
-          <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+          <parameter name="destroy_notify" transfer-ownership="none" scope="async" destroy="5">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">called when @user_data is no longer needed</doc>
             <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
           </parameter>
         </parameters>
@@ -815,11 +816,12 @@ external-only or not at all.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">additional attributes to add to the `eglCreateImage`() call.</doc>
           <type name="guintptr" c:type="guintptr*"/>
         </parameter>
-        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" scope="notified">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">user data</doc>
           <type name="gpointer" c:type="gpointer"/>
         </parameter>
-        <parameter name="destroy_notify" transfer-ownership="none" scope="async">
+        <parameter name="destroy_notify" transfer-ownership="none" scope="async" destroy="5">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">called when @user_data is no longer needed</doc>
           <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
         </parameter>
       </parameters>
