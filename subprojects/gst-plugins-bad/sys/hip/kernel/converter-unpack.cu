@@ -93,6 +93,23 @@ GstHipConverterUnpack_BGR10A2_ARGB64
     *(unsigned short *) &dst[dst_pos + 6] = b;
   }
 }
+
+__global__ void
+GstHipConverterUnpack_YUY2_VUYA
+(unsigned char *src, unsigned char *dst, int width, int height,
+    int src_stride, int dst_stride)
+{
+  int x_pos = blockIdx.x * blockDim.x + threadIdx.x;
+  int y_pos = blockIdx.y * blockDim.y + threadIdx.y;
+  if (x_pos < width && y_pos < height) {
+    int dst_pos = x_pos * 4 + y_pos * dst_stride;
+    int src_pos = (x_pos / 2) * 4 + y_pos * src_stride;
+    dst[dst_pos] = src[src_pos + 3];
+    dst[dst_pos + 1] = src[src_pos + 1];
+    dst[dst_pos + 2] = src[src_pos + ((x_pos & 1) ? 2 : 0)];
+    dst[dst_pos + 3] = 0xff;
+  }
+}
 }
 #else
 static const char ConverterUnpack_str[] =
@@ -165,6 +182,23 @@ static const char ConverterUnpack_str[] =
 "    *(unsigned short *) &dst[dst_pos + 2] = r;\n"
 "    *(unsigned short *) &dst[dst_pos + 4] = g;\n"
 "    *(unsigned short *) &dst[dst_pos + 6] = b;\n"
+"  }\n"
+"}\n"
+"\n"
+"__global__ void\n"
+"GstHipConverterUnpack_YUY2_VUYA\n"
+"(unsigned char *src, unsigned char *dst, int width, int height,\n"
+"    int src_stride, int dst_stride)\n"
+"{\n"
+"  int x_pos = blockIdx.x * blockDim.x + threadIdx.x;\n"
+"  int y_pos = blockIdx.y * blockDim.y + threadIdx.y;\n"
+"  if (x_pos < width && y_pos < height) {\n"
+"    int dst_pos = x_pos * 4 + y_pos * dst_stride;\n"
+"    int src_pos = (x_pos / 2) * 4 + y_pos * src_stride;\n"
+"    dst[dst_pos] = src[src_pos + 3];\n"
+"    dst[dst_pos + 1] = src[src_pos + 1];\n"
+"    dst[dst_pos + 2] = src[src_pos + ((x_pos & 1) ? 2 : 0)];\n"
+"    dst[dst_pos + 3] = 0xff;\n"
 "  }\n"
 "}\n"
 "}\n"

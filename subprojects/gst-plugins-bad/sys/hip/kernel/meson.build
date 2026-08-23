@@ -39,6 +39,7 @@ conv_output_formats = [
   'I422_10',
   'I422_12',
   'VUYA',
+  'YUY2',
   'RGBA',
   'RGBx',
   'BGRA',

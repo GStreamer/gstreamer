@@ -1161,6 +1161,9 @@ gst_hip_converter_setup (GstHipConverter * self)
     case GST_VIDEO_FORMAT_VUYA:
       output_name = "VUYA";
       break;
+    case GST_VIDEO_FORMAT_YUY2:
+      output_name = "YUY2";
+      break;
     default:
       break;
   }
@@ -1198,6 +1201,12 @@ gst_hip_converter_setup (GstHipConverter * self)
           GST_VIDEO_FORMAT_ARGB64, GST_VIDEO_INFO_WIDTH (in_info),
           GST_VIDEO_INFO_HEIGHT (in_info));
       unpack_name = "GstHipConverterUnpack_BGR10A2_ARGB64";
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      gst_video_info_set_format (&priv->texture_info,
+          GST_VIDEO_FORMAT_VUYA, GST_VIDEO_INFO_WIDTH (in_info),
+          GST_VIDEO_INFO_HEIGHT (in_info));
+      unpack_name = "GstHipConverterUnpack_YUY2_VUYA";
       break;
     default:
       break;

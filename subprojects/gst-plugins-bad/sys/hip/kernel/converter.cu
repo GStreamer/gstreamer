@@ -1358,6 +1358,35 @@ struct OutputVUYA : public IOutput
   }
 };
 
+struct OutputYUY2 : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1)
+  {
+    unsigned int pos = x * 2 + y * stride0;
+    dst0[pos] = scale_to_uchar (sample.x);
+    if (x % 2 == 0) {
+      dst0[pos + 1] = scale_to_uchar (sample.y);
+      dst0[pos + 3] = scale_to_uchar (sample.z);
+    }
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1)
+  {
+    unsigned int pos = x * 2 + y * stride0;
+    dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);
+    if (x % 2 == 0) {
+      dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);
+      dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);
+    }
+  }
+};
+
 __device__ inline float2
 rotate_identity (float x, float y)
 {
@@ -2807,6 +2836,35 @@ static const char ConverterMain_str[] =
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
 "    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);\n"
+"  }\n"
+"};\n"
+"\n"
+"struct OutputYUY2 : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1)\n"
+"  {\n"
+"    unsigned int pos = x * 2 + y * stride0;\n"
+"    dst0[pos] = scale_to_uchar (sample.x);\n"
+"    if (x % 2 == 0) {\n"
+"      dst0[pos + 1] = scale_to_uchar (sample.y);\n"
+"      dst0[pos + 3] = scale_to_uchar (sample.z);\n"
+"    }\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1)\n"
+"  {\n"
+"    unsigned int pos = x * 2 + y * stride0;\n"
+"    dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"    if (x % 2 == 0) {\n"
+"      dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"      dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);\n"
+"    }\n"
 "  }\n"
 "};\n"
 "\n"
