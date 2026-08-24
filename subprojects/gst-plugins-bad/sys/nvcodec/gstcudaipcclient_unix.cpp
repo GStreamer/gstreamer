@@ -407,7 +407,7 @@ gst_cuda_ipc_client_unix_loop (GstCudaIpcClient * client)
 GstCudaIpcClient *
 gst_cuda_ipc_client_new (const gchar * address, GstCudaContext * context,
     GstCudaStream * stream, GstCudaIpcIOMode io_mode, guint timeout,
-    guint buffer_size)
+    guint buffer_size, gboolean retain_handles)
 {
   GstCudaIpcClient *client;
   GstCudaIpcClientUnix *self;
@@ -428,6 +428,7 @@ gst_cuda_ipc_client_new (const gchar * address, GstCudaContext * context,
     client->stream = gst_cuda_stream_ref (stream);
   client->io_mode = io_mode;
   client->buffer_size = buffer_size;
+  client->retain_handles = retain_handles;
 
   return client;
 }

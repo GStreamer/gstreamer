@@ -230833,6 +230833,18 @@
                         "readable": true,
                         "type": "guint64",
                         "writable": true
+                    },
+                    "retain-handles": {
+                        "blurb": "Keep imported IPC handles mapped for the lifetime of the connection",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
                     }
                 },
                 "rank": "none"

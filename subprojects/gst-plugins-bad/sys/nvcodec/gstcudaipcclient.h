@@ -54,6 +54,7 @@ struct GstCudaIpcClient
   GstCudaStream *stream;
   GstCudaIpcIOMode io_mode;
   guint buffer_size;
+  gboolean retain_handles;
 
   GstCudaIpcClientPrivate *priv;
 };

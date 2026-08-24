@@ -66,6 +66,7 @@ enum
   PROP_IO_MODE,
   PROP_CONN_TIMEOUT,
   PROP_BUFFER_SIZE,
+  PROP_RETAIN_HANDLES,
 };
 
 #define DEFAULT_DEVICE_ID -1
@@ -78,6 +79,7 @@ enum
 #define DEFAULT_IO_MODE GST_CUDA_IPC_IO_COPY
 #define DEFAULT_CONN_TIMEOUT 5
 #define DEFAULT_BUFFER_SIZE 3
+#define DEFAULT_RETAIN_HANDLES FALSE
 
 /* *INDENT-OFF* */
 struct GstCudaIpcSrcPrivate
@@ -99,6 +101,7 @@ struct GstCudaIpcSrcPrivate
   GstCudaIpcIOMode io_mode = DEFAULT_IO_MODE;
   guint conn_timeout = DEFAULT_CONN_TIMEOUT;
   guint buffer_size = DEFAULT_BUFFER_SIZE;
+  gboolean retain_handles = DEFAULT_RETAIN_HANDLES;
 };
 /* *INDENT-ON* */
 
@@ -182,6 +185,25 @@ gst_cuda_ipc_src_class_init (GstCudaIpcSrcClass * klass)
       g_param_spec_uint ("buffer-size", "Buffer Size",
           "Size of internal buffer", 1, G_MAXINT,
           DEFAULT_BUFFER_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstCudaIpcSrc:retain-handles:
+   *
+   * Keeps imported CUDA IPC handles mapped for the lifetime of the connection
+   * instead of closing them when each buffer is released, avoiding a re-import
+   * per buffer when the peer recycles its buffer pool.
+   *
+   * Assumes the peer keeps exported allocations alive while the connection is
+   * open.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_RETAIN_HANDLES,
+      g_param_spec_boolean ("retain-handles", "Retain Handles",
+          "Keep imported IPC handles mapped for the lifetime of the connection",
+          DEFAULT_RETAIN_HANDLES,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
 
@@ -278,6 +300,9 @@ gst_cuda_ipc_src_set_property (GObject * object, guint prop_id,
     case PROP_BUFFER_SIZE:
       priv->buffer_size = g_value_get_uint (value);
       break;
+    case PROP_RETAIN_HANDLES:
+      priv->retain_handles = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -310,6 +335,9 @@ gst_win32_video_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, priv->buffer_size);
+      break;
+    case PROP_RETAIN_HANDLES:
+      g_value_set_boolean (value, priv->retain_handles);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -352,7 +380,8 @@ gst_cuda_ipc_src_start (GstBaseSrc * src)
 
   std::lock_guard < std::mutex > lk (priv->lock);
   priv->client = gst_cuda_ipc_client_new (priv->address.c_str (), priv->context,
-      priv->stream, priv->io_mode, priv->conn_timeout, priv->buffer_size - 1);
+      priv->stream, priv->io_mode, priv->conn_timeout, priv->buffer_size - 1,
+      priv->retain_handles);
 
   return TRUE;
 }

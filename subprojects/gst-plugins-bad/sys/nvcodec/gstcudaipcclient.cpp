@@ -24,6 +24,7 @@
 #include "gstcudaipcclient.h"
 #include "gstnvcodecutils.h"
 #include <gst/cuda/gstcuda-private.h>
+#include <algorithm>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
@@ -205,6 +206,7 @@ struct GstCudaIpcClientPrivate
   std::queue<CUipcMemHandle> unused_data;
   std::queue<GstCudaSharableHandle> unused_os_handle;
   std::vector<std::weak_ptr<GstCudaIpcImportData>> imported;
+  std::vector<std::shared_ptr<GstCudaIpcHandle>> retained;
   int device_id = 0;
 };
 /* *INDENT-ON* */
@@ -607,6 +609,8 @@ gst_cuda_client_update_caps (GstCudaIpcClient * self, GstCaps * caps)
   if (!caps)
     return true;
 
+  priv->retained.clear ();
+
   gst_clear_caps (&priv->caps);
   priv->caps = caps;
 
@@ -688,6 +692,12 @@ gst_cuda_ipc_client_have_data (GstCudaIpcClient * self)
   }
 
   dptr = import_handle->dptr;
+
+  if (self->retain_handles &&
+      std::find (priv->retained.begin (), priv->retained.end (),
+          import_handle) == priv->retained.end ()) {
+    priv->retained.push_back (import_handle);
+  }
 
   if (self->io_mode != GST_CUDA_IPC_IO_COPY) {
     auto it = priv->imported.begin ();
@@ -894,6 +904,7 @@ gst_cuda_ipc_client_continue (GstCudaIpcClient * self)
   }
 
   if (priv->server_eos || priv->shutdown) {
+    priv->retained.clear ();
     gst_cuda_ipc_client_run_gc (self);
 
     GST_DEBUG_OBJECT (self, "Remaining imported memory %" G_GSIZE_FORMAT,
