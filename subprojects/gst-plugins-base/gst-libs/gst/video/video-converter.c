@@ -9350,6 +9350,188 @@ convert_RGBP_F32_RGBP (GstVideoConverter * convert,
       task_func, (gpointer) tasks_p);
 }
 
+MAKE_PACKED_FLOAT_TASK (convert_GRAY8_GRAY_F32_task,
+    video_orc_convert_u8_f32, guint8, gfloat, 1);
+MAKE_PACKED_FLOAT_TASK (convert_GRAY8_GRAY_F32_swap_task,
+    video_orc_convert_u8_f32_swap, guint8, gfloat, 1);
+MAKE_PACKED_FLOAT_TASK (convert_GRAY8_GRAY_F32_range_task,
+    video_orc_convert_u8_f32_range, guint8, gfloat, 1);
+MAKE_PACKED_FLOAT_TASK (convert_GRAY8_GRAY_F32_range_swap_task,
+    video_orc_convert_u8_f32_range_swap, guint8, gfloat, 1);
+
+static void
+convert_GRAY8_GRAY_F32 (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest)
+{
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  guint8 *s, *d;
+  FConvertFloatTask *tasks;
+  FConvertFloatTask **tasks_p;
+  gint n_threads, lines_per_thread, i;
+  gfloat scale, offset, min, max;
+  gboolean swap;
+  GstParallelizedTaskFunc task_func;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += convert->in_x;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += convert->out_x * sizeof (gfloat);
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  swap = GST_VIDEO_FRAME_FORMAT (dest) == GST_VIDEO_FORMAT_GRAY_F32BE;
+#else
+  swap = GST_VIDEO_FRAME_FORMAT (dest) == GST_VIDEO_FORMAT_GRAY_F32LE;
+#endif
+
+  if (convert->in_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+    gdouble in_offset[GST_VIDEO_MAX_COMPONENTS];
+    gdouble in_scale[GST_VIDEO_MAX_COMPONENTS];
+
+    gst_video_color_range_offsets_full (GST_VIDEO_COLOR_RANGE_16_235,
+        src->info.finfo, in_offset, in_scale, NULL);
+
+    scale = 1.0f / in_scale[0];
+    offset = -in_offset[0] / in_scale[0];
+    min = 0.0f;
+    max = 1.0f;
+
+    task_func = swap ?
+        (GstParallelizedTaskFunc) convert_GRAY8_GRAY_F32_range_swap_task :
+        (GstParallelizedTaskFunc) convert_GRAY8_GRAY_F32_range_task;
+  } else {
+    scale = 1.0f / 255.0f;
+    offset = 0.0f;
+    min = 0.0f;
+    max = 1.0f;
+
+    task_func = swap ?
+        (GstParallelizedTaskFunc) convert_GRAY8_GRAY_F32_swap_task :
+        (GstParallelizedTaskFunc) convert_GRAY8_GRAY_F32_task;
+  }
+
+  n_threads = convert->conversion_runner->n_threads;
+
+  tasks = convert->tasks[0] =
+      g_renew (FConvertFloatTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertFloatTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride[0] = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride[0] = FRAME_GET_STRIDE (src);
+    tasks[i].d[0] = d + i * lines_per_thread * tasks[i].dstride[0];
+    tasks[i].s[0] = s + i * lines_per_thread * tasks[i].sstride[0];
+    tasks[i].width = width;
+    tasks[i].height =
+        MIN ((i + 1) * lines_per_thread, height) - i * lines_per_thread;
+
+    tasks[i].scale = scale;
+    tasks[i].offset = offset;
+    tasks[i].min = min;
+    tasks[i].max = max;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      task_func, (gpointer) tasks_p);
+}
+
+MAKE_PACKED_FLOAT_TASK (convert_GRAY_F32_GRAY8_task,
+    video_orc_convert_f32_u8, gfloat, guint8, 1);
+MAKE_PACKED_FLOAT_TASK (convert_GRAY_F32_GRAY8_swap_task,
+    video_orc_convert_f32_u8_swap, gfloat, guint8, 1);
+MAKE_PACKED_FLOAT_TASK (convert_GRAY_F32_GRAY8_range_task,
+    video_orc_convert_f32_u8_range, gfloat, guint8, 1);
+MAKE_PACKED_FLOAT_TASK (convert_GRAY_F32_GRAY8_range_swap_task,
+    video_orc_convert_f32_u8_range_swap, gfloat, guint8, 1);
+
+static void
+convert_GRAY_F32_GRAY8 (GstVideoConverter * convert,
+    const GstVideoFrame * src, GstVideoFrame * dest)
+{
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  guint8 *s, *d;
+  FConvertFloatTask *tasks;
+  FConvertFloatTask **tasks_p;
+  gint n_threads, lines_per_thread, i;
+  gfloat scale, offset, min, max;
+  gboolean swap;
+  GstParallelizedTaskFunc task_func;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += convert->in_x * sizeof (gfloat);
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += convert->out_x;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  swap = GST_VIDEO_FRAME_FORMAT (src) == GST_VIDEO_FORMAT_GRAY_F32BE;
+#else
+  swap = GST_VIDEO_FRAME_FORMAT (src) == GST_VIDEO_FORMAT_GRAY_F32LE;
+#endif
+
+  if (convert->out_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+    gdouble out_offset[GST_VIDEO_MAX_COMPONENTS];
+    gdouble out_scale[GST_VIDEO_MAX_COMPONENTS];
+
+    gst_video_color_range_offsets_full (GST_VIDEO_COLOR_RANGE_16_235,
+        dest->info.finfo, out_offset, out_scale, NULL);
+
+    scale = out_scale[0];
+    offset = out_offset[0];
+    min = 0.0f;
+    max = 1.0f;
+
+    task_func = swap ?
+        (GstParallelizedTaskFunc) convert_GRAY_F32_GRAY8_range_swap_task :
+        (GstParallelizedTaskFunc) convert_GRAY_F32_GRAY8_range_task;
+  } else {
+    scale = 255.0f;
+    offset = 0.0f;
+    min = 0.0f;
+    max = 1.0f;
+
+    task_func = swap ?
+        (GstParallelizedTaskFunc) convert_GRAY_F32_GRAY8_swap_task :
+        (GstParallelizedTaskFunc) convert_GRAY_F32_GRAY8_task;
+  }
+
+  n_threads = convert->conversion_runner->n_threads;
+
+  tasks = convert->tasks[0] =
+      g_renew (FConvertFloatTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertFloatTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride[0] = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride[0] = FRAME_GET_STRIDE (src);
+    tasks[i].d[0] = d + i * lines_per_thread * tasks[i].dstride[0];
+    tasks[i].s[0] = s + i * lines_per_thread * tasks[i].sstride[0];
+    tasks[i].width = width;
+    tasks[i].height =
+        MIN ((i + 1) * lines_per_thread, height) - i * lines_per_thread;
+
+    tasks[i].scale = scale;
+    tasks[i].offset = offset;
+    tasks[i].min = min;
+    tasks[i].max = max;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      task_func, (gpointer) tasks_p);
+}
+
 /* Fast paths */
 
 typedef struct
@@ -9879,6 +10061,15 @@ static const VideoTransform transforms[] = {
       FALSE, FALSE, FALSE, FALSE, 0, 0, convert_RGBP_F32_RGBP},
   {GST_VIDEO_FORMAT_RGBP_F32BE, GST_VIDEO_FORMAT_RGBP, TRUE, FALSE, TRUE, FALSE,
       FALSE, FALSE, FALSE, FALSE, 0, 0, convert_RGBP_F32_RGBP},
+
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY_F32LE, TRUE, FALSE, TRUE,
+      FALSE, FALSE, FALSE, FALSE, FALSE, 0, 0, convert_GRAY8_GRAY_F32},
+  {GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_GRAY_F32BE, TRUE, FALSE, TRUE,
+      FALSE, FALSE, FALSE, FALSE, FALSE, 0, 0, convert_GRAY8_GRAY_F32},
+  {GST_VIDEO_FORMAT_GRAY_F32LE, GST_VIDEO_FORMAT_GRAY8, TRUE, FALSE, TRUE,
+      FALSE, FALSE, FALSE, FALSE, FALSE, 0, 0, convert_GRAY_F32_GRAY8},
+  {GST_VIDEO_FORMAT_GRAY_F32BE, GST_VIDEO_FORMAT_GRAY8, TRUE, FALSE, TRUE,
+      FALSE, FALSE, FALSE, FALSE, FALSE, 0, 0, convert_GRAY_F32_GRAY8},
 };
 
 static gboolean
