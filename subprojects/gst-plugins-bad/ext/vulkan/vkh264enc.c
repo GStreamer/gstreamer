@@ -337,7 +337,7 @@ static const struct
   const char *name;
 } H264LevelMap[] = {
   { GST_H264_LEVEL_L1, STD_VIDEO_H264_LEVEL_IDC_1_0, "1" },
-  /* {GST_H264_LEVEL_L1B, "1b", }, */
+  { GST_H264_LEVEL_L1B, STD_VIDEO_H264_LEVEL_IDC_1_0, "1b" }, /* Vulkan hasn't 1B */
   { GST_H264_LEVEL_L1_1, STD_VIDEO_H264_LEVEL_IDC_1_1, "1.1"},
   { GST_H264_LEVEL_L1_2, STD_VIDEO_H264_LEVEL_IDC_1_2, "1.2" },
   { GST_H264_LEVEL_L1_3, STD_VIDEO_H264_LEVEL_IDC_1_3, "1.3" },
