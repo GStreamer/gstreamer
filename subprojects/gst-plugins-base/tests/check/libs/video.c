@@ -4846,6 +4846,112 @@ GST_START_TEST (test_video_meta_transform_matrix_rotation_45)
 
 GST_END_TEST;
 
+static void
+unpack_u8_pixel (const GstVideoFrame * frame, gint x, gint y, guint8 pixel[4])
+{
+  frame->info.finfo->unpack_func (frame->info.finfo,
+      GST_VIDEO_PACK_FLAG_NONE, pixel, frame->data, frame->info.stride,
+      x, y, 1);
+}
+
+GST_START_TEST (test_video_convert_border_color)
+{
+  const GstVideoFormat formats[] = {
+    GST_VIDEO_FORMAT_RGBA,
+    GST_VIDEO_FORMAT_AYUV,
+    GST_VIDEO_FORMAT_GRAY8,
+  };
+  const guint32 border_argb = 0xff4080c0;
+  GstVideoInfo src_info;
+  GstVideoFrame src_frame;
+  GstBuffer *src_buf;
+  guint i;
+
+  fail_unless (gst_video_info_set_format (&src_info,
+          GST_VIDEO_FORMAT_ARGB, 1, 1));
+
+  src_buf = gst_buffer_new_and_alloc (src_info.size);
+  fail_unless (gst_video_frame_map (&src_frame, &src_info,
+          src_buf, GST_MAP_READWRITE));
+
+  {
+    /* Fill source ARGB */
+    const guint8 argb[] = { 0xff, 0x40, 0x80, 0xc0 };
+    gpointer data[GST_VIDEO_MAX_PLANES] = { NULL, };
+    gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    data[0] = GST_VIDEO_FRAME_PLANE_DATA (&src_frame, 0);
+    stride[0] = GST_VIDEO_FRAME_PLANE_STRIDE (&src_frame, 0);
+
+    src_info.finfo->pack_func (src_info.finfo, GST_VIDEO_PACK_FLAG_NONE,
+        (gpointer) argb, sizeof (argb), data, stride,
+        GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, 1);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    GstVideoInfo ref_info, out_info;
+    GstVideoFrame ref_frame, out_frame;
+    GstBuffer *ref_buf, *out_buf;
+    GstVideoConverter *convert;
+    guint8 ref[4], border[4];
+    guint c;
+
+    /* 1st path, src -> test format to get the computed border color value */
+    fail_unless (gst_video_info_set_format (&ref_info, formats[i], 1, 1));
+
+    ref_buf = gst_buffer_new_and_alloc (ref_info.size);
+    fail_unless (gst_video_frame_map (&ref_frame, &ref_info,
+            ref_buf, GST_MAP_READWRITE));
+
+    convert = gst_video_converter_new (&src_info, &ref_info, NULL);
+    fail_unless (convert);
+
+    gst_video_converter_frame (convert, &src_frame, &ref_frame);
+    gst_video_converter_free (convert);
+
+    /* 2nd path, do actual conversion with border enabled */
+    fail_unless (gst_video_info_set_format (&out_info, formats[i], 3, 3));
+
+    out_buf = gst_buffer_new_and_alloc (out_info.size);
+    gst_buffer_memset (out_buf, 0, 0, out_info.size);
+
+    fail_unless (gst_video_frame_map (&out_frame, &out_info,
+            out_buf, GST_MAP_READWRITE));
+
+    convert = gst_video_converter_new (&src_info, &out_info,
+        gst_structure_new ("options",
+            GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 1,
+            GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 1,
+            GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 1,
+            GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 1,
+            GST_VIDEO_CONVERTER_OPT_BORDER_ARGB, G_TYPE_UINT,
+            border_argb, NULL));
+    fail_unless (convert);
+
+    gst_video_converter_frame (convert, &src_frame, &out_frame);
+    gst_video_converter_free (convert);
+
+    /* compare color values between reference (converted via normal conversion
+     * path) and produced borders */
+    unpack_u8_pixel (&ref_frame, 0, 0, ref);
+    unpack_u8_pixel (&out_frame, 0, 1, border);
+    for (c = 0; c < 4; c++) {
+      fail_unless (ref[c] == border[c], "%s comp %u, ref %u, border %u",
+          gst_video_format_to_string (formats[i]), c, ref[c], border[c]);
+    }
+
+    gst_video_frame_unmap (&out_frame);
+    gst_video_frame_unmap (&ref_frame);
+    gst_buffer_unref (out_buf);
+    gst_buffer_unref (ref_buf);
+  }
+
+  gst_video_frame_unmap (&src_frame);
+  gst_buffer_unref (src_buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -4920,6 +5026,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_flip_horizontal);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_flip_vertical);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_rotation_45);
+  tcase_add_test (tc_chain, test_video_convert_border_color);
 
   return s;
 }
