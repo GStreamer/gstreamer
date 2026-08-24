@@ -9448,13 +9448,6 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   if (GET_OPT_DITHER_QUANTIZATION (convert) != 1)
     return FALSE;
 
-  /* float formats only support the 0_1 range and the fast paths cannot
-   * convert ranges, refuse them on any mismatch */
-  if ((GST_VIDEO_FORMAT_INFO_IS_FLOAT (convert->in_info.finfo) ||
-          GST_VIDEO_FORMAT_INFO_IS_FLOAT (convert->out_info.finfo)) &&
-      convert->in_info.colorimetry.range != convert->out_info.colorimetry.range)
-    return FALSE;
-
   in_bpp = convert->in_info.finfo->bits;
   out_bpp = convert->out_info.finfo->bits;
 
