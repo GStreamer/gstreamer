@@ -517,6 +517,25 @@ GST_START_TEST (test_dataurisrc_from_uri)
 
 GST_END_TEST;
 
+static gboolean
+can_convert_iso_8859_5_to_utf8 (void)
+{
+  const gchar iso_8859_5_sample[] = { (gchar) 0xc0, 0 };
+  GError *error = NULL;
+  gchar *converted;
+
+  converted =
+      g_convert_with_fallback (iso_8859_5_sample, 1, "UTF-8", "ISO-8859-5",
+      (gchar *) "*", NULL, NULL, &error);
+  if (converted == NULL) {
+    g_clear_error (&error);
+    return FALSE;
+  }
+
+  g_free (converted);
+  return TRUE;
+}
+
 GST_START_TEST (test_dataurisrc_uris)
 {
 #define STRING_CONTENT(s) s, sizeof(s) - 1
@@ -547,6 +566,10 @@ GST_START_TEST (test_dataurisrc_uris)
     GstHarness *h;
     GstElement *src;
     GstBuffer *buf;
+
+    if (g_str_equal (tests[i].name, "charset_base64") &&
+        !can_convert_iso_8859_5_to_utf8 ())
+      continue;
 
     src = gst_element_factory_make ("dataurisrc", NULL);
     g_object_set (src, "uri", tests[i].uri, NULL);
