@@ -248,6 +248,14 @@ void video_orc_unpack_RGBA_F32 (guint16 * ORC_RESTRICT d1, const gfloat * ORC_RE
 void video_orc_unpack_RGBA_F32_swap (guint16 * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1, int n);
 void video_orc_pack_RGBA_F32 (gfloat * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
 void video_orc_pack_RGBA_F32_swap (gfloat * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
+void video_orc_convert_u8_f32 (gfloat * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_u8_f32_swap (gfloat * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_u8_f32_range (gfloat * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_u8_f32_range_swap (gfloat * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_f32_u8 (guint8 * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_f32_u8_swap (guint8 * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_f32_u8_range (guint8 * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
+void video_orc_convert_f32_u8_range_swap (guint8 * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1, int p1, int p2, int p3, int p4, int n);
 
 #ifdef __cplusplus
 }

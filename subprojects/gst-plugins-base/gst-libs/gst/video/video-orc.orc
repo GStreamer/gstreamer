@@ -3007,3 +3007,155 @@ convuwl t1, s1
 convlf t2, t1
 mulf t2, t2, c_scale
 swapl d1, t2
+
+
+.function video_orc_convert_u8_f32
+.dest 4 d1 gfloat
+.source 1 s1 guint8
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 2 t1
+.temp 4 t2
+
+convubw t1, s1
+convuwl t2, t1
+convlf t2, t2
+mulf d1, t2, p_scale
+
+
+.function video_orc_convert_u8_f32_swap
+.dest 4 d1 gfloat
+.source 1 s1 guint8
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 2 t1
+.temp 4 t2
+
+convubw t1, s1
+convuwl t2, t1
+convlf t2, t2
+mulf t2, t2, p_scale
+swapl d1, t2
+
+
+.function video_orc_convert_u8_f32_range
+.dest 4 d1 gfloat
+.source 1 s1 guint8
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 2 t1
+.temp 4 t2
+
+convubw t1, s1
+convuwl t2, t1
+convlf t2, t2
+mulf t2, t2, p_scale
+addf t2, t2, p_offset
+maxf t2, t2, p_min
+minf d1, t2, p_max
+
+
+.function video_orc_convert_u8_f32_range_swap
+.dest 4 d1 gfloat
+.source 1 s1 guint8
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 2 t1
+.temp 4 t2
+
+convubw t1, s1
+convuwl t2, t1
+convlf t2, t2
+mulf t2, t2, p_scale
+addf t2, t2, p_offset
+maxf t2, t2, p_min
+minf t2, t2, p_max
+swapl d1, t2
+
+
+.function video_orc_convert_f32_u8
+.dest 1 d1 guint8
+.source 4 s1 gfloat
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+
+maxf t1, s1, p_min
+minf t1, t1, p_max
+mulf t1, t1, p_scale
+convfl t2, t1
+convlw t3, t2
+convwb d1, t3
+
+
+.function video_orc_convert_f32_u8_swap
+.dest 1 d1 guint8
+.source 4 s1 gfloat
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+
+swapl t1, s1
+maxf t1, t1, p_min
+minf t1, t1, p_max
+mulf t1, t1, p_scale
+convfl t2, t1
+convlw t3, t2
+convwb d1, t3
+
+
+.function video_orc_convert_f32_u8_range
+.dest 1 d1 guint8
+.source 4 s1 gfloat
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+
+maxf t1, s1, p_min
+minf t1, t1, p_max
+mulf t1, t1, p_scale
+addf t1, t1, p_offset
+convfl t2, t1
+convlw t3, t2
+convwb d1, t3
+
+
+.function video_orc_convert_f32_u8_range_swap
+.dest 1 d1 guint8
+.source 4 s1 gfloat
+.param 4 p_scale
+.param 4 p_offset
+.param 4 p_min
+.param 4 p_max
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+
+swapl t1, s1
+maxf t1, t1, p_min
+minf t1, t1, p_max
+mulf t1, t1, p_scale
+addf t1, t1, p_offset
+convfl t2, t1
+convlw t3, t2
+convwb d1, t3
