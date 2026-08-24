@@ -73,6 +73,15 @@ enum
 #define DEFAULT_ADD_BORDERS         TRUE
 #define DEFAULT_BORDER_COLOR        0x00000000  /* opaque black, packed AMFColor */
 
+#define DOC_CAPS_COMM \
+    "format = (string) { NV12, P010_10LE, BGRA, RGBA }, " \
+    "width = (int) [ 128, 8192 ], height = (int) [ 128, 4096 ]"
+
+#define DOC_CAPS \
+    "video/x-raw(memory:D3D12Memory), " DOC_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D11Memory), " DOC_CAPS_COMM "; " \
+    "video/x-raw, " DOC_CAPS_COMM
+
 typedef struct _GstAmfHQScaler GstAmfHQScaler;
 typedef struct _GstAmfHQScalerClass GstAmfHQScalerClass;
 
@@ -147,6 +156,8 @@ gst_amf_hq_scaler_class_init (GstAmfHQScalerClass * klass, gpointer data)
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstAmfBaseFilterClass *base_class = GST_AMF_BASE_FILTER_CLASS (klass);
   GstAmfHQScalerClassData *cdata = (GstAmfHQScalerClassData *) data;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   gobject_class->set_property = gst_amf_hq_scaler_set_property;
   gobject_class->get_property = gst_amf_hq_scaler_get_property;
@@ -180,12 +191,19 @@ gst_amf_hq_scaler_class_init (GstAmfHQScalerClass * klass, gpointer data)
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   gst_element_class_set_static_metadata (element_class,
       "AMD AMF High-Quality Video Scaler",
