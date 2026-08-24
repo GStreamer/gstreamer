@@ -1379,6 +1379,140 @@ GST_START_TEST (test_video_convert_rgba_float)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_convert_float_to_integer_clamp)
+{
+  const struct
+  {
+    gboolean gamma;
+    gboolean primaries;
+    GstVideoTransferFunction in_transfer;
+    GstVideoColorPrimaries in_primaries;
+    GstVideoTransferFunction out_transfer;
+    GstVideoColorPrimaries out_primaries;
+  } cases[] = {
+    /* no gamma / no primaries */
+    {
+          FALSE, FALSE,
+          GST_VIDEO_TRANSFER_SRGB,
+          GST_VIDEO_COLOR_PRIMARIES_BT709,
+          GST_VIDEO_TRANSFER_SRGB,
+          GST_VIDEO_COLOR_PRIMARIES_BT709,
+        },
+    /* gamma only */
+    {
+          TRUE, FALSE,
+          GST_VIDEO_TRANSFER_SRGB,
+          GST_VIDEO_COLOR_PRIMARIES_BT709,
+          GST_VIDEO_TRANSFER_BT709,
+          GST_VIDEO_COLOR_PRIMARIES_BT709,
+        },
+    /* primaries conversion */
+    {
+          FALSE, TRUE,
+          GST_VIDEO_TRANSFER_SRGB,
+          GST_VIDEO_COLOR_PRIMARIES_BT709,
+          GST_VIDEO_TRANSFER_SRGB,
+          GST_VIDEO_COLOR_PRIMARIES_BT2020,
+        },
+    /* gamma + primaries conversion */
+    {
+          TRUE, TRUE,
+          GST_VIDEO_TRANSFER_SRGB,
+          GST_VIDEO_COLOR_PRIMARIES_BT709,
+          GST_VIDEO_TRANSFER_BT709,
+          GST_VIDEO_COLOR_PRIMARIES_BT2020,
+        },
+  };
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (cases); i++) {
+    GstVideoInfo in_info, out_info;
+    GstVideoFrame in_frame, out_frame;
+    GstBuffer *in_buf, *out_buf;
+    GstVideoConverter *convert;
+    GstStructure *config;
+    gfloat *data;
+    guint8 *result;
+    guint c;
+
+    fail_unless (gst_video_info_set_format (&in_info,
+            GST_VIDEO_FORMAT_ARGB_F32, 2, 1));
+    fail_unless (gst_video_info_set_format (&out_info,
+            GST_VIDEO_FORMAT_ARGB, 2, 1));
+
+    in_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_1;
+    in_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+    in_info.colorimetry.transfer = cases[i].in_transfer;
+    in_info.colorimetry.primaries = cases[i].in_primaries;
+
+    out_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+    out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+    out_info.colorimetry.transfer = cases[i].out_transfer;
+    out_info.colorimetry.primaries = cases[i].out_primaries;
+
+    in_buf = gst_buffer_new_and_alloc (in_info.size);
+    out_buf = gst_buffer_new_and_alloc (out_info.size);
+
+    fail_unless (gst_video_frame_map (&in_frame, &in_info,
+            in_buf, GST_MAP_READWRITE));
+    fail_unless (gst_video_frame_map (&out_frame, &out_info,
+            out_buf, GST_MAP_READWRITE));
+
+    /* ARGB_F32: A, R, G, B */
+    data = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+
+    data[0] = 1.0f;
+    data[1] = -0.25f;
+    data[2] = -0.25f;
+    data[3] = -0.25f;
+
+    data[4] = 1.0f;
+    data[5] = 2.0f;
+    data[6] = 2.0f;
+    data[7] = 2.0f;
+
+    config = gst_structure_new ("options",
+        GST_VIDEO_CONVERTER_OPT_GAMMA_MODE,
+        GST_TYPE_VIDEO_GAMMA_MODE,
+        cases[i].gamma ? GST_VIDEO_GAMMA_MODE_REMAP :
+        GST_VIDEO_GAMMA_MODE_NONE,
+        GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE,
+        GST_TYPE_VIDEO_PRIMARIES_MODE,
+        cases[i].primaries ? GST_VIDEO_PRIMARIES_MODE_MERGE_ONLY :
+        GST_VIDEO_PRIMARIES_MODE_NONE, NULL);
+
+    convert = gst_video_converter_new (&in_info, &out_info, config);
+    fail_unless (convert);
+
+    gst_video_converter_frame (convert, &in_frame, &out_frame);
+
+    result = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+
+    /* lower clamp */
+    fail_unless_equals_int (result[0], 255);
+    for (c = 1; c < 4; c++) {
+      fail_unless (result[c] == 0,
+          "case %u, lower clamp comp %u, expected 0, got %u", i, c, result[c]);
+    }
+
+    /* upper clamp */
+    fail_unless_equals_int (result[4], 255);
+    for (c = 5; c < 8; c++) {
+      fail_unless (result[c] == 255,
+          "case %u, upper clamp comp %u, expected 255, got %u",
+          i, c - 4, result[c]);
+    }
+
+    gst_video_converter_free (convert);
+    gst_video_frame_unmap (&out_frame);
+    gst_video_frame_unmap (&in_frame);
+    gst_buffer_unref (out_buf);
+    gst_buffer_unref (in_buf);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_convert_frame)
 {
   GstVideoInfo vinfo;
@@ -5505,6 +5639,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_formats_float);
   tcase_add_test (tc_chain, test_video_convert_rgba_float_lossless);
   tcase_add_test (tc_chain, test_video_convert_rgba_float);
+  tcase_add_test (tc_chain, test_video_convert_float_to_integer_clamp);
   tcase_add_test (tc_chain, test_guess_framerate);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);

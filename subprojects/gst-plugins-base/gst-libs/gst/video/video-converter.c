@@ -1546,6 +1546,12 @@ gamma_convert_u16_u16 (GammaData * data, gpointer dest, gpointer src)
   }
 }
 
+static inline gdouble
+CLAMP_F (gfloat f)
+{
+  return CLAMP (f, 0.0f, 1.0f);
+}
+
 /* float unpack format is already in [0, 1], so we can use
  * transfer_function_{decode,encode} directly */
 static void
@@ -1558,11 +1564,14 @@ gamma_decode_float (GammaData * data, gpointer dest, gpointer src)
   for (i = 0; i < data->width; i++) {
     d[i * 4 + 0] = s[i * 4 + 0];
     d[i * 4 + 1] =
-        gst_video_transfer_function_decode (data->tr_func, s[i * 4 + 1]);
+        gst_video_transfer_function_decode (data->tr_func,
+        CLAMP_F (s[i * 4 + 1]));
     d[i * 4 + 2] =
-        gst_video_transfer_function_decode (data->tr_func, s[i * 4 + 2]);
+        gst_video_transfer_function_decode (data->tr_func,
+        CLAMP_F (s[i * 4 + 2]));
     d[i * 4 + 3] =
-        gst_video_transfer_function_decode (data->tr_func, s[i * 4 + 3]);
+        gst_video_transfer_function_decode (data->tr_func,
+        CLAMP_F (s[i * 4 + 3]));
   }
 }
 
@@ -1576,11 +1585,14 @@ gamma_encode_float (GammaData * data, gpointer dest, gpointer src)
   for (i = 0; i < data->width; i++) {
     d[i * 4 + 0] = s[i * 4 + 0];
     d[i * 4 + 1] =
-        gst_video_transfer_function_encode (data->tr_func, s[i * 4 + 1]);
+        gst_video_transfer_function_encode (data->tr_func,
+        CLAMP_F (s[i * 4 + 1]));
     d[i * 4 + 2] =
-        gst_video_transfer_function_encode (data->tr_func, s[i * 4 + 2]);
+        gst_video_transfer_function_encode (data->tr_func,
+        CLAMP_F (s[i * 4 + 2]));
     d[i * 4 + 3] =
-        gst_video_transfer_function_encode (data->tr_func, s[i * 4 + 3]);
+        gst_video_transfer_function_encode (data->tr_func,
+        CLAMP_F (s[i * 4 + 3]));
   }
 }
 
@@ -1599,17 +1611,17 @@ gamma_encode_float_u8 (GammaData * data, gpointer dest, gpointer src)
     d[i * 4 + 0] = CLAMP (val, 0, 255);
 
     val = gst_video_transfer_function_encode (data->tr_func,
-        s[i * 4 + 1]) * 255.0;
+        CLAMP_F (s[i * 4 + 1])) * 255.0;
     val = rint (val);
     d[i * 4 + 1] = CLAMP (val, 0, 255);
 
     val = gst_video_transfer_function_encode (data->tr_func,
-        s[i * 4 + 2]) * 255.0;
+        CLAMP_F (s[i * 4 + 2])) * 255.0;
     val = rint (val);
     d[i * 4 + 2] = CLAMP (val, 0, 255);
 
     val = gst_video_transfer_function_encode (data->tr_func,
-        s[i * 4 + 3]) * 255.0;
+        CLAMP_F (s[i * 4 + 3])) * 255.0;
     val = rint (val);
     d[i * 4 + 3] = CLAMP (val, 0, 255);
   }
@@ -1625,22 +1637,22 @@ gamma_encode_float_u16 (GammaData * data, gpointer dest, gpointer src)
   for (i = 0; i < data->width; i++) {
     gdouble val;
 
-    val = s[i * 4 + 0] * 65535.0;
+    val = CLAMP_F (s[i * 4 + 0]) * 65535.0;
     val = rint (val);
     d[i * 4 + 0] = CLAMP (val, 0, 65535);
 
     val = gst_video_transfer_function_encode (data->tr_func,
-        s[i * 4 + 1]) * 65535.0;
+        CLAMP_F (s[i * 4 + 1])) * 65535.0;
     val = rint (val);
     d[i * 4 + 1] = CLAMP (val, 0, 65535);
 
     val = gst_video_transfer_function_encode (data->tr_func,
-        s[i * 4 + 2]) * 65535.0;
+        CLAMP_F (s[i * 4 + 2])) * 65535.0;
     val = rint (val);
     d[i * 4 + 2] = CLAMP (val, 0, 65535);
 
     val = gst_video_transfer_function_encode (data->tr_func,
-        s[i * 4 + 3]) * 65535.0;
+        CLAMP_F (s[i * 4 + 3])) * 65535.0;
     val = rint (val);
     d[i * 4 + 3] = CLAMP (val, 0, 65535);
   }
