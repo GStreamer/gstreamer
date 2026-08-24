@@ -405,13 +405,23 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
         g_convert_with_fallback (bdata, bsize, "UTF-8", charset, (char *) "*",
         &read, &written, NULL);
     g_free (bdata);
+    if (data == NULL)
+      goto invalid_uri_encoded_data;
 
     bdata = data;
     bsize = written;
   }
-  buffer = gst_buffer_new_wrapped (bdata, bsize);
+  if (bsize == 0) {
+    g_free (bdata);
+    buffer = gst_buffer_new ();
+  } else {
+    buffer = gst_buffer_new_wrapped (bdata, bsize);
+  }
 
-  caps = gst_type_find_helper_for_buffer (GST_OBJECT (src), buffer, NULL);
+  if (bsize > 0)
+    caps = gst_type_find_helper_for_buffer (GST_OBJECT (src), buffer, NULL);
+  else
+    caps = NULL;
   if (!caps)
     caps = gst_caps_new_empty_simple (mimetype);
   gst_base_src_set_caps (GST_BASE_SRC_CAST (src), caps);
