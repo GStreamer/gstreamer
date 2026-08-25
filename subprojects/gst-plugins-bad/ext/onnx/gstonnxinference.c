@@ -144,6 +144,7 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
   GST_ONNX_EXECUTION_PROVIDER_HIP,
   GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
+  GST_ONNX_EXECUTION_PROVIDER_VITIS_AI,
 } GstOnnxExecutionProvider;
 
 struct _GstOnnxInference
@@ -348,6 +349,20 @@ gst_onnx_execution_provider_get_type (void)
             "Microsoft DirectML execution provider (compiled out, will error)",
           "dml"},
 #endif
+      /**
+       * GstOnnxExecutionProvider::vitisai
+       *
+       * AMD Vitis AI execution provider
+       *
+       * Since: 1.30
+       */
+      {GST_ONNX_EXECUTION_PROVIDER_VITIS_AI,
+#if HAVE_VITISAI
+            "AMD Vitis AI execution provider",
+#else
+            "AMD Vitis AI execution provider (compiled out, requires ONNX Runtime >= 1.18)",
+#endif
+          "vitisai"},
       {0, NULL, NULL},
     };
 
@@ -1139,6 +1154,24 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       }
       api->DisableCpuMemArena (session_options);
       break;
+    }
+    case GST_ONNX_EXECUTION_PROVIDER_VITIS_AI:
+    {
+#if HAVE_VITISAI
+      status =
+          api->SessionOptionsAppendExecutionProvider_VitisAI (session_options,
+          NULL, NULL, 0);
+      if (status) {
+        GST_ERROR_OBJECT (self, "Failed to append Vitis AI provider: %s",
+            api->GetErrorMessage (status));
+        goto error;
+      }
+      break;
+#else
+      GST_ERROR_OBJECT (self, "Vitis AI execution provider is unavailable, "
+          "need ONNX Runtime >=1.18");
+      goto error;
+#endif
     }
     case GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX:
 #if !HAVE_WINML

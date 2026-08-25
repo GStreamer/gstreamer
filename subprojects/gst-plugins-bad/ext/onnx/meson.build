@@ -25,6 +25,7 @@ extra_deps = []
 extra_incs = []
 have_winml = false
 have_directml = false
+have_vitisai = false
 have_ort_register_execution_provider_library = false
 onnx_require_eps = get_option('onnx-require-eps')
 
@@ -97,6 +98,12 @@ if not have_winml
     cc.find_library('onnxruntime_providers_migraphx', dirs: [onnxrt_libdir])
   endif
 
+  have_vitisai = cc.has_member(
+      'OrtApi', 'SessionOptionsAppendExecutionProvider_VitisAI',
+      prefix: '#include <onnxruntime_c_api.h>',
+      include_directories: extra_incs, dependencies: onnxrt_dep,
+      required: 'vitisai' in onnx_require_eps)
+
   have_ort_register_execution_provider_library = cc.has_member(
       'OrtApi', 'RegisterExecutionProviderLibrary',
       prefix: '#include <onnxruntime_c_api.h>',
@@ -107,6 +114,7 @@ endif
 onnx_config = configuration_data()
 onnx_config.set10('HAVE_WINML', have_winml)
 onnx_config.set10('HAVE_DIRECTML', have_directml)
+onnx_config.set10('HAVE_VITISAI', have_vitisai)
 onnx_config.set10('HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY',
                   have_ort_register_execution_provider_library)
 

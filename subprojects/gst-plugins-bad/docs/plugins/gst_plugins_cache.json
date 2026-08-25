@@ -237155,6 +237155,11 @@
                         "desc": "Microsoft DirectML execution provider (compiled out, will error)",
                         "name": "dml",
                         "value": "5"
+                    },
+                    {
+                        "desc": "AMD Vitis AI execution provider",
+                        "name": "vitisai",
+                        "value": "6"
                     }
                 ]
             },

@@ -113,31 +113,45 @@ Note: `--compile_no_warning_as_error` is required on GCC 16+ due to stricter che
 ```
 PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:$PKG_CONFIG_PATH \
 LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH \
-meson setup <builddir>
+meson setup <builddir> -Dgst-plugins-bad:onnx=enabled -Dgst-plugins-bad:onnx-require-eps=migraphx
 ```
 
 When onnxruntime is detected in `/usr/local`, meson automatically sets `PKG_CONFIG_PATH`,
 `LD_LIBRARY_PATH`, and `HIP_VISIBLE_DEVICES=0` in the devenv. No manual action is required
 when building with meson devenv.
 
-6. HIP (AMD GPU, dynamically loaded EP)
+6. Vitis AI (AMD NPU)
+
+Similar to MIGraphX, the Vitis AI EP is not available as a pre-built package
+and must be compiled from source. Follow steps 5.2 and 5.3 above with these
+changes:
+
+* Download and extract the RyzenAI SDK which provides the Vitis AI
+  runtime dependencies.
+* Clone onnxruntime
+* Pass `--use_vitisai` to `./build.sh`
+  - Remove the migraphx options if you don't want to build that
+* Pass `-Dgst-plugins-bad:onnx-require-eps=vitisai` to the GStreamer `meson setup`
+  command.
+
+7. HIP (AMD GPU, dynamically loaded EP)
 
 The HIP EP is not built into onnxruntime. It is shipped as a separate
 execution provider library and loaded dynamically at runtime, which
 requires onnxruntime >= 1.22.
 
-6.1 Install the HIP EP, then point `MORPHIZEN_EP_LIB` at the EP library
+7.1 Install the HIP EP, then point `MORPHIZEN_EP_LIB` at the EP library
 before running the pipeline:
 
 ```
 export MORPHIZEN_EP_LIB=/opt/hip-ep/lib/libhipgpu.so
 ```
 
-6.2 On a multi-GPU system, select the GPU with the `device` property
+7.2 On a multi-GPU system, select the GPU with the `device` property
 (card index, e.g. `device=1`). Without it, all detected HIP GPUs are
 passed to the EP.
 
-7. Windows ML
+8. Windows ML
 
 On Windows, the plugin can be built against the Microsoft-provided ONNX Runtime
 using the onnx-winml option:

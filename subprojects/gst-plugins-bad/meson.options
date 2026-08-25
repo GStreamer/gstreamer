@@ -267,7 +267,7 @@ option('nvds-lib-path', type: 'string', value : '',
 
 # onnx plugin options
 option('onnx-winml', type : 'feature', value : 'disabled', description : 'Use Microsoft.Windows.AI.MachineLearning package')
-option('onnx-require-eps', type : 'array', choices: ['none', 'cuda', 'hip', 'migraphx', 'vsi'], value : ['none'],
+option('onnx-require-eps', type : 'array', choices: ['none', 'cuda', 'hip', 'migraphx', 'vitisai', 'vsi'], value : ['none'],
        description : 'HW-specific ONNX Execution Providers to require at build-time. By default, runtime auto-detection is used.')
 
 # QSV plugin options
