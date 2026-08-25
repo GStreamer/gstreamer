@@ -2613,7 +2613,11 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       gchar *name;
       gchar *value;
 
-      gst_rtcp_packet_sdes_get_entry (packet, &type, &len, &data);
+      if (!gst_rtcp_packet_sdes_get_entry (packet, &type, &len, &data)) {
+        GST_WARNING ("malformed SDES packet, ignoring item %d (SSRC %08x) "
+            "entry %d and the rest of the packet", i, ssrc, j);
+        break;
+      }
 
       GST_DEBUG ("entry %d, type %d, len %d, data %.*s", j, type, len, len,
           data);

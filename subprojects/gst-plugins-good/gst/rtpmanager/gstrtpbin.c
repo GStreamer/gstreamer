@@ -2093,8 +2093,13 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
             guint8 len;
             const guint8 *data;
 
-            gst_rtcp_packet_sdes_get_entry (&packet, &type, &len,
-                (guint8 **) & data);
+            if (!gst_rtcp_packet_sdes_get_entry (&packet, &type, &len,
+                    (guint8 **) & data)) {
+              GST_WARNING_OBJECT (bin, "malformed SDES packet for SSRC %08x, "
+                  "ignoring the rest of it",
+                  gst_rtcp_packet_sdes_get_ssrc (&packet));
+              break;
+            }
 
             if (type == GST_RTCP_SDES_CNAME) {
               GST_RTP_BIN_LOCK (bin);
