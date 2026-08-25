@@ -78,12 +78,61 @@ get_tracer_by_name (const gchar * name)
   GstTracer *tracer = NULL;
 
   tracers = gst_tracing_get_active_tracers ();
-  for (l = tracers; l; l = l->next)
-    if (g_strcmp0 (GST_OBJECT_NAME (l->data), name) == 0)
-      tracer = l->data;
+  for (l = tracers; l; l = l->next) {
+    if (g_strcmp0 (GST_OBJECT_NAME (l->data), name) == 0) {
+      tracer = gst_object_ref (l->data);
+      break;
+    }
+  }
 
-  g_list_free (tracers);
+  g_list_free_full (tracers, gst_object_unref);
+
   return tracer;
+}
+
+static void
+setup_leaks_tracers (void)
+{
+  /* This is equivalent to using GST_TRACERS before gst_init(), but direct
+   * construction also works when gst_init() has already run. */
+  GstTracer *plain = get_tracer_by_name ("plain");
+  GstTracer *more = get_tracer_by_name ("more");
+  GstPluginFeature *feature, *loaded_feature;
+  GType tracer_type;
+
+  if (plain != NULL && more != NULL)
+    goto done;
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "leaks");
+  fail_unless (feature != NULL);
+  loaded_feature = gst_plugin_feature_load (feature);
+  gst_object_unref (feature);
+  fail_unless (GST_IS_TRACER_FACTORY (loaded_feature));
+
+  tracer_type =
+      gst_tracer_factory_get_tracer_type (GST_TRACER_FACTORY (loaded_feature));
+  fail_unless (tracer_type != G_TYPE_INVALID);
+
+  if (plain == NULL) {
+    plain = g_object_new (tracer_type,
+        "name", "plain", "log-leaks-on-deinit", FALSE, NULL);
+    gst_object_ref_sink (plain);
+  }
+
+  if (more == NULL) {
+    more = g_object_new (tracer_type,
+        "name", "more",
+        "filters", "GstPad",
+        "check-refs", TRUE,
+        "stack-traces-flags", 0, "log-leaks-on-deinit", FALSE, NULL);
+    gst_object_ref_sink (more);
+  }
+
+  gst_object_unref (loaded_feature);
+
+done:
+  gst_clear_object (&plain);
+  gst_clear_object (&more);
 }
 
 /* Test logging of live objects to debug logs */
@@ -501,11 +550,13 @@ leakstracer_suite (void)
   TCase *tc_chain_2 = tcase_create ("activity-tracking");
 
   suite_add_tcase (s, tc_chain_1);
+  tcase_add_checked_fixture (tc_chain_1, setup_leaks_tracers, NULL);
   tcase_add_test (tc_chain_1, test_log_live_objects);
   tcase_add_test (tc_chain_1, test_get_live_objects);
   tcase_add_test (tc_chain_1, test_get_live_objects_filtered_detailed);
 
   suite_add_tcase (s, tc_chain_2);
+  tcase_add_checked_fixture (tc_chain_2, setup_leaks_tracers, NULL);
   tcase_add_test (tc_chain_2, test_activity_start_stop);
   tcase_add_test (tc_chain_2, test_activity_log_checkpoint);
   tcase_add_test (tc_chain_2, test_activity_get_checkpoint);
@@ -513,16 +564,4 @@ leakstracer_suite (void)
   return s;
 }
 
-/* Replacement for GST_CHECK_MAIN (leakstracer); because we need to set the
- * env before gst_init() is called */
-int
-main (int argc, char **argv)
-{
-  Suite *s;
-  g_setenv ("GST_TRACERS", "leaks(name=plain,log-leaks-on-deinit=false);"
-      "leaks(name=more,filters=GstPad,check-refs=true,stack-traces-flags=none,log-leaks-on-deinit=false);",
-      TRUE);
-  gst_check_init (&argc, &argv);
-  s = leakstracer_suite ();
-  return gst_check_run_suite (s, "leakstracer", __FILE__);
-}
+GST_CHECK_MAIN (leakstracer)

@@ -98,7 +98,7 @@ core_tests = [
   [ 'elements/filesrc.c', not gst_registry ],
   [ 'elements/funnel.c', not gst_registry ],
   [ 'elements/identity.c', not gst_registry or not gst_parse ],
-  [ 'elements/leaks.c', not tracer_hooks or not gst_debug ],
+  [ 'elements/leaks.c', not tracer_hooks or not gst_debug or get_option('coretracers').disabled() ],
   [ 'elements/multiqueue.c', not gst_registry ],
   [ 'elements/selector.c', not gst_registry ],
   [ 'elements/streamiddemux.c', not gst_registry ],
