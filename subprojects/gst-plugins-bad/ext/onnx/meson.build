@@ -2,6 +2,8 @@ onnx_sources = [
   'gstonnx.c',
   'gstonnx-utils.c',
   'gstonnxinference.c',
+  'gstonnximporter.c',
+  'gstonnximporter-cpu.c',
 ]
 
 onnx_headers = [
