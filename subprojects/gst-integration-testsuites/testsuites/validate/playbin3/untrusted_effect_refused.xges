@@ -1,0 +1,25 @@
+<ges version='0.7'>
+  <project properties='properties;' metadatas='metadatas, format-version=(string)0.7;'>
+    <encoding-profiles>
+    </encoding-profiles>
+    <ressources>
+      <asset id='GESTestClip' extractable-type-name='GESTestClip' properties='properties, supported-formats=(int)6;' metadatas='metadatas;' >
+      </asset>
+      <asset id='video queue2 temp-template=/tmp/ges-untrusted-XXXXXX' extractable-type-name='GESEffect' properties='properties, track-type=(int)4;' metadatas='metadatas;' >
+      </asset>
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, duration=(guint64)1000000000;'>
+      <track caps='video/x-raw(ANY)' track-type='4' track-id='0' properties='properties, message-forward=(boolean)true, restriction-caps=(string)&quot;video/x-raw\(ANY\)\,\ framerate\=\(fraction\)30/1\,\ width\=\(int\)1280\,\ height\=\(int\)720&quot;, id=(string)34e6b08f3e081301b82d222bd6f69e72;' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='GESTestClip' type-name='GESTestClip' layer-priority='0' track-types='6' start='0' duration='1000000000' inpoint='0' rate='0' properties='properties, name=(string)testclip0, vpattern=(int)0;' metadatas='metadatas;'>
+          <effect asset-id='queue2 temp-template=/tmp/ges-untrusted-XXXXXX' clip-id='0' type-name='GESEffect' track-type='4' track-id='0' properties='properties, track-type=(int)4;' metadatas='metadatas;' children-properties='properties, GstQueue2::high-percent=(int)99, GstQueue2::high-watermark=(double)0.98999999999999999, GstQueue2::low-percent=(int)1, GstQueue2::low-watermark=(double)0.01, GstQueue2::max-size-buffers=(uint)100, GstQueue2::max-size-bytes=(uint)2097152, GstQueue2::max-size-time=(guint64)2000000000, GstQueue2::ring-buffer-max-size=(guint64)0, GstQueue2::temp-remove=(boolean)true, GstQueue2::temp-template=(string)/tmp/ges-untrusted-XXXXXX, GstQueue2::use-bitrate-query=(boolean)true, GstQueue2::use-buffering=(boolean)false, GstQueue2::use-rate-estimate=(boolean)true, GstQueue2::use-tags-bitrate=(boolean)false;'>
+          </effect>
+          <source track-id='0' properties='properties, track-type=(int)4, has-internal-source=(boolean)true;' metadatas='metadatas;'  children-properties='properties, GstFramePositioner::alpha=(double)1, GstVideoTestSrc::background-color=(uint)4278190080, GstFramePositioner::fheight=(float)0, GstVideoTestSrc::foreground-color=(uint)4294967295, GstFramePositioner::fposx=(float)0, GstFramePositioner::fposy=(float)0, GstFramePositioner::fwidth=(float)0, GstFramePositioner::height=(int)0, GstFramePositioner::operator=(int)1, GstVideoTestSrc::pattern=(int)0, GstFramePositioner::posx=(int)0, GstFramePositioner::posy=(int)0, NleSource::reverse=(boolean)false, GstVideoDirection::video-direction=(int)8, GstFramePositioner::width=(int)0, GstFramePositioner::zorder=(uint)4294967291;'>
+          </source>
+        </clip>
+      </layer>
+      <groups>
+      </groups>
+    </timeline>
+  </project>
+</ges>

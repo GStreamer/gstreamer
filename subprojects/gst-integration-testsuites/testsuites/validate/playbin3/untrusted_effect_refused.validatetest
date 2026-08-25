@@ -1,0 +1,11 @@
+set-globals, project_dir="$(test_dir)"
+meta,
+    args={
+        "playbin3 uri=file://$(project_dir)/untrusted_effect_refused.xges video-sink=fakesink audio-sink=fakesink",
+    },
+    expected-issues={
+        [expected-issue,
+            level=critical,
+            issue-id=runtime::error-on-bus,
+            details=".*is not allowed when loading untrusted content.*"],
+    }
