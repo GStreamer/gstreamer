@@ -55,13 +55,16 @@ gst_record_test_tracer_init (GstRecordTestTracer * tracer)
 static gint event_count;
 static GstTraceFormat *last_format;
 static GstTraceValue last_values[8];
-static GstTracer *test_tracer;
+static GstTracer *event_tracer;
 
 static void
 event_cb (GObject * tracer, GstClockTime ts, GstTraceFormat * format,
     const GstTraceValue * values)
 {
   guint n_fields = gst_trace_format_get_n_fields (format), i, vi = 0;
+
+  fail_unless (GST_IS_TRACER (tracer));
+  fail_unless_equals_pointer (tracer, event_tracer);
 
   last_format = format;
   for (i = 0; i < n_fields; i++) {
@@ -81,20 +84,19 @@ event_cb (GObject * tracer, GstClockTime ts, GstTraceFormat * format,
 }
 
 static void
-setup (void)
+setup_event_tracer (void)
 {
-  event_count = 0;
-  last_format = NULL;
-  test_tracer = g_object_new (gst_record_test_tracer_get_type (), NULL);
-  gst_object_ref_sink (test_tracer);
-  gst_tracing_register_hook (test_tracer, "event", G_CALLBACK (event_cb));
+  event_tracer = g_object_new (gst_record_test_tracer_get_type (), NULL);
+  gst_object_ref_sink (event_tracer);
+  gst_tracing_register_hook (event_tracer, "event", G_CALLBACK (event_cb));
+  gst_object_unref (event_tracer);
 }
 
 static void
-cleanup (void)
+reset_event_state (void)
 {
-  gst_object_unref (test_tracer);
-  test_tracer = NULL;
+  event_count = 0;
+  last_format = NULL;
 }
 
 
@@ -180,7 +182,8 @@ gst_tracer_record_suite (void)
   TCase *tc_chain = tcase_create ("record");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_checked_fixture (tc_chain, setup, cleanup);
+  tcase_add_unchecked_fixture (tc_chain, setup_event_tracer, NULL);
+  tcase_add_checked_fixture (tc_chain, reset_event_state, NULL);
   tcase_add_test (tc_chain, serialize_message_logging);
   tcase_add_test (tc_chain, serialize_static_record);
 
