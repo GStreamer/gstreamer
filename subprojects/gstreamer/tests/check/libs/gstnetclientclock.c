@@ -81,7 +81,8 @@ GST_START_TEST (test_functioning)
   g_object_get (client, "port", &port, NULL);
 
   /* let the clocks synchronize */
-  gst_clock_wait_for_sync (GST_CLOCK (client), GST_SECOND);
+  fail_unless (gst_clock_wait_for_sync (GST_CLOCK (client), 5 * GST_SECOND),
+      "network client clock failed to synchronize");
 
   servtime = gst_clock_get_time (server);
   clienttime = gst_clock_get_time (client);
