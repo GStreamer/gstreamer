@@ -23,7 +23,7 @@ if get_option('onnx').disabled()
   subdir_done()
 endif
 
-extra_args = []
+extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_deps = []
 extra_incs = []
 have_winml = false
@@ -31,6 +31,7 @@ have_directml = false
 have_vitisai = false
 have_ort_register_execution_provider_library = false
 onnx_require_eps = get_option('onnx-require-eps')
+have_gst_hip = false
 
 fsmod = import('fs')
 
@@ -49,7 +50,6 @@ if host_system == 'windows' and not onnx_winml_opt.disabled()
       dml_dep = cc.find_library('directml', required: false)
       if dml_dep.found()
         have_directml = true
-        extra_args += ['-DGST_USE_UNSTABLE_API']
         extra_deps += [gstd3d12_dep, dml_dep]
         onnx_sources += ['gstonnx-dml.cpp']
       endif
@@ -95,7 +95,15 @@ if 'vsi' in onnx_require_eps
                   dependencies: onnxrt_dep)
 endif
 
+if gsthip_dep.found()
+  have_gst_hip = true
+  extra_deps += [gsthip_dep]
+  extra_incs += [hipstub_incdir]
+  onnx_sources += ['gstonnximporter-hip.c']
+endif
+
 onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
+
 if not have_winml
   if 'migraphx' in onnx_require_eps
     cc.find_library('onnxruntime_providers_migraphx', dirs: [onnxrt_libdir])
@@ -135,6 +143,7 @@ onnx_config.set10('HAVE_DIRECTML', have_directml)
 onnx_config.set10('HAVE_VITISAI', have_vitisai)
 onnx_config.set10('HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY',
                   have_ort_register_execution_provider_library)
+onnx_config.set10('HAVE_GST_HIP', have_gst_hip)
 
 configure_file(
   output: 'gstonnx-config.h',

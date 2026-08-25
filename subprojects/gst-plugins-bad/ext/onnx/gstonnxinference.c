@@ -124,6 +124,14 @@
 #include "gstonnx-dml.h"
 #endif
 
+#if HAVE_GST_HIP
+#include <gst/hip/gsthip.h>
+#include "gstonnximporter-hip.h"
+#else
+/* define to reduce ifdefs */
+#define GST_CAPS_FEATURE_MEMORY_HIP_MEMORY "memory:HIPMemory"
+#endif
+
 #define HIP_DYNAMIC_EP_NAME "hipgpu"
 #define MIGRAPHX_DYNAMIC_EP_NAME "MIGraphXExecutionProvider"
 
@@ -135,6 +143,11 @@
 #define GST_ONNX_VIDEO_FORMATS \
     "{ RGB, RGBP, GRAY8, RGB_F32BE, RGBP_F32BE, GRAY_F32BE }"
 #endif
+
+#define DOC_CAPS_STR \
+  GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY, \
+      GST_ONNX_VIDEO_FORMATS)
 
 typedef enum
 {
@@ -167,6 +180,7 @@ struct _GstOnnxInference
   GstVideoInfo video_info;
   GstCaps *input_tensors_caps;
   GstCaps *output_tensors_caps;
+  GRecMutex context_lock;
 
   OrtEnv *env;
   OrtSession *session;
@@ -190,8 +204,18 @@ struct _GstOnnxInference
 #if HAVE_DIRECTML
   GstOnnxDmlCtx *dml_ctx;
 #endif
+#ifdef HAVE_GST_HIP
+  GstHipDevice *device_hip;
+#endif
   GstOnnxImporterConfig importer_config;
-  GstOnnxImporter *importer;
+  GstOnnxImporter *cpu_importer;
+  GstOnnxImporter *device_importer;
+  /* Currently active importer without holding ownership */
+  GstOnnxImporter *active_importer;
+  /* DXGI adapter luid of selected device on Windows */
+  gint64 adapter_luid;
+  /* Device ID selected for the execution provider */
+  guint selected_device_id;
 };
 
 /* Protects api, api_base and onnxruntime_module while loading the library */
@@ -207,6 +231,7 @@ static void *onnxruntime_module = NULL;
 
 typedef const OrtApiBase *(ORT_API_CALL * GstOrtGetApiBaseFunc) (void);
 
+static gboolean have_hip_rtc = FALSE;
 
 GST_DEBUG_CATEGORY (onnx_inference_debug);
 GST_DEBUG_CATEGORY (onnx_runtime_debug);
@@ -230,26 +255,15 @@ enum
 #define GST_ONNX_INFERENCE_DEFAULT_EXECUTION_PROVIDER    GST_ONNX_EXECUTION_PROVIDER_CPU
 #define GST_ONNX_INFERENCE_DEFAULT_OPTIMIZATION_LEVEL    GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_EXTENDED
 
-static GstStaticPadTemplate gst_onnx_inference_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS))
-    );
-
-static GstStaticPadTemplate gst_onnx_inference_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS))
-    );
-
-
 static void gst_onnx_inference_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_onnx_inference_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_onnx_inference_finalize (GObject * object);
+static void gst_onnx_inference_set_context (GstElement * element,
+    GstContext * context);
+static gboolean gst_onnx_inference_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query);
 static GstFlowReturn gst_onnx_inference_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
 static GstCaps *gst_onnx_inference_transform_caps (GstBaseTransform *
@@ -263,6 +277,7 @@ gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
 static gboolean gst_onnx_inference_start (GstBaseTransform * trans);
 static gboolean gst_onnx_inference_stop (GstBaseTransform * trans);
 
+#define gst_onnx_inference_parent_class parent_class
 G_DEFINE_TYPE (GstOnnxInference, gst_onnx_inference, GST_TYPE_BASE_TRANSFORM);
 
 GType gst_onnx_optimization_level_get_type (void);
@@ -398,6 +413,9 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseTransformClass *basetransform_class = (GstBaseTransformClass *) klass;
+  GstPadTemplate *pad_templ;
+  GstCaps *templ_caps;
+  GstCaps *doc_caps;
 
   GST_DEBUG_CATEGORY_INIT (onnx_inference_debug, "onnxinference",
       0, "ONNX Runtime Inference");
@@ -502,10 +520,37 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       "Filter/Video",
       "Apply neural network to video frames and create tensor output",
       "Aaron Boxer <aaron.boxer@collabora.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_onnx_inference_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_onnx_inference_src_template));
+
+  templ_caps =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS));
+#if HAVE_GST_HIP
+  if (gst_hip_rtc_load_library (GST_HIP_VENDOR_AMD)) {
+    GstCaps *hip_caps = gst_caps_copy (templ_caps);
+    gst_caps_set_features_simple (hip_caps,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY));
+    gst_caps_append (templ_caps, hip_caps);
+    have_hip_rtc = TRUE;
+  }
+#endif
+
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, templ_caps);
+  doc_caps = gst_caps_from_string (DOC_CAPS_STR);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+  gst_caps_unref (doc_caps);
+  gst_caps_unref (templ_caps);
+
+  element_class->set_context =
+      GST_DEBUG_FUNCPTR (gst_onnx_inference_set_context);
+
+  basetransform_class->query = GST_DEBUG_FUNCPTR (gst_onnx_inference_query);
   basetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_onnx_inference_transform_ip);
   basetransform_class->transform_caps =
@@ -541,6 +586,8 @@ gst_onnx_inference_init (GstOnnxInference * self)
   self->channels_dim = -1;
   self->batch_dim = -1;
 
+  g_rec_mutex_init (&self->context_lock);
+
   /* Passthrough would propagate tensors caps upstream */
   gst_base_transform_set_prefer_passthrough (GST_BASE_TRANSFORM (self), FALSE);
 }
@@ -556,7 +603,9 @@ gst_onnx_inference_finalize (GObject * object)
   g_free (self->vitisai_config_file);
   gst_caps_unref (self->input_tensors_caps);
   gst_caps_unref (self->output_tensors_caps);
-  G_OBJECT_CLASS (gst_onnx_inference_parent_class)->finalize (object);
+  g_rec_mutex_clear (&self->context_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -634,6 +683,48 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_onnx_inference_set_context (GstElement * element, GstContext * context)
+{
+#if HAVE_GST_HIP
+  GstOnnxInference *self = GST_ONNX_INFERENCE (element);
+
+  g_rec_mutex_lock (&self->context_lock);
+#ifdef G_OS_WIN32
+  gst_hip_handle_set_context_for_adapter_luid (element, context,
+      GST_HIP_VENDOR_AMD, self->adapter_luid, &self->device_hip);
+#else
+  gst_hip_handle_set_context (element, context,
+      GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
+#endif
+  g_rec_mutex_unlock (&self->context_lock);
+#endif
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+static gboolean
+gst_onnx_inference_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
+{
+#if HAVE_GST_HIP
+  GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
+    gboolean ret;
+    g_rec_mutex_lock (&self->context_lock);
+    ret = gst_hip_handle_context_query (GST_ELEMENT (self),
+        query, self->device_hip);
+    g_rec_mutex_unlock (&self->context_lock);
+    if (ret)
+      return TRUE;
+  }
+#endif
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+      query);
 }
 
 static gsize
@@ -749,6 +840,71 @@ done:
   return ret;
 }
 
+static gboolean
+gst_onnx_inference_can_use_hip (GstOnnxInference * self)
+{
+#ifdef HAVE_GST_HIP
+  if (!have_hip_rtc ||
+      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX) {
+    return FALSE;
+  }
+
+  if (!self->session)
+    return TRUE;
+
+  if (!self->device_importer)
+    return FALSE;
+
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
+
+/* Only remove non-suppported caps features */
+static GstCaps *
+gst_onnx_inference_filter_memory_caps (GstOnnxInference * self, GstCaps * caps)
+{
+  GstCaps *ret = gst_caps_new_empty ();
+  gboolean have_hip = gst_onnx_inference_can_use_hip (self);
+  guint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+    gboolean is_hip = gst_caps_features_contains (features,
+        GST_CAPS_FEATURE_MEMORY_HIP_MEMORY);
+
+    if (is_hip && !have_hip)
+      continue;
+
+    gst_caps_append_structure_full (ret,
+        gst_structure_copy (gst_caps_get_structure (caps, i)),
+        gst_caps_features_copy (features));
+  }
+
+  return ret;
+}
+
+/* Add supported memory caps features */
+static GstCaps *
+gst_onnx_inference_add_memory_caps (GstOnnxInference * self, GstCaps * caps)
+{
+  GstCaps *ret = gst_caps_copy (caps);
+
+#ifdef HAVE_GST_HIP
+  if (gst_onnx_inference_can_use_hip (self)) {
+    GstCaps *hip_caps = gst_caps_copy (caps);
+
+    gst_caps_set_features_simple (hip_caps,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY));
+    gst_caps_append (ret, hip_caps);
+  }
+#endif
+
+  return ret;
+}
+
 static GstCaps *
 gst_onnx_inference_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
@@ -756,6 +912,7 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
   GstCaps *other_caps;
   GstCaps *restrictions;
+  GstCaps *memory_caps;
   bool has_session;
 
   GST_OBJECT_LOCK (self);
@@ -764,7 +921,7 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
   GST_OBJECT_UNLOCK (self);
 
   if (!has_session) {
-    other_caps = gst_caps_ref (caps);
+    other_caps = gst_onnx_inference_filter_memory_caps (self, caps);
     gst_caps_unref (restrictions);
     goto done;
   }
@@ -783,24 +940,29 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
     gst_caps_replace (&restrictions, intersect);
     gst_caps_unref (tensors_caps);
     gst_caps_unref (intersect);
-    other_caps = gst_caps_intersect_full (caps, restrictions,
+
+    memory_caps = gst_onnx_inference_add_memory_caps (self, restrictions);
+    other_caps = gst_caps_intersect_full (caps, memory_caps,
         GST_CAPS_INTERSECT_FIRST);
 
-  } else if (direction == GST_PAD_SRC) {
+    gst_caps_unref (memory_caps);
+  } else {
     /* Remove tensors from caps to prevent upstream propagation. */
     GstCaps *tmp_caps = gst_caps_copy (caps);
 
     if (!gst_caps_is_empty (tmp_caps)) {
-      GstStructure *tstruct = gst_caps_get_structure (tmp_caps, 0);
-      gst_structure_remove_field (tstruct, "tensors");
+      guint i;
+      for (i = 0; i < gst_caps_get_size (tmp_caps); i++) {
+        GstStructure *tstruct = gst_caps_get_structure (tmp_caps, i);
+        gst_structure_remove_field (tstruct, "tensors");
+      }
     }
 
-    other_caps = gst_caps_intersect_full (tmp_caps, restrictions,
+    memory_caps = gst_onnx_inference_add_memory_caps (self, restrictions);
+    other_caps = gst_caps_intersect_full (tmp_caps, memory_caps,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp_caps);
-  } else {
-    other_caps = gst_caps_intersect_full (caps, restrictions,
-        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (memory_caps);
   }
 
   gst_caps_unref (restrictions);
@@ -1475,6 +1637,9 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 #if !HAVE_WINML
     {
       const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
+      self->selected_device_id = 0;
+      if (self->device)
+        self->selected_device_id = g_ascii_strtoll (self->device, NULL, 10);
 
       if (cache_dir && *cache_dir && gst_onnx_runtime_version_at_least (1, 23)) {
         /*
@@ -1500,10 +1665,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         }
 
         memset (&migraphx_options, 0, sizeof (migraphx_options));
-
-        if (self->device)
-          migraphx_options.device_id =
-              (int) g_ascii_strtoll (self->device, NULL, 10);
+        migraphx_options.device_id = self->selected_device_id;
 
         status =
             api->SessionOptionsAppendExecutionProvider_MIGraphX
@@ -1620,10 +1782,71 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     self->session = NULL;
     goto error;
   }
+#if HAVE_GST_HIP
+  if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX) {
+    GST_OBJECT_UNLOCK (self);
+    g_rec_mutex_lock (&self->context_lock);
+    self->adapter_luid = 0;
+    gst_clear_object (&self->device_hip);
 
-  self->importer = gst_onnx_importer_cpu_new (api);
-  if (!self->importer)
+#if HAVE_WINML
+    const OrtEpDevice *ep_device = NULL;
+    status = api->SessionGetEpDeviceForInputs (self->session, &ep_device, 1);
+
+    if (status) {
+      GST_WARNING_OBJECT (self, "Couldn't get EP device for input: %s",
+          api->GetErrorMessage (status));
+      api->ReleaseStatus (status);
+      status = NULL;
+    } else if (ep_device) {
+      const OrtHardwareDevice *hwdev = api->EpDevice_Device (ep_device);
+      const OrtKeyValuePairs *metadata = api->HardwareDevice_Metadata (hwdev);
+      const gchar *luid_str = api->GetKeyValue (metadata, "LUID");
+
+      {
+        const char *const *keys = NULL;
+        const char *const *values = NULL;
+        size_t num_entries = 0;
+        size_t j;
+
+        api->GetKeyValuePairs (metadata, &keys, &values, &num_entries);
+
+        GST_LOG_OBJECT (self, "MIGraphX metadata entries: %" G_GSIZE_FORMAT,
+            num_entries);
+
+        for (j = 0; j < num_entries; j++)
+          GST_LOG_OBJECT (self, "  %s = %s", keys[j], values[j]);
+      }
+
+      if (luid_str) {
+        GST_DEBUG_OBJECT (self, "Input EP device LUID: %s", luid_str);
+
+        self->adapter_luid = g_ascii_strtoll (luid_str, NULL, 10);
+        gst_hip_ensure_element_data_for_adapter_luid (GST_ELEMENT (self),
+            GST_HIP_VENDOR_AMD, self->adapter_luid, &self->device_hip);
+      }
+    }
+#else
+    gst_hip_ensure_element_data (GST_ELEMENT (self),
+        GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
+#endif
+    g_rec_mutex_unlock (&self->context_lock);
+    GST_OBJECT_LOCK (self);
+
+    if (self->device_hip) {
+      GST_DEBUG_OBJECT (self, "Creating HIP importer");
+      self->device_importer = gst_onnx_importer_hip_new (api, self->device_hip);
+      if (!self->device_importer)
+        GST_WARNING_OBJECT (self, "Couldn't create HIP importer");
+    }
+  }
+#endif
+
+  self->cpu_importer = gst_onnx_importer_cpu_new (api);
+  if (!self->cpu_importer) {
+    GST_ERROR_OBJECT (self, "Couldn't create importer");
     goto error;
+  }
 
   api->ReleaseSessionOptions (session_options);
   session_options = NULL;
@@ -2110,7 +2333,9 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 
   GST_OBJECT_LOCK (self);
 
-  gst_clear_object (&self->importer);
+  gst_clear_object (&self->cpu_importer);
+  gst_clear_object (&self->device_importer);
+  self->active_importer = NULL;
 
   // Clean up output names
   if (self->output_names) {
@@ -2159,6 +2384,10 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   g_clear_pointer (&self->dml_ctx, gst_onnx_dml_free_context);
 #endif
 
+#if HAVE_GST_HIP
+  gst_clear_object (&self->device_hip);
+#endif
+
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
@@ -2171,7 +2400,7 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
   GstOnnxImporterConfig *config = &self->importer_config;
 
-  if (!self->importer) {
+  if (!self->cpu_importer) {
     GST_ERROR_OBJECT (self, "Importer is not prepared");
     return FALSE;
   }
@@ -2239,8 +2468,18 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   }
 
   config->tensor_size = input_tensor_size;
+  self->active_importer = self->cpu_importer;
 
-  if (!gst_onnx_importer_setup (self->importer, &self->video_info, config)) {
+  if (self->device_importer) {
+    if (!gst_onnx_importer_setup (self->device_importer,
+            &self->video_info, config)) {
+      GST_WARNING_OBJECT (self, "Couldn't setup device importer");
+    } else {
+      self->active_importer = self->device_importer;
+    }
+  }
+
+  if (!gst_onnx_importer_setup (self->cpu_importer, &self->video_info, config)) {
     GST_ERROR_OBJECT (self, "Couldn't setup importer");
     return FALSE;
   }
@@ -2252,8 +2491,7 @@ static gboolean
 gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
-  if (!GST_BASE_TRANSFORM_CLASS
-      (gst_onnx_inference_parent_class)->propose_allocation (trans,
+  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
     return FALSE;
 
@@ -2272,6 +2510,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
   GstOnnxImporterConfig *config = &self->importer_config;
+  GstOnnxImporter *target_importer = self->active_importer;
 
   GST_LOG_OBJECT (self, "Input dimensions: %" G_GINT64_FORMAT
       ":%" G_GINT64_FORMAT ":%" G_GINT64_FORMAT ":%" G_GINT64_FORMAT,
@@ -2280,7 +2519,12 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       config->dims_count > 2 ? config->dims[2] : -1,
       config->dims_count > 3 ? config->dims[3] : -1);
 
-  input_tensor = gst_onnx_importer_prepare (self->importer, buf);
+  input_tensor = gst_onnx_importer_prepare (target_importer, buf);
+  if (!input_tensor && target_importer != self->cpu_importer) {
+    target_importer = self->cpu_importer;
+    input_tensor = gst_onnx_importer_prepare (target_importer, buf);
+  }
+
   if (!input_tensor) {
     GST_ERROR_OBJECT (self, "Couldn't create input tensor");
     return GST_FLOW_ERROR;
@@ -2405,7 +2649,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   g_free (output_tensors);
 
   GST_TRACE_OBJECT (trans, "Num tensors:%zu", self->output_count);
-  gst_onnx_importer_unprepare (self->importer);
+  gst_onnx_importer_unprepare (target_importer);
 
   return GST_FLOW_OK;
 
@@ -2428,7 +2672,7 @@ error:
   if (tmeta)
     gst_buffer_remove_meta (buf, (GstMeta *) tmeta);
 
-  gst_onnx_importer_unprepare (self->importer);
+  gst_onnx_importer_unprepare (target_importer);
 
   return GST_FLOW_ERROR;
 }
