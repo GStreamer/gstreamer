@@ -230,6 +230,50 @@ gst_hip_ensure_element_data (GstElement * element, GstHipVendor vendor,
 }
 
 /**
+ * gst_hip_ensure_element_data_for_adapter_luid:
+ * @element: the #GstElement running the query
+ * @vendor: a #GstHipVendor
+ * @adapter_luid: DXGI adapter LUID
+ * @device: (inout): the resulting #GstHipDevice
+ *
+ * Perform the steps necessary for retrieving a #GstHipDevice from the
+ * surrounding elements or from the application using the #GstContext mechanism.
+ *
+ * If the content of @device is not %NULL, then no #GstContext query is
+ * necessary for #GstHipDevice.
+ *
+ * Returns: whether a #GstHipDevice exists in @device
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_ensure_element_data_for_adapter_luid (GstElement * element,
+    GstHipVendor vendor, gint64 adapter_luid, GstHipDevice ** device)
+{
+  if (*device)
+    return TRUE;
+
+  run_hip_context_query (element, device);
+  if (*device)
+    return TRUE;
+
+  *device = gst_hip_device_new_for_adapter_luid (vendor, adapter_luid);
+
+  if (*device == nullptr) {
+    GST_ERROR_OBJECT (element,
+        "Couldn't create new device with luid %" G_GINT64_FORMAT, adapter_luid);
+    return FALSE;
+  } else {
+    auto ctx = gst_context_new_hip_device (*device);
+    gst_element_set_context (element, ctx);
+    auto msg = gst_message_new_have_context (GST_OBJECT_CAST (element), ctx);
+    gst_element_post_message (GST_ELEMENT_CAST (element), msg);
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_hip_handle_set_context:
  * @element: a #GstElement
  * @context: a #GstContext
@@ -272,6 +316,61 @@ gst_hip_handle_set_context (GstElement * element, GstContext * context,
             "vendor", GST_TYPE_HIP_VENDOR, &other_vendor,
             "device-id", G_TYPE_UINT, &other_idx, nullptr)) {
       if ((device_id == -1 || (guint) device_id == other_idx) &&
+          (vendor == GST_HIP_VENDOR_UNKNOWN || vendor == other_vendor)) {
+        *device = other_device;
+        return TRUE;
+      }
+
+      gst_object_unref (other_device);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_hip_handle_set_context_for_adapter_luid:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @vendor: a #GstHipVendor
+ * @adapter_luid: DXGI adapter LUID
+ * @device: (inout) (transfer full): location of a #GstHipDevice
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * HIP capable elements.
+ *
+ * Retrieves the #GstHipDevice in @context and places the result in @device.
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_handle_set_context_for_adapter_luid (GstElement * element,
+    GstContext * context, GstHipVendor vendor, gint64 adapter_luid,
+    GstHipDevice ** device)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (device != nullptr, FALSE);
+
+  if (!context)
+    return FALSE;
+
+  auto context_type = gst_context_get_context_type (context);
+  if (g_strcmp0 (context_type, GST_HIP_DEVICE_CONTEXT_TYPE) == 0) {
+    GstHipDevice *other_device = nullptr;
+    gint64 other_adapter = 0;
+    GstHipVendor other_vendor;
+
+    /* If we had device already, will not replace it */
+    if (*device)
+      return TRUE;
+
+    auto s = gst_context_get_structure (context);
+    if (gst_structure_get (s, "device", GST_TYPE_HIP_DEVICE, &other_device,
+            "vendor", GST_TYPE_HIP_VENDOR, &other_vendor,
+            "adapter-luid", G_TYPE_INT64, &other_adapter, nullptr)) {
+      if (adapter_luid == other_adapter &&
           (vendor == GST_HIP_VENDOR_UNKNOWN || vendor == other_vendor)) {
         *device = other_device;
         return TRUE;

@@ -73,6 +73,10 @@ GstHipDevice * gst_hip_device_new         (GstHipVendor vendor,
                                            guint device_id);
 
 GST_HIP_API
+GstHipDevice * gst_hip_device_new_for_adapter_luid (GstHipVendor vendor,
+                                                    gint64 adapter_luid);
+
+GST_HIP_API
 gboolean       gst_hip_device_set_current (GstHipDevice * device);
 
 GST_HIP_API

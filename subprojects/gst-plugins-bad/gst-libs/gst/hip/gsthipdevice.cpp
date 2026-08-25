@@ -242,6 +242,77 @@ gst_hip_device_new (GstHipVendor vendor, guint device_id)
   return self;
 }
 
+#ifdef G_OS_WIN32
+static gint
+get_device_id_for_luid (GstHipVendor vendor, gint64 luid_int64)
+{
+  if (!gst_hip_load_library (vendor))
+    return -1;
+
+  int num_dev = 0;
+  auto hip_ret = HipGetDeviceCount (vendor, &num_dev);
+  if (hip_ret != hipSuccess || num_dev <= 0)
+    return -1;
+
+
+  for (int i = 0; i < num_dev; i++) {
+    char luid[8];
+    guint node_mask;
+
+    hip_ret = HipDeviceGetLuid (vendor, luid, &node_mask, i);
+    if (hip_ret != hipSuccess)
+      continue;
+
+    LARGE_INTEGER luid_val;
+    memcpy (&luid_val.LowPart, luid, sizeof (luid_val.LowPart));
+    memcpy (&luid_val.HighPart,
+        &luid[sizeof (luid_val.LowPart)], sizeof (luid_val.HighPart));
+    if (luid_val.QuadPart == luid_int64)
+      return i;
+  }
+
+  return -1;
+}
+#endif
+
+/**
+ * gst_hip_device_new_for_adapter_luid:
+ * @vendor: a #GstHipVendor
+ * @adapter_luid: DXGI adapter LUID
+ *
+ * Creates a new device instance with @vendor and @adapter_luid. Windows only
+ *
+ * Returns: (transfer full) (nullable): a #GstHipDevice if succeeded,
+ * otherwise %NULL
+ *
+ * Since: 1.30
+ */
+GstHipDevice *
+gst_hip_device_new_for_adapter_luid (GstHipVendor vendor, gint64 adapter_luid)
+{
+#ifdef G_OS_WIN32
+  gint device_id = -1;
+  if (vendor != GST_HIP_VENDOR_UNKNOWN) {
+    device_id = get_device_id_for_luid (vendor, adapter_luid);
+  } else {
+    vendor = GST_HIP_VENDOR_AMD;
+    device_id = get_device_id_for_luid (GST_HIP_VENDOR_AMD, adapter_luid);
+    if (device_id < 0) {
+      vendor = GST_HIP_VENDOR_NVIDIA;
+      device_id = get_device_id_for_luid (GST_HIP_VENDOR_NVIDIA, adapter_luid);
+    }
+  }
+
+  if (device_id < 0)
+    return nullptr;
+
+  return gst_hip_device_new (vendor, device_id);
+#else
+  GST_WARNING ("Only supported on Windows");
+  return nullptr;
+#endif
+}
+
 /**
  * gst_hip_device_set_current:
  * @device: a #GstHipDevice
