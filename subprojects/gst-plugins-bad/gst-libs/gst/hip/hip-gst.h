@@ -206,6 +206,12 @@ GST_HIP_API
 hipError_t HipGraphicsUnregisterResource (GstHipVendor vendor,
                                           hipGraphicsResource_t resource);
 
+GST_HIP_API
+hipError_t HipDeviceGetLuid (GstHipVendor vendor,
+                             char *luid,
+                             unsigned int *deviceNodeMask,
+                             hipDevice_t dev);
+
 G_END_DECLS
 
 

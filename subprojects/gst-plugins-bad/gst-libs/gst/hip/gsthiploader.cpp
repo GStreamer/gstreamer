@@ -147,6 +147,8 @@ struct GstHipFuncTableCuda
     const CUDA_RESOURCE_DESC * pResDesc, const CUDA_TEXTURE_DESC * pTexDesc,
     const CUDA_RESOURCE_VIEW_DESC * pResViewDesc);
   CUresult (CUDAAPI *cuTexObjectDestroy) (CUtexObject texObject);
+  CUresult (CUDAAPI *cuDeviceGetLuid) (char *luid, unsigned int *deviceNodeMask,
+      CUdevice dev);
 };
 
 struct GstHipFuncTableCudaRt
@@ -316,6 +318,7 @@ load_cuda_func_table (void)
   LOAD_SYMBOL (cuMemsetD32Async);
   LOAD_SYMBOL (cuTexObjectCreate);
   LOAD_SYMBOL (cuTexObjectDestroy);
+  LOAD_SYMBOL (cuDeviceGetLuid);
 
   table->loaded = TRUE;
 }
@@ -1317,3 +1320,29 @@ HipGraphicsGLRegisterBuffer (GstHipVendor vendor,
   return hipCUDAErrorTohipError (cuda_ret);
 }
 #endif
+
+hipError_t
+HipDeviceGetLuid (GstHipVendor vendor, char *luid, unsigned int *deviceNodeMask,
+    hipDevice_t dev)
+{
+  CHECK_VENDOR (vendor);
+
+  if (!luid || !deviceNodeMask)
+    return hipErrorInvalidValue;
+
+  if (vendor == GST_HIP_VENDOR_AMD) {
+    hipDeviceProp_t prop = { };
+    auto hip_ret = amd_ftable.hipGetDeviceProperties (&prop, dev);
+    if (hip_ret != hipSuccess)
+      return hip_ret;
+
+    memcpy (luid, prop.luid, sizeof (prop.luid));
+    *deviceNodeMask = prop.luidDeviceNodeMask;
+    return hipSuccess;
+  }
+
+  auto cuda_ret = cuda_ftable.cuDeviceGetLuid (luid,
+      deviceNodeMask, (CUdevice) dev);
+
+  return hipCUResultTohipError (cuda_ret);
+}

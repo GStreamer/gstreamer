@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include <stddef.h>
 #include <hip/texture_types.h>
 
+typedef int hipDevice_t;
+
 typedef struct {
     // 32-bit Atomics
     unsigned hasGlobalInt32Atomics : 1;     ///< 32-bit integer atomics for global memory.

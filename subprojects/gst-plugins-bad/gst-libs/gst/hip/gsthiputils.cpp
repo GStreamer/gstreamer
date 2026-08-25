@@ -104,6 +104,12 @@ context_set_hip_device (GstContext * context, GstHipDevice * device)
   gst_structure_set (s, "device", GST_TYPE_HIP_DEVICE, device,
       "vendor", GST_TYPE_HIP_VENDOR, vendor,
       "device-id", G_TYPE_UINT, device_id, nullptr);
+
+#ifdef G_OS_WIN32
+  gint64 luid = 0;
+  g_object_get (device, "adapter-luid", &luid, nullptr);
+  gst_structure_set (s, "adapter-luid", G_TYPE_INT64, luid, nullptr);
+#endif
 }
 
 static gboolean
