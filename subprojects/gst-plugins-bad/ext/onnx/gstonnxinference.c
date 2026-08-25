@@ -114,8 +114,10 @@
 
 #include <onnxruntime_c_api.h>
 
-#if HAVE_VSI_NPU
-#include <core/providers/vsinpu/vsinpu_provider_factory.h>
+#ifdef G_OS_WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
 #endif
 
 #if HAVE_WINML
@@ -289,16 +291,9 @@ gst_onnx_execution_provider_get_type (void)
     static GEnumValue execution_provider_types[] = {
       {GST_ONNX_EXECUTION_PROVIDER_CPU, "CPU execution provider",
           "cpu"},
-#if HAVE_CUDA
       {GST_ONNX_EXECUTION_PROVIDER_CUDA,
             "CUDA execution provider",
           "cuda"},
-#else
-      {GST_ONNX_EXECUTION_PROVIDER_CUDA,
-            "CUDA execution provider (compiled out, will use CPU)",
-          "cuda"},
-#endif
-#if HAVE_VSI_NPU
       /**
        * GstOnnxExecutionProvider::vsi
        *
@@ -310,13 +305,7 @@ gst_onnx_execution_provider_get_type (void)
       {GST_ONNX_EXECUTION_PROVIDER_VSI,
             "VeriSilicon NPU execution provider",
           "vsi"},
-#else
-      {GST_ONNX_EXECUTION_PROVIDER_VSI,
-            "VeriSilicon NPU execution provider (compiled out, will use CPU)",
-          "vsi"},
-#endif
 
-#if HAVE_MIGRAPHX || HAVE_WINML
       /**
        * GstOnnxExecutionProvider::migraphx
        *
@@ -328,13 +317,7 @@ gst_onnx_execution_provider_get_type (void)
       {GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
             "AMD MIGraphX execution provider",
           "migraphx"},
-#else
-      {GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX,
-            "AMD MIGraphX execution provider (compiled out, will use CPU)",
-          "migraphx"},
-#endif
 
-#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
       /**
        * GstOnnxExecutionProvider::hip
        *
@@ -344,14 +327,12 @@ gst_onnx_execution_provider_get_type (void)
        */
 
       {GST_ONNX_EXECUTION_PROVIDER_HIP,
+#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
             "AMD HIP execution provider",
-          "hip"},
 #else
-      {GST_ONNX_EXECUTION_PROVIDER_HIP,
-            "AMD HIP execution provider (requires ONNX Runtime >= 1.22)",
-          "hip"},
+            "AMD HIP execution provider (compiled out, requires ONNX Runtime >= 1.22)",
 #endif
-#if HAVE_DIRECTML
+          "hip"},
       /**
        * GstOnnxExecutionProvider::dml
        *
@@ -359,11 +340,12 @@ gst_onnx_execution_provider_get_type (void)
        *
        * Since: 1.30
        */
+#if HAVE_DIRECTML
       {GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
           "Microsoft DirectML execution provider", "dml"},
 #else
       {GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
-            "Microsoft DirectML execution provider (compiled out, will use CPU)",
+            "Microsoft DirectML execution provider (compiled out, will error)",
           "dml"},
 #endif
       {0, NULL, NULL},
@@ -970,6 +952,26 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
 }
 #endif
 
+typedef OrtStatus *(ORT_API_CALL * GstOrtAppendVsiNpuFunc) (OrtSessionOptions *
+    options);
+
+static GstOrtAppendVsiNpuFunc
+gst_onnx_inference_get_vsi_npu_append_func (void)
+{
+#ifdef G_OS_WIN32
+  HMODULE module = GetModuleHandleW (L"onnxruntime.dll");
+
+  if (!module)
+    return NULL;
+
+  return (GstOrtAppendVsiNpuFunc) GetProcAddress (module,
+      "OrtSessionOptionsAppendExecutionProvider_VSINPU");
+#else
+  return (GstOrtAppendVsiNpuFunc) dlsym (RTLD_DEFAULT,
+      "OrtSessionOptionsAppendExecutionProvider_VSINPU");
+#endif
+}
+
 static gboolean
 gst_onnx_inference_start (GstBaseTransform * trans)
 {
@@ -1119,22 +1121,25 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       break;
     }
     case GST_ONNX_EXECUTION_PROVIDER_VSI:
-#if HAVE_VSI_NPU
-      status =
-          OrtSessionOptionsAppendExecutionProvider_VSINPU (session_options);
+    {
+      GstOrtAppendVsiNpuFunc append_vsi_npu =
+          gst_onnx_inference_get_vsi_npu_append_func ();
+
+      if (!append_vsi_npu) {
+        GST_ERROR_OBJECT (self, "VSI NPU execution provider is unavailable");
+        goto error;
+      }
+      status = append_vsi_npu (session_options);
       if (status) {
-        GST_ERROR_OBJECT (self, "Failed to set VSINPU AI execution provider:"
-            " %s", api->GetErrorMessage (status));
+        GST_ERROR_OBJECT (self, "Failed to append VSI NPU provider: %s",
+            api->GetErrorMessage (status));
         goto error;
       }
       api->DisableCpuMemArena (session_options);
-#else
-      GST_ERROR_OBJECT (self, "Compiled without VSI support");
-      goto error;
-#endif
       break;
+    }
     case GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX:
-#if HAVE_MIGRAPHX
+#if !HAVE_WINML
     {
       OrtMIGraphXProviderOptions migraphx_options;
       memset (&migraphx_options, 0, sizeof (migraphx_options));
@@ -1152,7 +1157,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
     }
-#elif HAVE_WINML
+#else
     {
       ORTCHAR_T *lib_path_w;
       gchar *lib_path =
@@ -1183,15 +1188,20 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
     }
-#else
-      GST_ERROR_OBJECT (self, "Compiled without MIGraphX support");
-      goto error;
 #endif
       break;
     case GST_ONNX_EXECUTION_PROVIDER_HIP:
 #if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
     {
       const gchar *ep_lib_path = g_getenv ("MORPHIZEN_EP_LIB");
+
+      if (!api->RegisterExecutionProviderLibrary ||
+          !api->UnregisterExecutionProviderLibrary || !api->GetEpDevices ||
+          !api->SessionOptionsAppendExecutionProvider_V2) {
+        GST_ERROR_OBJECT (self,
+            "ONNX Runtime does not support dynamically loaded execution providers");
+        goto error;
+      }
 
       if (!ep_lib_path || !*ep_lib_path) {
         GST_ERROR_OBJECT (self,
@@ -1795,8 +1805,9 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   if (self->env) {
 #if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
     if (self->registered_ep_name) {
-      (void) api->UnregisterExecutionProviderLibrary (self->env,
-          self->registered_ep_name);
+      if (api->UnregisterExecutionProviderLibrary)
+        (void) api->UnregisterExecutionProviderLibrary (self->env,
+            self->registered_ep_name);
     }
     self->registered_ep_name = NULL;
 #endif

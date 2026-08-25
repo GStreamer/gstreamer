@@ -237137,22 +237137,22 @@
                         "value": "1"
                     },
                     {
-                        "desc": "VeriSilicon NPU execution provider (compiled out, will use CPU)",
+                        "desc": "VeriSilicon NPU execution provider",
                         "name": "vsi",
                         "value": "2"
                     },
                     {
-                        "desc": "AMD MIGraphX execution provider (compiled out, will use CPU)",
+                        "desc": "AMD MIGraphX execution provider",
                         "name": "migraphx",
                         "value": "3"
                     },
                     {
-                        "desc": "AMD HIP execution provider (requires ONNX Runtime >= 1.22)",
+                        "desc": "AMD HIP execution provider (compiled out, requires ONNX Runtime >= 1.22)",
                         "name": "hip",
                         "value": "4"
                     },
                     {
-                        "desc": "Microsoft DirectML execution provider (compiled out, will use CPU)",
+                        "desc": "Microsoft DirectML execution provider (compiled out, will error)",
                         "name": "dml",
                         "value": "5"
                     }

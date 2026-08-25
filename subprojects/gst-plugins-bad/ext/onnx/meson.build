@@ -24,11 +24,9 @@ extra_args = []
 extra_deps = []
 extra_incs = []
 have_winml = false
-have_vsi_npu = false
-have_migraphx = false
-have_ort_register_execution_provider_library = false
-have_cuda = false
 have_directml = false
+have_ort_register_execution_provider_library = false
+onnx_require_eps = get_option('onnx-require-eps')
 
 fsmod = import('fs')
 
@@ -37,9 +35,8 @@ onnxrt_dep = dependency('', required : false)
 onnx_winml_opt = get_option('onnx-winml')
 if host_system == 'windows' and not onnx_winml_opt.disabled()
   onnxrt_dep = dependency('microsoft.windows.ai.machinelearning',
-      version: '>= 2.2.12',
-      allow_fallback: true,
-      required: onnx_winml_opt)
+                          version: '>= 2.2.12', allow_fallback: true,
+                          required: onnx_winml_opt)
   if onnxrt_dep.found()
     have_winml = true
     have_ort_register_execution_provider_library = true
@@ -81,75 +78,37 @@ if not onnxrt_dep.found()
   subdir_done()
 endif
 
-if gstcuda_dep.found()
-    have_cuda = true
-    extra_deps += [gstcuda_dep]
+if host_system != 'windows'
+  extra_deps += cc.find_library('dl', required: false)
+endif
+
+if 'cuda' in onnx_require_eps and not gstcuda_dep.found()
+  error('ONNX EP "cuda" enabled, but CUDA was not found')
+endif
+
+if 'vsi' in onnx_require_eps
+  cc.has_function('OrtSessionOptionsAppendExecutionProvider_VSINPU',
+                  dependencies: onnxrt_dep)
 endif
 
 if not have_winml
-  onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
-
-  if cc.has_function('OrtSessionOptionsAppendExecutionProvider_VSINPU',
-          dependencies: onnxrt_dep) and \
-    cc.has_header('core/providers/vsinpu/vsinpu_provider_factory.h',
-          dependencies: onnxrt_dep,
-          include_directories: extra_incs)
-    have_vsi_npu = true
+  if 'migraphx' in onnx_require_eps
+    onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
+    cc.find_library('onnxruntime_providers_migraphx', dirs: [onnxrt_libdir])
   endif
 
-  migraphx_dep = cc.find_library('onnxruntime_providers_migraphx',
-      dirs: [onnxrt_libdir],
-      required: false)
-  if migraphx_dep.found()
-    have_migraphx = true
-  endif
-
-  # Check if OrtApi::RegisterExecutionProviderLibrary is available as needed
-  # for dynamically loaded execution providers.
-  if cc.has_member('OrtApi', 'RegisterExecutionProviderLibrary',
-          prefix: '#include <onnxruntime_c_api.h>',
-          dependencies: onnxrt_dep,
-          include_directories: extra_incs)
-    have_ort_register_execution_provider_library = true
-  endif
+  have_ort_register_execution_provider_library = cc.has_member(
+      'OrtApi', 'RegisterExecutionProviderLibrary',
+      prefix: '#include <onnxruntime_c_api.h>',
+      include_directories: extra_incs, dependencies: onnxrt_dep,
+      required: 'hip' in onnx_require_eps)
 endif
 
-
-features = {
-  'cuda': {
-    'enabled': have_cuda,
-    'message': 'Enabled CUDA execution provider',
-  },
-  'winml': {
-    'enabled': have_winml,
-    'message': 'Enabled Windows ML',
-  },
-  'vsi_npu': {
-    'enabled': have_vsi_npu,
-    'message': 'Enabled VSI Onnx VSI NPU provider',
-  },
-  'migraphx': {
-    'enabled': have_migraphx,
-    'message': 'Enabled ONNX MIGraphX execution provider'
-  },
-  'ort_register_execution_provider_library': {
-    'enabled': have_ort_register_execution_provider_library,
-    'message': 'Found ONNX Runtime >= 1.22, enabling dynamically loaded execution providers',
-  },
-  'directml': {
-    'enabled': have_directml,
-    'message': 'Enabled DirectML execution provider'
-  },
-}
-
 onnx_config = configuration_data()
-foreach name, feature : features
-  enabled = feature['enabled']
-  onnx_config.set10('HAVE_' + name.underscorify().to_upper(), enabled)
-  if enabled
-    message(feature['message'])
-  endif
-endforeach
+onnx_config.set10('HAVE_WINML', have_winml)
+onnx_config.set10('HAVE_DIRECTML', have_directml)
+onnx_config.set10('HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY',
+                  have_ort_register_execution_provider_library)
 
 configure_file(
   output: 'gstonnx-config.h',
