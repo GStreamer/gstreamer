@@ -120,6 +120,10 @@ When onnxruntime is detected in `/usr/local`, meson automatically sets `PKG_CONF
 `LD_LIBRARY_PATH`, and `HIP_VISIBLE_DEVICES=0` in the devenv. No manual action is required
 when building with meson devenv.
 
+5.4 Note that if `ORT_MIGRAPHX_MODEL_CACHE_PATH` is set, it overrides the
+model-cache-dir option since the env var is read directly by the MIGraphX
+implementation.
+
 6. Vitis AI (AMD NPU)
 
 Similar to MIGraphX, the Vitis AI EP is not available as a pre-built package

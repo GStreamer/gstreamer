@@ -154,6 +154,7 @@ struct _GstOnnxInference
   GstOnnxOptimizationLevel optimization_level;
   GstOnnxExecutionProvider execution_provider;
   gchar *device;
+  gchar *model_cache_dir;
   gchar *vitisai_config_file;
   GstVideoInfo video_info;
   GstCaps *input_tensors_caps;
@@ -209,6 +210,7 @@ enum
   PROP_OPTIMIZATION_LEVEL,
   PROP_EXECUTION_PROVIDER,
   PROP_DEVICE,
+  PROP_MODEL_CACHE_DIR,
   PROP_VITISAI_CONFIG_FILE
 };
 
@@ -453,6 +455,21 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
           NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstOnnxInference:model-cache-dir
+   *
+   * Directory used by the execution provider to cache compiled models.
+   * Currently supported by the MIGraphX, Vitis AI and HIP execution providers.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MODEL_CACHE_DIR,
+      g_param_spec_string ("model-cache-dir",
+          "Model cache directory",
+          "Directory used by the execution provider to cache compiled models",
+          NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstOnnxInference:vitisai-config-file
    *
    * Vitis AI execution provider configuration file. This is passed to the
@@ -505,6 +522,7 @@ gst_onnx_inference_init (GstOnnxInference * self)
 
   self->execution_provider = GST_ONNX_EXECUTION_PROVIDER_CPU;
   self->device = NULL;
+  self->model_cache_dir = NULL;
   self->vitisai_config_file = NULL;
 
   self->scales = NULL;
@@ -527,6 +545,7 @@ gst_onnx_inference_finalize (GObject * object)
   g_free (self->dest);
   g_free (self->model_file);
   g_free (self->device);
+  g_free (self->model_cache_dir);
   g_free (self->vitisai_config_file);
   g_free (self->scales);
   g_free (self->offsets);
@@ -569,6 +588,10 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
       g_free (self->device);
       self->device = g_value_dup_string (value);
       break;
+    case PROP_MODEL_CACHE_DIR:
+      g_free (self->model_cache_dir);
+      self->model_cache_dir = g_value_dup_string (value);
+      break;
     case PROP_VITISAI_CONFIG_FILE:
       g_free (self->vitisai_config_file);
       self->vitisai_config_file = g_value_dup_string (value);
@@ -597,6 +620,9 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
       g_value_set_string (value, self->device);
+      break;
+    case PROP_MODEL_CACHE_DIR:
+      g_value_set_string (value, self->model_cache_dir);
       break;
     case PROP_VITISAI_CONFIG_FILE:
       g_value_set_string (value, self->vitisai_config_file);
@@ -899,6 +925,40 @@ done:
   return g_string_free (dims_gstr, FALSE);
 }
 
+static const gchar *
+gst_onnx_inference_get_model_cache_dir (GstOnnxInference * self)
+{
+  /* env var fallback is only for use with the devenv */
+  const char *cache_dir = self->model_cache_dir ? self->model_cache_dir
+      : g_getenv ("GST_ORT_MODEL_CACHE_DIR");
+
+  if (cache_dir && *cache_dir && g_mkdir_with_parents (cache_dir, 0755) < 0)
+    GST_WARNING_OBJECT (self, "Failed to create model cache dir '%s', model "
+        "compilation may fail or be uncached", cache_dir);
+
+  return cache_dir;
+}
+
+static gboolean
+gst_onnx_runtime_version_at_least (guint required_major, guint required_minor)
+{
+  const gchar *version = OrtGetApiBase ()->GetVersionString ();
+  gchar *end = NULL;
+  guint64 major, minor;
+
+  major = g_ascii_strtoull (version, &end, 10);
+  if (end == version || *end != '.')
+    return FALSE;
+
+  version = end + 1;
+  minor = g_ascii_strtoull (version, &end, 10);
+  if (end == version)
+    return FALSE;
+
+  return major > required_major ||
+      (major == required_major && minor >= required_minor);
+}
+
 #if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
 static gboolean
 gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
@@ -908,6 +968,9 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
   const OrtEpDevice **target_devices = NULL;
   size_t num_ep_devices = 0;
   size_t num_target_devices = 0;
+  const char *provider_options_keys[] = { "cache_dir" };
+  const char *provider_options_values[1];
+  size_t num_provider_options = 0;
   size_t i;
   OrtStatus *status;
 
@@ -979,10 +1042,33 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
     g_free (target_devices);
     return FALSE;
   }
-  // Finally, append EP to session options.
+  /*
+   * Finally, append EP to session options.
+   * Plugin EPs use their own option schema. Both the HIP and MIGraphX plugin
+   * EPs call this option cache_dir at present. This may change in the future.
+   * MIGraphX:
+   *  - repo: https://github.com/onnxruntime/onnxruntime-ep-amdgpu
+   *  - header: src/migraphx/mgx_options.h
+   * HIP:
+   *  - repo: https://github.com/ROCm/hip-ep/
+   *  - header: morphizen/morphizen-core/include/morphizen/provider_option_keys.hpp
+   */
+  if (g_strcmp0 (ep_name, "hipgpu") == 0 ||
+      g_strcmp0 (ep_name, "MIGraphXExecutionProvider") == 0) {
+    const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
+
+    if (cache_dir && *cache_dir) {
+      provider_options_values[0] = cache_dir;
+      num_provider_options = 1;
+    }
+  }
+
   status =
       api->SessionOptionsAppendExecutionProvider_V2 (opts,
-      self->env, target_devices, num_target_devices, NULL, NULL, 0);
+      self->env, target_devices, num_target_devices,
+      num_provider_options ? provider_options_keys : NULL,
+      num_provider_options ? provider_options_values : NULL,
+      num_provider_options);
   g_free (target_devices);
 
   if (status) {
@@ -1056,6 +1142,14 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
         ("model-file property not set"));
     goto error_no_lock;
+  }
+
+  if (self->model_cache_dir && *self->model_cache_dir &&
+      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX &&
+      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_HIP &&
+      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_VITIS_AI) {
+    GST_WARNING_OBJECT (self,
+        "model-cache-dir is not supported by the selected execution provider");
   }
 
   modelinfo = gst_analytics_modelinfo_load (self->model_file);
@@ -1185,9 +1279,20 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     case GST_ONNX_EXECUTION_PROVIDER_VITIS_AI:
     {
 #if HAVE_VITISAI
-      const char *keys[] = { "config_file" };
-      const char *values[] = { self->vitisai_config_file };
-      size_t num_options = self->vitisai_config_file ? 1 : 0;
+      const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
+      const char *keys[2];
+      const char *values[2];
+      size_t num_options = 0;
+
+      if (self->vitisai_config_file && *self->vitisai_config_file) {
+        keys[num_options] = "config_file";
+        values[num_options++] = self->vitisai_config_file;
+      }
+
+      if (cache_dir && *cache_dir) {
+        keys[num_options] = "cache_dir";
+        values[num_options++] = cache_dir;
+      }
 
       status =
           api->SessionOptionsAppendExecutionProvider_VitisAI (session_options,
@@ -1207,16 +1312,41 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     case GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX:
 #if !HAVE_WINML
     {
-      OrtMIGraphXProviderOptions migraphx_options;
-      memset (&migraphx_options, 0, sizeof (migraphx_options));
+      const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
 
-      if (self->device)
-        migraphx_options.device_id =
-            (int) g_ascii_strtoll (self->device, NULL, 10);
+      if (cache_dir && *cache_dir && gst_onnx_runtime_version_at_least (1, 23)) {
+        /*
+         * onnxruntime online docs are usually out of date, so you have to
+         * check the headers. For example, migraphx_model_cache_dir is
+         * documented here and was backported to onnxruntime 1.23:
+         * core/providers/migraphx/migraphx_execution_provider_info.h
+         */
+        const char *keys[2] = { "migraphx_model_cache_dir", "device_id" };
+        const char *values[2] = { cache_dir, self->device };
+        size_t num_options = self->device ? 2 : 1;
 
-      status =
-          api->SessionOptionsAppendExecutionProvider_MIGraphX (session_options,
-          &migraphx_options);
+        status = api->SessionOptionsAppendExecutionProvider (session_options,
+            "MIGraphX", keys, values, num_options);
+      } else {
+        OrtMIGraphXProviderOptions migraphx_options;
+
+        if (cache_dir && *cache_dir) {
+          GST_WARNING_OBJECT (self,
+              "model-cache-dir requires ONNX Runtime >= 1.23 for the "
+              "MIGraphX execution provider; runtime version is %s",
+              OrtGetApiBase ()->GetVersionString ());
+        }
+
+        memset (&migraphx_options, 0, sizeof (migraphx_options));
+
+        if (self->device)
+          migraphx_options.device_id =
+              (int) g_ascii_strtoll (self->device, NULL, 10);
+
+        status =
+            api->SessionOptionsAppendExecutionProvider_MIGraphX
+            (session_options, &migraphx_options);
+      }
       if (status) {
         GST_ERROR_OBJECT (self, "Failed to create MIGraphX provider: %s",
             api->GetErrorMessage (status));

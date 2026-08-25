@@ -237077,6 +237077,18 @@
                         "type": "gfloat",
                         "writable": true
                     },
+                    "model-cache-dir": {
+                        "blurb": "Directory used by the execution provider to cache compiled models",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "model-file": {
                         "blurb": "ONNX model file",
                         "conditionally-available": false,

@@ -111,6 +111,11 @@ if not have_winml
       required: 'hip' in onnx_require_eps)
 endif
 
+model_cache_dir = meson.build_root() / 'ort-model-cache'
+meson.add_devenv({
+  'GST_ORT_MODEL_CACHE_DIR': model_cache_dir,
+})
+
 onnx_config = configuration_data()
 onnx_config.set10('HAVE_WINML', have_winml)
 onnx_config.set10('HAVE_DIRECTML', have_directml)
