@@ -36,6 +36,32 @@ G_STMT_START {                                                           \
     "'" #a "' (%d) is not almost equal to '" #b"' (%d)", first, second); \
 } G_STMT_END;
 
+#ifdef __ANDROID__
+static gchar *old_tz;
+
+static void
+setup_timezone (void)
+{
+  old_tz = g_strdup (g_getenv ("TZ"));
+
+  /* Android libc obtains local time from the platform timezone service, while
+   * GLib uses TZ or Unix zoneinfo files that are not available to the app. */
+  fail_unless (g_setenv ("TZ", "UTC", TRUE));
+  tzset ();
+}
+
+static void
+restore_timezone (void)
+{
+  if (old_tz != NULL)
+    fail_unless (g_setenv ("TZ", old_tz, TRUE));
+  else
+    g_unsetenv ("TZ");
+  g_clear_pointer (&old_tz, g_free);
+  tzset ();
+}
+#endif
+
 GST_START_TEST (test_GstDateTime_now)
 {
   GstDateTime *dt;
@@ -934,6 +960,9 @@ gst_date_time_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+#ifdef __ANDROID__
+  tcase_add_unchecked_fixture (tc_chain, setup_timezone, restore_timezone);
+#endif
   tcase_add_test (tc_chain, test_GstDateTime_get_dmy);
   tcase_add_test (tc_chain, test_GstDateTime_get_hour);
   tcase_add_test (tc_chain, test_GstDateTime_get_microsecond);
