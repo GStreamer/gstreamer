@@ -680,6 +680,8 @@ GST_START_TEST (test_aggregate_queries_robustness)
   gst_aggregator_test_slow_down_sink_query = TRUE;
 
   _test_data_init (&test, FALSE);
+  /* This test does not run the main loop, so it does not use the timeout. */
+  g_source_remove (test.timeout_id);
 
   caps = gst_caps_new_empty_simple ("foo/x-bar");
   _chain_data_init (&data1, test.aggregator,
