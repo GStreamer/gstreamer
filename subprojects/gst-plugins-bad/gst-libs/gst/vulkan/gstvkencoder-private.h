@@ -153,7 +153,6 @@ union _GstVulkanEncoderParametersFeedback
 
 struct _GstVulkanEncoderQualityPoperties
 {
-  gint32 quality_level;
   union
   {
     VkVideoEncodeH264QualityLevelPropertiesKHR h264;
@@ -181,7 +180,6 @@ GST_VULKAN_API
 gboolean                gst_vulkan_encoder_start                (GstVulkanEncoder * self,
                                                                  GstVulkanVideoProfile * profile,
                                                                  gconstpointer session_create_pnext,
-                                                                 GstVulkanEncoderQualityProperties * codec_quality_props,
                                                                  GError ** error);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_stop                 (GstVulkanEncoder * self);
@@ -214,6 +212,13 @@ GST_VULKAN_API
 gboolean                gst_vulkan_encoder_is_started           (GstVulkanEncoder * self);
 GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
+GST_VULKAN_API
+gboolean                gst_vulkan_encoder_set_quality_level    (GstVulkanEncoder * self,
+                                                                 guint32 quality,
+                                                                 const GstVulkanVideoProfile * vk_profile,
+                                                                 const GstVulkanVideoCapabilities * vk_caps,
+                                                                 GstVulkanEncoderQualityProperties * out_quality_props,
+                                                                 GError ** error);
 GST_VULKAN_API
 gint32                  gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
 GST_VULKAN_API

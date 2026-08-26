@@ -457,7 +457,6 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   gint min_ctb_size = 64, max_ctb_size = 16;
   gint max_tb_size = 0, min_tb_size = 0;
   gint max_transform_hierarchy;
-  GstVulkanEncoderQualityProperties quality_props;
 
   /* *INDENT-OFF* */
   profile = (GstVulkanVideoProfile) {
@@ -480,12 +479,6 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_KHR,
       .stdProfileIdc = profile_idc,
     }
-  };
-  quality_props = (GstVulkanEncoderQualityProperties) {
-    .quality_level = -1,
-    .codec.h265 = {
-      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_QUALITY_LEVEL_PROPERTIES_KHR,
-    },
   };
   /* *INDENT-ON* */
 
@@ -512,8 +505,7 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
 
   fail_unless (gst_vulkan_encoder_quality_level (enc) == -1);
 
-  fail_unless (gst_vulkan_encoder_start (enc, &profile, NULL, &quality_props,
-          &err));
+  fail_unless (gst_vulkan_encoder_start (enc, &profile, NULL, &err));
 
   fail_unless (gst_vulkan_encoder_quality_level (enc) > -1);
 

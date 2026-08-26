@@ -684,7 +684,6 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   StdVideoH264ProfileIdc vk_profile;
   GstVulkanVideoCapabilities vk_caps;
   VkVideoEncodeH264CapabilitiesKHR *vk_h264_caps;
-  GstVulkanEncoderQualityProperties quality_props;
   StdVideoH264LevelIdc vk_max_level;
   VkVideoEncodeH264SessionCreateInfoKHR vk_h264_session;
   gpointer session_create = NULL;
@@ -729,13 +728,6 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
         .stdProfileIdc = vk_profile,
       },
     };
-    quality_props =  (GstVulkanEncoderQualityProperties) {
-      .quality_level = self->rc.quality,
-      .codec.h264 = {
-        .sType =
-            VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR,
-      },
-    };
     /* *INDENT-ON* */
   }
 
@@ -763,25 +755,39 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   }
 
   if (!gst_vulkan_encoder_start (self->encoder, &self->profile, session_create,
-          &quality_props, &err)) {
+          &err)) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Unable to start vulkan encoder with error %s", err->message), (NULL));
     g_clear_error (&err);
     return GST_FLOW_ERROR;
   }
 
+  gst_vulkan_encoder_caps (self->encoder, &vk_caps);
+  vk_h264_caps = &vk_caps.encoder.codec.h264;
+
   /* quality configuration */
   {
-    self->rc.quality = gst_vulkan_encoder_quality_level (self->encoder);
-    update_property_uint (self, &self->prop.quality, self->rc.quality,
-        PROP_QUALITY);
+    GstVulkanEncoderQualityProperties qprop = {
+      .codec.h264 = {.sType =
+            VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR}
+    };
+
     self->rc.ratecontrol = gst_vulkan_encoder_rc_mode (self->encoder);
     update_property_uint (self, &self->prop.ratecontrol, self->rc.ratecontrol,
         PROP_RATECONTROL);
-  }
 
-  gst_vulkan_encoder_caps (self->encoder, &vk_caps);
-  vk_h264_caps = &vk_caps.encoder.codec.h264;
+    self->rc.quality =
+        MIN (self->rc.quality, vk_caps.encoder.caps.maxQualityLevels - 1);
+    if (!gst_vulkan_encoder_set_quality_level (self->encoder, self->rc.quality,
+            NULL, NULL, &qprop, &err)) {
+      GST_ERROR_OBJECT (self, "Unable to set encoder quality: %s",
+          err->message);
+      g_clear_error (&err);
+      return GST_FLOW_ERROR;
+    }
+    update_property_uint (self, &self->prop.quality, self->rc.quality,
+        PROP_QUALITY);
+  }
 
   GST_LOG_OBJECT (self, "H264 encoder capabilities:\n"
       "    Standard capability flags:\n"

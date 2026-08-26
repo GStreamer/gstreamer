@@ -363,7 +363,6 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
   StdVideoH264ProfileIdc profile_idc = STD_VIDEO_H264_PROFILE_IDC_MAIN;
   GstVulkanEncoderParameters enc_params;
   VkVideoEncodeH264SessionParametersAddInfoKHR params_add;
-  GstVulkanEncoderQualityProperties quality_props;
 
   /* *INDENT-OFF* */
   profile = (GstVulkanVideoProfile) {
@@ -386,12 +385,6 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR,
       .stdProfileIdc = profile_idc,
     }
-  };
-  quality_props = (GstVulkanEncoderQualityProperties) {
-    .quality_level = -1,
-    .codec.h264 = {
-      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR,
-    },
   };
   /* *INDENT-ON* */
 
@@ -418,8 +411,7 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
 
   fail_unless (gst_vulkan_encoder_quality_level (enc) == -1);
 
-  fail_unless (gst_vulkan_encoder_start (enc, &profile, NULL, &quality_props,
-          &err));
+  fail_unless (gst_vulkan_encoder_start (enc, &profile, NULL, &err));
 
   fail_unless (gst_vulkan_encoder_quality_level (enc) > -1);
 
