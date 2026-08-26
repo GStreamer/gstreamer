@@ -671,6 +671,66 @@ _h264_get_chroma_subsampling (GstVideoInfo * info)
   g_assert_not_reached ();
 }
 
+static void
+_reset_rc_props (GstVulkanH264Encoder * self,
+    const GstVulkanVideoCapabilities * vk_caps)
+{
+  GstVulkanVideoCapabilities _vkcaps;
+
+  if (!self->encoder)
+    return;
+
+  if (!vk_caps) {
+    if (!gst_vulkan_encoder_caps (self->encoder, &_vkcaps)) {
+      GST_DEBUG_OBJECT (self,
+          "RC configuration wasn't updated: no capabilities available");
+      return;
+    }
+    vk_caps = &_vkcaps;
+  }
+
+  GST_OBJECT_LOCK (self);
+  self->rc.ratecontrol = self->prop.ratecontrol;
+  self->rc.min_qp = (self->prop.min_qp > 0) ?
+      MAX (self->prop.min_qp, vk_caps->encoder.codec.h264.minQp) : 0;
+  self->rc.max_qp = (self->prop.max_qp > 0) ?
+      MIN (self->prop.max_qp, vk_caps->encoder.codec.h264.maxQp) : 0;
+  GST_OBJECT_UNLOCK (self);
+
+  {
+    gst_vulkan_encoder_set_rc_mode (self->encoder, vk_caps,
+        self->rc.ratecontrol);
+    self->rc.ratecontrol = gst_vulkan_encoder_rc_mode (self->encoder);
+    update_property_uint (self, &self->prop.ratecontrol, self->rc.ratecontrol,
+        PROP_RATECONTROL);
+  }
+
+  if (self->rc.ratecontrol ==
+      VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR) {
+    GST_OBJECT_LOCK (self);
+    self->rc.qp_i =
+        CLAMP (self->prop.qp_i, vk_caps->encoder.codec.h264.minQp,
+        vk_caps->encoder.codec.h264.maxQp);
+    self->rc.qp_p =
+        CLAMP (self->prop.qp_p, vk_caps->encoder.codec.h264.minQp,
+        vk_caps->encoder.codec.h264.maxQp);
+    self->rc.qp_b =
+        CLAMP (self->prop.qp_b, vk_caps->encoder.codec.h264.minQp,
+        vk_caps->encoder.codec.h264.maxQp);
+    GST_OBJECT_UNLOCK (self);
+  } else {
+    self->rc.qp_i = 0;
+    self->rc.qp_p = 0;
+    self->rc.qp_b = 0;
+  }
+
+  update_property_uint (self, &self->prop.qp_i, self->rc.qp_i, PROP_QP_I);
+  update_property_uint (self, &self->prop.qp_p, self->rc.qp_p, PROP_QP_P);
+  update_property_uint (self, &self->prop.qp_b, self->rc.qp_b, PROP_QP_B);
+  update_property_uint (self, &self->prop.min_qp, self->rc.min_qp, PROP_MIN_QP);
+  update_property_uint (self, &self->prop.max_qp, self->rc.max_qp, PROP_MAX_QP);
+}
+
 static GstFlowReturn
 gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     GstVideoCodecState * in_state, GstH264Profile profile,
@@ -772,10 +832,9 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
             VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR}
     };
 
-    self->rc.ratecontrol = gst_vulkan_encoder_rc_mode (self->encoder);
-    update_property_uint (self, &self->prop.ratecontrol, self->rc.ratecontrol,
-        PROP_RATECONTROL);
+    _reset_rc_props (self, &vk_caps);
 
+    /* quality set should go after setting the rate control mode */
     self->rc.quality =
         MIN (self->rc.quality, vk_caps.encoder.caps.maxQualityLevels - 1);
     if (!gst_vulkan_encoder_set_quality_level (self->encoder, self->rc.quality,
@@ -1591,59 +1650,6 @@ _setup_slice (GstVulkanH264Encoder * self, GstH264EncoderFrame * h264_frame,
       (self->params.pps.pic_init_qp_minus26 + 26);
 }
 
-static void
-_reset_rc_props (GstVulkanH264Encoder * self)
-{
-  GstVulkanVideoCapabilities vk_caps;
-
-  if (!self->encoder)
-    return;
-
-  if (!gst_vulkan_encoder_caps (self->encoder, &vk_caps))
-    return;
-
-  GST_OBJECT_LOCK (self);
-  self->rc.ratecontrol = self->prop.ratecontrol;
-  self->rc.min_qp = (self->prop.min_qp > 0) ?
-      MAX (self->prop.min_qp, vk_caps.encoder.codec.h264.minQp) : 0;
-  self->rc.max_qp = (self->prop.max_qp > 0) ?
-      MIN (self->prop.max_qp, vk_caps.encoder.codec.h264.maxQp) : 0;
-  GST_OBJECT_UNLOCK (self);
-
-  if (self->rc.ratecontrol ==
-      VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR) {
-    GST_OBJECT_LOCK (self);
-    self->rc.qp_i =
-        CLAMP (self->prop.qp_i, vk_caps.encoder.codec.h264.minQp,
-        vk_caps.encoder.codec.h264.maxQp);
-    self->rc.qp_p =
-        CLAMP (self->prop.qp_p, vk_caps.encoder.codec.h264.minQp,
-        vk_caps.encoder.codec.h264.maxQp);
-    self->rc.qp_b =
-        CLAMP (self->prop.qp_b, vk_caps.encoder.codec.h264.minQp,
-        vk_caps.encoder.codec.h264.maxQp);
-    GST_OBJECT_UNLOCK (self);
-  } else {
-    self->rc.qp_i = 0;
-    self->rc.qp_p = 0;
-    self->rc.qp_b = 0;
-  }
-
-  {
-    gst_vulkan_encoder_set_rc_mode (self->encoder, &vk_caps,
-        self->rc.ratecontrol);
-    self->rc.ratecontrol = gst_vulkan_encoder_rc_mode (self->encoder);
-    update_property_uint (self, &self->prop.ratecontrol, self->rc.ratecontrol,
-        PROP_RATECONTROL);
-  }
-
-  update_property_uint (self, &self->prop.qp_i, self->rc.qp_i, PROP_QP_I);
-  update_property_uint (self, &self->prop.qp_p, self->rc.qp_p, PROP_QP_P);
-  update_property_uint (self, &self->prop.qp_b, self->rc.qp_b, PROP_QP_B);
-  update_property_uint (self, &self->prop.min_qp, self->rc.min_qp, PROP_MIN_QP);
-  update_property_uint (self, &self->prop.max_qp, self->rc.max_qp, PROP_MAX_QP);
-}
-
 static StdVideoH264PictureType
 _gst_slice_type_2_vk_pic_type (GstH26XGOP * frame)
 {
@@ -1669,7 +1675,7 @@ update_properties_unlocked (GstVulkanH264Encoder * self)
     return;
 
   GST_OBJECT_UNLOCK (self);
-  _reset_rc_props (self);
+  _reset_rc_props (self, NULL);
   GST_OBJECT_LOCK (self);
 
   self->update_props = FALSE;
@@ -1779,8 +1785,6 @@ gst_vulkan_h264_encoder_reset (GstH264Encoder * base)
   self->rc.bitrate = self->prop.bitrate;
   self->rc.quality = self->prop.quality;
   GST_OBJECT_UNLOCK (self);
-
-  _reset_rc_props (self);
 
   self->coded_buffer_size = 0;
 }
