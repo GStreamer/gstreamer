@@ -1273,7 +1273,12 @@ gst_onnx_inference_start (GstBaseTransform * trans)
             api->GetErrorMessage (status));
         goto error;
       }
-      api->DisableCpuMemArena (session_options);
+      status = api->DisableCpuMemArena (session_options);
+      if (status) {
+        GST_WARNING_OBJECT (self, "Failed to disable the CPU memory arena: %s",
+            api->GetErrorMessage (status));
+        api->ReleaseStatus (status);
+      }
       break;
     }
     case GST_ONNX_EXECUTION_PROVIDER_VITIS_AI:
