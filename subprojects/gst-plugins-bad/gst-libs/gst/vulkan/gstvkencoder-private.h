@@ -174,6 +174,7 @@ void                    gst_vulkan_encoder_set_callbacks        (GstVulkanEncode
                                                                  GDestroyNotify notify);
 GST_VULKAN_API
 void                    gst_vulkan_encoder_set_rc_mode          (GstVulkanEncoder * self,
+                                                                 const GstVulkanVideoCapabilities * vk_caps,
                                                                  VkVideoEncodeRateControlModeFlagBitsKHR rc_mode);
 
 GST_VULKAN_API
@@ -222,7 +223,7 @@ gboolean                gst_vulkan_encoder_set_quality_level    (GstVulkanEncode
 GST_VULKAN_API
 gint32                  gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
 GST_VULKAN_API
-gint32                  gst_vulkan_encoder_rc_mode              (GstVulkanEncoder * self);
+guint32                 gst_vulkan_encoder_rc_mode              (GstVulkanEncoder * self);
 
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_picture_init         (GstVulkanEncoderPicture * pic,

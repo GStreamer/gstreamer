@@ -1595,7 +1595,6 @@ static void
 _reset_rc_props (GstVulkanH264Encoder * self)
 {
   GstVulkanVideoCapabilities vk_caps;
-  gint32 rc_mode;
 
   if (!self->encoder)
     return;
@@ -1630,10 +1629,10 @@ _reset_rc_props (GstVulkanH264Encoder * self)
     self->rc.qp_b = 0;
   }
 
-  gst_vulkan_encoder_set_rc_mode (self->encoder, self->rc.ratecontrol);
-  rc_mode = gst_vulkan_encoder_rc_mode (self->encoder);
-  if (rc_mode != -1) {
-    self->rc.ratecontrol = rc_mode;
+  {
+    gst_vulkan_encoder_set_rc_mode (self->encoder, &vk_caps,
+        self->rc.ratecontrol);
+    self->rc.ratecontrol = gst_vulkan_encoder_rc_mode (self->encoder);
     update_property_uint (self, &self->prop.ratecontrol, self->rc.ratecontrol,
         PROP_RATECONTROL);
   }

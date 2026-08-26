@@ -395,20 +395,17 @@ gst_vulkan_encoder_quality_level (GstVulkanEncoder * self)
  *
  * Get the current rate control mode.
  *
- * Returns: whether the encoder has started, it will return the rate control
- *     mode; otherwise it will return -1
+ * Returns: the rate control mode
  */
-gint32
+guint32
 gst_vulkan_encoder_rc_mode (GstVulkanEncoder * self)
 {
   GstVulkanEncoderPrivate *priv;
 
-  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), -1);
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self),
+      VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
-
-  if (!priv->started)
-    return -1;
 
   return priv->rc_mode;
 }
@@ -478,24 +475,30 @@ _rate_control_mode_to_str (VkVideoEncodeRateControlModeFlagBitsKHR rc_mode)
 
 static void
 _rate_control_mode_validate (GstVulkanEncoder * self,
+    const GstVulkanVideoCapabilities * vk_caps,
     VkVideoEncodeRateControlModeFlagBitsKHR * rc_mode)
 {
-  GstVulkanEncoderPrivate *priv =
-      gst_vulkan_encoder_get_instance_private (self);
+  const VkVideoEncodeRateControlModeFlagBitsKHR rc_modes[] = {
+    VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR,
+    VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR,
+    VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR,
+  };
 
-  if (rc_mode > VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR
-      && !(priv->caps.encoder.caps.rateControlModes & *rc_mode)) {
+  if (*rc_mode == VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR)
+    return;
+
+  if (!(vk_caps->encoder.caps.rateControlModes & *rc_mode)) {
     *rc_mode = VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR;
-    for (int i = VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR;
-        i <= VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR; i++) {
-      if ((priv->caps.encoder.caps.rateControlModes) & i) {
-        GST_DEBUG_OBJECT (self, "rate control mode is forced to: %s",
-            _rate_control_mode_to_str (i));
-        *rc_mode = i;
+    for (int i = 0; i < G_N_ELEMENTS (rc_modes); i++) {
+      if ((vk_caps->encoder.caps.rateControlModes) & rc_modes[i]) {
+        *rc_mode = rc_modes[i];
         break;
       }
     }
   }
+
+  GST_DEBUG_OBJECT (self, "rate control mode is forced to: %s",
+      _rate_control_mode_to_str (*rc_mode));
 }
 
 /**
@@ -732,7 +735,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
     goto failed;
 
   /* check rate control mode if it was set before start */
-  _rate_control_mode_validate (self, &priv->rc_mode);
+  _rate_control_mode_validate (self, &priv->caps, &priv->rc_mode);
 
   priv->session_reset = TRUE;
   priv->started = TRUE;
@@ -1382,8 +1385,19 @@ gst_vulkan_encoder_set_callbacks (GstVulkanEncoder * self,
   priv->callbacks_notify = notify;
 }
 
+/**
+ * gst_vulkan_encoder_set_rc_mode:
+ * @self: a #GstVulkanEncoder
+ * @vk_caps: (optional): a #GstVulkanVideoCapabilities
+ * @rc_mode: the rate control mode to set
+ *
+ * Sets the rate control mode to use in the encoding process. If @vk_caps is
+ * %NULL and the encoder has already started, the current vulkan capabilities
+ * are used.
+ */
 void
 gst_vulkan_encoder_set_rc_mode (GstVulkanEncoder * self,
+    const GstVulkanVideoCapabilities * vk_caps,
     VkVideoEncodeRateControlModeFlagBitsKHR rc_mode)
 {
   GstVulkanEncoderPrivate *priv;
@@ -1395,11 +1409,14 @@ gst_vulkan_encoder_set_rc_mode (GstVulkanEncoder * self,
   if (priv->rc_mode == rc_mode)
     return;
 
-  if (priv->started) {
-    _rate_control_mode_validate (self, &rc_mode);
-    if (priv->rc_mode == rc_mode)
-      return;
-  }
+  if (priv->started && !vk_caps)
+    vk_caps = &priv->caps;
+
+  g_return_if_fail (vk_caps);
+
+  _rate_control_mode_validate (self, vk_caps, &rc_mode);
+  if (priv->rc_mode == rc_mode)
+    return;
 
   priv->session_reset = TRUE;
   priv->rc_mode = rc_mode;
