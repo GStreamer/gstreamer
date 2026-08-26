@@ -237100,6 +237100,18 @@
                         "readable": true,
                         "type": "GstOnnxOptimizationLevel",
                         "writable": true
+                    },
+                    "vitisai-config-file": {
+                        "blurb": "Configuration file for the Vitis AI execution provider. NULL means use the provider default.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
                     }
                 },
                 "rank": "primary"

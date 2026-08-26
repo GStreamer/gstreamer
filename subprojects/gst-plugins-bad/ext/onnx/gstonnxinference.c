@@ -154,6 +154,7 @@ struct _GstOnnxInference
   GstOnnxOptimizationLevel optimization_level;
   GstOnnxExecutionProvider execution_provider;
   gchar *device;
+  gchar *vitisai_config_file;
   GstVideoInfo video_info;
   GstCaps *input_tensors_caps;
   GstCaps *output_tensors_caps;
@@ -207,7 +208,8 @@ enum
   PROP_MODEL_FILE,
   PROP_OPTIMIZATION_LEVEL,
   PROP_EXECUTION_PROVIDER,
-  PROP_DEVICE
+  PROP_DEVICE,
+  PROP_VITISAI_CONFIG_FILE
 };
 
 #define GST_ONNX_INFERENCE_DEFAULT_EXECUTION_PROVIDER    GST_ONNX_EXECUTION_PROVIDER_CPU
@@ -450,6 +452,22 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
           "(e.g. \"0\" for device index). NULL means use the provider default.",
           NULL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstOnnxInference:vitisai-config-file
+   *
+   * Vitis AI execution provider configuration file. This is passed to the
+   * provider as its `config_file` option when execution-provider is "vitisai".
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_VITISAI_CONFIG_FILE,
+      g_param_spec_string ("vitisai-config-file",
+          "Vitis AI configuration file",
+          "Configuration file for the Vitis AI execution provider. NULL "
+          "means use the provider default.", NULL,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class, "onnxinference",
       "Filter/Video",
       "Apply neural network to video frames and create tensor output",
@@ -487,6 +505,7 @@ gst_onnx_inference_init (GstOnnxInference * self)
 
   self->execution_provider = GST_ONNX_EXECUTION_PROVIDER_CPU;
   self->device = NULL;
+  self->vitisai_config_file = NULL;
 
   self->scales = NULL;
   self->offsets = NULL;
@@ -508,6 +527,7 @@ gst_onnx_inference_finalize (GObject * object)
   g_free (self->dest);
   g_free (self->model_file);
   g_free (self->device);
+  g_free (self->vitisai_config_file);
   g_free (self->scales);
   g_free (self->offsets);
   g_free (self->input_dims_model);
@@ -549,6 +569,10 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
       g_free (self->device);
       self->device = g_value_dup_string (value);
       break;
+    case PROP_VITISAI_CONFIG_FILE:
+      g_free (self->vitisai_config_file);
+      self->vitisai_config_file = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -573,6 +597,9 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
       g_value_set_string (value, self->device);
+      break;
+    case PROP_VITISAI_CONFIG_FILE:
+      g_value_set_string (value, self->vitisai_config_file);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1158,9 +1185,13 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     case GST_ONNX_EXECUTION_PROVIDER_VITIS_AI:
     {
 #if HAVE_VITISAI
+      const char *keys[] = { "config_file" };
+      const char *values[] = { self->vitisai_config_file };
+      size_t num_options = self->vitisai_config_file ? 1 : 0;
+
       status =
           api->SessionOptionsAppendExecutionProvider_VitisAI (session_options,
-          NULL, NULL, 0);
+          num_options ? keys : NULL, num_options ? values : NULL, num_options);
       if (status) {
         GST_ERROR_OBJECT (self, "Failed to append Vitis AI provider: %s",
             api->GetErrorMessage (status));

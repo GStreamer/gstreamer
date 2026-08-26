@@ -134,6 +134,14 @@ changes:
 * Pass `-Dgst-plugins-bad:onnx-require-eps=vitisai` to the GStreamer `meson setup`
   command.
 
+6.1 Set the `vitisai-config-file` property to pass a Vitis AI configuration
+file to the execution provider, for example:
+
+```
+onnxinference execution-provider=vitisai \
+    vitisai-config-file=/path/to/vaip_config.json
+```
+
 7. HIP (AMD GPU, dynamically loaded EP)
 
 The HIP EP is not built into onnxruntime. It is shipped as a separate
