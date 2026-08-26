@@ -280,6 +280,9 @@ guint32              gst_h264_encoder_get_num_b_frames       (GstH264Encoder * s
 
 gboolean             gst_h264_encoder_gop_is_b_pyramid       (GstH264Encoder * self);
 
+gboolean             gst_h264_encoder_generate_gop_structure (GstH264Encoder * self,
+                                                              guint * dpb_size);
+
 const GstH264LevelDescriptor *gst_h264_get_level_descriptor  (GstH264Profile profile,
                                                               guint64 bitrate,
                                                               GstVideoInfo * in_info,

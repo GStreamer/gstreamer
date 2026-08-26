@@ -366,3 +366,11 @@ gst_h26x_gop_mapper_reset (GstH26XGOPMapper * self)
   if (self->frame_map)
     self->frame_map = g_array_set_size (self->frame_map, 0);
 }
+
+gboolean
+gst_h26x_gop_mapper_is_generated (GstH26XGOPMapper * self)
+{
+  g_return_val_if_fail (GST_IS_H26X_GOP_MAPPER (self), FALSE);
+
+  return (self->frame_map && self->frame_map->len > 0);
+}

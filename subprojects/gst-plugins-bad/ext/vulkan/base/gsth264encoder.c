@@ -525,12 +525,21 @@ adjust_reference_distribution (GstH264Encoder * self,
  * + Skip this if in lookahead mode.
  */
 static gboolean
-gst_h264_encoder_generate_gop_structure (GstH264Encoder * self)
+gst_h264_encoder_generate_gop_structure_internal (GstH264Encoder * self)
 {
   GstH264EncoderPrivate *priv = _GET_PRIV (self);
   guint32 list0, list1, gop_ref_num;
   gint32 p_frames;
   gboolean ret;
+
+  /* FIXME: max number of references in list0 should be set before generating
+   * the GOP mapper. And L0 size can be zero for hardware that only process
+   * intra-frame */
+
+  if (priv->gop.mapper && gst_h26x_gop_mapper_is_generated (priv->gop.mapper)) {
+    GST_INFO_OBJECT (self, "GOP Mapper is already generated. Reset it first.");
+    return TRUE;
+  }
 
   if (priv->stream.profile == GST_H264_PROFILE_BASELINE
       || priv->stream.variant == GST_H264_ENCODER_PROFILE_VARIANT_CONSTRAINED)
@@ -702,7 +711,6 @@ gst_h264_encoder_reset (GstH264Encoder * self)
   GstH264EncoderPrivate *priv = _GET_PRIV (self);
   GstH264EncoderClass *klass = GST_H264_ENCODER_GET_CLASS (self);
 
-
   GST_OBJECT_LOCK (self);
   priv->gop.params.idr_period = priv->prop.idr_period;
   priv->gop.num_ref_frames = priv->prop.num_ref_frames;
@@ -841,7 +849,6 @@ gst_h264_encoder_reorder_lists_push (GstH264Encoder * self,
   gboolean add_cached_key_frame = FALSE;
   guint32 cur_frame_index;
   GstH26XGOP *next;
-
 
   if (!priv->gop.mapper)
     return TRUE;
@@ -2392,8 +2399,9 @@ gst_h264_encoder_configure (GstH264Encoder * self)
       return ret;
   }
 
-  /* now we have the L0/L1 list sizes */
-  if (!gst_h264_encoder_generate_gop_structure (self))
+  /* new_sequence() could have created the mapper but if not, let's create it
+   * now, since we should have the L0/L1 list sizes */
+  if (!gst_h264_encoder_generate_gop_structure_internal (self))
     return GST_FLOW_ERROR;
 
   if (priv->stream.level == 0) {
@@ -3251,6 +3259,35 @@ gst_h264_encoder_gop_is_b_pyramid (GstH264Encoder * self)
   GST_OBJECT_LOCK (self);
   ret = priv->prop.b_pyramid;
   GST_OBJECT_UNLOCK (self);
+
+  return ret;
+}
+
+/**
+ * gst_h264_encoder_generate_gop_structure:
+ * @self: a #GstH264Encoder
+ * @dpb_size: (out) (optional): the calculated DBP size
+ *
+ * Generate a GOP structure using the GstH26xMapper given the parameters.
+ *
+ * Returns: whether the GOP map could be generated.
+ */
+gboolean
+gst_h264_encoder_generate_gop_structure (GstH264Encoder * self,
+    guint * dpb_size)
+{
+  GstH264EncoderPrivate *priv;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_H264_ENCODER (self), FALSE);
+
+  priv = _GET_PRIV (self);
+
+  ret = gst_h264_encoder_generate_gop_structure_internal (self);
+  if (ret) {
+    if (dpb_size)
+      *dpb_size = priv->gop.max_dec_frame_buffering;
+  }
 
   return ret;
 }

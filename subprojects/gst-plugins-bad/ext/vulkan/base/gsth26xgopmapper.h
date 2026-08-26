@@ -130,6 +130,8 @@ gboolean             gst_h26x_gop_mapper_set_params          (GstH26XGOPMapper *
 
 void                 gst_h26x_gop_mapper_reset               (GstH26XGOPMapper * self);
 
+gboolean             gst_h26x_gop_mapper_is_generated        (GstH26XGOPMapper * self);
+
 #define GST_H26X_GOP_IS(gop, type) (_gst_h26x_gop_is (gop, G_PASTE (GST_H26X_GOP_TYPE_, type)))
 #define GST_H26X_GOP_IS_IDR(gop)   (_gst_h26x_gop_is_idr (gop))
 
