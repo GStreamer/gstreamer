@@ -61,6 +61,7 @@
 
 #include "base/gsth264encoder.h"
 #include "gst/vulkan/gstvkencoder-private.h"
+#include "gst/vulkan/gstvkvideo-private.h"
 #include "gstvkvideocaps.h"
 #include "gstvulkanelements.h"
 
@@ -101,6 +102,7 @@ struct _GstVulkanH264Encoder
 
   /* sequence configuration */
   GstVulkanVideoProfile profile;
+  StdVideoH264LevelIdc level;
   GstH264SPS sps;
   GstH264PPS pps;
   gsize coded_buffer_size;
@@ -549,20 +551,6 @@ gst_vulkan_h264_encoder_init_std_sps (GstVulkanH264Encoder * self,
   if (sps->level_idc == 0xff)
     return FALSE;
 
-  if (self->rc.bitrate == 0) {
-    const GstH264LevelDescriptor *desc;
-
-    desc = gst_h264_get_level_descriptor (sps->profile_idc, 0,
-        &self->in_state->info, sps->vui_parameters.max_dec_frame_buffering);
-    if (!desc)
-      return FALSE;
-
-    self->rc.bitrate =
-        desc->max_br * gst_h264_get_cpb_nal_factor (sps->profile_idc) / 1024;
-  }
-
-  _configure_rate_control (self, &vk_caps);
-
   if (sps->direct_8x8_inference_flag == 0
       && (vk_h264_caps->stdSyntaxFlags &
           VK_VIDEO_ENCODE_H264_STD_DIRECT_8X8_INFERENCE_FLAG_UNSET_BIT_KHR) ==
@@ -732,6 +720,25 @@ _reset_rc_props (GstVulkanH264Encoder * self,
 }
 
 static gboolean
+_get_vk_caps (GstVulkanH264Encoder * self,
+    GstVulkanVideoProfile * profile, GstVulkanVideoCapabilities * vkcaps)
+{
+  GstVulkanPhysicalDevice *gpu = self->device->physical_device;
+  GError *err = NULL;
+
+  if (!gst_vulkan_video_get_capabilities (gpu, profile, vkcaps, &err)) {
+    if (err) {
+      GST_ERROR_OBJECT (self, "Error getting video capabilites: %s",
+          err->message);
+      g_clear_error (&err);
+    }
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 _get_vk_video_params (GstH264Profile profile, GstVideoInfo * in_info,
     StdVideoH264ProfileIdc * vk_profile,
     VkVideoChromaSubsamplingFlagBitsKHR * chroma_subsampling,
@@ -805,6 +812,8 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   StdVideoH264LevelIdc vk_max_level;
   VkVideoEncodeH264SessionCreateInfoKHR vk_h264_session;
   gpointer session_create = NULL;
+  GstVulkanVideoProfile profile_tmp;
+  guint dpb_size = 0;
   gboolean skip_start = TRUE;
 
   if (!self->encoder) {
@@ -824,7 +833,77 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
       && self->profile.codec.h264enc.stdProfileIdc == vk_profile);
 
   _build_profile (vk_profile, chroma_subsampling, bit_depth_luma,
-      bit_depth_chroma, &self->profile);
+      bit_depth_chroma, &profile_tmp);
+
+  if (!_get_vk_caps (self, &profile_tmp, &vk_caps))
+    return GST_FLOW_ERROR;
+
+  gst_h264_encoder_set_max_num_references (encoder,
+      vk_caps.encoder.codec.h264.maxPPictureL0ReferenceCount,
+      vk_caps.encoder.codec.h264.maxL1ReferenceCount);
+
+  if (!gst_h264_encoder_generate_gop_structure (encoder, &dpb_size)) {
+    GST_WARNING_OBJECT (self, "Could not generate GOP structure");
+    return GST_FLOW_ERROR;
+  }
+
+  if (self->rc.bitrate == 0) {
+    const GstH264LevelDescriptor *desc;
+
+    desc = gst_h264_get_level_descriptor (profile, 0, &in_state->info,
+        dpb_size);
+    if (!desc)
+      return GST_FLOW_ERROR;
+
+    self->rc.bitrate =
+        desc->max_br * gst_h264_get_cpb_nal_factor (profile) / 1024;
+  }
+
+  if (*level == 0) {
+    const GstH264LevelDescriptor *desc;
+
+    desc = gst_h264_get_level_descriptor (profile, self->rc.bitrate,
+        &in_state->info, dpb_size);
+    if (!desc)
+      return GST_FLOW_ERROR;
+
+    *level = desc->level_idc;
+  }
+
+  vk_max_level = vk_caps.encoder.codec.h264.maxLevelIdc;
+  if (vk_max_level != STD_VIDEO_H264_LEVEL_IDC_INVALID) {
+    gint max_level = gst_h264_level_idc_from_vk (vk_max_level);
+    if (max_level > 0)
+      *level = MIN (max_level, *level);
+  }
+
+  vk_max_level = gst_vulkan_h264_level_idc (*level);
+  skip_start &= self->level == vk_max_level;
+
+  /* update quality and rate control since they might changed */
+  {
+    GstVulkanEncoderQualityProperties qprop = {
+      .codec.h264 = {.sType =
+            VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR}
+    };
+
+    _reset_rc_props (self, &vk_caps);
+    /* configure rate control right after setting rate control mode */
+    _configure_rate_control (self, &vk_caps);
+
+    /* quality set should go after setting the rate control mode */
+    self->rc.quality =
+        MIN (self->rc.quality, vk_caps.encoder.caps.maxQualityLevels - 1);
+    if (!gst_vulkan_encoder_set_quality_level (self->encoder, self->rc.quality,
+            &profile_tmp, &vk_caps, &qprop, &err)) {
+      GST_ERROR_OBJECT (self, "Unable to set encoder quality: %s",
+          err->message);
+      g_clear_error (&err);
+      return GST_FLOW_ERROR;
+    }
+    update_property_uint (self, &self->prop.quality, self->rc.quality,
+        PROP_QUALITY);
+  }
 
   if (gst_vulkan_encoder_is_started (self->encoder)) {
     if (skip_start) {
@@ -835,15 +914,21 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     }
   }
 
-  if (*level > 0) {
+  {
     /* *INDENT-OFF* */
     vk_h264_session = (VkVideoEncodeH264SessionCreateInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_CREATE_INFO_KHR,
       .useMaxLevelIdc = VK_TRUE,
-      .maxLevelIdc = gst_vulkan_h264_level_idc (*level),
+      .maxLevelIdc = vk_max_level,
     };
     /* *INDENT-ON* */
+
     session_create = &vk_h264_session;
+
+    /* copy profile and fix chaining pointers */
+    self->profile = profile_tmp;
+    self->profile.profile.pNext = &self->profile.usage.encode;
+    self->profile.usage.encode.pNext = &self->profile.codec.h264enc;
   }
 
   if (!gst_vulkan_encoder_start (self->encoder, &self->profile, session_create,
@@ -856,29 +941,6 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
 
   gst_vulkan_encoder_caps (self->encoder, &vk_caps);
   vk_h264_caps = &vk_caps.encoder.codec.h264;
-
-  /* quality configuration */
-  {
-    GstVulkanEncoderQualityProperties qprop = {
-      .codec.h264 = {.sType =
-            VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR}
-    };
-
-    _reset_rc_props (self, &vk_caps);
-
-    /* quality set should go after setting the rate control mode */
-    self->rc.quality =
-        MIN (self->rc.quality, vk_caps.encoder.caps.maxQualityLevels - 1);
-    if (!gst_vulkan_encoder_set_quality_level (self->encoder, self->rc.quality,
-            NULL, NULL, &qprop, &err)) {
-      GST_ERROR_OBJECT (self, "Unable to set encoder quality: %s",
-          err->message);
-      g_clear_error (&err);
-      return GST_FLOW_ERROR;
-    }
-    update_property_uint (self, &self->prop.quality, self->rc.quality,
-        PROP_QUALITY);
-  }
 
   GST_LOG_OBJECT (self, "H264 encoder capabilities:\n"
       "    Standard capability flags:\n"
@@ -997,18 +1059,6 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  /* gallium drivers always reply 1.0 level idc  */
-  vk_max_level = vk_caps.encoder.codec.h264.maxLevelIdc;
-  if (vk_max_level > STD_VIDEO_H264_LEVEL_IDC_1_0 && *level > 0) {
-    gint max_level = gst_h264_level_idc_from_vk (vk_max_level);
-    if (max_level >= 0)
-      *level = MIN (max_level, *level);
-  }
-
-  gst_h264_encoder_set_max_num_references (encoder,
-      vk_h264_caps->maxPPictureL0ReferenceCount,
-      vk_h264_caps->maxL1ReferenceCount);
-
   if (gst_h264_encoder_is_live (encoder)) {
     /* low latency */
     gst_h264_encoder_set_preferred_output_delay (encoder, 0);
@@ -1016,6 +1066,8 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     /* experimental best value for VA */
     gst_h264_encoder_set_preferred_output_delay (encoder, 4);
   }
+
+  self->level = vk_max_level;
 
   if (self->in_state)
     gst_video_codec_state_unref (self->in_state);
@@ -1140,24 +1192,14 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
   GError *err = NULL;
   GstVulkanEncoderParametersOverrides overrides;
   GstVulkanEncoderParametersFeedback feedback;
-  GstVulkanVideoCapabilities vk_caps;
   GstFlowReturn ret;
   gpointer data = NULL;
   gsize data_size = 0;
-  StdVideoH264LevelIdc vk_max_level;
 
   if (!self->encoder) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("The vulkan encoder has not been initialized properly"), (NULL));
     return GST_FLOW_ERROR;
-  }
-
-  /* gallium drivers always reply 10 level idc  */
-  gst_vulkan_encoder_caps (self->encoder, &vk_caps);
-  vk_max_level = vk_caps.encoder.codec.h264.maxLevelIdc;
-  if (vk_max_level > STD_VIDEO_H264_LEVEL_IDC_1_0) {
-    sps->level_idc =
-        MIN (gst_h264_level_idc_from_vk (vk_max_level), sps->level_idc);
   }
 
   ret = gst_vulkan_h264_encoder_update_parameters (self, sps, pps);
