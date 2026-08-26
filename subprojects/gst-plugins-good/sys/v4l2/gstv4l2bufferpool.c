@@ -712,6 +712,8 @@ static gboolean
 gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
 {
   GstV4l2Object *obj = pool->obj;
+  GstBufferPoolClass *pclass = GST_BUFFER_POOL_CLASS (parent_class);
+  guint i;
 
   if (pool->streaming)
     return TRUE;
@@ -723,7 +725,7 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_DMABUF_IMPORT:
       if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
         guint num_queued;
-        guint i, n = 0;
+        guint n = 0;
 
         GST_OBJECT_LOCK (pool);
         num_queued = g_atomic_int_get (&pool->num_queued);
@@ -739,8 +741,34 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
           gst_v4l2_buffer_pool_resurrect_buffer (pool);
       }
 
-      if (obj->ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
+      if (obj->ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0) {
+        if (pool->vallocator)
+          gst_v4l2_allocator_flush (pool->vallocator);
+
+        for (i = 0; i < VIDEO_MAX_FRAME; i++) {
+          gint old_buffer_state =
+              g_atomic_int_and (&pool->buffer_state[i], ~BUFFER_STATE_QUEUED);
+          if ((old_buffer_state & BUFFER_STATE_QUEUED) && pool->buffers[i]) {
+            GstBuffer *buffer = pool->buffers[i];
+            GstBufferPool *bpool = GST_BUFFER_POOL (pool);
+
+            pool->buffers[i] = NULL;
+
+            if (!(old_buffer_state & BUFFER_STATE_OUTSTANDING)) {
+              if (V4L2_TYPE_IS_OUTPUT (pool->obj->type))
+                gst_v4l2_buffer_pool_complete_release_buffer (bpool, buffer,
+                    FALSE);
+
+              else              /* Don't re-enqueue capture buffer on stop */
+                pclass->release_buffer (bpool, buffer);
+            }
+
+            g_atomic_int_add (&pool->num_queued, -1);
+          }
+        }
+
         goto streamon_failed;
+      }
 
       pool->streaming = TRUE;
 
@@ -990,11 +1018,19 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
         g_signal_connect_swapped (pool->vallocator, "group-released",
         G_CALLBACK (gst_v4l2_buffer_pool_group_released), pool);
     ret = gst_v4l2_buffer_pool_streamon (pool);
+    if (!ret)
+      goto streamon_failed;
   }
 
   return ret;
 
   /* ERRORS */
+streamon_failed:
+  {
+    GST_ERROR_OBJECT (pool, "streamon failed");
+    pclass->stop (bpool);
+    return FALSE;
+  }
 wrong_config:
   {
     GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
