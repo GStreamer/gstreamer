@@ -338,6 +338,25 @@ otherwise %NULL</doc>
           </parameter>
         </parameters>
       </constructor>
+      <constructor name="new_for_adapter_luid" c:identifier="gst_hip_device_new_for_adapter_luid" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Creates a new device instance with @vendor and @adapter_luid. Windows only</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipDevice if succeeded,
+otherwise %NULL</doc>
+          <type name="HipDevice" c:type="GstHipDevice*"/>
+        </return-value>
+        <parameters>
+          <parameter name="vendor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipVendor</doc>
+            <type name="HipVendor" c:type="GstHipVendor"/>
+          </parameter>
+          <parameter name="adapter_luid" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">DXGI adapter LUID</doc>
+            <type name="gint64" c:type="gint64"/>
+          </parameter>
+        </parameters>
+      </constructor>
       <method name="get_attribute" c:identifier="gst_hip_device_get_attribute" version="1.28" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Gets a device attribute via hipDeviceGetAttribute</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
@@ -434,6 +453,10 @@ otherwise %NULL</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <property name="adapter-luid" version="1.30" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Adapter LUID, same value as DXGI LUID. Only valid on Windows</doc>
+        <type name="gint64" c:type="gint64"/>
+      </property>
       <property name="device-id" transfer-ownership="none" getter="get_device_id" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
@@ -1193,6 +1216,36 @@ necessary for #GstHipDevice.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="hip_ensure_element_data_for_adapter_luid" c:identifier="gst_hip_ensure_element_data_for_adapter_luid" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Perform the steps necessary for retrieving a #GstHipDevice from the
+surrounding elements or from the application using the #GstContext mechanism.
+
+If the content of @device is not %NULL, then no #GstContext query is
+necessary for #GstHipDevice.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">whether a #GstHipDevice exists in @device</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">the #GstElement running the query</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="vendor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+        <parameter name="adapter_luid" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">DXGI adapter LUID</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="device" direction="inout" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">the resulting #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice**"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="hip_handle_context_query" c:identifier="gst_hip_handle_context_query" version="1.28">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
       <return-value transfer-ownership="none">
@@ -1242,6 +1295,39 @@ Retrieves the #GstHipDevice in @context and places the result in @device.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">preferred device-id, pass device_id &gt;=0 when
             the device_id explicitly required. Otherwise, set -1.</doc>
           <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="device" direction="inout" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">location of a #GstHipDevice</doc>
+          <type name="HipDevice" c:type="GstHipDevice**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_handle_set_context_for_adapter_luid" c:identifier="gst_hip_handle_set_context_for_adapter_luid" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Helper function for implementing #GstElementClass.set_context() in
+HIP capable elements.
+
+Retrieves the #GstHipDevice in @context and places the result in @device.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">whether the @device could be set successfully</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstContext</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="vendor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipVendor</doc>
+          <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+        <parameter name="adapter_luid" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">DXGI adapter LUID</doc>
+          <type name="gint64" c:type="gint64"/>
         </parameter>
         <parameter name="device" direction="inout" caller-allocates="0" transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">location of a #GstHipDevice</doc>
