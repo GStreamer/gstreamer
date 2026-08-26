@@ -873,6 +873,7 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to get EP devices: %s",
         api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
     return FALSE;
   }
 
@@ -945,6 +946,7 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to append %s EP: %s",
         ep_name, api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
     return FALSE;
   }
 
