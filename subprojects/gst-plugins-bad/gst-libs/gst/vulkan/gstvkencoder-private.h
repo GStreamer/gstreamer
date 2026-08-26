@@ -180,6 +180,7 @@ void                    gst_vulkan_encoder_set_rc_mode          (GstVulkanEncode
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_start                (GstVulkanEncoder * self,
                                                                  GstVulkanVideoProfile * profile,
+                                                                 gconstpointer session_create_pnext,
                                                                  GstVulkanEncoderQualityProperties * codec_quality_props,
                                                                  GError ** error);
 GST_VULKAN_API

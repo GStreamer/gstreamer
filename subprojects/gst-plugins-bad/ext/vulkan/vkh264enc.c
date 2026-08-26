@@ -686,6 +686,8 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   VkVideoEncodeH264CapabilitiesKHR *vk_h264_caps;
   GstVulkanEncoderQualityProperties quality_props;
   StdVideoH264LevelIdc vk_max_level;
+  VkVideoEncodeH264SessionCreateInfoKHR vk_h264_session;
+  gpointer session_create = NULL;
 
   if (!self->encoder) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
@@ -749,8 +751,19 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     }
   }
 
-  if (!gst_vulkan_encoder_start (self->encoder, &self->profile, &quality_props,
-          &err)) {
+  if (*level > 0) {
+    /* *INDENT-OFF* */
+    vk_h264_session = (VkVideoEncodeH264SessionCreateInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_CREATE_INFO_KHR,
+      .useMaxLevelIdc = VK_TRUE,
+      .maxLevelIdc = gst_vulkan_h264_level_idc (*level),
+    };
+    /* *INDENT-ON* */
+    session_create = &vk_h264_session;
+  }
+
+  if (!gst_vulkan_encoder_start (self->encoder, &self->profile, session_create,
+          &quality_props, &err)) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Unable to start vulkan encoder with error %s", err->message), (NULL));
     g_clear_error (&err);

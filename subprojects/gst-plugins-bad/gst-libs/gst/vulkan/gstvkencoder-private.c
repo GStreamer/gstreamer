@@ -502,6 +502,7 @@ _rate_control_mode_validate (GstVulkanEncoder * self,
  * gst_vulkan_encoder_start:
  * @self: a #GstVulkanEncoder
  * @profile: a #GstVulkanVideoProfile
+ * @session_create_pnext: a VkInStructure for video session chaining
  * @codec_quality_props: codec specific quality structure to fetch
  * @error: (out) : an error result in case of failure or %NULL
  *
@@ -512,7 +513,7 @@ _rate_control_mode_validate (GstVulkanEncoder * self,
  */
 gboolean
 gst_vulkan_encoder_start (GstVulkanEncoder * self,
-    GstVulkanVideoProfile * profile,
+    GstVulkanVideoProfile * profile, gconstpointer session_create_pnext,
     GstVulkanEncoderQualityProperties * codec_quality_props, GError ** error)
 {
   GstVulkanEncoderPrivate *priv;
@@ -746,6 +747,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   /* *INDENT-OFF* */
   session_create = (VkVideoSessionCreateInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR,
+    .pNext = session_create_pnext,
     .queueFamilyIndex = self->queue->family,
     .pVideoProfile = &profile->profile,
     .pictureFormat = vk_format,

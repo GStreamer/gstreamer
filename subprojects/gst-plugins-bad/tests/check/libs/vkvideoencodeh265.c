@@ -512,7 +512,8 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
 
   fail_unless (gst_vulkan_encoder_quality_level (enc) == -1);
 
-  fail_unless (gst_vulkan_encoder_start (enc, &profile, &quality_props, &err));
+  fail_unless (gst_vulkan_encoder_start (enc, &profile, NULL, &quality_props,
+          &err));
 
   fail_unless (gst_vulkan_encoder_quality_level (enc) > -1);
 
