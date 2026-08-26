@@ -826,7 +826,7 @@ gst_codec_sei_inserter_chain (GstPad * pad, GstObject * parent,
 
   gst_video_codec_frame_ref (frame);
   if (!klass->push (self, frame, &latency)) {
-    GST_ERROR_OBJECT (self, "Couldn't process frame");
+    GST_DEBUG_OBJECT (self, "Couldn't process frame");
     priv->current_frame_events = frame->events;
     frame->events = NULL;
     gst_video_codec_frame_unref (frame);
