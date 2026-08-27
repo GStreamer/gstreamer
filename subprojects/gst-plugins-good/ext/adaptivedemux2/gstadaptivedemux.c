@@ -750,19 +750,6 @@ gst_adaptive_demux_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (g_atomic_int_compare_and_exchange (&demux->running, TRUE, FALSE))
         GST_DEBUG_OBJECT (demux, "demuxer has stopped running");
-
-      gst_adaptive_demux_loop_stop (demux->priv->scheduler_task, TRUE);
-      downloadhelper_stop (demux->download_helper);
-
-      TRACKS_LOCK (demux);
-      demux->priv->flushing = TRUE;
-      g_cond_signal (&demux->priv->tracks_add);
-      gst_task_stop (demux->priv->output_task);
-      TRACKS_UNLOCK (demux);
-
-      gst_task_join (demux->priv->output_task);
-
-      gst_adaptive_demux_reset (demux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adaptive_demux_reset (demux);
@@ -785,6 +772,20 @@ gst_adaptive_demux_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Start download task */
       downloadhelper_start (demux->download_helper);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_adaptive_demux_loop_stop (demux->priv->scheduler_task, TRUE);
+      downloadhelper_stop (demux->download_helper);
+
+      TRACKS_LOCK (demux);
+      demux->priv->flushing = TRUE;
+      g_cond_signal (&demux->priv->tracks_add);
+      gst_task_stop (demux->priv->output_task);
+      TRACKS_UNLOCK (demux);
+
+      gst_task_join (demux->priv->output_task);
+
+      gst_adaptive_demux_reset (demux);
       break;
     default:
       break;
