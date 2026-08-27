@@ -731,6 +731,64 @@ _reset_rc_props (GstVulkanH264Encoder * self,
   update_property_uint (self, &self->prop.max_qp, self->rc.max_qp, PROP_MAX_QP);
 }
 
+static gboolean
+_get_vk_video_params (GstH264Profile profile, GstVideoInfo * in_info,
+    StdVideoH264ProfileIdc * vk_profile,
+    VkVideoChromaSubsamplingFlagBitsKHR * chroma_subsampling,
+    VkVideoComponentBitDepthFlagsKHR * bit_depth_luma,
+    VkVideoComponentBitDepthFlagsKHR * bit_depth_chroma)
+{
+  *chroma_subsampling = _h264_get_chroma_subsampling (in_info);
+
+  *bit_depth_luma =
+      gst_vulkan_h264_bit_depth (GST_VIDEO_INFO_COMP_DEPTH (in_info, 0));
+  if (*bit_depth_luma == VK_VIDEO_COMPONENT_BIT_DEPTH_INVALID_KHR)
+    return FALSE;
+
+  *bit_depth_chroma =
+      gst_vulkan_h264_bit_depth (GST_VIDEO_INFO_COMP_DEPTH (in_info, 1));
+  if (*bit_depth_chroma == VK_VIDEO_COMPONENT_BIT_DEPTH_INVALID_KHR)
+    return FALSE;
+
+  *vk_profile = gst_vulkan_h264_profile_type (profile);
+  if (*vk_profile == STD_VIDEO_H264_PROFILE_IDC_INVALID)
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+_build_profile (StdVideoH264ProfileIdc vk_profile,
+    VkVideoChromaSubsamplingFlagBitsKHR chroma_subsampling,
+    VkVideoComponentBitDepthFlagsKHR bit_depth_luma,
+    VkVideoComponentBitDepthFlagsKHR bit_depth_chroma,
+    GstVulkanVideoProfile * profile)
+{
+  /* *INDENT-OFF* */
+  *profile = (GstVulkanVideoProfile) {
+    .profile = (VkVideoProfileInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
+      .pNext = &profile->usage.encode,
+      .videoCodecOperation = VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR,
+      .chromaSubsampling = chroma_subsampling,
+      .chromaBitDepth = bit_depth_chroma,
+      .lumaBitDepth = bit_depth_luma,
+    },
+    .usage.encode = (VkVideoEncodeUsageInfoKHR) {
+      .pNext = &profile->codec.h264enc,
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR,
+      .videoUsageHints = VK_VIDEO_ENCODE_USAGE_DEFAULT_KHR,
+      .videoContentHints = VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR,
+      .tuningMode = VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR,
+    },
+    .codec.h264enc = (VkVideoEncodeH264ProfileInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR,
+      .stdProfileIdc = vk_profile,
+    },
+  };
+  /* *INDENT-ON* */
+}
+
 static GstFlowReturn
 gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     GstVideoCodecState * in_state, GstH264Profile profile,
@@ -747,6 +805,7 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   StdVideoH264LevelIdc vk_max_level;
   VkVideoEncodeH264SessionCreateInfoKHR vk_h264_session;
   gpointer session_create = NULL;
+  gboolean skip_start = TRUE;
 
   if (!self->encoder) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
@@ -755,47 +814,20 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
   }
 
   /* profile configuration */
-  {
-    chroma_subsampling = _h264_get_chroma_subsampling (in_info);
-    bit_depth_luma =
-        gst_vulkan_h264_bit_depth (GST_VIDEO_INFO_COMP_DEPTH (in_info, 0));
-    g_assert (bit_depth_luma != VK_VIDEO_COMPONENT_BIT_DEPTH_INVALID_KHR);
-    bit_depth_chroma =
-        gst_vulkan_h264_bit_depth (GST_VIDEO_INFO_COMP_DEPTH (in_info, 1));
-    g_assert (bit_depth_chroma != VK_VIDEO_COMPONENT_BIT_DEPTH_INVALID_KHR);
+  if (!_get_vk_video_params (profile, &in_state->info, &vk_profile,
+          &chroma_subsampling, &bit_depth_luma, &bit_depth_chroma))
+    return GST_FLOW_ERROR;
 
-    vk_profile = gst_vulkan_h264_profile_type (profile);
+  skip_start &= (self->profile.profile.chromaSubsampling == chroma_subsampling
+      && self->profile.profile.chromaBitDepth == bit_depth_chroma
+      && self->profile.profile.lumaBitDepth == bit_depth_luma
+      && self->profile.codec.h264enc.stdProfileIdc == vk_profile);
 
-    /* *INDENT-OFF* */
-    self->profile = (GstVulkanVideoProfile) {
-      .profile = (VkVideoProfileInfoKHR) {
-        .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
-        .pNext = &self->profile.usage.encode,
-        .videoCodecOperation = VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR,
-        .chromaSubsampling = chroma_subsampling,
-        .chromaBitDepth = bit_depth_chroma,
-        .lumaBitDepth = bit_depth_luma,
-      },
-      .usage.encode = (VkVideoEncodeUsageInfoKHR) {
-        .pNext = &self->profile.codec.h264enc,
-        .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR,
-        .videoUsageHints = VK_VIDEO_ENCODE_USAGE_DEFAULT_KHR,
-        .videoContentHints = VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR,
-        .tuningMode = VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR,
-      },
-      .codec.h264enc = (VkVideoEncodeH264ProfileInfoKHR) {
-        .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR,
-        .stdProfileIdc = vk_profile,
-      },
-    };
-    /* *INDENT-ON* */
-  }
+  _build_profile (vk_profile, chroma_subsampling, bit_depth_luma,
+      bit_depth_chroma, &self->profile);
 
   if (gst_vulkan_encoder_is_started (self->encoder)) {
-    if (self->profile.profile.chromaSubsampling == chroma_subsampling
-        && self->profile.profile.chromaBitDepth == bit_depth_chroma
-        && self->profile.profile.lumaBitDepth == bit_depth_luma
-        && self->profile.codec.h264enc.stdProfileIdc == vk_profile) {
+    if (skip_start) {
       return GST_FLOW_OK;
     } else {
       GST_DEBUG_OBJECT (self, "Restarting vulkan encoder");
