@@ -479,36 +479,108 @@ _guess_tensor_data_type (GstTFliteInference * self, gsize dims_count,
   return TRUE;
 }
 
+/* Same width/height/channels/planar inference as _guess_tensor_data_type(),
+ * but driven by a video format already known from modelinfo instead of
+ * guessing it from the channel count. Also validates caps from modelinfo
+ * agains dims.
+ *
+ * The tfliteinference sinkpad only ever negotiates video/x-raw, so this is
+ * the only media-type modelinfo-declared input caps can resolve to.
+ *
+ * @s: The "video/x-raw" structure from the tensor's declared modelinfo caps.
+ * @out_format: (out): Set to the declared format string when one is
+ *    present in @s, left untouched otherwise.
+ *
+ * Returns: FALSE only on a unknown format, incompatible caps and dims,
+ *    TRUE otherwise
+ */
 static gboolean
-_get_input_params (GstTFliteInference * self, GstTensorDataType * data_type,
-    gint * width, gint * height, const gchar ** gst_format,
-    gint * channels, gboolean * planar)
+derive_input_params_from_video_caps (GstTFliteInference * self,
+    gsize dims_count, gsize * dims, const GstStructure * s, gint * width,
+    gint * height, gint * channels, gboolean * planar,
+    const gchar ** out_format)
 {
-  GstTFliteInferencePrivate *priv =
-      gst_tflite_inference_get_instance_private (self);
-  const TfLiteTensor *input_tensor;
-  gint i_size = TfLiteInterpreterGetInputTensorCount (priv->interpreter);
-  gsize dims_count;
-  gsize *dims = NULL;
-  gboolean ret;
+  const gchar *format = gst_structure_get_string (s, "format");
+  GstVideoFormat vfmt;
+  const GstVideoFormatInfo *info;
+  guint n_channels;
 
-  if (i_size != 1) {
-    GST_ERROR_OBJECT (self, "Currently only support model with a single"
-        " input tensor, but model has %d", i_size);
+  if (!format)
+    return TRUE;
+
+  vfmt = gst_video_format_from_string (format);
+  if (vfmt == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Unknown video format '%s' declared by modelinfo",
+        format);
     return FALSE;
   }
 
-  input_tensor = TfLiteInterpreterGetInputTensor (priv->interpreter, 0);
-  if (convert_tensor_info (input_tensor, NULL, data_type, &dims_count, &dims)) {
-    ret = _guess_tensor_data_type (self, dims_count, dims, gst_format, width,
-        height, channels, planar);
-  } else {
-    GST_ERROR_OBJECT (self, "Input tensor has no dimensions, rejecting");
-    ret = FALSE;
-  }
-  g_free (dims);
+  info = gst_video_format_get_info (vfmt);
+  n_channels = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (info);
+  *planar = GST_VIDEO_FORMAT_INFO_N_PLANES (info) > 1;
+  *channels = n_channels;
 
-  return ret;
+  if (dims_count < 2 || dims_count > 4) {
+    GST_ERROR_OBJECT (self,
+        "Don't know how to interpret tensors with %zu dimensions", dims_count);
+    return FALSE;
+  }
+
+  switch (dims_count) {
+    case 2:
+      *height = dims[0];
+      *width = dims[1];
+      break;
+    case 3:
+      if (*planar) {
+        if (dims[0] != n_channels) {
+          GST_ERROR_OBJECT (self, "Dims don't have %u channels in the "
+              "dimension expected for format '%s'", n_channels, format);
+          return FALSE;
+        }
+        *height = dims[1];
+        *width = dims[2];
+      } else {
+        if (dims[2] != n_channels) {
+          GST_ERROR_OBJECT (self, "Dims don't have %u channels in the "
+              "dimension expected for format '%s'", n_channels, format);
+          return FALSE;
+        }
+        *height = dims[0];
+        *width = dims[1];
+      }
+      break;
+    case 4:
+      /* Assuming dims[0] is a batch */
+      if (*planar) {
+        if (dims[1] != n_channels) {
+          GST_ERROR_OBJECT (self, "Dims don't have %u channels in the "
+              "dimension expected for format '%s'", n_channels, format);
+          return FALSE;
+        }
+        *height = dims[2];
+        *width = dims[3];
+      } else {
+        if (dims[3] != n_channels) {
+          GST_ERROR_OBJECT (self, "Dims don't have %u channels in the "
+              "dimension expected for format '%s'", n_channels, format);
+          return FALSE;
+        }
+        *height = dims[1];
+        *width = dims[2];
+      }
+      break;
+  }
+
+  if (!gst_analytics_modelinfo_validate_video_caps_resolution (s, *width,
+          *height)) {
+    GST_ERROR_OBJECT (self, "Modelinfo caps declared width/height "
+        "inconsistent with the tensor's dims");
+    return FALSE;
+  }
+
+  *out_format = format;
+  return TRUE;
 }
 
 static gboolean
@@ -586,12 +658,8 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     gchar *tensor_name = NULL;
     gint width = 0, height = 0;
     const gchar *gst_format = NULL;
-
-    if (!_get_input_params (self, &data_type, &width, &height, &gst_format,
-            &priv->channels, &priv->planar)) {
-      GST_ERROR_OBJECT (self, "Failed to get parameters");
-      goto error;
-    }
+    gboolean format_from_modelinfo = FALSE;
+    GstCaps *mi_caps = NULL;
 
     if (!convert_tensor_info (tflite_tensor, &tname, &data_type,
             &dims_count, &dims)) {
@@ -609,7 +677,68 @@ gst_tflite_inference_start (GstBaseTransform * trans)
           "Model info file doesn't contain info for input_tensor[%u]:%s matching the"
           " type %s and dims %s", 0, tname,
           gst_tensor_data_type_get_name (data_type), dims_str);
+      g_free (dims_str);
+    } else {
+      /* Modelinfo v1.1+ declares the input caps explicitly, only fall
+       * back to guessing the tensor layout from its shape when modelinfo
+       * doesn't declare a format */
+      mi_caps = gst_analytics_modelinfo_get_input_caps (modelinfo, tensor_name);
+      if (mi_caps) {
+        GstCaps *tmpl_caps = gst_caps_from_string (VIDEO_CAPS);
+        GstCaps *supported_caps = gst_caps_intersect (mi_caps, tmpl_caps);
 
+        gst_caps_unref (tmpl_caps);
+
+        if (gst_caps_is_empty (supported_caps)) {
+          GST_ERROR_OBJECT (self, "Modelinfo declares caps %" GST_PTR_FORMAT
+              " for input tensor '%s', which tfliteinference does not "
+              "support", mi_caps, tensor_name);
+          gst_caps_unref (supported_caps);
+          gst_caps_unref (mi_caps);
+          g_free (tensor_name);
+          g_free (dims);
+          goto error;
+        }
+        gst_caps_unref (supported_caps);
+
+        /* Resolves gst_format from the tensor's declared caps, erroring for
+         * a dims/format combination tfliteinference can't handle. The
+         * sinkpad only ever negotiates video/x-raw, so mi_caps is
+         * guaranteed to declare that media-type here (checked by the
+         * intersection above). */
+        if (!derive_input_params_from_video_caps (self, dims_count, dims,
+                gst_caps_get_structure (mi_caps, 0), &width, &height,
+                &priv->channels, &priv->planar, &gst_format)) {
+          gst_caps_unref (mi_caps);
+          g_free (tensor_name);
+          g_free (dims);
+          goto error;
+        }
+        format_from_modelinfo = gst_format != NULL;
+      }
+    }
+
+    if (!gst_format
+        && !_guess_tensor_data_type (self, dims_count, dims, &gst_format,
+            &width, &height, &priv->channels, &priv->planar)) {
+      GST_ERROR_OBJECT (self, "Failed to get parameters");
+      g_clear_pointer (&mi_caps, gst_caps_unref);
+      g_free (tensor_name);
+      g_free (dims);
+      goto error;
+    }
+
+    if (format_from_modelinfo) {
+      GST_INFO_OBJECT (self, "Input tensor '%s' format '%s' taken from "
+          "modelinfo", tname, gst_format);
+    } else {
+      GST_INFO_OBJECT (self, "Input tensor '%s' format '%s' guessed from "
+          "tensor dims", tname, gst_format);
+    }
+
+    g_free (dims);
+
+    if (tensor_name == NULL) {
       g_free (priv->scales);
       g_free (priv->offsets);
       priv->scales = g_new (gdouble, priv->channels);
@@ -618,9 +747,6 @@ gst_tflite_inference_start (GstBaseTransform * trans)
         priv->scales[i] = 1.0;
         priv->offsets[i] = 0.0;
       }
-
-      g_free (dims);
-      g_free (dims_str);
     } else {
       gdouble *input_mins = g_alloca (sizeof (gdouble) * priv->channels);
       gdouble *input_maxs = g_alloca (sizeof (gdouble) * priv->channels);
@@ -635,11 +761,14 @@ gst_tflite_inference_start (GstBaseTransform * trans)
               NULL, &priv->scales, &priv->offsets)) {
         GST_ERROR_OBJECT (self, "Failed to get scales/offsets for tensor %s",
             tensor_name);
+        g_clear_pointer (&mi_caps, gst_caps_unref);
         g_free (tensor_name);
         goto error;
       }
     }
 
+    /* Any declared width/height was already validated against dims in
+     * derive_input_params_from_video_caps(). */
     priv->model_incaps = gst_caps_new_empty_simple ("video/x-raw");
     if (width && height)
       gst_caps_set_simple (priv->model_incaps, "width", G_TYPE_INT, width,
@@ -661,7 +790,12 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     }
 
 
-    if (priv->in_place) {
+    if (format_from_modelinfo) {
+      /* Modelinfo v1.1+ declared the format explicitly, already validated
+       * against this element's supported formats above */
+      gst_caps_set_simple (priv->model_incaps, "format", G_TYPE_STRING,
+          gst_format, NULL);
+    } else if (priv->in_place) {
       gst_caps_set_simple (priv->model_incaps, "format", G_TYPE_STRING,
           gst_format, NULL);
     } else if (priv->channels == 1) {
@@ -681,6 +815,7 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     gst_caps_set_simple (priv->model_incaps, "pixel-aspect-ratio",
         GST_TYPE_FRACTION, 1, 1, NULL);
 
+    g_clear_pointer (&mi_caps, gst_caps_unref);
     g_free (tensor_name);
   }
 
