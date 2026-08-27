@@ -2106,6 +2106,52 @@ gst_adaptive_demux_setup_streams_for_restart (GstAdaptiveDemux * demux,
                               GST_SEEK_FLAG_SNAP_AFTER | \
                               GST_SEEK_FLAG_SNAP_NEAREST))
 
+/* Sends @flush_event (flush-start or flush-stop, consumed by this call) to
+ * all the stream parsebins of all periods and then to all exposed src pads.
+ *
+ * Flushing the parsebins unblocks any element inside them that may be
+ * blocking the download thread (e.g. a decryptor waiting for its ring buffer
+ * to drain). The track sinkpads drop the flush events coming out of parsebin,
+ * so the src pads have to be flushed explicitly for downstream (decoders,
+ * sinks) to be flushed and return the buffers they are holding.
+ *
+ * The parsebin flushes must stay balanced: a parsebin left in flushing state
+ * would silently drop all data after the streams restart. This is why no
+ * stream "running" state check is made here.
+ *
+ * The events are sent without holding TRACKS_LOCK: a download thread blocked
+ * on TRACKS_LOCK in _track_sink_chain_function() holds the parsebin pads
+ * stream locks, which a serialized flush-stop needs to take. */
+static void
+gst_adaptive_demux_send_flush_event (GstAdaptiveDemux * demux,
+    GstEvent * flush_event)
+{
+  GList *pads = NULL, *iter, *p, *s;
+
+  TRACKS_LOCK (demux);
+  for (p = demux->priv->periods->head; p; p = p->next) {
+    GstAdaptiveDemuxPeriod *period = p->data;
+
+    for (s = period->streams; s; s = s->next) {
+      GstAdaptiveDemux2Stream *stream = s->data;
+
+      if (stream->parsebin_sink)
+        pads = g_list_prepend (pads, gst_object_ref (stream->parsebin_sink));
+    }
+  }
+  TRACKS_UNLOCK (demux);
+
+  for (iter = pads; iter; iter = iter->next) {
+    GstPad *pad = iter->data;
+
+    GST_DEBUG_OBJECT (pad, "Sending %" GST_PTR_FORMAT, flush_event);
+    gst_pad_send_event (pad, gst_event_ref (flush_event));
+  }
+  g_list_free_full (pads, (GDestroyNotify) gst_object_unref);
+
+  gst_adaptive_demux_push_src_event (demux, flush_event);
+}
+
 /**
  * gst_adaptive_demux_handle_seek_event:
  * @demux:
@@ -2126,10 +2172,9 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   guint32 seqnum;
   gboolean update;
   gboolean ret = FALSE;
+  gboolean need_flush_stop = FALSE;
   GstSegment oldsegment;
   GstEvent *flush_event;
-
-  GST_INFO_OBJECT (demux, "Received seek event");
 
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -2148,10 +2193,23 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   }
 
   seqnum = gst_event_get_seqnum (event);
+  GST_INFO_OBJECT (demux, "Received seek event (seq %u)", seqnum);
+
+  if (flags & GST_SEEK_FLAG_FLUSH && !lost_sync) {
+    GST_DEBUG_OBJECT (demux, "sending flush start");
+    flush_event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (flush_event, seqnum);
+
+    /* This must happen before trying to grab the scheduler lock: the
+     * scheduler thread may be blocked inside a parsebin element, and only a
+     * flush will unblock it. */
+    gst_adaptive_demux_send_flush_event (demux, flush_event);
+    need_flush_stop = TRUE;
+  }
 
   if (!GST_ADAPTIVE_SCHEDULER_LOCK (demux)) {
     GST_LOG_OBJECT (demux, "Failed to acquire scheduler context");
-    return FALSE;
+    goto flush_stop_return;
   }
 
   if (flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE) {
@@ -2288,14 +2346,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   /* have a backup in case seek fails */
   gst_segment_copy_into (&demux->segment, &oldsegment);
 
-  if (!lost_sync) {
-    GST_DEBUG_OBJECT (demux, "sending flush start");
-    flush_event = gst_event_new_flush_start ();
-    gst_event_set_seqnum (flush_event, seqnum);
-
-    gst_adaptive_demux_push_src_event (demux, flush_event);
-  }
-
   gst_adaptive_demux_stop_tasks (demux, FALSE);
   gst_adaptive_demux_reset_tracks (demux);
 
@@ -2431,11 +2481,12 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   /* Resetting flow combiner */
   gst_flow_combiner_reset (demux->priv->flowcombiner);
 
-  if (!lost_sync) {
+  if (need_flush_stop) {
     GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
     flush_event = gst_event_new_flush_stop (TRUE);
     gst_event_set_seqnum (flush_event, seqnum);
-    gst_adaptive_demux_push_src_event (demux, flush_event);
+    gst_adaptive_demux_send_flush_event (demux, flush_event);
+    need_flush_stop = FALSE;
   }
 
   /* If the seek generated a new period, prepare it */
@@ -2476,6 +2527,16 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
 unlock_return:
   GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+
+flush_stop_return:
+  /* If the seek bailed out after flush-start was sent, rebalance with a
+   * flush-stop so that the parsebins and downstream resume dataflow. */
+  if (need_flush_stop) {
+    flush_event = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (flush_event, seqnum);
+    gst_adaptive_demux_send_flush_event (demux, flush_event);
+  }
+
   gst_event_unref (event);
 
   return ret;
