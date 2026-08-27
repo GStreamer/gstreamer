@@ -280,6 +280,106 @@ GST_START_TEST (test_gbrp_caps_input)
 
 GST_END_TEST;
 
+/* Test that a non-in-place model whose modelinfo declares an explicit input
+ * format advertises and accepts only that format, not the whole family of
+ * heuristic-compatible formats. */
+GST_START_TEST (test_declared_caps_restricts_to_single_format)
+{
+  static const gchar modelinfo_content[] =
+      "[modelinfo]\n"
+      "version=1.1\n"
+      "group-id=declared-caps-group\n"
+      "\n"
+      "[serving_default_input_f32:0]\n"
+      "id=input-0\n"
+      "type=float32\n"
+      "dims=1,4,4,3\n"
+      "dir=input\n"
+      "caps=video/x-raw, format=RGB\n"
+      "ranges=0.0,255.0\n"
+      "\n"
+      "[PartitionedCall_1:0]\n"
+      "id=output-0\n" "type=float32\n" "dims=1,48\n" "dir=output\n";
+  gchar *tmp_model = setup_model_with_modelinfo (GST_TFLITE_TEST_DATA_PATH,
+      "tfliteinference", "flatten_float32in_float32out.tflite",
+      modelinfo_content);
+  GstHarness *h = harness_new_with_model (tmp_model);
+  GstPad *sinkpad = gst_element_get_static_pad (h->element, "sink");
+  GstCaps *caps = gst_pad_query_caps (sinkpad, NULL);
+  GstCaps *probe;
+  GstCaps *accept;
+
+  fail_unless (caps != NULL);
+
+  probe = gst_caps_from_string ("video/x-raw, format=RGB");
+  fail_unless (gst_caps_can_intersect (caps, probe),
+      "Expected sink caps to advertise the declared format RGB");
+  gst_caps_unref (probe);
+
+  /* Modelinfo pins the format to RGB, so other formats from the same
+   * heuristic-compatible family must no longer be advertised. */
+  probe = gst_caps_from_string ("video/x-raw, format=GBRP");
+  fail_if (gst_caps_can_intersect (caps, probe),
+      "Expected sink caps to NOT advertise GBRP when modelinfo declares RGB");
+  gst_caps_unref (probe);
+
+  gst_caps_unref (caps);
+
+  accept =
+      gst_caps_from_string ("video/x-raw,format=RGB,width=4,height=4,"
+      "framerate=30/1");
+  fail_unless (gst_pad_query_accept_caps (sinkpad, accept));
+  gst_caps_unref (accept);
+
+  accept =
+      gst_caps_from_string ("video/x-raw,format=RGBA,width=4,height=4,"
+      "framerate=30/1");
+  fail_if (gst_pad_query_accept_caps (sinkpad, accept));
+  gst_caps_unref (accept);
+
+  gst_object_unref (sinkpad);
+  gst_harness_teardown (h);
+  cleanup_temp_model (tmp_model);
+}
+
+GST_END_TEST;
+
+/* Test that a model whose modelinfo declares an input format outside the
+ * element's supported pad template fails to reach PAUSED, instead of
+ * silently falling back to the dims-based heuristic. */
+GST_START_TEST (test_declared_caps_unsupported_format_fails_to_start)
+{
+  static const gchar modelinfo_content[] =
+      "[modelinfo]\n"
+      "version=1.1\n"
+      "group-id=unsupported-caps-group\n"
+      "\n"
+      "[serving_default_input_f32:0]\n"
+      "id=input-0\n"
+      "type=float32\n"
+      "dims=1,4,4,3\n"
+      "dir=input\n"
+      "caps=video/x-raw, format=I420\n"
+      "ranges=0.0,255.0\n"
+      "\n"
+      "[PartitionedCall_1:0]\n"
+      "id=output-0\n" "type=float32\n" "dims=1,48\n" "dir=output\n";
+  gchar *tmp_model = setup_model_with_modelinfo (GST_TFLITE_TEST_DATA_PATH,
+      "tfliteinference", "flatten_float32in_float32out.tflite",
+      modelinfo_content);
+  GstElement *e = gst_element_factory_make ("tfliteinference", NULL);
+
+  g_object_set (e, "model-file", tmp_model, NULL);
+  fail_if (gst_element_set_state (e, GST_STATE_PAUSED)
+      != GST_STATE_CHANGE_FAILURE);
+
+  gst_element_set_state (e, GST_STATE_NULL);
+  gst_object_unref (e);
+  cleanup_temp_model (tmp_model);
+}
+
+GST_END_TEST;
+
 
 static void
 _caught_log_func (GstDebugCategory * category,
@@ -1476,6 +1576,8 @@ tfliteinference_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_input_formats);
   tcase_add_test (tc, test_gbrp_caps_input);
+  tcase_add_test (tc, test_declared_caps_restricts_to_single_format);
+  tcase_add_test (tc, test_declared_caps_unsupported_format_fails_to_start);
   tcase_add_test (tc, test_planar_uint8_input_in_place);
   tcase_add_test (tc, test_interleaved_uint8_input_in_place);
   tcase_add_test (tc, test_gray8_input_conversion);
