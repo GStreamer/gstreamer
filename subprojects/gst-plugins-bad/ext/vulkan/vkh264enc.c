@@ -479,12 +479,13 @@ _configure_rate_control (GstVulkanH264Encoder * self,
     GstVulkanVideoCapabilities * vk_caps)
 {
   self->rc.bitrate =
-      MIN (self->rc.bitrate, vk_caps->encoder.caps.maxBitrate / 1024);
+      CLAMP (self->rc.bitrate, 1, vk_caps->encoder.caps.maxBitrate / 1024);
   update_property_uint (self, &self->prop.bitrate, self->rc.bitrate,
       PROP_BITRATE);
 
   switch (self->rc.ratecontrol) {
     case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR:
+    case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR:
       self->rc.max_bitrate = self->rc.bitrate;
       break;
     case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR:
@@ -492,7 +493,8 @@ _configure_rate_control (GstVulkanH264Encoder * self,
       self->rc.max_bitrate = (guint)
           gst_util_uint64_scale_int (self->rc.bitrate, 100, 66);
       self->rc.max_bitrate =
-          MIN (self->rc.max_bitrate, vk_caps->encoder.caps.maxBitrate / 1024);
+          CLAMP (self->rc.max_bitrate, 1,
+          vk_caps->encoder.caps.maxBitrate / 1024);
       break;
     default:
       break;
@@ -1525,7 +1527,7 @@ _setup_rc_pic (GstVulkanEncoderPicture * pic,
 
   rc_info->pNext = &vk_frame->vkrc_info;
 
-  if (rc_info->rateControlMode >
+  if (rc_info->rateControlMode !=
       VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR) {
     rc_layer->averageBitrate = self->rc.bitrate * 1024;
     rc_layer->maxBitrate = self->rc.max_bitrate * 1024;
