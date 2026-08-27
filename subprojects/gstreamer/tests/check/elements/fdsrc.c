@@ -63,6 +63,7 @@ setup_fdsrc (void)
   mysinkpad = gst_check_setup_sink_pad (fdsrc, &sinktemplate);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
+  have_eos = FALSE;
   return fdsrc;
 }
 
@@ -72,6 +73,7 @@ cleanup_fdsrc (GstElement * fdsrc)
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (fdsrc);
   gst_check_teardown_element (fdsrc);
+  gst_check_drop_buffers ();
 }
 
 #ifdef HAVE_PIPE
@@ -118,8 +120,6 @@ GST_START_TEST (test_num_buffers)
   cleanup_fdsrc (src);
   close (pipe_fd[0]);
   close (pipe_fd[1]);
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
 }
 
 GST_END_TEST;
