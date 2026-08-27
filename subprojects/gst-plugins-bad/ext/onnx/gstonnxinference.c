@@ -1459,7 +1459,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
 
-      dml_ctx = gst_onnx_dml_create_context (device12, session_options);
+      dml_ctx = gst_onnx_dml_create_context (device12, session_options, api);
       gst_object_unref (device12);
       if (!dml_ctx) {
         GST_ERROR_OBJECT (self,

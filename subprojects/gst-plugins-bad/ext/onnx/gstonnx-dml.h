@@ -27,7 +27,8 @@ G_BEGIN_DECLS
 typedef struct _GstOnnxDmlCtx GstOnnxDmlCtx;
 
 GstOnnxDmlCtx * gst_onnx_dml_create_context (GstD3D12Device * device12,
-                                             OrtSessionOptions * opt);
+                                             OrtSessionOptions * opt,
+                                             const OrtApi * api);
 
 void gst_onnx_dml_free_context (GstOnnxDmlCtx * ctx);
 

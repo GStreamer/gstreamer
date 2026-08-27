@@ -23,7 +23,6 @@
 
 #include <gst/d3d12/gstd3d12.h>
 #include <gst/d3d12/gstd3d12-private.h>
-#include <onnxruntime_cxx_api.h>
 #include <dml_provider_factory.h>
 #include <directml.h>
 #include <wrl.h>
@@ -61,14 +60,15 @@ struct _GstOnnxDmlCtx
 
 GstOnnxDmlCtx *
 gst_onnx_dml_create_context (GstD3D12Device * device_12,
-    OrtSessionOptions * opt)
+    OrtSessionOptions * opt, const OrtApi * api)
 {
   const OrtDmlApi *dml_api = nullptr;
-  auto status = Ort::GetApi ().GetExecutionProviderApi ("DML", ORT_API_VERSION,
+  auto status = api->GetExecutionProviderApi ("DML", ORT_API_VERSION,
       reinterpret_cast < const void **>(&dml_api));
   if (status) {
     GST_ERROR_OBJECT (device_12, "Couldn't get OrtDmlApi, %s",
-        Ort::GetApi ().GetErrorMessage (status));
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
     return nullptr;
   }
 
@@ -90,21 +90,24 @@ gst_onnx_dml_create_context (GstD3D12Device * device_12,
       device_ml.Get (), gst_d3d12_cmd_queue_get_handle (cq));
   if (status) {
     GST_ERROR_OBJECT (device_12, "Couldn't append DML EP, %s",
-        Ort::GetApi ().GetErrorMessage (status));
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
     return nullptr;
   }
 
-  status = Ort::GetApi ().SetSessionExecutionMode (opt, ORT_SEQUENTIAL);
+  status = api->SetSessionExecutionMode (opt, ORT_SEQUENTIAL);
   if (status) {
     GST_ERROR_OBJECT (device_12, "SetSessionExecutionMode failed, %s",
-        Ort::GetApi ().GetErrorMessage (status));
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
     return nullptr;
   }
 
-  status = Ort::GetApi ().DisableMemPattern (opt);
+  status = api->DisableMemPattern (opt);
   if (status) {
     GST_ERROR_OBJECT (device_12, "DisableMemPattern failed, %s",
-        Ort::GetApi ().GetErrorMessage (status));
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
     return nullptr;
   }
 
