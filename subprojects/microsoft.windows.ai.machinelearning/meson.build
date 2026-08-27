@@ -55,7 +55,7 @@ windows_ml_api_dep = declare_dependency(
 
 onnxruntime_dep = declare_dependency(
   include_directories: onnxruntime_inc_dir,
-  dependencies: onnx_import_lib,
+  # Purposely omit the onnxruntime library, we do not link to it
 )
 
 windows_ml_dep = declare_dependency(

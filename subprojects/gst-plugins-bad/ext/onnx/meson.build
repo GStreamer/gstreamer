@@ -92,9 +92,9 @@ if 'vsi' in onnx_require_eps
                   dependencies: onnxrt_dep)
 endif
 
+onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
 if not have_winml
   if 'migraphx' in onnx_require_eps
-    onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
     cc.find_library('onnxruntime_providers_migraphx', dirs: [onnxrt_libdir])
   endif
 
@@ -116,6 +116,16 @@ meson.add_devenv({
   'GST_ORT_MODEL_CACHE_DIR': model_cache_dir,
 })
 
+if onnxrt_libdir != ''
+  if host_system == 'windows'
+    meson.add_devenv({'PATH': onnxrt_libdir}, method: 'prepend')
+  elif host_system == 'darwin'
+    meson.add_devenv({'DYLD_LIBRARY_PATH': onnxrt_libdir}, method: 'prepend')
+  else
+    meson.add_devenv({'LD_LIBRARY_PATH': onnxrt_libdir}, method: 'prepend')
+  endif
+endif
+
 onnx_config = configuration_data()
 onnx_config.set10('HAVE_WINML', have_winml)
 onnx_config.set10('HAVE_DIRECTML', have_directml)
@@ -127,6 +137,16 @@ configure_file(
   output: 'gstonnx-config.h',
   configuration: onnx_config,
 )
+
+# Don't link to libonnxruntime, we dlopen it. We can't strip link_args on winml
+# because the dep contains WinML libs in addition to onnxruntime. The linker
+# will strip unused import libraries, so that's fine.
+if not have_winml
+  onnxrt_dep = onnxrt_dep.partial_dependency(
+      compile_args: true,
+      includes: true,
+  )
+endif
 
 gstonnx = library('gstonnx',
   onnx_sources,

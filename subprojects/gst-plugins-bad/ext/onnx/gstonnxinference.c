@@ -195,7 +195,18 @@ struct _GstOnnxInference
 #endif
 };
 
+/* Protects api, api_base and onnxruntime_module while loading the library */
+G_LOCK_DEFINE_STATIC (onnx_api);
 static const OrtApi *api = NULL;
+static const OrtApiBase *api_base = NULL;
+
+#ifdef G_OS_WIN32
+static HMODULE onnxruntime_module = NULL;
+#else
+static void *onnxruntime_module = NULL;
+#endif
+
+typedef const OrtApiBase *(ORT_API_CALL * GstOrtGetApiBaseFunc) (void);
 
 
 GST_DEBUG_CATEGORY (onnx_inference_debug);
@@ -511,8 +522,6 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_ONNX_EXECUTION_PROVIDER,
       (GstPluginAPIFlags) 0);
-
-  api = OrtGetApiBase ()->GetApi (ORT_API_VERSION);
 }
 
 static void
@@ -655,6 +664,87 @@ get_tensor_type_size (GstTensorDataType data_type)
     default:
       return 0;
   };
+}
+
+static gboolean
+gst_onnx_inference_load_library (GstOnnxInference * self)
+{
+  GstOrtGetApiBaseFunc get_api_base;
+  gboolean ret = FALSE;
+
+  G_LOCK (onnx_api);
+
+  if (api) {
+    ret = TRUE;
+    goto done;
+  }
+#ifdef G_OS_WIN32
+  onnxruntime_module = LoadLibraryA ("onnxruntime.dll");
+  if (!onnxruntime_module) {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+        ("Could not load onnxruntime.dll (error 0x%lx)", GetLastError ()));
+    goto done;
+  }
+
+  get_api_base = (GstOrtGetApiBaseFunc) GetProcAddress (onnxruntime_module,
+      "OrtGetApiBase");
+#else
+#ifdef __APPLE__
+  onnxruntime_module = dlopen ("libonnxruntime.1.dylib", RTLD_NOW | RTLD_LOCAL);
+#else
+  onnxruntime_module = dlopen ("libonnxruntime.so.1", RTLD_NOW | RTLD_LOCAL);
+#endif
+
+  if (!onnxruntime_module) {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+        ("Could not load libonnxruntime: %s", dlerror ()));
+    goto done;
+  }
+
+  get_api_base = (GstOrtGetApiBaseFunc) dlsym (onnxruntime_module,
+      "OrtGetApiBase");
+#endif
+
+  if (!get_api_base) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT, (NULL),
+        ("Could not resolve OrtGetApiBase"));
+    goto done;
+  }
+
+  api_base = get_api_base ();
+  if (!api_base) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT, (NULL),
+        ("OrtGetApiBase returned NULL"));
+    goto done;
+  }
+  // GetApi says we must only pass ORT_API_VERSION to it, but actually any
+  // version older than ORT_API_VERSION also works. We rely on that behavior
+  // to be able to build using the headers of one libonnxruntime version, and
+  // allow users to load a different (newer) one at runtime.
+  uint32_t api_version;
+  {
+    char *end = NULL;
+    const char *minor_version = strstr (api_base->GetVersionString (), ".") + 1;
+    errno = 0;
+    api_version = (uint32_t) g_ascii_strtoull (minor_version, &end, 10);
+    if (end == minor_version || errno || api_version == 0 ||
+        api_version == G_MAXUINT32)
+      api_version = ORT_API_VERSION;
+  }
+
+  api = api_base->GetApi (api_version);
+  if (!api) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT, (NULL),
+        ("Loaded libonnxruntime does not support API version %d", api_version));
+    goto done;
+  }
+
+  GST_INFO_OBJECT (self, "ONNX-RT successfully loaded");
+  ret = TRUE;
+
+done:
+  G_UNLOCK (onnx_api);
+  return ret;
 }
 
 static GstCaps *
@@ -945,7 +1035,7 @@ gst_onnx_inference_get_model_cache_dir (GstOnnxInference * self)
 static gboolean
 gst_onnx_runtime_version_at_least (guint required_major, guint required_minor)
 {
-  const gchar *version = OrtGetApiBase ()->GetVersionString ();
+  const gchar *version = api_base->GetVersionString ();
   gchar *end = NULL;
   guint64 major, minor;
 
@@ -1092,15 +1182,10 @@ static GstOrtAppendVsiNpuFunc
 gst_onnx_inference_get_vsi_npu_append_func (void)
 {
 #ifdef G_OS_WIN32
-  HMODULE module = GetModuleHandleW (L"onnxruntime.dll");
-
-  if (!module)
-    return NULL;
-
-  return (GstOrtAppendVsiNpuFunc) GetProcAddress (module,
+  return (GstOrtAppendVsiNpuFunc) GetProcAddress (onnxruntime_module,
       "OrtSessionOptionsAppendExecutionProvider_VSINPU");
 #else
-  return (GstOrtAppendVsiNpuFunc) dlsym (RTLD_DEFAULT,
+  return (GstOrtAppendVsiNpuFunc) dlsym (onnxruntime_module,
       "OrtSessionOptionsAppendExecutionProvider_VSINPU");
 #endif
 }
@@ -1128,9 +1213,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   gdouble *input_mins;
   gdouble *input_maxs;
 
-  if (!api) {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("ORT_API_VERSION %d not supported by ONNX runtime", ORT_API_VERSION));
+  if (!gst_onnx_inference_load_library (self)) {
+    GST_ERROR_OBJECT (self, "ONNX Runtime failed to load");
     return FALSE;
   }
 
@@ -1342,7 +1426,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
           GST_WARNING_OBJECT (self,
               "model-cache-dir requires ONNX Runtime >= 1.23 for the "
               "MIGraphX execution provider; runtime version is %s",
-              OrtGetApiBase ()->GetVersionString ());
+              api_base->GetVersionString ());
         }
 
         memset (&migraphx_options, 0, sizeof (migraphx_options));
