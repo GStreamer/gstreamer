@@ -703,6 +703,7 @@ group-id=test-model-v1-5
 dims=1,224,224,3
 dir=input
 type=uint8
+caps=video/x-raw, format=RGB
 
 [output_tensor]
 dims=1,1000
@@ -736,6 +737,171 @@ id=output_logits
             self.assertEqual(minor_version, 5)
 
             modelinfo.free()
+        finally:
+            if os.path.exists(temp_modelinfo):
+                os.unlink(temp_modelinfo)
+            if os.path.exists(model_filename):
+                os.unlink(model_filename)
+
+    def test_modelinfo_get_input_caps(self):
+        """Test get_input_caps() on a v1.1 modelinfo with caps declared"""
+        import tempfile
+        import os
+
+        modelinfo_content = """
+[modelinfo]
+version=1.1
+group-id=test-model-v1-1
+
+[input_tensor]
+dims=1,224,224,3
+dir=input
+type=uint8
+caps=video/x-raw, format=RGB
+
+[output_tensor]
+dims=1,1000
+dir=output
+type=float32
+id=output_logits
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.modelinfo',
+                                         delete=False) as f:
+            f.write(modelinfo_content)
+            temp_modelinfo = f.name
+
+        try:
+            model_filename = temp_modelinfo[:-10]
+            modelinfo = GstAnalytics.ModelInfo.load(model_filename)
+            self.assertIsNotNone(modelinfo)
+
+            caps = modelinfo.get_input_caps("input_tensor")
+            self.assertIsNotNone(caps)
+            expected_caps = Gst.Caps.from_string("video/x-raw, format=(string)RGB")
+            self.assertTrue(caps.is_equal(expected_caps))
+
+            modelinfo.free()
+        finally:
+            if os.path.exists(temp_modelinfo):
+                os.unlink(temp_modelinfo)
+            if os.path.exists(model_filename):
+                os.unlink(model_filename)
+
+    def test_modelinfo_get_input_caps_missing(self):
+        """Test get_input_caps() returns None for a v1.0 modelinfo (predates caps)"""
+        import tempfile
+        import os
+
+        modelinfo_content = """
+[modelinfo]
+version=1.0
+group-id=test-model-v1-0
+
+[input_tensor]
+dims=1,224,224,3
+dir=input
+type=uint8
+
+[output_tensor]
+dims=1,1000
+dir=output
+type=float32
+id=output_logits
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.modelinfo',
+                                         delete=False) as f:
+            f.write(modelinfo_content)
+            temp_modelinfo = f.name
+
+        try:
+            model_filename = temp_modelinfo[:-10]
+            modelinfo = GstAnalytics.ModelInfo.load(model_filename)
+            self.assertIsNotNone(modelinfo)
+
+            caps = modelinfo.get_input_caps("input_tensor")
+            self.assertIsNone(caps)
+
+            modelinfo.free()
+        finally:
+            if os.path.exists(temp_modelinfo):
+                os.unlink(temp_modelinfo)
+            if os.path.exists(model_filename):
+                os.unlink(model_filename)
+
+    def test_modelinfo_missing_mandatory_fields_rejected(self):
+        """Test that a v1.1 modelinfo missing caps on an input
+        tensor fails to load"""
+        import tempfile
+        import os
+
+        modelinfo_content = """
+[modelinfo]
+version=1.1
+group-id=test-model-v1-1
+
+[input_tensor]
+dims=1,224,224,3
+dir=input
+type=uint8
+
+[output_tensor]
+dims=1,1000
+dir=output
+type=float32
+id=output_logits
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.modelinfo',
+                                         delete=False) as f:
+            f.write(modelinfo_content)
+            temp_modelinfo = f.name
+
+        try:
+            model_filename = temp_modelinfo[:-10]
+            # Load should fail: v1.1 requires caps on input tensors
+            modelinfo = GstAnalytics.ModelInfo.load(model_filename)
+            self.assertIsNone(modelinfo)
+        finally:
+            if os.path.exists(temp_modelinfo):
+                os.unlink(temp_modelinfo)
+            if os.path.exists(model_filename):
+                os.unlink(model_filename)
+
+    def test_modelinfo_placeholder_caps_rejected(self):
+        """Test that a v1.1 modelinfo with an unresolved PLACEHOLDER caps
+        fails to load"""
+        import tempfile
+        import os
+
+        modelinfo_content = """
+[modelinfo]
+version=1.1
+group-id=test-model-v1-1
+
+[input_tensor]
+dims=1,224,224,3
+dir=input
+type=uint8
+caps=PLACEHOLDER-CAPS-REQUIRED
+
+[output_tensor]
+dims=1,1000
+dir=output
+type=float32
+id=output_logits
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.modelinfo',
+                                         delete=False) as f:
+            f.write(modelinfo_content)
+            temp_modelinfo = f.name
+
+        try:
+            model_filename = temp_modelinfo[:-10]
+            modelinfo = GstAnalytics.ModelInfo.load(model_filename)
+            self.assertIsNone(modelinfo)
         finally:
             if os.path.exists(temp_modelinfo):
                 os.unlink(temp_modelinfo)
