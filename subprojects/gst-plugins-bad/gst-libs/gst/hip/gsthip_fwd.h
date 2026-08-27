@@ -55,6 +55,10 @@ typedef struct _GstHipBufferPool GstHipBufferPool;
 typedef struct _GstHipBufferPoolClass GstHipBufferPoolClass;
 typedef struct _GstHipBufferPoolPrivate GstHipBufferPoolPrivate;
 
+typedef struct _GstHipHostBufferPool GstHipHostBufferPool;
+typedef struct _GstHipHostBufferPoolClass GstHipHostBufferPoolClass;
+typedef struct _GstHipHostBufferPoolPrivate GstHipHostBufferPoolPrivate;
+
 typedef struct _GstHipGraphicsResource GstHipGraphicsResource;
 
 typedef struct _GstHipStream GstHipStream;
