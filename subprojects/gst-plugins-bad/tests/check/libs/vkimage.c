@@ -194,15 +194,15 @@ GST_START_TEST (test_image_wrapped_with_image_info)
 
 GST_END_TEST;
 
-#define N_THREADS 2
+#define N_THREADS 4
 #define N_MEMORY 4
-#define N_OPS 512
+#define N_OPS 1024
 
 struct view_stress
 {
   GMutex lock;
   GCond cond;
-  gboolean ready;
+  gint ready;
   int n_ops;
   GQueue *memories;
   GstHarnessThread *threads[N_THREADS];
@@ -270,6 +270,105 @@ GST_START_TEST (test_image_view_stress)
   g_mutex_clear (&stress.lock);
   g_cond_clear (&stress.cond);
   g_queue_free_full (stress.memories, (GDestroyNotify) gst_memory_unref);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+#define MEMORY_READY 1
+#define VIEW_READY 2
+
+struct simultaneous_destruction
+{
+  GMutex lock;
+  GCond cond;
+  gint state;
+  GstVulkanImageMemory *image;
+  GstVulkanImageView *view;
+};
+
+static void
+get_memory_and_unref (struct simultaneous_destruction *d)
+{
+  g_mutex_lock (&d->lock);
+  d->state |= MEMORY_READY;
+  g_cond_broadcast (&d->cond);
+  while (!(d->state & VIEW_READY))
+    g_cond_wait (&d->cond, &d->lock);
+  GstVulkanImageView *view = gst_vulkan_get_or_create_image_view (d->image);
+  GST_INFO ("unref mem %p", d->image);
+  g_mutex_unlock (&d->lock);
+
+  gst_memory_unref ((GstMemory *) d->image);
+  g_thread_yield ();
+  gst_vulkan_image_view_unref (view);
+}
+
+static void
+get_view_and_unref (struct simultaneous_destruction *d)
+{
+  g_mutex_lock (&d->lock);
+
+  d->state |= VIEW_READY;
+  g_cond_broadcast (&d->cond);
+  while (!(d->state & MEMORY_READY))
+    g_cond_wait (&d->cond, &d->lock);
+  GST_INFO ("unref view %p", d->view);
+  g_mutex_unlock (&d->lock);
+
+  g_thread_yield ();
+  gst_vulkan_image_view_unref (d->view);
+}
+
+static void
+simultaneous_destruction_task (GstHarnessThread * t, gint * count)
+{
+  GstVideoInfo v_info;
+  struct simultaneous_destruction d = { 0, };
+
+  g_mutex_init (&d.lock);
+  g_cond_init (&d.cond);
+
+  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 16, 16);
+  d.image = create_image_mem (&v_info);
+  d.view = gst_vulkan_get_or_create_image_view (d.image);
+
+  GThread *mem_unref =
+      g_thread_new (NULL, (GThreadFunc) get_memory_and_unref, &d);
+  GThread *view_unref =
+      g_thread_new (NULL, (GThreadFunc) get_view_and_unref, &d);
+
+  g_thread_join (mem_unref);
+  g_thread_join (view_unref);
+  g_mutex_clear (&d.lock);
+  g_cond_clear (&d.cond);
+
+  int progress = g_atomic_int_add (count, 1);
+  if (progress % 5000 == 0)
+    g_print ("progress: %d\n", progress);
+}
+
+#define N_DESTROY_THREADS 8
+
+GST_START_TEST (test_image_view_mem_simultaneous_destruction)
+{
+  GstHarness *h = gst_harness_new_empty ();
+  GstHarnessThread *t[N_DESTROY_THREADS];
+  int count = 0;
+
+  for (int i = 0; i < N_DESTROY_THREADS; i++) {
+    t[i] = gst_harness_stress_custom_start (h,
+        NULL, (GFunc) simultaneous_destruction_task, &count, 0);
+  }
+
+  while (g_atomic_int_get (&count) < 10240)
+    g_usleep (1000);
+
+  for (int i = 0; i < N_DESTROY_THREADS; i++) {
+    gst_harness_stress_thread_stop (t[i]);
+  }
+
+  GST_INFO ("performed %d", g_atomic_int_get (&count));
   gst_harness_teardown (h);
 }
 
@@ -344,6 +443,7 @@ vkimage_suite (void)
     tcase_add_test (tc_basic, test_image_view_new);
     tcase_add_test (tc_basic, test_image_view_get);
     tcase_add_test (tc_basic, test_image_view_stress);
+    tcase_add_test (tc_basic, test_image_view_mem_simultaneous_destruction);
   }
 
   return s;

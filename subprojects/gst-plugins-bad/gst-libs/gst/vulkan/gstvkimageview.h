@@ -60,6 +60,15 @@ struct _GstVulkanImageView
 
   VkImageViewCreateInfo create_info;
 
+  /**
+   * GstVulkanImageView.lock:
+   *
+   * lock.
+   *
+   * Since: 1.30
+   */
+  GMutex lock;
+
   /* <private> */
   gpointer _reserved        [GST_PADDING];
 };
@@ -81,21 +90,8 @@ gst_vulkan_image_view_ref (GstVulkanImageView * trash)
   return (GstVulkanImageView *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (trash));
 }
 
-/**
- * gst_vulkan_image_view_unref: (skip)
- * @trash: (transfer full): a #GstVulkanImageView.
- *
- * Decreases the refcount of the trash object. If the refcount reaches 0, the
- * trash will be freed.
- *
- * Since: 1.18
- */
-static inline void gst_vulkan_image_view_unref(GstVulkanImageView* trash);
-static inline void
-gst_vulkan_image_view_unref (GstVulkanImageView * trash)
-{
-  gst_mini_object_unref (GST_MINI_OBJECT_CAST (trash));
-}
+GST_VULKAN_API
+void gst_vulkan_image_view_unref (GstVulkanImageView * view);
 
 /**
  * gst_clear_vulkan_image_view: (skip)
@@ -114,7 +110,7 @@ gst_vulkan_image_view_unref (GstVulkanImageView * trash)
 static inline void
 gst_clear_vulkan_image_view (GstVulkanImageView ** view_ptr)
 {
-  gst_clear_mini_object ((GstMiniObject **) view_ptr);
+  g_clear_pointer (view_ptr, gst_vulkan_image_view_unref);
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanImageView, gst_vulkan_image_view_unref)

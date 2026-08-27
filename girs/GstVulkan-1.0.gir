@@ -4995,6 +4995,10 @@ criteria.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h">the creation information for this view</doc>
         <type name="Vulkan.ImageViewCreateInfo" c:type="VkImageViewCreateInfo"/>
       </field>
+      <field name="lock" version="1.30" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h">lock.</doc>
+        <type name="GLib.Mutex" c:type="GMutex"/>
+      </field>
       <field name="_reserved" readable="0" private="1">
         <array zero-terminated="0" fixed-size="4">
           <type name="gpointer" c:type="gpointer"/>
@@ -5032,20 +5036,20 @@ criteria.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method-inline name="unref" c:identifier="gst_vulkan_image_view_unref" version="1.18" introspectable="0">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h">Decreases the refcount of the trash object. If the refcount reaches 0, the
-trash will be freed.</doc>
+      <method name="unref" c:identifier="gst_vulkan_image_view_unref" version="1.18" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.c">Decreases the refcount of the @view. If the refcount reaches 0, the
+@view will be freed.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
         <parameters>
-          <instance-parameter name="trash" transfer-ownership="full">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h">a #GstVulkanImageView.</doc>
+          <instance-parameter name="view" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.c">a #GstVulkanImageView.</doc>
             <type name="VulkanImageView" c:type="GstVulkanImageView*"/>
           </instance-parameter>
         </parameters>
-      </method-inline>
+      </method>
     </record>
     <class name="VulkanInstance" c:symbol-prefix="vulkan_instance" c:type="GstVulkanInstance" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanInstance" glib:get-type="gst_vulkan_instance_get_type" glib:type-struct="VulkanInstanceClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.h"/>

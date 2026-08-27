@@ -49,23 +49,8 @@ init_debug (void)
   }
 }
 
-extern void
-gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
-    GstVulkanImageView * view);
-
-static gboolean
-gst_vulkan_image_view_dispose (GstVulkanImageView * view)
-{
-  GstVulkanImageMemory *image;
-
-  if ((image = view->image) == NULL)
-    return TRUE;
-
-  gst_vulkan_image_view_ref (view);
-  gst_vulkan_image_memory_release_view (image, view);
-
-  return FALSE;
-}
+extern gboolean
+gst_vulkan_image_memory_release_view (GstVulkanImageView * view);
 
 static void
 gst_vulkan_image_view_free (GstVulkanImageView * view)
@@ -80,6 +65,7 @@ gst_vulkan_image_view_free (GstVulkanImageView * view)
   }
   view->image = NULL;
   gst_clear_object (&view->device);
+  g_mutex_clear (&view->lock);
 
   g_free (view);
 }
@@ -111,8 +97,7 @@ gst_vulkan_image_view_new (GstVulkanImageMemory * image,
   view = g_new0 (GstVulkanImageView, 1);
 
   gst_mini_object_init ((GstMiniObject *) view, 0,
-      gst_vulkan_image_view_get_type (), NULL,
-      (GstMiniObjectDisposeFunction) gst_vulkan_image_view_dispose,
+      gst_vulkan_image_view_get_type (), NULL, NULL,
       (GstMiniObjectFreeFunction) gst_vulkan_image_view_free);
 
   err =
@@ -126,6 +111,7 @@ gst_vulkan_image_view_new (GstVulkanImageMemory * image,
   view->create_info = *create_info;
   /* we cannot keep this as it may point to stack allocated memory */
   view->create_info.pNext = NULL;
+  g_mutex_init (&view->lock);
 
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_VIEW, "new image view for image: %p",
       image);
@@ -145,6 +131,37 @@ error:
     g_free (view);
     return NULL;
   }
+}
+
+/**
+ * gst_vulkan_image_view_unref: (skip)
+ * @view: (transfer full): a #GstVulkanImageView.
+ *
+ * Decreases the refcount of the @view. If the refcount reaches 0, the
+ * @view will be freed.
+ *
+ * Since: 1.18
+ */
+void
+gst_vulkan_image_view_unref (GstVulkanImageView * view)
+{
+  gint old_ref;
+
+retry_decrement:
+  old_ref = g_atomic_int_get (&view->parent.refcount);
+  if (old_ref > 1) {
+    if (!g_atomic_int_compare_and_exchange (&view->parent.refcount, old_ref,
+            old_ref - 1))
+      goto retry_decrement;
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_VIEW, "%p unref %d->%d",
+        view, old_ref, old_ref - 1);
+    return;
+  }
+
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_VIEW, "dispose view %p with image %p",
+      view, view->image);
+  if (gst_vulkan_image_memory_release_view (view))
+    gst_mini_object_unref ((GstMiniObject *) view);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstVulkanImageView, gst_vulkan_image_view);

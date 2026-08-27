@@ -385,11 +385,19 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "freeing image memory:%p "
       "id:%" G_GUINT64_FORMAT, mem, (guint64) mem->image);
 
-  g_warn_if_fail (mem->outstanding_views->len == 0);
-  g_ptr_array_unref (mem->outstanding_views);
+  g_mutex_lock (&mem->lock);
+  GPtrArray *outstanding_views = mem->outstanding_views;
+  mem->outstanding_views = NULL;
 
-  g_ptr_array_foreach (mem->views, (GFunc) _free_view, NULL);
-  g_ptr_array_unref (mem->views);
+  GPtrArray *views = mem->views;
+  mem->views = NULL;
+  g_mutex_unlock (&mem->lock);
+
+  g_warn_if_fail (outstanding_views->len == 0);
+  g_ptr_array_unref (outstanding_views);
+
+  g_ptr_array_foreach (views, (GFunc) _free_view, NULL);
+  g_ptr_array_unref (views);
 
   if (mem->image && !mem->wrapped)
     vkDestroyImage (mem->device->device, mem->image, NULL);
@@ -573,32 +581,43 @@ find_view_index_unlocked (GstVulkanImageMemory * image,
   return (gint) index;
 }
 
-extern void
-gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
-    GstVulkanImageView * view);
+extern gboolean
+gst_vulkan_image_memory_release_view (GstVulkanImageView * view);
 
-void
-gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
-    GstVulkanImageView * view)
+gboolean
+gst_vulkan_image_memory_release_view (GstVulkanImageView * view)
 {
+  GstVulkanImageMemory *image;
+  int old_ref;
   guint index;
 
-  g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
-  g_return_if_fail (image == view->image);
+  g_mutex_lock (&view->lock);
+
+  old_ref = g_atomic_int_add (&view->parent.refcount, -1);
+
+  if (old_ref != 1) {
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY,
+        "not ready to free view %p as ref %d != 1", view, old_ref);
+    g_mutex_unlock (&view->lock);
+    return FALSE;
+  }
+  gst_vulkan_image_view_ref (view);
+
+  image = view->image;
+  if (!image) {
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "view %p without image -> free",
+        view);
+    g_mutex_unlock (&view->lock);
+    return TRUE;
+  }
+
+  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)),
+      FALSE);
 
   g_mutex_lock (&image->lock);
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", image);
-
-  /* If the refcount is > 1 at this point, another ref has been taken by a
-   * concurrent gst_vulkan_image_memory_find_view() before we got the lock, so
-   * we must leave the view as outstanding. */
-  if (GST_MINI_OBJECT_REFCOUNT_VALUE (view) > 1) {
-    g_mutex_unlock (&image->lock);
-    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
-        image);
-    gst_vulkan_image_view_unref (view);
-    return;
-  }
+  view->image = NULL;
+  g_mutex_unlock (&view->lock);
 
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "image %p removing view %p",
       image, view);
@@ -609,11 +628,12 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
     g_warning ("GstVulkanImageMemory:%p attempt to remove a view %p "
         "that we do not own", image, view);
   }
-  view->image = NULL;
   g_mutex_unlock (&image->lock);
-  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
-      image);
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY,
+      "unlocked image memory %p view %p", image, view);
   gst_memory_unref ((GstMemory *) image);
+
+  return FALSE;
 }
 
 /**
@@ -707,15 +727,19 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
     ret =
         gst_vulkan_image_view_ref (g_ptr_array_index (image->outstanding_views,
             index));
+    g_assert (image == ret->image);
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY,
+        "Image %p found outstanding view %p", image, ret);
   } else if (g_ptr_array_find_with_equal_func (image->views, &view,
           (GEqualFunc) find_view_func, &index)) {
     ret = g_ptr_array_steal_index_fast (image->views, index);
     g_ptr_array_add (image->outstanding_views, ret);
+    g_assert (!ret->image);
     ret->image = (GstVulkanImageMemory *) gst_memory_ref ((GstMemory *) image);
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "Image %p found stored view %p",
+        image, ret);
   }
 
-  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "Image %p found view %p",
-      image, ret);
   g_mutex_unlock (&image->lock);
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "unlocked image memory %p",
       image);

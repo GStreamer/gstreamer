@@ -1438,17 +1438,17 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self, GError ** error)
     goto error;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    gst_clear_mini_object ((GstMiniObject **) & in_views[i]);
+    gst_clear_vulkan_image_view (&in_views[i]);
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    gst_clear_mini_object ((GstMiniObject **) & out_views[i]);
+    gst_clear_vulkan_image_view (&out_views[i]);
 
   return gst_vulkan_command_buffer_ref (self->exec->cmd_buf);
 
 error:
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    gst_clear_mini_object ((GstMiniObject **) & in_views[i]);
+    gst_clear_vulkan_image_view (&in_views[i]);
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    gst_clear_mini_object ((GstMiniObject **) & out_views[i]);
+    gst_clear_vulkan_image_view (&out_views[i]);
   return NULL;
 }
 
