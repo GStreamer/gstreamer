@@ -326,6 +326,11 @@ GST_HIP_API
 hipError_t HipDeviceGetByPCIBusId (GstHipVendor vendor,
                                    int * device,
                                    const char * pciBusId);
+GST_HIP_API
+hipError_t HipHostGetDevicePointer (GstHipVendor vendor,
+                                    void** devPtr,
+                                    void* hstPtr,
+                                    unsigned int flags);
 
 G_END_DECLS
 

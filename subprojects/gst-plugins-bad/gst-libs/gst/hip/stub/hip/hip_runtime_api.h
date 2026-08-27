@@ -622,3 +622,62 @@ typedef enum hipMemAllocationGranularity_flags {
   hipMemAllocationGranularityMinimum = 0x0,     ///< Minimum granularity
   hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
 } hipMemAllocationGranularity_flags;
+
+// Flags that can be used with hipHostMalloc/hipHostAlloc.
+/** Default pinned memory allocation on the host.*/
+#define hipHostAllocDefault 0x0
+
+/** Default pinned memory allocation on the host.
+ * @note This is the same definition as #hipHostAllocPortable.*/
+#define hipHostMallocDefault 0x0
+
+/** Memory is considered allocated by all contexts.*/
+#define hipHostAllocPortable 0x1
+
+/** Memory is considered allocated by all contexts.
+ * @note This is the same definition as #hipHostAllocPortable.*/
+#define hipHostMallocPortable 0x1
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.*/
+#define hipHostAllocMapped 0x2
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.
+ * @note This is the same #hipHostMallocMapped.*/
+#define hipHostMallocMapped 0x2
+
+/** Allocates the memory as write-combined. On some system configurations, write-combined allocation
+ * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
+ * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.
+ * @note  This flag is only for CUDA source compatibility but not functional within HIP runtime,
+ * because the allocation path is currently not supported on the AMD platform.*/
+#define hipHostAllocWriteCombined 0x4
+
+/** Allocates the memory as write-combined. On some system configurations, write-combined allocation
+ * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
+ * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.
+ * @note  This flag is the same definition as #hipHostAllocWriteCombined which is equivalent to
+ * cudaHostAllocWriteCombined. It is only for CUDA source compatibility but not functional within
+ * HIP runtime, because the allocation path is currently not supported on the AMD platform.*/
+#define hipHostMallocWriteCombined 0x4
+
+/**
+ * Host memory will be forcedly allocated on extended fine grained system memory
+ * pool which is with MTYPE_UC.
+ * @note  This allocation flag is applicable on AMD devices, except for Navi4X, in Linux only.
+ */
+#define hipHostMallocUncached 0x10000000
+#define hipHostAllocUncached hipHostMallocUncached
+
+/**
+ * Host memory allocation will follow numa policy set by user.
+ * @note  This numa allocation flag is applicable on Linux, under development on Windows.
+ */
+#define hipHostMallocNumaUser 0x20000000
+
+/** Allocate coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
+#define hipHostMallocCoherent 0x40000000
+
+/** Allocate non-coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
+#define hipHostMallocNonCoherent 0x80000000

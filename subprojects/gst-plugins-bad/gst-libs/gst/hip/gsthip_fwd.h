@@ -32,13 +32,24 @@ typedef struct _GstHipDevicePrivate GstHipDevicePrivate;
 typedef struct _GstHipMemory GstHipMemory;
 typedef struct _GstHipMemoryPrivate GstHipMemoryPrivate;
 
+typedef struct _GstHipHostMemory GstHipHostMemory;
+typedef struct _GstHipHostMemoryPrivate GstHipHostMemoryPrivate;
+
 typedef struct _GstHipAllocator GstHipAllocator;
 typedef struct _GstHipAllocatorClass GstHipAllocatorClass;
 typedef struct _GstHipAllocatorPrivate GstHipAllocatorPrivate;
 
+typedef struct _GstHipHostAllocator GstHipHostAllocator;
+typedef struct _GstHipHostAllocatorClass GstHipHostAllocatorClass;
+typedef struct _GstHipHostAllocatorPrivate GstHipHostAllocatorPrivate;
+
 typedef struct _GstHipPoolAllocator GstHipPoolAllocator;
 typedef struct _GstHipPoolAllocatorClass GstHipPoolAllocatorClass;
 typedef struct _GstHipPoolAllocatorPrivate GstHipPoolAllocatorPrivate;
+
+typedef struct _GstHipHostPoolAllocator GstHipHostPoolAllocator;
+typedef struct _GstHipHostPoolAllocatorClass GstHipHostPoolAllocatorClass;
+typedef struct _GstHipHostPoolAllocatorPrivate GstHipHostPoolAllocatorPrivate;
 
 typedef struct _GstHipBufferPool GstHipBufferPool;
 typedef struct _GstHipBufferPoolClass GstHipBufferPoolClass;

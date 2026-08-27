@@ -120,6 +120,8 @@ struct GstHipFuncTableAmd
       const void *srcHost, size_t ByteCount);
   hipError_t (*hipMemcpyHtoDAsync) (hipDeviceptr_t dstDevice,
       const void *srcHost, size_t ByteCount, hipStream_t hStream);
+  hipError_t (*hipHostGetDevicePointer) (void** devPtr,
+      void* hstPtr, unsigned int flags);
 #ifdef HAVE_GST_GL
   hipError_t (*hipGLGetDevices) (unsigned int* pHipDeviceCount,
       int* pHipDevices, unsigned int hipDeviceCount,
@@ -197,6 +199,8 @@ struct GstHipFuncTableCuda
       size_t ByteCount);
   CUresult (CUDAAPI *cuMemcpyHtoDAsync) (CUdeviceptr dstDevice,
       const void *srcHost, size_t ByteCount, CUstream hStream);
+  CUresult (CUDAAPI *cuMemHostGetDevicePointer) (CUdeviceptr* pdptr,
+      void* p, unsigned int Flags);
 };
 
 struct GstHipFuncTableCudaRt
@@ -338,6 +342,7 @@ load_amd_func_table (void)
   LOAD_SYMBOL (hipMemcpyDtoHAsync);
   LOAD_SYMBOL (hipMemcpyHtoD);
   LOAD_SYMBOL (hipMemcpyHtoDAsync);
+  LOAD_SYMBOL (hipHostGetDevicePointer);
 
 #ifdef HAVE_GST_GL
   LOAD_SYMBOL (hipGLGetDevices);
@@ -397,6 +402,7 @@ load_cuda_func_table (void)
   LOAD_SYMBOL (cuMemcpyDtoHAsync);
   LOAD_SYMBOL (cuMemcpyHtoD);
   LOAD_SYMBOL (cuMemcpyHtoDAsync);
+  LOAD_SYMBOL (cuMemHostGetDevicePointer);
 
   table->loaded = TRUE;
 }
@@ -1701,4 +1707,18 @@ HipDeviceGetByPCIBusId (GstHipVendor vendor, int *device, const char *pciBusId)
 
   auto cuda_ret = cudart_ftable.cudaDeviceGetByPCIBusId (device, pciBusId);
   return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipHostGetDevicePointer (GstHipVendor vendor, void **devPtr, void *hstPtr,
+    unsigned int flags)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipHostGetDevicePointer (devPtr, hstPtr, flags);
+
+  auto cuda_ret = cuda_ftable.cuMemHostGetDevicePointer ((CUdeviceptr *) devPtr,
+      hstPtr, flags);
+  return hipCUResultTohipError (cuda_ret);
 }

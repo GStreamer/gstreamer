@@ -37,6 +37,7 @@
 #include <gst/hip/gsthipevent.h>
 #include <gst/hip/gsthiploader.h>
 #include <gst/hip/gsthipmemory.h>
+#include <gst/hip/gsthipmemory-host.h>
 #include <gst/hip/gsthiprtc.h>
 #include <gst/hip/gsthipstream.h>
 #include <gst/hip/gsthiputils.h>
