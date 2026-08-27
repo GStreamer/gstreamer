@@ -905,9 +905,23 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
         PROP_QUALITY);
   }
 
+  if (gst_h264_encoder_is_live (encoder)) {
+    /* low latency */
+    gst_h264_encoder_set_preferred_output_delay (encoder, 0);
+  } else {
+    /* experimental best value for VA */
+    gst_h264_encoder_set_preferred_output_delay (encoder, 4);
+  }
+
+  self->level = vk_max_level;
+
   if (gst_vulkan_encoder_is_started (self->encoder)) {
     if (skip_start) {
-      return GST_FLOW_OK;
+      /* if the video info didn't change, don't renegotiate */
+      if (self->in_state
+          && gst_video_info_is_equal (&self->in_state->info, &in_state->info))
+        return GST_FLOW_OK;
+      goto renegotiate;
     } else {
       GST_DEBUG_OBJECT (self, "Restarting vulkan encoder");
       gst_vulkan_encoder_stop (self->encoder);
@@ -1059,24 +1073,15 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  if (gst_h264_encoder_is_live (encoder)) {
-    /* low latency */
-    gst_h264_encoder_set_preferred_output_delay (encoder, 0);
-  } else {
-    /* experimental best value for VA */
-    gst_h264_encoder_set_preferred_output_delay (encoder, 4);
-  }
-
-  self->level = vk_max_level;
-
-  if (self->in_state)
-    gst_video_codec_state_unref (self->in_state);
-  self->in_state = gst_video_codec_state_ref (in_state);
-
+renegotiate:
   self->coded_width = GST_ROUND_UP_N (GST_VIDEO_INFO_WIDTH (in_info),
       vk_caps.encoder.caps.encodeInputPictureGranularity.width);
   self->coded_height = GST_ROUND_UP_N (GST_VIDEO_INFO_HEIGHT (in_info),
       vk_caps.encoder.caps.encodeInputPictureGranularity.height);
+
+  if (self->in_state)
+    gst_video_codec_state_unref (self->in_state);
+  self->in_state = gst_video_codec_state_ref (in_state);
 
   return GST_FLOW_OK;
 }
