@@ -446,3 +446,188 @@ gst_context_new_hip_device (GstHipDevice * device)
 
   return ctx;
 }
+
+static gboolean
+gst_hip_buffer_copy_into_fallback (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  GstVideoFrame in_frame, out_frame;
+  gboolean ret;
+
+  if (!gst_video_frame_map (&in_frame, info, src, GST_MAP_READ)) {
+    GST_ERROR ("Couldn't map src frame");
+    return FALSE;
+  }
+
+  if (!gst_video_frame_map (&out_frame, info, dst, GST_MAP_WRITE)) {
+    GST_ERROR ("Couldn't map dst frame");
+    gst_video_frame_unmap (&in_frame);
+    return FALSE;
+  }
+
+  ret = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return ret;
+}
+
+/**
+ * gst_hip_buffer_copy_into:
+ * @dest: a #GstBuffer
+ * @src: a #GstBuffer
+ * @info: a #GstVideoInfo
+ *
+ * Copies video data from @src into @dest according to @info.
+ *
+ * This function copies only memory contents and does not copy buffer
+ * metadata. Use gst_buffer_copy_into() separately if metadata also needs
+ * to be copied.
+ *
+ * If either @src or @dest contains HIP memory, an optimized copy path is
+ * used when possible.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (dest), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  /* HIP expects single memory buffer */
+  if (gst_buffer_n_memory (src) != 1 || gst_buffer_n_memory (dest) != 1)
+    return gst_hip_buffer_copy_into_fallback (dest, src, info);
+
+  auto in_mem = gst_buffer_peek_memory (src, 0);
+  auto out_mem = gst_buffer_peek_memory (dest, 0);
+
+  auto in_hip = gst_is_hip_memory (in_mem);
+  auto out_hip = gst_is_hip_memory (out_mem);
+
+  if (!in_hip && !out_hip)
+    return gst_hip_buffer_copy_into_fallback (dest, src, info);
+
+  enum CopyType
+  {
+    CopyUnknown,
+    CopyDtoD,
+    CopyDtoH,
+    CopyHtoD,
+  };
+
+  CopyType copy_type = CopyUnknown;
+  GstHipVendor vendor = GST_HIP_VENDOR_UNKNOWN;
+  GstHipStream *stream = nullptr;
+
+  if (in_hip) {
+    auto in_hmem = GST_HIP_MEMORY_CAST (in_mem);
+    stream = gst_hip_memory_get_stream (in_hmem);
+    vendor = gst_hip_device_get_vendor (in_hmem->device);
+    if (!stream)
+      stream = gst_hip_device_get_stream (in_hmem->device);
+
+    if (!out_hip) {
+      copy_type = CopyDtoH;
+    } else {
+      auto out_hmem = GST_HIP_MEMORY_CAST (out_mem);
+      if (gst_hip_device_is_equal (in_hmem->device, out_hmem->device)) {
+        /* in/out same device, DtoD */
+        copy_type = CopyDtoD;
+      } else {
+        /* Copy in device into out staging */
+        copy_type = CopyDtoH;
+      }
+    }
+  } else {
+    auto out_hmem = GST_HIP_MEMORY_CAST (out_mem);
+    stream = gst_hip_memory_get_stream (out_hmem);
+    vendor = gst_hip_device_get_vendor (out_hmem->device);
+    if (!stream)
+      stream = gst_hip_device_get_stream (out_hmem->device);
+
+    copy_type = CopyHtoD;
+  }
+
+  g_assert (copy_type != CopyUnknown);
+
+  GstVideoFrame in_frame, out_frame;
+  GstMapFlags in_map_flags, out_map_flags;
+
+  switch (copy_type) {
+    case CopyDtoD:
+      in_map_flags = GST_MAP_READ_HIP;
+      out_map_flags = GST_MAP_WRITE_HIP;
+      break;
+    case CopyDtoH:
+      in_map_flags = GST_MAP_READ_HIP;
+      out_map_flags = GST_MAP_WRITE;
+      break;
+    case CopyHtoD:
+      in_map_flags = GST_MAP_READ;
+      out_map_flags = GST_MAP_WRITE_HIP;
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
+  }
+
+  if (!gst_video_frame_map (&in_frame, info, src, in_map_flags)) {
+    GST_ERROR ("Couldn't map src frame");
+    return FALSE;
+  }
+
+  if (!gst_video_frame_map (&out_frame, info, dest, out_map_flags)) {
+    GST_ERROR ("Couldn't map dst frame");
+    gst_video_frame_unmap (&in_frame);
+    return FALSE;
+  }
+
+  hipError_t hip_ret = hipSuccess;
+  auto stream_handle = gst_hip_stream_get_handle (stream);
+
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
+    hip_Memcpy2D param = { };
+    param.srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, i);
+
+    param.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
+    param.WidthInBytes = GST_VIDEO_FRAME_COMP_WIDTH (&in_frame, i)
+        * GST_VIDEO_FRAME_COMP_PSTRIDE (&in_frame, i);
+    param.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&in_frame, i);
+
+    if (copy_type == CopyDtoD) {
+      param.srcMemoryType = hipMemoryTypeDevice;
+      param.srcDevice = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, i);
+
+      param.dstMemoryType = hipMemoryTypeDevice;
+      param.dstDevice = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
+    } else if (copy_type == CopyDtoH) {
+      param.srcMemoryType = hipMemoryTypeDevice;
+      param.srcDevice = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, i);
+
+      param.dstMemoryType = hipMemoryTypeHost;
+      param.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
+    } else {
+      param.srcMemoryType = hipMemoryTypeHost;
+      param.srcHost = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, i);
+
+      param.dstMemoryType = hipMemoryTypeDevice;
+      param.dstDevice = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
+    }
+
+    hip_ret = HipMemcpyParam2DAsync (vendor, &param, stream_handle);
+    if (!gst_hip_result (hip_ret, vendor))
+      break;
+  }
+
+  if (hip_ret == hipSuccess)
+    hip_ret = HipStreamSynchronize (vendor, stream_handle);
+
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
+
+  return gst_hip_result (hip_ret, vendor);
+}

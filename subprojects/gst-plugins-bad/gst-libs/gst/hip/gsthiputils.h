@@ -86,5 +86,10 @@ gboolean     gst_hip_handle_context_query   (GstElement * element,
 GST_HIP_API
 GstContext * gst_context_new_hip_device     (GstHipDevice * device);
 
+GST_HIP_API
+gboolean     gst_hip_buffer_copy_into (GstBuffer * dest,
+                                       GstBuffer * src,
+                                       const GstVideoInfo * info);
+
 G_END_DECLS
 

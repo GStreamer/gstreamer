@@ -1185,6 +1185,34 @@ inactive.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="hip_buffer_copy_into" c:identifier="gst_hip_buffer_copy_into" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Copies video data from @src into @dest according to @info.
+
+This function copies only memory contents and does not copy buffer
+metadata. Use gst_buffer_copy_into() separately if metadata also needs
+to be copied.
+
+If either @src or @dest contains HIP memory, an optimized copy path is
+used when possible.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="dest" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="src" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstVideoInfo</doc>
+          <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="hip_ensure_element_data" c:identifier="gst_hip_ensure_element_data" version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Perform the steps necessary for retrieving a #GstHipDevice from the
 surrounding elements or from the application using the #GstContext mechanism.
