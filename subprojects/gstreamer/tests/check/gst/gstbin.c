@@ -1719,11 +1719,21 @@ GST_START_TEST (test_duration_is_max)
   /* irks, duration is reset on basesrc */
   state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
   fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
 
   /* set durations on src */
+  GST_OBJECT_LOCK (src[0]);
   GST_BASE_SRC (src[0])->segment.duration = 1000;
+  GST_OBJECT_UNLOCK (src[0]);
+  GST_OBJECT_LOCK (src[1]);
   GST_BASE_SRC (src[1])->segment.duration = 3000;
+  GST_OBJECT_UNLOCK (src[1]);
+  GST_OBJECT_LOCK (src[2]);
   GST_BASE_SRC (src[2])->segment.duration = 2000;
+  GST_OBJECT_UNLOCK (src[2]);
 
   /* set to playing */
   state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
@@ -1781,11 +1791,21 @@ GST_START_TEST (test_duration_unknown_overrides)
   /* irks, duration is reset on basesrc */
   state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
   fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
 
   /* set durations on src */
+  GST_OBJECT_LOCK (src[0]);
   GST_BASE_SRC (src[0])->segment.duration = GST_CLOCK_TIME_NONE;
+  GST_OBJECT_UNLOCK (src[0]);
+  GST_OBJECT_LOCK (src[1]);
   GST_BASE_SRC (src[1])->segment.duration = 3000;
+  GST_OBJECT_UNLOCK (src[1]);
+  GST_OBJECT_LOCK (src[2]);
   GST_BASE_SRC (src[2])->segment.duration = 2000;
+  GST_OBJECT_UNLOCK (src[2]);
 
   /* set to playing */
   state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
