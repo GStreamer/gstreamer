@@ -979,36 +979,6 @@ gst_hip_memory_copy_decide_allocation (GstBaseTransform * trans,
       query);
 }
 
-static GstFlowReturn
-gst_hip_memory_copy_system_copy (GstHipMemoryCopy * self,
-    GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  auto priv = self->priv;
-  GstVideoFrame in_frame, out_frame;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (!gst_video_frame_map (&in_frame, &priv->info, inbuf, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Couldn't map input frame");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!gst_video_frame_map (&out_frame, &priv->info, outbuf, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Couldn't map output frame");
-    gst_video_frame_unmap (&in_frame);
-    return GST_FLOW_ERROR;
-  }
-
-  if (!gst_video_frame_copy (&out_frame, &in_frame)) {
-    GST_ERROR_OBJECT (self, "Copy failed");
-    ret = GST_FLOW_ERROR;
-  }
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&in_frame);
-
-  return ret;
-}
-
 #ifdef HAVE_GST_CUDA
 static gboolean
 gst_hip_memory_copy_device_copy (GstHipMemoryCopy * self, GstBuffer * inbuf,
@@ -1313,7 +1283,10 @@ gst_hip_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 #endif
 
-  return gst_hip_memory_copy_system_copy (self, inbuf, outbuf);
+  if (!gst_hip_buffer_copy_into (outbuf, inbuf, &priv->info))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 struct _GstHipUpload
