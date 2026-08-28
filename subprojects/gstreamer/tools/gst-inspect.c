@@ -2528,7 +2528,8 @@ main (int argc, char *argv[])
   argv = g_win32_get_command_line ();
 #endif
 
-#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE && \
+    !defined(GST_CHECK_MAIN)
   ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
 #else
   ret = real_main (argc, argv);
