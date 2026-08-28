@@ -43,6 +43,157 @@ GST_START_TEST (test_async_state_change_empty)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstElement *pipeline;
+  GstElement *sink;
+  GstPad *sinkpad;
+  GMutex lock;
+  GCond cond;
+  gboolean stream_locked;
+  gboolean post_reset_time;
+  gboolean message_posted;
+  gboolean do_latency_called;
+  gboolean state_lock_contended;
+  GstClockTime reset_running_time;
+} ResetTimeLockData;
+
+static gboolean
+reset_time_do_latency (G_GNUC_UNUSED GstBin * bin, gpointer user_data)
+{
+  ResetTimeLockData *data = user_data;
+  gboolean state_lock_acquired = GST_STATE_TRYLOCK (data->pipeline);
+
+  if (state_lock_acquired)
+    GST_STATE_UNLOCK (data->pipeline);
+
+  data->do_latency_called = TRUE;
+  data->state_lock_contended = !state_lock_acquired;
+
+  /* Do not run the default handler, whose latency event would eventually
+   * wait for the state lock. */
+  return TRUE;
+}
+
+static gpointer
+post_reset_time_with_stream_lock (gpointer user_data)
+{
+  ResetTimeLockData *data = user_data;
+
+  GST_PAD_STREAM_LOCK (data->sinkpad);
+
+  g_mutex_lock (&data->lock);
+  data->stream_locked = TRUE;
+  g_cond_broadcast (&data->cond);
+  while (!data->post_reset_time)
+    g_cond_wait (&data->cond, &data->lock);
+  g_mutex_unlock (&data->lock);
+
+  gst_element_post_message (data->sink,
+      gst_message_new_reset_time (GST_OBJECT (data->sink),
+          data->reset_running_time));
+
+  g_mutex_lock (&data->lock);
+  data->message_posted = TRUE;
+  g_cond_broadcast (&data->cond);
+  g_mutex_unlock (&data->lock);
+
+  GST_PAD_STREAM_UNLOCK (data->sinkpad);
+
+  return NULL;
+}
+
+/* Check that RESET_TIME updates the base time without running the parent bin's
+ * state transition. Model the lock inversion seen when a streaming thread
+ * posts RESET_TIME while holding a sink-pad stream lock and a state-change
+ * thread holds the pipeline state lock while waiting for that stream lock. The
+ * custom do-latency handler uses trylock to detect the inverse state-lock
+ * contention and suppresses the default handler so the test reports the
+ * condition rather than deadlocking. */
+GST_START_TEST (test_reset_time_during_state_change)
+{
+  ResetTimeLockData data = { 0, };
+  GstElement *pipeline = gst_pipeline_new (NULL);
+  GstElement *src = gst_element_factory_make ("fakesrc", NULL);
+  GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+  GstClock *clock = gst_test_clock_new ();
+  gboolean stream_lock_contended;
+  GstClockTime base_time;
+  gulong signal_id;
+  GThread *thread;
+
+  fail_unless (pipeline && src && sink);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (clock), 100 * GST_SECOND);
+  gst_pipeline_use_clock (GST_PIPELINE (pipeline), clock);
+  g_object_set (src, "is-live", TRUE, NULL);
+  g_object_set (sink, "async", FALSE, "sync", FALSE, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+  fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
+      GST_STATE_CHANGE_FAILURE);
+  fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_FAILURE);
+  fail_unless_equals_uint64 (gst_element_get_base_time (pipeline),
+      100 * GST_SECOND);
+
+  data.pipeline = pipeline;
+  data.sink = sink;
+  data.sinkpad = gst_element_get_static_pad (sink, "sink");
+  data.reset_running_time = 10 * GST_SECOND;
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+
+  signal_id = g_signal_connect (pipeline, "do-latency",
+      G_CALLBACK (reset_time_do_latency), &data);
+  thread = g_thread_new ("reset-time", post_reset_time_with_stream_lock, &data);
+
+  g_mutex_lock (&data.lock);
+  while (!data.stream_locked) {
+    g_printerr ("Waiting for worker to acquire stream lock\n");
+    mark_point ();
+    g_cond_wait (&data.cond, &data.lock);
+  }
+  g_mutex_unlock (&data.lock);
+
+  GST_STATE_LOCK (pipeline);
+  stream_lock_contended = !GST_PAD_STREAM_TRYLOCK (data.sinkpad);
+  if (!stream_lock_contended)
+    GST_PAD_STREAM_UNLOCK (data.sinkpad);
+
+  g_mutex_lock (&data.lock);
+  data.post_reset_time = TRUE;
+  g_cond_broadcast (&data.cond);
+  while (!data.message_posted) {
+    g_printerr ("Waiting for worker to post RESET_TIME\n");
+    mark_point ();
+    g_cond_wait (&data.cond, &data.lock);
+  }
+  g_mutex_unlock (&data.lock);
+  GST_STATE_UNLOCK (pipeline);
+
+  g_thread_join (thread);
+  g_signal_handler_disconnect (pipeline, signal_id);
+  base_time = gst_element_get_base_time (pipeline);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (data.sinkpad);
+  gst_object_unref (pipeline);
+  gst_object_unref (clock);
+  g_cond_clear (&data.cond);
+  g_mutex_clear (&data.lock);
+
+  fail_unless (data.stream_locked, "Worker did not acquire the stream lock");
+  fail_unless (stream_lock_contended,
+      "Stream lock was unexpectedly available to the state-change thread");
+  fail_unless (data.message_posted, "RESET_TIME message was not posted");
+  fail_unless_equals_uint64 (base_time, 90 * GST_SECOND);
+  fail_if (data.do_latency_called && data.state_lock_contended,
+      "RESET_TIME synchronously recalculated latency while another thread "
+      "held the pipeline state lock");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_async_state_change_fake_ready)
 {
   GstPipeline *pipeline;
@@ -748,6 +899,7 @@ gst_pipeline_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_async_state_change_empty);
+  tcase_add_test (tc_chain, test_reset_time_during_state_change);
   tcase_add_test (tc_chain, test_async_state_change_fake_ready);
   tcase_add_test (tc_chain, test_async_state_change_fake);
   tcase_add_test (tc_chain, test_get_bus);
