@@ -1,5 +1,6 @@
 onnx_sources = [
   'gstonnx.c',
+  'gstonnx-utils.c',
   'gstonnxinference.c',
 ]
 

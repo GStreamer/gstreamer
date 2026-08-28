@@ -105,6 +105,7 @@
 #endif
 
 #include "gstonnx-config.h"
+#include "gstonnx-utils.h"
 #include "gstonnxinference.h"
 
 #include <gst/gst.h>
@@ -113,12 +114,6 @@
 #include <gst/analytics/analytics.h>
 
 #include <onnxruntime_c_api.h>
-
-#ifdef G_OS_WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
 
 #if HAVE_WINML
 #include "gstonnx-winml.h"
@@ -679,7 +674,13 @@ gst_onnx_inference_load_library (GstOnnxInference * self)
     goto done;
   }
 #ifdef G_OS_WIN32
-  onnxruntime_module = LoadLibraryA ("onnxruntime.dll");
+  /* Pick the user-specified onnxruntime */
+  onnxruntime_module = gst_onnx_find_onnxrt ();
+
+  /* Fallback: search in the usual paths */
+  if (!onnxruntime_module)
+    onnxruntime_module = LoadLibraryA ("onnxruntime.dll");
+
   if (!onnxruntime_module) {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Could not load onnxruntime.dll (error 0x%lx)", GetLastError ()));
@@ -689,10 +690,15 @@ gst_onnx_inference_load_library (GstOnnxInference * self)
   get_api_base = (GstOrtGetApiBaseFunc) GetProcAddress (onnxruntime_module,
       "OrtGetApiBase");
 #else
+  /* Pick the user-specified onnxruntime */
+  onnxruntime_module = gst_onnx_find_onnxrt ();
+
+  /* Fallback: search in the usual paths */
+  if (!onnxruntime_module)
 #ifdef __APPLE__
-  onnxruntime_module = dlopen ("libonnxruntime.1.dylib", RTLD_NOW | RTLD_LOCAL);
+    onnxruntime_module = dlopen ("libonnxruntime.1.dylib", GST_DLOPEN_OPTS);
 #else
-  onnxruntime_module = dlopen ("libonnxruntime.so.1", RTLD_NOW | RTLD_LOCAL);
+    onnxruntime_module = dlopen ("libonnxruntime.so.1", GST_DLOPEN_OPTS);
 #endif
 
   if (!onnxruntime_module) {
