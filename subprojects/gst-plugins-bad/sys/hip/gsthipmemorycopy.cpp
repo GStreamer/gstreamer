@@ -588,6 +588,7 @@ static void
 gst_hip_memory_copy_before_transform (GstBaseTransform * trans,
     GstBuffer * buffer)
 {
+#ifdef HAVE_GST_CUDA
   auto self = GST_HIP_MEMORY_COPY (trans);
   auto priv = self->priv;
 
@@ -678,6 +679,7 @@ gst_hip_memory_copy_before_transform (GstBaseTransform * trans,
     gst_hip_memory_copy_set_caps (trans, priv->in_caps, priv->out_caps);
     gst_base_transform_reconfigure_src (trans);
   }
+#endif
 }
 
 static GstCaps *
