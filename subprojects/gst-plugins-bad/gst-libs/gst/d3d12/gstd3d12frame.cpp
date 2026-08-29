@@ -287,6 +287,18 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
   frame->frame_flags = (GstVideoFrameFlags) frame_flags;
   frame->d3d12_flags = d3d12_flags;
 
+  auto meta = gst_buffer_get_video_meta (buffer);
+  if (meta) {
+    /* Copy the memory layout from GstVideoMeta for buffer resources,
+     * the resource desc of buffer resource cannot represent the memory layout */
+    frame->info.width = meta->width;
+    frame->info.height = meta->height;
+    for (guint i = 0; i < meta->n_planes; i++) {
+      frame->info.offset[i] = meta->offset[i];
+      frame->info.stride[i] = meta->stride[i];
+    }
+  }
+
   return TRUE;
 }
 
@@ -336,6 +348,39 @@ gst_d3d12_frame_build_copy_args (GstD3D12Frame * dest,
       dest->subresource_index[plane]);
   args->src = CD3DX12_TEXTURE_COPY_LOCATION (src->data[plane],
       src->subresource_index[plane]);
+}
+
+static gboolean
+gst_d3d12_frame_build_copy_buffer_args (GstD3D12Frame * dest,
+    const GstD3D12Frame * src, guint plane, GstD3D12CopyBuffer2DArgs * args)
+{
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+
+  gst_video_format_info_component (src->info.finfo, plane, comp);
+
+  auto src_stride = GST_VIDEO_INFO_PLANE_STRIDE (&src->info, plane);
+  auto dst_stride = GST_VIDEO_INFO_PLANE_STRIDE (&dest->info, plane);
+  if (src_stride <= 0 || dst_stride <= 0)
+    return FALSE;
+
+  auto src_width = GST_VIDEO_INFO_COMP_WIDTH (&src->info, comp[0]);
+  auto dst_width = GST_VIDEO_INFO_COMP_WIDTH (&dest->info, comp[0]);
+  auto src_height = GST_VIDEO_INFO_COMP_HEIGHT (&src->info, comp[0]);
+  auto dst_height = GST_VIDEO_INFO_COMP_HEIGHT (&dest->info, comp[0]);
+  auto pstride = GST_VIDEO_INFO_COMP_PSTRIDE (&src->info, comp[0]);
+
+  args->src = src->data[plane];
+  args->src_offset = GST_VIDEO_INFO_PLANE_OFFSET (&src->info, plane);
+  args->src_stride = src_stride;
+
+  args->dst = dest->data[plane];
+  args->dst_offset = GST_VIDEO_INFO_PLANE_OFFSET (&dest->info, plane);
+  args->dst_stride = dst_stride;
+
+  args->width_in_bytes = MIN (src_width, dst_width) * pstride;
+  args->height = MIN (src_height, dst_height);
+
+  return TRUE;
 }
 
 /**
@@ -399,12 +444,41 @@ gst_d3d12_frame_copy_full (GstD3D12Frame * dest, const GstD3D12Frame * src,
     return FALSE;
   }
 
-  GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
-  D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
+  auto num_planes = GST_VIDEO_INFO_N_PLANES (&dest->info);
+  auto dest_desc = GetDesc (dest->data[0]);
+  auto src_desc = GetDesc (src->data[0]);
 
-  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&dest->info); i++) {
-    gst_d3d12_frame_build_copy_args (dest, src, i, &args[i], &src_box[i]);
-    args[i].src_box = &src_box[i];
+  if (dest_desc.Dimension != src_desc.Dimension) {
+    GST_ERROR ("Copy between different resource dimensions is not supported");
+    return FALSE;
+  }
+
+  auto dimension = dest_desc.Dimension;
+  for (guint i = 0; i < num_planes; i++) {
+    if (!dest->data[i] || !src->data[i]) {
+      GST_ERROR ("Missing resource for plane %u", i);
+      return FALSE;
+    }
+
+    dest_desc = GetDesc (dest->data[i]);
+    src_desc = GetDesc (src->data[i]);
+
+    if (dest_desc.Dimension != dimension || src_desc.Dimension != dimension) {
+      GST_ERROR ("Mixed resource dimensions are not supported");
+      return FALSE;
+    }
+  }
+
+  if (dimension != D3D12_RESOURCE_DIMENSION_BUFFER &&
+      dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D) {
+    GST_ERROR ("Unsupported resource dimension %d", dimension);
+    return FALSE;
+  }
+
+  if (dimension == D3D12_RESOURCE_DIMENSION_BUFFER &&
+      queue_type == D3D12_COMMAND_LIST_TYPE_COPY) {
+    GST_ERROR ("Buffer 2D copy cannot be performed on copy queue");
+    return FALSE;
   }
 
   GstD3D12FenceData *fence_data;
@@ -427,11 +501,36 @@ gst_d3d12_frame_copy_full (GstD3D12Frame * dest, const GstD3D12Frame * src,
     }
   }
 
-  auto ret = gst_d3d12_device_copy_texture_region (dest->device,
-      GST_VIDEO_INFO_N_PLANES (&dest->info), args, fence_data,
-      (guint) fences_to_wait.size (), fences_to_wait.data (),
-      fence_values_to_wait.data (), queue_type,
-      fence_value);
+  gboolean ret;
+  if (dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    GstD3D12CopyBuffer2DArgs args[GST_VIDEO_MAX_PLANES] = { };
+
+    for (guint i = 0; i < num_planes; i++) {
+      if (!gst_d3d12_frame_build_copy_buffer_args (dest, src, i, &args[i])) {
+        GST_ERROR ("Couldn't build buffer copy arguments");
+        gst_d3d12_fence_data_unref (fence_data);
+        return FALSE;
+      }
+    }
+
+    ret = gst_d3d12_device_copy_buffer_2d (dest->device,
+        num_planes, args, fence_data,
+        (guint) fences_to_wait.size (), fences_to_wait.data (),
+        fence_values_to_wait.data (), queue_type, fence_value);
+  } else {
+    GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
+    D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
+
+    for (guint i = 0; i < num_planes; i++) {
+      gst_d3d12_frame_build_copy_args (dest, src, i, &args[i], &src_box[i]);
+      args[i].src_box = &src_box[i];
+    }
+
+    ret = gst_d3d12_device_copy_texture_region (dest->device,
+        num_planes, args, fence_data,
+        (guint) fences_to_wait.size (), fences_to_wait.data (),
+        fence_values_to_wait.data (), queue_type, fence_value);
+  }
 
   if (!ret)
     return FALSE;
@@ -508,19 +607,37 @@ gst_d3d12_frame_copy_plane_full (GstD3D12Frame * dest,
     return FALSE;
   }
 
-  GstD3D12CopyTextureRegionArgs args = { };
-  D3D12_BOX src_box = { };
+  if (!dest->data[plane] || !src->data[plane]) {
+    GST_ERROR ("Missing resource for plane %u", plane);
+    return FALSE;
+  }
 
-  gst_d3d12_frame_build_copy_args (dest, src, plane, &args, &src_box);
-  args.src_box = &src_box;
+  auto dest_desc = GetDesc (dest->data[plane]);
+  auto src_desc = GetDesc (src->data[plane]);
+
+  if (dest_desc.Dimension != src_desc.Dimension) {
+    GST_ERROR ("Copy between different resource dimensions is not supported");
+    return FALSE;
+  }
+
+  if (dest_desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER &&
+      dest_desc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D) {
+    GST_ERROR ("Unsupported resource dimension %d", dest_desc.Dimension);
+    return FALSE;
+  }
+
+  if (dest_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER &&
+      queue_type == D3D12_COMMAND_LIST_TYPE_COPY) {
+    GST_ERROR ("Buffer 2D copy cannot be performed on copy queue");
+    return FALSE;
+  }
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_device_acquire_fence_data (dest->device, &fence_data);
   gst_d3d12_fence_data_push (fence_data,
       FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src->buffer)));
 
-  auto cq = gst_d3d12_device_get_cmd_queue (src->device,
-      queue_type);
+  auto cq = gst_d3d12_device_get_cmd_queue (src->device, queue_type);
   auto cq_handle = gst_d3d12_cmd_queue_get_handle (cq);
 
   if (src->fence[plane].fence)
@@ -529,11 +646,32 @@ gst_d3d12_frame_copy_plane_full (GstD3D12Frame * dest,
   if (dest->fence[plane].fence)
     cq_handle->Wait (dest->fence[plane].fence, dest->fence[plane].fence_value);
 
-  auto ret = gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
-      fence_data, 0, nullptr, nullptr, queue_type,
-      fence_value);
+  gboolean ret;
+
+  if (dest_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    GstD3D12CopyBuffer2DArgs args = { };
+
+    if (!gst_d3d12_frame_build_copy_buffer_args (dest, src, plane, &args)) {
+      GST_ERROR ("Couldn't build buffer copy arguments");
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+    }
+
+    ret = gst_d3d12_device_copy_buffer_2d (dest->device, 1, &args,
+        fence_data, 0, nullptr, nullptr, queue_type, fence_value);
+  } else {
+    GstD3D12CopyTextureRegionArgs args = { };
+    D3D12_BOX src_box = { };
+
+    gst_d3d12_frame_build_copy_args (dest, src, plane, &args, &src_box);
+    args.src_box = &src_box;
+
+    ret = gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
+        fence_data, 0, nullptr, nullptr, queue_type, fence_value);
+  }
+
   if (!ret)
-    return ret;
+    return FALSE;
 
   if (fence) {
     *fence = gst_d3d12_device_get_fence_handle (dest->device, queue_type);

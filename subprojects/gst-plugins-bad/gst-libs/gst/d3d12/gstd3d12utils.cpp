@@ -602,6 +602,39 @@ is_d3d12_buffer (GstBuffer * buffer)
 }
 
 static gboolean
+gst_d3d12_buffer_layout_is_identical (const GstD3D12Frame * frame,
+    GstBuffer * staging, const GstVideoInfo * info)
+{
+  auto staging_info = *info;
+  auto meta = gst_buffer_get_video_meta (staging);
+
+  if (meta) {
+    staging_info.width = meta->width;
+    staging_info.height = meta->height;
+
+    for (guint i = 0; i < meta->n_planes; i++) {
+      staging_info.offset[i] = meta->offset[i];
+      staging_info.stride[i] = meta->stride[i];
+    }
+  }
+
+  if (frame->info.width != staging_info.width ||
+      frame->info.height != staging_info.height) {
+    return FALSE;
+  }
+
+  auto n_planes = GST_VIDEO_INFO_N_PLANES (info);
+  for (guint i = 0; i < n_planes; i++) {
+    if (frame->info.offset[i] != staging_info.offset[i] ||
+        frame->info.stride[i] != staging_info.stride[i]) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 try_d3d12_to_staging_copy (GstBuffer * dst, GstBuffer * src,
     const GstVideoInfo * info, D3D12_COMMAND_LIST_TYPE queue_type)
 {
@@ -625,35 +658,20 @@ try_d3d12_to_staging_copy (GstBuffer * dst, GstBuffer * src,
     return FALSE;
   }
 
+  auto src_desc = GetDesc (frame.data[0]);
+  if (src_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER &&
+      !gst_d3d12_buffer_layout_is_identical (&frame, dst, info)) {
+    gst_d3d12_frame_unmap (&frame);
+    return FALSE;
+  }
+
   GstMapInfo map;
   if (!gst_memory_map (GST_MEMORY_CAST (dmem), &map, GST_MAP_WRITE_D3D12)) {
     gst_d3d12_frame_unmap (&frame);
     return FALSE;
   }
 
-  GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
-  D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
-  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES] = { };
   auto resource = (ID3D12Resource *) map.data;
-
-  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    auto sbox = &src_box[i];
-    gst_d3d12_staging_memory_get_layout (dmem, i, &layout[i]);
-
-    sbox->left = 0;
-    sbox->top = 0;
-    sbox->right = MIN (layout[i].Footprint.Width,
-        (UINT) frame.plane_rect[i].right);
-    sbox->bottom = MIN (layout[i].Footprint.Height,
-        (UINT) frame.plane_rect[i].bottom);
-    sbox->front = 0;
-    sbox->back = 1;
-
-    args[i].src = CD3DX12_TEXTURE_COPY_LOCATION (frame.data[i],
-        frame.subresource_index[i]);
-    args[i].dst = CD3DX12_TEXTURE_COPY_LOCATION (resource, layout[i]);
-    args[i].src_box = &src_box[i];
-  }
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_device_acquire_fence_data (device, &fence_data);
@@ -671,11 +689,46 @@ try_d3d12_to_staging_copy (GstBuffer * dst, GstBuffer * src,
   }
 
   guint64 fence_val = 0;
-  auto ret = gst_d3d12_device_copy_texture_region (device,
-      GST_VIDEO_INFO_N_PLANES (info), args, fence_data,
-      (guint) fences_to_wait.size (), fences_to_wait.data (),
-      fence_values_to_wait.data (), queue_type,
-      &fence_val);
+  gboolean ret;
+
+  if (src_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    auto dst_desc = GetDesc (resource);
+    guint64 buffer_copy_size = MIN (src_desc.Width, dst_desc.Width);
+
+    ret = gst_d3d12_device_copy_buffer_region (device,
+        resource, 0, frame.data[0], 0, buffer_copy_size,
+        fence_data, (guint) fences_to_wait.size (),
+        fences_to_wait.data (), fence_values_to_wait.data (),
+        queue_type, &fence_val);
+  } else {
+    GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
+    D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES] = { };
+
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      auto sbox = &src_box[i];
+      gst_d3d12_staging_memory_get_layout (dmem, i, &layout[i]);
+
+      sbox->left = 0;
+      sbox->top = 0;
+      sbox->right = MIN (layout[i].Footprint.Width,
+          (UINT) frame.plane_rect[i].right);
+      sbox->bottom = MIN (layout[i].Footprint.Height,
+          (UINT) frame.plane_rect[i].bottom);
+      sbox->front = 0;
+      sbox->back = 1;
+
+      args[i].src = CD3DX12_TEXTURE_COPY_LOCATION (frame.data[i],
+          frame.subresource_index[i]);
+      args[i].dst = CD3DX12_TEXTURE_COPY_LOCATION (resource, layout[i]);
+      args[i].src_box = sbox;
+    }
+
+    ret = gst_d3d12_device_copy_texture_region (device,
+        GST_VIDEO_INFO_N_PLANES (info), args, fence_data,
+        (guint) fences_to_wait.size (), fences_to_wait.data (),
+        fence_values_to_wait.data (), queue_type, &fence_val);
+  }
 
   gst_memory_unmap (GST_MEMORY_CAST (dmem), &map);
   gst_d3d12_frame_unmap (&frame);
@@ -712,36 +765,21 @@ try_staging_to_d3d12_copy (GstBuffer * dst, GstBuffer * src,
     return FALSE;
   }
 
+  auto dst_desc = GetDesc (frame.data[0]);
+
+  if (dst_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER &&
+      !gst_d3d12_buffer_layout_is_identical (&frame, src, info)) {
+    gst_d3d12_frame_unmap (&frame);
+    return FALSE;
+  }
+
   GstMapInfo map;
   if (!gst_memory_map (GST_MEMORY_CAST (dmem), &map, GST_MAP_READ_D3D12)) {
     gst_d3d12_frame_unmap (&frame);
     return FALSE;
   }
 
-  GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
-  D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
-  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES] = { };
-
   auto resource = (ID3D12Resource *) map.data;
-
-  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    auto sbox = &src_box[i];
-    gst_d3d12_staging_memory_get_layout (dmem, i, &layout[i]);
-
-    sbox->left = 0;
-    sbox->top = 0;
-    sbox->right = MIN (layout[i].Footprint.Width,
-        (UINT) frame.plane_rect[i].right);
-    sbox->bottom = MIN (layout[i].Footprint.Height,
-        (UINT) frame.plane_rect[i].bottom);
-    sbox->front = 0;
-    sbox->back = 1;
-
-    args[i].src = CD3DX12_TEXTURE_COPY_LOCATION (resource, layout[i]);
-    args[i].dst = CD3DX12_TEXTURE_COPY_LOCATION (frame.data[i],
-        frame.subresource_index[i]);
-    args[i].src_box = &src_box[i];
-  }
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_device_acquire_fence_data (device, &fence_data);
@@ -759,11 +797,45 @@ try_staging_to_d3d12_copy (GstBuffer * dst, GstBuffer * src,
   }
 
   guint64 fence_val = 0;
-  auto ret = gst_d3d12_device_copy_texture_region (device,
-      GST_VIDEO_INFO_N_PLANES (info), args, fence_data,
-      (guint) fences_to_wait.size (), fences_to_wait.data (),
-      fence_values_to_wait.data (), queue_type,
-      &fence_val);
+  gboolean ret;
+
+  if (dst_desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    auto src_desc = GetDesc (resource);
+    guint64 buffer_copy_size = MIN (src_desc.Width, dst_desc.Width);
+
+    ret = gst_d3d12_device_copy_buffer_region (device,
+        frame.data[0], 0, resource, 0, buffer_copy_size,
+        fence_data, (guint) fences_to_wait.size (), fences_to_wait.data (),
+        fence_values_to_wait.data (), queue_type, &fence_val);
+  } else {
+    GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
+    D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES] = { };
+
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      auto sbox = &src_box[i];
+      gst_d3d12_staging_memory_get_layout (dmem, i, &layout[i]);
+
+      sbox->left = 0;
+      sbox->top = 0;
+      sbox->right = MIN (layout[i].Footprint.Width,
+          (UINT) frame.plane_rect[i].right);
+      sbox->bottom = MIN (layout[i].Footprint.Height,
+          (UINT) frame.plane_rect[i].bottom);
+      sbox->front = 0;
+      sbox->back = 1;
+
+      args[i].src = CD3DX12_TEXTURE_COPY_LOCATION (resource, layout[i]);
+      args[i].dst = CD3DX12_TEXTURE_COPY_LOCATION (frame.data[i],
+          frame.subresource_index[i]);
+      args[i].src_box = &src_box[i];
+    }
+
+    ret = gst_d3d12_device_copy_texture_region (device,
+        GST_VIDEO_INFO_N_PLANES (info), args, fence_data,
+        (guint) fences_to_wait.size (), fences_to_wait.data (),
+        fence_values_to_wait.data (), queue_type, &fence_val);
+  }
 
   gst_memory_unmap (GST_MEMORY_CAST (dmem), &map);
   gst_d3d12_frame_unmap (&frame);
