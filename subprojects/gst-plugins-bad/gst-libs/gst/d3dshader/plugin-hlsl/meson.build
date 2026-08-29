@@ -35,6 +35,8 @@ hlsl_sources = [
   ['CSMain_nv12_to_r8_sample', 'cs'],
   ['CSMain_p010_to_a420_10_load', 'cs'],
   ['CSMain_p010_to_a420_10_sample', 'cs'],
+  ['CSMain_buffer_copy_2d', 'cs'],
+  ['CSMain_buffer_copy_2d_unaligned', 'cs'],
 ]
 
 shader_model = '5_0'

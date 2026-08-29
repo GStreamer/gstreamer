@@ -55,3 +55,5 @@
 #include "CSMain_nv12_to_r8_sample.hlsl"
 #include "CSMain_p010_to_a420_10_load.hlsl"
 #include "CSMain_p010_to_a420_10_sample.hlsl"
+#include "CSMain_buffer_copy_2d.hlsl"
+#include "CSMain_buffer_copy_2d_unaligned.hlsl"

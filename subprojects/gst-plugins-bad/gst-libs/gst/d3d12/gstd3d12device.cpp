@@ -150,6 +150,7 @@ struct DeviceInner
 
     gst_clear_object (&fence_data_pool);
     gst_clear_object (&rtv_heap_pool);
+    gst_clear_object (&srv_heap_pool);
 
     gamma_dec_lut.clear();
     gamma_enc_lut.clear();
@@ -157,6 +158,9 @@ struct DeviceInner
     gamma_lut_pso = nullptr;
     gamma_lut_rs = nullptr;
     mipmap_cache.clear ();
+    copy_2d_pso = nullptr;
+    copy_2d_unaligned_pso = nullptr;
+    copy_2d_rs = nullptr;
 
     if (adapter3) {
       adapter3->UnregisterVideoMemoryBudgetChangeNotification (budget_change_cb_cookie);
@@ -295,8 +299,15 @@ struct DeviceInner
   std::unordered_map<DWORD, ComPtr<ID3D12Resource>> gamma_dec_lut;
   std::unordered_map<DWORD, ComPtr<ID3D12Resource>> gamma_enc_lut;
   GstD3D12DescHeapPool *rtv_heap_pool = nullptr;
+  GstD3D12DescHeapPool *srv_heap_pool = nullptr;
+
+  /* PSO for gst_d3d12_device_copy_buffer_2d */
+  ComPtr<ID3D12RootSignature> copy_2d_rs;
+  ComPtr<ID3D12PipelineState> copy_2d_pso;
+  ComPtr<ID3D12PipelineState> copy_2d_unaligned_pso;
 
   guint rtv_inc_size;
+  guint srv_inc_size;
 
   guint adapter_index = 0;
   guint device_id = 0;
@@ -1491,6 +1502,9 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 
   priv->rtv_inc_size =
       device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+  priv->srv_inc_size =
+      device->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
   priv->fence_data_pool = gst_d3d12_fence_data_pool_new ();
 
@@ -1571,6 +1585,18 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     priv->rtv_heap_pool = gst_d3d12_desc_heap_pool_new (device.Get (),
         &rtv_desc);
     GST_OBJECT_FLAG_SET (priv->rtv_heap_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  }
+
+  {
+    D3D12_DESCRIPTOR_HEAP_DESC srv_desc = { };
+    srv_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    /* SRV/UAV for each planes  */
+    srv_desc.NumDescriptors = 2 * 4;
+    srv_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    priv->srv_heap_pool = gst_d3d12_desc_heap_pool_new (device.Get (),
+        &srv_desc);
+    GST_OBJECT_FLAG_SET (priv->srv_heap_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   }
 
   priv->device.As (&priv->device3);
@@ -2140,6 +2166,386 @@ gst_d3d12_device_copy_buffer_region (GstD3D12Device * device,
   auto ret = gst_d3d12_result (hr, device);
 
   /* We can release command list since command list pool will hold it */
+  gst_d3d12_cmd_list_unref (gst_cl);
+
+  if (ret) {
+    gst_d3d12_cmd_queue_set_notify (queue, fence_val, fence_data,
+        (GDestroyNotify) gst_d3d12_fence_data_unref);
+  } else {
+    gst_d3d12_fence_data_unref (fence_data);
+  }
+
+  if (fence_value)
+    *fence_value = fence_val;
+
+  return ret;
+}
+
+static HRESULT
+gst_d3d12_device_copy_buffer_get_rs_blob (GstD3D12Device * device,
+    ID3DBlob ** blob)
+{
+  static ID3DBlob *rs_blob = nullptr;
+  static HRESULT hr = S_OK;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC desc = { };
+    CD3DX12_ROOT_PARAMETER root_params[2];
+    CD3DX12_DESCRIPTOR_RANGE ranges[2];
+
+    root_params[0].InitAsConstants (8, 0);
+
+    ranges[0].Init (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+    ranges[1].Init (D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+    root_params[1].InitAsDescriptorTable (2, ranges);
+
+    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (desc,
+        G_N_ELEMENTS (root_params), root_params, 0, nullptr,
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
+
+    ComPtr < ID3DBlob > error_blob;
+    hr = D3DX12SerializeVersionedRootSignature (&desc,
+        D3D_ROOT_SIGNATURE_VERSION_1_0, &rs_blob, &error_blob);
+    if (!gst_d3d12_result (hr, device)) {
+      const gchar *error_msg = nullptr;
+      if (error_blob)
+        error_msg = (const gchar *) error_blob->GetBufferPointer ();
+
+      GST_ERROR_OBJECT (device,
+          "Couldn't serialize root signature, hr: 0x%x, error detail: %s",
+          (guint) hr, GST_STR_NULL (error_msg));
+    }
+  } GST_D3D12_CALL_ONCE_END;
+
+  if (rs_blob) {
+    *blob = rs_blob;
+    rs_blob->AddRef ();
+  }
+
+  return hr;
+}
+
+static gboolean
+gst_d3d12_device_ensure_copy_buffer_2d_pso (GstD3D12Device * self)
+{
+  auto & priv = self->priv->inner;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->copy_2d_pso && priv->copy_2d_unaligned_pso)
+    return TRUE;
+
+  auto device = gst_d3d12_device_get_device_handle (self);
+  HRESULT hr;
+  if (!priv->copy_2d_rs) {
+    ComPtr < ID3DBlob > rs_blob;
+    hr = gst_d3d12_device_copy_buffer_get_rs_blob (self, &rs_blob);
+    if (!gst_d3d12_result (hr, self)) {
+      GST_ERROR_OBJECT (self, "Couldn't get RS");
+      return FALSE;
+    }
+
+    hr = device->CreateRootSignature (0,
+        rs_blob->GetBufferPointer (), rs_blob->GetBufferSize (),
+        IID_PPV_ARGS (&priv->copy_2d_rs));
+    if (!gst_d3d12_result (hr, self)) {
+      GST_ERROR_OBJECT (self, "Couldn't create root signature");
+      return FALSE;
+    }
+  }
+
+  if (!priv->copy_2d_pso) {
+    GstD3DShaderByteCode bytecode = { };
+    if (!gst_d3d_plugin_shader_get_cs_blob (GST_D3D_PLUGIN_CS_BUFFER_COPY_2D,
+            GST_D3D_SM_5_0, &bytecode)) {
+      GST_ERROR_OBJECT (self, "Couldn't compile copy buffer 2D shader");
+      return FALSE;
+    }
+
+    D3D12_COMPUTE_PIPELINE_STATE_DESC pso_desc = { };
+    pso_desc.pRootSignature = priv->copy_2d_rs.Get ();
+    pso_desc.CS.pShaderBytecode = bytecode.byte_code;
+    pso_desc.CS.BytecodeLength = bytecode.byte_code_len;
+
+    hr = device->CreateComputePipelineState (&pso_desc,
+        IID_PPV_ARGS (&priv->copy_2d_pso));
+    if (!gst_d3d12_result (hr, self)) {
+      GST_ERROR_OBJECT (self, "Couldn't create compute pipeline state");
+      return FALSE;
+    }
+  }
+
+  if (!priv->copy_2d_unaligned_pso) {
+    GstD3DShaderByteCode bytecode = { };
+    if (!gst_d3d_plugin_shader_get_cs_blob
+        (GST_D3D_PLUGIN_CS_BUFFER_COPY_2D_UNALIGNED, GST_D3D_SM_5_0,
+            &bytecode)) {
+      GST_ERROR_OBJECT (self, "Couldn't compile copy buffer 2D shader");
+      return FALSE;
+    }
+
+    D3D12_COMPUTE_PIPELINE_STATE_DESC pso_desc = { };
+    pso_desc.pRootSignature = priv->copy_2d_rs.Get ();
+    pso_desc.CS.pShaderBytecode = bytecode.byte_code;
+    pso_desc.CS.BytecodeLength = bytecode.byte_code_len;
+
+    hr = device->CreateComputePipelineState (&pso_desc,
+        IID_PPV_ARGS (&priv->copy_2d_unaligned_pso));
+    if (!gst_d3d12_result (hr, self)) {
+      GST_ERROR_OBJECT (self, "Couldn't create compute pipeline state");
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_device_copy_buffer_2d (GstD3D12Device * device, guint num_args,
+    const GstD3D12CopyBuffer2DArgs * args, GstD3D12FenceData * fence_data,
+    guint num_fences_to_wait, ID3D12Fence ** fences_to_wait,
+    const guint64 * fence_values_to_wait, D3D12_COMMAND_LIST_TYPE command_type,
+    guint64 * fence_value)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (num_args > 0, FALSE);
+  g_return_val_if_fail (num_args <= 4, FALSE);
+  g_return_val_if_fail (args, FALSE);
+
+  HRESULT hr;
+  auto & priv = device->priv->inner;
+  GstD3D12CmdAllocPool *ca_pool;
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  GstD3D12CmdListPool *cl_pool;
+  GstD3D12CmdList *gst_cl = nullptr;
+  GstD3D12CmdQueue *queue = nullptr;
+  guint64 fence_val = 0;
+
+  switch (command_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      ca_pool = priv->direct_ca_pool;
+      cl_pool = priv->direct_cl_pool;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+      queue = priv->compute_queue;
+      ca_pool = priv->compute_ca_pool;
+      cl_pool = priv->compute_cl_pool;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported command list type %d",
+          command_type);
+      return FALSE;
+  }
+
+  if (!gst_d3d12_device_ensure_copy_buffer_2d_pso (device)) {
+    GST_ERROR_OBJECT (device, "Couldn't prepare PSO");
+    return FALSE;
+  }
+
+  if (!fence_data)
+    gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+
+  gst_d3d12_cmd_alloc_pool_acquire (ca_pool, &gst_ca);
+  if (!gst_ca) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
+  gst_d3d12_cmd_list_pool_acquire (cl_pool, ca, &gst_cl);
+
+  if (!gst_cl) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command list");
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  ComPtr < ID3D12CommandList > cl_base;
+  ComPtr < ID3D12GraphicsCommandList > cl;
+
+  cl_base = gst_d3d12_cmd_list_get_handle (gst_cl);
+  cl_base.As (&cl);
+
+  GstD3D12DescHeap *desc_heap = nullptr;
+  gst_d3d12_desc_heap_pool_acquire (priv->srv_heap_pool, &desc_heap);
+  if (!desc_heap) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire descriptor heap");
+    gst_d3d12_cmd_list_unref (gst_cl);
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (desc_heap));
+
+  auto d3d_device = gst_d3d12_device_get_device_handle (device);
+  auto desc_handle = gst_d3d12_desc_heap_get_handle (desc_heap);
+
+  auto cpu_handle =
+      CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+      (desc_handle));
+  auto gpu_handle =
+      CD3DX12_GPU_DESCRIPTOR_HANDLE (GetGPUDescriptorHandleForHeapStart
+      (desc_handle));
+
+  cl->SetComputeRootSignature (priv->copy_2d_rs.Get ());
+
+  ID3D12DescriptorHeap *heaps[] = { desc_handle };
+  cl->SetDescriptorHeaps (1, heaps);
+
+  ID3D12PipelineState *current_pso = nullptr;
+
+  for (guint i = 0; i < num_args; i++) {
+    const auto & arg = args[i];
+
+    if (!arg.src || !arg.dst || !arg.width_in_bytes || !arg.height ||
+        arg.width_in_bytes > arg.src_stride ||
+        arg.width_in_bytes > arg.dst_stride) {
+      GST_ERROR_OBJECT (device, "Invalid buffer layout");
+      gst_d3d12_cmd_list_unref (gst_cl);
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+    }
+
+    auto src_desc = GetDesc (arg.src);
+    auto dst_desc = GetDesc (arg.dst);
+
+    if (src_desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER ||
+        dst_desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER) {
+      GST_ERROR_OBJECT (device, "Resource is not a buffer");
+      gst_d3d12_cmd_list_unref (gst_cl);
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+    }
+
+    gboolean is_aligned = !(arg.src_offset & 3) && !(arg.dst_offset & 3) &&
+        !(arg.src_stride & 3) && !(arg.dst_stride & 3);
+
+    guint64 src_base;
+    guint64 dst_base;
+    guint src_offset;
+    guint dst_offset;
+    ID3D12PipelineState *pso;
+
+    if (is_aligned) {
+      src_base = arg.src_offset;
+      dst_base = arg.dst_offset;
+      src_offset = 0;
+      dst_offset = 0;
+      pso = priv->copy_2d_pso.Get ();
+    } else {
+      src_base = arg.src_offset & ~3ull;
+      dst_base = arg.dst_offset & ~3ull;
+      src_offset = (guint) (arg.src_offset - src_base);
+      dst_offset = (guint) (arg.dst_offset - dst_base);
+      pso = priv->copy_2d_unaligned_pso.Get ();
+    }
+
+    if (pso != current_pso) {
+      cl->SetPipelineState (pso);
+      current_pso = pso;
+    }
+
+    guint64 src_end;
+    guint64 dst_end;
+
+    if (is_aligned) {
+      auto copy_width = GST_ROUND_UP_4 (arg.width_in_bytes);
+
+      src_end = arg.src_offset +
+          (guint64) (arg.height - 1) * arg.src_stride + copy_width;
+      dst_end = arg.dst_offset +
+          (guint64) (arg.height - 1) * arg.dst_stride + copy_width;
+    } else {
+      src_end = src_base + GST_ROUND_UP_4 (src_offset +
+          (guint64) (arg.height - 1) * arg.src_stride + arg.width_in_bytes + 3);
+
+      dst_end = dst_base + GST_ROUND_UP_4 (dst_offset +
+          (guint64) (arg.height - 1) * arg.dst_stride + arg.width_in_bytes);
+    }
+
+    if (src_end > src_desc.Width || dst_end > dst_desc.Width) {
+      GST_ERROR_OBJECT (device, "Buffer copy range exceeds resource size");
+      gst_d3d12_cmd_list_unref (gst_cl);
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+    }
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
+    srv_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srv_desc.Buffer.FirstElement = src_base / 4;
+    srv_desc.Buffer.NumElements = (UINT) ((src_desc.Width - src_base) / 4);
+    srv_desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
+
+    d3d_device->CreateShaderResourceView (arg.src, &srv_desc, cpu_handle);
+
+    cpu_handle.Offset (priv->srv_inc_size);
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc = { };
+    uav_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+    uav_desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+    uav_desc.Buffer.FirstElement = dst_base / 4;
+    uav_desc.Buffer.NumElements = (UINT) ((dst_desc.Width - dst_base) / 4);
+    uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
+
+    d3d_device->CreateUnorderedAccessView (arg.dst,
+        nullptr, &uav_desc, cpu_handle);
+
+    struct
+    {
+      guint src_stride;
+      guint dst_stride;
+      guint width_in_bytes;
+      guint height;
+      guint src_offset;
+      guint dst_offset;
+      guint padding[2];
+    } const_data = {
+      arg.src_stride,
+      arg.dst_stride,
+      arg.width_in_bytes,
+      arg.height,
+      src_offset,
+      dst_offset,
+      {0, 0},
+    };
+
+    cl->SetComputeRoot32BitConstants (0, 8, &const_data, 0);
+    cl->SetComputeRootDescriptorTable (1, gpu_handle);
+
+    guint num_dwords;
+    if (is_aligned)
+      num_dwords = (arg.width_in_bytes + 3) / 4;
+    else
+      num_dwords = (arg.width_in_bytes + 6) / 4;
+
+    cl->Dispatch ((num_dwords + 63) / 64, arg.height, 1);
+
+    cpu_handle.Offset (priv->srv_inc_size);
+    gpu_handle.Offset (2, priv->srv_inc_size);
+  }
+
+  hr = cl->Close ();
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Couldn't close command list");
+    gst_d3d12_cmd_list_unref (gst_cl);
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  ID3D12CommandList *cmd_list[] = { cl.Get () };
+
+  hr = gst_d3d12_cmd_queue_execute_command_lists_full (queue,
+      num_fences_to_wait, fences_to_wait, fence_values_to_wait,
+      1, cmd_list, &fence_val);
+  auto ret = gst_d3d12_result (hr, device);
+
   gst_d3d12_cmd_list_unref (gst_cl);
 
   if (ret) {
