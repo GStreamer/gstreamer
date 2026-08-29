@@ -405,7 +405,8 @@ gst_d3d12_memory_ensure_staging_resource (GstD3D12Memory * dmem)
   if (priv->staging)
     return TRUE;
 
-  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS) == 0) {
+  if (priv->desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER &&
+      (priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS) == 0) {
     GST_ERROR_OBJECT (dmem->device, "simultaneous access is not supported");
     return FALSE;
   }
@@ -467,19 +468,6 @@ gst_d3d12_memory_download (GstD3D12Memory * dmem)
     return TRUE;
   }
 
-  std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
-  for (guint i = 0; i < priv->num_subresources; i++) {
-    GstD3D12CopyTextureRegionArgs args;
-    memset (&args, 0, sizeof (args));
-
-    args.dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->staging.Get (),
-        priv->layout[i]);
-    args.src = CD3DX12_TEXTURE_COPY_LOCATION (priv->resource.Get (),
-        priv->subresource_index[i]);
-
-    copy_args.push_back (args);
-  }
-
   guint64 fence_val = 0;
   guint num_fences_to_wait = 0;
   ID3D12Fence *fences_to_wait[] = { priv->fence.Get () };
@@ -487,11 +475,34 @@ gst_d3d12_memory_download (GstD3D12Memory * dmem)
   if (priv->fence)
     num_fences_to_wait = 1;
 
+  gboolean ret;
   /* Use async copy queue when downloading */
-  if (!gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
-          copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
-          fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_COPY, &fence_val)) {
-    GST_ERROR_OBJECT (dmem->device, "Couldn't download texture to staging");
+  if (priv->desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    ret =
+        gst_d3d12_device_copy_buffer_region (dmem->device, priv->staging.Get (),
+        0, priv->resource.Get (), 0, priv->size, nullptr, num_fences_to_wait,
+        fences_to_wait, fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_COPY,
+        &fence_val);
+  } else {
+    std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
+    for (guint i = 0; i < priv->num_subresources; i++) {
+      GstD3D12CopyTextureRegionArgs args;
+      memset (&args, 0, sizeof (args));
+
+      args.dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->staging.Get (),
+          priv->layout[i]);
+      args.src = CD3DX12_TEXTURE_COPY_LOCATION (priv->resource.Get (),
+          priv->subresource_index[i]);
+
+      copy_args.push_back (args);
+    }
+    ret = gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
+        copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
+        fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_COPY, &fence_val);
+  }
+
+  if (!ret) {
+    GST_ERROR_OBJECT (dmem->device, "Couldn't download resource to staging");
     return FALSE;
   }
 
@@ -516,30 +527,39 @@ gst_d3d12_memory_upload (GstD3D12Memory * dmem)
     return TRUE;
   }
 
-  std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
-  for (guint i = 0; i < priv->num_subresources; i++) {
-    GstD3D12CopyTextureRegionArgs args;
-    memset (&args, 0, sizeof (args));
-
-    args.dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->resource.Get (),
-        priv->subresource_index[i]);
-    args.src = CD3DX12_TEXTURE_COPY_LOCATION (priv->staging.Get (),
-        priv->layout[i]);
-
-    copy_args.push_back (args);
-  }
-
   guint num_fences_to_wait = 0;
   ID3D12Fence *fences_to_wait[] = { priv->fence.Get () };
   guint64 fence_values_to_wait[] = { priv->fence_val };
   if (fences_to_wait[0])
     num_fences_to_wait = 1;
 
-  if (!gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
-          copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
-          fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
-          &priv->fence_val)) {
-    GST_ERROR_OBJECT (dmem->device, "Couldn't upload texture");
+  gboolean ret;
+  if (priv->desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    ret =
+        gst_d3d12_device_copy_buffer_region (dmem->device,
+        priv->resource.Get (), 0, priv->staging.Get (), 0, priv->size, nullptr,
+        num_fences_to_wait, fences_to_wait, fence_values_to_wait,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, &priv->fence_val);
+  } else {
+    std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
+    for (guint i = 0; i < priv->num_subresources; i++) {
+      GstD3D12CopyTextureRegionArgs args;
+      memset (&args, 0, sizeof (args));
+
+      args.dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->resource.Get (),
+          priv->subresource_index[i]);
+      args.src = CD3DX12_TEXTURE_COPY_LOCATION (priv->staging.Get (),
+          priv->layout[i]);
+
+      copy_args.push_back (args);
+    }
+    ret = gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
+        copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
+        fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT, &priv->fence_val);
+  }
+
+  if (!ret) {
+    GST_ERROR_OBJECT (dmem->device, "Couldn't upload resource");
     return FALSE;
   }
 
@@ -714,7 +734,7 @@ gst_d3d12_memory_sync (GstD3D12Memory * mem)
 /**
  * gst_d3d12_memory_init_once:
  *
- * Initializes the Direct3D12 Texture allocator. It is safe to call
+ * Initializes the Direct3D12 resource allocator. It is safe to call
  * this function multiple times. This must be called before any other
  * GstD3D12Memory operation.
  *
@@ -837,6 +857,7 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
 {
   auto priv = mem->priv;
   auto allocator = GST_MEMORY_CAST (mem)->allocator;
+
   if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0) {
     GST_LOG_OBJECT (allocator,
         "Shader resource was denied, configured flags 0x%x",
@@ -862,21 +883,32 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
 
     priv->srv_heap = srv_heap;
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Texture2D.MipLevels = priv->desc.MipLevels;
-
     auto cpu_handle =
         CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
         (srv_heap));
 
-    for (guint i = 0; i < priv->num_subresources; i++) {
-      srv_desc.Format = priv->resource_formats[i];
-      srv_desc.Texture2D.PlaneSlice = i;
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
+    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    if (priv->desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+      srv_desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+      srv_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+      srv_desc.Buffer.NumElements = (UINT) (priv->desc.Width / 4);
+      srv_desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
+
       device->CreateShaderResourceView (priv->resource.Get (), &srv_desc,
           cpu_handle);
-      cpu_handle.Offset (priv->srv_inc_size);
+    } else {
+      srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+      srv_desc.Texture2D.MipLevels = priv->desc.MipLevels;
+
+      for (guint i = 0; i < priv->num_subresources; i++) {
+        srv_desc.Format = priv->resource_formats[i];
+        srv_desc.Texture2D.PlaneSlice = i;
+        device->CreateShaderResourceView (priv->resource.Get (), &srv_desc,
+            cpu_handle);
+        cpu_handle.Offset (priv->srv_inc_size);
+      }
     }
   }
 
@@ -901,6 +933,7 @@ gst_d3d12_memory_get_unordered_access_view_heap (GstD3D12Memory * mem)
 {
   auto priv = mem->priv;
   auto allocator = GST_MEMORY_CAST (mem)->allocator;
+
   if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS) == 0) {
     GST_LOG_OBJECT (allocator,
         "Unordered access view is not allowed, configured flags 0x%x",
@@ -927,17 +960,26 @@ gst_d3d12_memory_get_unordered_access_view_heap (GstD3D12Memory * mem)
     priv->uav_heap = uav_heap;
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc = { };
-    uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     auto cpu_handle =
         CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
         (uav_heap));
 
-    for (guint i = 0; i < priv->num_subresources; i++) {
-      uav_desc.Format = priv->resource_formats[i];
-      uav_desc.Texture2D.PlaneSlice = i;
+    if (priv->desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+      uav_desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+      uav_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+      uav_desc.Buffer.NumElements = (UINT) (priv->desc.Width / 4);
+      uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
       device->CreateUnorderedAccessView (priv->resource.Get (), nullptr,
           &uav_desc, cpu_handle);
-      cpu_handle.Offset (priv->srv_inc_size);
+    } else {
+      uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+      for (guint i = 0; i < priv->num_subresources; i++) {
+        uav_desc.Format = priv->resource_formats[i];
+        uav_desc.Texture2D.PlaneSlice = i;
+        device->CreateUnorderedAccessView (priv->resource.Get (), nullptr,
+            &uav_desc, cpu_handle);
+        cpu_handle.Offset (priv->srv_inc_size);
+      }
     }
   }
 
@@ -960,6 +1002,12 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem)
 {
   auto priv = mem->priv;
   auto allocator = GST_MEMORY_CAST (mem)->allocator;
+
+  if (priv->desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    GST_LOG_OBJECT (allocator, "Buffer resources do not support RTV");
+    return nullptr;
+  }
+
   if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) == 0) {
     GST_LOG_OBJECT (allocator,
         "Render target is not allowed, configured flags 0x%x",
@@ -1201,6 +1249,10 @@ gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,
   g_return_val_if_fail (mem, nullptr);
   g_return_val_if_fail (device11, nullptr);
 
+  /* Buffer resources cannot be shared as D3D11 textures */
+  if (priv->desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+    return nullptr;
+
   std::lock_guard < std::mutex > lk (priv->lock);
   auto it = std::find_if (priv->shared_texture11.begin (),
       priv->shared_texture11.end (),[&](const auto & shared)->bool {
@@ -1353,41 +1405,25 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
     gst_d3d12_pool_allocator_acquire_memory (pool, &dst);
   }
 
-  auto src_tex = (ID3D12Resource *) info.data;
+  auto src_resource = (ID3D12Resource *) info.data;
+  auto desc = GetDesc (src_resource);
   if (!dst) {
-    D3D12_RESOURCE_DESC desc;
     D3D12_HEAP_PROPERTIES heap_props;
     D3D12_HEAP_FLAGS heap_flags;
 
-    desc = GetDesc (src_tex);
     desc.DepthOrArraySize = 1;
-    src_tex->GetHeapProperties (&heap_props, &heap_flags);
+    src_resource->GetHeapProperties (&heap_props, &heap_flags);
     dst = gst_d3d12_allocator_alloc_internal (nullptr, dmem->device,
         &heap_props, heap_flags, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr);
   }
 
   if (!dst) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate texture");
+    GST_ERROR_OBJECT (self, "Couldn't allocate resource");
     gst_memory_unmap (mem, &info);
     return priv->fallback_copy (mem, offset, size);
   }
 
-  std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
-  auto dst_dmem = GST_D3D12_MEMORY_CAST (dst);
-  auto dst_priv = dst_dmem->priv;
   auto mem_priv = dmem->priv;
-  for (guint i = 0; i < mem_priv->num_subresources; i++) {
-    GstD3D12CopyTextureRegionArgs args;
-    memset (&args, 0, sizeof (args));
-
-    args.dst = CD3DX12_TEXTURE_COPY_LOCATION (dst_priv->resource.Get (),
-        dst_priv->subresource_index[i]);
-    args.src = CD3DX12_TEXTURE_COPY_LOCATION (mem_priv->resource.Get (),
-        mem_priv->subresource_index[i]);
-    copy_args.push_back (args);
-  }
-  gst_memory_unmap (mem, &info);
-
   ComPtr < ID3D12Fence > fence_to_wait;
   guint64 fence_value_to_wait[1];
   {
@@ -1406,10 +1442,41 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
   if (fence_to_wait)
     num_fences_to_wait = 1;
 
-  gst_d3d12_device_copy_texture_region (dmem->device,
-      copy_args.size (), copy_args.data (), fence_data, num_fences_to_wait,
-      fences_to_wait, fence_value_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
-      &dst_priv->fence_val);
+  auto dst_dmem = GST_D3D12_MEMORY_CAST (dst);
+  auto dst_priv = dst_dmem->priv;
+
+  gboolean ret;
+  if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    ret = gst_d3d12_device_copy_buffer_region (dmem->device,
+        dst_priv->resource.Get (), 0, mem_priv->resource.Get (), 0, desc.Width,
+        fence_data, num_fences_to_wait, fences_to_wait, fence_value_to_wait,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, &dst_priv->fence_val);
+  } else {
+    std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
+    for (guint i = 0; i < mem_priv->num_subresources; i++) {
+      GstD3D12CopyTextureRegionArgs args;
+      memset (&args, 0, sizeof (args));
+
+      args.dst = CD3DX12_TEXTURE_COPY_LOCATION (dst_priv->resource.Get (),
+          dst_priv->subresource_index[i]);
+      args.src = CD3DX12_TEXTURE_COPY_LOCATION (mem_priv->resource.Get (),
+          mem_priv->subresource_index[i]);
+      copy_args.push_back (args);
+    }
+    ret = gst_d3d12_device_copy_texture_region (dmem->device,
+        copy_args.size (), copy_args.data (), fence_data, num_fences_to_wait,
+        fences_to_wait, fence_value_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        &dst_priv->fence_val);
+  }
+  gst_memory_unmap (mem, &info);
+
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Couldn't copy resource");
+    gst_memory_unref (dst);
+
+    return priv->fallback_copy (mem, offset, size);
+  }
+
   dst_priv->fence = gst_d3d12_device_get_fence_handle (dmem->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
@@ -1502,12 +1569,19 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
 
   auto device_handle = gst_d3d12_device_get_device_handle (device);
   auto desc = GetDesc (resource);
-  guint8 num_subresources =
-      D3D12GetFormatPlaneCount (device_handle, desc.Format);
-  D3D12_HEAP_FLAGS heap_flags;
+  guint8 num_subresources = 0;
 
-  if (num_subresources == 0) {
-    GST_ERROR_OBJECT (allocator, "Couldn't get format info");
+  if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    num_subresources = 1;
+  } else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D) {
+    num_subresources = D3D12GetFormatPlaneCount (device_handle, desc.Format);
+
+    if (num_subresources == 0) {
+      GST_ERROR_OBJECT (allocator, "Couldn't get format info");
+      return nullptr;
+    }
+  } else {
+    GST_ERROR_OBJECT (device, "Not supported dimension %d", desc.Dimension);
     return nullptr;
   }
 
@@ -1516,6 +1590,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
     return nullptr;
   }
 
+  D3D12_HEAP_FLAGS heap_flags;
   auto hr = resource->GetHeapProperties (nullptr, &heap_flags);
   if (!gst_d3d12_result (hr, device)) {
     GST_ERROR_OBJECT (allocator, "Couldn't get heap property");
@@ -1530,8 +1605,10 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   priv->heap_flags = heap_flags;
   priv->num_subresources = num_subresources;
   priv->resource = resource;
-  gst_d3d12_dxgi_format_get_resource_format (priv->desc.Format,
-      priv->resource_formats);
+  if (desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER) {
+    gst_d3d12_dxgi_format_get_resource_format (priv->desc.Format,
+        priv->resource_formats);
+  }
   priv->srv_inc_size =
       device_handle->GetDescriptorHandleIncrementSize
       (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -1550,32 +1627,37 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
 
   mem->device = (GstD3D12Device *) gst_object_ref (device);
 
-  for (guint i = 0; i < num_subresources; i++) {
-    /* One notable difference between D3D12/D3D11 is that, D3D12 introduced
-     * *PLANE* slice concept. That means, Each plane of YUV format
-     * (e.g, DXGI_FORMAT_NV12) can be accessible in D3D12 but that wasn't
-     * allowed in D3D11. As a result, the way for calculating subresource index
-     * is changed. This is an example of subresource indexing
-     * for array size == 3 with NV12 format.
-     *
-     *     Array 0       Array 1       Array 2
-     * +-------------+-------------+-------------+
-     * | Y plane : 0 | Y plane : 1 | Y plane : 2 |
-     * +-------------+-------------+-------------+
-     * | UV plane: 3 | UV plane: 4 | UV plane: 5 |
-     * +-------------+-------------+-------------+
-     */
-    mem->priv->subresource_index[i] = D3D12CalcSubresource (0,
-        array_slice, i, 1, desc.DepthOrArraySize);
-  }
+  if (desc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    priv->size = desc.Width;
+    priv->subresource_index[0] = 0;
+  } else {
+    for (guint i = 0; i < num_subresources; i++) {
+      /* One notable difference between D3D12/D3D11 is that, D3D12 introduced
+       * *PLANE* slice concept. That means, Each plane of YUV format
+       * (e.g, DXGI_FORMAT_NV12) can be accessible in D3D12 but that wasn't
+       * allowed in D3D11. As a result, the way for calculating subresource index
+       * is changed. This is an example of subresource indexing
+       * for array size == 3 with NV12 format.
+       *
+       *     Array 0       Array 1       Array 2
+       * +-------------+-------------+-------------+
+       * | Y plane : 0 | Y plane : 1 | Y plane : 2 |
+       * +-------------+-------------+-------------+
+       * | UV plane: 3 | UV plane: 4 | UV plane: 5 |
+       * +-------------+-------------+-------------+
+       */
+      mem->priv->subresource_index[i] = D3D12CalcSubresource (0,
+          array_slice, i, 1, desc.DepthOrArraySize);
+    }
 
-  /* Then calculate staging memory size and copyable layout */
-  UINT64 size;
-  desc.DepthOrArraySize = 1;
-  desc.MipLevels = 1;
-  device_handle->GetCopyableFootprints (&desc, 0,
-      num_subresources, 0, priv->layout, nullptr, nullptr, &size);
-  priv->size = size;
+    /* Then calculate staging memory size and copyable layout */
+    UINT64 size;
+    desc.DepthOrArraySize = 1;
+    desc.MipLevels = 1;
+    device_handle->GetCopyableFootprints (&desc, 0,
+        num_subresources, 0, priv->layout, nullptr, nullptr, &size);
+    priv->size = size;
+  }
 
   priv->subresource_rect[0].left = 0;
   priv->subresource_rect[0].top = 0;
@@ -1634,7 +1716,7 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
   hr = device_handle->CreateCommittedResource (heap_props, heap_flags,
       desc, initial_state, optimized_clear_value, IID_PPV_ARGS (&resource));
   if (!gst_d3d12_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create texture");
+    GST_ERROR_OBJECT (self, "Couldn't create resource");
     return nullptr;
   }
 

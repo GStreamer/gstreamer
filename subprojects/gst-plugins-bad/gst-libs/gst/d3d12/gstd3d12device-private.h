@@ -55,6 +55,20 @@ gboolean  gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
                                                 guint64 * fence_value);
 
 GST_D3D12_API
+gboolean  gst_d3d12_device_copy_buffer_region (GstD3D12Device * device,
+                                               ID3D12Resource * dst,
+                                               guint64 dst_offset,
+                                               ID3D12Resource * src,
+                                               guint64 src_offset,
+                                               guint64 size,
+                                               GstD3D12FenceData * fence_data,
+                                               guint num_fences_to_wait,
+                                               ID3D12Fence ** fences_to_wait,
+                                               const guint64 * fence_values_to_wait,
+                                               D3D12_COMMAND_LIST_TYPE command_type,
+                                               guint64 * fence_value);
+
+GST_D3D12_API
 gboolean  gst_d3d12_device_acquire_fence_data (GstD3D12Device * device,
                                                GstD3D12FenceData ** fence_data);
 

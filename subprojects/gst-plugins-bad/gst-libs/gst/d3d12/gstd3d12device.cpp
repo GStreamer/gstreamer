@@ -2040,6 +2040,122 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
 }
 
 gboolean
+gst_d3d12_device_copy_buffer_region (GstD3D12Device * device,
+    ID3D12Resource * dst, guint64 dst_offset, ID3D12Resource * src,
+    guint64 src_offset, guint64 size, GstD3D12FenceData * fence_data,
+    guint num_fences_to_wait, ID3D12Fence ** fences_to_wait,
+    const guint64 * fence_values_to_wait, D3D12_COMMAND_LIST_TYPE command_type,
+    guint64 * fence_value)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (dst, FALSE);
+  g_return_val_if_fail (src, FALSE);
+  g_return_val_if_fail (size > 0, FALSE);
+
+  HRESULT hr;
+  auto priv = device->priv->inner;
+  GstD3D12CmdAllocPool *ca_pool;
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  GstD3D12CmdListPool *cl_pool;
+  GstD3D12CmdList *gst_cl = nullptr;
+  GstD3D12CmdQueue *queue = nullptr;
+  guint64 fence_val = 0;
+
+  if (!fence_data)
+    gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+
+  switch (command_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      ca_pool = priv->direct_ca_pool;
+      cl_pool = priv->direct_cl_pool;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+      queue = priv->compute_queue;
+      ca_pool = priv->compute_ca_pool;
+      cl_pool = priv->compute_cl_pool;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      ca_pool = priv->copy_ca_pool;
+      cl_pool = priv->copy_cl_pool;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported command list type %d",
+          command_type);
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+  }
+
+  gst_d3d12_cmd_alloc_pool_acquire (ca_pool, &gst_ca);
+  if (!gst_ca) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
+  gst_d3d12_cmd_list_pool_acquire (cl_pool, ca, &gst_cl);
+
+  if (!gst_cl) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command list");
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  ComPtr < ID3D12CommandList > cl_base;
+  ComPtr < ID3D12GraphicsCommandList > cl;
+
+  cl_base = gst_d3d12_cmd_list_get_handle (gst_cl);
+  cl_base.As (&cl);
+
+  gboolean do_region_copy = TRUE;
+  if (src_offset == 0 && dst_offset == 0) {
+    auto src_desc = GetDesc (src);
+    auto dst_desc = GetDesc (dst);
+    if (src_desc.Width == dst_desc.Width && src_desc.Width == size) {
+      do_region_copy = FALSE;
+      cl->CopyResource (dst, src);
+    }
+  }
+
+  if (do_region_copy)
+    cl->CopyBufferRegion (dst, dst_offset, src, src_offset, size);
+
+  hr = cl->Close ();
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Couldn't close command list");
+    gst_clear_d3d12_cmd_list (&gst_cl);
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
+
+  ID3D12CommandList *cmd_list[] = { cl.Get () };
+
+  hr = gst_d3d12_cmd_queue_execute_command_lists_full (queue,
+      num_fences_to_wait, fences_to_wait, fence_values_to_wait, 1, cmd_list,
+      &fence_val);
+  auto ret = gst_d3d12_result (hr, device);
+
+  /* We can release command list since command list pool will hold it */
+  gst_d3d12_cmd_list_unref (gst_cl);
+
+  if (ret) {
+    gst_d3d12_cmd_queue_set_notify (queue, fence_val, fence_data,
+        (GDestroyNotify) gst_d3d12_fence_data_unref);
+  } else {
+    gst_d3d12_fence_data_unref (fence_data);
+  }
+
+  if (fence_value)
+    *fence_value = fence_val;
+
+  return ret;
+}
+
+gboolean
 gst_d3d12_device_acquire_fence_data (GstD3D12Device * device,
     GstD3D12FenceData ** fence_data)
 {
