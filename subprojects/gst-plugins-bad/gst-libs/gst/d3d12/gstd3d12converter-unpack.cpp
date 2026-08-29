@@ -275,7 +275,7 @@ gst_d3d12_unpack_new (GstD3D12Device * device,
   priv->tg_y = (guint) ceil (priv->in_info.height / (float) bytecode.y_unit);
 
   priv->x_unit = bytecode.x_unit;
-  priv->y_unit = bytecode.x_unit;
+  priv->y_unit = bytecode.y_unit;
 
   D3D12_COMPUTE_PIPELINE_STATE_DESC pso_desc = { };
   pso_desc.pRootSignature = priv->rs_typed.Get ();
