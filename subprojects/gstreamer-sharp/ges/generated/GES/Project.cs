@@ -796,9 +796,19 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_project_list_encoding_profiles(IntPtr raw);
 
+		[Obsolete]
 		public Gst.PbUtils.EncodingProfile[] ListEncodingProfiles() {
 			IntPtr raw_ret = ges_project_list_encoding_profiles(Handle);
 			Gst.PbUtils.EncodingProfile[] ret = (Gst.PbUtils.EncodingProfile[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), false, false, typeof(Gst.PbUtils.EncodingProfile));
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_project_list_encoding_profiles_full(IntPtr raw);
+
+		public Gst.PbUtils.EncodingProfile[] ListEncodingProfilesFull() {
+			IntPtr raw_ret = ges_project_list_encoding_profiles_full(Handle);
+			Gst.PbUtils.EncodingProfile[] ret = (Gst.PbUtils.EncodingProfile[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.EncodingProfile));
 			return ret;
 		}
 

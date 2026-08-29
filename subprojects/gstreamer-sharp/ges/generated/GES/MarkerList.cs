@@ -258,9 +258,19 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_marker_list_add(IntPtr raw, ulong position);
 
+		[Obsolete]
 		public GES.Marker Add(ulong position) {
 			IntPtr raw_ret = ges_marker_list_add(Handle, position);
 			GES.Marker ret = GLib.Object.GetObject(raw_ret) as GES.Marker;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_marker_list_add_full(IntPtr raw, ulong position);
+
+		public GES.Marker AddFull(ulong position) {
+			IntPtr raw_ret = ges_marker_list_add_full(Handle, position);
+			GES.Marker ret = GLib.Object.GetObject(raw_ret, true) as GES.Marker;
 			return ret;
 		}
 

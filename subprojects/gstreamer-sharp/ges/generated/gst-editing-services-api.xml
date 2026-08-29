@@ -323,8 +323,12 @@
           <parameter name="asset" type="GESAsset*" />
         </parameters>
       </virtual_method>
-      <method name="GetAsset" cname="ges_extractable_get_asset">
+      <method name="GetAsset" cname="ges_extractable_get_asset" deprecated="true" deprecated-version="1.30">
         <return-type type="GESAsset*" />
+        <parameters />
+      </method>
+      <method name="GetAssetFull" cname="ges_extractable_get_asset_full" version="1.30">
+        <return-type type="GESAsset*" owned="true" />
         <parameters />
       </method>
       <method name="GetId" cname="ges_extractable_get_id">
@@ -426,7 +430,7 @@
           <parameter name="key" type="const-gchar*" />
         </parameters>
       </method>
-      <method name="GetMeta" cname="ges_meta_container_get_meta">
+      <method name="GetMeta" cname="ges_meta_container_get_meta" deprecated="true" deprecated-version="1.30">
         <return-type type="GValue*">
           <warning>missing glib:type-name</warning>
         </return-type>
@@ -434,8 +438,23 @@
           <parameter name="key" type="const-gchar*" />
         </parameters>
       </method>
-      <method name="GetString" cname="ges_meta_container_get_string">
+      <method name="GetMetaFull" cname="ges_meta_container_get_meta_full" version="1.30">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter name="key" type="const-gchar*" />
+          <parameter name="dest" type="GValue*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="GetString" cname="ges_meta_container_get_string" deprecated="true" deprecated-version="1.30">
         <return-type type="const-gchar*" />
+        <parameters>
+          <parameter name="meta_item" type="const-gchar*" />
+        </parameters>
+      </method>
+      <method name="GetStringFull" cname="ges_meta_container_get_string_full" version="1.30">
+        <return-type type="gchar*" owned="true" />
         <parameters>
           <parameter name="meta_item" type="const-gchar*" />
         </parameters>
@@ -745,8 +764,12 @@
           <parameter name="error" type="GError**" />
         </parameters>
       </method>
-      <method name="GetError" cname="ges_asset_get_error" version="1.8">
+      <method name="GetError" cname="ges_asset_get_error" version="1.8" deprecated="true" deprecated-version="1.30">
         <return-type type="GLib.Error" />
+        <parameters />
+      </method>
+      <method name="GetErrorFull" cname="ges_asset_get_error_full" version="1.30">
+        <return-type type="GLib.Error*" owned="true" />
         <parameters />
       </method>
       <method name="GetExtractableType" cname="ges_asset_get_extractable_type">
@@ -757,16 +780,28 @@
         <return-type type="const-gchar*" />
         <parameters />
       </method>
-      <method name="GetProxy" cname="ges_asset_get_proxy">
+      <method name="GetProxy" cname="ges_asset_get_proxy" deprecated="true" deprecated-version="1.30">
         <return-type type="GESAsset*" />
         <parameters />
       </method>
-      <method name="GetProxyTarget" cname="ges_asset_get_proxy_target">
+      <method name="GetProxyFull" cname="ges_asset_get_proxy_full" version="1.30">
+        <return-type type="GESAsset*" owned="true" />
+        <parameters />
+      </method>
+      <method name="GetProxyTarget" cname="ges_asset_get_proxy_target" deprecated="true" deprecated-version="1.30">
         <return-type type="GESAsset*" />
         <parameters />
       </method>
-      <method name="ListProxies" cname="ges_asset_list_proxies">
+      <method name="GetProxyTargetFull" cname="ges_asset_get_proxy_target_full" version="1.30">
+        <return-type type="GESAsset*" owned="true" />
+        <parameters />
+      </method>
+      <method name="ListProxies" cname="ges_asset_list_proxies" deprecated="true" deprecated-version="1.30">
         <return-type type="GList*" element_type="GESAsset*" />
+        <parameters />
+      </method>
+      <method name="ListProxiesFull" cname="ges_asset_list_proxies_full" version="1.30">
+        <return-type type="GList*" element_type="GESAsset*" elements_owned="true" owned="true" />
         <parameters />
       </method>
       <method name="SetProxy" cname="ges_asset_set_proxy">
@@ -1062,14 +1097,28 @@
           <parameter name="type" type="GESTrackType" />
         </parameters>
       </virtual_method>
-      <method name="AddAsset" cname="ges_clip_add_asset">
+      <method name="AddAsset" cname="ges_clip_add_asset" deprecated="true" deprecated-version="1.30">
         <return-type type="GESTrackElement*" />
         <parameters>
           <parameter name="asset" type="GESAsset*" />
         </parameters>
       </method>
-      <method name="AddChildToTrack" cname="ges_clip_add_child_to_track" version="1.18">
+      <method name="AddAssetFull" cname="ges_clip_add_asset_full" version="1.30">
+        <return-type type="GESTrackElement*" owned="true" />
+        <parameters>
+          <parameter name="asset" type="GESAsset*" />
+        </parameters>
+      </method>
+      <method name="AddChildToTrack" cname="ges_clip_add_child_to_track" version="1.18" deprecated="true" deprecated-version="1.30">
         <return-type type="GESTrackElement*" />
+        <parameters throws="1">
+          <parameter name="child" type="GESTrackElement*" />
+          <parameter name="track" type="GESTrack*" />
+          <parameter name="error" type="GError**" />
+        </parameters>
+      </method>
+      <method name="AddChildToTrackFull" cname="ges_clip_add_child_to_track_full" version="1.30">
+        <return-type type="GESTrackElement*" owned="true" />
         <parameters throws="1">
           <parameter name="child" type="GESTrackElement*" />
           <parameter name="track" type="GESTrack*" />
@@ -1391,6 +1440,10 @@
           <parameter name="recursive" type="gboolean" />
         </parameters>
       </method>
+      <method name="GetHeight" cname="ges_container_get_height" version="1.30">
+        <return-type type="guint32" />
+        <parameters />
+      </method>
       <method name="Remove" cname="ges_container_remove">
         <return-type type="gboolean" />
         <parameters>
@@ -1610,8 +1663,11 @@
           <parameter name="error" type="GError**" />
         </parameters>
       </method>
-      <method name="GetDefault" cname="ges_formatter_get_default" shared="true">
+      <method name="GetDefault" cname="ges_formatter_get_default" shared="true" deprecated="true" deprecated-version="1.30">
         <return-type type="GESAsset*" />
+      </method>
+      <method name="GetDefaultFull" cname="ges_formatter_get_default_full" shared="true" version="1.30">
+        <return-type type="GESAsset*" owned="true" />
       </method>
       <virtual_method name="CanLoadUri" cname="can_load_uri">
         <return-type type="gboolean" />
@@ -1807,8 +1863,12 @@
         <return-type type="guint" />
         <parameters />
       </method>
-      <method name="GetTimeline" cname="ges_layer_get_timeline">
+      <method name="GetTimeline" cname="ges_layer_get_timeline" deprecated="true" deprecated-version="1.30">
         <return-type type="GESTimeline*" />
+        <parameters />
+      </method>
+      <method name="GetTimelineFull" cname="ges_layer_get_timeline_full" version="1.30">
+        <return-type type="GESTimeline*" owned="true" />
         <parameters />
       </method>
       <method name="IsEmpty" cname="ges_layer_is_empty">
@@ -1900,8 +1960,14 @@
         <return-type type="GType" />
       </method>
       <constructor cname="ges_marker_list_new" disable_void_ctor="" version="1.18" />
-      <method name="Add" cname="ges_marker_list_add" version="1.18">
+      <method name="Add" cname="ges_marker_list_add" version="1.18" deprecated="true" deprecated-version="1.30">
         <return-type type="GESMarker*" />
+        <parameters>
+          <parameter name="position" type="guint64" />
+        </parameters>
+      </method>
+      <method name="AddFull" cname="ges_marker_list_add_full" version="1.30">
+        <return-type type="GESMarker*" owned="true" />
         <parameters>
           <parameter name="position" type="guint64" />
         </parameters>
@@ -2225,8 +2291,12 @@
           <parameter name="filter" type="GType" />
         </parameters>
       </method>
-      <method name="ListEncodingProfiles" cname="ges_project_list_encoding_profiles">
+      <method name="ListEncodingProfiles" cname="ges_project_list_encoding_profiles" deprecated="true" deprecated-version="1.30">
         <return-type type="const GList*" element_type="GstEncodingProfile*" />
+        <parameters />
+      </method>
+      <method name="ListEncodingProfilesFull" cname="ges_project_list_encoding_profiles_full" version="1.30">
+        <return-type type="GList*" element_type="GstEncodingProfile*" elements_owned="true" owned="true" />
         <parameters />
       </method>
       <method name="Load" cname="ges_project_load">
@@ -2731,8 +2801,12 @@
           <parameter name="frame_number" type="gint64" />
         </parameters>
       </method>
-      <method name="GetGroups" cname="ges_timeline_get_groups">
+      <method name="GetGroups" cname="ges_timeline_get_groups" deprecated="true" deprecated-version="1.30">
         <return-type type="GList*" element_type="GESGroup*" />
+        <parameters />
+      </method>
+      <method name="GetGroupsFull" cname="ges_timeline_get_groups_full" version="1.30">
+        <return-type type="GList*" element_type="GESGroup*" elements_owned="true" owned="true" />
         <parameters />
       </method>
       <method name="GetLayer" cname="ges_timeline_get_layer">
@@ -2755,8 +2829,14 @@
         <return-type type="guint64" />
         <parameters />
       </method>
-      <method name="GetTrackForPad" cname="ges_timeline_get_track_for_pad">
+      <method name="GetTrackForPad" cname="ges_timeline_get_track_for_pad" deprecated="true" deprecated-version="1.30">
         <return-type type="GESTrack*" />
+        <parameters>
+          <parameter name="pad" type="GstPad*" />
+        </parameters>
+      </method>
+      <method name="GetTrackForPadFull" cname="ges_timeline_get_track_for_pad_full" version="1.30">
+        <return-type type="GESTrack*" owned="true" />
         <parameters>
           <parameter name="pad" type="GstPad*" />
         </parameters>
@@ -3605,8 +3685,14 @@
         <return-type type="gboolean" />
         <parameters />
       </method>
-      <method name="GetCaps" cname="ges_track_get_caps">
+      <method name="GetCaps" cname="ges_track_get_caps" deprecated="true" deprecated-version="1.30">
         <return-type type="GstCaps*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters />
+      </method>
+      <method name="GetCapsFull" cname="ges_track_get_caps_full" version="1.30">
+        <return-type type="GstCaps*" owned="true">
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters />
@@ -3625,8 +3711,12 @@
         </return-type>
         <parameters />
       </method>
-      <method name="GetTimeline" cname="ges_track_get_timeline">
+      <method name="GetTimeline" cname="ges_track_get_timeline" deprecated="true" deprecated-version="1.30">
         <return-type type="GESTimeline*" />
+        <parameters />
+      </method>
+      <method name="GetTimelineFull" cname="ges_track_get_timeline_full" version="1.30">
+        <return-type type="GESTimeline*" owned="true" />
         <parameters />
       </method>
       <method name="RemoveElement" cname="ges_track_remove_element">
@@ -3779,34 +3869,56 @@
           <parameter name="position" type="guint64" />
         </parameters>
       </method>
-      <method name="GetAllControlBindings" cname="ges_track_element_get_all_control_bindings">
+      <method name="GetAllControlBindings" cname="ges_track_element_get_all_control_bindings" deprecated="true" deprecated-version="1.30">
         <return-type type="GHashTable*" element_type="const-gchar*" />
+        <parameters />
+      </method>
+      <method name="GetAllControlBindingsFull" cname="ges_track_element_get_all_control_bindings_full" version="1.30">
+        <return-type type="GHashTable*" element_type="gchar*" elements_owned="true" owned="true" />
         <parameters />
       </method>
       <method name="GetAutoClampControlSources" cname="ges_track_element_get_auto_clamp_control_sources" version="1.18">
         <return-type type="gboolean" />
         <parameters />
       </method>
-      <method name="GetControlBinding" cname="ges_track_element_get_control_binding">
+      <method name="GetControlBinding" cname="ges_track_element_get_control_binding" deprecated="true" deprecated-version="1.30">
         <return-type type="GstControlBinding*" />
         <parameters>
           <parameter name="property_name" type="const-gchar*" />
         </parameters>
       </method>
-      <method name="GetElement" cname="ges_track_element_get_element">
+      <method name="GetControlBindingFull" cname="ges_track_element_get_control_binding_full" version="1.30">
+        <return-type type="GstControlBinding*" owned="true" />
+        <parameters>
+          <parameter name="property_name" type="const-gchar*" />
+        </parameters>
+      </method>
+      <method name="GetElement" cname="ges_track_element_get_element" deprecated="true" deprecated-version="1.30">
         <return-type type="GstElement*" />
+        <parameters />
+      </method>
+      <method name="GetElementFull" cname="ges_track_element_get_element_full" version="1.30">
+        <return-type type="GstElement*" owned="true" />
         <parameters />
       </method>
       <method name="GetGnlobject" cname="ges_track_element_get_gnlobject" deprecated="true">
         <return-type type="GstElement*" />
         <parameters />
       </method>
-      <method name="GetNleobject" cname="ges_track_element_get_nleobject" version="1.6">
+      <method name="GetNleobject" cname="ges_track_element_get_nleobject" version="1.6" deprecated="true" deprecated-version="1.30">
         <return-type type="GstElement*" />
         <parameters />
       </method>
-      <method name="GetTrack" cname="ges_track_element_get_track">
+      <method name="GetNleobjectFull" cname="ges_track_element_get_nleobject_full" version="1.30">
+        <return-type type="GstElement*" owned="true" />
+        <parameters />
+      </method>
+      <method name="GetTrack" cname="ges_track_element_get_track" deprecated="true" deprecated-version="1.30">
         <return-type type="GESTrack*" />
+        <parameters />
+      </method>
+      <method name="GetTrackFull" cname="ges_track_element_get_track_full" version="1.30">
+        <return-type type="GESTrack*" owned="true" />
         <parameters />
       </method>
       <method name="GetTrackType" cname="ges_track_element_get_track_type">
@@ -4451,8 +4563,14 @@
       <method name="ErrorQuark" cname="ges_error_quark" shared="true" version="1.28">
         <return-type type="GLib.Quark" />
       </method>
-      <method name="FindFormatterForUri" cname="ges_find_formatter_for_uri" shared="true" version="1.18">
+      <method name="FindFormatterForUri" cname="ges_find_formatter_for_uri" shared="true" version="1.18" deprecated="true" deprecated-version="1.30">
         <return-type type="GESAsset*" />
+        <parameters>
+          <parameter name="uri" type="const-gchar*" />
+        </parameters>
+      </method>
+      <method name="FindFormatterForUriFull" cname="ges_find_formatter_for_uri_full" shared="true" version="1.30">
+        <return-type type="GESAsset*" owned="true" />
         <parameters>
           <parameter name="uri" type="const-gchar*" />
         </parameters>
@@ -4542,7 +4660,7 @@
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR" />
       <constant value="2" ctype="gint" gtype="gint" name="VERSION_MICRO" />
       <constant value="29" ctype="gint" gtype="gint" name="VERSION_MINOR" />
-      <constant value="1" ctype="gint" gtype="gint"   name="VERSION_NANO" />
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO" />
     </object>
   </namespace>
 </api>

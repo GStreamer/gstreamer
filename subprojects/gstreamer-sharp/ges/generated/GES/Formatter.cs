@@ -183,10 +183,22 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_formatter_get_default();
 
+		[Obsolete]
 		public static GES.Asset Default { 
 			get {
 				IntPtr raw_ret = ges_formatter_get_default();
 				GES.Asset ret = GLib.Object.GetObject(raw_ret) as GES.Asset;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_formatter_get_default_full();
+
+		public static GES.Asset DefaultFull { 
+			get {
+				IntPtr raw_ret = ges_formatter_get_default_full();
+				GES.Asset ret = GLib.Object.GetObject(raw_ret, true) as GES.Asset;
 				return ret;
 			}
 		}
@@ -222,10 +234,22 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_extractable_get_asset(IntPtr raw);
 
+		[Obsolete]
 		public GES.Asset Asset { 
 			get {
 				IntPtr raw_ret = ges_extractable_get_asset(Handle);
 				GES.Asset ret = GLib.Object.GetObject(raw_ret) as GES.Asset;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_extractable_get_asset_full(IntPtr raw);
+
+		public GES.Asset AssetFull { 
+			get {
+				IntPtr raw_ret = ges_extractable_get_asset_full(Handle);
+				GES.Asset ret = GLib.Object.GetObject(raw_ret, true) as GES.Asset;
 				return ret;
 			}
 		}

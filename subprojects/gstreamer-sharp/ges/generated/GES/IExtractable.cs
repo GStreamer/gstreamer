@@ -11,6 +11,9 @@ namespace GES {
 		GES.Asset Asset { 
 			get;
 		}
+		GES.Asset AssetFull { 
+			get;
+		}
 		string Id { 
 			get;
 		}

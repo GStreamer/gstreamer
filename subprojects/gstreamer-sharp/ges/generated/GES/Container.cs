@@ -18,12 +18,14 @@ namespace GES {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint ges_container_get_height(IntPtr raw);
+
 		[GLib.Property ("height")]
 		public uint Height {
-			get {
-				GLib.Value val = GetProperty ("height");
-				uint ret = (uint) val;
-				val.Dispose ();
+			get  {
+				uint raw_ret = ges_container_get_height(Handle);
+				uint ret = raw_ret;
 				return ret;
 			}
 		}

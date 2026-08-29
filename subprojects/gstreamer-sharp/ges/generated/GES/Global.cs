@@ -68,10 +68,22 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_find_formatter_for_uri(IntPtr uri);
 
+		[Obsolete]
 		public static GES.Asset FindFormatterForUri(string uri) {
 			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
 			IntPtr raw_ret = ges_find_formatter_for_uri(native_uri);
 			GES.Asset ret = GLib.Object.GetObject(raw_ret) as GES.Asset;
+			GLib.Marshaller.Free (native_uri);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_find_formatter_for_uri_full(IntPtr uri);
+
+		public static GES.Asset FindFormatterForUriFull(string uri) {
+			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
+			IntPtr raw_ret = ges_find_formatter_for_uri_full(native_uri);
+			GES.Asset ret = GLib.Object.GetObject(raw_ret, true) as GES.Asset;
 			GLib.Marshaller.Free (native_uri);
 			return ret;
 		}

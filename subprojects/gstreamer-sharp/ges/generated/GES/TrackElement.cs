@@ -70,6 +70,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_element_get_track(IntPtr raw);
 
+		[Obsolete]
 		[GLib.Property ("track")]
 		public GES.Track Track {
 			get  {
@@ -655,6 +656,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern System.IntPtr ges_track_element_get_all_control_bindings(IntPtr raw);
 
+		[Obsolete]
 		public string[] AllControlBindings { 
 			get {
 				System.IntPtr raw_ret = ges_track_element_get_all_control_bindings(Handle);
@@ -664,8 +666,20 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern System.IntPtr ges_track_element_get_all_control_bindings_full(IntPtr raw);
+
+		public string[] AllControlBindingsFull { 
+			get {
+				System.IntPtr raw_ret = ges_track_element_get_all_control_bindings_full(Handle);
+				string[] ret = (string[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(System.IntPtr), true, true, typeof(string));
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_element_get_control_binding(IntPtr raw, IntPtr property_name);
 
+		[Obsolete]
 		public Gst.ControlBinding GetControlBinding(string property_name) {
 			IntPtr native_property_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
 			IntPtr raw_ret = ges_track_element_get_control_binding(Handle, native_property_name);
@@ -675,12 +689,35 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_track_element_get_control_binding_full(IntPtr raw, IntPtr property_name);
+
+		public Gst.ControlBinding GetControlBindingFull(string property_name) {
+			IntPtr native_property_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
+			IntPtr raw_ret = ges_track_element_get_control_binding_full(Handle, native_property_name);
+			Gst.ControlBinding ret = GLib.Object.GetObject(raw_ret, true) as Gst.ControlBinding;
+			GLib.Marshaller.Free (native_property_name);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_element_get_element(IntPtr raw);
 
+		[Obsolete]
 		public Gst.Element Element { 
 			get {
 				IntPtr raw_ret = ges_track_element_get_element(Handle);
 				Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_track_element_get_element_full(IntPtr raw);
+
+		public Gst.Element ElementFull { 
+			get {
+				IntPtr raw_ret = ges_track_element_get_element_full(Handle);
+				Gst.Element ret = GLib.Object.GetObject(raw_ret, true) as Gst.Element;
 				return ret;
 			}
 		}
@@ -700,10 +737,33 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_element_get_nleobject(IntPtr raw);
 
+		[Obsolete]
 		public Gst.Element Nleobject { 
 			get {
 				IntPtr raw_ret = ges_track_element_get_nleobject(Handle);
 				Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_track_element_get_nleobject_full(IntPtr raw);
+
+		public Gst.Element NleobjectFull { 
+			get {
+				IntPtr raw_ret = ges_track_element_get_nleobject_full(Handle);
+				Gst.Element ret = GLib.Object.GetObject(raw_ret, true) as Gst.Element;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_track_element_get_track_full(IntPtr raw);
+
+		public GES.Track TrackFull { 
+			get {
+				IntPtr raw_ret = ges_track_element_get_track_full(Handle);
+				GES.Track ret = GLib.Object.GetObject(raw_ret, true) as GES.Track;
 				return ret;
 			}
 		}

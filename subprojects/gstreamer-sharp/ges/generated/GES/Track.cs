@@ -33,6 +33,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_get_caps(IntPtr raw);
 
+		[Obsolete]
 		[GLib.Property ("caps")]
 		public Gst.Caps Caps {
 			get  {
@@ -376,6 +377,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_track_get_caps_full(IntPtr raw);
+
+		public Gst.Caps CapsFull { 
+			get {
+				IntPtr raw_ret = ges_track_get_caps_full(Handle);
+				Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_track_get_elements(IntPtr raw);
 
 		public GES.TrackElement[] Elements { 
@@ -392,6 +404,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_track_set_timeline(IntPtr raw, IntPtr timeline);
 
+		[Obsolete]
 		public GES.Timeline Timeline { 
 			get {
 				IntPtr raw_ret = ges_track_get_timeline(Handle);
@@ -400,6 +413,17 @@ namespace GES {
 			}
 			set {
 				ges_track_set_timeline(Handle, value == null ? IntPtr.Zero : value.Handle);
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_track_get_timeline_full(IntPtr raw);
+
+		public GES.Timeline TimelineFull { 
+			get {
+				IntPtr raw_ret = ges_track_get_timeline_full(Handle);
+				GES.Timeline ret = GLib.Object.GetObject(raw_ret, true) as GES.Timeline;
+				return ret;
 			}
 		}
 
@@ -559,6 +583,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_meta_container_get_meta(IntPtr raw, IntPtr key);
 
+		[Obsolete]
 		public GLib.Value GetMeta(string key) {
 			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
 			IntPtr raw_ret = ges_meta_container_get_meta(Handle, native_key);
@@ -568,12 +593,38 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_get_meta_full(IntPtr raw, IntPtr key, IntPtr dest);
+
+		public bool GetMetaFull(string key, out GLib.Value dest) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr native_dest = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (GLib.Value)));
+			bool raw_ret = ges_meta_container_get_meta_full(Handle, native_key, native_dest);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_key);
+			dest = (GLib.Value) Marshal.PtrToStructure (native_dest, typeof (GLib.Value));
+			Marshal.FreeHGlobal (native_dest);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_meta_container_get_string(IntPtr raw, IntPtr meta_item);
 
+		[Obsolete]
 		public string GetString(string meta_item) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			IntPtr raw_ret = ges_meta_container_get_string(Handle, native_meta_item);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_meta_container_get_string_full(IntPtr raw, IntPtr meta_item);
+
+		public string GetStringFull(string meta_item) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			IntPtr raw_ret = ges_meta_container_get_string_full(Handle, native_meta_item);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;
 		}

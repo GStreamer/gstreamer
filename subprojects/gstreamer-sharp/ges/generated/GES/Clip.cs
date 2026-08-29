@@ -130,6 +130,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_clip_add_asset(IntPtr raw, IntPtr asset);
 
+		[Obsolete]
 		public GES.TrackElement AddAsset(GES.Asset asset) {
 			IntPtr raw_ret = ges_clip_add_asset(Handle, asset == null ? IntPtr.Zero : asset.Handle);
 			GES.TrackElement ret = GLib.Object.GetObject(raw_ret) as GES.TrackElement;
@@ -137,12 +138,33 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_clip_add_asset_full(IntPtr raw, IntPtr asset);
+
+		public GES.TrackElement AddAssetFull(GES.Asset asset) {
+			IntPtr raw_ret = ges_clip_add_asset_full(Handle, asset == null ? IntPtr.Zero : asset.Handle);
+			GES.TrackElement ret = GLib.Object.GetObject(raw_ret, true) as GES.TrackElement;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr ges_clip_add_child_to_track(IntPtr raw, IntPtr child, IntPtr track, out IntPtr error);
 
+		[Obsolete]
 		public unsafe GES.TrackElement AddChildToTrack(GES.TrackElement child, GES.Track track) {
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = ges_clip_add_child_to_track(Handle, child == null ? IntPtr.Zero : child.Handle, track == null ? IntPtr.Zero : track.Handle, out error);
 			GES.TrackElement ret = GLib.Object.GetObject(raw_ret) as GES.TrackElement;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe IntPtr ges_clip_add_child_to_track_full(IntPtr raw, IntPtr child, IntPtr track, out IntPtr error);
+
+		public unsafe GES.TrackElement AddChildToTrackFull(GES.TrackElement child, GES.Track track) {
+			IntPtr error = IntPtr.Zero;
+			IntPtr raw_ret = ges_clip_add_child_to_track_full(Handle, child == null ? IntPtr.Zero : child.Handle, track == null ? IntPtr.Zero : track.Handle, out error);
+			GES.TrackElement ret = GLib.Object.GetObject(raw_ret, true) as GES.TrackElement;
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}

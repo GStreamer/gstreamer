@@ -21,7 +21,9 @@ namespace GES {
 		bool GetInt64(string meta_item, out long dest);
 		GES.MarkerList GetMarkerList(string key);
 		GLib.Value GetMeta(string key);
+		bool GetMetaFull(string key, out GLib.Value dest);
 		string GetString(string meta_item);
+		string GetStringFull(string meta_item);
 		bool GetUint(string meta_item, out uint dest);
 		bool GetUint64(string meta_item, out ulong dest);
 		string MetasToString();
