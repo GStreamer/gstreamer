@@ -179,18 +179,22 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_d3d12_device_get_format (self->device, GST_VIDEO_INFO_FORMAT (&info),
         &format);
 
-    D3D12_RESOURCE_FLAGS resource_flags =
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
-    if ((format.support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
-        D3D12_FORMAT_SUPPORT1_RENDER_TARGET) {
-      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    }
+    D3D12_RESOURCE_FLAGS resource_flags = D3D12_RESOURCE_FLAG_NONE;
+    if (format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+      resource_flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    } else {
+      resource_flags = D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
+      if ((format.support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET) {
+        resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+      }
 
-    if ((format.support1 & D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW) ==
-        D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW &&
-        (format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) ==
-        GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
-      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+      if ((format.support1 & D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW)
+          == D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW
+          && (format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) ==
+          GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
+        resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+      }
     }
 
     priv->d3d12_params =
@@ -203,79 +207,106 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   const auto params = priv->d3d12_params;
   memset (desc, 0, sizeof (desc));
 
+  /* Filter out invalid resource flags */
+  auto resource_flags = params->resource_flags;
+  if (params->d3d12_format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    resource_flags &= ~(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
+        D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL |
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+  }
+
   gsize total_mem_size = 0;
-  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
-  if (params->d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
-    desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.dxgi_format,
-        params->aligned_info.width, params->aligned_info.height,
-        params->array_size, params->mip_levels, 1, 0, params->resource_flags);
+  if (params->d3d12_format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    auto size_aligned = GST_ROUND_UP_N (params->aligned_info.size,
+        D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT);
+    desc[0] = CD3DX12_RESOURCE_DESC::Buffer (size_aligned, resource_flags);
 
-    gst_d3d12_buffer_pool_do_align (desc[0]);
-
-    auto alloc = (GstD3D12Allocator *)
+    priv->alloc[0] = (GstD3D12Allocator *)
         gst_d3d12_pool_allocator_new (self->device,
         &heap_props, params->heap_flags, &desc[0],
         D3D12_RESOURCE_STATE_COMMON, nullptr);
-    auto num_planes = D3D12GetFormatPlaneCount (device,
-        params->d3d12_format.dxgi_format);
 
-    auto single_array_desc = desc[0];
-    single_array_desc.DepthOrArraySize = 1;
-    single_array_desc.MipLevels = 1;
+    total_mem_size = size_aligned;
 
-    UINT64 mem_size;
-    device->GetCopyableFootprints (&single_array_desc, 0, num_planes, 0,
-        layout, nullptr, nullptr, &mem_size);
-    total_mem_size = mem_size;
-    for (guint i = 0; i < num_planes; i++) {
-      priv->stride[i] = layout[i].Footprint.RowPitch;
-      priv->offset[i] = layout[i].Offset;
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&params->aligned_info); i++) {
+      priv->stride[i] = GST_VIDEO_INFO_PLANE_STRIDE (&params->aligned_info, i);
+      priv->offset[i] = GST_VIDEO_INFO_PLANE_OFFSET (&params->aligned_info, i);
     }
-
-    priv->alloc[0] = alloc;
   } else {
-    auto finfo = params->aligned_info.finfo;
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
+    if (params->d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
+      desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.dxgi_format,
+          params->aligned_info.width, params->aligned_info.height,
+          params->array_size, params->mip_levels, 1, 0, resource_flags);
 
-    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (params->d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
-        break;
-
-      gint comp[GST_VIDEO_MAX_COMPONENTS];
-      gst_video_format_info_component (finfo, i, comp);
-
-      guint width = GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, comp[0]);
-      guint height =
-          GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, comp[0]);
-      width = MAX (width, 1);
-      height = MAX (height, 1);
-
-      desc[i] =
-          CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.resource_format[i],
-          width, height, params->array_size, params->mip_levels, 1, 0,
-          params->resource_flags);
-
-      gst_d3d12_buffer_pool_do_align (desc[i]);
+      gst_d3d12_buffer_pool_do_align (desc[0]);
 
       auto alloc = (GstD3D12Allocator *)
           gst_d3d12_pool_allocator_new (self->device,
-          &heap_props, params->heap_flags, &desc[i],
+          &heap_props, params->heap_flags, &desc[0],
           D3D12_RESOURCE_STATE_COMMON, nullptr);
+      auto num_planes = D3D12GetFormatPlaneCount (device,
+          params->d3d12_format.dxgi_format);
+
+      auto single_array_desc = desc[0];
+      single_array_desc.DepthOrArraySize = 1;
+      single_array_desc.MipLevels = 1;
 
       UINT64 mem_size;
-      desc[i].MipLevels = 1;
-      device->GetCopyableFootprints (&desc[i], 0, 1, 0,
-          &layout[i], nullptr, nullptr, &mem_size);
+      device->GetCopyableFootprints (&single_array_desc, 0, num_planes, 0,
+          layout, nullptr, nullptr, &mem_size);
+      total_mem_size = mem_size;
+      for (guint i = 0; i < num_planes; i++) {
+        priv->stride[i] = layout[i].Footprint.RowPitch;
+        priv->offset[i] = layout[i].Offset;
+      }
 
-      priv->stride[i] = layout[i].Footprint.RowPitch;
-      priv->offset[i] = total_mem_size;
-      total_mem_size += mem_size;
+      priv->alloc[0] = alloc;
+    } else {
+      auto finfo = params->aligned_info.finfo;
 
-      priv->alloc[i] = alloc;
+      for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+        if (params->d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
+          break;
+
+        gint comp[GST_VIDEO_MAX_COMPONENTS];
+        gst_video_format_info_component (finfo, i, comp);
+
+        guint width =
+            GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, comp[0]);
+        guint height =
+            GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, comp[0]);
+        width = MAX (width, 1);
+        height = MAX (height, 1);
+
+        desc[i] =
+            CD3DX12_RESOURCE_DESC::Tex2D (params->
+            d3d12_format.resource_format[i], width, height, params->array_size,
+            params->mip_levels, 1, 0, resource_flags);
+
+        gst_d3d12_buffer_pool_do_align (desc[i]);
+
+        auto alloc = (GstD3D12Allocator *)
+            gst_d3d12_pool_allocator_new (self->device,
+            &heap_props, params->heap_flags, &desc[i],
+            D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+        UINT64 mem_size;
+        desc[i].MipLevels = 1;
+        device->GetCopyableFootprints (&desc[i], 0, 1, 0,
+            &layout[i], nullptr, nullptr, &mem_size);
+
+        priv->stride[i] = layout[i].Footprint.RowPitch;
+        priv->offset[i] = total_mem_size;
+        total_mem_size += mem_size;
+
+        priv->alloc[i] = alloc;
+      }
     }
-  }
 
-  if (params->array_size > 1)
-    max_buffers = params->array_size;
+    if (params->array_size > 1)
+      max_buffers = params->array_size;
+  }
 
   gst_buffer_pool_config_set_params (config,
       caps, total_mem_size, min_buffers, max_buffers);

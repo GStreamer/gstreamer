@@ -139,62 +139,80 @@ gst_d3d12_staging_buffer_pool_set_config (GstBufferPool * pool,
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
 
-  if (d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
-    auto desc = CD3DX12_RESOURCE_DESC::Tex2D (d3d12_format.dxgi_format,
-        priv->info.width, priv->info.height, 1, 1, 1, 0,
-        D3D12_RESOURCE_FLAG_NONE);
+  if (d3d12_format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+    priv->total_mem_size = GST_ROUND_UP_N (priv->info.size,
+        D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT);
+    priv->layout_count = 1;
+    priv->layout[0].Offset = 0;
+    priv->layout[0].Footprint.Format = DXGI_FORMAT_UNKNOWN;
+    priv->layout[0].Footprint.Width = priv->total_mem_size;
+    priv->layout[0].Footprint.Height = 1;
+    priv->layout[0].Footprint.Depth = 1;
+    priv->layout[0].Footprint.RowPitch = priv->total_mem_size;
 
-    gst_d3d12_staging_buffer_pool_do_align (desc);
-
-    auto num_planes = D3D12GetFormatPlaneCount (device,
-        d3d12_format.dxgi_format);
-
-    UINT64 mem_size;
-    device->GetCopyableFootprints (&desc, 0, num_planes, 0,
-        priv->layout, nullptr, nullptr, &mem_size);
-    for (guint i = 0; i < num_planes; i++) {
-      priv->stride[i] = priv->layout[i].Footprint.RowPitch;
-      priv->offset[i] = (gsize) priv->layout[i].Offset;
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->info); i++) {
+      priv->stride[i] = priv->info.stride[i];
+      priv->offset[i] = priv->info.offset[i];
     }
-
-    priv->layout_count = num_planes;
-    priv->total_mem_size = mem_size;
   } else {
-    auto finfo = priv->info.finfo;
-    UINT64 base_offset = 0;
-
-    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
-        break;
-
-      gint comp[GST_VIDEO_MAX_COMPONENTS];
-      gst_video_format_info_component (finfo, i, comp);
-
-      guint width = GST_VIDEO_INFO_COMP_WIDTH (&priv->info, comp[0]);
-      guint height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->info, comp[0]);
-      width = MAX (width, 1);
-      height = MAX (height, 1);
-
-      auto desc = CD3DX12_RESOURCE_DESC::Tex2D (d3d12_format.resource_format[i],
-          width, height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+    if (d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
+      auto desc = CD3DX12_RESOURCE_DESC::Tex2D (d3d12_format.dxgi_format,
+          priv->info.width, priv->info.height, 1, 1, 1, 0,
+          D3D12_RESOURCE_FLAG_NONE);
 
       gst_d3d12_staging_buffer_pool_do_align (desc);
 
+      auto num_planes = D3D12GetFormatPlaneCount (device,
+          d3d12_format.dxgi_format);
+
       UINT64 mem_size;
-      device->GetCopyableFootprints (&desc, 0, 1, base_offset,
-          &priv->layout[i], nullptr, nullptr, &mem_size);
+      device->GetCopyableFootprints (&desc, 0, num_planes, 0,
+          priv->layout, nullptr, nullptr, &mem_size);
+      for (guint i = 0; i < num_planes; i++) {
+        priv->stride[i] = priv->layout[i].Footprint.RowPitch;
+        priv->offset[i] = (gsize) priv->layout[i].Offset;
+      }
 
-      priv->stride[i] = priv->layout[i].Footprint.RowPitch;
-      priv->offset[i] = (gsize) priv->layout[i].Offset;
+      priv->layout_count = num_planes;
+      priv->total_mem_size = mem_size;
+    } else {
+      auto finfo = priv->info.finfo;
+      UINT64 base_offset = 0;
 
-      base_offset += mem_size;
+      for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+        if (d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
+          break;
 
-      priv->layout_count++;
-      base_offset = GST_ROUND_UP_N (base_offset,
-          (UINT64) D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+        gint comp[GST_VIDEO_MAX_COMPONENTS];
+        gst_video_format_info_component (finfo, i, comp);
+
+        guint width = GST_VIDEO_INFO_COMP_WIDTH (&priv->info, comp[0]);
+        guint height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->info, comp[0]);
+        width = MAX (width, 1);
+        height = MAX (height, 1);
+
+        auto desc =
+            CD3DX12_RESOURCE_DESC::Tex2D (d3d12_format.resource_format[i],
+            width, height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+
+        gst_d3d12_staging_buffer_pool_do_align (desc);
+
+        UINT64 mem_size;
+        device->GetCopyableFootprints (&desc, 0, 1, base_offset,
+            &priv->layout[i], nullptr, nullptr, &mem_size);
+
+        priv->stride[i] = priv->layout[i].Footprint.RowPitch;
+        priv->offset[i] = (gsize) priv->layout[i].Offset;
+
+        base_offset += mem_size;
+
+        priv->layout_count++;
+        base_offset = GST_ROUND_UP_N (base_offset,
+            (UINT64) D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+      }
+
+      priv->total_mem_size = (gsize) base_offset;
     }
-
-    priv->total_mem_size = (gsize) base_offset;
   }
 
   gst_buffer_pool_config_set_params (config,
