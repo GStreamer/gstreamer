@@ -149,6 +149,12 @@ gboolean gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
                                                GstD3DConverterCSByteCode * byte_code);
 
 GST_D3D_SHADER_API
+gboolean gst_d3d_converter_shader_get_cs_blob_d3d11 (GstVideoFormat in_format,
+                                                     GstVideoFormat out_format,
+                                                     GstD3DShaderModel shader_model,
+                                                     GstD3DConverterCSByteCode * byte_code);
+
+GST_D3D_SHADER_API
 guint   gst_d3d_converter_shader_get_ps_blob (GstVideoFormat in_format,
                                               GstVideoFormat out_format,
                                               gboolean in_premul,

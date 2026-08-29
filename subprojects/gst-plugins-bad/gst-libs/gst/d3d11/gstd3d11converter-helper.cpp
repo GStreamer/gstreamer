@@ -95,7 +95,7 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
   if (in_format != out_format) {
     need_convert = TRUE;
     if (handle->GetFeatureLevel () >= D3D_FEATURE_LEVEL_11_0) {
-      try_cs = gst_d3d_converter_shader_get_cs_blob (in_format, out_format,
+      try_cs = gst_d3d_converter_shader_get_cs_blob_d3d11 (in_format, out_format,
           GST_D3D_SM_5_0, &bytecode);
       if (try_cs) {
         srv_format = bytecode.srv_format;

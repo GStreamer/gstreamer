@@ -334,10 +334,10 @@ gst_d3d_converter_shader_get_vs_blob (GstD3DShaderModel shader_model,
   return TRUE;
 }
 
-gboolean
-gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
+static gboolean
+gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
     GstVideoFormat out_format, GstD3DShaderModel shader_model,
-    GstD3DConverterCSByteCode * byte_code)
+    gboolean is_d3d11, GstD3DConverterCSByteCode * byte_code)
 {
   g_return_val_if_fail (shader_model < GST_D3D_SM_LAST, FALSE);
   g_return_val_if_fail (byte_code, FALSE);
@@ -400,13 +400,23 @@ gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
       x_unit = 32;
       break;
     case GST_VIDEO_FORMAT_RGB:
-      srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      in_format_str = "RGB";
+      if (is_d3d11) {
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "RGB";
+      } else {
+        srv_format = DXGI_FORMAT_R32_TYPELESS;
+        in_format_str = "RGB_Buffer";
+      }
       x_unit = 32;
       break;
     case GST_VIDEO_FORMAT_BGR:
-      srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      in_format_str = "BGR";
+      if (is_d3d11) {
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "BGR";
+      } else {
+        srv_format = DXGI_FORMAT_R32_TYPELESS;
+        in_format_str = "BGR_Buffer";
+      }
       x_unit = 32;
       break;
     case GST_VIDEO_FORMAT_RGB16:
@@ -518,13 +528,23 @@ gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
       x_unit = 8;
       break;
     case GST_VIDEO_FORMAT_RGB:
-      uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      out_format_str = "RGB";
+      if (is_d3d11) {
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "RGB";
+      } else {
+        uav_format = DXGI_FORMAT_R32_TYPELESS;
+        out_format_str = "RGB_Buffer";
+      }
       x_unit = 32;
       break;
     case GST_VIDEO_FORMAT_BGR:
-      uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      out_format_str = "BGR";
+      if (is_d3d11) {
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "BGR";
+      } else {
+        uav_format = DXGI_FORMAT_R32_TYPELESS;
+        out_format_str = "BGR_Buffer";
+      }
       x_unit = 32;
       break;
     case GST_VIDEO_FORMAT_RGB16:
@@ -638,6 +658,24 @@ gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
   g_compiled_blobs.push_back ({ shader_name, blob });
 
   return TRUE;
+}
+
+gboolean
+gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
+    GstVideoFormat out_format, GstD3DShaderModel shader_model,
+    GstD3DConverterCSByteCode * byte_code)
+{
+  return gst_d3d_converter_shader_get_cs_blob_internal (in_format, out_format,
+      shader_model, FALSE, byte_code);
+}
+
+gboolean
+gst_d3d_converter_shader_get_cs_blob_d3d11 (GstVideoFormat in_format,
+    GstVideoFormat out_format, GstD3DShaderModel shader_model,
+    GstD3DConverterCSByteCode * byte_code)
+{
+  return gst_d3d_converter_shader_get_cs_blob_internal (in_format, out_format,
+      shader_model, TRUE, byte_code);
 }
 
 enum class PS_OUTPUT

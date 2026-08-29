@@ -36,6 +36,14 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_converter_debug);
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
+struct GstD3D12UnpackConstants
+{
+  guint width;
+  guint height;
+  guint stride;
+  guint padding;
+};
+
 struct GstD3D12UnpackPrivate
 {
   ~GstD3D12UnpackPrivate ()
@@ -64,10 +72,12 @@ struct GstD3D12UnpackPrivate
   guint y_unit = 8;
 
   GstD3D12DescHeapPool *desc_pool = nullptr;
+  GstD3D12UnpackConstants cbuf = { };
 
   GstBufferPool *upload_pool = nullptr;
   GstBufferPool *output_pool = nullptr;
   bool need_process = false;
+  bool is_buffer = false;
   guint heap_inc_size;
 };
 
@@ -178,6 +188,7 @@ gst_d3d12_unpack_new (GstD3D12Device * device,
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       conv_format = GST_VIDEO_FORMAT_RGBA;
+      priv->is_buffer = true;
       break;
     case GST_VIDEO_FORMAT_r210:
       conv_format = GST_VIDEO_FORMAT_RGB10A2_LE;
@@ -228,19 +239,20 @@ gst_d3d12_unpack_new (GstD3D12Device * device,
 
   D3D_ROOT_SIGNATURE_VERSION rs_version = D3D_ROOT_SIGNATURE_VERSION_1_0;
 
-  CD3DX12_ROOT_PARAMETER param;
+  CD3DX12_ROOT_PARAMETER param[2];
   CD3DX12_DESCRIPTOR_RANGE range[2];
   range[0].Init (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
   range[1].Init (D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
 
-  param.InitAsDescriptorTable (2, range);
+  param[0].InitAsDescriptorTable (2, range);
+  param[1].InitAsConstants (4, 0, 0);
 
   D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc = { };
 
   ComPtr < ID3DBlob > rs_blob;
   ComPtr < ID3DBlob > error_blob;
-  CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (rs_desc, 1, &param,
-      0, nullptr, rs_flags);
+  CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (rs_desc,
+      G_N_ELEMENTS (param), param, 0, nullptr, rs_flags);
   auto hr = D3DX12SerializeVersionedRootSignature (&rs_desc,
       rs_version, &rs_blob, &error_blob);
   if (!gst_d3d12_result (hr, device)) {
@@ -474,6 +486,7 @@ gst_d3d12_unpack_execute (GstD3D12Unpack * unpack, GstBuffer * buffer,
   auto desc_handle = gst_d3d12_desc_heap_get_handle (descriptor);
   auto desc_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (GetCPUDescriptorHandleForHeapStart (desc_handle));
+
   device->CopyDescriptorsSimple (1, desc_cpu_handle,
       in_frame.srv_desc_handle[0], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   desc_cpu_handle.Offset (priv->heap_inc_size);
@@ -487,6 +500,16 @@ gst_d3d12_unpack_execute (GstD3D12Unpack * unpack, GstBuffer * buffer,
   cl->SetDescriptorHeaps (1, heaps);
   cl->SetComputeRootDescriptorTable (0,
       GetGPUDescriptorHandleForHeapStart (desc_handle));
+
+  if (priv->is_buffer) {
+    priv->cbuf.width = width;
+    priv->cbuf.height = height;
+    priv->cbuf.stride = in_frame.info.stride[0];
+
+    cl->SetComputeRoot32BitConstants (1,
+        sizeof (priv->cbuf) / sizeof (guint), &priv->cbuf, 0);
+  }
+
   cl->Dispatch (priv->tg_x, priv->tg_y, 1);
   D3D12_RESOURCE_BARRIER barrier =
       CD3DX12_RESOURCE_BARRIER::Transition (out_frame.data[0],

@@ -36,6 +36,14 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_converter_debug);
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
+struct GstD3D12PackConstants
+{
+  guint width;
+  guint height;
+  guint stride;
+  guint padding;
+};
+
 struct GstD3D12PackPrivate
 {
   ~GstD3D12PackPrivate ()
@@ -57,9 +65,11 @@ struct GstD3D12PackPrivate
   guint tg_y = 0;
 
   GstD3D12DescHeapPool *desc_pool = nullptr;
+  GstD3D12PackConstants cbuf = { };
 
   GstBufferPool *render_target_pool = nullptr;
   bool need_process = false;
+  bool is_buffer = false;
   guint heap_inc_size;
 };
 
@@ -171,6 +181,7 @@ gst_d3d12_pack_new (GstD3D12Device * device,
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       conv_format = GST_VIDEO_FORMAT_RGBA;
+      priv->is_buffer = true;
       break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_r210:
@@ -224,19 +235,20 @@ gst_d3d12_pack_new (GstD3D12Device * device,
 
   D3D_ROOT_SIGNATURE_VERSION rs_version = D3D_ROOT_SIGNATURE_VERSION_1_0;
 
-  CD3DX12_ROOT_PARAMETER param;
+  CD3DX12_ROOT_PARAMETER param[2];
   CD3DX12_DESCRIPTOR_RANGE range[2];
   range[0].Init (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
   range[1].Init (D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
 
-  param.InitAsDescriptorTable (2, range);
+  param[0].InitAsDescriptorTable (2, range);
+  param[1].InitAsConstants (4, 0, 0);
 
   D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc = { };
 
   ComPtr < ID3DBlob > rs_blob;
   ComPtr < ID3DBlob > error_blob;
-  CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (rs_desc, 1, &param,
-      0, nullptr, rs_flags);
+  CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (rs_desc,
+      G_N_ELEMENTS (param), param, 0, nullptr, rs_flags);
   auto hr = D3DX12SerializeVersionedRootSignature (&rs_desc,
       rs_version, &rs_blob, &error_blob);
   if (!gst_d3d12_result (hr, device)) {
@@ -397,6 +409,16 @@ gst_d3d12_pack_execute (GstD3D12Pack * pack, GstBuffer * in_buf,
   cl->SetDescriptorHeaps (1, heaps);
   cl->SetComputeRootDescriptorTable (0,
       GetGPUDescriptorHandleForHeapStart (desc_handle));
+
+  if (priv->is_buffer) {
+    priv->cbuf.width = out_frame.info.width;
+    priv->cbuf.height = out_frame.info.height;
+    priv->cbuf.stride = out_frame.info.stride[0];
+
+    cl->SetComputeRoot32BitConstants (1,
+        sizeof (priv->cbuf) / sizeof (guint), &priv->cbuf, 0);
+  }
+
   cl->Dispatch (priv->tg_x, priv->tg_y, 1);
 
   gst_d3d12_frame_unmap (&in_frame);

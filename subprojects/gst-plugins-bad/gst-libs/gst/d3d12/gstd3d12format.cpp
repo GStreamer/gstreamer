@@ -206,11 +206,11 @@ struct FormatBuilder : public GstD3D12Format
       GstVideoFormat Format
     )
   {
-    DXGI_FORMAT resource_format[] = { DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN,
-        DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN };
-    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+    DXGI_FORMAT resource_format[] = { DXGI_FORMAT_R32_TYPELESS,
+        DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_OUTPUT_UAV,
         D3D12_RESOURCE_DIMENSION_BUFFER, DXGI_FORMAT_UNKNOWN, resource_format,
-        D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE);
+        D3D12_FORMAT_SUPPORT1_BUFFER, D3D12_FORMAT_SUPPORT2_NONE);
   }
 };
 
@@ -241,10 +241,8 @@ static const GstD3D12Format g_format_map[] = {
       DXGI_FORMAT_R8G8B8A8_UNORM),
   FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_ABGR,
       DXGI_FORMAT_R8G8B8A8_UNORM),
-  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_RGB,
-      DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM),
-  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_BGR,
-      DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_RGB),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_BGR),
   FormatBuilder::Planar (GST_VIDEO_FORMAT_Y41B),
   FormatBuilder::Planar (GST_VIDEO_FORMAT_Y42B),
   FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_YVYU,
@@ -273,12 +271,12 @@ static const GstD3D12Format g_format_map[] = {
       DXGI_FORMAT_B5G5R5A1_UNORM),
   FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_BGR15,
       DXGI_FORMAT_B5G5R5A1_UNORM),
-  FormatBuilder::Buffer (GST_VIDEO_FORMAT_UYVP),
+  FormatBuilder::NotSupported (GST_VIDEO_FORMAT_UYVP),
   FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A420),
-  FormatBuilder::Buffer (GST_VIDEO_FORMAT_RGB8P),
+  FormatBuilder::NotSupported (GST_VIDEO_FORMAT_RGB8P),
   FormatBuilder::Planar (GST_VIDEO_FORMAT_YUV9),
   FormatBuilder::Planar (GST_VIDEO_FORMAT_YVU9),
-  FormatBuilder::Buffer (GST_VIDEO_FORMAT_IYU1),
+  FormatBuilder::NotSupported (GST_VIDEO_FORMAT_IYU1),
   FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_ARGB64,
       DXGI_FORMAT_R16G16B16A16_UNORM),
   FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_AYUV64,
