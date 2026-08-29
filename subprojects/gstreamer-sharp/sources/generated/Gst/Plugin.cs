@@ -258,6 +258,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_plugin_get_registry(IntPtr raw);
+
+		public Gst.Registry Registry { 
+			get {
+				IntPtr raw_ret = gst_plugin_get_registry(Handle);
+				Gst.Registry ret = GLib.Object.GetObject(raw_ret) as Gst.Registry;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_release_date_string(IntPtr raw);
 
 		public string ReleaseDateString { 
@@ -341,6 +352,13 @@ namespace Gst {
 			IntPtr raw_ret = gst_plugin_load(Handle);
 			Gst.Plugin ret = GLib.Object.GetObject(raw_ret, true) as Gst.Plugin;
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_plugin_set_static_features_flag(IntPtr raw);
+
+		public void SetStaticFeaturesFlag() {
+			gst_plugin_set_static_features_flag(Handle);
 		}
 
 

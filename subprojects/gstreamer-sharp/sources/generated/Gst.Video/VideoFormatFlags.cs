@@ -21,6 +21,7 @@ namespace Gst.Video {
 		Unpack = 128,
 		Tiled = 256,
 		Subtiles = 512,
+		Float = 1024,
 	}
 
 	internal class VideoFormatFlagsGType {

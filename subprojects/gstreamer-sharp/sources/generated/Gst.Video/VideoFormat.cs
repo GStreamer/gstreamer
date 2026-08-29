@@ -152,6 +152,11 @@ namespace Gst.Video {
 		Nv1610le40 = 139,
 		Bgr10x2Le = 140,
 		Rgb10x2Le = 141,
+		AhardwareBuffer = 142,
+		RgbaF16le = 143,
+		RgbaF16be = 144,
+		RgbaF32le = 145,
+		RgbaF32be = 146,
 	}
 
 	internal class VideoFormatGType {

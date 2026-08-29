@@ -682,6 +682,7 @@
     <enum name="PluginFlags" cname="GstPluginFlags" type="flags" gtype="gst_plugin_flags_get_type">
       <member cname="GST_PLUGIN_FLAG_CACHED" name="Cached" value="16"/>
       <member cname="GST_PLUGIN_FLAG_BLACKLISTED" name="Blacklisted" value="32"/>
+      <member cname="GST_PLUGIN_FLAG_STATIC_FEATURES" name="StaticFeatures" value="64"/>
     </enum>
     <enum name="QueryTypeFlags" cname="GstQueryTypeFlags" type="flags" gtype="gst_query_type_flags_get_type">
       <member cname="GST_QUERY_TYPE_UPSTREAM" name="Upstream" value="1"/>
@@ -5605,6 +5606,10 @@
         <return-type type="const-gchar*"/>
         <parameters/>
       </method>
+      <method name="GetRegistry" cname="gst_plugin_get_registry" version="1.30">
+        <return-type type="GstRegistry*"/>
+        <parameters/>
+      </method>
       <method name="GetReleaseDateString" cname="gst_plugin_get_release_date_string">
         <return-type type="const-gchar*"/>
         <parameters/>
@@ -5644,6 +5649,10 @@
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
+      </method>
+      <method name="SetStaticFeaturesFlag" cname="gst_plugin_set_static_features_flag" version="1.30">
+        <return-type type="void"/>
+        <parameters/>
       </method>
     </object>
     <object name="PluginFeature" cname="GstPluginFeature" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
@@ -12912,6 +12921,9 @@
       <method name="CpuidSupportsArmNeon64" cname="gst_cpuid_supports_arm_neon64" shared="true" version="1.28">
         <return-type type="gboolean"/>
       </method>
+      <method name="CpuidSupportsRiscvV" cname="gst_cpuid_supports_riscv_v" shared="true" version="1.30">
+        <return-type type="gboolean"/>
+      </method>
       <method name="CpuidSupportsX863dnow" cname="gst_cpuid_supports_x86_3dnow" shared="true" version="1.28">
         <return-type type="gboolean"/>
       </method>
@@ -14888,7 +14900,7 @@
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
       <constant value="2" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
       <constant value="29" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
-      <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstApp" library="gstapp-1.0">
@@ -19599,6 +19611,12 @@
           </parameter>
         </parameters>
       </method>
+      <method name="SetAllowDuplicatedPts" cname="gst_base_parse_set_allow_duplicated_pts" version="1.30">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="allow_duplicated_pts" type="gboolean"/>
+        </parameters>
+      </method>
       <method name="SetAverageBitrate" cname="gst_base_parse_set_average_bitrate">
         <return-type type="void"/>
         <parameters>
@@ -20019,6 +20037,7 @@
       <property name="Async" cname="async" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Blocksize" cname="blocksize" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="EnableLastSample" cname="enable-last-sample" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="EnableLastSampleNotify" cname="enable-last-sample-notify" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.30"/>
       <property name="LastSample" cname="last-sample" type="GstSample*" readable="true" writeable="false" construct="false" construct-only="false"/>
       <property name="MaxBitrate" cname="max-bitrate" type="guint64" readable="true" writeable="true" construct="false" construct-only="false" version="1.2"/>
       <property name="MaxLateness" cname="max-lateness" type="gint64" readable="true" writeable="true" construct="false" construct-only="false"/>
@@ -24520,7 +24539,7 @@
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR"/>
       <constant value="2" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
       <constant value="29" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
-      <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
+      <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstRtp" library="gstrtp-1.0">
@@ -30448,6 +30467,7 @@
       <member cname="GST_VIDEO_COLOR_RANGE_UNKNOWN" name="Unknown" value="0"/>
       <member cname="GST_VIDEO_COLOR_RANGE_0_255" name="_00255" value="1"/>
       <member cname="GST_VIDEO_COLOR_RANGE_16_235" name="_1616235" value="2"/>
+      <member cname="GST_VIDEO_COLOR_RANGE_0_1" name="_001" value="3"/>
     </enum>
     <enum name="VideoDitherMethod" cname="GstVideoDitherMethod" type="enum" gtype="gst_video_dither_method_get_type">
       <member cname="GST_VIDEO_DITHER_NONE" name="None" value="0"/>
@@ -30604,6 +30624,11 @@
       <member cname="GST_VIDEO_FORMAT_NV16_10LE40" name="Nv1610le40" value="139"/>
       <member cname="GST_VIDEO_FORMAT_BGR10x2_LE" name="Bgr10x2Le" value="140"/>
       <member cname="GST_VIDEO_FORMAT_RGB10x2_LE" name="Rgb10x2Le" value="141"/>
+      <member cname="GST_VIDEO_FORMAT_AHARDWARE_BUFFER" name="AhardwareBuffer" value="142"/>
+      <member cname="GST_VIDEO_FORMAT_RGBA_F16LE" name="RgbaF16le" value="143"/>
+      <member cname="GST_VIDEO_FORMAT_RGBA_F16BE" name="RgbaF16be" value="144"/>
+      <member cname="GST_VIDEO_FORMAT_RGBA_F32LE" name="RgbaF32le" value="145"/>
+      <member cname="GST_VIDEO_FORMAT_RGBA_F32BE" name="RgbaF32be" value="146"/>
     </enum>
     <enum name="VideoGLTextureOrientation" cname="GstVideoGLTextureOrientation" type="enum" gtype="gst_video_gl_texture_orientation_get_type">
       <member cname="GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL" name="NormalYNormal" value="0"/>
@@ -30806,6 +30831,7 @@
       <member cname="GST_VIDEO_FORMAT_FLAG_UNPACK" name="Unpack" value="128"/>
       <member cname="GST_VIDEO_FORMAT_FLAG_TILED" name="Tiled" value="256"/>
       <member cname="GST_VIDEO_FORMAT_FLAG_SUBTILES" name="Subtiles" value="512"/>
+      <member cname="GST_VIDEO_FORMAT_FLAG_FLOAT" name="Float" value="1024"/>
     </enum>
     <enum name="VideoFrameFlags" cname="GstVideoFrameFlags" type="flags" gtype="gst_video_frame_flags_get_type">
       <member cname="GST_VIDEO_FRAME_FLAG_NONE" name="None" value="0"/>
@@ -32988,7 +33014,7 @@
       <field cname="uuid" access="public" writeable="true" readable="true" is_callback="false" name="Uuid" type="guint8" array="true" array_len="16" element_type="guint8"/>
       <field cname="data" access="public" writeable="true" readable="true" is_callback="false" name="Data" type="guint8"/>
       <field cname="size" access="public" writeable="true" readable="true" is_callback="false" name="Size" type="guint" array="true" element_type="guint8"/>
-      <method name="Free" cname="gst_h274_user_data_unregistered_free" version="1.30">
+      <method name="Clear" cname="gst_h274_user_data_unregistered_clear" version="1.30">
         <return-type type="void"/>
         <parameters/>
       </method>
@@ -34891,7 +34917,7 @@
           </parameter>
           <parameter name="fps_n" type="guint"/>
           <parameter name="fps_d" type="guint"/>
-          <parameter name="latest_daily_jam" type="GDateTime*">
+          <parameter allow-none="1" name="latest_daily_jam" type="GDateTime*">
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="flags" type="GstVideoTimeCodeFlags"/>
@@ -34956,6 +34982,14 @@
           </parameter>
         </parameters>
       </method>
+      <method name="H274DscInitializationClear" cname="gst_h274_dsc_initialization_clear" shared="true" version="1.30">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="dsci" type="GstH274DigitallySignedContentInitialization*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="H274DscInitializationCopy" cname="gst_h274_dsc_initialization_copy" shared="true" version="1.30">
         <return-type type="void"/>
         <parameters>
@@ -34967,10 +35001,10 @@
           </parameter>
         </parameters>
       </method>
-      <method name="H274DscInitializationFree" cname="gst_h274_dsc_initialization_free" shared="true" version="1.30">
+      <method name="H274DscSelectionClear" cname="gst_h274_dsc_selection_clear" shared="true" version="1.30">
         <return-type type="void"/>
         <parameters>
-          <parameter name="dsci" type="GstH274DigitallySignedContentInitialization*">
+          <parameter name="dscs" type="GstH274DigitallySignedContentSelection*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -34986,10 +35020,10 @@
           </parameter>
         </parameters>
       </method>
-      <method name="H274DscSelectionFree" cname="gst_h274_dsc_selection_free" shared="true" version="1.30">
+      <method name="H274DscVerificationClear" cname="gst_h274_dsc_verification_clear" shared="true" version="1.30">
         <return-type type="void"/>
         <parameters>
-          <parameter name="dscs" type="GstH274DigitallySignedContentSelection*">
+          <parameter name="dscv" type="GstH274DigitallySignedContentVerification*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -35005,10 +35039,10 @@
           </parameter>
         </parameters>
       </method>
-      <method name="H274DscVerificationFree" cname="gst_h274_dsc_verification_free" shared="true" version="1.30">
+      <method name="H274UserDataRegisteredClear" cname="gst_h274_user_data_registered_clear" shared="true" version="1.30">
         <return-type type="void"/>
         <parameters>
-          <parameter name="dscv" type="GstH274DigitallySignedContentVerification*">
+          <parameter name="rud" type="GstH274RegisteredUserData*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -35020,14 +35054,6 @@
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="src_rud" type="GstH274RegisteredUserData*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="H274UserDataRegisteredFree" cname="gst_h274_user_data_registered_free" shared="true" version="1.30">
-        <return-type type="void"/>
-        <parameters>
-          <parameter name="rud" type="GstH274RegisteredUserData*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -36343,10 +36369,10 @@
       <constant value="sink" ctype="gchar*" gtype="gchar*" name="VIDEO_ENCODER_SINK_NAME"/>
       <constant value="src" ctype="gchar*" gtype="gchar*" name="VIDEO_ENCODER_SRC_NAME"/>
       <constant value="{ " ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ALL"/>
-      <constant value="A444_16BE, A444_16LE, AYUV64, ARGB64, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, Y416_LE, RGBA64_LE, ARGB64_LE, BGRA64_LE, ABGR64_LE, A422_16BE, A422_16LE, A420_16BE, A420_16LE, A444_12BE, GBRA_12BE, A444_12LE, GBRA_12LE, Y412_BE, Y412_LE, A422_12BE, A422_12LE, A420_12BE, A420_12LE, A444_10BE, GBRA_10BE, A444_10LE, GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, BGR10A2_LE, RGB10A2_LE, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16BE, GBR_16BE, Y444_16LE, GBR_16LE, Y216_BE, v216, Y216_LE, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, BGR10x2_LE, RGB10x2_LE, I422_10BE, I422_10LE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10BE, I420_10LE, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, P010_10LE, NV12_10LE40, NV12_10LE32, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE16, GRAY10_LE32, GRAY8" ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ALL_STR" version="1.24"/>
+      <constant value="RGBA_F32BE, RGBA_F32LE, A444_16BE, A444_16LE, AYUV64, ARGB64, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, Y416_LE, RGBA64_LE, ARGB64_LE, BGRA64_LE, ABGR64_LE, A422_16BE, A422_16LE, A420_16BE, A420_16LE, A444_12BE, GBRA_12BE, A444_12LE, GBRA_12LE, Y412_BE, Y412_LE, A422_12BE, A422_12LE, A420_12BE, A420_12LE, RGBA_F16BE, RGBA_F16LE, A444_10BE, GBRA_10BE, A444_10LE, GBRA_10LE, A422_10BE, A422_10LE, A420_10BE, A420_10LE, Y410, BGR10A2_LE, RGB10A2_LE, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16BE, GBR_16BE, Y444_16LE, GBR_16LE, Y216_BE, v216, Y216_LE, P016_BE, P016_LE, Y444_12BE, GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, I420_12LE, P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, BGR10x2_LE, RGB10x2_LE, I422_10BE, I422_10LE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10BE, I420_10LE, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, P010_10LE, NV12_10LE40, NV12_10LE32, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE16, GRAY10_LE32, GRAY8" ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ALL_STR" version="1.24"/>
       <constant value="{ " ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ANY" version="1.24"/>
-      <constant value="DMA_DRM, " ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ANY_STR" version="1.24"/>
-      <constant value="142" ctype="gint" gtype="gint" name="VIDEO_FORMAT_LAST" version="1.26"/>
+      <constant value="AHARDWARE_BUFFER, DMA_DRM, " ctype="gchar*" gtype="gchar*" name="VIDEO_FORMATS_ANY_STR" version="1.24"/>
+      <constant value="147" ctype="gint" gtype="gint" name="VIDEO_FORMAT_LAST" version="1.26"/>
       <constant value="(fraction) [ 0, max ]" ctype="gchar*" gtype="gchar*" name="VIDEO_FPS_RANGE"/>
       <constant value="1024" ctype="gint" gtype="gint" name="VIDEO_HDR10_PLUS_MAX_BYTES" version="1.30"/>
       <constant value="25" ctype="gint" gtype="gint" name="VIDEO_HDR10_PLUS_MAX_COLS_MD_APL" version="1.30"/>
@@ -36462,6 +36488,7 @@
       <member cname="GST_WEBRTC_KIND_UNKNOWN" name="Unknown" value="0"/>
       <member cname="GST_WEBRTC_KIND_AUDIO" name="Audio" value="1"/>
       <member cname="GST_WEBRTC_KIND_VIDEO" name="Video" value="2"/>
+      <member cname="GST_WEBRTC_KIND_APPLICATION" name="Application" value="3"/>
     </enum>
     <enum name="WebRTCPeerConnectionState" cname="GstWebRTCPeerConnectionState" type="enum" gtype="gst_webrtc_peer_connection_state_get_type">
       <member cname="GST_WEBRTC_PEER_CONNECTION_STATE_NEW" name="New" value="0"/>

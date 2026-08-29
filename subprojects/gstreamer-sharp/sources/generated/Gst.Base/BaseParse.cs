@@ -974,6 +974,15 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_base_parse_set_allow_duplicated_pts(IntPtr raw, bool allow_duplicated_pts);
+
+		public bool AllowDuplicatedPts { 
+			set {
+				gst_base_parse_set_allow_duplicated_pts(Handle, value);
+			}
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_average_bitrate(IntPtr raw, uint bitrate);
 
 		public uint AverageBitrate { 

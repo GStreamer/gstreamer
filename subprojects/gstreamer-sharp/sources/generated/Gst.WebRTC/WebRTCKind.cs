@@ -13,6 +13,7 @@ namespace Gst.WebRTC {
 		Unknown = 0,
 		Audio = 1,
 		Video = 2,
+		Application = 3,
 	}
 
 	internal class WebRTCKindGType {

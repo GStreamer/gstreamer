@@ -13,6 +13,7 @@ namespace Gst.Video {
 		Unknown = 0,
 		_00255 = 1,
 		_1616235 = 2,
+		_001 = 3,
 	}
 
 	internal class VideoColorRangeGType {

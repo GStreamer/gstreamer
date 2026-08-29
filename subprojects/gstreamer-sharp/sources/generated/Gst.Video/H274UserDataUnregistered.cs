@@ -37,6 +37,22 @@ namespace Gst.Video {
 			}
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_h274_user_data_unregistered_clear(IntPtr raw);
+
+		public void Clear() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_h274_user_data_unregistered_clear(this_as_native);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		static void ReadNative (IntPtr native, ref Gst.Video.H274UserDataUnregistered target)
+		{
+			target = New (native);
+		}
+
 		public bool Equals (H274UserDataUnregistered other)
 		{
 			return true && Uuid.Equals (other.Uuid) && Data.Equals (other.Data) && Size.Equals (other.Size);

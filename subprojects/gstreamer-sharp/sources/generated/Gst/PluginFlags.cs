@@ -13,6 +13,7 @@ namespace Gst {
 
 		Cached = 16,
 		Blacklisted = 32,
+		StaticFeatures = 64,
 	}
 
 	internal class PluginFlagsGType {

@@ -66,6 +66,21 @@ namespace Gst.Base {
 			}
 		}
 
+		[GLib.Property ("enable-last-sample-notify")]
+		public bool EnableLastSampleNotify {
+			get {
+				GLib.Value val = GetProperty ("enable-last-sample-notify");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("enable-last-sample-notify", val);
+				val.Dispose ();
+			}
+		}
+
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_base_sink_get_last_sample(IntPtr raw);
 

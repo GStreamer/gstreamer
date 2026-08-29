@@ -137,6 +137,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_cpuid_supports_riscv_v();
+
+		public static bool CpuidSupportsRiscvV() {
+			bool raw_ret = gst_cpuid_supports_riscv_v();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_cpuid_supports_x86_3dnow();
 
 		public static bool CpuidSupportsX863dnow() {
