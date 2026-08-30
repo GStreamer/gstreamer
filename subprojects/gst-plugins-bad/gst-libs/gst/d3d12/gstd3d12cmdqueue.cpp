@@ -499,8 +499,9 @@ gst_d3d12_cmd_queue_set_notify (GstD3D12CmdQueue * queue,
 
   auto priv = queue->priv;
 
-  std::lock_guard < std::mutex > elk (priv->execute_lock);
   auto gc_data = std::make_shared < GCData > (fence_data, notify, fence_value);
+
+  std::lock_guard < std::mutex > lk (priv->lock);
   if (!priv->gc_thread) {
     priv->gc_thread = g_thread_new ("GstD3D12Gc",
         (GThreadFunc) gst_d3d12_cmd_queue_gc_thread, queue);
@@ -508,7 +509,6 @@ gst_d3d12_cmd_queue_set_notify (GstD3D12CmdQueue * queue,
 
   GST_LOG_OBJECT (queue, "Pushing GC data %" G_GUINT64_FORMAT, fence_value);
 
-  std::lock_guard < std::mutex > lk (priv->lock);
   priv->gc_list.push (std::move (gc_data));
   priv->cond.notify_one ();
 }
