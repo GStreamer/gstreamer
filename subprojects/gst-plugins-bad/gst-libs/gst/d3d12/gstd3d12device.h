@@ -132,5 +132,12 @@ HRESULT                 gst_d3d12_device_enqueue_make_resident    (GstD3D12Devic
                                                                    ID3D12Fence ** fence,
                                                                    guint64 * fence_value);
 
+GST_D3D12_API
+gboolean                gst_d3d12_device_prepare_graphics_cmd_list (GstD3D12Device * device,
+                                                                    ID3D12GraphicsCommandList ** cl,
+                                                                    GstD3D12CmdAllocPool * ca_pool,
+                                                                    ID3D12PipelineState * initial_state,
+                                                                    GstD3D12FenceData * fence_data);
+
 G_END_DECLS
 

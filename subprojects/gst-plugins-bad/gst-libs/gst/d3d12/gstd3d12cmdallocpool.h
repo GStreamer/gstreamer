@@ -79,6 +79,9 @@ gboolean                       gst_d3d12_cmd_alloc_pool_acquire (GstD3D12CmdAllo
                                                                  GstD3D12CmdAlloc ** ca);
 
 GST_D3D12_API
+D3D12_COMMAND_LIST_TYPE        gst_d3d12_cmd_alloc_pool_get_cmd_list_type (GstD3D12CmdAllocPool * pool);
+
+GST_D3D12_API
 GstD3D12CmdAlloc *             gst_d3d12_cmd_alloc_ref (GstD3D12CmdAlloc * ca);
 
 GST_D3D12_API

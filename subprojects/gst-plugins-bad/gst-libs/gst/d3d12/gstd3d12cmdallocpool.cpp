@@ -221,6 +221,25 @@ gst_d3d12_cmd_alloc_pool_acquire (GstD3D12CmdAllocPool * pool,
 }
 
 /**
+ * gst_d3d12_cmd_alloc_pool_get_cmd_list_type:
+ * @pool: a #GstD3D12CmdAllocPool
+ *
+ * Gets the command list type configured for @pool.
+ *
+ * Returns: the command list type
+ *
+ * Since: 1.30
+ */
+D3D12_COMMAND_LIST_TYPE
+gst_d3d12_cmd_alloc_pool_get_cmd_list_type (GstD3D12CmdAllocPool * pool)
+{
+  g_return_val_if_fail (GST_IS_D3D12_CMD_ALLOC_POOL (pool),
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+  return pool->priv->cmd_type;
+}
+
+/**
  * gst_d3d12_cmd_alloc_ref:
  * @ca: a #GstD3D12CmdAlloc
  *

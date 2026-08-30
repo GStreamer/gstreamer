@@ -2995,3 +2995,87 @@ gst_d3d12_device_is_over_budget (GstD3D12Device * device)
 
   return device->priv->inner->is_over_budget.load ();
 }
+
+/**
+ * gst_d3d12_device_prepare_graphics_cmd_list:
+ * @device: a #GstD3D12Device
+ * @cl: (inout): a pointer to an ID3D12GraphicsCommandList
+ * @ca_pool: a #GstD3D12CmdAllocPool
+ * @initial_state: (nullable): an initial pipeline state object
+ * @fence_data: a #GstD3D12FenceData
+ *
+ * Prepares @cl for command recording. If @cl points to %NULL, a new
+ * command list is created using the command list type configured for
+ * @ca_pool. Otherwise, the existing command list is reset. @initial_state
+ * is used as the initial pipeline state for the command list.
+ *
+ * The command allocator used for recording is acquired from @ca_pool
+ * and added to @fence_data.
+ *
+ * Returns: %TRUE if the command list was successfully prepared
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_device_prepare_graphics_cmd_list (GstD3D12Device * device,
+    ID3D12GraphicsCommandList ** cl, GstD3D12CmdAllocPool * ca_pool,
+    ID3D12PipelineState * initial_state, GstD3D12FenceData * fence_data)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (cl, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_ALLOC_POOL (ca_pool), FALSE);
+  g_return_val_if_fail (fence_data, FALSE);
+
+  auto & priv = device->priv->inner;
+
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (ca_pool, &gst_ca)) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
+    return FALSE;
+  }
+
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
+  auto hr = ca->Reset ();
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Couldn't reset command allocator");
+    gst_d3d12_cmd_alloc_unref (gst_ca);
+    return FALSE;
+  }
+
+  if (*cl == nullptr) {
+    ComPtr < ID3D12GraphicsCommandList > new_cl;
+    auto cmd_type = gst_d3d12_cmd_alloc_pool_get_cmd_list_type (ca_pool);
+
+    if (cmd_type != D3D12_COMMAND_LIST_TYPE_DIRECT &&
+        cmd_type != D3D12_COMMAND_LIST_TYPE_COMPUTE &&
+        cmd_type != D3D12_COMMAND_LIST_TYPE_COPY) {
+      GST_ERROR_OBJECT (device, "Unexpected command list type %d", cmd_type);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
+      return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (device, "Creating new command list for type %d",
+        cmd_type);
+
+    hr = priv->device->CreateCommandList (0, cmd_type, ca, initial_state,
+        IID_PPV_ARGS (&new_cl));
+    if (!gst_d3d12_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Couldn't create command list");
+      gst_d3d12_cmd_alloc_unref (gst_ca);
+      return FALSE;
+    }
+
+    *cl = new_cl.Detach ();
+  } else {
+    hr = (*cl)->Reset (ca, initial_state);
+    if (!gst_d3d12_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Couldn't reset command list");
+      gst_d3d12_cmd_alloc_unref (gst_ca);
+      return FALSE;
+    }
+  }
+
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+
+  return TRUE;
+}
