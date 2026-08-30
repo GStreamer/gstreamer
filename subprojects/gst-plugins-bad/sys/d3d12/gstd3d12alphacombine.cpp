@@ -896,46 +896,19 @@ gst_d3d12_alpha_combine_convert_nv12 (GstD3D12AlphaCombine * self,
     return nullptr;
   }
 
-  auto out_dmem = (GstD3D12Memory *) out_mem;
-  auto out_resource = gst_d3d12_memory_get_resource_handle (out_dmem);
-
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (ctx->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (priv->device,
+          ctx->cl.GetAddressOf (), ctx->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
     gst_d3d12_fence_data_unref (fence_data);
     gst_memory_unref (out_mem);
 
     return nullptr;
   }
 
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
-
-  auto hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_fence_data_unref (fence_data);
-    gst_memory_unref (out_mem);
-
-    return nullptr;
-  }
-
-  if (!ctx->cl) {
-    hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca, nullptr, IID_PPV_ARGS (&ctx->cl));
-  } else {
-    hr = ctx->cl->Reset (ca, nullptr);
-  }
-
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command list");
-    gst_d3d12_fence_data_unref (fence_data);
-    gst_memory_unref (out_mem);
-    return nullptr;
-  }
+  auto out_dmem = (GstD3D12Memory *) out_mem;
+  auto out_resource = gst_d3d12_memory_get_resource_handle (out_dmem);
 
   if (alpha_buf) {
     GstD3D12Frame alpha_frame;
@@ -1036,7 +1009,7 @@ gst_d3d12_alpha_combine_convert_nv12 (GstD3D12AlphaCombine * self,
     ctx->cl->ClearRenderTargetView (cpu_handle, clear_color, 0, nullptr);
   }
 
-  hr = ctx->cl->Close ();
+  auto hr = ctx->cl->Close ();
   if (!gst_d3d12_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Couldn't close command list");
     gst_d3d12_fence_data_unref (fence_data);
@@ -1147,10 +1120,9 @@ gst_d3d12_alpha_combine_convert_p010 (GstD3D12AlphaCombine * self,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (ctx->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (priv->device,
+          ctx->cl.GetAddressOf (), ctx->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
     gst_d3d12_fence_data_unref (fence_data);
     gst_d3d12_frame_unmap (&main_frame);
     if (alpha_buf)
@@ -1158,40 +1130,6 @@ gst_d3d12_alpha_combine_convert_p010 (GstD3D12AlphaCombine * self,
     gst_d3d12_frame_unmap (&out_frame);
     gst_buffer_unref (out_buf);
 
-    return nullptr;
-  }
-
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
-
-  auto hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_fence_data_unref (fence_data);
-    gst_d3d12_frame_unmap (&main_frame);
-    if (alpha_buf)
-      gst_d3d12_frame_unmap (&alpha_frame);
-    gst_d3d12_frame_unmap (&out_frame);
-    gst_buffer_unref (out_buf);
-
-    return nullptr;
-  }
-
-  if (!ctx->cl) {
-    hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca, nullptr, IID_PPV_ARGS (&ctx->cl));
-  } else {
-    hr = ctx->cl->Reset (ca, nullptr);
-  }
-
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command list");
-    gst_d3d12_fence_data_unref (fence_data);
-    gst_d3d12_frame_unmap (&main_frame);
-    if (alpha_buf)
-      gst_d3d12_frame_unmap (&alpha_frame);
-    gst_d3d12_frame_unmap (&out_frame);
-    gst_buffer_unref (out_buf);
     return nullptr;
   }
 
@@ -1297,7 +1235,7 @@ gst_d3d12_alpha_combine_convert_p010 (GstD3D12AlphaCombine * self,
 
   gst_d3d12_frame_unmap (&out_frame);
 
-  hr = ctx->cl->Close ();
+  auto hr = ctx->cl->Close ();
   if (!gst_d3d12_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Couldn't close command list");
     gst_d3d12_fence_data_unref (fence_data);

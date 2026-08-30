@@ -394,41 +394,14 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
   }
   gst_d3d12_frame_unmap (&out_frame);
 
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
-    return FALSE;
-  }
-
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  auto hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_cmd_alloc_unref (gst_ca);
-    return FALSE;
-  }
-
-  if (!priv->cl) {
-    auto device = gst_d3d12_device_get_device_handle (priv->device);
-    hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca, nullptr, IID_PPV_ARGS (&priv->cl));
-    if (!gst_d3d12_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create command list");
-      gst_d3d12_cmd_alloc_unref (gst_ca);
-      return FALSE;
-    }
-  } else {
-    hr = priv->cl->Reset (ca, nullptr);
-    if (!gst_d3d12_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_cmd_alloc_unref (gst_ca);
-      return FALSE;
-    }
-  }
-
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (priv->device,
+          priv->cl.GetAddressOf (), priv->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
+    gst_d3d12_fence_data_unref (fence_data);
+    return FALSE;
+  }
 
   g_object_set (priv->blend_conv, "src-width", priv->layout_info.width,
       "src-height", priv->layout_info.height,
@@ -510,7 +483,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
     gst_clear_buffer (&bgra_buf);
   }
 
-  hr = priv->cl->Close ();
+  auto hr = priv->cl->Close ();
   if (ret)
     ret = gst_d3d12_result (hr, priv->device);
 

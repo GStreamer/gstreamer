@@ -2186,47 +2186,18 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
-    gst_clear_buffer (&convert_buffer);
-    return GST_FLOW_ERROR;
-  }
-
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-
-  auto hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_cmd_alloc_unref (gst_ca);
-    gst_clear_buffer (&convert_buffer);
-    return GST_FLOW_ERROR;
-  }
-
-  if (!priv->ctx->cl) {
-    auto device = gst_d3d12_device_get_device_handle (self->device);
-    hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca, nullptr, IID_PPV_ARGS (&priv->ctx->cl));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_cmd_alloc_unref (gst_ca);
-      gst_clear_buffer (&convert_buffer);
-      return GST_FLOW_ERROR;
-    }
-  } else {
-    hr = priv->ctx->cl->Reset (ca, nullptr);
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_cmd_alloc_unref (gst_ca);
-      gst_clear_buffer (&convert_buffer);
-      return GST_FLOW_ERROR;
-    }
-  }
-
-  auto cl = priv->ctx->cl;
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (self->device,
+          priv->ctx->cl.GetAddressOf (), priv->ctx->ca_pool, nullptr,
+          fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
+    gst_clear_buffer (&convert_buffer);
+    gst_d3d12_fence_data_unref (fence_data);
+    return GST_FLOW_ERROR;
+  }
+
+  auto & cl = priv->ctx->cl;
 
   pts = priv->accum_rtime + priv->running_time;
   gst_d3d12_test_src_draw_pattern (self, pts, cl.Get ());
@@ -2239,7 +2210,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
     return GST_FLOW_ERROR;
   }
 
-  hr = cl->Close ();
+  auto hr = cl->Close ();
 
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't close command list");

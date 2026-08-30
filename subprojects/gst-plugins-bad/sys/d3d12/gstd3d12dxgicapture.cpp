@@ -1690,34 +1690,11 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   GstD3D12FenceData *fence_data = nullptr;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-
-  GstD3D12CmdAlloc *gst_ca = nullptr;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (self->device,
+          priv->cl.GetAddressOf (), priv->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
     gst_d3d12_fence_data_unref (fence_data);
-    return FALSE;
-  }
 
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
-
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_fence_data_unref (fence_data);
-    return FALSE;
-  }
-
-  if (!priv->cl) {
-    hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca, nullptr, IID_PPV_ARGS (&priv->cl));
-  } else {
-    hr = priv->cl->Reset (ca, nullptr);
-  }
-
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command list");
-    gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
   }
 

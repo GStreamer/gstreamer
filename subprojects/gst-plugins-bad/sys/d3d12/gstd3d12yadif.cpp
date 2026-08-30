@@ -1663,34 +1663,9 @@ gst_d3d12_yadif_process_frame (GstD3D12Yadif * self)
     }
   }
 
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
-    gst_d3d12_yadif_unmap_frame_ctx (&frame_ctx);
-    gst_d3d12_fence_data_unref (fence_data);
-    return GST_FLOW_ERROR;
-  }
-
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
-
-  HRESULT hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_yadif_unmap_frame_ctx (&frame_ctx);
-    gst_d3d12_fence_data_unref (fence_data);
-    return GST_FLOW_ERROR;
-  }
-
-  if (!priv->cl) {
-    hr = device->CreateCommandList (0, priv->queue_type,
-        ca, nullptr, IID_PPV_ARGS (&priv->cl));
-  } else {
-    hr = priv->cl->Reset (ca, nullptr);
-  }
-
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command list");
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (priv->device,
+          priv->cl.GetAddressOf (), priv->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
     gst_d3d12_yadif_unmap_frame_ctx (&frame_ctx);
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
@@ -1756,7 +1731,7 @@ gst_d3d12_yadif_process_frame (GstD3D12Yadif * self)
     }
   }
 
-  hr = priv->cl->Close ();
+  auto hr = priv->cl->Close ();
 
   if (!gst_d3d12_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Couldn't close command list");
@@ -1830,33 +1805,9 @@ gst_d3d12_yadif_preproc (GstD3D12Yadif * self, GstBuffer * buffer)
   gst_d3d12_fence_data_pool_acquire (priv->fence_pool, &fence_data);
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (buffer));
 
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
-    gst_d3d12_fence_data_unref (fence_data);
-    return nullptr;
-  }
-
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
-
-  auto hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_fence_data_unref (fence_data);
-    return nullptr;
-  }
-
-  auto device = gst_d3d12_device_get_device_handle (priv->device);
-  if (!priv->cl) {
-    hr = device->CreateCommandList (0, priv->queue_type,
-        ca, nullptr, IID_PPV_ARGS (&priv->cl));
-  } else {
-    hr = priv->cl->Reset (ca, nullptr);
-  }
-
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command list");
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (priv->device,
+          priv->cl.GetAddressOf (), priv->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
     gst_d3d12_fence_data_unref (fence_data);
     return nullptr;
   }
@@ -1898,6 +1849,7 @@ gst_d3d12_yadif_preproc (GstD3D12Yadif * self, GstBuffer * buffer)
   auto desc_handle = gst_d3d12_desc_heap_get_handle (desc_heap);
   auto cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (GetCPUDescriptorHandleForHeapStart (desc_handle));
+  auto device = gst_d3d12_device_get_device_handle (priv->device);
 
   device->CopyDescriptorsSimple (1, cpu_handle, in_frame.srv_desc_handle[0],
       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -1916,7 +1868,7 @@ gst_d3d12_yadif_preproc (GstD3D12Yadif * self, GstBuffer * buffer)
   priv->cl->SetPipelineState (ctx->pso.Get ());
   priv->cl->SetComputeRootDescriptorTable (0, gpu_handle);
   priv->cl->Dispatch (ctx->dispatch_x, ctx->dispatch_y, 1);
-  hr = priv->cl->Close ();
+  auto hr = priv->cl->Close ();
 
   if (!gst_d3d12_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Couldn't close command list");

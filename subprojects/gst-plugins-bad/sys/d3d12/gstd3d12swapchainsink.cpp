@@ -1093,50 +1093,22 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
 
   gst_d3d12_overlay_blender_upload (priv->comp, priv->cached_buf);
 
-  GstD3D12CmdAlloc *gst_ca;
-  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+  if (!gst_d3d12_device_prepare_graphics_cmd_list (self->device,
+          priv->cl.GetAddressOf (), priv->ca_pool, nullptr, fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't prepare command list");
+    gst_d3d12_fence_data_unref (fence_data);
+
     return FALSE;
   }
 
-  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
-  auto hr = ca->Reset ();
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't reset command list");
-    gst_d3d12_cmd_alloc_unref (gst_ca);
-    return FALSE;
-  }
-
-  ComPtr < ID3D12GraphicsCommandList > cl;
-  if (!priv->cl) {
-    auto device_handle = gst_d3d12_device_get_device_handle (self->device);
-    hr = device_handle->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca, nullptr, IID_PPV_ARGS (&cl));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create command list");
-      gst_d3d12_cmd_alloc_unref (gst_ca);
-      return FALSE;
-    }
-
-    priv->cl = cl;
-  } else {
-    cl = priv->cl;
-    hr = cl->Reset (ca, nullptr);
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_cmd_alloc_unref (gst_ca);
-      return FALSE;
-    }
-  }
+  auto & cl = priv->cl;
 
   priv->last_backbuf_idx = priv->swapchain->GetCurrentBackBufferIndex ();
   priv->last_backbuf_pts = GST_BUFFER_PTS (priv->cached_buf);
   priv->last_backbuf_dur = GST_BUFFER_DURATION (priv->cached_buf);
   auto backbuf = priv->backbuf[priv->last_backbuf_idx]->backbuf;
-
-  GstD3D12FenceData *fence_data;
-  gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (backbuf, 0);
   auto backbuf_texture = gst_d3d12_memory_get_resource_handle (mem);
@@ -1224,7 +1196,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     cl->ResourceBarrier (1, &barrier);
   }
 
-  hr = cl->Close ();
+  auto hr = cl->Close ();
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't close command list");
     gst_d3d12_fence_data_unref (fence_data);
