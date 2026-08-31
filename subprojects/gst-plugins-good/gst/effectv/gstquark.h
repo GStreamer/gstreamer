@@ -53,7 +53,6 @@ struct _GstQuarkTV
   GstVideoFilter element;
 
   /* < private > */
-  gint area;
   gint planes;
   gint current_plane;
   GstBuffer **planetable;

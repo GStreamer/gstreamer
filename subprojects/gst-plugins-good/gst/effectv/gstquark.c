@@ -85,13 +85,8 @@ gst_quarktv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
   GstQuarkTV *filter = GST_QUARKTV (vfilter);
-  gint width, height;
-
-  width = GST_VIDEO_INFO_WIDTH (in_info);
-  height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   gst_quarktv_planetable_clear (filter);
-  filter->area = width * height;
 
   return TRUE;
 }
@@ -101,10 +96,10 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
     GstVideoFrame * out_frame)
 {
   GstQuarkTV *filter = GST_QUARKTV (vfilter);
-  gint area;
   guint32 *src, *dest;
   GstClockTime timestamp;
   GstBuffer **planetable;
+  gint width, height;
   gint planes, current_plane;
 
   timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
@@ -125,7 +120,8 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   GST_OBJECT_LOCK (filter);
-  area = filter->area;
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
   planetable = filter->planetable;
   planes = filter->planes;
   current_plane = filter->current_plane;
@@ -136,7 +132,10 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
 
   GstMapInfo map_infos[MAX_PLANES];
   guint32 *map_ptrs[MAX_PLANES] = { NULL };
-  gint i;
+  gint i, x, y, ss, ds;
+
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0) / 4;
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0) / 4;
 
   gboolean ret = FALSE;
   for (i = 0; i < planes; i++) {
@@ -150,20 +149,25 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
     }
   }
 
+  gint yds, yss;
   /* For each pixel */
-  while (--area) {
-    /* pick a random buffer */
-    gint rand = (current_plane + (fastrand () >> 24)) % planes;
+  for (y = 0; y < height; y++) {
+    yds = y * ds;
+    yss = y * ss;
+    for (x = 0; x < width; x++) {
+      /* pick a random buffer */
+      gint rand = (current_plane + (fastrand () >> 24)) % planes;
 
-    /* Copy the pixel from a random mapped buffer to dest */
-    if (map_ptrs[rand])
-      dest[area] = map_ptrs[rand][area];
-    else
-      dest[area] = src[area];
+      /* Copy the pixel from a random mapped buffer to dest */
+      if (map_ptrs[rand])
+        dest[yds + x] = map_ptrs[rand][yss + x];
+      else
+        dest[yds + x] = src[yss + x];
+    }
   }
 
   for (i = 0; i < planes; i++) {
-    if (planetable[i]) {
+    if (planetable[i] && map_ptrs[i]) {
       gst_buffer_unmap (planetable[i], &map_infos[i]);
     }
   }
