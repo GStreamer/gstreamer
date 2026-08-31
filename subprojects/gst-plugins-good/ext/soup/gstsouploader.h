@@ -32,6 +32,7 @@
 #define _soup_logger_set_printer _ad2_soup_logger_set_printer
 #define _soup_session_add_feature _ad2_soup_session_add_feature
 #define _soup_session_add_feature_by_type _ad2_soup_session_add_feature_by_type
+#define _soup_session_get_feature _ad2_soup_session_get_feature
 #define gst_soup_uri_new ad2_gst_soup_uri_new
 #define gst_soup_uri_free ad2_gst_soup_uri_free
 #define gst_soup_uri_to_string ad2_gst_soup_uri_to_string
@@ -70,8 +71,8 @@
 #define _soup_session_send_finish _ad2_soup_session_send_finish
 #define _soup_session_send _ad2_soup_session_send
 #define _soup_cookie_parse _ad2_soup_cookie_parse
-#define _soup_cookies_to_request _ad2_soup_cookies_to_request
-#define _soup_cookies_free _ad2_soup_cookies_free
+#define _soup_cookie_jar_add_cookie_full _ad2_soup_cookie_jar_add_cookie_full
+#define _soup_cookie_free _ad2_soup_cookie_free
 #define gst_soup_session_cancel_message ad2_gst_soup_session_cancel_message
 #endif
 
@@ -90,6 +91,7 @@ void _soup_logger_set_printer (SoupLogger *logger, SoupLoggerPrinter printer,
 void _soup_session_add_feature (SoupSession *session,
                                 SoupSessionFeature *feature);
 void _soup_session_add_feature_by_type (SoupSession *session, GType feature_type);
+SoupSessionFeature *_soup_session_get_feature (SoupSession *session, GType feature_type);
 
 typedef struct _GstSoupUri {
 #if (defined(LINK_SOUP) && LINK_SOUP == 3) || (!defined(LINK_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
@@ -176,9 +178,9 @@ GInputStream *_soup_session_send (SoupSession *session, SoupMessage *msg,
 
 void gst_soup_session_cancel_message (SoupSession *session, SoupMessage *msg, GCancellable *cancellable);
 
-SoupCookie *_soup_cookie_parse (const char *header);
-void _soup_cookies_to_request (GSList *cookies, SoupMessage *msg);
-void _soup_cookies_free (GSList *cookies);
+SoupCookie *_soup_cookie_parse (const char *header, const GstSoupUri *origin);
+void _soup_cookie_jar_add_cookie_full (SoupCookieJar *jar, SoupCookie *cookie, const GstSoupUri *origin);
+void _soup_cookie_free (SoupCookie *cookie);
 
 
 G_END_DECLS

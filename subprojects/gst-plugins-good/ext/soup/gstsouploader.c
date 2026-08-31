@@ -134,6 +134,7 @@ typedef struct _GstSoupVTable
   void (*_soup_session_abort) (SoupSession * session);
   void (*_soup_session_add_feature) (SoupSession * session, SoupSessionFeature * feature);
   void (*_soup_session_add_feature_by_type) (SoupSession * session, GType feature_type);
+  SoupSessionFeature *(*_soup_session_get_feature) (SoupSession * session, GType feature_type);
   GType (*_soup_session_get_type) (void);
 
   void (*_soup_auth_authenticate) (SoupAuth * auth, const char *username,
@@ -148,8 +149,8 @@ typedef struct _GstSoupVTable
   GInputStream *(*_soup_session_send) (SoupSession * session, SoupMessage * msg,
     GCancellable * cancellable, GError ** error);
   SoupCookie* (*_soup_cookie_parse) (const char* header, gpointer origin_uri);
-  void (*_soup_cookies_to_request) (GSList* cookies, SoupMessage* msg);
-  void (*_soup_cookies_free) (GSList *cookies);
+  void (*_soup_cookie_jar_add_cookie_full) (SoupCookieJar * jar, SoupCookie * cookie, gpointer uri, gpointer first_party);
+  void (*_soup_cookie_free) (SoupCookie * cookie);
 
   /* *INDENT-ON* */
 } GstSoupVTable;
@@ -314,12 +315,13 @@ gst_soup_load_library (void)
       LOAD_SYMBOL (soup_session_abort);
       LOAD_SYMBOL (soup_session_add_feature);
       LOAD_SYMBOL (soup_session_add_feature_by_type);
+      LOAD_SYMBOL (soup_session_get_feature);
       LOAD_SYMBOL (soup_session_get_type);
       LOAD_SYMBOL (soup_session_send);
       LOAD_SYMBOL (soup_session_send_finish);
       LOAD_SYMBOL (soup_cookie_parse);
-      LOAD_SYMBOL (soup_cookies_to_request);
-      LOAD_SYMBOL (soup_cookies_free);
+      LOAD_SYMBOL (soup_cookie_jar_add_cookie_full);
+      LOAD_SYMBOL (soup_cookie_free);
 
       vtable->loaded = TRUE;
       goto beach;
@@ -833,6 +835,17 @@ _soup_session_add_feature_by_type (SoupSession * session, GType feature_type)
 #endif
 }
 
+SoupSessionFeature *
+_soup_session_get_feature (SoupSession * session, GType feature_type)
+{
+#ifdef LINK_SOUP
+  return soup_session_get_feature (session, feature_type);
+#else
+  g_assert (gst_soup_vtable._soup_session_get_feature != NULL);
+  return gst_soup_vtable._soup_session_get_feature (session, feature_type);
+#endif
+}
+
 void
 _soup_message_headers_foreach (SoupMessageHeaders * hdrs,
     SoupMessageHeadersForeachFunc func, gpointer user_data)
@@ -1070,35 +1083,74 @@ gst_soup_session_cancel_message (SoupSession * session, SoupMessage * msg,
 }
 
 SoupCookie *
-_soup_cookie_parse (const char *header)
+_soup_cookie_parse (const char *header, const GstSoupUri * origin)
 {
 #ifdef LINK_SOUP
-  return soup_cookie_parse (header, NULL);
+#if LINK_SOUP == 2
+  return soup_cookie_parse (header, origin ? origin->soup_uri : NULL);
+#else
+  return soup_cookie_parse (header, origin ? origin->uri : NULL);
+#endif
 #else
   g_assert (gst_soup_vtable._soup_cookie_parse != NULL);
-  return gst_soup_vtable._soup_cookie_parse (header, NULL);
+
+  if (origin == NULL)
+    return gst_soup_vtable._soup_cookie_parse (header, NULL);
+
+  if (gst_soup_vtable.lib_version == 2)
+    return gst_soup_vtable._soup_cookie_parse (header, origin->soup_uri);
+
+  /* libsoup 3 path */
+#if GLIB_CHECK_VERSION(2, 66, 0)
+  return gst_soup_vtable._soup_cookie_parse (header, origin->uri);
+#else
+  /* libsoup 3 requires GLib >= 2.69.1, unreachable with old GLib */
+  g_assert_not_reached ();
+  return NULL;
+#endif
 #endif
 }
 
-
 void
-_soup_cookies_to_request (GSList * cookies, SoupMessage * msg)
+_soup_cookie_jar_add_cookie_full (SoupCookieJar * jar, SoupCookie * cookie,
+    const GstSoupUri * origin)
 {
 #ifdef LINK_SOUP
-  soup_cookies_to_request (cookies, msg);
+#if LINK_SOUP == 2
+  soup_cookie_jar_add_cookie_full (jar, cookie,
+      origin ? origin->soup_uri : NULL, NULL);
 #else
-  g_assert (gst_soup_vtable._soup_cookies_to_request != NULL);
-  gst_soup_vtable._soup_cookies_to_request (cookies, msg);
+  soup_cookie_jar_add_cookie_full (jar, cookie, origin ? origin->uri : NULL,
+      NULL);
+#endif
+#else
+  g_assert (gst_soup_vtable._soup_cookie_jar_add_cookie_full != NULL);
+
+  gpointer uri = NULL;
+  if (origin != NULL) {
+    if (gst_soup_vtable.lib_version == 2)
+      uri = origin->soup_uri;
+    else {
+      /* libsoup 3 path */
+#if GLIB_CHECK_VERSION(2, 66, 0)
+      uri = origin->uri;
+#else
+      /* libsoup 3 requires GLib >= 2.69.1, unreachable with old GLib */
+      g_assert_not_reached ();
+#endif
+    }
+  }
+  gst_soup_vtable._soup_cookie_jar_add_cookie_full (jar, cookie, uri, NULL);
 #endif
 }
 
 void
-_soup_cookies_free (GSList * cookies)
+_soup_cookie_free (SoupCookie * cookie)
 {
 #ifdef LINK_SOUP
-  soup_cookies_free (cookies);
+  soup_cookie_free (cookie);
 #else
-  g_assert (gst_soup_vtable._soup_cookies_free != NULL);
-  gst_soup_vtable._soup_cookies_free (cookies);
+  g_assert (gst_soup_vtable._soup_cookie_free != NULL);
+  gst_soup_vtable._soup_cookie_free (cookie);
 #endif
 }
