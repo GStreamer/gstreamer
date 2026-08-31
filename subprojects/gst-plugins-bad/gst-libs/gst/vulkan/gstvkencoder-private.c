@@ -99,11 +99,26 @@ _populate_function_table (GstVulkanEncoder * self)
 }
 
 static void
+_clear_dpb_pool (GstVulkanEncoder * self)
+{
+  GstVulkanEncoderPrivate *priv =
+      gst_vulkan_encoder_get_instance_private (self);
+
+  GST_DEBUG_OBJECT (self, "Destroying DBP pool and related buffers");
+  if (priv->layered_view)
+    gst_vulkan_image_view_unref (priv->layered_view);
+  gst_clear_buffer (&priv->layered_buffer);
+  gst_clear_object (&priv->dpb_pool);
+}
+
+static void
 gst_vulkan_encoder_finalize (GObject * object)
 {
   GstVulkanEncoder *self = GST_VULKAN_ENCODER (object);
   GstVulkanEncoderPrivate *priv =
       gst_vulkan_encoder_get_instance_private (self);
+
+  _clear_dpb_pool (self);
 
   if (priv->callbacks_user_data && priv->callbacks_notify) {
     priv->callbacks_notify (priv->callbacks_user_data);
@@ -435,11 +450,6 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
   gst_clear_caps (&priv->profile_caps);
 
   gst_clear_vulkan_handle (&priv->session_params);
-
-  if (priv->layered_view)
-    gst_vulkan_image_view_unref (priv->layered_view);
-  gst_clear_buffer (&priv->layered_buffer);
-  gst_clear_object (&priv->dpb_pool);
 
   gst_clear_object (&priv->exec);
 
@@ -933,7 +943,7 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
 
   if ((!priv->layered_dpb && priv->dpb_pool)
       || (priv->layered_dpb && priv->layered_buffer))
-    return TRUE;
+    _clear_dpb_pool (self);
 
   if (priv->layered_dpb) {
     min_buffers = max_buffers = 1;
