@@ -57,9 +57,6 @@ struct _GstHipMemoryPrivate
   GstHipVendor vendor;
   void *data = nullptr;
   void *staging = nullptr;
-  gsize pitch = 0;
-  guint width_in_bytes = 0;
-  guint height = 0;
   gboolean texture_support = FALSE;
   hipTextureObject_t texture[4][N_TEX_ADDR_MODES][N_TEX_FILTER_MODES] = { };
   GstHipStream *stream = nullptr;
@@ -121,104 +118,6 @@ gst_hip_allocator_init (GstHipAllocator * allocator)
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
-static gboolean
-gst_hip_allocator_update_info (const GstVideoInfo * reference,
-    gsize pitch, gsize alloc_height, GstVideoInfo * aligned)
-{
-  GstVideoInfo ret = *reference;
-  guint height = reference->height;
-
-  ret.size = pitch * alloc_height;
-
-  switch (GST_VIDEO_INFO_FORMAT (reference)) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
-    {
-      guint chroma_height = GST_ROUND_UP_2 (height) / 2;
-      /* we are wasting space yes, but required so that this memory
-       * can be used in kernel function */
-      ret.stride[0] = pitch;
-      ret.stride[1] = pitch;
-      ret.stride[2] = pitch;
-      ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] + (ret.stride[1] * chroma_height);
-      break;
-    }
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-      ret.stride[0] = pitch;
-      ret.stride[1] = pitch;
-      ret.stride[2] = pitch;
-      ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] + (ret.stride[1] * height);
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:
-      ret.stride[0] = pitch;
-      ret.stride[1] = pitch;
-      ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-    case GST_VIDEO_FORMAT_RGBP:
-    case GST_VIDEO_FORMAT_BGRP:
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-      ret.stride[0] = pitch;
-      ret.stride[1] = pitch;
-      ret.stride[2] = pitch;
-      ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] * 2;
-      break;
-    case GST_VIDEO_FORMAT_GBRA:
-      ret.stride[0] = pitch;
-      ret.stride[1] = pitch;
-      ret.stride[2] = pitch;
-      ret.stride[3] = pitch;
-      ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] * 2;
-      ret.offset[3] = ret.offset[1] * 3;
-      break;
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_BGR10A2_LE:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_VUYA:
-      ret.stride[0] = pitch;
-      ret.offset[0] = 0;
-      break;
-    default:
-      return FALSE;
-  }
-
-  *aligned = ret;
-
-  return TRUE;
-}
-
 static size_t
 do_align (size_t value, size_t align)
 {
@@ -228,10 +127,42 @@ do_align (size_t value, size_t align)
   return ((value + align - 1) / align) * align;
 }
 
+static gboolean
+gst_hip_allocator_update_info (const GstVideoInfo * reference, gsize align,
+    GstVideoInfo * aligned)
+{
+  GstVideoInfo ret = *reference;
+  gsize offset = 0;
+  guint n_planes = GST_VIDEO_INFO_N_PLANES (reference);
+
+  for (guint i = 0; i < n_planes; i++) {
+    gint components[GST_VIDEO_MAX_COMPONENTS];
+
+    gst_video_format_info_component (reference->finfo, i, components);
+    if (components[0] < 0)
+      return FALSE;
+
+    auto height = GST_VIDEO_INFO_COMP_HEIGHT (reference, components[0]);
+    auto stride = do_align (reference->stride[i], align);
+
+    offset = do_align (offset, align);
+
+    ret.stride[i] = stride;
+    ret.offset[i] = offset;
+
+    offset += stride * height;
+  }
+
+  ret.size = offset;
+
+  *aligned = ret;
+
+  return TRUE;
+}
+
 static GstMemory *
 gst_hip_allocator_alloc_internal (GstHipAllocator * self,
-    GstHipDevice * device, const GstVideoInfo * info,
-    guint width_in_bytes, guint alloc_height, GstHipStream * stream)
+    GstHipDevice * device, const GstVideoInfo * info, GstHipStream * stream)
 {
   hipError_t hip_ret = hipSuccess;
 
@@ -244,19 +175,17 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
       hipDeviceAttributeTextureAlignment, &texture_align);
   if (texture_align <= 0)
     texture_align = 0;
-  auto pitch = do_align (width_in_bytes, texture_align);
 
-  void *data;
-  hip_ret = HipMalloc (vendor, &data, pitch * alloc_height);
-  if (!gst_hip_result (hip_ret, vendor)) {
-    GST_ERROR_OBJECT (self, "Failed to allocate memory");
+  GstVideoInfo alloc_info;
+  if (!gst_hip_allocator_update_info (info, texture_align, &alloc_info)) {
+    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
     return nullptr;
   }
 
-  GstVideoInfo alloc_info;
-  if (!gst_hip_allocator_update_info (info, pitch, alloc_height, &alloc_info)) {
-    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
-    HipFree (vendor, data);
+  void *data;
+  hip_ret = HipMalloc (vendor, &data, alloc_info.size);
+  if (!gst_hip_result (hip_ret, vendor)) {
+    GST_ERROR_OBJECT (self, "Failed to allocate memory");
     return nullptr;
   }
 
@@ -268,9 +197,6 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   mem->priv = priv;
 
   priv->data = data;
-  priv->pitch = pitch;
-  priv->width_in_bytes = width_in_bytes;
-  priv->height = alloc_height;
   priv->vendor = vendor;
   priv->stream = stream;
   if (stream)
@@ -319,7 +245,6 @@ static gboolean
 gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
 {
   auto priv = mem->priv;
-  hip_Memcpy2D param = { };
 
   if (!priv->staging ||
       !GST_MEMORY_FLAG_IS_SET (mem, GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD)) {
@@ -331,18 +256,10 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
     return FALSE;
   }
 
-  param.srcMemoryType = hipMemoryTypeHost;
-  param.srcHost = priv->staging;
-  param.srcPitch = priv->pitch;
-
-  param.dstMemoryType = hipMemoryTypeDevice;
-  param.dstDevice = priv->data;
-  param.dstPitch = priv->pitch;
-  param.WidthInBytes = priv->width_in_bytes;
-  param.Height = priv->height;
-
   auto stream = gst_hip_stream_get_handle (priv->stream);
-  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, stream);
+  auto hip_ret = HipMemcpyHtoDAsync (priv->vendor, priv->data, priv->staging,
+      mem->mem.size, stream);
+
   if (gst_hip_result (hip_ret, priv->vendor))
     hip_ret = HipStreamSynchronize (priv->vendor, stream);
 
@@ -358,7 +275,6 @@ static gboolean
 gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
 {
   auto priv = mem->priv;
-  hip_Memcpy2D param = { };
 
   if (!GST_MEMORY_FLAG_IS_SET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD))
     return TRUE;
@@ -378,18 +294,9 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
     }
   }
 
-  param.srcMemoryType = hipMemoryTypeDevice;
-  param.srcDevice = priv->data;
-  param.srcPitch = priv->pitch;
-
-  param.dstMemoryType = hipMemoryTypeHost;
-  param.dstHost = priv->staging;
-  param.dstPitch = priv->pitch;
-  param.WidthInBytes = priv->width_in_bytes;
-  param.Height = priv->height;
   auto stream = gst_hip_stream_get_handle (priv->stream);
-
-  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, stream);
+  auto hip_ret = HipMemcpyDtoHAsync (priv->vendor, priv->staging, priv->data,
+      mem->mem.size, stream);
   if (gst_hip_result (hip_ret, priv->vendor))
     hip_ret = HipStreamSynchronize (priv->vendor, stream);
 
@@ -447,7 +354,6 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   auto vendor = src_mem->priv->vendor;
   auto device = src_mem->device;
   GstMapInfo src_info, dst_info;
-  hip_Memcpy2D param = { };
   GstMemory *copy = nullptr;
   auto stream = gst_hip_device_get_stream (device);
 
@@ -463,9 +369,8 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   }
 
   if (!copy) {
-    copy = gst_hip_allocator_alloc_internal (self, device,
-        &src_mem->info, src_mem->priv->width_in_bytes, src_mem->priv->height,
-        stream);
+    copy = gst_hip_allocator_alloc_internal (self,
+        device, &src_mem->info, stream);
   }
 
   if (!copy) {
@@ -494,19 +399,9 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
     return nullptr;
   }
 
-  param.srcMemoryType = hipMemoryTypeDevice;
-  param.srcDevice = src_info.data;
-  param.srcPitch = src_mem->priv->pitch;
-
-  param.dstMemoryType = hipMemoryTypeDevice;
-  param.dstDevice = dst_info.data;
-  param.dstPitch = src_mem->priv->pitch;
-  param.WidthInBytes = src_mem->priv->width_in_bytes;
-  param.Height = src_mem->priv->height;
-
   auto stream_handle = gst_hip_stream_get_handle (stream);
-
-  auto ret = HipMemcpyParam2DAsync (vendor, &param, stream_handle);
+  auto ret = HipMemcpyDtoDAsync (vendor, dst_info.data, src_info.data,
+      src_info.size, stream_handle);
   if (gst_hip_result (ret, vendor))
     ret = HipStreamSynchronize (vendor, stream_handle);
 
@@ -768,68 +663,6 @@ gst_hip_memory_sync (GstHipMemory * mem)
   gst_clear_hip_event (&priv->event);
 }
 
-static guint
-gst_hip_allocator_calculate_alloc_height (const GstVideoInfo * info)
-{
-  guint alloc_height;
-
-  alloc_height = GST_VIDEO_INFO_HEIGHT (info);
-
-  /* make sure valid height for subsampled formats */
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
-      alloc_height = GST_ROUND_UP_2 (alloc_height);
-      break;
-    default:
-      break;
-  }
-
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
-      alloc_height *= 2;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:
-      alloc_height += alloc_height / 2;
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-    case GST_VIDEO_FORMAT_RGBP:
-    case GST_VIDEO_FORMAT_BGRP:
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-      alloc_height *= 3;
-      break;
-    case GST_VIDEO_FORMAT_GBRA:
-      alloc_height *= 4;
-      break;
-    default:
-      break;
-  }
-
-  return alloc_height;
-}
-
 /**
  * gst_hip_allocator_alloc:
  * @allocator: (allow-none): a #GstHipAllocator
@@ -847,18 +680,14 @@ GstMemory *
 gst_hip_allocator_alloc (GstHipAllocator * allocator,
     GstHipDevice * device, const GstVideoInfo * info)
 {
-  guint alloc_height;
-
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), nullptr);
   g_return_val_if_fail (info, nullptr);
 
   if (!allocator)
     allocator = (GstHipAllocator *) _hip_memory_allocator;
 
-  alloc_height = gst_hip_allocator_calculate_alloc_height (info);
-
-  return gst_hip_allocator_alloc_internal (allocator, device,
-      info, info->stride[0], alloc_height, gst_hip_device_get_stream (device));
+  return gst_hip_allocator_alloc_internal (allocator, device, info,
+      gst_hip_device_get_stream (device));
 }
 
 /**
@@ -895,7 +724,6 @@ struct _GstHipPoolAllocatorPrivate
 
   guint outstanding = 0;
   guint cur_mems = 0;
-  guint alloc_height;
   gboolean flushing = FALSE;
 };
 
@@ -1093,8 +921,7 @@ gst_hip_pool_allocator_alloc (GstHipPoolAllocator * self, GstMemory ** mem)
   auto priv = self->priv;
 
   auto new_mem = gst_hip_allocator_alloc_internal (_hip_memory_allocator,
-      self->device, &self->info, self->info.stride[0], priv->alloc_height,
-      gst_hip_device_get_stream (self->device));
+      self->device, &self->info, gst_hip_device_get_stream (self->device));
 
   if (!new_mem) {
     GST_ERROR_OBJECT (self, "Failed to allocate new memory");
@@ -1167,8 +994,6 @@ gst_hip_pool_allocator_new (GstHipDevice * device, const GstVideoInfo * info)
 
   self->device = (GstHipDevice *) gst_object_ref (device);
   self->info = *info;
-
-  self->priv->alloc_height = gst_hip_allocator_calculate_alloc_height (info);
 
   return self;
 }
