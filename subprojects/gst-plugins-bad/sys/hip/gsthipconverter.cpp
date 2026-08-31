@@ -1783,7 +1783,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   const TextureFormat *format;
   hipTextureObject_t texture[GST_VIDEO_MAX_COMPONENTS] = { };
   guint8 *dst[GST_VIDEO_MAX_COMPONENTS] = { };
-  gint stride[2] = { 0, };
+  gint stride[4] = { 0, };
   gint width, height;
   gint off_x = 0;
   gint off_y = 0;
@@ -1836,8 +1836,8 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     return TRUE;
 
   gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
-    &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1],
-    priv->const_buf, &off_x, &off_y
+    &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1], &stride[2],
+    &stride[3], priv->const_buf, &off_x, &off_y
   };
 
   auto cmem = (GstHipMemory *) gst_buffer_peek_memory (in_buf, 0);
@@ -1892,12 +1892,10 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     }
   }
 
-  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&out_frame); i++)
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&out_frame); i++) {
     dst[i] = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
-
-  stride[0] = stride[1] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
-  if (GST_VIDEO_FRAME_N_PLANES (&out_frame) > 1)
-    stride[1] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 1);
+    stride[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
+  }
 
   auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->main_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
