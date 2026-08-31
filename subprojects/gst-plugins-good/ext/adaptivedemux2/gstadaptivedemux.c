@@ -1180,7 +1180,7 @@ invalid_manifest:
 struct http_headers_collector
 {
   GstAdaptiveDemux *demux;
-  gchar **cookies;
+  const gchar *uri;
 };
 
 static gboolean
@@ -1203,47 +1203,58 @@ gst_adaptive_demux_handle_upstream_http_header (const GstIdStr * fieldname,
 
   if ((g_ascii_strcasecmp (field_name, "Cookie") == 0) ||
       g_ascii_strcasecmp (field_name, "Set-Cookie") == 0) {
-    guint i = 0, prev_len = 0, total_len = 0;
-    gchar **cookies = NULL;
+    const gboolean is_set_cookie =
+        g_ascii_strcasecmp (field_name, "Set-Cookie") == 0;
+    guint i, n = 0;
+    gchar **values = NULL;
 
-    if (hdr_data->cookies != NULL)
-      prev_len = g_strv_length (hdr_data->cookies);
+    if (hdr_data->uri == NULL) {
+      GST_WARNING_OBJECT (demux,
+          "Got %s header without an origin URI, ignoring",
+          gst_id_str_as_str (fieldname));
+    } else if (GST_VALUE_HOLDS_ARRAY (value)) {
+      n = gst_value_array_get_size (value);
+      values = g_new0 (gchar *, n + 1);
 
-    if (GST_VALUE_HOLDS_ARRAY (value)) {
-      total_len = gst_value_array_get_size (value) + prev_len;
-      cookies = (gchar **) g_malloc0 ((total_len + 1) * sizeof (gchar *));
-
-      for (i = 0; i < gst_value_array_get_size (value); i++) {
+      for (i = 0; i < n; i++) {
         GST_INFO_OBJECT (demux, "%s : %s", gst_id_str_as_str (fieldname),
             g_value_get_string (gst_value_array_get_value (value, i)));
-        cookies[i] = g_value_dup_string (gst_value_array_get_value (value, i));
+        values[i] = g_value_dup_string (gst_value_array_get_value (value, i));
       }
     } else if (G_VALUE_HOLDS_STRING (value)) {
-      total_len = 1 + prev_len;
-      cookies = (gchar **) g_malloc0 ((total_len + 1) * sizeof (gchar *));
+      n = 1;
+      values = g_new0 (gchar *, 2);
 
       GST_INFO_OBJECT (demux, "%s : %s", gst_id_str_as_str (fieldname),
           g_value_get_string (value));
-      cookies[0] = g_value_dup_string (value);
+      values[0] = g_value_dup_string (value);
     } else {
       GST_WARNING_OBJECT (demux, "%s field is not string or array",
           gst_id_str_as_str (fieldname));
     }
 
-    if (cookies) {
-      if (prev_len) {
+    for (i = 0; i < n; i++) {
+      if (is_set_cookie) {
+        downloadhelper_add_cookie (demux->download_helper, hdr_data->uri,
+            values[i]);
+      } else {
+        /* Request cookies only carry name=value pairs, so cookie attributes
+         * are lost until the server re-sends Set-Cookie */
+        gchar **pairs;
         guint j;
-        for (j = 0; j < prev_len; j++) {
-          GST_DEBUG_OBJECT (demux,
-              "Append existing cookie %s", hdr_data->cookies[j]);
-          cookies[i + j] = g_strdup (hdr_data->cookies[j]);
-        }
-      }
-      cookies[total_len] = NULL;
 
-      g_strfreev (hdr_data->cookies);
-      hdr_data->cookies = cookies;
+        pairs = g_strsplit (values[i], ";", -1);
+        for (j = 0; pairs[j]; j++) {
+          pairs[j] = g_strstrip (pairs[j]);
+          if (*pairs[j] != '\0')
+            downloadhelper_add_cookie (demux->download_helper, hdr_data->uri,
+                pairs[j]);
+        }
+        g_strfreev (pairs);
+      }
     }
+
+    g_strfreev (values);
   }
 
   if (g_ascii_strcasecmp (field_name, "Referer") == 0) {
@@ -1332,6 +1343,16 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
       struct http_headers_collector c = { demux, NULL };
 
       if (gst_structure_has_name (structure, "http-headers")) {
+        const gchar *uri = NULL;
+
+        /* Origin for cookies from these headers. Prefer the redirect target
+         * since a redirected request's headers belong to it. */
+        gst_structure_get (structure, "redirection-uri", G_TYPE_STRING, &uri,
+            NULL);
+        if (uri == NULL)
+          gst_structure_get (structure, "uri", G_TYPE_STRING, &uri, NULL);
+        c.uri = uri;
+
         if (gst_structure_has_field (structure, "request-headers")) {
           GstStructure *req_headers = NULL;
           gst_structure_get (structure, "request-headers", GST_TYPE_STRUCTURE,
@@ -1352,9 +1373,6 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
             gst_structure_free (res_headers);
           }
         }
-
-        if (c.cookies)
-          downloadhelper_set_cookies (demux->download_helper, c.cookies);
       }
       break;
     }

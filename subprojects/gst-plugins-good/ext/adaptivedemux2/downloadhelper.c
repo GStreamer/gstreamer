@@ -49,7 +49,7 @@ struct DownloadHelper
 
   gchar *referer;
   gchar *user_agent;
-  GSList *cookies;
+  SoupCookieJar *cookie_jar;
 };
 
 struct DownloadHelperTransfer
@@ -816,6 +816,11 @@ downloadhelper_new (GstAdaptiveDemuxClock * clock)
    * an attempt to reuse an already closed connection */
   dh->session = _soup_session_new_with_options ("timeout", 10, NULL);
 
+  /* Add cookie jar feature to let libsoup handle cookies automatically */
+  _soup_session_add_feature_by_type (dh->session, _soup_cookie_jar_get_type ());
+  dh->cookie_jar = (SoupCookieJar *) _soup_session_get_feature (dh->session,
+      _soup_cookie_jar_get_type ());
+
   /* Setup soup header debugging if we are at GST_LEVEL_TRACE */
   if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
     /* Create a new logger and set body_size_limit to -1 (no limit) */
@@ -850,7 +855,6 @@ downloadhelper_free (DownloadHelper * dh)
 
   g_free (dh->referer);
   g_free (dh->user_agent);
-  _soup_cookies_free (dh->cookies);
 
   g_free (dh);
 }
@@ -873,29 +877,75 @@ downloadhelper_set_user_agent (DownloadHelper * dh, const gchar * user_agent)
   g_mutex_unlock (&dh->transfer_lock);
 }
 
-/* Takes ownership of the strv */
-void
-downloadhelper_set_cookies (DownloadHelper * dh, gchar ** cookies)
+typedef struct
 {
-  guint i;
-  g_mutex_lock (&dh->transfer_lock);
-  _soup_cookies_free (dh->cookies);
-  dh->cookies = NULL;
+  SoupCookieJar *cookie_jar;
+  SoupCookie *cookie;
+  GstSoupUri *origin;
+} CookieAddData;
 
-  for (i = 0; cookies[i]; i++) {
-    SoupCookie *cookie = _soup_cookie_parse (cookies[i]);
+static gboolean
+add_cookie_idle (gpointer user_data)
+{
+  CookieAddData *data = user_data;
 
-    if (cookie == NULL) {
-      GST_WARNING ("Couldn't parse cookie, ignoring: %s", cookies[i]);
-      continue;
-    }
+  _soup_cookie_jar_add_cookie_full (data->cookie_jar, data->cookie,
+      data->origin);
+  gst_soup_uri_free (data->origin);
+  g_free (data);
+  return G_SOURCE_REMOVE;
+}
 
-    dh->cookies = g_slist_append (dh->cookies, cookie);
+/* Add a cookie parsed from a Cookie or Set-Cookie header value for the
+ * given origin URI.
+ *
+ * Added on the transfer thread because the libsoup 2 cookie jar is not
+ * thread-safe. */
+void
+downloadhelper_add_cookie (DownloadHelper * dh, const gchar * uri,
+    const gchar * cookie)
+{
+  GstSoupUri *soup_uri;
+  SoupCookie *cookie_obj;
+  CookieAddData *data;
+  GSource *source;
+
+  soup_uri = gst_soup_uri_new (uri);
+  if (soup_uri == NULL) {
+    GST_WARNING ("Couldn't parse cookie origin URI %s, ignoring cookie %s",
+        uri, cookie);
+    return;
   }
 
-  g_mutex_unlock (&dh->transfer_lock);
+  cookie_obj = _soup_cookie_parse (cookie, soup_uri);
 
-  g_strfreev (cookies);
+  if (cookie_obj == NULL) {
+    GST_WARNING ("Couldn't parse cookie, ignoring: %s", cookie);
+    gst_soup_uri_free (soup_uri);
+    return;
+  }
+
+  g_mutex_lock (&dh->transfer_lock);
+  if (!dh->running || dh->cookie_jar == NULL) {
+    /* Shutting down or no cookie jar */
+    g_mutex_unlock (&dh->transfer_lock);
+    _soup_cookie_free (cookie_obj);
+    gst_soup_uri_free (soup_uri);
+    return;
+  }
+
+  data = g_new (CookieAddData, 1);
+  data->cookie_jar = dh->cookie_jar;
+  data->cookie = cookie_obj;
+  data->origin = soup_uri;
+  source = g_idle_source_new ();
+  /* Use DEFAULT priority instead of DEFAULT_IDLE so the cookies are guaranteed
+   * to be added before the transfer request idle source runs */
+  g_source_set_priority (source, G_PRIORITY_DEFAULT);
+  g_source_set_callback (source, add_cookie_idle, data, NULL);
+  g_source_attach (source, dh->transfer_context);
+  g_source_unref (source);
+  g_mutex_unlock (&dh->transfer_lock);
 }
 
 /* Called with the transfer lock held */
@@ -1017,6 +1067,19 @@ downloadhelper_stop (DownloadHelper * dh)
   if (transfer_thread != NULL) {
     g_thread_join (transfer_thread);
   }
+
+  /* Remove a stale source that would submit queued requests as transfers */
+  g_mutex_lock (&dh->transfer_lock);
+  if (dh->transfer_requests_source != NULL) {
+    g_source_destroy (dh->transfer_requests_source);
+    g_source_unref (dh->transfer_requests_source);
+    dh->transfer_requests_source = NULL;
+  }
+  g_mutex_unlock (&dh->transfer_lock);
+
+  /* Drain any pending cookie additions while the session and jar are still alive */
+  while (g_main_context_pending (dh->transfer_context))
+    g_main_context_iteration (dh->transfer_context, FALSE);
 
   /* The transfer thread has exited at this point - any remaining transfers are unfinished
    * and need cleaning up */
@@ -1150,10 +1213,6 @@ downloadhelper_submit_request (DownloadHelper * dh,
 
     if (dh->user_agent != NULL) {
       _soup_message_headers_append (msg_headers, "User-Agent", dh->user_agent);
-    }
-
-    if (dh->cookies != NULL) {
-      _soup_cookies_to_request (dh->cookies, msg);
     }
 
     transfer_task = transfer_task_new_soup (dh, request, msg, blocking);

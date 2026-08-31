@@ -139,6 +139,7 @@ typedef gpointer SoupURI;
 typedef gpointer SoupMessageBody;
 typedef gpointer SoupMessageHeaders;
 typedef gpointer SoupAuth;
+typedef gpointer SoupCookieJar;
 
 typedef struct _SoupMessage2 {
   GObject parent;
