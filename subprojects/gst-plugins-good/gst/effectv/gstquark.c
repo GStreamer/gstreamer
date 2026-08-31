@@ -138,10 +138,15 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
   guint32 *map_ptrs[MAX_PLANES] = { NULL };
   gint i;
 
+  gboolean ret = FALSE;
   for (i = 0; i < planes; i++) {
     if (planetable[i]) {
-      gst_buffer_map (planetable[i], &map_infos[i], GST_MAP_READ);
-      map_ptrs[i] = (guint32 *) map_infos[i].data;
+      ret = gst_buffer_map (planetable[i], &map_infos[i], GST_MAP_READ);
+      if (ret) {
+        map_ptrs[i] = (guint32 *) map_infos[i].data;
+      } else {
+        map_ptrs[i] = NULL;
+      }
     }
   }
 
