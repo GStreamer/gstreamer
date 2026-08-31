@@ -171,10 +171,23 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
 
   auto vendor = gst_hip_device_get_vendor (device);
   gint texture_align = 0;
-  gst_hip_device_get_attribute (device,
-      hipDeviceAttributeTextureAlignment, &texture_align);
-  if (texture_align <= 0)
-    texture_align = 0;
+  GstHipFormat hip_format = { };
+  gboolean texture_support = FALSE;
+  if (!gst_hip_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+          &hip_format)) {
+    GST_WARNING_OBJECT (self, "Unexpected format %s, assume buffer format",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+  } else if ((hip_format.format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D)
+      == GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
+    texture_support = TRUE;
+
+    gst_hip_device_get_attribute (device,
+        hipDeviceAttributeTextureAlignment, &texture_align);
+    if (texture_align <= 0) {
+      texture_support = FALSE;
+      texture_align = 0;
+    }
+  }
 
   GstVideoInfo alloc_info;
   if (!gst_hip_allocator_update_info (info, texture_align, &alloc_info)) {
@@ -202,7 +215,8 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   if (stream)
     gst_hip_stream_ref (stream);
 
-  g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
+  if (texture_support)
+    g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
 
   gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags) 0,
       GST_ALLOCATOR_CAST (self), nullptr, alloc_info.size, 0, 0,
@@ -447,64 +461,6 @@ gst_is_hip_memory (GstMemory * mem)
       GST_IS_HIP_ALLOCATOR (mem->allocator);
 }
 
-typedef struct _TextureFormat
-{
-  GstVideoFormat format;
-  hipArray_Format array_format[GST_VIDEO_MAX_COMPONENTS];
-  guint channels[GST_VIDEO_MAX_COMPONENTS];
-} TextureFormat;
-
-#define HIP_AD_FORMAT_NONE ((hipArray_Format) 0)
-#define MAKE_FORMAT_YUV_PLANAR(f,cf) \
-  { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf, \
-      HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_NONE },  {1, 1, 1, 0} }
-#define MAKE_FORMAT_YUV_SEMI_PLANAR(f,cf) \
-  { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf, \
-      HIP_AD_FORMAT_NONE, HIP_AD_FORMAT_NONE }, {1, 2, 0, 0} }
-#define MAKE_FORMAT_RGB(f,cf) \
-  { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_NONE, \
-      HIP_AD_FORMAT_NONE, HIP_AD_FORMAT_NONE }, {4, 0, 0, 0} }
-#define MAKE_FORMAT_RGBP(f,cf) \
-  { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf, \
-      HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_NONE }, {1, 1, 1, 0} }
-#define MAKE_FORMAT_RGBAP(f,cf) \
-  { GST_VIDEO_FORMAT_ ##f,  { HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf, \
-      HIP_AD_FORMAT_ ##cf, HIP_AD_FORMAT_ ##cf }, {1, 1, 1, 1} }
-
-static const TextureFormat format_map[] = {
-  MAKE_FORMAT_YUV_PLANAR (I420, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_PLANAR (YV12, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_SEMI_PLANAR (NV12, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_SEMI_PLANAR (NV21, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_SEMI_PLANAR (P010_10LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_SEMI_PLANAR (P012_LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_SEMI_PLANAR (P016_LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_PLANAR (I420_10LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_PLANAR (I420_12LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_PLANAR (Y444, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_PLANAR (Y444_10LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_PLANAR (Y444_12LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_PLANAR (Y444_16LE, UNSIGNED_INT16),
-  MAKE_FORMAT_RGB (RGBA, UNSIGNED_INT8),
-  MAKE_FORMAT_RGB (BGRA, UNSIGNED_INT8),
-  MAKE_FORMAT_RGB (RGBx, UNSIGNED_INT8),
-  MAKE_FORMAT_RGB (BGRx, UNSIGNED_INT8),
-  MAKE_FORMAT_RGB (ARGB, UNSIGNED_INT8),
-  MAKE_FORMAT_RGB (ARGB64, UNSIGNED_INT16),
-  MAKE_FORMAT_RGB (ABGR, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_PLANAR (Y42B, UNSIGNED_INT8),
-  MAKE_FORMAT_YUV_PLANAR (I422_10LE, UNSIGNED_INT16),
-  MAKE_FORMAT_YUV_PLANAR (I422_12LE, UNSIGNED_INT16),
-  MAKE_FORMAT_RGBP (RGBP, UNSIGNED_INT8),
-  MAKE_FORMAT_RGBP (BGRP, UNSIGNED_INT8),
-  MAKE_FORMAT_RGBP (GBR, UNSIGNED_INT8),
-  MAKE_FORMAT_RGBP (GBR_10LE, UNSIGNED_INT16),
-  MAKE_FORMAT_RGBP (GBR_12LE, UNSIGNED_INT16),
-  MAKE_FORMAT_RGBP (GBR_16LE, UNSIGNED_INT16),
-  MAKE_FORMAT_RGBAP (GBRA, UNSIGNED_INT8),
-  MAKE_FORMAT_RGB (VUYA, UNSIGNED_INT8),
-};
-
 /**
  * gst_hip_memory_get_texture:
  * @mem: a #GstHipMemory
@@ -531,7 +487,7 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   auto priv = mem->priv;
 
   if (!priv->texture_support) {
-    GST_WARNING_OBJECT (mem->device, "Texture not supported");
+    GST_LOG_OBJECT (mem->device, "Texture not supported");
     return FALSE;
   }
 
@@ -541,17 +497,14 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
     return TRUE;
   }
 
-  const TextureFormat *format = nullptr;
-  for (guint i = 0; i < G_N_ELEMENTS (format_map); i++) {
-    if (format_map[i].format == GST_VIDEO_INFO_FORMAT (&mem->info)) {
-      format = &format_map[i];
-      break;
-    }
-  }
-
-  if (!format) {
-    GST_WARNING_OBJECT (mem->device, "Not supported format %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&mem->info)));
+  GstHipFormat hip_format = { };
+  if (!gst_hip_device_get_format (mem->device,
+          GST_VIDEO_INFO_FORMAT (&mem->info), &hip_format)
+      || (hip_format.format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) !=
+      GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
+    /* Must be checked during alloc time already */
+    GST_ERROR_OBJECT (mem->device, "Texture not supported");
+    priv->texture_support = FALSE;
     return FALSE;
   }
 
@@ -566,8 +519,8 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   HIP_TEXTURE_DESC tex_desc = { };
 
   res_desc.resType = HIP_RESOURCE_TYPE_PITCH2D;
-  res_desc.res.pitch2D.format = format->array_format[plane];
-  res_desc.res.pitch2D.numChannels = format->channels[plane];
+  res_desc.res.pitch2D.format = hip_format.array_format[plane];
+  res_desc.res.pitch2D.numChannels = hip_format.channels[plane];
   res_desc.res.pitch2D.width = GST_VIDEO_INFO_COMP_WIDTH (&mem->info, plane);
   res_desc.res.pitch2D.height = GST_VIDEO_INFO_COMP_HEIGHT (&mem->info, plane);
   res_desc.res.pitch2D.pitchInBytes =

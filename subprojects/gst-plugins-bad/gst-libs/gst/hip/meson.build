@@ -4,6 +4,7 @@ hip_sources = [
   'gsthipbufferpool.cpp',
   'gsthipdevice.cpp',
   'gsthipevent.cpp',
+  'gsthipformat.cpp',
   'gsthiploader.cpp',
   'gsthipmemory.cpp',
   'gsthiprtc.cpp',

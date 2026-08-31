@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2025 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2026 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,13 +19,30 @@
 
 #pragma once
 
-#include <gst/hip/gsthip.h>
-#include <gst/hip/gsthipformat-private.h>
+#include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/hip/gsthip_fwd.h>
 
 G_BEGIN_DECLS
 
+typedef enum
+{
+  GST_HIP_FORMAT_FLAG_NONE = 0,
+  GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D = (1 << 0),
+} GstHipFormatFlags;
+
+typedef struct
+{
+  GstVideoFormat format;
+  GstHipFormatFlags format_flags;
+  hipArray_Format array_format[GST_VIDEO_MAX_PLANES];
+  guint channels[GST_VIDEO_MAX_PLANES];
+} GstHipFormat;
+
 GST_HIP_API
-void  gst_hip_memory_init_once (void);
+gboolean  gst_hip_device_get_format (GstHipDevice * device,
+                                     GstVideoFormat format,
+                                     GstHipFormat * hip_format);
 
 G_END_DECLS
 
