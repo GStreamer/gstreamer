@@ -764,6 +764,12 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         goto unmap_input_error;
       }
 
+      if (flxh->width == 0 || flxh->height == 0) {
+        GST_ELEMENT_ERROR (flxdec, STREAM, DECODE,
+            ("Invalid zero width or height in header"), (NULL));
+        goto unmap_input_error;
+      }
+
       GST_INFO_OBJECT (flxdec, "size      :  %d", flxh->size);
       GST_INFO_OBJECT (flxdec, "frames    :  %d", flxh->frames);
       GST_INFO_OBJECT (flxdec, "width     :  %d", flxh->width);
@@ -774,6 +780,11 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       flxdec->next_time = 0;
 
       if (flxh->type == FLX_MAGICHDR_FLI) {
+        if (flxh->speed == 0) {
+          GST_ELEMENT_ERROR (flxdec, STREAM, DECODE,
+              ("Invalid speed in header"), (NULL));
+          goto unmap_input_error;
+        }
         flxdec->frame_time = JIFFIE * flxh->speed;
       } else if (flxh->speed == 0) {
         flxdec->frame_time = GST_SECOND / 70;
