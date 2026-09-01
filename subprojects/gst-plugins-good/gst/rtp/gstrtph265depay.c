@@ -1383,6 +1383,7 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
       GST_INFO_OBJECT (depayload,
           "Dropping %" GST_PTR_FORMAT ", we are waiting for a keyframe",
           outbuf);
+      gst_rtp_base_depayload_flush (depayload, FALSE);
       gst_buffer_unref (outbuf);
     }
   }
