@@ -157,6 +157,9 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
             mngr->state = GST_PNM_INFO_MNGR_STATE_WHITE_SPACE;
             mngr->data_offset += i;
             if (mngr->info.type == GST_PNM_TYPE_BITMAP) {
+              /* Reject zero-sized images */
+              if (mngr->info.width == 0 || mngr->info.height == 0)
+                return GST_PNM_INFO_MNGR_RESULT_FAILED;
               mngr->data_offset += 1;
               mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;
               return GST_PNM_INFO_MNGR_RESULT_FINISHED;
@@ -185,6 +188,9 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
             } else if ((mngr->info.max > 255) || (mngr->info.max < 1)) {
               return GST_PNM_INFO_MNGR_RESULT_FAILED;
             }
+            /* Reject zero-sized images */
+            if (mngr->info.width == 0 || mngr->info.height == 0)
+              return GST_PNM_INFO_MNGR_RESULT_FAILED;
             mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;
             mngr->data_offset += i + 1;
             return GST_PNM_INFO_MNGR_RESULT_FINISHED;

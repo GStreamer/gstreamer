@@ -104,6 +104,59 @@ GST_START_TEST (test_pnm_enc_dec)
 
 GST_END_TEST;
 
+/* Push PNM data whose header declares zero dimensions and make sure the
+ * decoder fails cleanly with a stream error instead of negotiating a
+ * 0x0 output state (which trips a critical in the video decoder base
+ * class). P6 fails at the max field, P4 (bitmap) at the height field. */
+GST_START_TEST (test_pnmdec_zero_dimensions)
+{
+  const gchar *headers[] = {
+    "P6\n0 0\n255\n0123456789",
+    "P4\n0 0\nxx"
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (headers); i++) {
+    GstElement *pipeline;
+    GstElement *src;
+    GstBus *bus;
+    GstMessage *msg;
+    GstFlowReturn ret;
+    GstBuffer *buf;
+
+    pipeline = gst_parse_launch ("appsrc name=src ! pnmdec ! fakesink", NULL);
+    fail_unless (pipeline != NULL);
+
+    src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+    bus = gst_element_get_bus (pipeline);
+
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+    buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+        (gpointer) headers[i], strlen (headers[i]), 0, strlen (headers[i]),
+        NULL, NULL);
+    g_signal_emit_by_name (src, "push-buffer", buf, &ret);
+    gst_buffer_unref (buf);
+
+    /* No critical so far; the check log handler would have failed the
+     * test already otherwise */
+    msg = gst_bus_timed_pop_filtered (bus, 5 * GST_SECOND,
+        GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+    fail_unless (msg != NULL, "no error message for header '%s'", headers[i]);
+    fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR,
+        "expected error, got %s for header '%s'",
+        GST_MESSAGE_TYPE_NAME (msg), headers[i]);
+    gst_message_unref (msg);
+
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (bus);
+    gst_object_unref (src);
+    gst_object_unref (pipeline);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 pnm_suite (void)
 {
@@ -112,6 +165,7 @@ pnm_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_pnm_enc_dec);
+  tcase_add_test (tc_chain, test_pnmdec_zero_dimensions);
 
   return s;
 }
