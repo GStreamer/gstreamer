@@ -237,8 +237,8 @@ gst_video_color_range_offsets (GstVideoColorRange range,
  *
  * If @fullscale is provided, it will contain the maximum full-range value for
  * each component. For integer formats, the value is `(1 << depth) - 1`, where
- * `depth` is the bit depth of each component. For floating-point formats, the
- * value is 1.0
+ * `depth` is the bit depth of each component. For floating-point formats with
+ * the %GST_VIDEO_COLOR_RANGE_0_1 range, the value is 1.0.
  *
  * Since: 1.30
  */
@@ -251,6 +251,7 @@ gst_video_color_range_offsets_full (GstVideoColorRange range,
   gboolean yuv;
   gboolean is_float;
   guint i;
+  guint depth[GST_VIDEO_MAX_COMPONENTS];
 
   g_return_if_fail (info != NULL);
   g_return_if_fail (offset != NULL);
@@ -272,6 +273,9 @@ gst_video_color_range_offsets_full (GstVideoColorRange range,
     range = GST_VIDEO_COLOR_RANGE_0_255;
   }
 
+  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++)
+    depth[i] = is_float ? 8 : info->depth[i];
+
   switch (range) {
     case GST_VIDEO_COLOR_RANGE_0_1:
       offset[0] = 0;
@@ -288,30 +292,30 @@ gst_video_color_range_offsets_full (GstVideoColorRange range,
     case GST_VIDEO_COLOR_RANGE_0_255:
       offset[0] = 0.0;
       if (yuv) {
-        offset[1] = ldexp (1.0, info->depth[1] - 1);
-        offset[2] = ldexp (1.0, info->depth[2] - 1);
+        offset[1] = ldexp (1.0, depth[1] - 1);
+        offset[2] = ldexp (1.0, depth[2] - 1);
       } else {
         offset[1] = 0.0;
         offset[2] = 0.0;
       }
-      scale[0] = ldexp (1.0, info->depth[0]) - 1.0;
-      scale[1] = ldexp (1.0, info->depth[1]) - 1.0;
-      scale[2] = ldexp (1.0, info->depth[2]) - 1.0;
+      scale[0] = ldexp (1.0, depth[0]) - 1.0;
+      scale[1] = ldexp (1.0, depth[1]) - 1.0;
+      scale[2] = ldexp (1.0, depth[2]) - 1.0;
       break;
     case GST_VIDEO_COLOR_RANGE_16_235:
-      offset[0] = ldexp (1.0, info->depth[0] - 4);
-      scale[0] = ldexp (219.0, info->depth[0] - 8);
+      offset[0] = ldexp (1.0, depth[0] - 4);
+      scale[0] = ldexp (219.0, depth[0] - 8);
 
       if (yuv) {
-        offset[1] = ldexp (1.0, info->depth[1] - 1);
-        offset[2] = ldexp (1.0, info->depth[2] - 1);
-        scale[1] = ldexp (224.0, info->depth[1] - 8);
-        scale[2] = ldexp (224.0, info->depth[2] - 8);
+        offset[1] = ldexp (1.0, depth[1] - 1);
+        offset[2] = ldexp (1.0, depth[2] - 1);
+        scale[1] = ldexp (224.0, depth[1] - 8);
+        scale[2] = ldexp (224.0, depth[2] - 8);
       } else {
-        offset[1] = ldexp (1.0, info->depth[1] - 4);
-        offset[2] = ldexp (1.0, info->depth[2] - 4);
-        scale[1] = ldexp (219.0, info->depth[1] - 8);
-        scale[2] = ldexp (219.0, info->depth[2] - 8);
+        offset[1] = ldexp (1.0, depth[1] - 4);
+        offset[2] = ldexp (1.0, depth[2] - 4);
+        scale[1] = ldexp (219.0, depth[1] - 8);
+        scale[2] = ldexp (219.0, depth[2] - 8);
       }
       break;
   }
@@ -321,14 +325,14 @@ gst_video_color_range_offsets_full (GstVideoColorRange range,
   if (range == GST_VIDEO_COLOR_RANGE_0_1)
     scale[3] = 1.0;
   else
-    scale[3] = ldexp (1.0, info->depth[3]) - 1.0;
+    scale[3] = ldexp (1.0, depth[3]) - 1.0;
 
   if (fullscale) {
     for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
-      if (is_float)
+      if (range == GST_VIDEO_COLOR_RANGE_0_1)
         fullscale[i] = 1.0;
       else
-        fullscale[i] = ldexp (1.0, info->depth[i]) - 1.0;
+        fullscale[i] = ldexp (1.0, depth[i]) - 1.0;
     }
   }
 

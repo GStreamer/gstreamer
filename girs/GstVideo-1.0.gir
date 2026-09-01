@@ -6539,8 +6539,8 @@ the component values in range [0.0 .. 1.0] back to their representation in
 
 If @fullscale is provided, it will contain the maximum full-range value for
 each component. For integer formats, the value is `(1 &lt;&lt; depth) - 1`, where
-`depth` is the bit depth of each component. For floating-point formats, the
-value is 1.0</doc>
+`depth` is the bit depth of each component. For floating-point formats with
+the %GST_VIDEO_COLOR_RANGE_0_1 range, the value is 1.0.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -19888,8 +19888,8 @@ the component values in range [0.0 .. 1.0] back to their representation in
 
 If @fullscale is provided, it will contain the maximum full-range value for
 each component. For integer formats, the value is `(1 &lt;&lt; depth) - 1`, where
-`depth` is the bit depth of each component. For floating-point formats, the
-value is 1.0</doc>
+`depth` is the bit depth of each component. For floating-point formats with
+the %GST_VIDEO_COLOR_RANGE_0_1 range, the value is 1.0.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-color.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
