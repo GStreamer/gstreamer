@@ -696,6 +696,7 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
     guint auth, GstDtlsEnc * self)
 {
   GstBuffer *new_encoder_key;
+  gsize key_len;
   gchar *key_str;
 
   g_return_if_fail (GST_IS_DTLS_ENC (self));
@@ -704,15 +705,16 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_cipher = cipher;
   self->srtp_auth = auth;
 
-  new_encoder_key =
-      gst_buffer_new_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  key_len = gst_dtls_srtp_master_key_length (cipher);
+
+  new_encoder_key = gst_buffer_new_memdup (key, key_len);
 
   if (self->encoder_key)
     gst_buffer_unref (self->encoder_key);
 
   self->encoder_key = new_encoder_key;
 
-  key_str = g_base64_encode (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  key_str = g_base64_encode (key, key_len);
   GST_INFO_OBJECT (self, "received key: %s", key_str);
   g_free (key_str);
 

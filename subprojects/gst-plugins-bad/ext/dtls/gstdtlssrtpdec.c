@@ -447,14 +447,33 @@ on_decoder_request_key (GstElement * srtp_decoder,
     g_object_get (bin->dtls_element,
         "srtp-cipher", &cipher, "srtp-auth", &auth, NULL);
 
-    g_return_val_if_fail (cipher == GST_DTLS_SRTP_CIPHER_AES_128_ICM, NULL);
-
     key_caps = gst_caps_new_simple ("application/x-srtp",
-        "srtp-key", GST_TYPE_BUFFER, key_buffer,
-        "srtp-cipher", G_TYPE_STRING, "aes-128-icm",
-        "srtcp-cipher", G_TYPE_STRING, "aes-128-icm", NULL);
+        "srtp-key", GST_TYPE_BUFFER, key_buffer, NULL);
+
+    gst_clear_buffer (&key_buffer);
+
+    switch (cipher) {
+      case GST_DTLS_SRTP_CIPHER_AES_128_ICM:
+        gst_caps_set_simple (key_caps,
+            "srtp-cipher", G_TYPE_STRING, "aes-128-icm",
+            "srtcp-cipher", G_TYPE_STRING, "aes-128-icm", NULL);
+        break;
+      case GST_DTLS_SRTP_CIPHER_AES_128_GCM:
+        gst_caps_set_simple (key_caps,
+            "srtp-cipher", G_TYPE_STRING, "aes-128-gcm",
+            "srtcp-cipher", G_TYPE_STRING, "aes-128-gcm", NULL);
+        break;
+      default:
+        gst_clear_caps (&key_caps);
+        g_return_val_if_reached (NULL);
+    }
 
     switch (auth) {
+      case GST_DTLS_SRTP_AUTH_NULL:
+        gst_caps_set_simple (key_caps,
+            "srtp-auth", G_TYPE_STRING, "null",
+            "srtcp-auth", G_TYPE_STRING, "null", NULL);
+        break;
       case GST_DTLS_SRTP_AUTH_HMAC_SHA1_32:
         gst_caps_set_simple (key_caps,
             "srtp-auth", G_TYPE_STRING, "hmac-sha1-32",
@@ -466,11 +485,10 @@ on_decoder_request_key (GstElement * srtp_decoder,
             "srtcp-auth", G_TYPE_STRING, "hmac-sha1-80", NULL);
         break;
       default:
+        gst_clear_caps (&key_caps);
         g_return_val_if_reached (NULL);
         break;
     }
-
-    gst_buffer_unref (key_buffer);
 
     return key_caps;
   } else {
