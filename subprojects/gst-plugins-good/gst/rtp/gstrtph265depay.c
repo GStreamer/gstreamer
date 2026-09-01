@@ -1716,6 +1716,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             GST_WARNING_OBJECT (rtph265depay, "missing FU start bit on an "
                 "earlier packet. Dropping.");
             gst_rtp_base_depayload_flush (depayload, FALSE);
+            gst_rtp_base_depayload_dropped (depayload);
             gst_adapter_clear (rtph265depay->adapter);
             return NULL;
           }
@@ -1730,6 +1731,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             rtph265depay->current_fu_type = 0;
             rtph265depay->last_fu_seqnum = 0;
             gst_rtp_base_depayload_flush (depayload, FALSE);
+            gst_rtp_base_depayload_dropped (depayload);
             gst_adapter_clear (rtph265depay->adapter);
             return NULL;
           }
@@ -1772,6 +1774,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             rtph265depay->current_fu_type = 0;
             rtph265depay->last_fu_seqnum = 0;
             gst_rtp_base_depayload_flush (depayload, FALSE);
+            gst_rtp_base_depayload_dropped (depayload);
             gst_adapter_clear (rtph265depay->adapter);
             return NULL;
           }
