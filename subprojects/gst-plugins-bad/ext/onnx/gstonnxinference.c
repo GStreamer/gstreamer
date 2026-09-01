@@ -128,6 +128,9 @@
 #include "gstonnx-dml.h"
 #endif
 
+#define HIP_DYNAMIC_EP_NAME "hipgpu"
+#define MIGRAPHX_DYNAMIC_EP_NAME "MIGraphXExecutionProvider"
+
 typedef enum
 {
   GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
@@ -1010,7 +1013,7 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
 
           if (g_strcmp0 (ep_name, "hipgpu") == 0) {
             card_idx_str = api->GetKeyValue (metadata, "card_idx");
-          } else if (g_strcmp0 (ep_name, "MIGraphXExecutionProvider") == 0) {
+          } else if (g_strcmp0 (ep_name, MIGRAPHX_DYNAMIC_EP_NAME) == 0) {
             /* MIGraphX EP on Windows reports DXGI LUID and adapter number.
              * Use adapter number here */
             card_idx_str = api->GetKeyValue (metadata, "DxgiAdapterNumber");
@@ -1053,8 +1056,8 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
    *  - repo: https://github.com/ROCm/hip-ep/
    *  - header: morphizen/morphizen-core/include/morphizen/provider_option_keys.hpp
    */
-  if (g_strcmp0 (ep_name, "hipgpu") == 0 ||
-      g_strcmp0 (ep_name, "MIGraphXExecutionProvider") == 0) {
+  if (g_strcmp0 (ep_name, HIP_DYNAMIC_EP_NAME) == 0 ||
+      g_strcmp0 (ep_name, MIGRAPHX_DYNAMIC_EP_NAME) == 0) {
     const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
 
     if (cache_dir && *cache_dir) {
@@ -1362,7 +1365,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     {
       ORTCHAR_T *lib_path_w;
       gchar *lib_path =
-          gst_onnx_winml_ep_catalog_find ("MIGraphXExecutionProvider");
+          gst_onnx_winml_ep_catalog_find (MIGRAPHX_DYNAMIC_EP_NAME);
       if (!lib_path) {
         GST_ERROR_OBJECT (self, "Couldn't prepare MIGraphX EP via WindowsML");
         goto error;
@@ -1371,7 +1374,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       lib_path_w =
           (ORTCHAR_T *) g_utf8_to_utf16 (lib_path, -1, NULL, NULL, NULL);
       status = api->RegisterExecutionProviderLibrary (self->env,
-          "MIGraphXExecutionProvider", lib_path_w);
+          MIGRAPHX_DYNAMIC_EP_NAME, lib_path_w);
       g_free (lib_path_w);
 
       if (status) {
@@ -1382,10 +1385,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       }
       g_free (lib_path);
 
-      self->registered_ep_name = "MIGraphXExecutionProvider";
+      self->registered_ep_name = MIGRAPHX_DYNAMIC_EP_NAME;
 
       if (!gst_onnx_inference_append_ep (self,
-              session_options, "MIGraphXExecutionProvider")) {
+              session_options, MIGRAPHX_DYNAMIC_EP_NAME)) {
         goto error;
       }
     }
