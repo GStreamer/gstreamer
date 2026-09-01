@@ -960,7 +960,7 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
   gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
       VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR,
-      VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT);
+      VK_ACCESS_NONE_KHR);
 
   if (priv->layered_dpb) {
     gst_structure_set (config, "num-layers", G_TYPE_UINT,
@@ -1030,6 +1030,24 @@ _setup_rate_control (GstVulkanEncoder * self, GstVulkanEncoderPicture * pic,
 
   priv->callbacks.setup_rc_pic (pic, rc_info, rc_layer,
       priv->callbacks_user_data);
+}
+
+static void
+_reset_buffer_access (GstVulkanEncoder * self, GstBuffer * buffer)
+{
+  GstVulkanEncoderPrivate *priv =
+      gst_vulkan_encoder_get_instance_private (self);
+  GstVulkanBarrierImageInfo info = { 0, };
+  /* assume all memories in buffer has the same barrier info */
+  GstVulkanImageMemory *vk_mem =
+      (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, 0);
+
+  gst_vulkan_image_memory_lock (vk_mem);
+  gst_vulkan_image_memory_peek_barrier_unlocked (vk_mem, &info);
+  gst_vulkan_image_memory_unlock (vk_mem);
+
+  gst_vulkan_operation_update_frame (priv->exec, buffer,
+      info.parent.pipeline_stages, VK_ACCESS_NONE_KHR, info.image_layout, NULL);
 }
 
 /**
@@ -1203,6 +1221,9 @@ again:
           VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
           VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR))
     goto reset_and_error;
+
+  _reset_buffer_access (self, pic->in_buffer);
+
   if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->in_buffer,
           VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
           VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
@@ -1214,6 +1235,7 @@ again:
           VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
           VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR))
     goto reset_and_error;
+
   if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->dpb_buffer,
           VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
           VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
