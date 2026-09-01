@@ -73,7 +73,7 @@ enum
 #define DEFAULT_SPLIT_VIEW          FALSE
 
 #define DOC_CAPS_COMM \
-    "format = (string) { NV12, P010_10LE, BGRA, RGBA }, " \
+    "format = (string) { NV12, P010_10LE }, " \
     "width = (int) [ 128, 8192 ], height = (int) [ 128, 4096 ]"
 
 #define DOC_CAPS \
@@ -311,12 +311,6 @@ gst_amf_vq_enhancer_build_template_caps (AMFComponent * comp, gboolean is_input)
           break;
         case AMF_SURFACE_P010:
           name = "P010_10LE";
-          break;
-        case AMF_SURFACE_BGRA:
-          name = "BGRA";
-          break;
-        case AMF_SURFACE_RGBA:
-          name = "RGBA";
           break;
         default:
           break;
