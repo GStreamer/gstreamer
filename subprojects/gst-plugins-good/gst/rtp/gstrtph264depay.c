@@ -1043,7 +1043,7 @@ gst_rtp_h264_depay_push (GstRtpH264Depay * rtph264depay, GstBuffer * outbuf,
  * so downstream waiting for keyframe can pick up at SPS/PPS/IDR */
 #define NAL_TYPE_IS_KEY(nt) (((nt) == 5) || ((nt) == 7) || ((nt) == 8))
 
-static void
+static gboolean
 gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     GstClockTime in_timestamp, gboolean marker)
 {
@@ -1053,6 +1053,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   GstBuffer *outbuf = NULL;
   GstClockTime out_timestamp;
   gboolean keyframe, out_keyframe;
+  gboolean consumed = TRUE;
 
   gst_buffer_map (nal, &map, GST_MAP_READ);
   if (G_UNLIKELY (map.size < 5))
@@ -1073,7 +1074,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
               4, gst_buffer_get_size (nal) - 4));
       gst_buffer_unmap (nal, &map);
       gst_buffer_unref (nal);
-      return;
+      return consumed;
     } else if (rtph264depay->sps->len == 0 || rtph264depay->pps->len == 0) {
       /* Down push down any buffer in non-bytestream mode if the SPS/PPS haven't
        * go through yet
@@ -1084,7 +1085,8 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
                   "all-headers", G_TYPE_BOOLEAN, TRUE, NULL)));
       gst_buffer_unmap (nal, &map);
       gst_buffer_unref (nal);
-      return;
+      consumed = FALSE;
+      return consumed;
     }
 
     if (rtph264depay->new_codec_data &&
@@ -1169,10 +1171,12 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
           outbuf);
       gst_rtp_base_depayload_flush (depayload, FALSE);
       gst_buffer_unref (outbuf);
+      if (marker)
+        consumed = FALSE;
     }
   }
 
-  return;
+  return consumed;
 
   /* ERRORS */
 short_nal:
@@ -1180,7 +1184,8 @@ short_nal:
     GST_WARNING_OBJECT (depayload, "dropping short NAL");
     gst_buffer_unmap (nal, &map);
     gst_buffer_unref (nal);
-    return;
+    consumed = FALSE;
+    return consumed;
   }
 }
 
@@ -1219,8 +1224,10 @@ gst_rtp_h264_finish_fragmentation_unit (GstRtpH264Depay * rtph264depay)
 
   rtph264depay->current_fu_type = 0;
 
-  gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
-      rtph264depay->fu_timestamp, rtph264depay->fu_marker);
+  /* if the finished FU was dropped, flush its delayed header extensions */
+  if (!gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
+          rtph264depay->fu_timestamp, rtph264depay->fu_marker))
+    gst_rtp_base_depayload_flush (GST_RTP_BASE_DEPAYLOAD (rtph264depay), FALSE);
 }
 
 static GstBuffer *
@@ -1265,6 +1272,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     guint outsize, nalu_size;
     GstClockTime timestamp;
     gboolean marker;
+    gboolean consumed = FALSE;
 
     timestamp = GST_BUFFER_PTS (rtp->buffer);
 
@@ -1363,7 +1371,8 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           if (payload_len <= 2)
             last = TRUE;
 
-          gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
+          consumed |=
+              gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
               marker && last);
         }
         break;
@@ -1454,7 +1463,8 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             }
           }
 
-          gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
+          consumed |=
+              gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
               marker && last);
         }
         break;
@@ -1627,10 +1637,18 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
         gst_rtp_copy_video_meta (rtph264depay, outbuf, rtp->buffer);
 
-        gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp, marker);
+        consumed =
+            gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
+            marker);
         break;
       }
     }
+
+    /* drop the current packet's delayed header extensions if nothing was
+     * consumed and we're not in the middle of a FU. Otherwise header extensions
+     * of dropped packets would leak into the next output buffer. */
+    if (!consumed && rtph264depay->current_fu_type == 0)
+      gst_rtp_base_depayload_dropped (depayload);
   }
 
   return NULL;
