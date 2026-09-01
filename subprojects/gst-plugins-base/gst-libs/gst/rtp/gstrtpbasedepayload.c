@@ -939,7 +939,13 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
      a buffer that's pushed, either way the buffer cache should be
      empty here and we append the delayed buffer */
   if (priv->hdrext_delayed) {
-    g_assert_true (gst_buffer_list_length (priv->hdrext_buffers) == 0);
+    if (gst_buffer_list_length (priv->hdrext_buffers) > 0) {
+      /* the previous output buffer was dropped (e.g. on packet loss) and its
+       * cached header extensions should not apply to the new buffer. */
+      GST_LOG_OBJECT (filter,
+          "flushing delayed header extensions of previous buffer");
+      gst_rtp_base_depayload_reset_hdrext_buffers (filter);
+    }
     gst_buffer_list_add (priv->hdrext_buffers, priv->hdrext_delayed);
     priv->hdrext_delayed = NULL;
   }
