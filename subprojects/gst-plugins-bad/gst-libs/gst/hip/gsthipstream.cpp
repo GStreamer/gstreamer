@@ -144,7 +144,7 @@ gst_hip_stream_get_device_id (GstHipStream * stream)
 {
   g_return_val_if_fail (stream, G_MAXUINT);
 
-  return stream->vendor;
+  return stream->device_id;
 }
 
 /**
