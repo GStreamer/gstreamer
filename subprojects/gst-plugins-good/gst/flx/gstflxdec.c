@@ -318,7 +318,7 @@ flx_decode_color (GstFlxDec * flxdec, GstByteReader * reader,
 
     actual_count = count == 0 ? 256 : count;
 
-    if (!gst_byte_reader_get_data (reader, count * 3, &data))
+    if (!gst_byte_reader_get_data (reader, actual_count * 3, &data))
       goto error;
 
     GST_LOG_OBJECT (flxdec, "cmap count: %d (indx: %d)", actual_count, indx);
