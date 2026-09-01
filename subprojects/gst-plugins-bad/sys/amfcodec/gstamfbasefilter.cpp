@@ -39,6 +39,7 @@
 #include <gst/vulkan/vulkan.h>
 #include <core/VulkanAMF.h>
 #endif
+#include <components/VideoConverter.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_amf_base_filter_debug);
 #define GST_CAT_DEFAULT gst_amf_base_filter_debug
@@ -58,6 +59,11 @@ using namespace Microsoft::WRL;
 #endif
 /* *INDENT-ON* */
 
+#ifdef G_OS_WIN32
+static AMF_SURFACE_FORMAT
+gst_amf_base_filter_video_format_to_amf (GstVideoFormat fmt);
+#endif
+
 struct _GstAmfBaseFilterPrivate
 {
   guint device_index = 0;
@@ -71,11 +77,358 @@ struct _GstAmfBaseFilterPrivate
    * / CreateSurfaceFromDX12Native (wrong usage/bind flags or heap type, or
    * cross-device same-GPU scenario). */
   GstBufferPool *input_pool = nullptr;
+  /* Either a GstAmfD3d11OutputAllocator or a GstAmfD3d12OutputAllocator,
+   * chosen in gst_amf_base_filter_open_component() based on api.active. */
+  AMFDataAllocatorCB *output_allocator = nullptr;
+  /* Set for the duration of transform(); read by output_allocator. */
+  GstBuffer *pending_outbuf = nullptr;
+  ID3D11Texture2D *pending_out_native_d3d11 = nullptr;
+#ifdef HAVE_GST_D3D12
+  ID3D12Resource *pending_out_native_d3d12 = nullptr;
+#endif
+  gboolean output_to_outbuf = FALSE;
 #endif
 
   AMFContext *context = nullptr;
   AMFComponent *component = nullptr;
 };
+
+#ifdef G_OS_WIN32
+static gboolean
+gst_amf_base_filter_guid_equal (const AMFGuid & a, const AMFGuid & b)
+{
+  return memcmp (&a, &b, sizeof (AMFGuid)) == 0;
+}
+
+/* Routes filters output into the downstream GstD3D11/D3D12 buffer via
+ * SetOutputDataAllocatorCB, avoiding a GPU copy + fence wait. */
+class GstAmfD3dOutputAllocatorBase:public AMFDataAllocatorCB
+{
+public:
+  explicit GstAmfD3dOutputAllocatorBase (GstAmfBaseFilter * filter)
+  :m_filter (filter), m_ref_count (1)
+  {
+  }
+  /* *INDENT-OFF* */
+  virtual ~GstAmfD3dOutputAllocatorBase () = default;
+  /* *INDENT-ON* */
+  amf_long AMF_STD_CALL Acquire () override
+  {
+    return InterlockedIncrement (&m_ref_count);
+  }
+
+  amf_long AMF_STD_CALL Release () override
+  {
+    amf_long count = InterlockedDecrement (&m_ref_count);
+    if (count == 0)
+      delete this;
+    return count;
+  }
+
+  AMF_RESULT AMF_STD_CALL QueryInterface (const AMFGuid & interfaceID,
+      void **ppInterface) override
+  {
+    if (!ppInterface)
+      return AMF_INVALID_ARG;
+
+    if (gst_amf_base_filter_guid_equal (interfaceID, AMFInterface::IID ())
+        || gst_amf_base_filter_guid_equal (interfaceID,
+            AMFDataAllocatorCB::IID ())) {
+      *ppInterface = static_cast < AMFDataAllocatorCB * >(this);
+      Acquire ();
+      return AMF_OK;
+    }
+
+    *ppInterface = nullptr;
+    return AMF_NO_INTERFACE;
+  }
+
+  AMF_RESULT AMF_STD_CALL AllocBuffer (AMF_MEMORY_TYPE type, amf_size size,
+      AMFBuffer ** ppBuffer) override
+  {
+    GstAmfBaseFilterPrivate *priv = m_filter->priv;
+    if (!priv->context)
+      return AMF_NOT_INITIALIZED;
+    return priv->context->AllocBuffer (type, size, ppBuffer);
+  }
+
+  AMF_RESULT AMF_STD_CALL AllocSurface (AMF_MEMORY_TYPE type,
+      AMF_SURFACE_FORMAT format, amf_int32 width, amf_int32 height,
+      amf_int32 hPitch, amf_int32 vPitch, AMFSurface ** ppSurface) override
+  {
+    GstAmfBaseFilterPrivate *priv = m_filter->priv;
+    AMF_SURFACE_FORMAT expected;
+    AMFSurfacePtr surface;
+
+    if (!ppSurface)
+      return AMF_INVALID_ARG;
+
+    *ppSurface = nullptr;
+
+    if (!priv->context || !priv->pending_outbuf || type != MemoryType ())
+      goto fallback;
+
+    expected =
+        gst_amf_base_filter_video_format_to_amf (GST_VIDEO_INFO_FORMAT
+        (&m_filter->out_info));
+    if (expected == AMF_SURFACE_UNKNOWN || format != expected)
+      goto fallback;
+
+    if (width != (amf_int32) GST_VIDEO_INFO_WIDTH (&m_filter->out_info)
+        || height != (amf_int32) GST_VIDEO_INFO_HEIGHT (&m_filter->out_info))
+      goto fallback;
+
+    (void) hPitch;
+    (void) vPitch;
+
+    /* Only a single-memory (packed-subresource) output buffer can be
+     * wrapped directly. */
+    if (gst_buffer_n_memory (priv->pending_outbuf) != 1)
+      goto fallback;
+
+    surface = WrapPendingOutbufAsSurface ();
+    if (!surface)
+      goto fallback;
+
+    priv->output_to_outbuf = TRUE;
+    *ppSurface = surface.Detach ();
+    GST_LOG_OBJECT (m_filter,
+        "AMF output surface wrapped from downstream buffer (%dx%d, "
+        "format %d)", width, height, (gint) format);
+    return AMF_OK;
+
+  fallback:
+    if (!priv->context)
+      return AMF_NOT_INITIALIZED;
+    return priv->context->AllocSurface (type, format, width, height, ppSurface);
+  }
+
+protected:
+  GstAmfBaseFilter * m_filter;
+
+  virtual AMF_MEMORY_TYPE MemoryType () const = 0;
+
+  /* Maps priv->pending_outbuf's single GstMemory (if not already mapped)
+   * and wraps its native resource as an AMFSurface via
+   * CreateSurfaceFromDX1{1,2}Native(). Returns a null AMFSurfacePtr on any
+   * failure (unsupported memory type, device mismatch, map failure, AMF
+   * failure) so the caller falls back to the default AMF allocation. */
+  virtual AMFSurfacePtr WrapPendingOutbufAsSurface () = 0;
+
+private:
+  volatile amf_long m_ref_count;
+};
+
+/* D3D11 addresses a plane's subresource via AMFTextureArrayIndexGUID
+ * private data set on the shared texture array. */
+class GstAmfD3d11OutputAllocator:public GstAmfD3dOutputAllocatorBase
+{
+public:
+  explicit GstAmfD3d11OutputAllocator (GstAmfBaseFilter * filter)
+  :GstAmfD3dOutputAllocatorBase (filter)
+  {
+  }
+
+protected:
+  /* *INDENT-OFF* */
+  AMF_MEMORY_TYPE MemoryType () const override
+  {
+    return AMF_MEMORY_DX11;
+  }
+
+  AMFSurfacePtr WrapPendingOutbufAsSurface () override
+  {
+    GstAmfBaseFilterPrivate *priv = m_filter->priv;
+    GstMemory *mem = gst_buffer_peek_memory (priv->pending_outbuf, 0);
+    GstD3D11Memory *dmem;
+    AMFSurfacePtr surface;
+    AMF_RESULT result;
+    ID3D11Texture2D *tex;
+    D3D11_TEXTURE2D_DESC desc;
+    guint subresource_idx;
+
+    if (!gst_is_d3d11_memory (mem))
+      return nullptr;
+
+    dmem = GST_D3D11_MEMORY_CAST (mem);
+    if (dmem->device != priv->d3d.d3d11_device)
+      return nullptr;
+
+    tex = (ID3D11Texture2D *) gst_d3d11_memory_get_resource_handle (dmem);
+    tex->GetDesc (&desc);
+    UINT required_flags =
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+    if ((desc.BindFlags & required_flags) != required_flags) {
+      GST_WARNING_OBJECT (m_filter,
+          "Pending output texture missing "
+          "D3D11_BIND_SHADER_RESOURCE | "
+          "D3D11_BIND_UNORDERED_ACCESS");
+      return nullptr;
+    }
+
+    subresource_idx = gst_d3d11_memory_get_subresource_index (dmem);
+
+    gst_d3d11_device_lock (priv->d3d.d3d11_device);
+    tex->SetPrivateData (AMFTextureArrayIndexGUID, sizeof (guint),
+        &subresource_idx);
+    result = priv->context->CreateSurfaceFromDX11Native (tex, &surface,
+        nullptr);
+    gst_d3d11_device_unlock (priv->d3d.d3d11_device);
+
+    if (result != AMF_OK || !surface) {
+      GST_LOG_OBJECT (m_filter,
+          "CreateSurfaceFromDX11Native for output failed (%"
+          GST_AMF_RESULT_FORMAT "), using AMF allocator",
+          GST_AMF_RESULT_ARGS (result));
+      return nullptr;
+    }
+
+    /* AMF now owns writing into this texture: mark the memory so any
+     * later CPU/staging access re-downloads from it (see
+     * gst_d3d12_buffer_set_fence()). */
+    GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
+
+    priv->pending_out_native_d3d11 = tex;
+    return surface;
+  }
+  /* *INDENT-ON* */
+};
+
+#ifdef HAVE_GST_D3D12
+/* AMF only finishes updating the AMFFenceGUID/AMFFenceValueGUID pair it
+ * tagged on a wrapped resource once it's done writing to it, so the fence
+ * has to be read here, on release, not before CreateSurfaceFromDX12Native().
+ * Handing AMF's fence straight to gst_d3d12_memory_set_fence() is valid --
+ * it only requires fence values that increase monotonically, not one of our
+ * own queues' (gstd3d12dxgicapture.cpp does the same with its own
+ * externally-owned shared fence). */
+class GstAmfD3D12FenceObserver:public AMFSurfaceObserver
+{
+public:
+  GstD3D12Memory * dmem = nullptr;
+
+  /* *INDENT-OFF* */
+  void AMF_STD_CALL OnSurfaceDataRelease (AMFSurface *) override
+  {
+    if (!dmem)
+      return;
+
+    ComPtr<ID3D12Fence> amf_fence;
+    guint64 amf_value = 0;
+
+    if (gst_amf_d3d12_get_resource_amf_fence
+        (gst_d3d12_memory_get_resource_handle (dmem), &amf_fence,
+            &amf_value)) {
+      gst_d3d12_memory_set_fence (dmem, amf_fence.Get (), amf_value, FALSE);
+    }
+
+    dmem = nullptr;
+  }
+  /* *INDENT-ON* */
+};
+
+/* D3D12 sibling of GstAmfD3d11OutputAllocator. D3D12 addresses every plane
+ * of a planar format as its own subresource of a single resource (unlike
+ * D3D11, which needs AMFTextureArrayIndexGUID to pick a subresource out of
+ * a texture array), so CreateSurfaceFromDX12Native() can wrap the
+ * downstream resource directly -- same as the zero-copy input path in
+ * gst_amf_base_filter_transform(). */
+class GstAmfD3d12OutputAllocator:public GstAmfD3dOutputAllocatorBase
+{
+public:
+  explicit GstAmfD3d12OutputAllocator (GstAmfBaseFilter * filter)
+  :GstAmfD3dOutputAllocatorBase (filter)
+  {
+  }
+
+protected:
+  /* *INDENT-OFF* */
+  AMF_MEMORY_TYPE MemoryType () const override
+  {
+    return AMF_MEMORY_DX12;
+  }
+
+  AMFSurfacePtr WrapPendingOutbufAsSurface () override
+  {
+    GstAmfBaseFilterPrivate *priv = m_filter->priv;
+    GstMemory *mem = gst_buffer_peek_memory (priv->pending_outbuf, 0);
+    GstD3D12Memory *dmem;
+    AMFSurfacePtr surface;
+    AMF_RESULT result;
+    ID3D12Resource *resource;
+    D3D12_RESOURCE_DESC desc;
+
+    if (!gst_is_d3d12_memory (mem))
+      return nullptr;
+
+    dmem = GST_D3D12_MEMORY_CAST (mem);
+    if (!gst_d3d12_device_is_equal (dmem->device, priv->d3d.d3d12_device))
+      return nullptr;
+
+    resource = gst_d3d12_memory_get_resource_handle (dmem);
+    desc = resource->GetDesc ();
+
+    /* Only require a flag when the output format actually supports it */
+    GstD3D12Format d3d12_format;
+    if (gst_d3d12_device_get_format (priv->d3d.d3d12_device,
+            GST_VIDEO_INFO_FORMAT (&m_filter->out_info), &d3d12_format)) {
+      gboolean rt_supported = (d3d12_format.support1 &
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET;
+      gboolean uav_supported = (d3d12_format.support1 &
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW) ==
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW;
+
+      if (rt_supported
+          && !(desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)) {
+        GST_WARNING_OBJECT (m_filter,
+            "Pending output resource missing "
+            "D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET");
+        return nullptr;
+      }
+
+      if (uav_supported
+          && !(desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)) {
+        GST_WARNING_OBJECT (m_filter,
+            "Pending output resource missing "
+            "D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS");
+        return nullptr;
+      }
+    }
+
+    m_fence_observer.dmem = dmem;
+    result =
+        AMFContext2Ptr (priv->context)->CreateSurfaceFromDX12Native (resource,
+        &surface, &m_fence_observer);
+
+    if (result != AMF_OK || !surface) {
+      GST_LOG_OBJECT (m_filter,
+          "CreateSurfaceFromDX12Native for output failed (%"
+          GST_AMF_RESULT_FORMAT "), using AMF allocator",
+          GST_AMF_RESULT_ARGS (result));
+      /* No surface means OnSurfaceDataRelease() will never fire to clear
+       * this. */
+      m_fence_observer.dmem = nullptr;
+      return nullptr;
+    }
+
+    /* AMF now owns writing into this resource: mark the memory so any
+     * later CPU/staging access re-downloads from it (see
+     * gst_d3d12_buffer_set_fence()). */
+    GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+
+    priv->pending_out_native_d3d12 = resource;
+    return surface;
+  }
+  /* *INDENT-ON* */
+
+private:
+    GstAmfD3D12FenceObserver m_fence_observer;
+};
+#endif /* HAVE_GST_D3D12 */
+#endif /* G_OS_WIN32 */
 
 #define gst_amf_base_filter_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstAmfBaseFilter, gst_amf_base_filter,
@@ -342,6 +695,10 @@ gst_amf_base_filter_close_context (GstAmfBaseFilter * self)
     gst_buffer_pool_set_active (priv->input_pool, FALSE);
     gst_clear_object (&priv->input_pool);
   }
+  if (priv->output_allocator) {
+    priv->output_allocator->Release ();
+    priv->output_allocator = nullptr;
+  }
   gst_amf_d3d_private_clear (&priv->d3d);
 #endif
 
@@ -354,6 +711,7 @@ gst_amf_base_filter_close_component (GstAmfBaseFilter * self)
   GstAmfBaseFilterPrivate *priv = self->priv;
 
   if (priv->component) {
+    priv->component->SetOutputDataAllocatorCB (nullptr);
     priv->component->Terminate ();
     priv->component->Release ();
     priv->component = nullptr;
@@ -420,6 +778,31 @@ gst_amf_base_filter_open_component (GstAmfBaseFilter * self)
   }
 
   priv->component = comp.Detach ();
+
+#ifdef G_OS_WIN32
+#ifdef HAVE_GST_D3D12
+  if (priv->api.active == GST_AMF_API_D3D12 && priv->d3d.d3d12_device) {
+    if (!priv->output_allocator)
+      priv->output_allocator = new GstAmfD3d12OutputAllocator (self);
+    result = priv->component->SetOutputDataAllocatorCB (priv->output_allocator);
+    if (result != AMF_OK) {
+      GST_WARNING_OBJECT (self,
+          "SetOutputDataAllocatorCB failed (%" GST_AMF_RESULT_FORMAT ")",
+          GST_AMF_RESULT_ARGS (result));
+    }
+  } else
+#endif
+  if (priv->d3d.d3d11_device) {
+    if (!priv->output_allocator)
+      priv->output_allocator = new GstAmfD3d11OutputAllocator (self);
+    result = priv->component->SetOutputDataAllocatorCB (priv->output_allocator);
+    if (result != AMF_OK) {
+      GST_WARNING_OBJECT (self,
+          "SetOutputDataAllocatorCB failed (%" GST_AMF_RESULT_FORMAT ")",
+          GST_AMF_RESULT_ARGS (result));
+    }
+  }
+#endif
 
   GST_INFO_OBJECT (self, "AMF component initialized: %dx%d -> %dx%d",
       GST_VIDEO_INFO_WIDTH (&self->in_info),
@@ -667,7 +1050,8 @@ gst_amf_base_filter_propose_allocation (GstBaseTransform * trans,
       && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     pool = gst_amf_d3d11_pool_new (priv->d3d.d3d11_device, caps, &info,
-        D3D11_BIND_SHADER_RESOURCE, 0, &size, FALSE);
+        D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE, 0, &size,
+        FALSE);
     if (!pool)
       return FALSE;
 
@@ -703,15 +1087,31 @@ gst_amf_base_filter_decide_allocation (GstBaseTransform * trans,
             GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
       GstBufferPool *pool;
       guint size;
+      GstD3D12Format d3d12_format;
+      D3D12_RESOURCE_FLAGS resource_flags =
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
+
+      /* Not every output format supports RENDER_TARGET / UNORDERED_ACCESS
+       * (e.g. YUY2 lacks D3D12_FORMAT_SUPPORT1_RENDER_TARGET); requesting
+       * an unsupported flag makes CreateCommittedResource fail outright. */
+      if (gst_d3d12_device_get_format (priv->d3d.d3d12_device,
+              GST_VIDEO_INFO_FORMAT (&out_info), &d3d12_format)) {
+        if ((d3d12_format.support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
+            D3D12_FORMAT_SUPPORT1_RENDER_TARGET)
+          resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+        if ((d3d12_format.support1 &
+                D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW) ==
+            D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW)
+          resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+      }
 
       /* Not activated here: GstBaseTransform's default decide_allocation
        * (called below) reconfigures whatever pool is in the query via
        * gst_buffer_pool_set_config(), which fails on an already-active
        * pool and silently falls back to a plain system-memory pool. */
       pool = gst_amf_d3d12_pool_new (priv->d3d.d3d12_device, outcaps,
-          &out_info, D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS
-          | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_HEAP_FLAG_SHARED,
-          &size, FALSE);
+          &out_info, resource_flags, D3D12_HEAP_FLAG_SHARED, &size, FALSE);
       if (pool) {
         if (gst_query_get_n_allocation_pools (query) > 0)
           gst_query_set_nth_allocation_pool (query, 0, pool, size, 0, 0);
@@ -735,8 +1135,9 @@ gst_amf_base_filter_decide_allocation (GstBaseTransform * trans,
 
       /* Not activated here; see the D3D12 branch above for why. */
       pool = gst_amf_d3d11_pool_new (priv->d3d.d3d11_device, outcaps,
-          &out_info, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
-          0, &size, FALSE);
+          &out_info,
+          D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS |
+          D3D11_BIND_SHADER_RESOURCE, 0, &size, FALSE);
       if (pool) {
         if (gst_query_get_n_allocation_pools (query) > 0)
           gst_query_set_nth_allocation_pool (query, 0, pool, size, 0, 0);
@@ -1053,7 +1454,71 @@ gst_amf_base_filter_copy_amf_to_d3d11 (GstAmfBaseFilter * self,
   return TRUE;
 }
 
+static void
+gst_amf_base_filter_clear_pending_output (GstAmfBaseFilter * self)
+{
+  GstAmfBaseFilterPrivate *priv = self->priv;
+
+  priv->pending_outbuf = nullptr;
+  priv->pending_out_native_d3d11 = nullptr;
+#ifdef HAVE_GST_D3D12
+  priv->pending_out_native_d3d12 = nullptr;
+#endif
+  priv->output_to_outbuf = FALSE;
+}
+
+static gboolean
+gst_amf_base_filter_output_written_to_outbuf (GstAmfBaseFilter * self,
+    AMFSurface * surface)
+{
+  GstAmfBaseFilterPrivate *priv = self->priv;
+  AMFPlane *plane;
+
+  if (!priv->output_to_outbuf)
+    return FALSE;
+
+  plane = surface->GetPlaneAt (0);
+  if (!plane)
+    return FALSE;
+
+#ifdef HAVE_GST_D3D12
+  if (priv->pending_out_native_d3d12) {
+    return (ID3D12Resource *) plane->GetNative () ==
+        priv->pending_out_native_d3d12;
+  }
+#endif
+
+  if (!priv->pending_out_native_d3d11)
+    return FALSE;
+
+  return (ID3D11Texture2D *) plane->GetNative () ==
+      priv->pending_out_native_d3d11;
+}
+
 #endif /* G_OS_WIN32 */
+
+static AMF_RESULT
+gst_amf_base_filter_query_output (GstAmfBaseFilter * self,
+    AMFDataPtr & out_data)
+{
+  GstAmfBaseFilterPrivate *priv = self->priv;
+  AMF_RESULT result = AMF_REPEAT;
+
+  /* AMF VPP-style components are 1-in/1-out.  QueryOutput may return
+   * AMF_REPEAT while GPU conversion is still in flight. */
+  for (int retries = 0; retries < 100; retries++) {
+    result = priv->component->QueryOutput (&out_data);
+    if (result == AMF_OK)
+      return AMF_OK;
+    if (result != AMF_REPEAT)
+      return result;
+
+    g_thread_yield ();
+    g_usleep (1000);
+  }
+
+  return result;
+}
 
 /* ============================================================
  *   Surface conversion (system memory <-> AMF surfaces)
@@ -1205,6 +1670,15 @@ gst_amf_base_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
+#ifdef G_OS_WIN32
+  priv->pending_outbuf = outbuf;
+  priv->output_to_outbuf = FALSE;
+  priv->pending_out_native_d3d11 = nullptr;
+#ifdef HAVE_GST_D3D12
+  priv->pending_out_native_d3d12 = nullptr;
+#endif
+#endif
+
 #ifdef HAVE_GST_D3D12
   if (priv->api.active == GST_AMF_API_D3D12) {
     /* --- D3D12 zero-copy input path ---
@@ -1318,16 +1792,7 @@ gst_amf_base_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 #endif
   }
 
-  /* The AMF VPP-style components are 1-in/1-out, so a poll loop is
-   * enough; we do not need a queue of pending PTS like the encoder. */
-  for (int retries = 0; retries < 100; retries++) {
-    result = priv->component->QueryOutput (&out_data);
-    if (result == AMF_OK)
-      break;
-    if (result != AMF_REPEAT)
-      break;
-    g_usleep (1000);
-  }
+  result = gst_amf_base_filter_query_output (self, out_data);
 
 #ifdef G_OS_WIN32
   /* AMF has finished reading the input texture; release the D3D11/D3D12
@@ -1351,33 +1816,51 @@ gst_amf_base_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (result != AMF_OK || out_data == nullptr) {
     GST_ERROR_OBJECT (self, "QueryOutput failed or empty, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+#ifdef G_OS_WIN32
+    gst_amf_base_filter_clear_pending_output (self);
+#endif
     return GST_FLOW_ERROR;
   }
 
   out_surface = AMFSurfacePtr (out_data);
   if (!out_surface) {
     GST_ERROR_OBJECT (self, "AMF output is not a surface");
+#ifdef G_OS_WIN32
+    gst_amf_base_filter_clear_pending_output (self);
+#endif
     return GST_FLOW_ERROR;
   }
 
+#ifdef G_OS_WIN32
+  /* AMF wrote directly into the downstream D3D11/D3D12 buffer via our
+   * allocator. */
+  if (gst_amf_base_filter_output_written_to_outbuf (self, out_surface)) {
+    GST_LOG_OBJECT (self,
+        "AMF rendered directly into downstream buffer (no copy/fence)");
+    gst_amf_base_filter_clear_pending_output (self);
+    return GST_FLOW_OK;
+  }
+  gst_amf_base_filter_clear_pending_output (self);
+#endif
+
 #ifdef HAVE_GST_D3D12
-  /* --- D3D12 zero-copy output path ---
+  /* --- D3D12 output fallback ---
    * GPU-copy the AMF output surface into the pre-allocated D3D12 output
    * buffer.  Falls through to host copy when outbuf is not a D3D12
    * buffer on the same device. */
   if (priv->api.active == GST_AMF_API_D3D12
       && gst_amf_base_filter_copy_amf_to_d3d12 (self, out_surface, outbuf))
-    goto output_done;
+    return GST_FLOW_OK;
 #endif
 
 #ifdef G_OS_WIN32
-  /* --- D3D11 zero-copy output path ---
+  /* --- D3D11 output fallback ---
    * GPU-copy the AMF output surface into the pre-allocated D3D11 output
    * buffer via CopySubresourceRegion.  No CPU readback involved.
    * Falls through to host copy when outbuf is not a D3D11 buffer on
    * the same device (e.g. downstream does not negotiate D3D11 caps). */
   if (gst_amf_base_filter_copy_amf_to_d3d11 (self, out_surface, outbuf))
-    goto output_done;
+    return GST_FLOW_OK;
 #endif
 
   /* Host-copy output path (Linux Vulkan path and Windows fallback). */
@@ -1392,12 +1875,6 @@ gst_amf_base_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (!gst_amf_base_filter_copy_surface_to_buffer (self, out_surface, outbuf))
     return GST_FLOW_ERROR;
 
-#ifdef G_OS_WIN32
-output_done:
-#endif
-  GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (inbuf);
-  GST_BUFFER_DTS (outbuf) = GST_BUFFER_DTS (inbuf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
   return GST_FLOW_OK;
 
 #ifdef G_OS_WIN32
@@ -1412,6 +1889,7 @@ error:
     gst_memory_unmap (gst_buffer_peek_memory (d3d11_input_buf, 0),
         &d3d11_input_map);
   gst_clear_buffer (&d3d11_input_buf);
+  gst_amf_base_filter_clear_pending_output (self);
   return GST_FLOW_ERROR;
 #endif
 }
