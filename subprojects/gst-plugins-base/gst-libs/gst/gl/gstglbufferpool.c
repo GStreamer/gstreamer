@@ -389,7 +389,7 @@ gst_gl_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
  * gst_gl_buffer_pool_new:
  * @context: the #GstGLContext to use
  *
- * Returns: a #GstBufferPool that allocates buffers with #GstGLMemory
+ * Returns: (transfer full): a #GstBufferPool that allocates buffers with #GstGLMemory
  */
 GstBufferPool *
 gst_gl_buffer_pool_new (GstGLContext * context)

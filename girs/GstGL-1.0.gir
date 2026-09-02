@@ -1473,7 +1473,7 @@ A #GstGLBufferPool is created with gst_gl_buffer_pool_new()
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
       <constructor name="new" c:identifier="gst_gl_buffer_pool_new">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a #GstBufferPool that allocates buffers with #GstGLMemory</doc>
           <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
         </return-value>
@@ -1831,7 +1831,7 @@ Environment variables:
       <constructor name="new" c:identifier="gst_gl_context_new" version="1.4">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcontext.c">Create a new #GstGLContext with the specified @display</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcontext.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcontext.c">a new #GstGLContext</doc>
           <type name="GLContext" c:type="GstGLContext*"/>
         </return-value>

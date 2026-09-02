@@ -334,7 +334,7 @@ _init_debug (void)
  *
  * Create a new #GstGLContext with the specified @display
  *
- * Returns: a new #GstGLContext
+ * Returns: (transfer full): a new #GstGLContext
  *
  * Since: 1.4
  */
