@@ -106,6 +106,46 @@ missing_plugins:
 
 GST_END_TEST;
 
+/* A minimal OGM text stream (tests/files/ogm-text.ogm): typefind reports
+ * application/x-ogm-text at the root and ogmtextparse re-exposes the same
+ * stream as text/x-raw. The caps of the two nodes are not classified into a
+ * stream family in pbutils, so they can not be described as one (or two)
+ * consistent stream info objects and discovery must fail loudly until the
+ * classification is fixed. */
+GST_START_TEST (test_disco_ogm_text)
+{
+  GError *err = NULL;
+  GstDiscoverer *dc;
+  GstDiscovererInfo *info;
+  gchar *uri, *path =
+      g_build_filename (GST_TEST_FILES_PATH, "ogm-text.ogm", NULL);
+
+  /* high timeout, in case we're running under valgrind */
+  dc = gst_discoverer_new (30 * GST_SECOND, &err);
+  fail_unless (dc != NULL);
+  fail_unless (err == NULL);
+
+  uri = gst_filename_to_uri (path, &err);
+  g_free (path);
+  fail_unless (err == NULL);
+
+  info = gst_discoverer_discover_uri (dc, uri, &err);
+  fail_unless (info);
+
+  /* ogmtext typefinder and ogmtextparse are in the ogg plugin */
+  if (have_ogg) {
+    fail_unless_equals_int (gst_discoverer_info_get_result (info),
+        GST_DISCOVERER_ERROR);
+    fail_unless (err != NULL);
+  }
+
+  gst_discoverer_info_unref (info);
+  g_object_unref (dc);
+  g_free (uri);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_disco_sync)
 {
   GError *err = NULL;
@@ -1005,6 +1045,7 @@ discoverer_suite (void)
   tcase_add_test (tc_chain, test_disco_sync_reuse_timeout);
   tcase_add_test (tc_chain, test_disco_missing_plugins);
   tcase_add_test (tc_chain, test_disco_serializing);
+  tcase_add_test (tc_chain, test_disco_ogm_text);
   tcase_add_test (tc_chain, test_disco_async);
   tcase_add_test (tc_chain, test_disco_async_custom_context);
   tcase_add_test (tc_chain, test_disco_async_reuse);
