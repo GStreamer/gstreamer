@@ -1416,18 +1416,21 @@ parse_auth_credentials (GPtrArray * auth_credentials, const gchar * header,
         if (eq[0] == '=') {
           GstRTSPAuthParam *auth_param = g_new0 (GstRTSPAuthParam, 1);
           const gchar *value;
+          const gchar *param_end;
 
           /* have an actual param */
           auth_param->name = g_strndup (header, eq - header);
 
           value = eq + 1;
           value = skip_lws (value);
-          auth_param->value = g_strndup (value, item_end - value);
+          param_end = skip_item (value);
+
+          auth_param->value = g_strndup (value, param_end - value);
           if (value[0] == '"')
             decode_quoted_string (auth_param->value);
 
           g_ptr_array_add (params, auth_param);
-          header = item_end;
+          header = param_end;
         } else {
           /* at next scheme, header at start of it */
           break;
