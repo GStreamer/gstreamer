@@ -600,6 +600,7 @@ is_subtitle_caps (const GstCaps * caps)
 
   name = gst_structure_get_name (s);
   if (g_str_has_prefix (name, "text/") ||
+      g_str_equal (name, "application/x-ogm-text") ||
       g_str_has_prefix (name, "subpicture/") ||
       g_str_has_prefix (name, "subtitle/") ||
       g_str_has_prefix (name, "closedcaption/") ||
@@ -613,9 +614,10 @@ is_subtitle_caps (const GstCaps * caps)
   return ret;
 }
 
-/* Returns the GstDiscoverer*Info subclass collect_information() would
- * populate for these caps. Must stay in sync with the dispatch in
- * collect_information(): same branch order, same predicates. */
+/* Maps stream caps to the GstDiscoverer*Info subclass describing them. This
+ * is the single source of truth for the classification: collect_information()
+ * dispatches its field-population branches on it, and parse_stream_topology()
+ * uses it for the elementary-stream merge check. */
 static GType
 info_type_for_caps (const GstCaps * caps)
 {
@@ -628,10 +630,12 @@ info_type_for_caps (const GstCaps * caps)
   if (!name)
     return GST_TYPE_DISCOVERER_STREAM_INFO;
 
-  if (g_str_has_prefix (name, "audio/"))
+  if (g_str_has_prefix (name, "audio/") ||
+      g_str_equal (name, "application/x-ogm-audio"))
     return GST_TYPE_DISCOVERER_AUDIO_INFO;
 
-  if (g_str_has_prefix (name, "video/") || g_str_has_prefix (name, "image/"))
+  if (g_str_has_prefix (name, "video/") || g_str_has_prefix (name, "image/") ||
+      g_str_equal (name, "application/x-ogm-video"))
     return GST_TYPE_DISCOVERER_VIDEO_INFO;
 
   if (is_subtitle_caps (caps))
@@ -952,7 +956,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   GstCaps *caps = NULL;
   GstStructure *caps_st;
   GstTagList *tags_st;
-  const gchar *name;
+  GType type;
   gint tmp, tmp2;
   guint utmp;
 
@@ -978,9 +982,9 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   }
 
   caps_st = gst_caps_get_structure (caps, 0);
-  name = gst_structure_get_name (caps_st);
+  type = info_type_for_caps (caps);
 
-  if (g_str_has_prefix (name, "audio/")) {
+  if (type == GST_TYPE_DISCOVERER_AUDIO_INFO) {
     GstDiscovererAudioInfo *info;
     const gchar *format_str;
     guint64 channel_mask;
@@ -1040,8 +1044,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     gst_caps_unref (caps);
     return (GstDiscovererStreamInfo *) info;
 
-  } else if (g_str_has_prefix (name, "video/") ||
-      g_str_has_prefix (name, "image/")) {
+  } else if (type == GST_TYPE_DISCOVERER_VIDEO_INFO) {
     GstDiscovererVideoInfo *info;
     const gchar *caps_str;
 
@@ -1106,7 +1109,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     gst_caps_unref (caps);
     return (GstDiscovererStreamInfo *) info;
 
-  } else if (is_subtitle_caps (caps)) {
+  } else if (type == GST_TYPE_DISCOVERER_SUBTITLE_INFO) {
     GstDiscovererSubtitleInfo *info;
 
     info = (GstDiscovererSubtitleInfo *) make_info (parent,

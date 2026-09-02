@@ -110,6 +110,7 @@ static const FormatInfo formats[] = {
   {"video/x-ivf", "Indeo video format (IVF)", AVIS_CONTAINER, "ivf"},
 
   /* audio formats with static descriptions */
+  {"application/x-ogm-audio", "OGM audio", FLAG_AUDIO, "ogm"},
   {"audio/x-ac3", "AC-3 (ATSC A/52)", FLAG_AUDIO, "ac3"},
   {"audio/ac3", "AC-3 (ATSC A/52)", FLAG_AUDIO, "ac3"},
   {"audio/x-private-ac3", "DVD AC-3 (ATSC A/52)", FLAG_AUDIO, "ac3"},
@@ -189,6 +190,7 @@ static const FormatInfo formats[] = {
 
 
   /* video formats with static descriptions */
+  {"application/x-ogm-video", "OGM video", FLAG_VIDEO, "ogm"},
   {"video/sp5x", "Sunplus JPEG 5.x", FLAG_VIDEO, ""},
   {"video/vivo", "Vivo", FLAG_VIDEO, ""},
   {"video/x-4xm", "4X Technologies Video", FLAG_VIDEO, ""},
@@ -277,6 +279,7 @@ static const FormatInfo formats[] = {
 
   /* subtitle formats with static descriptions */
   {"text/x-raw", N_("Timed Text"), FLAG_SUB, ""},
+  {"application/x-ogm-text", N_("OGM text"), FLAG_SUB, "ogm"},
   {"application/x-ssa", "SubStation Alpha", FLAG_SUB, ""},
   {"application/x-ass", "Advanced SubStation Alpha", FLAG_SUB, ""},
   /* FIXME: add variant field to typefinder? */

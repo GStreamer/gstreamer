@@ -108,15 +108,18 @@ GST_END_TEST;
 
 /* A minimal OGM text stream (tests/files/ogm-text.ogm): typefind reports
  * application/x-ogm-text at the root and ogmtextparse re-exposes the same
- * stream as text/x-raw. The caps of the two nodes are not classified into a
- * stream family in pbutils, so they can not be described as one (or two)
- * consistent stream info objects and discovery must fail loudly until the
- * classification is fixed. */
+ * stream as text/x-raw. The OGM text caps are classified as a subtitle
+ * stream, so both nodes are described as one subtitle stream info; as with
+ * other decode chains (e.g. theora), the info keeps the codec caps of the
+ * root node rather than the raw node's caps. */
 GST_START_TEST (test_disco_ogm_text)
 {
   GError *err = NULL;
   GstDiscoverer *dc;
   GstDiscovererInfo *info;
+  GstCaps *caps;
+  GstDiscovererStreamInfo *sinfo;
+  GList *streams;
   gchar *uri, *path =
       g_build_filename (GST_TEST_FILES_PATH, "ogm-text.ogm", NULL);
 
@@ -132,11 +135,22 @@ GST_START_TEST (test_disco_ogm_text)
   info = gst_discoverer_discover_uri (dc, uri, &err);
   fail_unless (info);
 
-  /* ogmtext typefinder and ogmtextparse are in the ogg plugin */
+  /* ogmtext typefinder and ogmtextparse are in the ogg plugin; without it
+   * the stream can not even be identified */
   if (have_ogg) {
     fail_unless_equals_int (gst_discoverer_info_get_result (info),
-        GST_DISCOVERER_ERROR);
-    fail_unless (err != NULL);
+        GST_DISCOVERER_OK);
+    fail_unless (err == NULL);
+
+    streams = gst_discoverer_info_get_stream_list (info);
+    fail_unless_equals_int (g_list_length (streams), 1);
+    sinfo = g_list_nth_data (streams, 0);
+    fail_unless (GST_IS_DISCOVERER_SUBTITLE_INFO (sinfo));
+    caps = gst_discoverer_stream_info_get_caps (sinfo);
+    fail_unless_equals_string (gst_structure_get_name (gst_caps_get_structure
+            (caps, 0)), "application/x-ogm-text");
+    gst_caps_unref (caps);
+    gst_discoverer_stream_info_list_free (streams);
   }
 
   gst_discoverer_info_unref (info);
