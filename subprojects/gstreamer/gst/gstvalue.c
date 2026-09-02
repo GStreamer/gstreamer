@@ -3135,8 +3135,18 @@ _priv_gst_value_parse_value (gchar * str,
   if (*s == '[') {
     ret = _priv_gst_value_parse_range_struct_caps (s, &s, value, type);
   } else if (*s == '{') {
+    /* A container type annotation is only honoured if it names a list-family
+     * type: the list parser below accesses value->data[0].v_pointer as a
+     * GstValueList, which is not valid for any other type */
     if (container_type == G_TYPE_INVALID)
       container_type = GST_TYPE_LIST;
+    else if (container_type != GST_TYPE_LIST
+        && container_type != GST_TYPE_UNIQUE_LIST
+        && container_type != GST_TYPE_ARRAY) {
+      GST_WARNING ("invalid container type '%s' for list",
+          g_type_name (container_type));
+      return FALSE;
+    }
     g_value_init (value, container_type);
     ret = _priv_gst_value_parse_list (s, &s, value, type, pspec);
   } else if (*s == '<') {

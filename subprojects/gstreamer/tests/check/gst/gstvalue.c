@@ -5015,6 +5015,55 @@ test_hash_value_equal (GValue * a, GValue * b, gboolean compare)
   g_value_unset (b);
 }
 
+GST_START_TEST (test_deserialize_bogus_container_cast)
+{
+  struct
+  {
+    const gchar *str;
+    GType type;
+  } tests[] = {
+    /* A container type annotation naming a non-list type used to make the
+     * list parser dereference unrelated GValue data. Such annotations must
+     * be rejected */
+    {"{(/str){a}}", GST_TYPE_LIST},
+    {"{(/str){a}}", GST_TYPE_UNIQUE_LIST},
+    {"<(/str){a}>", GST_TYPE_ARRAY},
+    {"{(/int){1}}", GST_TYPE_LIST},
+    {"{(/structure){a}}", GST_TYPE_LIST},
+    /* g_type_from_name () fallback: a GValueArray is not layout-compatible
+     * with GstValueList, its container annotation must be rejected */
+    {"{(/GValueArray){1}}", GST_TYPE_LIST},
+  };
+  const GValue *nested;
+  GValue value = { 0 };
+  gchar *str;
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (tests); i++) {
+    /* The parser writes into the input string, static strings are not safe */
+    str = g_strdup (tests[i].str);
+
+    g_value_init (&value, tests[i].type);
+    fail_if (gst_value_deserialize (&value, str),
+        "deserializing '%s' should fail on the bogus container annotation",
+        tests[i].str);
+    g_value_unset (&value);
+    g_free (str);
+  }
+
+  /* A container annotation naming a list type must still be honoured */
+  str = g_strdup ("{(/uniquelist){a}}");
+  g_value_init (&value, GST_TYPE_LIST);
+  fail_unless (gst_value_deserialize (&value, str));
+  fail_unless_equals_int (gst_value_list_get_size (&value), 1);
+  nested = gst_value_list_get_value (&value, 0);
+  fail_unless (GST_VALUE_HOLDS_UNIQUE_LIST (nested));
+  g_value_unset (&value);
+  g_free (str);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_hash)
 {
   guint i;
@@ -5455,6 +5504,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_serialize_deserialize_tag_list);
   tcase_add_test (tc_chain, test_serialize_deserialize_sample);
   tcase_add_test (tc_chain, test_serialize_deserialize_strv);
+  tcase_add_test (tc_chain, test_deserialize_bogus_container_cast);
   tcase_add_test (tc_chain, test_hash);
 
   return s;
