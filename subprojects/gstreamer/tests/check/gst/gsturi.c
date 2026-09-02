@@ -1229,6 +1229,56 @@ GST_START_TEST (test_url_unescape_equals_in_http_query)
 
 GST_END_TEST;
 
+GST_START_TEST (test_url_invalid_percent_encoding_in_query)
+{
+  GstUri *url;
+  GHashTable *table;
+
+  /* An invalid percent-escape in a query key used to be inserted as a NULL
+   * key and crashed g_str_hash () */
+  url = gst_uri_from_string ("scheme://host/path?%zz=1&b=2");
+  fail_unless (url != NULL);
+  table = gst_uri_get_query_table (url);
+  fail_unless (table != NULL);
+  fail_unless_equals_int (g_hash_table_size (table), 1);
+  fail_unless (gst_uri_query_has_key (url, "b"));
+  fail_unless_equals_string (gst_uri_get_query_value (url, "b"), "2");
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  /* the same applies when unescaping the value fails */
+  url = gst_uri_from_string ("scheme://host/path?a=%zz&b=2");
+  fail_unless (url != NULL);
+  table = gst_uri_get_query_table (url);
+  fail_unless (table != NULL);
+  fail_unless_equals_int (g_hash_table_size (table), 1);
+  fail_unless (gst_uri_query_has_key (url, "b"));
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  /* a key without a value is still stored with a NULL value */
+  url = gst_uri_from_string ("scheme://host/path?a&b=2");
+  fail_unless (url != NULL);
+  table = gst_uri_get_query_table (url);
+  fail_unless (table != NULL);
+  fail_unless_equals_int (g_hash_table_size (table), 2);
+  fail_unless (gst_uri_query_has_key (url, "a"));
+  fail_unless (gst_uri_get_query_value (url, "a") == NULL);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+
+  url = gst_uri_make_writable (gst_uri_from_string ("scheme://host/path"));
+  fail_unless (url != NULL);
+  fail_unless (gst_uri_set_query_string (url, "%"));
+  table = gst_uri_get_query_table (url);
+  fail_unless (table != NULL);
+  fail_unless_equals_int (g_hash_table_size (table), 0);
+  g_hash_table_unref (table);
+  gst_uri_unref (url);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_url_to_string)
 {
   GstUri *uri;
@@ -1288,6 +1338,7 @@ gst_uri_suite (void)
   tcase_add_test (tc_chain, test_url_get_set);
   tcase_add_test (tc_chain, test_url_get_media_fragment_table);
   tcase_add_test (tc_chain, test_url_unescape_equals_in_http_query);
+  tcase_add_test (tc_chain, test_url_invalid_percent_encoding_in_query);
   tcase_add_test (tc_chain, test_url_to_string);
 
   return s;

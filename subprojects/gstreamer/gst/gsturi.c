@@ -1415,8 +1415,17 @@ _gst_uri_string_to_table (const gchar * str, const gchar * part_sep,
             }
           }
         }
-        /* add value to the table */
-        g_hash_table_insert (new_table, key, value);
+        /* Don't insert invalid/bogus values. No key, or a key without a value
+         * should be dropped and ignored. While there are checks before, we
+         * could end up in this situation because of the unescaping functions
+         * returning NULL values */
+        if (key == NULL || (kv_sep_pos != NULL && value == NULL)) {
+          g_free (key);
+          g_free (value);
+        } else {
+          /* add value to the table */
+          g_hash_table_insert (new_table, key, value);
+        }
       }
     }
     /* tidy up */
