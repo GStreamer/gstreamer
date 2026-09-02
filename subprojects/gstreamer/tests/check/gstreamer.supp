@@ -2598,6 +2598,30 @@
    fun:plugin_init
 }
 
+## gst_static_caps_get() marks parsed caps MAY_BE_LEAKED; memcheck ignores that.
+## The GES video element selector reads factory static caps this way.
+{
+   <ges video element selector may-be-leaked static caps>
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect,possible
+   ...
+   fun:gst_static_caps_get
+   fun:pad_supports_memory_type
+   ...
+}
+
+## Same static caps: gst_caps_get_features() materialises their default
+## SystemMemory features when the GES selector inspects them.
+{
+   <ges video element selector may-be-leaked caps features>
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect,possible
+   ...
+   fun:gst_caps_get_features
+   fun:pad_supports_memory_type
+   ...
+}
+
 ## We don't know if ffmpeg frees this or not and better pass a copy for safety
 {
    <insert a suppression name here>
