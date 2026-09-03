@@ -1927,7 +1927,11 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   priv->stream = gst_hip_stream_get_handle (out_stream);
   if (in_stream != out_stream) {
     gst_hip_memory_sync (in_hmem);
-  } else {
+  } else if (!gst_hip_memory_is_imported (in_hmem)) {
+    /* Imported input cannot use lazy synchronization even if in/out use the
+     * same stream. Unlike GstHip-owned memory, imported memory has no implicit
+     * synchronization point on free(), and the completion event is stored
+     * only in output memory */
     set_event = TRUE;
   }
 

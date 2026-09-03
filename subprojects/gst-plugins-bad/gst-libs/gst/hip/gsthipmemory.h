@@ -95,6 +95,9 @@ void           gst_hip_memory_set_event (GstHipMemory * mem,
 GST_HIP_API
 void           gst_hip_memory_sync (GstHipMemory * mem);
 
+GST_HIP_API
+gboolean       gst_hip_memory_is_imported (GstHipMemory * mem);
+
 /**
  * GstHipAllocator:
  *

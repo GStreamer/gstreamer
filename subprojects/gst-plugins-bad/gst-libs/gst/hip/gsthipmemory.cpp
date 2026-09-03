@@ -574,6 +574,24 @@ gst_hip_memory_sync (GstHipMemory * mem)
 }
 
 /**
+ * gst_hip_memory_is_imported:
+ * @mem: a #GstHipMemory
+ *
+ * Checks if @mem is imported from external memory
+ *
+ * Returns: %TRUE if @mem is imported, %FALSE otherwise
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_memory_is_imported (GstHipMemory * mem)
+{
+  g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), FALSE);
+
+  return mem->priv->external_mem != nullptr;
+}
+
+/**
  * gst_hip_allocator_alloc:
  * @allocator: (allow-none): a #GstHipAllocator
  * @device: a #GstHipDevice
