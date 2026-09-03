@@ -1238,35 +1238,34 @@ gst_vulkan_h264_encoder_new_parameters (GstH264Encoder * encoder,
   };
 
   if (!gst_vulkan_encoder_video_session_parameters_overrides (self->encoder,
-          &overrides, &feedback, &data_size, &data, &err))
+          &overrides, &feedback, &data_size, &data, &err)) {
+    GST_ERROR_OBJECT (self, "Unable to get overriden parameters: %s",
+        err ? err->message : "");
+    g_clear_error (&err);
     return GST_FLOW_ERROR;
+  }
 
   if (feedback.h264.hasStdSPSOverrides || feedback.h264.hasStdPPSOverrides) {
     GstH264SPS new_sps = { 0, };
     GstH264PPS new_pps = { 0, };
+
     GST_LOG_OBJECT (self, "Vulkan driver overrode parameters:%s%s",
         feedback.h264.hasStdSPSOverrides ? " SPS" : "",
         feedback.h264.hasStdPPSOverrides ? " PPS" : "");
 
-    if (_h264_parameters_parse (self, data, data_size, &new_sps, &new_pps)) {
-      if (feedback.h264.hasStdSPSOverrides)
-        *sps = new_sps;
-
-      if (feedback.h264.hasStdPPSOverrides) {
-        new_pps.sequence = sps;
-        *pps = new_pps;
-      }
-
-      ret = gst_vulkan_h264_encoder_update_parameters (self, sps, pps);
-      if (ret != GST_FLOW_OK) {
-        g_free (data);
-        return ret;
-      }
-    } else {
+    if (!_h264_parameters_parse (self, data, data_size, &new_sps, &new_pps)) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ,
           ("Unable to parse overriden parameters"), (NULL));
       g_free (data);
       return GST_FLOW_ERROR;
+    }
+
+    if (feedback.h264.hasStdSPSOverrides)
+      *sps = new_sps;
+
+    if (feedback.h264.hasStdPPSOverrides) {
+      new_pps.sequence = sps;
+      *pps = new_pps;
     }
   }
 
