@@ -676,6 +676,48 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
      * Caller should fallback to CPU copy */
     return nullptr;
   }
+
+  if (gst_is_hip_host_memory (external)) {
+    auto hmem = GST_HIP_HOST_MEMORY_CAST (external);
+    auto mem_dev = hmem->device;
+    if (gst_hip_device_is_equal (device, mem_dev)) {
+      auto device_ptr = gst_hip_host_memory_get_device_pointer (hmem);
+      if (device_ptr) {
+        auto mem = g_new0 (GstHipMemory, 1);
+        mem->device = (GstHipDevice *) gst_object_ref (device);
+        mem->info = *info;
+
+        auto priv = new GstHipMemoryPrivate ();
+        mem->priv = priv;
+
+        priv->external_mem = gst_memory_ref (external);
+        priv->data = device_ptr;
+        priv->vendor = gst_hip_device_get_vendor (device);
+        priv->stream = gst_hip_device_get_stream (device);
+        if (priv->stream)
+          gst_hip_stream_ref (priv->stream);
+        priv->texture_support =
+            gst_hip_device_check_texture_support (device, info);
+
+        gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags)
+            /* Writability of this wrapper memory does not represent that of
+             * underlying memory. Only read access is safe through the wrapper */
+            GST_MEMORY_FLAG_READONLY,
+            GST_ALLOCATOR_CAST (allocator), nullptr, external->size, 0, 0,
+            external->size);
+
+        return GST_MEMORY_CAST (mem);
+      } else {
+        GST_LOG_OBJECT (device, "Couldn't get device pointer from host memory");
+        return nullptr;
+      }
+    } else {
+      GST_DEBUG_OBJECT (device, "Host memory belongs to different device %"
+          GST_PTR_FORMAT, mem_dev);
+    }
+
+    return nullptr;
+  }
 #ifdef G_OS_WIN32
   /* TODO: add d3d12 support */
   return nullptr;
@@ -711,14 +753,14 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
   };
   /* *INDENT-ON* */
 
-  auto vendor = gst_hip_device_get_vendor (device);
-  if (vendor != GST_HIP_VENDOR_AMD) {
-    GST_WARNING_OBJECT (allocator, "Only AMD backend is supported");
+  if (!gst_is_dmabuf_memory (external)) {
+    GST_DEBUG_OBJECT (allocator, "Non-DMABUF memory");
     return nullptr;
   }
 
-  if (!gst_is_dmabuf_memory (external)) {
-    GST_WARNING_OBJECT (allocator, "Non-DMABUF memory");
+  auto vendor = gst_hip_device_get_vendor (device);
+  if (vendor != GST_HIP_VENDOR_AMD) {
+    GST_WARNING_OBJECT (allocator, "Only AMD backend is supported");
     return nullptr;
   }
 
