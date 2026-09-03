@@ -44,5 +44,15 @@ gboolean  gst_hip_device_get_format (GstHipDevice * device,
                                      GstVideoFormat format,
                                      GstHipFormat * hip_format);
 
+GST_HIP_API
+gboolean  gst_hip_device_align_video_info_for_texture (GstHipDevice * device,
+                                                       const GstVideoInfo * reference,
+                                                       GstVideoInfo * aligned_info,
+                                                       gboolean * texture_supported);
+
+GST_HIP_API
+gboolean  gst_hip_device_check_texture_support (GstHipDevice * device,
+                                                const GstVideoInfo * info);
+
 G_END_DECLS
 

@@ -24,6 +24,21 @@
 #include "gsthip.h"
 #include "gsthip-private.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_HIP_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("hipformat", 0, "hipformat");
+  } GST_HIP_CALL_ONCE_END;
+
+  return cat;
+}
+#endif
+
 #define HIP_AD_FORMAT_NONE ((hipArray_Format) 0)
 #define MAKE_FORMAT_YUV_PLANAR(f,cf) \
   { GST_VIDEO_FORMAT_ ##f, GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D, \
@@ -121,4 +136,147 @@ gst_hip_device_get_format (GstHipDevice * device, GstVideoFormat format,
   }
 
   return FALSE;
+}
+
+static gboolean
+_get_texture_alignment (GstHipDevice * device, GstVideoFormat format,
+    gint * stride_align, gint * offset_align)
+{
+  gint texture_align = 0;
+  gint pitch_align = 0;
+
+  for (guint i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].format == format) {
+      if ((format_map[i].format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D)
+          != GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
+        return FALSE;
+      }
+
+      auto hip_ret = gst_hip_device_get_attribute (device,
+          hipDeviceAttributeTextureAlignment, &texture_align);
+      if (hip_ret != hipSuccess)
+        return FALSE;
+
+      hip_ret = gst_hip_device_get_attribute (device,
+          hipDeviceAttributeTexturePitchAlignment, &pitch_align);
+      if (hip_ret != hipSuccess)
+        return FALSE;
+
+      break;
+    }
+  }
+
+  if (texture_align <= 0 || pitch_align <= 0)
+    return FALSE;
+
+  *stride_align = pitch_align;
+  *offset_align = texture_align;
+
+  return TRUE;
+}
+
+static size_t
+do_align (size_t value, size_t align)
+{
+  if (align == 0)
+    return value;
+
+  return ((value + align - 1) / align) * align;
+}
+
+gboolean
+gst_hip_device_align_video_info_for_texture (GstHipDevice * device,
+    const GstVideoInfo * reference, GstVideoInfo * aligned_info,
+    gboolean * texture_supported)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), FALSE);
+  g_return_val_if_fail (reference, FALSE);
+  g_return_val_if_fail (aligned_info, FALSE);
+  g_return_val_if_fail (texture_supported, FALSE);
+
+  *texture_supported = FALSE;
+
+  gint offset_align = 0;
+  gint stride_align = 0;
+  auto supported = _get_texture_alignment (device,
+      GST_VIDEO_INFO_FORMAT (reference), &stride_align, &offset_align);
+  if (!supported) {
+    GST_LOG_OBJECT (device, "Device or format does not support texture");
+    *aligned_info = *reference;
+    return TRUE;
+  }
+
+  GstVideoInfo ret = *reference;
+  gsize offset = 0;
+  guint n_planes = GST_VIDEO_INFO_N_PLANES (reference);
+
+  GST_LOG_OBJECT (device, "Aligning %s %dx%d for texture support, "
+      "offset alignment: %d, stride alignment: %d",
+      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (reference)),
+      reference->width, reference->height, offset_align, stride_align);
+
+  for (guint i = 0; i < n_planes; i++) {
+    gint components[GST_VIDEO_MAX_COMPONENTS];
+
+    gst_video_format_info_component (reference->finfo, i, components);
+    if (components[0] < 0)
+      return FALSE;
+
+    auto height = GST_VIDEO_INFO_COMP_HEIGHT (reference, components[0]);
+    auto stride = (gint) do_align (reference->stride[i], stride_align);
+
+    offset = do_align (offset, offset_align);
+
+    ret.stride[i] = stride;
+    ret.offset[i] = offset;
+
+    GST_LOG_OBJECT (device, "Plane %d: stride: %d -> %d, height: %d, offset: %"
+        G_GSIZE_FORMAT, i, reference->stride[i], stride, height, offset);
+
+    offset += stride * height;
+  }
+
+  GST_LOG_OBJECT (device, "Total size: %" G_GSIZE_FORMAT, offset);
+
+  ret.size = offset;
+
+  *aligned_info = ret;
+  *texture_supported = TRUE;
+
+  return TRUE;
+}
+
+gboolean
+gst_hip_device_check_texture_support (GstHipDevice * device,
+    const GstVideoInfo * info)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  gint offset_align = 0;
+  gint stride_align = 0;
+  auto supported = _get_texture_alignment (device,
+      GST_VIDEO_INFO_FORMAT (info), &stride_align, &offset_align);
+  if (!supported) {
+    GST_LOG_OBJECT (device, "Device or format does not support texture");
+    return FALSE;
+  }
+
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    if ((GST_VIDEO_INFO_PLANE_STRIDE (info, i) % stride_align) != 0) {
+      GST_LOG_OBJECT (device,
+          "Stride of plane %u is not aligned to %d, texture not supported",
+          i, stride_align);
+      return FALSE;
+    }
+
+    if ((GST_VIDEO_INFO_PLANE_OFFSET (info, i) % offset_align) != 0) {
+      GST_LOG_OBJECT (device,
+          "Offset of plane %u is not aligned to %d, texture not supported",
+          i, offset_align);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }

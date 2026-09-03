@@ -125,48 +125,6 @@ gst_hip_allocator_init (GstHipAllocator * allocator)
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
-static size_t
-do_align (size_t value, size_t align)
-{
-  if (align == 0)
-    return value;
-
-  return ((value + align - 1) / align) * align;
-}
-
-static gboolean
-gst_hip_allocator_update_info (const GstVideoInfo * reference, gsize align,
-    GstVideoInfo * aligned)
-{
-  GstVideoInfo ret = *reference;
-  gsize offset = 0;
-  guint n_planes = GST_VIDEO_INFO_N_PLANES (reference);
-
-  for (guint i = 0; i < n_planes; i++) {
-    gint components[GST_VIDEO_MAX_COMPONENTS];
-
-    gst_video_format_info_component (reference->finfo, i, components);
-    if (components[0] < 0)
-      return FALSE;
-
-    auto height = GST_VIDEO_INFO_COMP_HEIGHT (reference, components[0]);
-    auto stride = do_align (reference->stride[i], align);
-
-    offset = do_align (offset, align);
-
-    ret.stride[i] = stride;
-    ret.offset[i] = offset;
-
-    offset += stride * height;
-  }
-
-  ret.size = offset;
-
-  *aligned = ret;
-
-  return TRUE;
-}
-
 static GstMemory *
 gst_hip_allocator_alloc_internal (GstHipAllocator * self,
     GstHipDevice * device, const GstVideoInfo * info, GstHipStream * stream)
@@ -177,27 +135,10 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
     return nullptr;
 
   auto vendor = gst_hip_device_get_vendor (device);
-  gint texture_align = 0;
-  GstHipFormat hip_format = { };
-  gboolean texture_support = FALSE;
-  if (!gst_hip_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
-          &hip_format)) {
-    GST_WARNING_OBJECT (self, "Unexpected format %s, assume buffer format",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-  } else if ((hip_format.format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D)
-      == GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
-    texture_support = TRUE;
-
-    gst_hip_device_get_attribute (device,
-        hipDeviceAttributeTextureAlignment, &texture_align);
-    if (texture_align <= 0) {
-      texture_support = FALSE;
-      texture_align = 0;
-    }
-  }
-
   GstVideoInfo alloc_info;
-  if (!gst_hip_allocator_update_info (info, texture_align, &alloc_info)) {
+  gboolean texture_support = FALSE;
+  if (!gst_hip_device_align_video_info_for_texture (device,
+          info, &alloc_info, &texture_support)) {
     GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
     return nullptr;
   }
@@ -728,12 +669,8 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
   if (gst_is_hip_memory (external)) {
     auto hmem = GST_HIP_MEMORY_CAST (external);
     auto mem_dev = hmem->device;
-    if (gst_hip_device_get_vendor (device) ==
-        gst_hip_device_get_vendor (mem_dev) &&
-        gst_hip_device_get_device_id (device) ==
-        gst_hip_device_get_device_id (mem_dev)) {
+    if (gst_hip_device_is_equal (device, mem_dev))
       return gst_memory_ref (external);
-    }
 
     /* Cross-device/API copy is not supported.
      * Caller should fallback to CPU copy */
@@ -789,38 +726,6 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
   if (fd < 0) {
     GST_ERROR_OBJECT (allocator, "Couldn't get fd");
     return nullptr;
-  }
-
-  gint texture_align = 0;
-  GstHipFormat hip_format = { };
-  gboolean texture_support = FALSE;
-  if (!gst_hip_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
-          &hip_format)) {
-    GST_WARNING_OBJECT (allocator, "Unexpected format %s, assume buffer format",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-  } else if ((hip_format.format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D)
-      == GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
-    texture_support = TRUE;
-
-    gst_hip_device_get_attribute (device,
-        hipDeviceAttributeTextureAlignment, &texture_align);
-    if (texture_align <= 0) {
-      texture_support = FALSE;
-      texture_align = 0;
-    }
-  }
-
-  /* Check stride to ensure texture support */
-  if (texture_support) {
-    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-      if ((GST_VIDEO_INFO_PLANE_STRIDE (info, i) % texture_align) != 0) {
-        GST_LOG_OBJECT (allocator,
-            "Stride of plane %u is not aligned to %d, disable texture support",
-            i, texture_align);
-        texture_support = FALSE;
-        break;
-      }
-    }
   }
 
   std::shared_ptr < GstHipImportCacheDmaBuf > import_cache;
@@ -910,9 +815,7 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
   priv->stream = gst_hip_device_get_stream (device);
   if (priv->stream)
     gst_hip_stream_ref (priv->stream);
-
-  if (texture_support)
-    g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
+  priv->texture_support = gst_hip_device_check_texture_support (device, info);
 
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_READONLY,
       GST_ALLOCATOR_CAST (allocator), nullptr, external->size, 0, 0,
