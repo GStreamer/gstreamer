@@ -23,6 +23,7 @@
 
 #include "gsthip-config.h"
 #include <gst/hip/gsthip.h>
+#include <gst/hip/gsthip-private.h>
 
 #ifdef HAVE_GST_CUDA
 #include <gst/cuda/gstcuda.h>
@@ -35,6 +36,7 @@
 #include <gst/allocators/gstdmabuf.h>
 #include "gsthipmemorycopy.h"
 #include <mutex>
+#include <atomic>
 
 GST_DEBUG_CATEGORY_STATIC (gst_hip_memory_copy_debug);
 #define GST_CAT_DEFAULT gst_hip_memory_copy_debug
@@ -61,7 +63,7 @@ enum class TransferType
   GL_TO_HIP,
   HIP_TO_CUDA,
   HIP_TO_GL,
-  DMABUF_TO_HIP,
+  IMPORT_TO_HIP,
 };
 
 enum class MemoryType
@@ -87,8 +89,46 @@ enum
   PROP_VENDOR,
 };
 
+enum GstHipUploadMethod
+{
+  GST_HIP_UPLOAD_METHOD_AUTO,
+  GST_HIP_UPLOAD_METHOD_IMPORT,
+  GST_HIP_UPLOAD_METHOD_PINNED_COPY,
+  GST_HIP_UPLOAD_METHOD_SYSTEM,
+};
+
+/**
+ * GstHipUploadMethod:
+ *
+ * Since: 1.30
+ */
+#define GST_TYPE_HIP_UPLOAD_METHOD (gst_hip_upload_method_get_type ())
+static GType
+gst_hip_upload_method_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue values[] = {
+    {GST_HIP_UPLOAD_METHOD_AUTO,
+        "Prefer import on iGPU, pinned copy otherwise", "auto"},
+    {GST_HIP_UPLOAD_METHOD_IMPORT,
+        "Propose host-pinned memory and import", "import"},
+    {GST_HIP_UPLOAD_METHOD_PINNED_COPY,
+        "Propose host-pinned memory and copy to device memory", "pinned"},
+    {GST_HIP_UPLOAD_METHOD_SYSTEM,
+        "Propose system memory buffer pool", "system"},
+    {0, nullptr, nullptr}
+  };
+
+  GST_HIP_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstHipUploadMethod", values);
+  } GST_HIP_CALL_ONCE_END;
+
+  return type;
+}
+
 #define DEFAULT_DEVICE_ID -1
 #define DEFAULT_VENDOR GST_HIP_VENDOR_UNKNOWN
+#define DEFAULT_UPLOAD_METHOD GST_HIP_UPLOAD_METHOD_AUTO
 
 /* *INDENT-OFF* */
 struct _GstHipMemoryCopyPrivate
@@ -151,6 +191,8 @@ struct _GstHipMemoryCopyPrivate
 
   gint device_id = DEFAULT_DEVICE_ID;
   GstHipVendor vendor = DEFAULT_VENDOR;
+  std::atomic<GstHipUploadMethod> upload_method =
+      { GST_HIP_UPLOAD_METHOD_SYSTEM };
 };
 /* *INDENT-ON* */
 
@@ -592,7 +634,17 @@ gst_hip_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       return FALSE;
     }
 
-    priv->transfer_type = TransferType::DMABUF_TO_HIP;
+    priv->transfer_type = TransferType::IMPORT_TO_HIP;
+    return TRUE;
+  } else if (priv->in_type == MemoryType::SYSTEM &&
+      priv->out_type == MemoryType::HIP &&
+      (priv->upload_method == GST_HIP_UPLOAD_METHOD_AUTO ||
+          priv->upload_method == GST_HIP_UPLOAD_METHOD_IMPORT)) {
+    /* Proposed host pinned memory, try importing.
+     * We might disable the host map flag during propose_allocation()
+     * but then gst_hip_allocator_import_external_memory() will return false
+     * gracefully, then will switch method to system copy */
+    priv->transfer_type = TransferType::IMPORT_TO_HIP;
     return TRUE;
   }
 
@@ -1037,7 +1089,7 @@ gst_hip_memory_copy_propose_allocation (GstBaseTransform * trans,
   GstBufferPool *pool = nullptr;
   GstCaps *caps;
   guint size;
-  bool is_system = true;
+  bool is_system = false;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
@@ -1072,14 +1124,12 @@ gst_hip_memory_copy_propose_allocation (GstBaseTransform * trans,
             GST_CAPS_FEATURE_MEMORY_HIP_MEMORY)) {
       GST_DEBUG_OBJECT (self, "upstream support hip memory");
       pool = gst_hip_buffer_pool_new (priv->device);
-      is_system = false;
     }
 #ifdef HAVE_GST_CUDA
     else if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY) && priv->cuda_ctx) {
       GST_DEBUG_OBJECT (self, "upstream support cuda memory");
       pool = gst_cuda_buffer_pool_new (priv->cuda_ctx);
-      is_system = false;
     }
 #endif
 #ifdef HAVE_GST_HIP_GL
@@ -1088,12 +1138,67 @@ gst_hip_memory_copy_propose_allocation (GstBaseTransform * trans,
         gst_hip_memory_copy_ensure_gl_context (self)) {
       GST_DEBUG_OBJECT (self, "upstream support gl memory");
       pool = gst_gl_buffer_pool_new (priv->gl_ctx);
-      is_system = false;
     }
 #endif
 
-    if (!pool)
-      pool = gst_video_buffer_pool_new ();
+    auto upload_method = priv->upload_method.load ();
+    guint host_alloc_flags = 0;
+    bool is_host = false;
+    if (!pool) {
+      if (upload_method == GST_HIP_UPLOAD_METHOD_AUTO) {
+        /* Use host pinned memory by default. And decide upload method
+         * based on device capabilities */
+        int is_igpu = 0;
+        auto hip_ret = gst_hip_device_get_attribute (priv->device,
+            hipDeviceAttributeIntegrated, &is_igpu);
+        if (hip_ret == hipSuccess) {
+          GST_DEBUG_OBJECT (self, "Device is %s", is_igpu ? "iGPU" : "dGPU");
+          if (is_igpu) {
+            /* iGPU will share memory with system. Use import method */
+            upload_method = GST_HIP_UPLOAD_METHOD_IMPORT;
+          } else {
+            /* dGPU will require PCI transfer after all, copy to device memory */
+            upload_method = GST_HIP_UPLOAD_METHOD_PINNED_COPY;
+          }
+        } else {
+          GST_DEBUG_OBJECT (self,
+              "Couldn't query device type, using pinned copy");
+          upload_method = GST_HIP_UPLOAD_METHOD_PINNED_COPY;
+        }
+      }
+
+      if (upload_method == GST_HIP_UPLOAD_METHOD_IMPORT) {
+        /* check if device can map host memory */
+        int can_map_host = 0;
+        auto hip_ret = gst_hip_device_get_attribute (priv->device,
+            hipDeviceAttributeCanMapHostMemory, &can_map_host);
+        if (hip_ret != hipSuccess || !can_map_host) {
+          GST_DEBUG_OBJECT (self, "Device cannot map host memory");
+          upload_method = GST_HIP_UPLOAD_METHOD_PINNED_COPY;
+        }
+      }
+
+      switch (upload_method) {
+        case GST_HIP_UPLOAD_METHOD_IMPORT:
+          pool = gst_hip_host_buffer_pool_new (priv->device);
+          host_alloc_flags = hipHostMallocMapped;
+          is_host = true;
+          break;
+        case GST_HIP_UPLOAD_METHOD_PINNED_COPY:
+          pool = gst_hip_host_buffer_pool_new (priv->device);
+          is_host = true;
+          break;
+        default:
+          is_system = true;
+          pool = gst_video_buffer_pool_new ();
+          break;
+      }
+
+      if (!pool) {
+        GST_ERROR_OBJECT (self, "Failed to create buffer pool");
+        return FALSE;
+      }
+    }
 
     auto config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
@@ -1106,6 +1211,11 @@ gst_hip_memory_copy_propose_allocation (GstBaseTransform * trans,
 
     size = GST_VIDEO_INFO_SIZE (&info);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+
+    if (is_host) {
+      gst_buffer_pool_config_set_hip_host_alloc_flags (config,
+          host_alloc_flags);
+    }
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR_OBJECT (self, "Bufferpool config failed");
@@ -1500,7 +1610,7 @@ gst_hip_memory_copy_gl_copy (GstHipMemoryCopy * self, GstBuffer * inbuf,
 #endif
 
 static GstMemory *
-gst_hip_memory_copy_import_dmabuf (GstHipMemoryCopy * self, GstBuffer * buffer)
+gst_hip_memory_copy_import (GstHipMemoryCopy * self, GstBuffer * buffer)
 {
   auto priv = self->priv;
   auto n_mem = gst_buffer_n_memory (buffer);
@@ -1510,25 +1620,22 @@ gst_hip_memory_copy_import_dmabuf (GstHipMemoryCopy * self, GstBuffer * buffer)
     return nullptr;
   }
 
+  auto info = priv->info;
   auto vmeta = gst_buffer_get_video_meta (buffer);
   if (!vmeta) {
-    GST_DEBUG_OBJECT (self, "No video meta in input buffer");
+    GST_DEBUG_OBJECT (self, "Couldn't import buffer without video meta");
     return nullptr;
   }
 
   auto mem = gst_buffer_peek_memory (buffer, 0);
-  if (!gst_is_dmabuf_memory (mem)) {
-    GST_DEBUG_OBJECT (self, "Not a dmabuf memory");
-    return nullptr;
-  }
 
-  auto info = priv->info;
   info.width = vmeta->width;
   info.height = vmeta->height;
   for (guint i = 0; i < vmeta->n_planes; i++) {
     info.stride[i] = vmeta->stride[i];
     info.offset[i] = vmeta->offset[i];
   }
+  info.size = mem->size;
 
   return gst_hip_allocator_import_external_memory (nullptr,
       priv->device, mem, &info);
@@ -1541,18 +1648,17 @@ gst_hip_memory_copy_generate_output (GstBaseTransform * trans,
   auto self = GST_HIP_MEMORY_COPY (trans);
   auto priv = self->priv;
 
-  if (priv->transfer_type != TransferType::DMABUF_TO_HIP || !trans->queued_buf) {
+  if (priv->transfer_type != TransferType::IMPORT_TO_HIP || !trans->queued_buf) {
     return GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
         outbuf);
   }
 
-  auto imported = gst_hip_memory_copy_import_dmabuf (self, trans->queued_buf);
+  auto imported = gst_hip_memory_copy_import (self, trans->queued_buf);
   if (!imported) {
     /* Once it failed, following buffers will be likely to fail as well.
      * Switch copy mode to system memory */
     priv->transfer_type = TransferType::SYSTEM;
-    GST_WARNING_OBJECT (self,
-        "Couldn't import dmabuf memory, fallback to system copy");
+    GST_DEBUG_OBJECT (self, "Couldn't import memory, fallback to system copy");
 
     return GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
         outbuf);
@@ -1626,12 +1732,40 @@ struct _GstHipUpload
   GstHipMemoryCopy parent;
 };
 
+enum
+{
+  UPLOAD_PROP_0,
+  UPLOAD_PROP_UPLOAD_METHOD,
+};
+
+static void gst_hip_upload_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_hip_upload_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 G_DEFINE_TYPE (GstHipUpload, gst_hip_upload, GST_TYPE_HIP_MEMORY_COPY);
 
 static void
 gst_hip_upload_class_init (GstHipUploadClass * klass)
 {
+  auto object_class = G_OBJECT_CLASS (klass);
   auto element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->set_property = gst_hip_upload_set_property;
+  object_class->get_property = gst_hip_upload_get_property;
+
+  /**
+   * GstHipUpload:upload-method
+   *
+   * Upload method to use for uploading system memory into HIP device memory
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, UPLOAD_PROP_UPLOAD_METHOD,
+      g_param_spec_enum ("upload-method", "Upload Method",
+          "Upload method to use for uploading system memory into HIP device memory",
+          GST_TYPE_HIP_UPLOAD_METHOD, DEFAULT_UPLOAD_METHOD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "HIP Uploader", "Filter/Video/Uploader",
@@ -1674,6 +1808,9 @@ gst_hip_upload_class_init (GstHipUploadClass * klass)
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps));
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_HIP_UPLOAD_METHOD,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -1681,6 +1818,41 @@ gst_hip_upload_init (GstHipUpload * self)
 {
   auto memcpy = GST_HIP_MEMORY_COPY (self);
   memcpy->priv->is_uploader = true;
+  memcpy->priv->upload_method = DEFAULT_UPLOAD_METHOD;
+}
+
+static void
+gst_hip_upload_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_HIP_MEMORY_COPY (object);
+  auto priv = self->priv;
+
+  switch (prop_id) {
+    case UPLOAD_PROP_UPLOAD_METHOD:
+      priv->upload_method = (GstHipUploadMethod) g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_hip_upload_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_HIP_MEMORY_COPY (object);
+  auto priv = self->priv;
+
+  switch (prop_id) {
+    case UPLOAD_PROP_UPLOAD_METHOD:
+      g_value_set_enum (value, priv->upload_method);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 struct _GstHipDownload
