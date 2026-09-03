@@ -1279,6 +1279,33 @@ GST_START_TEST (test_url_invalid_percent_encoding_in_query)
 
 GST_END_TEST;
 
+GST_START_TEST (test_uri_null_query_key)
+{
+  GstUri *uri;
+  GList *keys = NULL;
+  gchar *res = NULL;
+
+  /* NULL query keys are programming errors and must produce a critical,
+   * not crash g_str_hash () */
+  uri = gst_uri_make_writable (gst_uri_from_string ("scheme://host/path?a=1"));
+  fail_unless (uri != NULL);
+
+  ASSERT_CRITICAL (gst_uri_set_query_value (uri, NULL, "x"));
+  ASSERT_CRITICAL (gst_uri_query_has_key (uri, NULL));
+  ASSERT_CRITICAL (gst_uri_get_query_value (uri, NULL));
+  ASSERT_CRITICAL (gst_uri_remove_query_key (uri, NULL));
+
+  keys = g_list_append (keys, (gchar *) "a");
+  keys = g_list_append (keys, NULL);
+  ASSERT_CRITICAL (res = gst_uri_get_query_string_ordered (uri, keys));
+  g_list_free (keys);
+  g_free (res);
+
+  gst_uri_unref (uri);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_url_to_string)
 {
   GstUri *uri;
@@ -1339,6 +1366,7 @@ gst_uri_suite (void)
   tcase_add_test (tc_chain, test_url_get_media_fragment_table);
   tcase_add_test (tc_chain, test_url_unescape_equals_in_http_query);
   tcase_add_test (tc_chain, test_url_invalid_percent_encoding_in_query);
+  tcase_add_test (tc_chain, test_uri_null_query_key);
   tcase_add_test (tc_chain, test_url_to_string);
 
   return s;
