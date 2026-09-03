@@ -180,6 +180,13 @@ gst_hip_allocator_free (GstAllocator * allocator, GstMemory * mem)
   auto priv = hmem->priv;
 
   gst_hip_device_set_current (hmem->device);
+  if (priv->external_mem && priv->event) {
+    /* Imported memory is not freed by HIP, so there is no implicit
+     * synchronization before returning it to the external owner.
+     * Perform explicit synchronization here */
+    gst_hip_event_synchronize (priv->event);
+    gst_clear_hip_event (&priv->event);
+  }
 
   for (guint i = 0; i < 4; i++) {
     for (guint j = 0; j < N_TEX_ADDR_MODES; j++) {
