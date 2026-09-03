@@ -17,6 +17,7 @@ vulkan_headers = [
   'vkav1dec.h',
   'vkh264dec.h',
   'vkh265dec.h',
+  'vkh265enc.h',
   'vkvp9dec.h',
   'vkimageidentity.h',
   'vkoverlaycompositor.h',
@@ -42,6 +43,7 @@ video_sources = [
   'vkav1dec.c',
   'vkh264enc.c',
   'vkh264dec.c',
+  'vkh265enc.c',
   'vkh265dec.c',
   'vkvp9dec.c',
 ]

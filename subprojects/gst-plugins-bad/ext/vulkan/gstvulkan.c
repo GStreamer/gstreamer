@@ -49,6 +49,7 @@
 #include "vkav1dec.h"
 #include "vkvp9dec.h"
 #include "vkh264enc.h"
+#include "vkh265enc.h"
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_vulkan_debug);
@@ -135,6 +136,10 @@ plugin_init (GstPlugin * plugin)
     if (gst_vulkan_device_is_extension_enabled (device,
             VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME)) {
       ret |= gst_vulkan_h264_encoder_register (plugin, device, GST_RANK_NONE);
+    }
+    if (gst_vulkan_device_is_extension_enabled (device,
+            VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME)) {
+      ret |= gst_vulkan_h265_encoder_register (plugin, device, GST_RANK_NONE);
     }
 #endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
     ret |= gst_vulkan_sink_register (plugin, device, GST_RANK_NONE);
