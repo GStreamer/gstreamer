@@ -12,4 +12,3 @@ play
 check-position, on-message=eos, expected-position=0.2
 
 stop
-

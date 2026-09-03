@@ -1,6 +1,6 @@
 meta,
-    args = {
-         "videotestsrc ! video/x-raw,width=1920,height=1080 ! x264enc name=enc @preset=Profile\\ YouTube ! fakesink",
+    args={
+        "videotestsrc ! video/x-raw,width=1920,height=1080 ! x264enc name=enc @preset=Profile\\ YouTube ! fakesink",
     }
 
 pause

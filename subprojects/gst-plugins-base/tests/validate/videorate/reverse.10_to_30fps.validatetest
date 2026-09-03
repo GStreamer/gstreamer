@@ -12,4 +12,3 @@ crank-clock, repeat=29
 # Waiting 1 second on EOS
 crank-clock, expected-elapsed-time=(guint64)33333334
 stop, on-message=eos
-

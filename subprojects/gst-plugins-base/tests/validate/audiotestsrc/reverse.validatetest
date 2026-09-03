@@ -1,8 +1,8 @@
 meta,
-    args = {
+    args={
         "audiotestsrc name=src samplesperbuffer=1024 ! audio/x-raw,format=S16LE,rate=44100 ! fakesink name=asink sync=true",
     },
-    configs = {
+    configs={
         [validateflow, pad=asink:sink, record-buffers=true],
     },
     handles-states=true,
@@ -19,6 +19,6 @@ crank-clock, repeat=22
 set-property, target-element-name="src", property-name="samplesperbuffer", property-value=4410, on-message=eos
 seek, start=0.0, stop=1.0, rate=-1.0, flags=accurate+flush
 crank-clock, expected-elapsed-time=0.0
-crank-clock, repeat=10,  expected-elapsed-time=0.1
+crank-clock, repeat=10, expected-elapsed-time=0.1
 
 stop, on-message=eos;

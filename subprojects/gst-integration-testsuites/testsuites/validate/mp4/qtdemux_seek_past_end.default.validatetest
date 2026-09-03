@@ -3,11 +3,11 @@ meta,
     reverse-playback=true,
     seek=true,
     handles-states=true,
-    args = {
-         "filesrc location=$(media_dir)/defaults/mp4/raw_h264.0.mp4 ! qtdemux ! audio/x-raw ! fakesink name=fakesink",
+    args={
+        "filesrc location=$(media_dir)/defaults/mp4/raw_h264.0.mp4 ! qtdemux ! audio/x-raw ! fakesink name=fakesink",
     },
-    configs = {
-       [validateflow, pad=fakesink:sink, record-buffers=true],
+    configs={
+        [validateflow, pad=fakesink:sink, record-buffers=true],
     }
 
 pause

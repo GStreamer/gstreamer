@@ -1,9 +1,13 @@
 meta,
-    args = {
-       "fakesrc num-buffers=1 ! fakesink",
+    args={
+        "fakesrc num-buffers=1 ! fakesink",
     },
-    expected-issues = {
-        "expected-issue, issue-id=scenario::not-ended",
+    expected-issues={
+        [expected-issue,
+            issue-id=scenario::not-ended],
     }
 
-set-property, target-element-factory-name=capsfilter, property-name=caps, property-value="video/x-raw,framerate=30/1,format=I420"
+set-property,
+    target-element-factory-name=capsfilter,
+    property-name=caps,
+    property-value="video/x-raw,framerate=30/1,format=I420"

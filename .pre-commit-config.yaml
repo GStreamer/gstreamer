@@ -34,6 +34,12 @@ repos:
         language: system
         entry: rustfmt --verbose --edition 2021
         types_or: ["rust"]
+    -   id: validatetest-fmt
+        name: validatetest-fmt
+        language: python
+        entry: validatetest-fmt -i
+        files: '\.validatetest$'
+        additional_dependencies: ["validatetest-fmt==0.1.4"]
     -   id: doc-checks
         name: doc-checks
         language: python

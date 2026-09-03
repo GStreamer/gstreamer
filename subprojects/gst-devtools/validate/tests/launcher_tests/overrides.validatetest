@@ -1,13 +1,18 @@
 meta,
-    args = {
+    args={
         "videotestsrc ! capsfilter name=cf ! fakesink",
     },
-    overrides = {
-        [change-severity, issue-id=runtime::not-negotiated, new-severity=warning],
-        [change-severity, issue-id=scenario::not-ended, new-severity=warning],
+    overrides={
+        [change-severity,
+            issue-id=runtime::not-negotiated,
+            new-severity=warning],
+        [change-severity,
+            issue-id=scenario::not-ended,
+            new-severity=warning],
     }
 
-set-properties, cf::caps="audio/x-raw"
+set-properties,
+    cf::caps="audio/x-raw"
 
 wait, message-type=error
 

@@ -7,12 +7,38 @@ meta,
     args={
         "nlecomposition name=compo ! video/x-raw,format=(string)YUY2,framerate=(fraction)30/1,height=(int)240,interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320 ! videoconvert ! $(videosink)",
     },
-    configs = {
-       [validateflow, pad=overlay:src, buffers-checksum=as-id, ignored-event-types={ tag }, ignored-fields = "buffer={meta}"],
-       [validateflow, pad=source_L0:src, buffers-checksum=as-id, ignored-event-types={ tag }],
-       [validateflow, pad=source_L1:src, buffers-checksum=as-id, ignored-event-types={ tag }],
-       [validateflow, pad=source_L2:src, buffers-checksum=as-id, ignored-event-types={ tag }],
-       [validateflow, pad=source_L3:src, buffers-checksum=as-id, ignored-event-types={ tag }],
+    configs={
+        [validateflow,
+            pad=overlay:src,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            },
+            ignored-fields="buffer={meta}"],
+        [validateflow,
+            pad=source_L0:src,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            }],
+        [validateflow,
+            pad=source_L1:src,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            }],
+        [validateflow,
+            pad=source_L2:src,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            }],
+        [validateflow,
+            pad=source_L3:src,
+            buffers-checksum=as-id,
+            ignored-event-types={
+                tag,
+            }],
     }
 
 nle-add-child, object-name="compo", desc="nlesource name=source_L0 inpoint=0 duration=200000000"
@@ -28,4 +54,3 @@ play
 check-position, on-message=eos, expected-position=0.2
 
 stop
-
