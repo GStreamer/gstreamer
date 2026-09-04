@@ -316,6 +316,17 @@ hipError_t HipMemSetAccess (GstHipVendor vendor,
                             const hipMemAccessDesc* desc,
                             size_t count);
 
+GST_HIP_API
+hipError_t HipDeviceGetPCIBusId (GstHipVendor vendor,
+                                 char * pciBusId,
+                                 int len,
+                                 int device);
+
+GST_HIP_API
+hipError_t HipDeviceGetByPCIBusId (GstHipVendor vendor,
+                                   int * device,
+                                   const char * pciBusId);
+
 G_END_DECLS
 
 

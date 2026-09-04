@@ -77,6 +77,10 @@ GstHipDevice * gst_hip_device_new_for_adapter_luid (GstHipVendor vendor,
                                                     gint64 adapter_luid);
 
 GST_HIP_API
+GstHipDevice * gst_hip_device_new_for_pci_bus_id (GstHipVendor vendor,
+                                                  const gchar * pci_bus_id);
+
+GST_HIP_API
 gboolean       gst_hip_device_set_current (GstHipDevice * device);
 
 GST_HIP_API

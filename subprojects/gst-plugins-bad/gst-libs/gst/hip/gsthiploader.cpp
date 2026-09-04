@@ -149,6 +149,8 @@ struct GstHipFuncTableAmd
   hipError_t (*hipMemSetAccess) (void* ptr, size_t size,
       const hipMemAccessDesc* desc, size_t count);
 #endif
+  hipError_t (*hipDeviceGetPCIBusId) (char* pciBusId, int len, int device);
+  hipError_t (*hipDeviceGetByPCIBusId) (int* device, const char* pciBusId);
 };
 
 struct GstHipFuncTableCuda
@@ -237,6 +239,8 @@ struct GstHipFuncTableCudaRt
   cudaError_t (CUDAAPI *cudaGraphicsGLRegisterBuffer) (struct cudaGraphicsResource **resource,
     unsigned int buffer, unsigned int flags);
 #endif
+  cudaError_t (CUDAAPI *cudaDeviceGetPCIBusId) (char* pciBusId, int len, int device);
+  cudaError_t (CUDAAPI *cudaDeviceGetByPCIBusId) (int* device, const char* pciBusId);
 };
 /* *INDENT-ON* */
 
@@ -352,6 +356,8 @@ load_amd_func_table (void)
   LOAD_SYMBOL (hipMemUnmap);
   LOAD_SYMBOL (hipMemSetAccess);
 #endif
+  LOAD_SYMBOL (hipDeviceGetPCIBusId);
+  LOAD_SYMBOL (hipDeviceGetByPCIBusId);
 
   table->loaded = TRUE;
 }
@@ -475,6 +481,8 @@ load_cudart_func_table (guint major_ver, guint minor_ver)
   LOAD_SYMBOL (cudaGLGetDevices);
   LOAD_SYMBOL (cudaGraphicsGLRegisterBuffer);
 #endif
+  LOAD_SYMBOL (cudaDeviceGetByPCIBusId);
+  LOAD_SYMBOL (cudaDeviceGetPCIBusId);
 
   table->loaded = TRUE;
 }
@@ -1669,4 +1677,28 @@ HipMemSetAccess (GstHipVendor vendor, void *ptr, size_t size,
 
   return amd_ftable.hipMemSetAccess (ptr, size, desc, count);
 #endif
+}
+
+hipError_t
+HipDeviceGetPCIBusId (GstHipVendor vendor, char *pciBusId, int len, int device)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipDeviceGetPCIBusId (pciBusId, len, device);
+
+  auto cuda_ret = cudart_ftable.cudaDeviceGetPCIBusId (pciBusId, len, device);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipDeviceGetByPCIBusId (GstHipVendor vendor, int *device, const char *pciBusId)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipDeviceGetByPCIBusId (device, pciBusId);
+
+  auto cuda_ret = cudart_ftable.cudaDeviceGetByPCIBusId (device, pciBusId);
+  return hipCUDAErrorTohipError (cuda_ret);
 }

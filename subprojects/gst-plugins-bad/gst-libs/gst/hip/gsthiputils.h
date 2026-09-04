@@ -65,6 +65,12 @@ gboolean     gst_hip_ensure_element_data_for_adapter_luid (GstElement * element,
                                                            GstHipDevice ** device);
 
 GST_HIP_API
+gboolean     gst_hip_ensure_element_data_for_pci_bus_id (GstElement * element,
+                                                         GstHipVendor vendor,
+                                                         const gchar * pci_bus_id,
+                                                         GstHipDevice ** device);
+
+GST_HIP_API
 gboolean     gst_hip_handle_set_context     (GstElement * element,
                                              GstContext * context,
                                              GstHipVendor vendor,
@@ -77,6 +83,13 @@ gboolean     gst_hip_handle_set_context_for_adapter_luid (GstElement * element,
                                                           GstHipVendor vendor,
                                                           gint64 adapter_luid,
                                                           GstHipDevice ** device);
+
+GST_HIP_API
+gboolean     gst_hip_handle_set_context_for_pci_bus_id (GstElement * element,
+                                                        GstContext * context,
+                                                        GstHipVendor vendor,
+                                                        const gchar * pci_bus_id,
+                                                        GstHipDevice ** device);
 
 GST_HIP_API
 gboolean     gst_hip_handle_context_query   (GstElement * element,

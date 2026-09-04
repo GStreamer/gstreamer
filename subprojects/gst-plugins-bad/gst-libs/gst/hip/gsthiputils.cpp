@@ -109,6 +109,12 @@ context_set_hip_device (GstContext * context, GstHipDevice * device)
   gint64 luid = 0;
   g_object_get (device, "adapter-luid", &luid, nullptr);
   gst_structure_set (s, "adapter-luid", G_TYPE_INT64, luid, nullptr);
+#else
+  gchar *pci_bus_id = nullptr;
+  g_object_get (device, "pci-bus-id", &pci_bus_id, nullptr);
+  if (pci_bus_id)
+    gst_structure_set (s, "pci-bus-id", G_TYPE_STRING, pci_bus_id, nullptr);
+  g_free (pci_bus_id);
 #endif
 }
 
@@ -274,6 +280,54 @@ gst_hip_ensure_element_data_for_adapter_luid (GstElement * element,
 }
 
 /**
+ * gst_hip_ensure_element_data_for_pci_bus_id:
+ * @element: the #GstElement running the query
+ * @vendor: a #GstHipVendor
+ * @pci_bus_id: The PCI bus ID
+ * @device: (inout): the resulting #GstHipDevice
+ *
+ * Perform the steps necessary for retrieving a #GstHipDevice from the
+ * surrounding elements or from the application using the #GstContext mechanism.
+ *
+ * If the content of @device is not %NULL, then no #GstContext query is
+ * necessary for #GstHipDevice.
+ *
+ * Returns: whether a #GstHipDevice exists in @device
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_ensure_element_data_for_pci_bus_id (GstElement * element,
+    GstHipVendor vendor, const gchar * pci_bus_id, GstHipDevice ** device)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (pci_bus_id, FALSE);
+  g_return_val_if_fail (device, FALSE);
+
+  if (*device)
+    return TRUE;
+
+  run_hip_context_query (element, device);
+  if (*device)
+    return TRUE;
+
+  *device = gst_hip_device_new_for_pci_bus_id (vendor, pci_bus_id);
+
+  if (*device == nullptr) {
+    GST_ERROR_OBJECT (element,
+        "Couldn't create new device with PCI bus ID %s", pci_bus_id);
+    return FALSE;
+  } else {
+    auto ctx = gst_context_new_hip_device (*device);
+    gst_element_set_context (element, ctx);
+    auto msg = gst_message_new_have_context (GST_OBJECT_CAST (element), ctx);
+    gst_element_post_message (GST_ELEMENT_CAST (element), msg);
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_hip_handle_set_context:
  * @element: a #GstElement
  * @context: a #GstContext
@@ -377,6 +431,64 @@ gst_hip_handle_set_context_for_adapter_luid (GstElement * element,
       }
 
       gst_object_unref (other_device);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_hip_handle_set_context_for_pci_bus_id:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @vendor: a #GstHipVendor
+ * @pci_bus_id: The PCI bus ID
+ * @device: (inout) (transfer full): location of a #GstHipDevice
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * HIP capable elements.
+ *
+ * Retrieves the #GstHipDevice in @context and places the result in @device.
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_handle_set_context_for_pci_bus_id (GstElement * element,
+    GstContext * context, GstHipVendor vendor, const gchar * pci_bus_id,
+    GstHipDevice ** device)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (device, FALSE);
+  g_return_val_if_fail (pci_bus_id, FALSE);
+
+  if (!context)
+    return FALSE;
+
+  auto context_type = gst_context_get_context_type (context);
+  if (g_strcmp0 (context_type, GST_HIP_DEVICE_CONTEXT_TYPE) == 0) {
+    GstHipDevice *other_device = nullptr;
+    gchar *other_pci_bus_id = nullptr;
+    GstHipVendor other_vendor;
+
+    /* If we had device already, will not replace it */
+    if (*device)
+      return TRUE;
+
+    auto s = gst_context_get_structure (context);
+    if (gst_structure_get (s, "device", GST_TYPE_HIP_DEVICE, &other_device,
+            "vendor", GST_TYPE_HIP_VENDOR, &other_vendor,
+            "pci-bus-id", G_TYPE_STRING, &other_pci_bus_id, nullptr)) {
+      if (g_strcmp0 (pci_bus_id, other_pci_bus_id) == 0 &&
+          (vendor == GST_HIP_VENDOR_UNKNOWN || vendor == other_vendor)) {
+        *device = other_device;
+        g_free (other_pci_bus_id);
+        return TRUE;
+      }
+
+      gst_object_unref (other_device);
+      g_free (other_pci_bus_id);
     }
   }
 
