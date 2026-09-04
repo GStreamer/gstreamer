@@ -237090,7 +237090,7 @@
                         "writable": true
                     },
                     "model-file": {
-                        "blurb": "ONNX model file",
+                        "blurb": "Path to the ONNX model file. A companion modelinfo file is required, looked up as <model-file>.modelinfo then <model-file without extension>.modelinfo",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,

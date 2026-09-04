@@ -441,13 +441,24 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
   /**
    * GstOnnxInference:model-file
    *
-   * ONNX model file
+   * Path to the ONNX model file.
+   *
+   * A modelinfo file describing the model's input and output tensors is
+   * required alongside it, and is looked up as `<model-file>.modelinfo`
+   * first, then as `<model-file without extension>.modelinfo`. For
+   * `/path/model.onnx` that is `/path/model.onnx.modelinfo`, then
+   * `/path/model.modelinfo`.
+   *
+   * Use the modelinfo-generator.py tool to generate one.
    *
    * Since: 1.24
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MODEL_FILE,
       g_param_spec_string ("model-file",
-          "ONNX model file", "ONNX model file", NULL, (GParamFlags)
+          "ONNX model file",
+          "Path to the ONNX model file. A companion modelinfo file is "
+          "required, looked up as <model-file>.modelinfo then "
+          "<model-file without extension>.modelinfo", NULL, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
    /**
@@ -1568,9 +1579,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   modelinfo = gst_analytics_modelinfo_load (self->model_file);
   if (!modelinfo) {
-    GST_ERROR_OBJECT (self, "Failed to load modelinfo for %s. "
-        "This could be due to: file not found, unsupported version, "
-        "or invalid file format.", self->model_file);
+    GST_ERROR_OBJECT (self, "Failed to load modelinfo for model '%s'. "
+        "A '.modelinfo' file is required alongside the model; generate one "
+        "with the modelinfo-generator.py tool. Run with GST_DEBUG=modelinfo:5 "
+        "for the exact reason.", self->model_file);
     goto error;
   }
   // Create environment
