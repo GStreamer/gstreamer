@@ -216,6 +216,8 @@ struct _GstOnnxInference
   gint64 adapter_luid;
   /* Device ID selected for the execution provider */
   guint selected_device_id;
+  /* PCI bus ID of plugin loaded execution provider on Linux */
+  gchar *pci_bus_id;
 };
 
 /* Protects api, api_base and onnxruntime_module while loading the library */
@@ -696,8 +698,13 @@ gst_onnx_inference_set_context (GstElement * element, GstContext * context)
   gst_hip_handle_set_context_for_adapter_luid (element, context,
       GST_HIP_VENDOR_AMD, self->adapter_luid, &self->device_hip);
 #else
-  gst_hip_handle_set_context (element, context,
-      GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
+  if (self->pci_bus_id) {
+    gst_hip_handle_set_context_for_pci_bus_id (element, context,
+        GST_HIP_VENDOR_AMD, self->pci_bus_id, &self->device_hip);
+  } else {
+    gst_hip_handle_set_context (element, context,
+        GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
+  }
 #endif
   g_rec_mutex_unlock (&self->context_lock);
 #endif
@@ -845,7 +852,8 @@ gst_onnx_inference_can_use_hip (GstOnnxInference * self)
 {
 #ifdef HAVE_GST_HIP
   if (!have_hip_rtc ||
-      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX) {
+      (self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX &&
+          self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_HIP)) {
     return FALSE;
   }
 
@@ -1421,6 +1429,65 @@ gst_onnx_inference_get_vsi_npu_append_func (void)
 #endif
 }
 
+#if HAVE_GST_HIP && HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+static gchar *
+get_selected_device_from_session (GstOnnxInference * self, OrtSession * session)
+{
+  OrtStatus *status = NULL;
+  const OrtEpDevice *ep_device = NULL;
+  gchar *luid_or_pci_bus_id = NULL;
+#ifdef G_OS_WIN32
+  const gchar *device_id_key = "LUID";
+#else
+  const gchar *device_id_key = "pci_bus_id";
+#endif
+
+  status = api->SessionGetEpDeviceForInputs (self->session, &ep_device, 1);
+  if (status) {
+    GST_WARNING_OBJECT (self, "Couldn't get EP device for input: %s",
+        api->GetErrorMessage (status));
+    goto error;
+  }
+
+  if (!ep_device) {
+    GST_WARNING_OBJECT (self, "Returned device is NULL");
+    goto error;
+  }
+
+  {
+    const OrtHardwareDevice *hwdev = api->EpDevice_Device (ep_device);
+    const OrtKeyValuePairs *metadata = api->HardwareDevice_Metadata (hwdev);
+    const gchar *device_id_value = NULL;
+
+    {
+      const char *const *keys = NULL;
+      const char *const *values = NULL;
+      size_t num_entries = 0;
+      size_t j;
+
+      api->GetKeyValuePairs (metadata, &keys, &values, &num_entries);
+
+      GST_LOG_OBJECT (self, "EP device metadata entries: %" G_GSIZE_FORMAT,
+          num_entries);
+
+      for (j = 0; j < num_entries; j++)
+        GST_LOG_OBJECT (self, "  %s = %s", keys[j], values[j]);
+    }
+
+    device_id_value = api->GetKeyValue (metadata, device_id_key);
+    luid_or_pci_bus_id = g_strdup (device_id_value);
+  }
+
+  return luid_or_pci_bus_id;
+
+error:
+  if (status)
+    api->ReleaseStatus (status);
+
+  return NULL;
+}
+#endif
+
 static gboolean
 gst_onnx_inference_start (GstBaseTransform * trans)
 {
@@ -1783,53 +1850,48 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     goto error;
   }
 #if HAVE_GST_HIP
-  if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX) {
+  if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX ||
+      self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP) {
     GST_OBJECT_UNLOCK (self);
     g_rec_mutex_lock (&self->context_lock);
     self->adapter_luid = 0;
+    g_clear_pointer (&self->pci_bus_id, g_free);
     gst_clear_object (&self->device_hip);
 
 #if HAVE_WINML
-    const OrtEpDevice *ep_device = NULL;
-    status = api->SessionGetEpDeviceForInputs (self->session, &ep_device, 1);
-
-    if (status) {
-      GST_WARNING_OBJECT (self, "Couldn't get EP device for input: %s",
-          api->GetErrorMessage (status));
-      api->ReleaseStatus (status);
-      status = NULL;
-    } else if (ep_device) {
-      const OrtHardwareDevice *hwdev = api->EpDevice_Device (ep_device);
-      const OrtKeyValuePairs *metadata = api->HardwareDevice_Metadata (hwdev);
-      const gchar *luid_str = api->GetKeyValue (metadata, "LUID");
-
-      {
-        const char *const *keys = NULL;
-        const char *const *values = NULL;
-        size_t num_entries = 0;
-        size_t j;
-
-        api->GetKeyValuePairs (metadata, &keys, &values, &num_entries);
-
-        GST_LOG_OBJECT (self, "MIGraphX metadata entries: %" G_GSIZE_FORMAT,
-            num_entries);
-
-        for (j = 0; j < num_entries; j++)
-          GST_LOG_OBJECT (self, "  %s = %s", keys[j], values[j]);
-      }
+    {
+      gchar *luid_str = get_selected_device_from_session (self, self->session);
 
       if (luid_str) {
         GST_DEBUG_OBJECT (self, "Input EP device LUID: %s", luid_str);
 
         self->adapter_luid = g_ascii_strtoll (luid_str, NULL, 10);
+        g_free (luid_str);
+
         gst_hip_ensure_element_data_for_adapter_luid (GST_ELEMENT (self),
             GST_HIP_VENDOR_AMD, self->adapter_luid, &self->device_hip);
       }
     }
 #else
-    gst_hip_ensure_element_data (GST_ELEMENT (self),
-        GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
-#endif
+#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+    if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP) {
+      gchar *pci_bus_id =
+          get_selected_device_from_session (self, self->session);
+
+      if (pci_bus_id) {
+        GST_DEBUG_OBJECT (self, "Input EP device PCI bus ID: %s", pci_bus_id);
+        self->pci_bus_id = pci_bus_id;
+        gst_hip_ensure_element_data_for_pci_bus_id (GST_ELEMENT (self),
+            GST_HIP_VENDOR_AMD, self->pci_bus_id, &self->device_hip);
+        g_clear_pointer (&self->pci_bus_id, g_free);
+      }
+    } else
+#endif /* HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY */
+    if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX) {
+      gst_hip_ensure_element_data (GST_ELEMENT (self),
+          GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
+    }
+#endif /* HAVE_WINML */
     g_rec_mutex_unlock (&self->context_lock);
     GST_OBJECT_LOCK (self);
 
@@ -1840,7 +1902,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         GST_WARNING_OBJECT (self, "Couldn't create HIP importer");
     }
   }
-#endif
+#endif /* HAVE_GST_HIP */
 
   self->cpu_importer = gst_onnx_importer_cpu_new (api);
   if (!self->cpu_importer) {
@@ -2387,6 +2449,8 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 #if HAVE_GST_HIP
   gst_clear_object (&self->device_hip);
 #endif
+
+  g_clear_pointer (&self->pci_bus_id, g_free);
 
   GST_OBJECT_UNLOCK (self);
 
