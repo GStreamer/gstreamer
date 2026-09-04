@@ -121,6 +121,95 @@ and/or use gtk-doc annotations.  -->
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="HIP_HOST_ALLOCATOR" c:identifier="GST_HIP_HOST_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_ALLOCATOR_CLASS" c:identifier="GST_HIP_HOST_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_ALLOCATOR_GET_CLASS" c:identifier="GST_HIP_HOST_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_BUFFER_POOL" c:identifier="GST_HIP_HOST_BUFFER_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_BUFFER_POOL_CAST" c:identifier="GST_HIP_HOST_BUFFER_POOL_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_BUFFER_POOL_CLASS" c:identifier="GST_HIP_HOST_BUFFER_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_BUFFER_POOL_GET_CLASS" c:identifier="GST_HIP_HOST_BUFFER_POOL_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_MEMORY_CAST" c:identifier="GST_HIP_HOST_MEMORY_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="HIP_HOST_MEMORY_NAME" value="HIPHostMemory" c:type="GST_HIP_HOST_MEMORY_NAME" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h">The name of the HIP host-pinned memory</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="HIP_HOST_POOL_ALLOCATOR" c:identifier="GST_HIP_HOST_POOL_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_POOL_ALLOCATOR_CAST" c:identifier="GST_HIP_HOST_POOL_ALLOCATOR_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_POOL_ALLOCATOR_CLASS" c:identifier="GST_HIP_HOST_POOL_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="HIP_HOST_POOL_ALLOCATOR_GET_CLASS" c:identifier="GST_HIP_HOST_POOL_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="HIP_MEMORY_CAST" c:identifier="GST_HIP_MEMORY_CAST" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
       <parameters>
@@ -812,6 +901,275 @@ before getting mapped device memory</doc>
         </parameters>
       </method>
     </record>
+    <class name="HipHostAllocator" c:symbol-prefix="hip_host_allocator" c:type="GstHipHostAllocator" version="1.30" parent="Gst.Allocator" glib:type-name="GstHipHostAllocator" glib:get-type="gst_hip_host_allocator_get_type" glib:type-struct="HipHostAllocatorClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h">Opaque GstHipHostAllocator struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <virtual-method name="set_active" invoker="set_active" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Controls the active state of @allocator.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">%TRUE if active state of @allocator was successfully updated.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipHostAllocator</doc>
+            <type name="HipHostAllocator" c:type="GstHipHostAllocator*"/>
+          </instance-parameter>
+          <parameter name="active" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">the new active state</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <method name="alloc" c:identifier="gst_hip_host_allocator_alloc" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Allocates HIP host pinned memory</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a newly allocated #GstHipHostMemory
+or otherwise %NULL if allocation failed</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipHostAllocator</doc>
+            <type name="HipHostAllocator" c:type="GstHipHostAllocator*"/>
+          </instance-parameter>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Total bytes to allocate</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">flags value for hipHostMalloc</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_active" c:identifier="gst_hip_host_allocator_set_active" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Controls the active state of @allocator.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">%TRUE if active state of @allocator was successfully updated.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipHostAllocator</doc>
+            <type name="HipHostAllocator" c:type="GstHipHostAllocator*"/>
+          </instance-parameter>
+          <parameter name="active" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">the new active state</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="allocator">
+        <type name="Gst.Allocator" c:type="GstAllocator"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipHostAllocatorPrivate" c:type="GstHipHostAllocatorPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipHostAllocatorClass" c:type="GstHipHostAllocatorClass" glib:is-gtype-struct-for="HipHostAllocator" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h">Opaque GstHipHostAllocatorClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <field name="allocator_class">
+        <type name="Gst.AllocatorClass" c:type="GstAllocatorClass"/>
+      </field>
+      <field name="set_active">
+        <callback name="set_active">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">%TRUE if active state of @allocator was successfully updated.</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="allocator" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipHostAllocator</doc>
+              <type name="HipHostAllocator" c:type="GstHipHostAllocator*"/>
+            </parameter>
+            <parameter name="active" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">the new active state</doc>
+              <type name="gboolean" c:type="gboolean"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipHostAllocatorPrivate" c:type="GstHipHostAllocatorPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <class name="HipHostBufferPool" c:symbol-prefix="hip_host_buffer_pool" c:type="GstHipHostBufferPool" version="1.30" parent="Gst.BufferPool" glib:type-name="GstHipHostBufferPool" glib:get-type="gst_hip_host_buffer_pool_get_type" glib:type-struct="HipHostBufferPoolClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h">Opaque GstHipHostBufferPool struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <constructor name="new" c:identifier="gst_hip_host_buffer_pool_new" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">a #GstBufferPool that allocates buffers with
+#GstHipHostMemory</doc>
+          <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">a #GstHipDevice to use</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <field name="parent">
+        <type name="Gst.BufferPool" c:type="GstBufferPool"/>
+      </field>
+      <field name="device">
+        <type name="HipDevice" c:type="GstHipDevice*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipHostBufferPoolPrivate" c:type="GstHipHostBufferPoolPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipHostBufferPoolClass" c:type="GstHipHostBufferPoolClass" glib:is-gtype-struct-for="HipHostBufferPool" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h">Opaque GstHipHostBufferPoolClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <field name="parent_class">
+        <type name="Gst.BufferPoolClass" c:type="GstBufferPoolClass"/>
+      </field>
+      <field name="_gst_reserved">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipHostBufferPoolPrivate" c:type="GstHipHostBufferPoolPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <record name="HipHostMemory" c:type="GstHipHostMemory" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h">Opaque GstHipHostMemory struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <field name="mem" writable="1">
+        <type name="Gst.Memory" c:type="GstMemory"/>
+      </field>
+      <field name="device" writable="1">
+        <type name="HipDevice" c:type="GstHipDevice*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipHostMemoryPrivate" c:type="GstHipHostMemoryPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="get_device_pointer" c:identifier="gst_hip_host_memory_get_device_pointer" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Gets device pointer mapped to host pinned memory</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">device pointer mapped to the host memory</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstMemory</doc>
+            <type name="HipHostMemory" c:type="GstHipHostMemory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="HipHostMemoryPrivate" c:type="GstHipHostMemoryPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
+    <class name="HipHostPoolAllocator" c:symbol-prefix="hip_host_pool_allocator" c:type="GstHipHostPoolAllocator" version="1.30" parent="HipHostAllocator" glib:type-name="GstHipHostPoolAllocator" glib:get-type="gst_hip_host_pool_allocator_get_type" glib:type-struct="HipHostPoolAllocatorClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h">Opaque GstHipHostPoolAllocator struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <constructor name="new" c:identifier="gst_hip_host_pool_allocator_new" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Creates a new #GstHipHostPoolAllocator instance</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipHostPoolAllocator</doc>
+          <type name="HipHostPoolAllocator" c:type="GstHipHostPoolAllocator*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipDevice</doc>
+            <type name="HipDevice" c:type="GstHipDevice*"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">the size of the memory to allocate</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">flags value for hipHostMalloc</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="acquire_memory" c:identifier="gst_hip_host_pool_allocator_acquire_memory" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">Acquires a #GstMemory from @allocator. @memory should point to a memory
+location that can hold a pointer to the new #GstMemory.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstFlowReturn such as %GST_FLOW_FLUSHING when the allocator is
+inactive.</doc>
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstHipHostPoolAllocator</doc>
+            <type name="HipHostPoolAllocator" c:type="GstHipHostPoolAllocator*"/>
+          </instance-parameter>
+          <parameter name="memory" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstMemory</doc>
+            <type name="Gst.Memory" c:type="GstMemory**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="parent">
+        <type name="HipHostAllocator" c:type="GstHipHostAllocator"/>
+      </field>
+      <field name="device">
+        <type name="HipDevice" c:type="GstHipDevice*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="HipHostPoolAllocatorPrivate" c:type="GstHipHostPoolAllocatorPrivate*"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="HipHostPoolAllocatorClass" c:type="GstHipHostPoolAllocatorClass" glib:is-gtype-struct-for="HipHostPoolAllocator" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h">Opaque GstHipHostPoolAllocatorClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <field name="parent_class">
+        <type name="HipHostAllocatorClass" c:type="GstHipHostAllocatorClass"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="HipHostPoolAllocatorPrivate" c:type="GstHipHostPoolAllocatorPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip_fwd.h"/>
+    </record>
     <record name="HipMemory" c:type="GstHipMemory" version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h">Opaque GstHipMemory struct</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
@@ -875,6 +1233,20 @@ HIP stream is in use</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a pointer to hipTextureObject_t object</doc>
             <type name="gpointer" c:type="hipTextureObject_t*"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="is_imported" c:identifier="gst_hip_memory_is_imported" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">Checks if @mem is imported from external memory</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">%TRUE if @mem is imported, %FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipMemory</doc>
+            <type name="HipMemory" c:type="GstHipMemory*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="set_event" c:identifier="gst_hip_memory_set_event" version="1.28">
@@ -1165,6 +1537,48 @@ inactive.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="IS_HIP_HOST_ALLOCATOR" c:identifier="GST_IS_HIP_HOST_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_HOST_ALLOCATOR_CLASS" c:identifier="GST_IS_HIP_HOST_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_HOST_BUFFER_POOL" c:identifier="GST_IS_HIP_HOST_BUFFER_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_HOST_BUFFER_POOL_CLASS" c:identifier="GST_IS_HIP_HOST_BUFFER_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_HOST_POOL_ALLOCATOR" c:identifier="GST_IS_HIP_HOST_POOL_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_HIP_HOST_POOL_ALLOCATOR_CLASS" c:identifier="GST_IS_HIP_HOST_POOL_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_HIP_POOL_ALLOCATOR" c:identifier="GST_IS_HIP_POOL_ALLOCATOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
       <parameters>
@@ -1191,6 +1605,36 @@ inactive.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.h"/>
       <type name="Gst.MapFlags" c:type="GstMapFlags"/>
     </constant>
+    <function name="buffer_pool_config_get_hip_host_alloc_flags" c:identifier="gst_buffer_pool_config_get_hip_host_alloc_flags" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">Requested flags value for hipHostMalloc</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_pool_config_set_hip_host_alloc_flags" c:identifier="gst_buffer_pool_config_set_hip_host_alloc_flags" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">Sets flags value for hipHostMalloc</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipbufferpool-host.cpp">flags value for hipHostMalloc</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="clear_hip_event" c:identifier="gst_clear_hip_event" version="1.28" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.cpp">Clears a reference to the @event</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipevent.h"/>
@@ -1547,6 +1991,19 @@ Retrieves the #GstHipDevice in @context and places the result in @device.</doc>
         <parameter name="vendor" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiprtc.cpp">a #GstHipVendor</doc>
           <type name="HipVendor" c:type="GstHipVendor"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="is_hip_host_memory" c:identifier="gst_is_hip_host_memory" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">%TRUE if @mem is allocated by #GstHipHostAllocator</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory-host.cpp">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
         </parameter>
       </parameters>
     </function>
