@@ -29,15 +29,14 @@
 #endif
 #endif
 
+#include <glib.h>
+
 #ifdef G_OS_WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #define GST_DLOPEN_OPTS (RTLD_NOW | RTLD_LOCAL)
 #endif
-
-#include <glib.h>
-
 
 G_BEGIN_DECLS
 
