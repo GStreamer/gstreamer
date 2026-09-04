@@ -19,6 +19,7 @@
 
 from . import overrides_hack
 
+import os  # noqa
 import tempfile  # noqa
 import gi
 
@@ -632,6 +633,12 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(effect3.inpoint, 20)
 
     def test_trim_time_effects(self):
+        # The effects here set a property inline in the bin-description
+        # (videorate rate=...), which the untrusted project loader refuses.
+        # This project is the test's own trusted content, so opt it out and
+        # unset it again when the test finishes so it does not leak.
+        os.environ["GES_ALLOW_UNTRUSTED"] = "1"
+        self.addCleanup(os.environ.pop, "GES_ALLOW_UNTRUSTED", None)
         self.track_types = [GES.TrackType.VIDEO]
         super().setUp()
         clip = self.append_clip(asset_id="max-duration=30")

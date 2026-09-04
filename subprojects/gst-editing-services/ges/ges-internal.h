@@ -241,6 +241,15 @@ ges_effect_asset_id_get_type_and_bindesc (const char    *id,
                                           GESTrackType  *track_type,
                                           GError       **error);
 
+/* Untrusted-content enforcement (see ges-untrusted.c). */
+G_GNUC_INTERNAL void     ges_untrusted_context_push        (void);
+G_GNUC_INTERNAL void     ges_untrusted_context_pop         (void);
+G_GNUC_INTERNAL gboolean ges_untrusted_context_active      (void);
+G_GNUC_INTERNAL gboolean ges_untrusted_bin_desc_check      (const gchar  *bin_desc,
+                                                            GError      **error);
+G_GNUC_INTERNAL gboolean ges_untrusted_property_check      (const gchar  *property_name,
+                                                            GError      **error);
+
 G_GNUC_INTERNAL void _ges_uri_asset_cleanup (void);
 
 G_GNUC_INTERNAL gboolean _ges_uri_asset_ensure_setup (gpointer uriasset_class);

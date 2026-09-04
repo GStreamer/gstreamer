@@ -308,8 +308,13 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
   const gchar *converter_str = NULL;
   GList *tmp, *sinkpads = NULL, *elems_with_reqsink = NULL,
       *elems_with_reqsrc = NULL;
-  GstElement *effect =
-      gst_parse_bin_from_description_full (bin_desc, FALSE, NULL,
+  GstElement *effect = NULL;
+
+  if (ges_untrusted_context_active ()
+      && !ges_untrusted_bin_desc_check (bin_desc, error))
+    return NULL;
+
+  effect = gst_parse_bin_from_description_full (bin_desc, FALSE, NULL,
       GST_PARSE_FLAG_PLACE_IN_BIN | GST_PARSE_FLAG_FATAL_ERRORS, error);
 
   if (!effect) {
@@ -401,6 +406,12 @@ ges_effect_asset_id_get_type_and_bindesc (const char *id,
 
   bindesc = g_strdup (user_bindesc);
   g_strfreev (typebin_desc);
+
+  if (ges_untrusted_context_active ()
+      && !ges_untrusted_bin_desc_check (bindesc, error)) {
+    g_free (bindesc);
+    return NULL;
+  }
 
   effect = gst_parse_bin_from_description (bindesc, TRUE, error);
   if (effect == NULL) {

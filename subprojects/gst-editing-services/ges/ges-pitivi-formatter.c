@@ -562,6 +562,13 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         prop_val = (gchar *) g_hash_table_lookup (effect_table,
             (gchar *) tmp_key->data);
 
+        if (!ges_untrusted_property_check ((gchar *) tmp_key->data, NULL)) {
+          GST_ERROR_OBJECT (effect,
+              "Refusing to set sensitive property \"%s\" from untrusted "
+              "project content", (gchar *) tmp_key->data);
+          continue;
+        }
+
         if (g_strstr_len (prop_val, -1, "(GEnum)")) {
           gchar **val = g_strsplit (prop_val, ")", 2);
 
@@ -676,7 +683,16 @@ load_pitivi_file_from_uri (GESFormatter * self,
     ges_project_set_loaded (GES_FORMATTER (self)->project,
         GES_FORMATTER (self), NULL);
   } else {
-    if (!make_clips (self)) {
+    gboolean loaded;
+
+    /* make_clips() builds the clips and their effects synchronously in this
+     * thread, so the untrusted context is active for the effect construction
+     * in make_source(). */
+    ges_untrusted_context_push ();
+    loaded = make_clips (self);
+    ges_untrusted_context_pop ();
+
+    if (!loaded) {
       GST_ERROR ("Couldn't deserialise the project properly");
       return FALSE;
     }

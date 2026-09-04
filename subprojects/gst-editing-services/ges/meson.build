@@ -59,6 +59,7 @@ ges_sources = files([
     'ges-timeline-tree.c',
     'ges-container.c',
     'ges-effect-asset.c',
+    'ges-untrusted.c',
     'ges-smart-adder.c',
     'ges-smart-video-mixer.c',
     'ges-utils.c',

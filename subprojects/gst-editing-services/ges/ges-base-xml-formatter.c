@@ -165,6 +165,10 @@ _parse (GESBaseXmlFormatter * self, GError ** error, LoadingState state)
       GES_BASE_XML_FORMATTER_GET_CLASS (self);
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
+  /* Everything parsed and requested from here comes from the project file and
+   * is untrusted; see ges-untrusted.c. */
+  ges_untrusted_context_push ();
+
   if (!self->xmlcontent || g_strcmp0 (self->xmlcontent, "") == 0) {
     err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Nothing contained in the project file.");
@@ -200,6 +204,7 @@ _parse (GESBaseXmlFormatter * self, GError ** error, LoadingState state)
   }
 
 done:
+  ges_untrusted_context_pop ();
   return parsecontext;
 
 failed:
@@ -565,6 +570,15 @@ _set_child_property (const GstIdStr * fieldname, const GValue * value,
     return TRUE;
   }
 
+  if (!ges_untrusted_property_check (pspec->name, NULL)) {
+    GST_ERROR_OBJECT (tlelement,
+        "Refusing to set sensitive property \"%s\" from untrusted project "
+        "content", pspec->name);
+    g_param_spec_unref (pspec);
+    gst_object_unref (object);
+    return TRUE;
+  }
+
   g_object_set_property (G_OBJECT (object), pspec->name, value);
   g_param_spec_unref (pspec);
   gst_object_unref (object);
@@ -705,9 +719,12 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
       goto done;
     }
 
-    /* We got a possible ID replacement for that asset, create it */
+    /* We got a possible ID replacement for that asset, create it. The
+     * replacement id still comes from the project, so keep it checked. */
+    ges_untrusted_context_push ();
     ges_asset_request_async (ges_asset_get_extractable_type (source),
         possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, passet);
+    ges_untrusted_context_pop ();
     ges_project_add_loading_asset (GES_FORMATTER (self)->project,
         ges_asset_get_extractable_type (source), possible_id);
 

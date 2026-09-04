@@ -769,6 +769,98 @@ GST_START_TEST (test_load_xges_and_play)
 GST_END_TEST;
 #endif
 
+/* Load a project from the XML in @content and return how many effects survived
+ * on its clips. A refused effect is dropped, so a lower count means the
+ * untrusted loader rejected it. */
+static guint
+load_untrusted_project_effects (const gchar * content)
+{
+  static guint counter = 0;
+  GESProject *project;
+  GESTimeline *timeline;
+  GList *layers, *l;
+  gchar *uri, *path, *name;
+  guint n_effects = 0;
+
+  /* A fresh uri per load, so the project asset cache does not hand us back a
+   * previously loaded project. */
+  name = g_strdup_printf ("untrusted-project-%u.xges", counter++);
+  uri = ges_test_get_tmp_uri (name);
+  g_free (name);
+  path = g_filename_from_uri (uri, NULL, NULL);
+  fail_unless (g_file_set_contents (path, content, -1, NULL));
+  g_free (path);
+
+  project = ges_project_new (uri);
+  g_free (uri);
+
+  mainloop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+  g_signal_connect (project, "missing-uri", (GCallback) _set_new_uri, NULL);
+
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  fail_unless (GES_IS_TIMELINE (timeline));
+  g_main_loop_run (mainloop);
+
+  layers = ges_timeline_get_layers (timeline);
+  for (l = layers; l; l = l->next) {
+    GList *clips = ges_layer_get_clips (GES_LAYER (l->data)), *c;
+
+    for (c = clips; c; c = c->next) {
+      GList *effects = ges_clip_get_top_effects (GES_CLIP (c->data));
+
+      n_effects += g_list_length (effects);
+      g_list_free_full (effects, gst_object_unref);
+    }
+    g_list_free_full (clips, gst_object_unref);
+  }
+  g_list_free_full (layers, gst_object_unref);
+
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+  g_main_loop_unref (mainloop);
+
+  return n_effects;
+}
+
+/* When a project is loaded (untrusted content), an effect may only use
+ * untrusted-aware elements and may not set a property in its bin-description
+ * (any '=' is refused). */
+GST_START_TEST (test_project_load_untrusted)
+{
+  gchar *uri, *path, *safe, *bad_element, *bad_property, **parts;
+
+  ges_init ();
+
+  uri = ges_test_file_uri ("test-project.xges");
+  path = g_filename_from_uri (uri, NULL, NULL);
+  fail_unless (g_file_get_contents (path, &safe, NULL, NULL));
+  g_free (uri);
+  g_free (path);
+
+  /* The allowlisted agingtv effect is accepted. */
+  fail_unless_equals_int (load_untrusted_project_effects (safe), 1);
+
+  /* An element that is not untrusted-aware is refused: the effect is dropped. */
+  parts = g_strsplit (safe, "asset-id='agingtv'", -1);
+  bad_element = g_strjoinv ("asset-id='capssetter'", parts);
+  g_strfreev (parts);
+  fail_unless_equals_int (load_untrusted_project_effects (bad_element), 0);
+  g_free (bad_element);
+
+  /* A property assignment (a '=') in the bin-description is refused too. */
+  parts = g_strsplit (safe, "asset-id='agingtv'", -1);
+  bad_property = g_strjoinv ("asset-id='agingtv scratch-lines=5'", parts);
+  g_strfreev (parts);
+  fail_unless_equals_int (load_untrusted_project_effects (bad_property), 0);
+  g_free (bad_property);
+
+  g_free (safe);
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -784,6 +876,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_project_auto_transition);
   /*tcase_add_test (tc_chain, test_load_xges_and_play); */
   tcase_add_test (tc_chain, test_project_unexistant_effect);
+  tcase_add_test (tc_chain, test_project_load_untrusted);
 
   return s;
 }
