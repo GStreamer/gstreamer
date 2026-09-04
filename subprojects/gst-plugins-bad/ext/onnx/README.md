@@ -170,11 +170,3 @@ using the onnx-winml option:
 ```
 meson setup <builddir> -Dgst-plugins-bad:onnx-winml=enabled
 ```
-
-Windows has its own `onnxruntime.dll` in `System32`, which is searched before
-`PATH` for unpackaged applications. Because of this, adding the Windows ML
-runtime directory to `PATH`, including via meson devenv, is not enough.
-
-For testing, copy the Windows ML `onnxruntime.dll` next to the executable being
-used, such as gst-launch-1.0.exe. Applications using the ONNX plugin need to
-deploy the Windows ML `onnxruntime.dll` next to their executable as well.
