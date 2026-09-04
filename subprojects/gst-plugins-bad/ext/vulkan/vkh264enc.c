@@ -908,6 +908,7 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     /* skip start only if quality didn't changed */
     quality = gst_vulkan_encoder_quality_level (self->encoder);
     skip_start &= quality != self->rc.quality;
+    self->rc.quality = quality;
 
     update_property_uint (self, &self->prop.quality, self->rc.quality,
         PROP_QUALITY);
@@ -961,7 +962,10 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     return GST_FLOW_ERROR;
   }
 
-  gst_vulkan_encoder_caps (self->encoder, &vk_caps);
+  if (!gst_vulkan_encoder_caps (self->encoder, &vk_caps)) {
+    GST_ERROR_OBJECT (self, "Couldn't get Vulkan Capabilities");
+    return GST_FLOW_ERROR;
+  }
   vk_h264_caps = &vk_caps.encoder.codec.h264;
 
   GST_LOG_OBJECT (self, "H264 encoder capabilities:\n"
@@ -1544,7 +1548,7 @@ _setup_rc_pic (GstVulkanEncoderPicture * pic,
      *
      * for more information: https://www.youtube.com/watch?v=Mn8v1ojV80M */
     rc_info->virtualBufferSizeInMs = self->rc.cpb_size;
-    rc_info->initialVirtualBufferSizeInMs = self->rc.cpb_size * (3 / 4);
+    rc_info->initialVirtualBufferSizeInMs = self->rc.cpb_size * 3 / 4;
 
     /* *INDENT-OFF* */
     vk_frame->vkrc_layer_info = (VkVideoEncodeH264RateControlLayerInfoKHR) {
