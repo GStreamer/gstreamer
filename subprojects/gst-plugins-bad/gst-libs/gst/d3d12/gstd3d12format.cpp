@@ -444,6 +444,10 @@ static const GstD3D12Format g_format_map[] = {
   FormatBuilder::Planar (GST_VIDEO_FORMAT_RGBP_F32LE,
       DXGI_FORMAT_R32_FLOAT),
   FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGBP_F32BE),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_RGB_F16LE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGB_F16BE),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_RGB_F32LE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGB_F32BE),
 };
 /* *INDENT-ON* */
 

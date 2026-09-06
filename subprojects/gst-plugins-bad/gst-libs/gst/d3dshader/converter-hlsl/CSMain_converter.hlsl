@@ -788,6 +788,134 @@ void Execute (uint3 tid)
 }
 #endif
 
+#ifdef BUILDING_CSMain_RGB_F32_Buffer_to_RGBA
+ByteAddressBuffer inBuf : register(t0);
+RWTexture2D<float4> outTex : register(u0);
+
+cbuffer Constants : register(b0)
+{
+  uint width;
+  uint height;
+  uint stride;
+  uint padding;
+};
+
+void Execute (uint3 tid)
+{
+  if (tid.x >= width || tid.y >= height)
+    return;
+
+  uint offset = tid.y * stride + tid.x * 12;
+  uint3 val = inBuf.Load3 (offset);
+
+  outTex[tid.xy] = float4 (asfloat (val), 1.0);
+}
+#endif
+
+#ifdef BUILDING_CSMain_RGBA_to_RGB_F32_Buffer
+Texture2D<float4> inTex : register(t0);
+RWByteAddressBuffer outBuf : register(u0);
+
+cbuffer Constants : register(b0)
+{
+  uint width;
+  uint height;
+  uint stride;
+  uint padding;
+};
+
+void Execute (uint3 tid)
+{
+  if (tid.x >= width || tid.y >= height)
+    return;
+
+  float3 val = inTex.Load (tid).rgb;
+  uint offset = tid.y * stride + tid.x * 12;
+
+  outBuf.Store3 (offset, asuint (val));
+}
+#endif
+
+#ifdef BUILDING_CSMain_RGB_F16_Buffer_to_RGBA
+ByteAddressBuffer inBuf : register(t0);
+RWTexture2D<float4> outTex : register(u0);
+
+cbuffer Constants : register(b0)
+{
+  uint width;
+  uint height;
+  uint stride;
+  uint padding;
+};
+
+void Execute (uint3 tid)
+{
+  uint xpos = tid.x * 2;
+  if (xpos >= width || tid.y >= height)
+    return;
+
+  uint offset = tid.y * stride + tid.x * 12;
+
+  uint3 val = uint3 (0, 0, 0);
+  uint remain = min (width - xpos, 2);
+
+  if (remain == 1)
+    val.xy = inBuf.Load2 (offset);
+  else
+    val = inBuf.Load3 (offset);
+
+  float3 p0 = float3 (f16tof32 (val.x & 0xffff), f16tof32 (val.x >> 16),
+      f16tof32 (val.y & 0xffff));
+  outTex[uint2 (xpos, tid.y)] = float4 (p0, 1.0);
+
+  if (remain > 1) {
+    float3 p1 = float3 (f16tof32 (val.y >> 16), f16tof32 (val.z & 0xffff),
+        f16tof32 (val.z >> 16));
+    outTex[uint2 (xpos + 1, tid.y)] = float4 (p1, 1.0);
+  }
+}
+#endif
+
+#ifdef BUILDING_CSMain_RGBA_to_RGB_F16_Buffer
+Texture2D<float4> inTex : register(t0);
+RWByteAddressBuffer outBuf : register(u0);
+
+cbuffer Constants : register(b0)
+{
+  uint width;
+  uint height;
+  uint stride;
+  uint padding;
+};
+
+void Execute (uint3 tid)
+{
+  uint xpos = tid.x * 2;
+  if (xpos >= width || tid.y >= height)
+    return;
+
+  uint remain = min (width - xpos, 2);
+
+  uint3 p0 = f32tof16 (inTex.Load (uint3 (xpos, tid.y, 0)).rgb);
+
+  uint3 p1 = uint3 (0, 0, 0);
+  if (remain > 1)
+    p1 = f32tof16 (inTex.Load (uint3 (xpos + 1, tid.y, 0)).rgb);
+
+  uint3 val;
+  val.x = p0.r | (p0.g << 16);
+  val.y = p0.b | (p1.r << 16);
+  val.z = p1.g | (p1.b << 16);
+
+  uint offset = tid.y * stride + tid.x * 12;
+
+  if (remain == 1)
+    outBuf.Store2 (offset, val.xy);
+  else
+    outBuf.Store3 (offset, val);
+}
+#endif
+
 [numthreads(8, 8, 1)]
 void ENTRY_POINT (uint3 tid : SV_DispatchThreadID)
 {
@@ -1559,6 +1687,134 @@ static const char str_CSMain_converter[] =
 "  if (remain == 1)\n"
 "    outBuf.Store (offset, val.x);\n"
 "  else if (remain == 2)\n"
+"    outBuf.Store2 (offset, val.xy);\n"
+"  else\n"
+"    outBuf.Store3 (offset, val);\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_RGB_F32_Buffer_to_RGBA\n"
+"ByteAddressBuffer inBuf : register(t0);\n"
+"RWTexture2D<float4> outTex : register(u0);\n"
+"\n"
+"cbuffer Constants : register(b0)\n"
+"{\n"
+"  uint width;\n"
+"  uint height;\n"
+"  uint stride;\n"
+"  uint padding;\n"
+"};\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  if (tid.x >= width || tid.y >= height)\n"
+"    return;\n"
+"\n"
+"  uint offset = tid.y * stride + tid.x * 12;\n"
+"  uint3 val = inBuf.Load3 (offset);\n"
+"\n"
+"  outTex[tid.xy] = float4 (asfloat (val), 1.0);\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_RGBA_to_RGB_F32_Buffer\n"
+"Texture2D<float4> inTex : register(t0);\n"
+"RWByteAddressBuffer outBuf : register(u0);\n"
+"\n"
+"cbuffer Constants : register(b0)\n"
+"{\n"
+"  uint width;\n"
+"  uint height;\n"
+"  uint stride;\n"
+"  uint padding;\n"
+"};\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  if (tid.x >= width || tid.y >= height)\n"
+"    return;\n"
+"\n"
+"  float3 val = inTex.Load (tid).rgb;\n"
+"  uint offset = tid.y * stride + tid.x * 12;\n"
+"\n"
+"  outBuf.Store3 (offset, asuint (val));\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_RGB_F16_Buffer_to_RGBA\n"
+"ByteAddressBuffer inBuf : register(t0);\n"
+"RWTexture2D<float4> outTex : register(u0);\n"
+"\n"
+"cbuffer Constants : register(b0)\n"
+"{\n"
+"  uint width;\n"
+"  uint height;\n"
+"  uint stride;\n"
+"  uint padding;\n"
+"};\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  uint xpos = tid.x * 2;\n"
+"  if (xpos >= width || tid.y >= height)\n"
+"    return;\n"
+"\n"
+"  uint offset = tid.y * stride + tid.x * 12;\n"
+"\n"
+"  uint3 val = uint3 (0, 0, 0);\n"
+"  uint remain = min (width - xpos, 2);\n"
+"\n"
+"  if (remain == 1)\n"
+"    val.xy = inBuf.Load2 (offset);\n"
+"  else\n"
+"    val = inBuf.Load3 (offset);\n"
+"\n"
+"  float3 p0 = float3 (f16tof32 (val.x & 0xffff), f16tof32 (val.x >> 16),\n"
+"      f16tof32 (val.y & 0xffff));\n"
+"  outTex[uint2 (xpos, tid.y)] = float4 (p0, 1.0);\n"
+"\n"
+"  if (remain > 1) {\n"
+"    float3 p1 = float3 (f16tof32 (val.y >> 16), f16tof32 (val.z & 0xffff),\n"
+"        f16tof32 (val.z >> 16));\n"
+"    outTex[uint2 (xpos + 1, tid.y)] = float4 (p1, 1.0);\n"
+"  }\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_RGBA_to_RGB_F16_Buffer\n"
+"Texture2D<float4> inTex : register(t0);\n"
+"RWByteAddressBuffer outBuf : register(u0);\n"
+"\n"
+"cbuffer Constants : register(b0)\n"
+"{\n"
+"  uint width;\n"
+"  uint height;\n"
+"  uint stride;\n"
+"  uint padding;\n"
+"};\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  uint xpos = tid.x * 2;\n"
+"  if (xpos >= width || tid.y >= height)\n"
+"    return;\n"
+"\n"
+"  uint remain = min (width - xpos, 2);\n"
+"\n"
+"  uint3 p0 = f32tof16 (inTex.Load (uint3 (xpos, tid.y, 0)).rgb);\n"
+"\n"
+"  uint3 p1 = uint3 (0, 0, 0);\n"
+"  if (remain > 1)\n"
+"    p1 = f32tof16 (inTex.Load (uint3 (xpos + 1, tid.y, 0)).rgb);\n"
+"\n"
+"  uint3 val;\n"
+"  val.x = p0.r | (p0.g << 16);\n"
+"  val.y = p0.b | (p1.r << 16);\n"
+"  val.z = p1.g | (p1.b << 16);\n"
+"\n"
+"  uint offset = tid.y * stride + tid.x * 12;\n"
+"\n"
+"  if (remain == 1)\n"
 "    outBuf.Store2 (offset, val.xy);\n"
 "  else\n"
 "    outBuf.Store3 (offset, val);\n"

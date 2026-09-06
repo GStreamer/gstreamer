@@ -183,6 +183,14 @@ gst_d3d12_pack_new (GstD3D12Device * device,
       conv_format = GST_VIDEO_FORMAT_RGBA;
       priv->is_buffer = true;
       break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+      conv_format = GST_VIDEO_FORMAT_RGBA_F16LE;
+      priv->is_buffer = true;
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+      conv_format = GST_VIDEO_FORMAT_RGBA_F32LE;
+      priv->is_buffer = true;
+      break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_r210:
       conv_format = GST_VIDEO_FORMAT_RGB10A2_LE;

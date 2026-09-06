@@ -409,6 +409,20 @@ gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
       }
       x_unit = 32;
       break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+      if (is_d3d11)
+        return FALSE;
+      srv_format = DXGI_FORMAT_R32_TYPELESS;
+      in_format_str = "RGB_F16_Buffer";
+      x_unit = 16;
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+      if (is_d3d11)
+        return FALSE;
+      srv_format = DXGI_FORMAT_R32_TYPELESS;
+      in_format_str = "RGB_F32_Buffer";
+      x_unit = 8;
+      break;
     case GST_VIDEO_FORMAT_BGR:
       if (is_d3d11) {
         srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -462,6 +476,14 @@ gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
       break;
     case GST_VIDEO_FORMAT_RGBA64_LE:
       srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+      in_format_str = "RGBA";
+      break;
+    case GST_VIDEO_FORMAT_RGBA_F16LE:
+      srv_format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+      in_format_str = "RGBA";
+      break;
+    case GST_VIDEO_FORMAT_RGBA_F32LE:
+      srv_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
       in_format_str = "RGBA";
       break;
     default:
@@ -537,6 +559,20 @@ gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
       }
       x_unit = 32;
       break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+      if (is_d3d11)
+        return FALSE;
+      uav_format = DXGI_FORMAT_R32_TYPELESS;
+      out_format_str = "RGB_F16_Buffer";
+      x_unit = 16;
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+      if (is_d3d11)
+        return FALSE;
+      uav_format = DXGI_FORMAT_R32_TYPELESS;
+      out_format_str = "RGB_F32_Buffer";
+      x_unit = 8;
+      break;
     case GST_VIDEO_FORMAT_BGR:
       if (is_d3d11) {
         uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -596,6 +632,14 @@ gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
       break;
     case GST_VIDEO_FORMAT_RGB10A2_LE:
       uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+      out_format_str = "RGBA";
+      break;
+    case GST_VIDEO_FORMAT_RGBA_F16LE:
+      uav_format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+      out_format_str = "RGBA";
+      break;
+    case GST_VIDEO_FORMAT_RGBA_F32LE:
+      uav_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
       out_format_str = "RGBA";
       break;
     default:
