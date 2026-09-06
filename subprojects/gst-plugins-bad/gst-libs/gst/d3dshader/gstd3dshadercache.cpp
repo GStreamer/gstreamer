@@ -466,6 +466,10 @@ gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
       srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
       in_format_str = "AYUV";
       break;
+    case GST_VIDEO_FORMAT_AYUV_F32:
+      srv_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      in_format_str = "AYUV";
+      break;
     case GST_VIDEO_FORMAT_RGBA:
       srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
       in_format_str = "RGBA";
@@ -624,6 +628,10 @@ gst_d3d_converter_shader_get_cs_blob_internal (GstVideoFormat in_format,
       break;
     case GST_VIDEO_FORMAT_AYUV64:
       uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+      out_format_str = "AYUV";
+      break;
+    case GST_VIDEO_FORMAT_AYUV_F32:
+      uav_format = DXGI_FORMAT_R32G32B32A32_FLOAT;
       out_format_str = "AYUV";
       break;
     case GST_VIDEO_FORMAT_RGBA:
@@ -818,6 +826,7 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
       return "VUYA";
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_AYUV64:
+    case GST_VIDEO_FORMAT_AYUV_F32:
       return "AYUV";
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
@@ -974,6 +983,7 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
       break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_AYUV64:
+    case GST_VIDEO_FORMAT_AYUV_F32:
       ret.push_back({PS_OUTPUT::PACKED, "AYUV"});
       break;
     case GST_VIDEO_FORMAT_NV12:
