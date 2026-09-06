@@ -450,6 +450,12 @@ static const GstD3D12Format g_format_map[] = {
   FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGB_F32BE),
   FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_AYUV_F32,
       DXGI_FORMAT_R32G32B32A32_FLOAT),
+  FormatBuilder::Gray (GST_VIDEO_FORMAT_GRAY_F16LE,
+      DXGI_FORMAT_R16_FLOAT),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GRAY_F16BE),
+  FormatBuilder::Gray (GST_VIDEO_FORMAT_GRAY_F32LE,
+      DXGI_FORMAT_R32_FLOAT),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GRAY_F32BE),
 };
 /* *INDENT-ON* */
 

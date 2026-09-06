@@ -862,6 +862,8 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
       return "Y410";
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY_F16LE:
+    case GST_VIDEO_FORMAT_GRAY_F32LE:
       return "GRAY";
     case GST_VIDEO_FORMAT_RGBP:
     case GST_VIDEO_FORMAT_RGBP_F16LE:
@@ -1055,6 +1057,8 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
       break;
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY_F16LE:
+    case GST_VIDEO_FORMAT_GRAY_F32LE:
       ret.push_back({PS_OUTPUT::LUMA, "Luma"});
       break;
     case GST_VIDEO_FORMAT_RGBP:
