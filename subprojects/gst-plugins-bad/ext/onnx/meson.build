@@ -28,8 +28,6 @@ extra_deps = []
 extra_incs = []
 have_winml = false
 have_directml = false
-have_vitisai = false
-have_ort_register_execution_provider_library = false
 onnx_require_eps = get_option('onnx-require-eps')
 have_gst_hip = false
 
@@ -44,7 +42,6 @@ if host_system == 'windows' and not onnx_winml_opt.disabled()
                           required: onnx_winml_opt)
   if onnxrt_dep.found()
     have_winml = true
-    have_ort_register_execution_provider_library = true
     onnx_sources += ['gstonnx-winml.c']
     if gstd3d12_dep.found() and cc.has_header('d3d12.h') and cc.has_header('directml.h')
       dml_dep = cc.find_library('directml', required: false)
@@ -103,23 +100,25 @@ if gsthip_dep.found()
 endif
 
 onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
+ort_api_version = cc.get_define(
+    'ORT_API_VERSION',
+    prefix: '#include <onnxruntime_c_api.h>',
+    dependencies: onnxrt_dep)
+message('ORT API version: ' + ort_api_version)
+ort_api_version = ort_api_version.to_int()
 
 if not have_winml
   if 'migraphx' in onnx_require_eps
     cc.find_library('onnxruntime_providers_migraphx', dirs: [onnxrt_libdir])
   endif
 
-  have_vitisai = cc.has_member(
-      'OrtApi', 'SessionOptionsAppendExecutionProvider_VitisAI',
-      prefix: '#include <onnxruntime_c_api.h>',
-      include_directories: extra_incs, dependencies: onnxrt_dep,
-      required: 'vitisai' in onnx_require_eps)
+  if 'vitisai' in onnx_require_eps and ort_api_version < 18
+    error('VitisAI EP requires ONNX Runtime >= 1.18 headers')
+  endif
 
-  have_ort_register_execution_provider_library = cc.has_member(
-      'OrtApi', 'RegisterExecutionProviderLibrary',
-      prefix: '#include <onnxruntime_c_api.h>',
-      include_directories: extra_incs, dependencies: onnxrt_dep,
-      required: 'hip' in onnx_require_eps)
+  if 'hip' in onnx_require_eps and ort_api_version < 22
+    error('HIP EP requires ONNX Runtime >= 1.22 headers')
+  endif
 endif
 
 model_cache_dir = meson.build_root() / 'ort-model-cache'
@@ -140,9 +139,6 @@ endif
 onnx_config = configuration_data()
 onnx_config.set10('HAVE_WINML', have_winml)
 onnx_config.set10('HAVE_DIRECTML', have_directml)
-onnx_config.set10('HAVE_VITISAI', have_vitisai)
-onnx_config.set10('HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY',
-                  have_ort_register_execution_provider_library)
 onnx_config.set10('HAVE_GST_HIP', have_gst_hip)
 
 configure_file(

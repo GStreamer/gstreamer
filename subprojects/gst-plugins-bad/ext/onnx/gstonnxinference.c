@@ -224,6 +224,7 @@ struct _GstOnnxInference
 G_LOCK_DEFINE_STATIC (onnx_api);
 static const OrtApi *api = NULL;
 static const OrtApiBase *api_base = NULL;
+static guint loaded_api_version = 0;
 
 #ifdef G_OS_WIN32
 static HMODULE onnxruntime_module = NULL;
@@ -362,7 +363,7 @@ gst_onnx_execution_provider_get_type (void)
        */
 
       {GST_ONNX_EXECUTION_PROVIDER_HIP,
-#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+#if ORT_API_VERSION >= 22
             "AMD HIP execution provider",
 #else
             "AMD HIP execution provider (compiled out, requires ONNX Runtime >= 1.22)",
@@ -391,7 +392,7 @@ gst_onnx_execution_provider_get_type (void)
        * Since: 1.30
        */
       {GST_ONNX_EXECUTION_PROVIDER_VITIS_AI,
-#if HAVE_VITISAI
+#if ORT_API_VERSION >= 18
             "AMD Vitis AI execution provider",
 #else
             "AMD Vitis AI execution provider (compiled out, requires ONNX Runtime >= 1.18)",
@@ -839,6 +840,8 @@ gst_onnx_inference_load_library (GstOnnxInference * self)
     goto done;
   }
 
+  loaded_api_version = api_version;
+
   GST_INFO_OBJECT (self, "ONNX-RT successfully loaded");
   ret = TRUE;
 
@@ -1238,27 +1241,7 @@ gst_onnx_inference_get_model_cache_dir (GstOnnxInference * self)
   return cache_dir;
 }
 
-static gboolean
-gst_onnx_runtime_version_at_least (guint required_major, guint required_minor)
-{
-  const gchar *version = api_base->GetVersionString ();
-  gchar *end = NULL;
-  guint64 major, minor;
-
-  major = g_ascii_strtoull (version, &end, 10);
-  if (end == version || *end != '.')
-    return FALSE;
-
-  version = end + 1;
-  minor = g_ascii_strtoull (version, &end, 10);
-  if (end == version)
-    return FALSE;
-
-  return major > required_major ||
-      (major == required_major && minor >= required_minor);
-}
-
-#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+#if ORT_API_VERSION >= 22
 static gboolean
 gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
     const gchar * ep_name)
@@ -1272,6 +1255,12 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
   size_t num_provider_options = 0;
   size_t i;
   OrtStatus *status;
+
+  if (loaded_api_version < 22) {
+    GST_ERROR_OBJECT (self,
+        "SessionOptionsAppendExecutionProvider_V2 requires ONNX Runtime >= 1.22");
+    return FALSE;
+  }
 
   status = api->GetEpDevices (self->env, &ep_devices, &num_ep_devices);
   if (status) {
@@ -1386,10 +1375,9 @@ gst_onnx_inference_register_ep (GstOnnxInference * self, const gchar * ep_name,
 {
   OrtStatus *status = NULL;
 
-  if (!api->RegisterExecutionProviderLibrary || !api->GetEpDevices ||
-      !api->SessionOptionsAppendExecutionProvider_V2) {
+  if (loaded_api_version < 22) {
     GST_ERROR_OBJECT (self,
-        "ONNX Runtime does not support dynamically loaded execution providers");
+        "RegisterExecutionProviderLibrary requires ONNX Runtime >= 1.22");
     return FALSE;
   }
 #ifdef G_OS_WIN32
@@ -1429,7 +1417,7 @@ gst_onnx_inference_get_vsi_npu_append_func (void)
 #endif
 }
 
-#if HAVE_GST_HIP && HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+#if HAVE_GST_HIP && ORT_API_VERSION >= 23
 static gchar *
 get_selected_device_from_session (GstOnnxInference * self, OrtSession * session)
 {
@@ -1441,6 +1429,12 @@ get_selected_device_from_session (GstOnnxInference * self, OrtSession * session)
 #else
   const gchar *device_id_key = "pci_bus_id";
 #endif
+
+  if (loaded_api_version < 23) {
+    GST_WARNING_OBJECT (self,
+        "SessionGetEpDeviceForInputs requires ONNX Runtime >= 1.23");
+    return NULL;
+  }
 
   status = api->SessionGetEpDeviceForInputs (self->session, &ep_device, 1);
   if (status) {
@@ -1669,7 +1663,13 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     }
     case GST_ONNX_EXECUTION_PROVIDER_VITIS_AI:
     {
-#if HAVE_VITISAI
+#if ORT_API_VERSION >= 18
+      if (loaded_api_version < 18) {
+        GST_ERROR_OBJECT (self,
+            "Vitis AI execution provider requires ONNX Runtime >= 1.18");
+        goto error;
+      }
+
       const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
       const char *keys[2];
       const char *values[2];
@@ -1708,7 +1708,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       if (self->device)
         self->selected_device_id = g_ascii_strtoll (self->device, NULL, 10);
 
-      if (cache_dir && *cache_dir && gst_onnx_runtime_version_at_least (1, 23)) {
+      if (cache_dir && *cache_dir && loaded_api_version >= 23) {
         /*
          * onnxruntime online docs are usually out of date, so you have to
          * check the headers. For example, migraphx_model_cache_dir is
@@ -1768,7 +1768,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 #endif
       break;
     case GST_ONNX_EXECUTION_PROVIDER_HIP:
-#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+#if ORT_API_VERSION >= 22
     {
       const gchar *ep_lib_path = g_getenv ("MORPHIZEN_EP_LIB");
 
@@ -1873,7 +1873,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       }
     }
 #else
-#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
+#if ORT_API_VERSION >= 23
     if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP) {
       gchar *pci_bus_id =
           get_selected_device_from_session (self, self->session);
@@ -1886,7 +1886,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         g_clear_pointer (&self->pci_bus_id, g_free);
       }
     } else
-#endif /* HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY */
+#endif /* ORT_API_VERSION >= 23 */
     if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX) {
       gst_hip_ensure_element_data (GST_ELEMENT (self),
           GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
