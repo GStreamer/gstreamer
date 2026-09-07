@@ -108,7 +108,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (
-      "video/x-raw,"
+      "video/x-raw(ANY),"
         "tensors=(structure)["
           "tensorgroups,"
               GROUP_ID_CLASSIFICATION"=(/uniquelist){"
@@ -125,7 +125,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
                       "type={float32, uint8};]"
               "}"
         "];"
-      "video/x-raw,"
+      "video/x-raw(ANY),"
         "tensors=(structure)["
           "tensorgroups,"
               GROUP_ID_CLASSIFICATION_SOFTMAXED"=(/uniquelist){"

@@ -75,14 +75,14 @@ static GstStaticPadTemplate gst_iou_tracker_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate gst_iou_tracker_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 typedef struct _BBox
