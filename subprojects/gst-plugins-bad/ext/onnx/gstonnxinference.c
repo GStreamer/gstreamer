@@ -184,7 +184,6 @@ struct _GstOnnxInference
   size_t input_dims_count;
   int64_t *input_dims_model;
   int64_t *input_dims_runtime;
-  const gchar *registered_ep_name;
 #if HAVE_DIRECTML
   GstOnnxDmlCtx *dml_ctx;
 #endif
@@ -1179,6 +1178,39 @@ gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
 
   return TRUE;
 }
+
+static gboolean
+gst_onnx_inference_register_ep (GstOnnxInference * self, const gchar * ep_name,
+    const gchar * lib_path)
+{
+  OrtStatus *status = NULL;
+
+  if (!api->RegisterExecutionProviderLibrary || !api->GetEpDevices ||
+      !api->SessionOptionsAppendExecutionProvider_V2) {
+    GST_ERROR_OBJECT (self,
+        "ONNX Runtime does not support dynamically loaded execution providers");
+    return FALSE;
+  }
+#ifdef G_OS_WIN32
+  ORTCHAR_T *lib_path_w = NULL;
+  lib_path_w = (ORTCHAR_T *) g_utf8_to_utf16 (lib_path, -1, NULL, NULL, NULL);
+  status = api->RegisterExecutionProviderLibrary (self->env,
+      ep_name, lib_path_w);
+  g_free (lib_path_w);
+#else
+  status = api->RegisterExecutionProviderLibrary (self->env, ep_name, lib_path);
+#endif
+
+  if (status) {
+    /* Registration can fail if the EP is already registered.
+     * Defer validation to gst_onnx_inference_append_ep() instead. */
+    GST_DEBUG_OBJECT (self, "Failed to register EP %s (%s): %s",
+        ep_name, lib_path, api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
+  }
+
+  return TRUE;
+}
 #endif
 
 typedef OrtStatus *(ORT_API_CALL * GstOrtAppendVsiNpuFunc) (OrtSessionOptions *
@@ -1453,7 +1485,6 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     }
 #else
     {
-      ORTCHAR_T *lib_path_w;
       gchar *lib_path =
           gst_onnx_winml_ep_catalog_find (MIGRAPHX_DYNAMIC_EP_NAME);
       if (!lib_path) {
@@ -1461,21 +1492,12 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
 
-      lib_path_w =
-          (ORTCHAR_T *) g_utf8_to_utf16 (lib_path, -1, NULL, NULL, NULL);
-      status = api->RegisterExecutionProviderLibrary (self->env,
-          MIGRAPHX_DYNAMIC_EP_NAME, lib_path_w);
-      g_free (lib_path_w);
-
-      if (status) {
-        GST_ERROR_OBJECT (self, "Failed to register MIGraphX library (%s): %s",
-            lib_path, api->GetErrorMessage (status));
+      if (!gst_onnx_inference_register_ep (self,
+              MIGRAPHX_DYNAMIC_EP_NAME, lib_path)) {
         g_free (lib_path);
         goto error;
       }
       g_free (lib_path);
-
-      self->registered_ep_name = MIGRAPHX_DYNAMIC_EP_NAME;
 
       if (!gst_onnx_inference_append_ep (self,
               session_options, MIGRAPHX_DYNAMIC_EP_NAME)) {
@@ -1489,39 +1511,16 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     {
       const gchar *ep_lib_path = g_getenv ("MORPHIZEN_EP_LIB");
 
-      if (!api->RegisterExecutionProviderLibrary ||
-          !api->UnregisterExecutionProviderLibrary || !api->GetEpDevices ||
-          !api->SessionOptionsAppendExecutionProvider_V2) {
-        GST_ERROR_OBJECT (self,
-            "ONNX Runtime does not support dynamically loaded execution providers");
-        goto error;
-      }
-
       if (!ep_lib_path || !*ep_lib_path) {
         GST_ERROR_OBJECT (self,
             "MORPHIZEN_EP_LIB environment variable not set");
         goto error;
       }
-      // First register the EP library.
-#ifdef G_OS_WIN32
-      {
-        ORTCHAR_T *lib_path_w =
-            (ORTCHAR_T *) g_utf8_to_utf16 (ep_lib_path, -1, NULL, NULL, NULL);
-        status = api->RegisterExecutionProviderLibrary (self->env, "hipgpu",
-            lib_path_w);
-        g_free (lib_path_w);
-      }
-#else
-      status = api->RegisterExecutionProviderLibrary (self->env, "hipgpu",
-          ep_lib_path);
-#endif
-      if (status) {
-        GST_ERROR_OBJECT (self, "Failed to register HIP EP library (%s): %s",
-            ep_lib_path, api->GetErrorMessage (status));
+
+      if (!gst_onnx_inference_register_ep (self, HIP_DYNAMIC_EP_NAME,
+              ep_lib_path)) {
         goto error;
       }
-
-      self->registered_ep_name = "hipgpu";
 
       if (!gst_onnx_inference_append_ep (self, session_options, "hipgpu"))
         goto error;
@@ -2097,14 +2096,10 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   self->allocator = NULL;
 
   if (self->env) {
-#if HAVE_ORT_REGISTER_EXECUTION_PROVIDER_LIBRARY
-    if (self->registered_ep_name) {
-      if (api->UnregisterExecutionProviderLibrary)
-        (void) api->UnregisterExecutionProviderLibrary (self->env,
-            self->registered_ep_name);
-    }
-    self->registered_ep_name = NULL;
-#endif
+    /* Do not unregister plugin EPs here. OrtEnv is a refcounted singleton
+     * and they may still be in use by other sessions. Explicit unregister
+     * is also unnecessary since EPs are automatically unregistered when
+     * the OrtEnv is destroyed */
     api->ReleaseEnv (self->env);
   }
   self->env = NULL;
