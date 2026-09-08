@@ -405,7 +405,7 @@ main (gint argc, gchar ** argv)
   /* *INDENT-OFF* */
   const GOptionEntry options[] = {
     {"codec", 'c', 0, G_OPTION_ARG_STRING, &codec,
-        "Codec to test: [ *h264 ]"},
+        "Codec to test: [ *h264, h265 ]"},
     {"alive", 'a', 0, G_OPTION_ARG_NONE, &alive,
         "Set test source as a live stream"},
     {"no-sync", 0, 0, G_OPTION_ARG_NONE, &no_sync,
@@ -419,6 +419,7 @@ main (gint argc, gchar ** argv)
     const char *decoder;
   } elements_map[] = {
     { "h264", "vulkanh264enc", "h264parse", "avdec_h264" },
+    { "h265", "vulkanh265enc", "h265parse", "avdec_h265" },
   };
   /* *INDENT-ON* */
 
