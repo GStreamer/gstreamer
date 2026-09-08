@@ -221,7 +221,7 @@ gboolean                gst_vulkan_encoder_set_quality_level    (GstVulkanEncode
                                                                  GstVulkanEncoderQualityProperties * out_quality_props,
                                                                  GError ** error);
 GST_VULKAN_API
-gint32                  gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
+guint32                 gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
 GST_VULKAN_API
 guint32                 gst_vulkan_encoder_rc_mode              (GstVulkanEncoder * self);
 

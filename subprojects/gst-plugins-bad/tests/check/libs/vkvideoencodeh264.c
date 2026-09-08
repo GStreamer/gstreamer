@@ -409,11 +409,9 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
     return NULL;
   }
 
-  fail_unless (gst_vulkan_encoder_quality_level (enc) == -1);
+  fail_unless (gst_vulkan_encoder_quality_level (enc) == 0);
 
   fail_unless (gst_vulkan_encoder_start (enc, &profile, NULL, &err));
-
-  fail_unless (gst_vulkan_encoder_quality_level (enc) > -1);
 
   fail_unless (gst_vulkan_encoder_is_started (enc));
 

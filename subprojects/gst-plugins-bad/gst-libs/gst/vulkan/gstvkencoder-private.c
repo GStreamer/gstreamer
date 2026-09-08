@@ -386,20 +386,16 @@ gst_vulkan_encoder_profile_caps (GstVulkanEncoder * self)
  *
  * Get the current encoding quality level.
  *
- * Returns: whether the encoder has started, it will return the quality level;
- *     otherwise it will return -1
+ * Returns: the quality level
  */
-gint32
+guint32
 gst_vulkan_encoder_quality_level (GstVulkanEncoder * self)
 {
   GstVulkanEncoderPrivate *priv;
 
-  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), -1);
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), 0);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
-
-  if (!priv->started)
-    return -1;
 
   return priv->quality;
 }
