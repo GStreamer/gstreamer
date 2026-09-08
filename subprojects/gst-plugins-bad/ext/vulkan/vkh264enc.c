@@ -884,7 +884,6 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
 
   /* update quality and rate control since they might changed */
   {
-    guint32 quality;
     GstVulkanEncoderQualityProperties qprop = {
       .codec.h264 = {.sType =
             VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR}
@@ -902,13 +901,8 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
       GST_ERROR_OBJECT (self, "Unable to set encoder quality: %s",
           err->message);
       g_clear_error (&err);
-      return GST_FLOW_ERROR;
+      self->rc.quality = gst_vulkan_encoder_quality_level (self->encoder);
     }
-
-    /* skip start only if quality didn't changed */
-    quality = gst_vulkan_encoder_quality_level (self->encoder);
-    skip_start &= quality != self->rc.quality;
-    self->rc.quality = quality;
 
     update_property_uint (self, &self->prop.quality, self->rc.quality,
         PROP_QUALITY);
