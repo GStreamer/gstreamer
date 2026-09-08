@@ -169,6 +169,12 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_VITIS_AI,
 } GstOnnxExecutionProvider;
 
+typedef struct
+{
+  gsize tensor_size;
+  GstBufferPool *pool;
+} GstOnnxOutputPool;
+
 struct _GstOnnxInference
 {
   GstBaseTransform basetransform;
@@ -203,6 +209,7 @@ struct _GstOnnxInference
   /* Raw dimensions returned from OrtApi::GetDimensions() */
   gint64 input_dims_model[GST_ONNX_IMPORTER_MAX_DIMS];
   GPtrArray *output_tensors;
+  GArray *output_pools;
 
 #if HAVE_DIRECTML
   GstOnnxDmlCtx *dml_ctx;
@@ -582,6 +589,16 @@ release_ort_value (OrtValue * data)
 }
 
 static void
+clear_output_pool (GstOnnxOutputPool * pool)
+{
+  pool->tensor_size = 0;
+  if (pool->pool) {
+    gst_buffer_pool_set_active (pool->pool, FALSE);
+    gst_clear_object (&pool->pool);
+  }
+}
+
+static void
 gst_onnx_inference_init (GstOnnxInference * self)
 {
   /* TODO: at the moment onnx inference only support video output. We
@@ -600,6 +617,9 @@ gst_onnx_inference_init (GstOnnxInference * self)
   self->batch_dim = -1;
   self->output_tensors =
       g_ptr_array_new_full (0, (GDestroyNotify) release_ort_value);
+  self->output_pools = g_array_new (FALSE, TRUE, sizeof (GstOnnxOutputPool));
+  g_array_set_clear_func (self->output_pools,
+      (GDestroyNotify) clear_output_pool);
 
   g_rec_mutex_init (&self->context_lock);
 
@@ -620,6 +640,7 @@ gst_onnx_inference_finalize (GObject * object)
   gst_caps_unref (self->output_tensors_caps);
   g_rec_mutex_clear (&self->context_lock);
   g_ptr_array_unref (self->output_tensors);
+  g_array_unref (self->output_pools);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2183,6 +2204,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   self->output_ids = g_new0 (GQuark, self->output_count);
   self->output_dims_orders = g_new0 (GstTensorDimOrder, self->output_count);
+  g_array_set_size (self->output_pools, self->output_count);
 
   for (i = 0; i < self->output_count; i++) {
     OrtTypeInfo *output_type_info = NULL;
@@ -2194,7 +2216,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     gchar *tensor_name = NULL;
     gchar *tensor_id = NULL;
     gsize *output_dims = NULL;
-
+    gboolean static_output = TRUE;
 
     status =
         api->SessionGetOutputTypeInfo (self->session, i, &output_type_info);
@@ -2248,7 +2270,70 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
     output_dims = (gsize *) g_malloc0 (card * sizeof (gsize));
     for (j = 0; j < card; j++) {
-      output_dims[j] = shape[j] > 0 ? shape[j] : G_MAXSIZE;
+      if (shape[j] > 0) {
+        output_dims[j] = shape[j];
+      } else {
+        output_dims[j] = G_MAXSIZE;
+        static_output = FALSE;
+      }
+    }
+
+    /* Output tensor size is static. Create pool to reuse buffers */
+    if (static_output) {
+      size_t num_elements = 0;
+      status = api->GetTensorShapeElementCount (output_tensor_info,
+          &num_elements);
+      if (status) {
+        GST_WARNING_OBJECT (self,
+            "Couldn't get element count for output tensor[%zu]:%s: %s",
+            i, self->output_names[i], api->GetErrorMessage (status));
+        api->ReleaseStatus (status);
+        status = NULL;
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Output tensor[%zu]:%s has %" G_GSIZE_FORMAT " elements",
+            i, self->output_names[i], num_elements);
+        gsize alloc_size = 0;
+        gsize element_size = get_tensor_type_size (gst_data_type);
+
+        if (element_size > 0 &&
+            g_size_checked_mul (&alloc_size, num_elements, element_size) &&
+            alloc_size <= G_MAXUINT) {
+          GstOnnxOutputPool *out_pool = &g_array_index (self->output_pools,
+              GstOnnxOutputPool, (gint) i);
+          GstStructure *config;
+          GstBufferPool *pool;
+
+          pool = gst_buffer_pool_new ();
+          config = gst_buffer_pool_get_config (pool);
+          gst_buffer_pool_config_set_params (config, NULL, alloc_size, 0, 0);
+          if (!gst_buffer_pool_set_config (pool, config)) {
+            GST_WARNING_OBJECT (self, "Couldn't set pool config");
+            gst_clear_object (&pool);
+          } else if (!gst_buffer_pool_set_active (pool, TRUE)) {
+            GST_WARNING_OBJECT (self, "Couldn't set pool active");
+            gst_clear_object (&pool);
+          }
+
+          if (pool) {
+            GST_DEBUG_OBJECT (self,
+                "Created output pool[%zu] with size %" G_GSIZE_FORMAT,
+                i, alloc_size);
+            out_pool->pool = pool;
+            out_pool->tensor_size = alloc_size;
+          }
+        } else {
+          GST_ERROR_OBJECT (self,
+              "Invalid output tensor[%zu] allocation size, "
+              "elements: %" G_GSIZE_FORMAT ", element-size: %" G_GSIZE_FORMAT
+              ", allocation-size: %" G_GSIZE_FORMAT,
+              i, num_elements, element_size, alloc_size);
+          g_free (output_dims);
+          g_value_unset (&v_tensors_set);
+          api->ReleaseTypeInfo (output_type_info);
+          goto error;
+        }
+      }
     }
 
     /* Look up tensor name in modelinfo */
@@ -2470,6 +2555,7 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 #endif
 
   g_clear_pointer (&self->pci_bus_id, g_free);
+  g_array_set_size (self->output_pools, 0);
 
   GST_OBJECT_UNLOCK (self);
 
@@ -2640,6 +2726,9 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     size_t num_dims;
     size_t num_elements;
     void *tensor_data;
+    size_t buffer_size;
+    GstOnnxOutputPool *out_pool = &g_array_index (self->output_pools,
+        GstOnnxOutputPool, i);
 
     status =
         api->GetTensorTypeAndShape (output_tensors[i], &output_tensor_info);
@@ -2702,20 +2791,31 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     }
 
     if (tensor_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-      size_t buffer_size = num_elements * sizeof (float);
-      tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
-      gst_buffer_fill (tensor->data, 0, tensor_data, buffer_size);
+      buffer_size = num_elements * sizeof (float);
       tensor->data_type = GST_TENSOR_DATA_TYPE_FLOAT32;
     } else if (tensor_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
-      size_t buffer_size = num_elements * sizeof (int);
-      tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
-      gst_buffer_fill (tensor->data, 0, tensor_data, buffer_size);
+      buffer_size = num_elements * sizeof (int);
       tensor->data_type = GST_TENSOR_DATA_TYPE_INT32;
     } else {
       GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
           ("Output tensor is not FLOAT32 or INT32, not supported"));
       goto error;
     }
+
+    if (out_pool->tensor_size == buffer_size && out_pool->pool) {
+      if (gst_buffer_pool_acquire_buffer (out_pool->pool, &tensor->data, NULL)
+          != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "Couldn't acquire buffer from pool");
+        tensor->data = NULL;
+      } else {
+        GST_LOG_OBJECT (self, "Acquired buffer for output[%zu] from pool", i);
+      }
+    }
+
+    if (!tensor->data)
+      tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
+
+    gst_buffer_fill (tensor->data, 0, tensor_data, buffer_size);
   }
 
   // Clean up output tensors
