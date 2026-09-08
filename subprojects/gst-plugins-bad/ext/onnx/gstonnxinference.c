@@ -134,6 +134,7 @@
 
 #define HIP_DYNAMIC_EP_NAME "hipgpu"
 #define MIGRAPHX_DYNAMIC_EP_NAME "MIGraphXExecutionProvider"
+#define GST_ONNX_MAX_OUTPUT_COUNT 128
 
 /* TODO: Add F16 formats */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -201,6 +202,8 @@ struct _GstOnnxInference
   gchar *input_name;
   /* Raw dimensions returned from OrtApi::GetDimensions() */
   gint64 input_dims_model[GST_ONNX_IMPORTER_MAX_DIMS];
+  GPtrArray *output_tensors;
+
 #if HAVE_DIRECTML
   GstOnnxDmlCtx *dml_ctx;
 #endif
@@ -572,6 +575,13 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
 }
 
 static void
+release_ort_value (OrtValue * data)
+{
+  if (data && api)
+    api->ReleaseValue (data);
+}
+
+static void
 gst_onnx_inference_init (GstOnnxInference * self)
 {
   /* TODO: at the moment onnx inference only support video output. We
@@ -588,6 +598,8 @@ gst_onnx_inference_init (GstOnnxInference * self)
   self->width_dim = -1;
   self->channels_dim = -1;
   self->batch_dim = -1;
+  self->output_tensors =
+      g_ptr_array_new_full (0, (GDestroyNotify) release_ort_value);
 
   g_rec_mutex_init (&self->context_lock);
 
@@ -607,6 +619,7 @@ gst_onnx_inference_finalize (GObject * object)
   gst_caps_unref (self->input_tensors_caps);
   gst_caps_unref (self->output_tensors_caps);
   g_rec_mutex_clear (&self->context_lock);
+  g_ptr_array_unref (self->output_tensors);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2039,6 +2052,12 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     goto error;
   }
 
+  if (self->output_count > GST_ONNX_MAX_OUTPUT_COUNT) {
+    GST_ERROR_OBJECT (self, "Too large output count %" G_GSIZE_FORMAT,
+        self->output_count);
+    goto error;
+  }
+
   api->ReleaseTypeInfo (input_type_info);
   input_type_info = NULL;
 
@@ -2594,7 +2613,8 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  output_tensors = g_new0 (OrtValue *, self->output_count);
+  g_ptr_array_set_size (self->output_tensors, self->output_count);
+  output_tensors = (OrtValue **) self->output_tensors->pdata;
 
   status =
       api->Run (self->session, NULL, (const char *const *) &self->input_name,
@@ -2609,13 +2629,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   api->ReleaseValue (input_tensor);
-
-  if (!output_tensors || self->output_count == 0) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
-        ("ONNX inference failed to produce outputs"));
-    goto error;
-  }
-
 
   tmeta = gst_buffer_add_tensor_meta (buf);
   tmeta->num_tensors = self->output_count;
@@ -2706,11 +2719,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   // Clean up output tensors
-  for (size_t i = 0; i < self->output_count; i++) {
-    if (output_tensors[i])
-      api->ReleaseValue (output_tensors[i]);
-  }
-  g_free (output_tensors);
+  g_ptr_array_set_size (self->output_tensors, 0);
 
   GST_TRACE_OBJECT (trans, "Num tensors:%zu", self->output_count);
   gst_onnx_importer_unprepare (target_importer);
@@ -2722,13 +2731,7 @@ error:
     api->ReleaseStatus (status);
   if (input_tensor)
     api->ReleaseValue (input_tensor);
-  if (output_tensors) {
-    for (size_t i = 0; i < self->output_count; i++) {
-      if (output_tensors[i])
-        api->ReleaseValue (output_tensors[i]);
-    }
-    g_free (output_tensors);
-  }
+  g_ptr_array_set_size (self->output_tensors, 0);
 
   if (output_tensor_info)
     api->ReleaseTensorTypeAndShapeInfo (output_tensor_info);
