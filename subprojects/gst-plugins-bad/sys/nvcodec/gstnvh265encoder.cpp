@@ -951,7 +951,7 @@ gst_nv_h265_encoder_set_property (GObject * object, guint prop_id,
       update_uint (self, &self->max_bitrate, value, UPDATE_BITRATE);
       break;
     case PROP_VBV_BUFFER_SIZE:
-      update_uint (self, &self->vbv_buffer_size, value, UPDATE_RC_PARAM);
+      update_uint (self, &self->vbv_buffer_size, value, UPDATE_BITRATE);
       break;
     case PROP_RC_LOOKAHEAD:
       /* rc-lookahead update requires pool size change */
@@ -2091,6 +2091,7 @@ gst_nv_h265_encoder_check_reconfigure (GstNvEncoder * encoder,
     if (klass->device_caps.dyn_bitrate_change > 0) {
       config->rcParams.averageBitRate = self->bitrate * 1024;
       config->rcParams.maxBitRate = self->max_bitrate * 1024;
+      config->rcParams.vbvBufferSize = self->vbv_buffer_size * 1024;
       reconfig = GST_NV_ENCODER_RECONFIGURE_BITRATE;
     } else {
       reconfig = GST_NV_ENCODER_RECONFIGURE_FULL;
