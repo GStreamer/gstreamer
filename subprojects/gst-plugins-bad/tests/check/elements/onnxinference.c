@@ -185,7 +185,7 @@ GST_START_TEST (test_output_uint8_rejected)
 
 GST_END_TEST;
 
-/* Test that a model with a float64 output does not fail to reach PAUSED state. */
+/* Test that a model with a float64 output fails to reach PAUSED state. */
 GST_START_TEST (test_output_float64_rejected)
 {
   gchar *model = g_build_filename (GST_ONNX_TEST_DATA_PATH,
@@ -193,7 +193,7 @@ GST_START_TEST (test_output_float64_rejected)
   GstElement *e = gst_element_factory_make ("onnxinference", NULL);
 
   g_object_set (e, "model-file", model, NULL);
-  fail_if (gst_element_set_state (e, GST_STATE_PAUSED)
+  fail_unless (gst_element_set_state (e, GST_STATE_PAUSED)
       == GST_STATE_CHANGE_FAILURE);
 
   gst_element_set_state (e, GST_STATE_NULL);
