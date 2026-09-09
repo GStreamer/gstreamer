@@ -137,6 +137,8 @@
 #define HIP_DYNAMIC_EP_NAME "hipgpu"
 #define MIGRAPHX_DYNAMIC_EP_NAME "MIGraphXExecutionProvider"
 #define GST_ONNX_MAX_OUTPUT_COUNT 128
+/* minimum version we require because of APIs we have compiled-in support for */
+#define MIN_ORT_API_VERSION 16
 
 /* TODO: Add F16 formats */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -295,6 +297,7 @@ gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query);
 static gboolean gst_onnx_inference_start (GstBaseTransform * trans);
 static gboolean gst_onnx_inference_stop (GstBaseTransform * trans);
+static int gst_min_ort_api_version (void);
 
 #define gst_onnx_inference_parent_class parent_class
 G_DEFINE_TYPE (GstOnnxInference, gst_onnx_inference, GST_TYPE_BASE_TRANSFORM);
@@ -380,6 +383,10 @@ gst_onnx_execution_provider_get_type (void)
 
       {GST_ONNX_EXECUTION_PROVIDER_HIP,
 #if ORT_API_VERSION >= 22
+#if MIN_ORT_API_VERSION < 22
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 22
+#endif
             "AMD HIP execution provider",
 #else
             "AMD HIP execution provider (compiled out, requires ONNX Runtime >= 1.22)",
@@ -409,6 +416,10 @@ gst_onnx_execution_provider_get_type (void)
        */
       {GST_ONNX_EXECUTION_PROVIDER_VITIS_AI,
 #if ORT_API_VERSION >= 18
+#if MIN_ORT_API_VERSION < 18
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 18
+#endif
             "AMD Vitis AI execution provider",
 #else
             "AMD Vitis AI execution provider (compiled out, requires ONNX Runtime >= 1.18)",
@@ -913,6 +924,13 @@ gst_onnx_inference_load_library (GstOnnxInference * self)
     if (end == minor_version || errno || api_version == 0 ||
         api_version == G_MAXUINT32)
       api_version = ORT_API_VERSION;
+  }
+
+  if (api_version < gst_min_ort_api_version ()) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT, (NULL),
+        ("Build does not support libonnxruntime API version < %d (loaded %d)",
+            gst_min_ort_api_version (), api_version));
+    goto done;
   }
 
   api = api_base->GetApi (api_version);
@@ -1574,6 +1592,10 @@ gst_onnx_inference_get_model_cache_dir (GstOnnxInference * self)
 }
 
 #if ORT_API_VERSION >= 22
+#if MIN_ORT_API_VERSION < 22
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 22
+#endif
 static gboolean
 gst_onnx_inference_append_ep (GstOnnxInference * self, OrtSessionOptions * opts,
     const gchar * ep_name)
@@ -1750,6 +1772,10 @@ gst_onnx_inference_get_vsi_npu_append_func (void)
 }
 
 #if HAVE_GST_HIP && ORT_API_VERSION >= 23
+#if MIN_ORT_API_VERSION < 23
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 23
+#endif
 static gchar *
 get_selected_device_from_session (GstOnnxInference * self, OrtSession * session)
 {
@@ -1998,6 +2024,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     case GST_ONNX_EXECUTION_PROVIDER_VITIS_AI:
     {
 #if ORT_API_VERSION >= 18
+#if MIN_ORT_API_VERSION < 18
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 18
+#endif
       if (loaded_api_version < 18) {
         GST_ERROR_OBJECT (self,
             "Vitis AI execution provider requires ONNX Runtime >= 1.18");
@@ -2103,6 +2133,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
       break;
     case GST_ONNX_EXECUTION_PROVIDER_HIP:
 #if ORT_API_VERSION >= 22
+#if MIN_ORT_API_VERSION < 22
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 22
+#endif
     {
       const gchar *ep_lib_path = g_getenv ("MORPHIZEN_EP_LIB");
 
@@ -2216,6 +2250,10 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     }
 #else
 #if ORT_API_VERSION >= 23
+#if MIN_ORT_API_VERSION < 23
+#undef MIN_ORT_API_VERSION
+#define MIN_ORT_API_VERSION 23
+#endif
     if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP) {
       gchar *pci_bus_id =
           get_selected_device_from_session (self, self->session);
@@ -3250,4 +3288,12 @@ error:
   gst_onnx_importer_unprepare (target_importer);
 
   return GST_FLOW_ERROR;
+}
+
+// This has to be last in this function to ensure that MIN_ORT_API_VERSION is
+// correctly defined by the pre-processor
+static inline int
+gst_min_ort_api_version (void)
+{
+  return MIN_ORT_API_VERSION;
 }
