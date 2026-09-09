@@ -494,6 +494,84 @@ GST_START_TEST (meta_serialize)
 
 GST_END_TEST;
 
+/* Build a full GstVideoCaptionMeta serialization and try to deserialize it. */
+static GstVideoCaptionMeta *
+caption_meta_deser_payload (GstBuffer * buffer,
+    GstVideoCaptionType caption_type, const guint8 * caption_data,
+    gsize caption_data_len, gsize declared_data_size, gsize payload_len)
+{
+  const gchar *name = "GstVideoCaptionMeta";
+  const gsize name_len = strlen (name);
+  const gsize header_size = 8 + name_len + 2;
+  const gsize total_size = header_size + payload_len;
+  guint8 *ser_data = g_new (guint8, total_size);
+  guint8 *payload = ser_data + header_size;
+  guint32 consumed = 0;
+  GstVideoCaptionMeta *meta;
+
+  GST_WRITE_UINT32_LE (ser_data + 0, total_size);
+  GST_WRITE_UINT32_LE (ser_data + 4, name_len);
+  memcpy (ser_data + 8, name, name_len + 1);
+  ser_data[8 + name_len + 1] = 0;       /* version */
+  if (payload_len >= 4)
+    GST_WRITE_UINT32_LE (payload, caption_type);
+  if (payload_len >= 8)
+    GST_WRITE_UINT32_LE (payload + 4, declared_data_size);
+  if (caption_data_len > 0)
+    memcpy (payload + 8, caption_data, caption_data_len);
+
+  meta = (GstVideoCaptionMeta *)
+      gst_meta_deserialize (buffer, ser_data, total_size, &consumed);
+  if (meta)
+    fail_unless_equals_uint64 ((guint64) consumed, (guint64) total_size);
+  g_free (ser_data);
+  return meta;
+}
+
+GST_START_TEST (deserialize_video_caption_meta)
+{
+  static const guint8 data[] = { 0x94, 0x20 };  /* CEA-608 RCL */
+
+  GstBuffer *buffer;
+  GstVideoCaptionMeta *meta;
+
+  gst_video_caption_meta_get_info ();
+
+  /* a valid payload is accepted */
+  buffer = gst_buffer_new ();
+  meta = caption_meta_deser_payload (buffer, GST_VIDEO_CAPTION_TYPE_CEA608_RAW,
+      data, sizeof (data), sizeof (data), sizeof (data) + 8);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->caption_type,
+      GST_VIDEO_CAPTION_TYPE_CEA608_RAW);
+  ck_assert_uint_eq (meta->size, sizeof (data));
+  fail_unless (memcmp (meta->data, data, meta->size) == 0);
+  gst_buffer_unref (buffer);
+
+  /* a data size of 0 is rejected */
+  buffer = gst_buffer_new ();
+  meta = caption_meta_deser_payload (buffer, GST_VIDEO_CAPTION_TYPE_CEA608_RAW,
+      NULL, 0, 0, 8);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a data size larger than the available payload is rejected */
+  buffer = gst_buffer_new ();
+  meta = caption_meta_deser_payload (buffer, GST_VIDEO_CAPTION_TYPE_CEA608_RAW,
+      data, sizeof (data), 10, sizeof (data) + 8);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a truncated header is rejected */
+  buffer = gst_buffer_new ();
+  meta = caption_meta_deser_payload (buffer, GST_VIDEO_CAPTION_TYPE_CEA608_RAW,
+      NULL, 0, 0, 6);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoanc_suite (void)
 {
@@ -510,6 +588,7 @@ gst_videoanc_suite (void)
 
   tcase_add_test (tc, serialize_video_caption_meta);
   tcase_add_test (tc, meta_serialize);
+  tcase_add_test (tc, deserialize_video_caption_meta);
 
   return s;
 }
