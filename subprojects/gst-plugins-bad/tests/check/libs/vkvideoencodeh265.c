@@ -377,31 +377,47 @@ check_h265_nalu (guint8 * bitstream, gsize size, GstH265NalUnitType nal_type)
 }
 
 static void
-check_h265_session_params (GstVulkanEncoder * enc, gint vps_id, gint sps_id,
-    gint pps_id)
+check_h265_session_params_override (GstVulkanEncoder * enc,
+    GstVulkanEncoderParametersOverrides * override_params,
+    GstH265NalUnitType nal_type)
 {
   GError *err = NULL;
   GstVulkanEncoderParametersFeedback feedback = { 0, };
   guint8 *bitstream = NULL;
   gsize bitstream_size = 0;
-  // Check VPS
-  GstVulkanEncoderParametersOverrides override_params = {
-    .h265 = {
-          .sType =
-          VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_GET_INFO_KHR,
-          .writeStdVPS = VK_TRUE,
-          .writeStdSPS = VK_FALSE,
-          .writeStdPPS = VK_FALSE,
-          .stdVPSId = 0,
-          .stdSPSId = 0,
-          .stdPPSId = 0,
-        }
-  };
+
   fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
-          &override_params, &feedback, &bitstream_size,
-          (gpointer *) & bitstream, &err));
-  check_h265_nalu (bitstream, bitstream_size, GST_H265_NAL_VPS);
+          override_params, &feedback, &bitstream_size, (gpointer *) & bitstream,
+          &err));
+
+  /* no override were posted */
+  if (!bitstream)
+    return;
+
+  check_h265_nalu (bitstream, bitstream_size, nal_type);
   g_free (bitstream);
+}
+
+static void
+check_h265_session_params (GstVulkanEncoder * enc, gint vps_id, gint sps_id,
+    gint pps_id)
+{
+  // Check VPS
+  GstVulkanEncoderParametersOverrides override_params;
+
+  override_params = (GstVulkanEncoderParametersOverrides) {
+    .h265 = {
+      .sType =
+          VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_GET_INFO_KHR,
+      .writeStdVPS = VK_TRUE,
+      .writeStdSPS = VK_FALSE,
+      .writeStdPPS = VK_FALSE,
+      .stdVPSId = 0,
+      .stdSPSId = 0,
+      .stdPPSId = 0,
+    }
+  };
+  check_h265_session_params_override (enc, &override_params, GST_H265_NAL_VPS);
 
   // Check SPS
   override_params = (GstVulkanEncoderParametersOverrides) {
@@ -416,11 +432,7 @@ check_h265_session_params (GstVulkanEncoder * enc, gint vps_id, gint sps_id,
       .stdPPSId = 0,
     }
   };
-  fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
-          &override_params, &feedback, &bitstream_size,
-          (gpointer *) & bitstream, &err));
-  check_h265_nalu (bitstream, bitstream_size, GST_H265_NAL_SPS);
-  g_free (bitstream);
+  check_h265_session_params_override (enc, &override_params, GST_H265_NAL_SPS);
 
   // Check PPS
   override_params = (GstVulkanEncoderParametersOverrides) {
@@ -435,11 +447,7 @@ check_h265_session_params (GstVulkanEncoder * enc, gint vps_id, gint sps_id,
       .stdPPSId = 0,
     }
   };
-  fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
-          &override_params, &feedback, &bitstream_size,
-          (gpointer *) & bitstream, &err));
-  check_h265_nalu (bitstream, bitstream_size, GST_H265_NAL_PPS);
-  g_free (bitstream);
+  check_h265_session_params_override (enc, &override_params, GST_H265_NAL_PPS);
 }
 
 static GstVulkanEncoder *

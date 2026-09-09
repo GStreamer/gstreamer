@@ -312,27 +312,43 @@ check_h264_nalu (guint8 * bitstream, gsize size, GstH264NalUnitType nal_type)
 }
 
 static void
-check_h264_session_params (GstVulkanEncoder * enc, gint sps_id, gint pps_id)
+check_h264_session_params_override (GstVulkanEncoder * enc,
+    GstVulkanEncoderParametersOverrides * override_params,
+    GstH264NalUnitType nal_type)
 {
   GError *err = NULL;
   GstVulkanEncoderParametersFeedback feedback = { 0, };
   guint8 *bitstream = NULL;
   gsize bitstream_size = 0;
-  GstVulkanEncoderParametersOverrides override_params = {
-    .h264 = {
-          .sType =
-          VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_GET_INFO_KHR,
-          .writeStdSPS = VK_TRUE,
-          .writeStdPPS = VK_FALSE,
-          .stdSPSId = 0,
-          .stdPPSId = 0,
-        }
-  };
-  fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
-          &override_params, &feedback, &bitstream_size,
-          (gpointer *) & bitstream, &err));
 
-  check_h264_nalu (bitstream, bitstream_size, GST_H264_NAL_SPS);
+  fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
+          override_params, &feedback, &bitstream_size, (gpointer *) & bitstream,
+          &err));
+
+  /* no override were posted */
+  if (!bitstream)
+    return;
+
+  check_h264_nalu (bitstream, bitstream_size, nal_type);
+  g_free (bitstream);
+}
+
+static void
+check_h264_session_params (GstVulkanEncoder * enc, gint sps_id, gint pps_id)
+{
+  GstVulkanEncoderParametersOverrides override_params;
+
+  override_params = (GstVulkanEncoderParametersOverrides) {
+    .h264 = {
+      .sType =
+          VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_GET_INFO_KHR,
+      .writeStdSPS = VK_TRUE,
+      .writeStdPPS = VK_FALSE,
+      .stdSPSId = 0,
+      .stdPPSId = 0,
+    }
+  };
+  check_h264_session_params_override (enc, &override_params, GST_H264_NAL_SPS);
 
   override_params = (GstVulkanEncoderParametersOverrides) {
     .h264 = {
@@ -344,13 +360,7 @@ check_h264_session_params (GstVulkanEncoder * enc, gint sps_id, gint pps_id)
       .stdPPSId = 0,
     }
   };
-  g_free (bitstream);
-  fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
-          &override_params, &feedback, &bitstream_size,
-          (gpointer *) & bitstream, &err));
-  check_h264_nalu (bitstream, bitstream_size, GST_H264_NAL_PPS);
-  g_free (bitstream);
-
+  check_h264_session_params_override (enc, &override_params, GST_H264_NAL_PPS);
 }
 
 static GstVulkanEncoder *

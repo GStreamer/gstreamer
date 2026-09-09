@@ -161,6 +161,10 @@ check_av1_session_params (GstVulkanEncoder * enc)
   fail_unless (gst_vulkan_encoder_video_session_parameters_overrides (enc,
           NULL, NULL, &bitstream_size, (gpointer *) & bitstream, &err));
 
+  /* no override were posted */
+  if (!bitstream)
+    return;
+
   assert_equals_int (check_av1_obu (bitstream, bitstream_size, &obu),
       GST_AV1_OBU_SEQUENCE_HEADER);
 
