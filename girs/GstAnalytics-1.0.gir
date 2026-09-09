@@ -140,12 +140,12 @@ from the parent buffer of this meta.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_index_by_quark" c:identifier="gst_analytics_cls_mtd_get_index_by_quark" version="1.24">
@@ -234,12 +234,12 @@ For example with a semantic_tag = "posture/hand-21-kp", first
 member represent the "wrist", second is the thumb first joint.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="add_member" c:identifier="gst_analytics_group_mtd_add_member" version="1.30">
@@ -490,12 +490,12 @@ gst_analytics_relation_meta_set_relation(rmeta,
 ]|</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticskeypointmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_confidence" c:identifier="gst_analytics_keypoint_mtd_get_confidence" version="1.30">
@@ -973,12 +973,12 @@ when no longer needed.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_id" c:identifier="gst_analytics_mtd_get_id" version="1.24">
@@ -1178,12 +1178,12 @@ resources it was using.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_confidence_lvl" c:identifier="gst_analytics_od_mtd_get_confidence_lvl" version="1.24">
@@ -1805,6 +1805,34 @@ must have a #GstVideoMeta attached</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="add_text_mtd" c:identifier="gst_analytics_relation_meta_add_text_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">Adds text metadata to @meta. If location information is needed, it can be
+represented by separate metadata such as #GstAnalyticsODMtd and associated
+with @text_mtd using @meta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="text" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">UTF-8 text</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="confidence" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">confidence level of @text</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="text_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">location for the newly added #GstAnalyticsTextMtd</doc>
+            <type name="TextMtd" c:type="GstAnalyticsTextMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="add_tracking_mtd" c:identifier="gst_analytics_relation_meta_add_tracking_mtd" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
         <return-value transfer-ownership="none">
@@ -2126,6 +2154,28 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_text_mtd" c:identifier="gst_analytics_relation_meta_get_text_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">Gets the #GstAnalyticsTextMtd identified by @an_meta_id from @meta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">%TRUE if the metadata was found, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">the identifier of the metadata</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">location for the #GstAnalyticsTextMtd</doc>
+            <type name="TextMtd" c:type="GstAnalyticsTextMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_tracking_mtd" c:identifier="gst_analytics_relation_meta_get_tracking_mtd" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
 otherwise this method return FALSE and @rlt is invalid.</doc>
@@ -2360,12 +2410,12 @@ Ids must have been obtained a call to
  Since: 1.26</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_mask" c:identifier="gst_analytics_segmentation_mtd_get_mask" version="1.26">
@@ -2970,12 +3020,12 @@ analytics-meta with additional parameters describing the tensor.
 Since 1.28</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_tensor" c:identifier="gst_analytics_tensor_mtd_get_tensor" version="1.28">
@@ -3001,16 +3051,85 @@ identified by @id is stored</doc>
         </return-value>
       </function>
     </record>
+    <record name="TextMtd" c:type="GstAnalyticsTextMtd" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">This type of metadata stores UTF-8 text and its confidence level.
+It can be used for image/video-to-text and audio-to-text inference.
+
+#GstAnalyticsTextMtd only stores text-related information. Additional
+information such as a bounding box can be represented by other metadata
+types such as #GstAnalyticsODMtd and associated with the text metadata
+using #GstAnalyticsRelationMeta.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_confidence" c:identifier="gst_analytics_text_mtd_get_confidence" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">Gets the confidence level of the text stored in @mtd.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">the confidence level</doc>
+          <type name="gfloat" c:type="gfloat"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">a #GstAnalyticsTextMtd</doc>
+            <type name="TextMtd" c:type="const GstAnalyticsTextMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_length" c:identifier="gst_analytics_text_mtd_get_length" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">Gets the length in bytes of the UTF-8 text stored in @mtd, excluding the
+terminating nul byte.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">the length of the text in bytes</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">a #GstAnalyticsTextMtd</doc>
+            <type name="TextMtd" c:type="const GstAnalyticsTextMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_text" c:identifier="gst_analytics_text_mtd_get_text" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">Gets the text stored in @mtd.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">the UTF-8 text stored in @mtd</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">a #GstAnalyticsTextMtd</doc>
+            <type name="TextMtd" c:type="const GstAnalyticsTextMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="get_mtd_type" c:identifier="gst_analytics_text_mtd_get_mtd_type" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">the #GstAnalyticsMtdType of #GstAnalyticsTextMtd</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
     <record name="TrackingMtd" c:type="GstAnalyticsTrackingMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Store information on results of object tracking</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_info" c:identifier="gst_analytics_tracking_mtd_get_info" version="1.24">
@@ -3455,6 +3574,13 @@ metadata type.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Opaque id of the #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="text_mtd_get_mtd_type" c:identifier="gst_analytics_text_mtd_get_mtd_type" moved-to="TextMtd.get_mtd_type" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">the #GstAnalyticsMtdType of #GstAnalyticsTextMtd</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
