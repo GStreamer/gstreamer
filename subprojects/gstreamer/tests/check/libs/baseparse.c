@@ -177,6 +177,128 @@ gst_parser_tester_init (GstParserTester * tester)
   tester->min_frame_size = 8;
 }
 
+/* Parser whose detect() needs the first two input buffers before it can
+ * decide on a stream format. */
+#define GST_PARSE_DETECT_TESTER_TYPE gst_parse_detect_tester_get_type ()
+static GType gst_parse_detect_tester_get_type (void);
+
+typedef struct _GstParseDetectTester GstParseDetectTester;
+typedef struct _GstParseDetectTesterClass GstParseDetectTesterClass;
+
+struct _GstParseDetectTester
+{
+  GstBaseParse parent;
+
+  guint min_frame_size;
+};
+
+struct _GstParseDetectTesterClass
+{
+  GstBaseParseClass parent_class;
+};
+
+G_DEFINE_TYPE (GstParseDetectTester, gst_parse_detect_tester,
+    GST_TYPE_BASE_PARSE);
+
+/* Number of times the detect() vfunc has been called. */
+static gint detect_calls = 0;
+
+static GstFlowReturn
+gst_parse_detect_tester_detect (GstBaseParse * parse, GstBuffer * buffer)
+{
+  GstMapInfo map;
+
+  detect_calls++;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  if (detect_calls == 1) {
+    /* First call: Only the first input buffer with 8 bytes. */
+    fail_unless_equals_int (gst_buffer_get_size (buffer), 8);
+  } else {
+    /* Second call: The original first input buffer with 8 bytes, followed
+     * by the second input buffer with another 8 bytes. */
+    fail_unless_equals_int (gst_buffer_get_size (buffer), 16);
+    fail_unless_equals_int (map.data[0], 0);
+    fail_unless_equals_int (map.data[8], 1);
+  }
+
+  gst_buffer_unmap (buffer, &map);
+
+  return detect_calls >= 2 ? GST_FLOW_OK : GST_FLOW_NOT_NEGOTIATED;
+}
+
+static gboolean
+gst_parse_detect_tester_start (GstBaseParse * parse)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_parse_detect_tester_stop (GstBaseParse * parse)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_parse_detect_tester_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
+{
+  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_parse_detect_tester_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
+{
+  GstParseDetectTester *test = (GstParseDetectTester *) parse;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  while (gst_buffer_get_size (frame->buffer) >= test->min_frame_size) {
+    *skipsize = 0;
+    GST_BUFFER_DURATION (frame->buffer) =
+        gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+        TEST_VIDEO_FPS_N);
+    ret = gst_base_parse_finish_frame (parse, frame, test->min_frame_size);
+    if (frame->buffer == NULL)
+      break;                    // buffer finished
+  }
+  return ret;
+}
+
+static void
+gst_parse_detect_tester_class_init (GstParseDetectTesterClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *baseparse_class = GST_BASE_PARSE_CLASS (klass);
+
+  static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-test-custom"));
+
+  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-test-custom"));
+
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
+
+  gst_element_class_set_metadata (element_class,
+      "ParseDetectTester", "Parser/Video", "yep", "me");
+
+  baseparse_class->start = gst_parse_detect_tester_start;
+  baseparse_class->stop = gst_parse_detect_tester_stop;
+  baseparse_class->handle_frame = gst_parse_detect_tester_handle_frame;
+  baseparse_class->set_sink_caps = gst_parse_detect_tester_set_sink_caps;
+  baseparse_class->detect = gst_parse_detect_tester_detect;
+}
+
+static void
+gst_parse_detect_tester_init (GstParseDetectTester * tester)
+{
+  tester->min_frame_size = 8;
+}
+
 static void
 setup_parsertester (void)
 {
@@ -803,6 +925,59 @@ GST_START_TEST (parser_sticky_events_after_flush)
 
 GST_END_TEST;
 
+GST_START_TEST (parser_detect_accumulation)
+{
+  GList *input = NULL;
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS ("video/x-test-custom"));
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("video/x-test-custom"));
+  GstSegment segment;
+  GstBuffer *buffer;
+  gint i;
+
+  detect_calls = 0;
+  caps_set = FALSE;
+
+  parsetest = g_object_new (GST_PARSE_DETECT_TESTER_TYPE, NULL);
+  mysrcpad = gst_check_setup_src_pad (parsetest, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (parsetest, &sinktemplate);
+  bus = gst_bus_new ();
+  gst_element_set_bus (parsetest, bus);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
+
+  send_startup_events ();
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  for (i = 0; i < 2; i++) {
+    buffer = create_test_buffer (i);
+    input = g_list_append (input, buffer);
+  }
+  for (GList * iter = input; iter; iter = g_list_next (iter)) {
+    fail_unless (gst_pad_push (mysrcpad, iter->data) == GST_FLOW_OK);
+  }
+  g_list_free (input);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* detect() must have been called twice and both input buffers must be output. */
+  fail_unless_equals_int (detect_calls, 2);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  check_no_error_received ();
+  cleanup_parsertest ();
+}
+
+GST_END_TEST;
+
+
 
 static void
 baseparse_setup (void)
@@ -814,6 +989,7 @@ baseparse_setup (void)
   loop = NULL;
   have_eos = have_data = caps_set = FALSE;
   buffer_count = 0;
+  detect_calls = 0;
 }
 
 static void
@@ -838,6 +1014,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_initial_gap_prefer_upstream_caps);
   tcase_add_test (tc, parser_convert_duration);
   tcase_add_test (tc, parser_sticky_events_after_flush);
+  tcase_add_test (tc, parser_detect_accumulation);
 
   return s;
 }

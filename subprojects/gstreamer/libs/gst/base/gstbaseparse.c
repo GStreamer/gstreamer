@@ -3215,20 +3215,16 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       detect_buf = gst_buffer_ref (buffer);
     } else {
       GList *l;
-      guint offset = 0;
 
       detect_buf = gst_buffer_new ();
 
       for (l = parse->priv->detect_buffers; l; l = l->next) {
-        gsize tmpsize = gst_buffer_get_size (l->data);
-
         gst_buffer_copy_into (detect_buf, GST_BUFFER_CAST (l->data),
-            GST_BUFFER_COPY_MEMORY, offset, tmpsize);
-        offset += tmpsize;
+            GST_BUFFER_COPY_MEMORY, 0, -1);
       }
       if (buffer)
-        gst_buffer_copy_into (detect_buf, buffer, GST_BUFFER_COPY_MEMORY,
-            offset, gst_buffer_get_size (buffer));
+        gst_buffer_copy_into (detect_buf, buffer, GST_BUFFER_COPY_MEMORY, 0,
+            -1);
     }
 
     ret = bclass->detect (parse, detect_buf);
