@@ -1889,6 +1889,184 @@ GST_START_TEST (test_converter_samples)
 
 GST_END_TEST;
 
+/* Build a full GstAudioMeta serialization and try to deserialize it. */
+static GstAudioMeta *
+audio_meta_deser_payload (GstBuffer * buffer, gint32 format, gint32 layout,
+    gint32 rate, gint32 channels, const gint32 * positions, gsize n_pos,
+    guint64 samples, const guint64 * offsets, gsize n_off)
+{
+  const gchar *name = "GstAudioMeta";
+  const gsize name_len = strlen (name);
+  const gsize payload_len = 20 + n_pos * 4 + 8 + n_off * 8;
+  const gsize header_size = 8 + name_len + 2;
+  const gsize total_size = header_size + payload_len;
+  guint8 *ser_data = g_new (guint8, total_size);
+  guint8 *payload = ser_data + header_size;
+  guint32 consumed = 0;
+  GstAudioMeta *meta;
+
+  GST_WRITE_UINT32_LE (ser_data + 0, total_size);
+  GST_WRITE_UINT32_LE (ser_data + 4, name_len);
+  memcpy (ser_data + 8, name, name_len + 1);
+  ser_data[8 + name_len + 1] = 0;       /* version */
+
+  GST_WRITE_UINT32_LE (payload, format);
+  GST_WRITE_UINT32_LE (payload + 4, 0); /* flags */
+  GST_WRITE_UINT32_LE (payload + 8, layout);
+  GST_WRITE_UINT32_LE (payload + 12, rate);
+  GST_WRITE_UINT32_LE (payload + 16, channels);
+  for (gsize i = 0; i < n_pos; i++)
+    GST_WRITE_UINT32_LE (payload + 20 + i * 4, positions[i]);
+  GST_WRITE_UINT64_LE (payload + 20 + n_pos * 4, samples);
+  for (gsize i = 0; i < n_off; i++)
+    GST_WRITE_UINT64_LE (payload + 28 + n_pos * 4 + i * 8, offsets[i]);
+
+  meta = (GstAudioMeta *) gst_meta_deserialize (buffer, ser_data, total_size,
+      &consumed);
+  if (meta)
+    fail_unless_equals_uint64 ((guint64) consumed, (guint64) total_size);
+  g_free (ser_data);
+  return meta;
+}
+
+GST_START_TEST (test_audio_meta_deserialize)
+{
+  GstBuffer *buffer;
+  GstAudioMeta *meta;
+
+  gst_audio_meta_get_info ();
+
+  const gint32 pos2[2] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+  };
+  const guint64 off00[2] = { 0, 0 };
+
+  /* a valid interleaved payload is accepted */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, 2, pos2, 2, 100, off00, 2);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->info.finfo->format, GST_AUDIO_FORMAT_S16LE);
+  fail_unless_equals_int (meta->info.layout, GST_AUDIO_LAYOUT_INTERLEAVED);
+  fail_unless_equals_int (meta->info.rate, 48000);
+  fail_unless_equals_int (meta->info.channels, 2);
+  fail_unless_equals_int (meta->info.position[0],
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT);
+  fail_unless_equals_int (meta->info.position[1],
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
+  ck_assert_uint_eq (meta->samples, 100);
+  gst_buffer_unref (buffer);
+
+  /* a payload missing one channel offset is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, 2, pos2, 2, 100, off00, 1);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a header-only payload is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, NULL, 0, 0, NULL, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a huge channel count is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, G_MAXINT, NULL, 0, 0, NULL, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a negative channel count is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, -1, NULL, 0, 0, NULL, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a negative format is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, -1, GST_AUDIO_LAYOUT_INTERLEAVED,
+      48000, 2, pos2, 2, 100, off00, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a huge format is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, G_MAXINT,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, 2, pos2, 2, 100, off00, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* an encoded format without a fixed sample width is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_ENCODED,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, 2, pos2, 2, 100, off00, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a zero rate is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 0, 2, pos2, 2, 100, off00, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* an invalid layout is rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE, 5, 48000,
+      2, pos2, 2, 100, off00, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a non-interleaved channel offset beyond the buffer is rejected */
+  const guint64 off_bad[2] = { 0, G_MAXUINT64 / 2 };
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED, 48000, 2, pos2, 2, 100, off_bad, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* more samples than fit into the buffer are rejected */
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_INTERLEAVED, 48000, 2, pos2, 2, 100000, off00, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a valid non-interleaved payload is accepted */
+  const guint64 off_ni[2] = { 0, 200 };
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED, 48000, 2, pos2, 2, 100, off_ni, 2);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->info.layout, GST_AUDIO_LAYOUT_NON_INTERLEAVED);
+  ck_assert_uint_eq (meta->samples, 100);
+  ck_assert_uint_eq (meta->offsets[0], 0);
+  ck_assert_uint_eq (meta->offsets[1], 200);
+  gst_buffer_unref (buffer);
+
+  /* non-interleaved channel planes that overlap in memory are rejected,
+   * even though they individually fit into the buffer */
+  const guint64 off_overlap[2] = { 0, 100 };
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED, 48000, 2, pos2, 2, 100, off_overlap, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  const guint64 off_same[2] = { 0, 0 };
+  buffer = gst_buffer_new_and_alloc (400);
+  meta = audio_meta_deser_payload (buffer, GST_AUDIO_FORMAT_S16LE,
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED, 48000, 2, pos2, 2, 100, off_same, 2);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -1930,6 +2108,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_audio_meta_serialize);
   tcase_add_test (tc_chain, test_audio_meta_serialize_65_chans);
   tcase_add_test (tc_chain, test_converter_samples);
+  tcase_add_test (tc_chain, test_audio_meta_deserialize);
 
   return s;
 }
