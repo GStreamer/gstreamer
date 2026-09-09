@@ -328,6 +328,7 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
         QSGTexture::Filtering::Nearest);
     texNode->setMaterial(tex);
     texNode->setFlag(QSGGeometryNode::OwnsMaterial);
+    this->priv->caps_change = TRUE;
   }
 
   if ((old_buffer = tex->getBuffer(&was_bound))) {

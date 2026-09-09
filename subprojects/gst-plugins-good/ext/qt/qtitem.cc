@@ -334,6 +334,7 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
     tex = GstQSGMaterial::new_for_format_and_target (GST_VIDEO_INFO_FORMAT (&this->priv->v_info), this->priv->tex_target);
     texNode->setMaterial(tex);
     texNode->setFlag(QSGGeometryNode::Flag::OwnsMaterial);
+    this->priv->caps_change = TRUE;
   }
 
   if ((old_buffer = tex->getBuffer(&was_bound))) {
