@@ -1,0 +1,15 @@
+set-globals, media_dir="$(test_dir)/../../../media/"
+meta,
+    seek=false,
+    handles-states=false,
+    args={
+        "appsrc name=appsrc0 ! qtdemux name=d d.video_0 ! fakesink async=false d.subtitle_0 ! fakesink async=false name=cc",
+    },
+    configs={
+        [validateflow, pad=cc:sink, record-buffers=true],
+    }
+
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/cea608-20260909.mp4/init.mp4"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/cea608-20260909.mp4/media1.mp4"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/cea608-20260909.mp4/media2.mp4"
+stop
