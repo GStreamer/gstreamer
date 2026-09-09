@@ -793,6 +793,7 @@ plugin_init (GstPlugin * plugin)
         "check CUDA toolkit package installation");
   }
 
+#ifdef HAVE_NVCODEC_DGPU
   /* Get or build complete cache (loads from serialized data or queries hardware) */
   GArray *cache = gst_nvcodec_get_or_build_cache (plugin, api_major_ver,
       api_minor_ver, dev_count, nvenc_available, nvdec_available);
@@ -803,7 +804,6 @@ plugin_init (GstPlugin * plugin)
       DeviceCachedCodecs *device =
           &g_array_index (cache, DeviceCachedCodecs, i);
 
-#ifdef HAVE_NVCODEC_DGPU
       /* Register decoders from cache */
       if (nvdec_available && device->decoders) {
         for (GList * l = device->decoders; l; l = l->next) {
@@ -920,11 +920,9 @@ plugin_init (GstPlugin * plugin)
       if (gst_nv_jpeg_enc_register (plugin, i, GST_RANK_NONE, have_nvrtc,
               FALSE))
         have_nvjpegenc = TRUE;
-#endif // HAVE_NVCODEC_DGPU
     }
   }
 
-#ifdef HAVE_NVCODEC_DGPU
   if (h264_enc_cdata) {
     gst_nv_h264_encoder_register_auto_select (plugin, h264_enc_cdata,
         GST_RANK_NONE);
