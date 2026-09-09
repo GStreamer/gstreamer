@@ -4325,7 +4325,7 @@ GST_START_TEST (test_video_meta_serialize)
   gst_buffer_unref (buf);
 
   /* Create a new buffer */
-  buf = gst_buffer_new ();
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
   guint32 consumed;
   meta = (GstVideoMeta *) gst_meta_deserialize (buf, data->data, data->len,
       &consumed);
@@ -4354,6 +4354,200 @@ GST_START_TEST (test_video_meta_serialize)
   }
 
   gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+/* Build a full GstVideoMeta serialization and try to deserialize it. */
+static GstVideoMeta *
+video_meta_deser_payload (GstBuffer * buffer, gint32 flags, gint32 format,
+    guint width, guint height, guint n_planes, const guint64 * offsets,
+    const gint32 * strides, gsize truncate)
+{
+  const gchar *name = "GstVideoMeta";
+  const gsize name_len = strlen (name);
+  const gsize payload_len = 20 + n_planes * 12 + 16 + n_planes * 4;
+  const gsize header_size = 8 + name_len + 2;
+  guint8 *ser_data = g_new (guint8, header_size + payload_len);
+  guint8 *payload = ser_data + header_size;
+  const gsize total_size = header_size + payload_len - truncate;
+  guint32 consumed = 0;
+  GstVideoMeta *meta;
+
+  GST_WRITE_UINT32_LE (ser_data + 0, total_size);
+  GST_WRITE_UINT32_LE (ser_data + 4, name_len);
+  memcpy (ser_data + 8, name, name_len + 1);
+  ser_data[8 + name_len + 1] = 0;       /* version */
+
+  GST_WRITE_UINT32_LE (payload, flags);
+  GST_WRITE_UINT32_LE (payload + 4, format);
+  GST_WRITE_UINT32_LE (payload + 8, width);
+  GST_WRITE_UINT32_LE (payload + 12, height);
+  GST_WRITE_UINT32_LE (payload + 16, n_planes);
+  for (gsize i = 0; i < n_planes; i++)
+    GST_WRITE_UINT64_LE (payload + 20 + i * 8, offsets[i]);
+  for (gsize i = 0; i < n_planes; i++)
+    GST_WRITE_UINT32_LE (payload + 20 + n_planes * 8 + i * 4, strides[i]);
+  /* padding */
+  for (gsize i = 0; i < 4; i++)
+    GST_WRITE_UINT32_LE (payload + 20 + n_planes * 12 + i * 4, 0);
+  /* stride_align */
+  for (gsize i = 0; i < n_planes; i++)
+    GST_WRITE_UINT32_LE (payload + 36 + n_planes * 12 + i * 4, 0);
+
+  meta = (GstVideoMeta *) gst_meta_deserialize (buffer, ser_data, total_size,
+      &consumed);
+  if (meta)
+    fail_unless_equals_uint64 ((guint64) consumed, (guint64) total_size);
+  g_free (ser_data);
+  return meta;
+}
+
+GST_START_TEST (test_video_meta_deserialize)
+{
+  GstBuffer *buffer;
+  GstVideoMeta *meta;
+
+  gst_video_meta_get_info ();
+
+  /* I420 64x64: Y 4096 @ 0, U 1024 @ 4096, V 1024 @ 5120 => 6144 bytes */
+  const guint64 off_i420[3] = { 0, 4096, 5120 };
+  const gint32 str_i420[3] = { 64, 32, 32 };
+
+  /* a valid I420 payload is accepted */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+      3, off_i420, str_i420, 0);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->format, GST_VIDEO_FORMAT_I420);
+  ck_assert_uint_eq (meta->width, 64);
+  ck_assert_uint_eq (meta->height, 64);
+  ck_assert_uint_eq (meta->n_planes, 3);
+  ck_assert_uint_eq (meta->offset[0], 0);
+  ck_assert_uint_eq (meta->offset[1], 4096);
+  ck_assert_uint_eq (meta->offset[2], 5120);
+  fail_unless_equals_int (meta->stride[0], 64);
+  fail_unless_equals_int (meta->stride[1], 32);
+  fail_unless_equals_int (meta->stride[2], 32);
+  gst_buffer_unref (buffer);
+
+  /* a payload missing one stride alignment is rejected */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+      3, off_i420, str_i420, 4);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* zero planes is rejected */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+      0, NULL, NULL, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* more than GST_VIDEO_MAX_PLANES planes is rejected */
+  {
+    const guint64 off5[5] = { 0, 4096, 5120, 0, 0 };
+    const gint32 str5[5] = { 64, 32, 32, 0, 0 };
+    buffer = gst_buffer_new_and_alloc (6144);
+    meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+        5, off5, str5, 0);
+    fail_unless (meta == NULL);
+    gst_buffer_unref (buffer);
+  }
+
+  /* a negative format is rejected */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, -1, 64, 64, 3, off_i420,
+      str_i420, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a huge format is rejected */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, G_MAXINT, 64, 64, 3, off_i420,
+      str_i420, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a zero width is rejected */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 0, 64,
+      3, off_i420, str_i420, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a plane count that does not match the format is rejected */
+  buffer = gst_buffer_new_and_alloc (6144);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+      1, off_i420, str_i420, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a plane offset beyond the buffer is rejected */
+  {
+    const guint64 off_bad[3] = { 4000, 4096, 5120 };
+    buffer = gst_buffer_new_and_alloc (6144);
+    meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+        3, off_bad, str_i420, 0);
+    fail_unless (meta == NULL);
+    gst_buffer_unref (buffer);
+  }
+
+  /* a negative stride is rejected */
+  {
+    const gint32 str_neg[3] = { -1, 32, 32 };
+    buffer = gst_buffer_new_and_alloc (6144);
+    meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+        3, off_i420, str_neg, 0);
+    fail_unless (meta == NULL);
+    gst_buffer_unref (buffer);
+  }
+
+  /* NV12 64x64 with a padded stride of 80: Y 5120 @ 0, UV 2560 @ 5120
+   * => 7680 bytes */
+  const guint64 off_nv12[2] = { 0, 5120 };
+  const gint32 str_nv12[2] = { 80, 80 };
+
+  /* a valid padded NV12 payload is accepted */
+  buffer = gst_buffer_new_and_alloc (7680);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_NV12, 64, 64,
+      2, off_nv12, str_nv12, 0);
+  fail_unless (meta);
+  fail_unless_equals_int (meta->format, GST_VIDEO_FORMAT_NV12);
+  ck_assert_uint_eq (meta->n_planes, 2);
+  ck_assert_uint_eq (meta->offset[1], 5120);
+  fail_unless_equals_int (meta->stride[0], 80);
+  fail_unless_equals_int (meta->stride[1], 80);
+  gst_buffer_unref (buffer);
+
+  /* a buffer one byte too small for the planes is rejected */
+  buffer = gst_buffer_new_and_alloc (7679);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_NV12, 64, 64,
+      2, off_nv12, str_nv12, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* I420 64x64 with the ONEFIELD flag set: the buffer only stores a single
+   * field of 32 lines: Y 2048 @ 0, U 512 @ 2048, V 512 @ 2560 => 3072 bytes */
+  const guint64 off_1field[3] = { 0, 2048, 2560 };
+
+  buffer = gst_buffer_new_and_alloc (3072);
+  meta = video_meta_deser_payload (buffer, GST_VIDEO_FRAME_FLAG_ONEFIELD,
+      GST_VIDEO_FORMAT_I420, 64, 64, 3, off_1field, str_i420, 0);
+  fail_unless (meta);
+  fail_unless (meta->flags & GST_VIDEO_FRAME_FLAG_ONEFIELD);
+  ck_assert_uint_eq (meta->offset[1], 2048);
+  ck_assert_uint_eq (meta->offset[2], 2560);
+  gst_buffer_unref (buffer);
+
+  /* the same planes without the ONEFIELD flag are rejected, because the
+   * full frame does not fit into the buffer */
+  buffer = gst_buffer_new_and_alloc (3072);
+  meta = video_meta_deser_payload (buffer, 0, GST_VIDEO_FORMAT_I420, 64, 64,
+      3, off_1field, str_i420, 0);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
@@ -5012,6 +5206,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_color_primaries_equivalent);
   tcase_add_test (tc_chain, test_info_dma_drm);
   tcase_add_test (tc_chain, test_video_meta_serialize);
+  tcase_add_test (tc_chain, test_video_meta_deserialize);
   tcase_add_test (tc_chain, test_video_convert_with_config_update);
   tcase_add_test (tc_chain, test_dma_drm_big_engian);
   tcase_add_test (tc_chain, test_video_meta_transform_matrix_identity);

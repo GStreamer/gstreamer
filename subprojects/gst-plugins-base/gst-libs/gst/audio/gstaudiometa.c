@@ -410,8 +410,19 @@ gst_audio_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
   if (!success)
     return NULL;
 
+  if (format < 0 || format >= GST_AUDIO_FORMAT_LAST ||
+      (layout != GST_AUDIO_LAYOUT_INTERLEAVED
+          && layout != GST_AUDIO_LAYOUT_NON_INTERLEAVED) ||
+      rate <= 0 || channels < 1)
+    return NULL;
+
   /* Position is limited to 64 */
   gint n_position = channels > 64 ? 0 : channels;
+
+  /* make sure the payload holds all channel positions and offsets */
+  if (size < 20 + (guint64) n_position * 4 + 8 + (guint64) channels * 8)
+    return NULL;
+
   gint32 *position = g_new (gint32, n_position);
   guint64 *offsets64 = g_new (guint64, channels);
   guint64 samples = 0;
@@ -449,7 +460,59 @@ gst_audio_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
   audio_info.flags = flags;
   audio_info.layout = layout;
 
-  ameta = gst_buffer_add_audio_meta (buffer, &audio_info, samples, offsets);
+  if (audio_info.finfo->width == 0) {
+    g_free (offsets);
+    g_free (position);
+    return NULL;
+  }
+
+  {
+    /* make sure the audio data is inside the buffer */
+    gsize buffer_size = gst_buffer_get_size (buffer);
+    guint64 size_per_channel;
+
+    if (samples > G_MAXUINT64 / audio_info.finfo->width) {
+      g_free (offsets);
+      g_free (position);
+      return NULL;
+    }
+
+    size_per_channel = samples * audio_info.finfo->width / 8;
+
+    if (audio_info.layout == GST_AUDIO_LAYOUT_INTERLEAVED) {
+      if (size_per_channel > G_MAXUINT64 / (guint64) channels ||
+          size_per_channel * (guint64) channels > (guint64) buffer_size) {
+        g_free (offsets);
+        g_free (position);
+        return NULL;
+      }
+    } else {
+      gsize max_offset = 0;
+      for (int i = 0; i < channels; i++)
+        max_offset = MAX (max_offset, offsets[i]);
+      if (max_offset > buffer_size ||
+          size_per_channel > (guint64) buffer_size - max_offset) {
+        g_free (offsets);
+        g_free (position);
+        return NULL;
+      }
+
+      /* make sure the channel planes do not overlap in memory */
+      for (int i = 0; i < channels; i++) {
+        for (int j = i + 1; j < channels; j++) {
+          if (!((guint64) offsets[i] + size_per_channel <= offsets[j] ||
+                  (guint64) offsets[j] + size_per_channel <= offsets[i])) {
+            g_free (offsets);
+            g_free (position);
+            return NULL;
+          }
+        }
+      }
+    }
+  }
+
+  ameta = gst_buffer_add_audio_meta (buffer, &audio_info, samples,
+      layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED ? offsets : NULL);
 
   g_free (offsets);
   g_free (position);
