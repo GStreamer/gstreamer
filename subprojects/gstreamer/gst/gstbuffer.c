@@ -2983,12 +2983,28 @@ timestamp_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
   if (size > 16 + caps_str_len + 1) {
     const gchar *info_str = (const gchar *) data + 16 + caps_str_len + 1;
     rtinfo = gst_structure_from_string (info_str, NULL);
+    if (!rtinfo) {
+      gst_clear_caps (&reference);
+      return NULL;
+    }
   }
 
-  GstReferenceTimestampMeta *meta =
-      gst_buffer_add_reference_timestamp_meta (buffer,
-      reference, timestamp, duration);
-  gst_caps_unref (reference);
+  GstReferenceTimestampMeta *meta;
+
+  /* The reference and the timestamp must be valid, otherwise
+   * gst_buffer_add_reference_timestamp_meta() would fail */
+  if (reference == NULL || timestamp == GST_CLOCK_TIME_NONE)
+    meta = NULL;
+  else
+    meta = gst_buffer_add_reference_timestamp_meta (buffer, reference,
+        timestamp, duration);
+
+  gst_clear_caps (&reference);
+
+  if (meta == NULL) {
+    gst_clear_structure (&rtinfo);
+    return NULL;
+  }
   meta->info = rtinfo;
 
   return (GstMeta *) meta;
