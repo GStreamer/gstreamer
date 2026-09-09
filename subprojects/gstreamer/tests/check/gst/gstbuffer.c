@@ -1040,6 +1040,99 @@ GST_START_TEST (test_reference_timestamp_meta_with_info_serialization)
 
 GST_END_TEST;
 
+/* Build a full GstReferenceTimestampMeta serialization and try to deserialize it. */
+static GstReferenceTimestampMeta *
+ts_meta_deser_payload (GstBuffer * buffer, guint64 timestamp, guint64 duration,
+    const gchar * caps_str, const gchar * info_str)
+{
+  const gchar *name = "GstReferenceTimestampMeta";
+  const gsize name_len = strlen (name);
+  const gsize caps_len = strlen (caps_str);
+  const gsize info_size = info_str ? strlen (info_str) + 1 : 0;
+  const gsize header_size = 8 + name_len + 2;
+  const gsize total_size = header_size + 16 + caps_len + 1 + info_size;
+  guint8 *ser_data = g_new (guint8, total_size);
+  guint8 *payload = ser_data + header_size;
+  guint32 consumed = 0;
+  GstReferenceTimestampMeta *meta;
+
+  GST_WRITE_UINT32_LE (ser_data + 0, total_size);
+  GST_WRITE_UINT32_LE (ser_data + 4, name_len);
+  memcpy (ser_data + 8, name, name_len + 1);
+  ser_data[8 + name_len + 1] = 0;       /* version */
+  GST_WRITE_UINT64_LE (payload, timestamp);
+  GST_WRITE_UINT64_LE (payload + 8, duration);
+  memcpy (payload + 16, caps_str, caps_len + 1);
+  if (info_str)
+    memcpy (payload + 17 + caps_len, info_str, info_size);
+
+  meta = (GstReferenceTimestampMeta *)
+      gst_meta_deserialize (buffer, ser_data, total_size, &consumed);
+  if (meta)
+    fail_unless_equals_uint64 ((guint64) consumed, (guint64) total_size);
+  g_free (ser_data);
+  return meta;
+}
+
+GST_START_TEST (test_reference_timestamp_meta_deserialize)
+{
+  GstCaps *reference =
+      gst_caps_new_simple ("timestamp/x-unix", NULL, NULL, NULL);
+  GstStructure *info =
+      gst_structure_new ("info", "field", G_TYPE_INT, 123, NULL);
+  GstBuffer *buffer;
+  GstReferenceTimestampMeta *meta;
+
+  gst_reference_timestamp_meta_get_info ();
+
+  /* a valid payload without an info structure is accepted */
+  buffer = gst_buffer_new ();
+  meta = ts_meta_deser_payload (buffer, 1, 2, "timestamp/x-unix", NULL);
+  fail_unless (meta);
+  fail_unless_equals_uint64 (meta->timestamp, 1);
+  fail_unless_equals_uint64 (meta->duration, 2);
+  fail_unless (gst_caps_is_equal (meta->reference, reference));
+  fail_unless (meta->info == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a valid payload with an info structure is accepted */
+  buffer = gst_buffer_new ();
+  meta = ts_meta_deser_payload (buffer, 1, 2, "timestamp/x-unix",
+      "info,field=(int)123");
+  fail_unless (meta);
+  fail_unless_equals_uint64 (meta->timestamp, 1);
+  fail_unless_equals_uint64 (meta->duration, 2);
+  fail_unless (gst_caps_is_equal (meta->reference, reference));
+  fail_unless (GST_IS_STRUCTURE (meta->info));
+  fail_unless (gst_structure_is_equal (meta->info, info));
+  gst_buffer_unref (buffer);
+
+  /* an invalid timestamp (GST_CLOCK_TIME_NONE) is rejected */
+  buffer = gst_buffer_new ();
+  meta = ts_meta_deser_payload (buffer, GST_CLOCK_TIME_NONE, 2,
+      "timestamp/x-unix", NULL);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* an invalid caps string is rejected */
+  buffer = gst_buffer_new ();
+  meta = ts_meta_deser_payload (buffer, 1, 2, "not a valid caps", NULL);
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  /* a malformed info structure string is rejected */
+  buffer = gst_buffer_new ();
+  meta = ts_meta_deser_payload (buffer, 1, 2, "timestamp/x-unix",
+      "not a valid structure");
+  fail_unless (meta == NULL);
+  gst_buffer_unref (buffer);
+
+  gst_structure_free (info);
+  gst_caps_unref (reference);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_set_and_cmp)
 {
   static const gchar set_and_cmp_sha1[] =
@@ -1178,6 +1271,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_reference_timestamp_meta_serialization);
   tcase_add_test (tc_chain,
       test_reference_timestamp_meta_with_info_serialization);
+  tcase_add_test (tc_chain, test_reference_timestamp_meta_deserialize);
   tcase_add_test (tc_chain, test_set_and_cmp);
   tcase_add_test (tc_chain, test_append_memory_write_locked);
 
