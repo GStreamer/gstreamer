@@ -1108,7 +1108,12 @@ GST_START_TEST (basesrc_negotiate)
 
 GST_END_TEST;
 
-typedef GstBaseSrc TestRefSrc;
+typedef struct
+{
+  GstBaseSrc parent;
+  gint create_refcount;
+  gboolean ready_to_create;
+} TestRefSrc;
 typedef GstBaseSrcClass TestRefSrcClass;
 
 static GstStaticPadTemplate ref_src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -1123,13 +1128,24 @@ G_DEFINE_TYPE (TestRefSrc, test_ref_src, GST_TYPE_BASE_SRC);
 static void
 test_ref_src_init (TestRefSrc * src)
 {
+  g_atomic_int_set (&src->create_refcount, 0);
+  src->ready_to_create = FALSE;
 }
 
 static GstFlowReturn
 test_ref_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** p_buf)
 {
-  ASSERT_OBJECT_REFCOUNT (src, "basesrc in create", 2);
+  TestRefSrc *ref_src = (TestRefSrc *) src;
+
+  /* Wait for the state change to release its temporary source references. */
+  g_mutex_lock (&check_mutex);
+  while (!ref_src->ready_to_create)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  /* Check the captured value on the test thread after stopping the task. */
+  g_atomic_int_set (&ref_src->create_refcount, GST_OBJECT_REFCOUNT_VALUE (src));
 
   return GST_FLOW_EOS;
 }
@@ -1175,6 +1191,7 @@ test_ref_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 GST_START_TEST (basesrc_create_refcount)
 {
   GstElement *src;
+  gint create_refcount;
 
   src = g_object_new (test_ref_src_get_type (), NULL);
 
@@ -1189,17 +1206,24 @@ GST_START_TEST (basesrc_create_refcount)
   gst_element_set_state (src, GST_STATE_PLAYING);
 
   g_mutex_lock (&check_mutex);
+  ((TestRefSrc *) src)->ready_to_create = TRUE;
+  g_cond_broadcast (&check_cond);
   while (!done)
     g_cond_wait (&check_cond, &check_mutex);
   g_mutex_unlock (&check_mutex);
 
   gst_element_set_state (src, GST_STATE_NULL);
 
+  create_refcount = g_atomic_int_get (&((TestRefSrc *) src)->create_refcount);
+
   ASSERT_OBJECT_REFCOUNT (src, "basesrc after task ended", 1);
 
   gst_check_teardown_sink_pad (src);
 
   gst_object_unref (src);
+
+  fail_unless (create_refcount == 2,
+      "basesrc in create refcount is %d instead of 2", create_refcount);
 }
 
 GST_END_TEST;
