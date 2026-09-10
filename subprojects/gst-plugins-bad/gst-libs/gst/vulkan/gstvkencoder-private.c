@@ -222,6 +222,9 @@ gst_vulkan_encoder_picture_init (GstVulkanEncoderPicture * pic,
   size_aligned = GST_ROUND_UP_N (size,
       priv->caps.caps.minBitstreamBufferSizeAlignment);
 
+  /* No slot attributed yet; -1 avoids releasing a live slot in clear(). */
+  pic->dpb_slot.slotIndex = -1;
+
   if (priv->layered_dpb) {
     g_assert (priv->layered_buffer);
     pic->dpb_buffer = gst_buffer_ref (priv->layered_buffer);
@@ -275,7 +278,7 @@ gst_vulkan_encoder_picture_clear (GstVulkanEncoderPicture * pic,
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
-  if (pic->dpb_slot.slotIndex > 0) {
+  if (pic->dpb_slot.slotIndex >= 0) {
     priv->slots[pic->dpb_slot.slotIndex] = NULL;
     pic->dpb_slot.slotIndex = -1;
   }
