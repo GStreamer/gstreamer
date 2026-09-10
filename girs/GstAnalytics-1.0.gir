@@ -392,6 +392,24 @@ Those fields are applied to input tensors for normalization:
    `-1.0,1.0` - Normalized to [-1,1] range (scale&#8776;0.00784, offset=-1.0)
    `16.0,235.0` - TV/limited range (scale&#8776;0.859, offset=16.0)
 
+Since format version 1.1, the following field is required on every input
+tensor section:
+ `caps`: A #GstCaps string describing the expected input media, e.g.
+  `video/x-raw, format=RGB`. Uses the same vocabulary and syntax as
+  GstCaps, this library does not validate the media-type or format
+  against a fixed enum, but the caps string must resolve to exactly one
+  structure (the media-type) and that structure must carry a `format`
+  field.
+
+Files declaring `version=1.0` predate `caps` and are expected to omit it
+entirely, caller (inference element) must fall back to their own heuristics
+in that case. Files declaring `version=1.1` (or any 1.x with minor &gt;= 1) must
+provide `caps` on every input tensor section. Regardless of version,
+gst_analytics_modelinfo_load() will fail if `caps` is present but fails to
+parse or lacks `format`, so a `caps` field is either fully absent (version
+1.0 only) or complete, a caller never has to handle a partially-declared
+`caps`.
+
 Other fields are ignored for now.
 
 The API is meant to be used by inference elements</doc>
@@ -602,12 +620,12 @@ See #gst_analytics_relation_meta_add_keypoint_mtd for more details</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="MODELINFO_VERSION_MINOR" value="0" c:type="GST_MODELINFO_VERSION_MINOR" version="1.28">
+    <constant name="MODELINFO_VERSION_MINOR" value="1" c:type="GST_MODELINFO_VERSION_MINOR" version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The current minor version of the modelinfo format</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="MODELINFO_VERSION_STR" value="1.0" c:type="GST_MODELINFO_VERSION_STR" version="1.28">
+    <constant name="MODELINFO_VERSION_STR" value="1.1" c:type="GST_MODELINFO_VERSION_STR" version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h">The current version string for the modelinfo format.
 This MUST be updated whenever the format changes.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
@@ -745,6 +763,27 @@ The tensor ID is ideally registered in the [Tensor ID Registry](https://github.c
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor ID string, or %NULL if not found.
    The caller must free this with g_free() when done.</doc>
           <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Instance of #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The name of the tensor</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_input_caps" c:identifier="gst_analytics_modelinfo_get_input_caps" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Parse the tensor's declared `caps` field into a #GstCaps. This field is
+only present on input tensors in modelinfo files declaring format
+version 1.1 or later, files at version 1.0 predate it.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A new #GstCaps, or %NULL if `caps`
+   is not present, or fails to parse, for this tensor.</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
         </return-value>
         <parameters>
           <instance-parameter name="modelinfo" transfer-ownership="none">
@@ -952,6 +991,54 @@ when no longer needed.</doc>
           <parameter name="model_filename" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the model file (e.g., "model.onnx", "model.tflite")</doc>
             <type name="filename" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="validate_caps_datatype" c:identifier="gst_analytics_modelinfo_validate_caps_datatype" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Validates that any `format` declared in @caps_structure agrees with the
+tensor's @data_type, both in numeric family (float vs integer) and in
+per-component bit depth.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%TRUE if @caps_structure declares a video format whose type
+and bit depth agree with @data_type, %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="caps_structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's declared modelinfo
+   input tensor caps structure.</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Input tensor's data type, as declared by the modelinfo `type`.</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="validate_video_caps_resolution" c:identifier="gst_analytics_modelinfo_validate_video_caps_resolution" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Validates any `width`/`height` declared in @caps_structure against
+@dims_width/@dims_height.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%FALSE if the declared caps is not video or disagree with dims,
+or over-constrain a dynamic axis, %TRUE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="caps_structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's declared modelinfo caps
+   structure, as returned by gst_caps_get_structure() on the result of
+   gst_analytics_modelinfo_get_input_caps().</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+          <parameter name="dims_width" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's own width, as derived from its dims.</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="dims_height" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's own height, as derived from its dims.</doc>
+            <type name="gint" c:type="gint"/>
           </parameter>
         </parameters>
       </function>
@@ -2759,12 +2846,60 @@ be the two element array `[32, 4]`.</doc>
           </parameter>
         </parameters>
       </method>
+      <function name="data_type_from_name" c:identifier="gst_tensor_data_type_from_name" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Parse @name, into a #GstTensorDataType.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">%TRUE if @name matched a known data type and @data_type was set,
+   %FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a data type name.</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="data_type" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">set to the matching #GstTensorDataType when found</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="data_type_get_bit_depth" c:identifier="gst_tensor_data_type_get_bit_depth" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get the number of bits used to store a single element of @data_type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">the bit depth of @data_type, or 0 for dynamic if @data_type has no
+fixed bit depth.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensorDataType</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="data_type_get_name" c:identifier="gst_tensor_data_type_get_name" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get a string version of the data type</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a constant string with the name of the data type</doc>
           <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensorDataType</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="data_type_is_float" c:identifier="gst_tensor_data_type_is_float" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Check whether @data_type is a floating-point type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">%TRUE if @data_type is a floating-point type, %FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <parameter name="data_type" transfer-ownership="none">
@@ -3483,6 +3618,54 @@ when no longer needed.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="modelinfo_validate_caps_datatype" c:identifier="gst_analytics_modelinfo_validate_caps_datatype" moved-to="ModelInfo.validate_caps_datatype" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Validates that any `format` declared in @caps_structure agrees with the
+tensor's @data_type, both in numeric family (float vs integer) and in
+per-component bit depth.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%TRUE if @caps_structure declares a video format whose type
+and bit depth agree with @data_type, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="caps_structure" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's declared modelinfo
+   input tensor caps structure.</doc>
+          <type name="Gst.Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="data_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Input tensor's data type, as declared by the modelinfo `type`.</doc>
+          <type name="TensorDataType" c:type="GstTensorDataType"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="modelinfo_validate_video_caps_resolution" c:identifier="gst_analytics_modelinfo_validate_video_caps_resolution" moved-to="ModelInfo.validate_video_caps_resolution" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Validates any `width`/`height` declared in @caps_structure against
+@dims_width/@dims_height.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%FALSE if the declared caps is not video or disagree with dims,
+or over-constrain a dynamic axis, %TRUE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="caps_structure" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's declared modelinfo caps
+   structure, as returned by gst_caps_get_structure() on the result of
+   gst_analytics_modelinfo_get_input_caps().</doc>
+          <type name="Gst.Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="dims_width" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's own width, as derived from its dims.</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="dims_height" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor's own height, as derived from its dims.</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="mtd_type_get_name" c:identifier="gst_analytics_mtd_type_get_name" moved-to="Mtd.type_get_name" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Gets the string version of the name of this type of analytics data</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
@@ -3543,12 +3726,60 @@ metadata type.</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
+    <function name="tensor_data_type_from_name" c:identifier="gst_tensor_data_type_from_name" moved-to="Tensor.data_type_from_name" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Parse @name, into a #GstTensorDataType.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">%TRUE if @name matched a known data type and @data_type was set,
+   %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="name" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a data type name.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="data_type" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">set to the matching #GstTensorDataType when found</doc>
+          <type name="TensorDataType" c:type="GstTensorDataType*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="tensor_data_type_get_bit_depth" c:identifier="gst_tensor_data_type_get_bit_depth" moved-to="Tensor.data_type_get_bit_depth" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get the number of bits used to store a single element of @data_type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">the bit depth of @data_type, or 0 for dynamic if @data_type has no
+fixed bit depth.</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="data_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensorDataType</doc>
+          <type name="TensorDataType" c:type="GstTensorDataType"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="tensor_data_type_get_name" c:identifier="gst_tensor_data_type_get_name" moved-to="Tensor.data_type_get_name" version="1.28">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get a string version of the data type</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a constant string with the name of the data type</doc>
         <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="data_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensorDataType</doc>
+          <type name="TensorDataType" c:type="GstTensorDataType"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="tensor_data_type_is_float" c:identifier="gst_tensor_data_type_is_float" moved-to="Tensor.data_type_is_float" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Check whether @data_type is a floating-point type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">%TRUE if @data_type is a floating-point type, %FALSE otherwise</doc>
+        <type name="gboolean" c:type="gboolean"/>
       </return-value>
       <parameters>
         <parameter name="data_type" transfer-ownership="none">
