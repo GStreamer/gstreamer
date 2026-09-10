@@ -301,6 +301,138 @@ gst_tensor_data_type_get_name (GstTensorDataType data_type)
 }
 
 /**
+ * gst_tensor_data_type_from_name:
+ * @name: a data type name.
+ * @data_type: (out): set to the matching #GstTensorDataType when found
+ *
+ * Parse @name, into a #GstTensorDataType.
+ *
+ * Returns: %TRUE if @name matched a known data type and @data_type was set,
+ *    %FALSE otherwise
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_tensor_data_type_from_name (const gchar * name,
+    GstTensorDataType * data_type)
+{
+  static const GstTensorDataType types[] = {
+    GST_TENSOR_DATA_TYPE_INT4,
+    GST_TENSOR_DATA_TYPE_INT8,
+    GST_TENSOR_DATA_TYPE_INT16,
+    GST_TENSOR_DATA_TYPE_INT32,
+    GST_TENSOR_DATA_TYPE_INT64,
+    GST_TENSOR_DATA_TYPE_UINT4,
+    GST_TENSOR_DATA_TYPE_UINT8,
+    GST_TENSOR_DATA_TYPE_UINT16,
+    GST_TENSOR_DATA_TYPE_UINT32,
+    GST_TENSOR_DATA_TYPE_UINT64,
+    GST_TENSOR_DATA_TYPE_FLOAT16,
+    GST_TENSOR_DATA_TYPE_FLOAT32,
+    GST_TENSOR_DATA_TYPE_FLOAT64,
+    GST_TENSOR_DATA_TYPE_BFLOAT16,
+  };
+  gsize i;
+
+  g_return_val_if_fail (name != NULL, FALSE);
+  g_return_val_if_fail (data_type != NULL, FALSE);
+
+  for (i = 0; i < G_N_ELEMENTS (types); i++) {
+    if (!g_strcmp0 (name, gst_tensor_data_type_get_name (types[i]))) {
+      *data_type = types[i];
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_tensor_data_type_is_float:
+ * @data_type: a #GstTensorDataType
+ *
+ * Check whether @data_type is a floating-point type.
+ *
+ * Returns: %TRUE if @data_type is a floating-point type, %FALSE otherwise
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_tensor_data_type_is_float (GstTensorDataType data_type)
+{
+  switch (data_type) {
+    case GST_TENSOR_DATA_TYPE_FLOAT16:
+    case GST_TENSOR_DATA_TYPE_FLOAT32:
+    case GST_TENSOR_DATA_TYPE_FLOAT64:
+    case GST_TENSOR_DATA_TYPE_BFLOAT16:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E4M3FN:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E4M3FNUZ:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E5M2:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E5M2FNUZ:
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
+/**
+ * gst_tensor_data_type_get_bit_depth:
+ * @data_type: a #GstTensorDataType
+ *
+ * Get the number of bits used to store a single element of @data_type.
+ *
+ * Returns: the bit depth of @data_type, or 0 for dynamic if @data_type has no
+ * fixed bit depth.
+ *
+ * Since: 1.30
+ */
+guint
+gst_tensor_data_type_get_bit_depth (GstTensorDataType data_type)
+{
+  switch (data_type) {
+    case GST_TENSOR_DATA_TYPE_INT4:
+    case GST_TENSOR_DATA_TYPE_UINT4:
+      return 4;
+
+    case GST_TENSOR_DATA_TYPE_INT8:
+    case GST_TENSOR_DATA_TYPE_UINT8:
+    case GST_TENSOR_DATA_TYPE_BOOL:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E4M3FN:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E4M3FNUZ:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E5M2:
+    case GST_TENSOR_DATA_TYPE_FLOAT8E5M2FNUZ:
+      return 8;
+
+    case GST_TENSOR_DATA_TYPE_INT16:
+    case GST_TENSOR_DATA_TYPE_UINT16:
+    case GST_TENSOR_DATA_TYPE_FLOAT16:
+    case GST_TENSOR_DATA_TYPE_BFLOAT16:
+      return 16;
+
+    case GST_TENSOR_DATA_TYPE_INT32:
+    case GST_TENSOR_DATA_TYPE_UINT32:
+    case GST_TENSOR_DATA_TYPE_FLOAT32:
+      return 32;
+
+    case GST_TENSOR_DATA_TYPE_INT64:
+    case GST_TENSOR_DATA_TYPE_UINT64:
+    case GST_TENSOR_DATA_TYPE_FLOAT64:
+    case GST_TENSOR_DATA_TYPE_COMPLEX64:
+      return 64;
+
+    case GST_TENSOR_DATA_TYPE_COMPLEX128:
+      return 128;
+
+    case GST_TENSOR_DATA_TYPE_STRING:
+      return 0;
+
+    default:
+      g_assert_not_reached ();
+      return 0;
+  }
+}
+
+/**
  * gst_tensor_check_type:
  * @tensor: A #GstTensor
  * @data_type: The data type of the tensor

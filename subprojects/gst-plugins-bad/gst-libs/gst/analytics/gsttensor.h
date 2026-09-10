@@ -226,6 +226,16 @@ GST_ANALYTICS_META_API
 const gchar *gst_tensor_data_type_get_name (GstTensorDataType data_type);
 
 GST_ANALYTICS_META_API
+gboolean gst_tensor_data_type_from_name (const gchar * name,
+    GstTensorDataType * data_type);
+
+GST_ANALYTICS_META_API
+gboolean gst_tensor_data_type_is_float (GstTensorDataType data_type);
+
+GST_ANALYTICS_META_API
+guint gst_tensor_data_type_get_bit_depth (GstTensorDataType data_type);
+
+GST_ANALYTICS_META_API
 gboolean gst_tensor_check_type(const GstTensor * tensor,
     GstTensorDataType data_type, GstTensorDimOrder order, gsize num_dims,
     const gsize *dims);
