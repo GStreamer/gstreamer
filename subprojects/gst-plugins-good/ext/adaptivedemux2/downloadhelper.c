@@ -1077,9 +1077,13 @@ downloadhelper_stop (DownloadHelper * dh)
   }
   g_mutex_unlock (&dh->transfer_lock);
 
-  /* Drain any pending cookie additions while the session and jar are still alive */
+  /* Drain any pending cookie additions while the session and jar are still
+   * alive. The transfer context must be the thread default while doing this,
+   * because libsoup dispatches the remaining transfer I/O on it. */
+  g_main_context_push_thread_default (dh->transfer_context);
   while (g_main_context_pending (dh->transfer_context))
     g_main_context_iteration (dh->transfer_context, FALSE);
+  g_main_context_pop_thread_default (dh->transfer_context);
 
   /* The transfer thread has exited at this point - any remaining transfers are unfinished
    * and need cleaning up */
