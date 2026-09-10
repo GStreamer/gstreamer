@@ -445,7 +445,9 @@ build fedora gcc:
           -Dgst-editing-services:python=disabled
           -Dintrospection=disabled
           -Ddoc=disabled
-          -Dqt5=disabled -Dqt6=enabled
+          -Dqt5=disabled
+          -Dqt6=enabled
+          -Dgst-plugins-bad:onnx=enabled
 
 build fedora clang:
   extends: '.build fedora x86_64'
@@ -467,7 +469,9 @@ build fedora clang:
           -Dintrospection=disabled
           -Dpython=disabled
           -Ddoc=disabled
-          -Dqt5=disabled -Dqt6=enabled
+          -Dqt5=disabled
+          -Dqt6=enabled
+          -Dgst-plugins-bad:onnx=enabled
 
 build debian x86_64:
   extends:
