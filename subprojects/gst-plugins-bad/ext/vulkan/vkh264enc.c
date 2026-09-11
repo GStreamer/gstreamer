@@ -849,6 +849,12 @@ gst_vulkan_h264_encoder_new_sequence (GstH264Encoder * encoder,
     return GST_FLOW_ERROR;
   }
 
+  if (dpb_size > vk_caps.caps.maxDpbSlots) {
+    GST_WARNING_OBJECT (self, "DPB size (%u) is bigger than available slots "
+        "(%u)", dpb_size, vk_caps.caps.maxDpbSlots);
+    return GST_FLOW_ERROR;
+  }
+
   if (self->rc.bitrate == 0) {
     const GstH264LevelDescriptor *desc;
 
