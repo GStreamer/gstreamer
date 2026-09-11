@@ -118,6 +118,15 @@ GST_BASE_API
 GstClockTime            gst_adapter_prev_pts_at_offset  (GstAdapter * adapter, gsize offset, guint64 * distance);
 
 GST_BASE_API
+guint64                 gst_adapter_buffer_seq_at_offset (GstAdapter * adapter, gsize offset);
+
+GST_BASE_API
+GstClockTime            gst_adapter_pts_at_offset       (GstAdapter * adapter, gsize offset, guint64 * distance);
+
+GST_BASE_API
+GstClockTime            gst_adapter_dts_at_offset       (GstAdapter * adapter, gsize offset, guint64 * distance);
+
+GST_BASE_API
 GstClockTime            gst_adapter_prev_dts_at_offset  (GstAdapter * adapter, gsize offset, guint64 * distance);
 
 GST_BASE_API

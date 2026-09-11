@@ -169,6 +169,8 @@ struct _GstAdapter
 
   guint64 distance_from_discont;
 
+  guint64 base_seq;
+
   GstMapInfo info;
 };
 
@@ -279,6 +281,7 @@ gst_adapter_clear (GstAdapter * adapter)
   adapter->dts_at_discont = GST_CLOCK_TIME_NONE;
   adapter->offset_at_discont = GST_BUFFER_OFFSET_NONE;
   adapter->distance_from_discont = 0;
+  adapter->base_seq = 0;
   adapter->scan_offset = 0;
   adapter->scan_entry_idx = G_MAXUINT;
 }
@@ -660,6 +663,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
     flush -= size;
 
     --adapter->count;
+    ++adapter->base_seq;
 
     cur = NULL;
     gst_buffer_unref (gst_vec_deque_pop_head (adapter->bufqueue));
@@ -1589,6 +1593,177 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
     *distance = adapter->pts_distance + offset - pts_offset;
 
   return pts;
+}
+
+/**
+ * gst_adapter_buffer_seq_at_offset:
+ * @adapter: a #GstAdapter
+ * @offset: the offset in the adapter
+ *
+ * Get the sequence number of the buffer containing the byte at offset @offset.
+ * Each buffer pushed into the adapter is assigned a monotonically increasing
+ * sequence number starting at 0. The sequence number can be used to detect
+ * whether the adapter has advanced into a new buffer: if the sequence number
+ * at a given offset changes between two calls, the adapter has consumed
+ * (flushed) the previous buffer and moved to the next one.
+ *
+ * If the adapter is empty, G_MAXUINT64 is returned.
+ *
+ * Since: 1.30
+ * Returns: The sequence number of the buffer at the given offset.
+ */
+guint64
+gst_adapter_buffer_seq_at_offset (GstAdapter * adapter, gsize offset)
+{
+  gsize read_offset = 0;
+  gsize target = offset + adapter->skip;
+  guint idx, len;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), G_MAXUINT64);
+
+  len = gst_vec_deque_get_length (adapter->bufqueue);
+  if (len == 0)
+    return G_MAXUINT64;
+
+  for (idx = 0; idx < len; idx++) {
+    gsize size = gst_buffer_get_size (gst_vec_deque_peek_nth (adapter->bufqueue,
+            idx));
+    if (read_offset + size > target)
+      return adapter->base_seq + idx;
+    read_offset += size;
+  }
+
+  return adapter->base_seq + len - 1;
+}
+
+/**
+ * gst_adapter_pts_at_offset:
+ * @adapter: a #GstAdapter
+ * @offset: the offset in the adapter at which to get timestamp
+ * @distance: (out) (allow-none): pointer to location for distance, or %NULL
+ *
+ * Get the pts of the data at offset @offset in the adapter, that is the pts
+ * of the buffer containing the byte at @offset.
+ *
+ * Unlike gst_adapter_prev_pts() and gst_adapter_prev_pts_at_offset(), which
+ * remember the last pts seen and keep returning it until a new one is seen,
+ * this function only considers the data that is currently in the adapter and
+ * never returns a pts of data that has already been consumed. If the buffer
+ * containing @offset has no valid pts, GST_CLOCK_TIME_NONE is returned, even
+ * if a pts was seen earlier.
+ *
+ * When @distance is given, the amount of bytes between the pts and the byte
+ * at @offset is returned. If no valid pts is available, the distance is set
+ * to 0.
+ *
+ * Since: 1.30
+ * Returns: The pts of the data at the given offset.
+ */
+GstClockTime
+gst_adapter_pts_at_offset (GstAdapter * adapter, gsize offset,
+    guint64 * distance)
+{
+  GstBuffer *cur;
+  gsize read_offset = 0;
+  gsize pts_offset = 0;
+  GstClockTime pts = GST_CLOCK_TIME_NONE;
+  guint idx, len;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
+
+  len = gst_vec_deque_get_length (adapter->bufqueue);
+  if (len == 0) {
+    if (distance)
+      *distance = 0;
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  /* find the buffer containing the byte at @offset */
+  for (idx = 0; idx < len; idx++) {
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx);
+
+    if (read_offset > offset + adapter->skip)
+      break;
+
+    pts = GST_BUFFER_PTS (cur);
+    pts_offset = read_offset;
+
+    read_offset += gst_buffer_get_size (cur);
+  }
+
+  if (distance) {
+    if (GST_CLOCK_TIME_IS_VALID (pts))
+      *distance = offset + adapter->skip - pts_offset;
+    else
+      *distance = 0;
+  }
+
+  return pts;
+}
+
+/**
+ * gst_adapter_dts_at_offset:
+ * @adapter: a #GstAdapter
+ * @offset: the offset in the adapter at which to get timestamp
+ * @distance: (out) (allow-none): pointer to location for distance, or %NULL
+ *
+ * Get the dts of the data at offset @offset in the adapter, that is the dts
+ * of the buffer containing the byte at @offset.
+ *
+ * Unlike gst_adapter_prev_dts() and gst_adapter_prev_dts_at_offset(), which
+ * remember the last dts seen and keep returning it until a new one is seen,
+ * this function only considers the data that is currently in the adapter and
+ * never returns a dts of data that has already been consumed. If the buffer
+ * containing @offset has no valid dts, GST_CLOCK_TIME_NONE is returned, even
+ * if a dts was seen earlier.
+ *
+ * When @distance is given, the amount of bytes between the dts and the byte
+ * at @offset is returned. If no valid dts is available, the distance is set
+ * to 0.
+ *
+ * Since: 1.30
+ * Returns: The dts of the data at the given offset.
+ */
+GstClockTime
+gst_adapter_dts_at_offset (GstAdapter * adapter, gsize offset,
+    guint64 * distance)
+{
+  GstBuffer *cur;
+  gsize read_offset = 0;
+  gsize dts_offset = 0;
+  GstClockTime dts = GST_CLOCK_TIME_NONE;
+  guint idx, len;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
+
+  len = gst_vec_deque_get_length (adapter->bufqueue);
+  if (len == 0) {
+    if (distance)
+      *distance = 0;
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  /* find the buffer containing the byte at @offset */
+  for (idx = 0; idx < len; idx++) {
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx);
+
+    if (read_offset > offset + adapter->skip)
+      break;
+
+    dts = GST_BUFFER_DTS (cur);
+    dts_offset = read_offset;
+
+    read_offset += gst_buffer_get_size (cur);
+  }
+
+  if (distance) {
+    if (GST_CLOCK_TIME_IS_VALID (dts))
+      *distance = offset + adapter->skip - dts_offset;
+    else
+      *distance = 0;
+  }
+
+  return dts;
 }
 
 /**

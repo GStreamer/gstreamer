@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 
 /* This test doesn't use actual JPEG data, but some fake data that we know
    will trigger certain paths in jpegparse. */
@@ -375,6 +376,66 @@ GST_START_TEST (test_parse_comment)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_duplicated_pts)
+{
+  GstHarness *h;
+  GstBuffer *buffer_in, *buffer_out;
+  GstCaps *caps_in, *caps_out;
+
+  caps_in = gst_caps_new_simple ("image/jpeg", "parsed",
+      G_TYPE_BOOLEAN, FALSE, NULL);
+
+  caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 0, 1, "width", G_TYPE_INT, 80, "height",
+      G_TYPE_INT, 60, "sof-marker", G_TYPE_INT, 0, "colorspace", G_TYPE_STRING,
+      "sYUV", "sampling", G_TYPE_STRING, "YCbCr-4:2:0", "interlace-mode",
+      G_TYPE_STRING, "progressive", "pixel-aspect-ratio", GST_TYPE_FRACTION, 1,
+      1, NULL);
+
+  h = gst_harness_new ("jpegparse");
+  gst_harness_set_src_caps (h, caps_in);
+  gst_harness_set_sink_caps (h, caps_out);
+
+  /* Push two complete frames with the same PTS and a third one with a
+   * different PTS */
+  buffer_in = make_my_input_buffer (test_data_comment,
+      sizeof (test_data_comment));
+  GST_BUFFER_PTS (buffer_in) = 100;
+  fail_unless_equals_int (gst_harness_push (h, buffer_in), GST_FLOW_OK);
+
+  buffer_in = make_my_input_buffer (test_data_comment,
+      sizeof (test_data_comment));
+  GST_BUFFER_PTS (buffer_in) = 100;
+  fail_unless_equals_int (gst_harness_push (h, buffer_in), GST_FLOW_OK);
+
+  buffer_in = make_my_input_buffer (test_data_comment,
+      sizeof (test_data_comment));
+  GST_BUFFER_PTS (buffer_in) = 200;
+  fail_unless_equals_int (gst_harness_push (h, buffer_in), GST_FLOW_OK);
+
+  /* The first frame gets the PTS from the input */
+  buffer_out = gst_harness_pull (h);
+  fail_unless (buffer_out);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (buffer_out), 100);
+  gst_buffer_unref (buffer_out);
+
+  /* The second frame has a duplicated PTS, which should be forwarded */
+  buffer_out = gst_harness_pull (h);
+  fail_unless (buffer_out);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (buffer_out), 100);
+  gst_buffer_unref (buffer_out);
+
+  /* The third frame has a different PTS, which gets forwarded as well */
+  buffer_out = gst_harness_pull (h);
+  fail_unless (buffer_out);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (buffer_out), 200);
+  gst_buffer_unref (buffer_out);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 jpegparse_suite (void)
 {
@@ -386,6 +447,7 @@ jpegparse_suite (void)
   tcase_add_test (tc_chain, test_parse_all_in_one_buf);
   tcase_add_test (tc_chain, test_parse_app1_exif);
   tcase_add_test (tc_chain, test_parse_comment);
+  tcase_add_test (tc_chain, test_parse_duplicated_pts);
 
   return s;
 }

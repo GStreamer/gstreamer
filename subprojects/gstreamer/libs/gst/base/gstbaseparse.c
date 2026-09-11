@@ -248,6 +248,7 @@ struct _GstBaseParsePrivate
   GstClockTime prev_pts;
   GstClockTime prev_dts;
   gboolean prev_dts_from_pts;
+  guint64 last_frame_buf_seq;
   GstClockTime frame_duration;
   gboolean seen_keyframe;
   gboolean is_video;
@@ -1435,6 +1436,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_dts_from_pts = FALSE;
+      parse->priv->last_frame_buf_seq = G_MAXUINT64;
       parse->priv->discont = TRUE;
       parse->priv->seen_keyframe = FALSE;
       parse->priv->skip = 0;
@@ -3350,20 +3352,28 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     /* move along with upstream timestamp (if any),
      * but interpolate in between */
-    pts = gst_adapter_prev_pts (parse->priv->adapter, NULL);
     dts = gst_adapter_prev_dts (parse->priv->adapter, NULL);
-    if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts)) {
-      parse->priv->prev_pts = parse->priv->next_pts = pts;
-      updated_prev_pts = TRUE;
-    } else if (parse->priv->allow_duplicated_pts
-        && GST_CLOCK_TIME_IS_VALID (pts)) {
-      /* Set the PTS unconditionally as next PTS even if it didn't change if
-       * duplicated PTS are allowed. Without this the next output would have a
-       * PTS of GST_CLOCK_TIME_NONE instead as next_pts is always reset to
-       * GST_CLOCK_TIME_NONE when pushing a frame.
-       * The same is not necessary for the DTS below as the DTS is not reset
-       * to GST_CLOCK_TIME_NONE unconditionally. */
-      parse->priv->next_pts = pts;
+    if (parse->priv->allow_duplicated_pts) {
+      /* Detect whether we've advanced into a new input buffer by comparing
+       * the buffer sequence number rather than PTS values. This correctly
+       * handles duplicated PTS (same PTS on consecutive buffers) and sparse
+       * PTS (a buffer without PTS after a buffer with PTS). */
+      guint64 buf_seq =
+          gst_adapter_buffer_seq_at_offset (parse->priv->adapter, 0);
+      pts = gst_adapter_pts_at_offset (parse->priv->adapter, 0, NULL);
+      if (buf_seq != parse->priv->last_frame_buf_seq) {
+        if (GST_CLOCK_TIME_IS_VALID (pts)) {
+          parse->priv->prev_pts = parse->priv->next_pts = pts;
+          updated_prev_pts = TRUE;
+        }
+        parse->priv->last_frame_buf_seq = buf_seq;
+      }
+    } else {
+      pts = gst_adapter_prev_pts (parse->priv->adapter, NULL);
+      if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts)) {
+        parse->priv->prev_pts = parse->priv->next_pts = pts;
+        updated_prev_pts = TRUE;
+      }
     }
 
     if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
@@ -5168,18 +5178,23 @@ gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
 
   g_return_if_fail (GST_IS_BASE_PARSE (parse));
 
-  pts = gst_adapter_prev_pts_at_offset (parse->priv->adapter, offset, NULL);
   dts = gst_adapter_prev_dts_at_offset (parse->priv->adapter, offset, NULL);
+  if (parse->priv->allow_duplicated_pts)
+    pts = gst_adapter_pts_at_offset (parse->priv->adapter, offset, NULL);
+  else
+    pts = gst_adapter_prev_pts_at_offset (parse->priv->adapter, offset, NULL);
 
   if (!GST_CLOCK_TIME_IS_VALID (pts) || !GST_CLOCK_TIME_IS_VALID (dts)) {
     GST_DEBUG_OBJECT (parse,
         "offset adapter timestamps dts=%" GST_TIME_FORMAT " pts=%"
         GST_TIME_FORMAT, GST_TIME_ARGS (dts), GST_TIME_ARGS (pts));
   }
-  if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts))
+  if (parse->priv->allow_duplicated_pts) {
+    if (GST_CLOCK_TIME_IS_VALID (pts))
+      parse->priv->prev_pts = parse->priv->next_pts = pts;
+  } else if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts)) {
     parse->priv->prev_pts = parse->priv->next_pts = pts;
-  else if (parse->priv->allow_duplicated_pts && GST_CLOCK_TIME_IS_VALID (pts))
-    parse->priv->next_pts = pts;
+  }
 
   if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts)) {
     parse->priv->prev_dts = parse->priv->next_dts = dts;

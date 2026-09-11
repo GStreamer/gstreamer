@@ -245,6 +245,31 @@ operations</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="buffer_seq_at_offset" c:identifier="gst_adapter_buffer_seq_at_offset" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Get the sequence number of the buffer containing the byte at offset @offset.
+Each buffer pushed into the adapter is assigned a monotonically increasing
+sequence number starting at 0. The sequence number can be used to detect
+whether the adapter has advanced into a new buffer: if the sequence number
+at a given offset changes between two calls, the adapter has consumed
+(flushed) the previous buffer and moved to the next one.
+
+If the adapter is empty, G_MAXUINT64 is returned.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">The sequence number of the buffer at the given offset.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">a #GstAdapter</doc>
+            <type name="Adapter" c:type="GstAdapter*"/>
+          </instance-parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">the offset in the adapter</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="clear" c:identifier="gst_adapter_clear">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Removes all buffers from @adapter.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
@@ -348,6 +373,40 @@ flag, or GST_CLOCK_TIME_NONE.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">a #GstAdapter</doc>
             <type name="Adapter" c:type="GstAdapter*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="dts_at_offset" c:identifier="gst_adapter_dts_at_offset" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Get the dts of the data at offset @offset in the adapter, that is the dts
+of the buffer containing the byte at @offset.
+
+Unlike gst_adapter_prev_dts() and gst_adapter_prev_dts_at_offset(), which
+remember the last dts seen and keep returning it until a new one is seen,
+this function only considers the data that is currently in the adapter and
+never returns a dts of data that has already been consumed. If the buffer
+containing @offset has no valid dts, GST_CLOCK_TIME_NONE is returned, even
+if a dts was seen earlier.
+
+When @distance is given, the amount of bytes between the dts and the byte
+at @offset is returned. If no valid dts is available, the distance is set
+to 0.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">The dts of the data at the given offset.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">a #GstAdapter</doc>
+            <type name="Adapter" c:type="GstAdapter*"/>
+          </instance-parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">the offset in the adapter at which to get timestamp</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="distance" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">pointer to location for distance, or %NULL</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="flush" c:identifier="gst_adapter_flush">
@@ -776,6 +835,40 @@ flag, or GST_CLOCK_TIME_NONE.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">a #GstAdapter</doc>
             <type name="Adapter" c:type="GstAdapter*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="pts_at_offset" c:identifier="gst_adapter_pts_at_offset" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Get the pts of the data at offset @offset in the adapter, that is the pts
+of the buffer containing the byte at @offset.
+
+Unlike gst_adapter_prev_pts() and gst_adapter_prev_pts_at_offset(), which
+remember the last pts seen and keep returning it until a new one is seen,
+this function only considers the data that is currently in the adapter and
+never returns a pts of data that has already been consumed. If the buffer
+containing @offset has no valid pts, GST_CLOCK_TIME_NONE is returned, even
+if a pts was seen earlier.
+
+When @distance is given, the amount of bytes between the pts and the byte
+at @offset is returned. If no valid pts is available, the distance is set
+to 0.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">The pts of the data at the given offset.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">a #GstAdapter</doc>
+            <type name="Adapter" c:type="GstAdapter*"/>
+          </instance-parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">the offset in the adapter at which to get timestamp</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="distance" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">pointer to location for distance, or %NULL</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="push" c:identifier="gst_adapter_push">

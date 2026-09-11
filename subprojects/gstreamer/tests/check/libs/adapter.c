@@ -778,6 +778,183 @@ GST_START_TEST (test_timestamp)
 
 GST_END_TEST;
 
+GST_START_TEST (test_buffer_seq)
+{
+  GstAdapter *adapter;
+  GstBuffer *buffer;
+  guint64 seq;
+
+  adapter = gst_adapter_new ();
+
+  /* empty adapter */
+  seq = gst_adapter_buffer_seq_at_offset (adapter, 0);
+  fail_unless_equals_uint64 (seq, G_MAXUINT64);
+
+  /* push 3 buffers */
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+
+  /* seqs are 0, 1, 2 */
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 0), 0);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 50), 0);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 99), 0);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 100),
+      1);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 150),
+      1);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 200),
+      2);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 299),
+      2);
+
+  /* flush the first buffer */
+  gst_adapter_flush (adapter, 100);
+  fail_unless_equals_uint64 (gst_adapter_available (adapter), 200);
+
+  /* head is now the second buffer, seq 1 */
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 0), 1);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 50), 1);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 100),
+      2);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 199),
+      2);
+
+  /* flush everything */
+  gst_adapter_flush (adapter, 200);
+  seq = gst_adapter_buffer_seq_at_offset (adapter, 0);
+  fail_unless_equals_uint64 (seq, G_MAXUINT64);
+
+  /* push again after full flush: seq continues from where we left off */
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 0), 3);
+
+  /* clear resets seq to 0 */
+  gst_adapter_clear (adapter);
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  fail_unless_equals_uint64 (gst_adapter_buffer_seq_at_offset (adapter, 0), 0);
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ts_at_offset)
+{
+  GstAdapter *adapter;
+  GstBuffer *buffer;
+  GstClockTime timestamp, dts;
+  guint64 dist;
+
+  adapter = gst_adapter_new ();
+
+  /* empty adapter */
+  timestamp = gst_adapter_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 0, &dist);
+  fail_unless (dts == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+
+  /* push a buffer with pts and dts */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_PTS (buffer) = 1 * GST_SECOND;
+  GST_BUFFER_DTS (buffer) = 0;
+  gst_adapter_push (adapter, buffer);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 0, &dist);
+  fail_unless (dts == 0);
+  fail_unless_equals_uint64 (dist, 0);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 50, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 50);
+  dts = gst_adapter_dts_at_offset (adapter, 50, &dist);
+  fail_unless (dts == 0);
+  fail_unless_equals_uint64 (dist, 50);
+
+  /* push a buffer without pts/dts: the containing-buffer read returns NONE,
+   * while the prev_*_at_offset() functions still report the stale values */
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 100, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 100, &dist);
+  fail_unless (dts == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 150, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 150, &dist);
+  fail_unless (dts == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+
+  /* flushing out the first buffer: still no pts and dts, while
+   * gst_adapter_prev_pts_at_offset() and gst_adapter_prev_dts_at_offset()
+   * report the stale timestamps */
+  gst_adapter_flush (adapter, 100);
+  fail_unless_equals_int (gst_adapter_available (adapter), 100);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 0, &dist);
+  fail_unless (dts == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+
+  timestamp = gst_adapter_prev_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 100);
+  dts = gst_adapter_prev_dts_at_offset (adapter, 0, &dist);
+  fail_unless (dts == 0);
+  fail_unless_equals_uint64 (dist, 100);
+
+  /* a buffer with pts and dts after a buffer without them: the timestamps
+   * are only valid from the start of the buffer with the timestamps */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_PTS (buffer) = 2 * GST_SECOND;
+  GST_BUFFER_DTS (buffer) = 1 * GST_SECOND;
+  gst_adapter_push (adapter, buffer);
+  fail_unless_equals_uint64 (gst_adapter_available (adapter), 200);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 0, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 0, &dist);
+  fail_unless (dts == GST_CLOCK_TIME_NONE);
+  fail_unless_equals_uint64 (dist, 0);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 100, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 0);
+  dts = gst_adapter_dts_at_offset (adapter, 100, &dist);
+  fail_unless (dts == 1 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 0);
+
+  timestamp = gst_adapter_pts_at_offset (adapter, 150, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 50);
+  dts = gst_adapter_dts_at_offset (adapter, 150, &dist);
+  fail_unless (dts == 1 * GST_SECOND);
+  fail_unless_equals_uint64 (dist, 50);
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_offset)
 {
   GstAdapter *adapter;
@@ -1464,6 +1641,8 @@ gst_adapter_suite (void)
   tcase_add_test (tc_chain, test_take_order);
   tcase_add_test (tc_chain, test_take_buf_order);
   tcase_add_test (tc_chain, test_timestamp);
+  tcase_add_test (tc_chain, test_buffer_seq);
+  tcase_add_test (tc_chain, test_ts_at_offset);
   tcase_add_test (tc_chain, test_scan);
   tcase_add_test (tc_chain, test_take_list);
   tcase_add_test (tc_chain, test_get_list);
