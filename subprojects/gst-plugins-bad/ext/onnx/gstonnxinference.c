@@ -218,7 +218,7 @@ struct _GstOnnxInference
 #if HAVE_DIRECTML
   GstD3D12Device *device12;
 #endif
-#ifdef HAVE_GST_HIP
+#if HAVE_GST_HIP
   GstHipDevice *device_hip;
 #endif
   GstOnnxImporterConfig importer_config;
@@ -248,7 +248,9 @@ static void *onnxruntime_module = NULL;
 
 typedef const OrtApiBase *(ORT_API_CALL * GstOrtGetApiBaseFunc) (void);
 
+#if HAVE_GST_HIP
 static gboolean have_hip_rtc = FALSE;
+#endif
 
 GST_DEBUG_CATEGORY (onnx_inference_debug);
 GST_DEBUG_CATEGORY (onnx_runtime_debug);
@@ -933,7 +935,7 @@ done:
 static gboolean
 gst_onnx_inference_can_use_hip (GstOnnxInference * self)
 {
-#ifdef HAVE_GST_HIP
+#if HAVE_GST_HIP
   if (!have_hip_rtc ||
       (self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX &&
           self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_HIP)) {
@@ -999,7 +1001,7 @@ gst_onnx_inference_add_memory_caps (GstOnnxInference * self, GstCaps * caps)
   }
 #endif
 
-#ifdef HAVE_GST_HIP
+#if HAVE_GST_HIP
   if (gst_onnx_inference_can_use_hip (self)) {
     GstCaps *hip_caps = gst_caps_copy (caps);
 
