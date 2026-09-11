@@ -177,6 +177,24 @@ _image_to_raw_decide_allocation (gpointer impl, GstQuery * query)
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
+  {
+    VkPhysicalDeviceMemoryProperties *mem_props =
+        &raw->download->device->physical_device->memory_properties;
+    VkMemoryPropertyFlags mem_flags =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+        VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    VkBufferUsageFlags usage_flags =
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    guint32 i;
+    for (i = 0; i < mem_props->memoryTypeCount; i++) {
+      if ((mem_props->memoryTypes[i].propertyFlags & mem_flags) == mem_flags) {
+        gst_vulkan_buffer_pool_config_set_allocation_params (config,
+            usage_flags, mem_flags);
+        break;
+      }
+    }
+  }
+
   if (!gst_buffer_pool_set_config (pool, config)) {
     gst_clear_object (&pool);
     GST_ERROR_OBJECT (raw->download, "Failed to set buffer pool config");
