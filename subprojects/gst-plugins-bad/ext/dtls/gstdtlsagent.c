@@ -198,7 +198,7 @@ gst_dtls_agent_init (GstDtlsAgent * self)
 
   SSL_CTX_set_verify_depth (priv->ssl_context, 2);
   SSL_CTX_set_tlsext_use_srtp (priv->ssl_context,
-      "SRTP_AEAD_AES_128_GCM:SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32");
+      "SRTP_AEAD_AES_128_GCM:SRTP_AEAD_AES_256_GCM:SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32");
   SSL_CTX_set_cipher_list (priv->ssl_context,
       "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
   SSL_CTX_set_read_ahead (priv->ssl_context, 1);

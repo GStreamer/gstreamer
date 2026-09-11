@@ -954,6 +954,11 @@ export_srtp_keys (GstDtlsConnection * self, GError ** err)
       auth = GST_DTLS_SRTP_AUTH_NULL;
       success = export_srtp_keys_len (self, 16, 12, &client_key, &server_key);
       break;
+    case SRTP_AEAD_AES_256_GCM:
+      cipher = GST_DTLS_SRTP_CIPHER_AES_256_GCM;
+      auth = GST_DTLS_SRTP_AUTH_NULL;
+      success = export_srtp_keys_len (self, 32, 12, &client_key, &server_key);
+      break;
     default:
       GST_WARNING_OBJECT (self,
           "Invalid/unsupported crypto suite set by handshake");
@@ -1393,6 +1398,8 @@ gst_dtls_srtp_master_key_length (GstDtlsSrtpCipher cipher)
       return 30;
     case GST_DTLS_SRTP_CIPHER_AES_128_GCM:
       return 28;
+    case GST_DTLS_SRTP_CIPHER_AES_256_GCM:
+      return 44;
     default:
       g_assert_not_reached ();
   }

@@ -50,6 +50,7 @@ typedef struct _GstDtlsConnectionPrivate GstDtlsConnectionPrivate;
 typedef enum {
     GST_DTLS_SRTP_CIPHER_AES_128_ICM = 1,
     GST_DTLS_SRTP_CIPHER_AES_128_GCM = 3,
+    GST_DTLS_SRTP_CIPHER_AES_256_GCM = 4,
 } GstDtlsSrtpCipher;
 
 /**

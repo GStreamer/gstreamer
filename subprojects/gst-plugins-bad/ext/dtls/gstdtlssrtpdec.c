@@ -463,6 +463,11 @@ on_decoder_request_key (GstElement * srtp_decoder,
             "srtp-cipher", G_TYPE_STRING, "aes-128-gcm",
             "srtcp-cipher", G_TYPE_STRING, "aes-128-gcm", NULL);
         break;
+      case GST_DTLS_SRTP_CIPHER_AES_256_GCM:
+        gst_caps_set_simple (key_caps,
+            "srtp-cipher", G_TYPE_STRING, "aes-256-gcm",
+            "srtcp-cipher", G_TYPE_STRING, "aes-256-gcm", NULL);
+        break;
       default:
         gst_clear_caps (&key_caps);
         g_return_val_if_reached (NULL);
