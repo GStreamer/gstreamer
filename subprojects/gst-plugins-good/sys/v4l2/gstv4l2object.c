@@ -3152,8 +3152,6 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       size.index++;
     } while (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
 
-    v4l2object->max_width = maxw;
-    v4l2object->max_height = maxh;
     GST_DEBUG_OBJECT (v4l2object->dbg_obj,
         "done iterating discrete frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
@@ -3206,8 +3204,6 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp,
           sysmem_tmpl, dmabuf_tmpl);
 
-      v4l2object->max_width = maxw;
-      v4l2object->max_height = maxh;
     }
   } else if (size.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) {
     guint32 maxw, maxh;
@@ -3239,8 +3235,6 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp,
           sysmem_tmpl, dmabuf_tmpl);
 
-      v4l2object->max_width = maxw;
-      v4l2object->max_height = maxh;
     }
   } else {
     gst_structure_free (template);
@@ -3315,9 +3309,6 @@ default_frame_sizes:
       min_w = min_h = 1;
     if (max_w == 0 || max_h == 0)
       max_w = max_h = GST_V4L2_MAX_SIZE;
-    v4l2object->max_width = max_w;
-    v4l2object->max_height = max_h;
-
     /* Since we can't get framerate directly, try to use the current norm */
     if (v4l2object->tv_norm && v4l2object->norms) {
       GList *norms;
@@ -3899,17 +3890,15 @@ field_to_str (enum v4l2_field f)
   return "unknown";
 }
 
-static guint
-calculate_max_sizeimage (GstV4l2Object * v4l2object, guint pixel_bitdepth)
+static gsize
+calculate_max_sizeimage (guint width, guint height, guint pixel_bitdepth)
 {
-  guint max_width, max_height;
-  guint sizeimage;
+  guint64 sizeimage;
 
-  max_width = v4l2object->max_width;
-  max_height = v4l2object->max_height;
-  sizeimage = max_width * max_height * pixel_bitdepth / 8 / 2;
+  sizeimage = MAX ((guint64) ENCODED_BUFFER_MIN_SIZE,
+      ((guint64) width * height * pixel_bitdepth) / 8);
 
-  return MAX (ENCODED_BUFFER_MIN_SIZE, sizeimage);
+  return (gsize) MIN (sizeimage, (guint64) G_MAXSIZE);
 }
 
 static gboolean
@@ -4177,7 +4166,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
     if (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_ENCODED)
       format.fmt.pix_mp.plane_fmt[0].sizeimage =
-          calculate_max_sizeimage (v4l2object, pixel_bitdepth);
+          calculate_max_sizeimage (width, height, pixel_bitdepth);
   } else {
     gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info.vinfo, 0);
 
@@ -4197,7 +4186,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
     if (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_ENCODED)
       format.fmt.pix.sizeimage =
-          calculate_max_sizeimage (v4l2object, pixel_bitdepth);
+          calculate_max_sizeimage (width, height, pixel_bitdepth);
   }
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Desired format is %dx%d, format "
