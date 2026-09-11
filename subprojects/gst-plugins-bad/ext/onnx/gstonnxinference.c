@@ -192,8 +192,8 @@ struct _GstOnnxInference
   OrtEnv *env;
   OrtSession *session;
   OrtAllocator *allocator;
-  int32_t width;
-  int32_t height;
+  int32_t model_in_width;
+  int32_t model_in_height;
   int32_t channels;
   gboolean planar;
   gint height_dim;
@@ -204,7 +204,6 @@ struct _GstOnnxInference
   gchar **output_names;
   GQuark *output_ids;
   GstTensorDimOrder *output_dims_orders;
-  bool fixedInputImageSize;
   gchar *input_name;
   /* Raw dimensions returned from OrtApi::GetDimensions() */
   gint64 input_dims_model[GST_ONNX_IMPORTER_MAX_DIMS];
@@ -2297,8 +2296,14 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         "tensor dims", tensor_name, gst_video_format_to_string (gst_format));
   }
 
-  self->height = gst_input_dims[self->height_dim];
-  self->width = gst_input_dims[self->width_dim];
+  self->model_in_height =
+      self->input_dims_model[self->height_dim] > 0 ?
+      self->input_dims_model[self->height_dim] : -1;
+
+  self->model_in_width =
+      self->input_dims_model[self->width_dim] > 0 ?
+      self->input_dims_model[self->width_dim] : -1;
+
   if (self->channels_dim >= 0) {
     self->channels = gst_input_dims[self->channels_dim];
   } else {
@@ -2307,11 +2312,9 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   GST_DEBUG_OBJECT (self, "height dim[%d]=%d, width dim[%d]=%d,"
       " channels dim[%d]=%d, batch_dim[%d]=%zu planar=%d",
-      self->height_dim, self->height, self->width_dim, self->width,
-      self->channels_dim, self->channels, self->batch_dim,
+      self->height_dim, self->model_in_height, self->width_dim,
+      self->model_in_width, self->channels_dim, self->channels, self->batch_dim,
       self->batch_dim >= 0 ? gst_input_dims[self->batch_dim] : 0, self->planar);
-
-  self->fixedInputImageSize = self->width > 0 && self->height > 0;
 
   /* Get per-channel scales and offsets from modelinfo */
   /* For video input, we assume uint8 pixel values in range [0, 255]
@@ -2392,14 +2395,17 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     gst_caps_set_simple (self->input_tensors_caps, "pixel-aspect-ratio",
         GST_TYPE_FRACTION, 1, 1, NULL);
 
-  if (self->fixedInputImageSize) {
-    if (!gst_structure_has_field (in_caps_s, "width"))
-      gst_caps_set_simple (self->input_tensors_caps, "width", G_TYPE_INT,
-          self->width, NULL);
-    if (!gst_structure_has_field (in_caps_s, "height"))
-      gst_caps_set_simple (self->input_tensors_caps, "height", G_TYPE_INT,
-          self->height, NULL);
+  if (self->model_in_width > 0 && !gst_structure_has_field (in_caps_s, "width")) {
+    gst_caps_set_simple (self->input_tensors_caps,
+        "width", G_TYPE_INT, self->model_in_width, NULL);
   }
+
+  if (self->model_in_height > 0 &&
+      !gst_structure_has_field (in_caps_s, "height")) {
+    gst_caps_set_simple (self->input_tensors_caps,
+        "height", G_TYPE_INT, self->model_in_height, NULL);
+  }
+
   // Get output names
   self->output_names = g_new0 (char *, self->output_count);
   for (i = 0; i < self->output_count; ++i) {
@@ -2764,6 +2770,9 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   gst_caps_unref (self->output_tensors_caps);
   self->output_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
 
+  self->model_in_width = 0;
+  self->model_in_height = 0;
+
 #if HAVE_DIRECTML
   g_clear_pointer (&self->dml_ctx, gst_onnx_dml_free_context);
 #endif
@@ -2797,15 +2806,6 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
-  if (self->fixedInputImageSize &&
-      (self->video_info.width != self->width ||
-          self->video_info.height != self->height)) {
-    GST_ERROR_OBJECT (self, "Dimensions from caps %ux%u doesn't match model"
-        " dimensions %dx%d", self->video_info.width, self->video_info.height,
-        self->width, self->height);
-    return FALSE;
-  }
-
   gsize element_size = get_tensor_type_size (config->data_type);
   gsize input_tensor_size;
 
@@ -2825,33 +2825,32 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
-  self->width = self->video_info.width;
-  self->height = self->video_info.height;
-
   /* Resolve dynamic input dimensions and validate fixed ones */
   memcpy (config->dims, self->input_dims_model, sizeof (config->dims));
 
   if (self->batch_dim >= 0)
     config->dims[self->batch_dim] = 1;
 
-  if (config->dims[self->height_dim] >= 0) {
-    if (config->dims[self->height_dim] != self->height) {
+  if (config->dims[self->height_dim] > 0) {
+    if (config->dims[self->height_dim] != self->video_info.height) {
       GST_ERROR_OBJECT (self, "Caps have height %d, but model expects %"
-          G_GINT64_FORMAT, self->height, config->dims[self->height_dim]);
+          G_GINT64_FORMAT, self->video_info.height,
+          config->dims[self->height_dim]);
       return FALSE;
     }
   } else {
-    config->dims[self->height_dim] = self->height;
+    config->dims[self->height_dim] = self->video_info.height;
   }
 
-  if (config->dims[self->width_dim] >= 0) {
-    if (config->dims[self->width_dim] != self->width) {
+  if (config->dims[self->width_dim] > 0) {
+    if (config->dims[self->width_dim] != self->video_info.width) {
       GST_ERROR_OBJECT (self, "Caps have width %d, but model expects %"
-          G_GINT64_FORMAT, self->width, config->dims[self->width_dim]);
+          G_GINT64_FORMAT, self->video_info.width,
+          config->dims[self->width_dim]);
       return FALSE;
     }
   } else {
-    config->dims[self->width_dim] = self->width;
+    config->dims[self->width_dim] = self->video_info.width;
   }
 
   config->tensor_size = input_tensor_size;
