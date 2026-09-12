@@ -144,6 +144,8 @@ void        gst_d3d12_device_update_resident_size (GstD3D12Device * device,
 GST_D3D12_API
 gboolean    gst_d3d12_device_is_over_budget (GstD3D12Device * device);
 
+GST_D3D12_API
+void        gst_d3d12_register_flush_callback (GDestroyNotify callback,
+                                               gpointer user_data);
 
 G_END_DECLS
-

@@ -37,6 +37,7 @@
 #include <locale>
 #include <codecvt>
 #include <algorithm>
+#include <utility>
 #include <d3d12sdklayers.h>
 #include <memory>
 #include <queue>
@@ -542,13 +543,34 @@ public:
     }
   }
 
-  void FlushAll ()
+  void RegisterFlushCallback (GDestroyNotify callback, gpointer user_data)
   {
     std::lock_guard <std::recursive_mutex> lk (lock_);
-    for (const auto & it : list_) {
-      it->Drain ();
-      it->ReportLiveObjects ();
+    auto entry = std::make_pair (callback, user_data);
+    if (std::find (flush_callbacks_.begin (), flush_callbacks_.end (), entry)
+        == flush_callbacks_.end ()) {
+      flush_callbacks_.push_back (entry);
     }
+  }
+
+  void FlushAll ()
+  {
+    std::vector<DeviceInnerPtr> devices;
+    std::vector<std::pair<GDestroyNotify, gpointer>> callbacks;
+    {
+      std::lock_guard <std::recursive_mutex> lk (lock_);
+      devices = list_;
+      callbacks = flush_callbacks_;
+      for (const auto & it : devices)
+        it->Drain ();
+    }
+
+    /* Callbacks may release devices or access the manager */
+    for (const auto & callback : callbacks)
+      callback.first (callback.second);
+
+    for (const auto & it : devices)
+      it->ReportLiveObjects ();
   }
 
 private:
@@ -573,6 +595,7 @@ private:
 private:
   std::recursive_mutex lock_;
   std::vector<DeviceInnerPtr> list_;
+  std::vector<std::pair<GDestroyNotify, gpointer>> flush_callbacks_;
   std::unordered_map<UINT,UINT> name_map_;
 };
 /* *INDENT-ON* */
@@ -2993,6 +3016,15 @@ gst_d3d12_device_is_uma (GstD3D12Device * device)
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
 
   return device->priv->inner->feature_support.UMA ();
+}
+
+void
+gst_d3d12_register_flush_callback (GDestroyNotify callback, gpointer user_data)
+{
+  g_return_if_fail (callback != nullptr);
+
+  auto manager = DeviceCacheManager::GetInstance ();
+  manager->RegisterFlushCallback (callback, user_data);
 }
 
 /**
