@@ -237,7 +237,6 @@ struct DecoderCmdData
 {
   ComPtr<ID3D12Device> device;
   ComPtr<ID3D12VideoDevice> video_device;
-  ComPtr<ID3D12VideoDecodeCommandList> cl;
   GstD3D12CmdQueue *queue = nullptr;
   bool need_full_drain = false;
 
@@ -296,6 +295,7 @@ struct DecoderSessionData
 
   D3D12_VIDEO_DECODER_DESC decoder_desc = {};
   ComPtr<ID3D12VideoDecoder> decoder;
+  ComPtr<ID3D12VideoDecodeCommandList> cl;
 
   D3D12_VIDEO_DECODER_HEAP_DESC heap_desc = {};
   ComPtr<ID3D12VideoDecoderHeap> heap;
@@ -570,9 +570,6 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
 
   gst_d3d12_decoder_drain (decoder, videodec);
   priv->session = nullptr;
-
-  /* XXX: NVIDIA driver crash if cmdlist is reused... */
-  priv->cmd->cl = nullptr;
 
   if (!gst_d3d12_device_get_format (decoder->device,
           GST_VIDEO_INFO_FORMAT (info), &device_format) ||
@@ -1068,12 +1065,12 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  if (!priv->cmd->cl) {
+  if (!priv->session->cl) {
     hr = priv->cmd->device->CreateCommandList (0,
         D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE,
-        ca, nullptr, IID_PPV_ARGS (&priv->cmd->cl));
+        ca, nullptr, IID_PPV_ARGS (&priv->session->cl));
   } else {
-    hr = priv->cmd->cl->Reset (ca);
+    hr = priv->session->cl->Reset (ca);
   }
 
   if (!gst_d3d12_result (hr, decoder->device)) {
@@ -1168,7 +1165,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
             D3D12_RESOURCE_STATE_COMMON, subresource[1]));
   }
 
-  priv->cmd->cl->ResourceBarrier (pre_barriers.size (), &pre_barriers[0]);
+  priv->session->cl->ResourceBarrier (pre_barriers.size (), &pre_barriers[0]);
 
   if (out_resource) {
     out_args.pOutputTexture2D = out_resource;
@@ -1223,13 +1220,14 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   priv->session->dpb->Lock ();
   priv->session->dpb->GetReferenceFrames (in_args.ReferenceFrames);
 
-  priv->cmd->cl->DecodeFrame (priv->session->decoder.Get (),
+  priv->session->cl->DecodeFrame (priv->session->decoder.Get (),
       &out_args, &in_args);
 
   if (!post_barriers.empty ())
-    priv->cmd->cl->ResourceBarrier (post_barriers.size (), &post_barriers[0]);
+    priv->session->cl->ResourceBarrier (post_barriers.size (),
+        &post_barriers[0]);
 
-  hr = priv->cmd->cl->Close ();
+  hr = priv->session->cl->Close ();
   priv->session->dpb->Unlock ();
 
   if (!gst_d3d12_result (hr, decoder->device)) {
@@ -1238,7 +1236,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  ID3D12CommandList *cl[] = { priv->cmd->cl.Get () };
+  ID3D12CommandList *cl[] = { priv->session->cl.Get () };
 
   hr = gst_d3d12_cmd_queue_execute_command_lists (priv->cmd->queue,
       1, cl, &priv->cmd->fence_val);
