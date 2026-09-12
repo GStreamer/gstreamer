@@ -114,11 +114,13 @@ enum
   PROP_MEMORY_BUDGET,
   PROP_RESIDENT_MEMORY_SIZE,
   PROP_OVER_BUDGET_FACTOR,
+  PROP_REUSE_DECODER_SESSION,
 };
 
 static GParamSpec *pspec_removed_reason = nullptr;
 
 #define DEFAULT_OVER_BUDGET_FACTOR 0.8
+#define DEFAULT_REUSE_DECODER_SESSION FALSE
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -333,6 +335,7 @@ struct DeviceInner
   std::atomic<gint64> resident_size = { 0 };
   std::atomic<double> overbudget_factor = { DEFAULT_OVER_BUDGET_FACTOR };
   std::atomic<bool> is_over_budget = { false };
+  std::atomic<gboolean> reuse_decoder_session = { DEFAULT_REUSE_DECODER_SESSION };
 
   std::vector<GstD3D12Device*> clients;
 
@@ -822,6 +825,24 @@ gst_d3d12_device_class_init (GstD3D12DeviceClass * klass)
           "or equal to \"memory-budget\")",
           0.0, 1.0, DEFAULT_OVER_BUDGET_FACTOR,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12Device:reuse-decoder-session:
+   *
+   * Keep video decoder sessions alive after decoder instances are destroyed,
+   * allowing compatible sessions to be reused by subsequent decoder instances.
+   *
+   * This avoids repeatedly creating and destroying D3D12 video decoder
+   * resources when compatible decoder instances are created sequentially.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_REUSE_DECODER_SESSION,
+      g_param_spec_boolean ("reuse-decoder-session",
+          "Reuse Decoder Session",
+          "Keep and reuse compatible video decoder sessions",
+          DEFAULT_REUSE_DECODER_SESSION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -893,6 +914,9 @@ gst_d3d12_device_get_property (GObject * object, guint prop_id,
     case PROP_OVER_BUDGET_FACTOR:
       g_value_set_double (value, priv->overbudget_factor.load ());
       break;
+    case PROP_REUSE_DECODER_SESSION:
+      g_value_set_boolean (value, priv->reuse_decoder_session.load ());
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -909,6 +933,9 @@ gst_d3d12_device_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_OVER_BUDGET_FACTOR:
       priv->overbudget_factor = g_value_get_double (value);
+      break;
+    case PROP_REUSE_DECODER_SESSION:
+      priv->reuse_decoder_session = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
