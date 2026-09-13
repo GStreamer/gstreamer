@@ -436,7 +436,7 @@ _guess_tensor_data_type (GstTFliteInference * self, gsize dims_count,
       } else if (dims[2] == 1 || dims[2] == 3) {
         *channels = dims[2];
         if (dims[2] == 1)
-          *gst_format = "GRAY";
+          *gst_format = "GRAY8";
         else
           *gst_format = "RGB";
         *height = dims[0];
