@@ -102,6 +102,8 @@ typedef struct
   GstVideoGammaMode gamma_mode;
   GstVideoPrimariesMode primaries_mode;
   gdouble alpha_value;
+  GstVideoConvertScaleVAlign v_align;
+  GstVideoConvertScaleHAlign h_align;
 
   GstVideoConverter *convert;
 
@@ -112,6 +114,8 @@ typedef struct
 
   gint borders_h;
   gint borders_w;
+  gint dst_x;
+  gint dst_y;
 
   gint crop_x;
   gint crop_y;
@@ -149,6 +153,8 @@ GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 #define DEFAULT_PROP_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PROP_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_PROP_N_THREADS 1
+#define DEFAULT_PROP_VALIGN GST_VIDEO_CONVERT_SCALE_VALIGN_CENTER
+#define DEFAULT_PROP_HALIGN GST_VIDEO_CONVERT_SCALE_HALIGN_CENTER
 
 enum
 {
@@ -170,6 +176,8 @@ enum
   PROP_GAMMA_MODE,
   PROP_PRIMARIES_MODE,
   PROP_CONVERTER_CONFIG,
+  PROP_VALIGN,
+  PROP_HALIGN,
 };
 
 #undef GST_VIDEO_SIZE_RANGE
@@ -220,6 +228,48 @@ gst_video_scale_method_get_type (void)
         g_enum_register_static ("GstVideoScaleMethod", video_scale_methods);
   }
   return video_scale_method_type;
+}
+
+#define GST_TYPE_VIDEO_CONVERT_SCALE_VALIGN (gst_video_convert_scale_valign_get_type())
+static GType
+gst_video_convert_scale_valign_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue methods[] = {
+    {GST_VIDEO_CONVERT_SCALE_VALIGN_TOP, "Top", "top"},
+    {GST_VIDEO_CONVERT_SCALE_VALIGN_CENTER, "Center", "center"},
+    {GST_VIDEO_CONVERT_SCALE_VALIGN_BOTTOM, "Bottom", "bottom"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_enum_register_static ("GstVideoConvertScaleVAlign", methods);
+    g_once_init_leave (&type, tmp);
+  }
+
+  return type;
+}
+
+#define GST_TYPE_VIDEO_CONVERT_SCALE_HALIGN (gst_video_convert_scale_halign_get_type())
+static GType
+gst_video_convert_scale_halign_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue methods[] = {
+    {GST_VIDEO_CONVERT_SCALE_HALIGN_LEFT, "Left", "left"},
+    {GST_VIDEO_CONVERT_SCALE_HALIGN_CENTER, "Center", "center"},
+    {GST_VIDEO_CONVERT_SCALE_HALIGN_RIGHT, "Right", "right"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_enum_register_static ("GstVideoConvertScaleHAlign", methods);
+    g_once_init_leave (&type, tmp);
+  }
+
+  return type;
 }
 
 static GstCaps *
@@ -393,6 +443,31 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
           " This configuration, if set, takes precedence over the other similar conversion properties.",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVideoConvertScale:valignment:
+   *
+   * Vertical alignment of the video content when adding borders
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_VALIGN,
+      g_param_spec_enum ("valignment", "Vertical Alignment",
+          "Vertical alignment of the video content when adding borders",
+          GST_TYPE_VIDEO_CONVERT_SCALE_VALIGN, DEFAULT_PROP_VALIGN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoConvertScale:halignment:
+   *
+   * Horizontal alignment of the video content when adding borders
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_HALIGN,
+      g_param_spec_enum ("halignment", "Horizontal Alignment",
+          "Horizontal alignment of the video content when adding borders",
+          GST_TYPE_VIDEO_CONVERT_SCALE_HALIGN, DEFAULT_PROP_HALIGN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter and scaler",
@@ -436,6 +511,8 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   klass->scales = TRUE;
 
   gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_CONVERT_SCALE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_CONVERT_SCALE_VALIGN, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_CONVERT_SCALE_HALIGN, 0);
 }
 
 static void
@@ -459,6 +536,8 @@ gst_video_convert_scale_init (GstVideoConvertScale * self)
   priv->matrix_mode = DEFAULT_PROP_MATRIX_MODE;
   priv->gamma_mode = DEFAULT_PROP_GAMMA_MODE;
   priv->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
+  priv->v_align = DEFAULT_PROP_VALIGN;
+  priv->h_align = DEFAULT_PROP_HALIGN;
 
   gst_video_info_init (&priv->last_frame_vinfo);
 
@@ -557,6 +636,12 @@ gst_video_convert_scale_set_property (GObject * object, guint prop_id,
       priv->converter_config = g_value_dup_boxed (value);
       priv->converter_config_changed = TRUE;
       break;
+    case PROP_VALIGN:
+      priv->v_align = g_value_get_enum (value);
+      break;
+    case PROP_HALIGN:
+      priv->h_align = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -622,6 +707,12 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERTER_CONFIG:
       g_value_set_boxed (value, priv->converter_config);
+      break;
+    case PROP_VALIGN:
+      g_value_set_enum (value, priv->v_align);
+      break;
+    case PROP_HALIGN:
+      g_value_set_enum (value, priv->h_align);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -819,7 +910,7 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
         GST_VIDEO_INFO_HEIGHT (&videofilter->in_info)
       };
       const GstVideoRectangle out_rectangle = {
-        priv->borders_w / 2, priv->borders_h / 2,
+        priv->dst_x, priv->dst_y,
         GST_VIDEO_INFO_WIDTH (&videofilter->out_info) - priv->borders_w,
         GST_VIDEO_INFO_HEIGHT (&videofilter->out_info) - priv->borders_h
       };
@@ -1008,8 +1099,8 @@ gst_video_convert_scale_get_default_config (GstVideoConvertScale * self,
       GST_VIDEO_RESAMPLER_OPT_ENVELOPE, G_TYPE_DOUBLE, priv->envelope,
       GST_VIDEO_RESAMPLER_OPT_SHARPNESS, G_TYPE_DOUBLE, priv->sharpness,
       GST_VIDEO_RESAMPLER_OPT_SHARPEN, G_TYPE_DOUBLE, priv->sharpen,
-      GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, priv->borders_w / 2,
-      GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, priv->borders_h / 2,
+      GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, priv->dst_x,
+      GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, priv->dst_y,
       GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT,
       out_info->width - priv->borders_w, GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT,
       G_TYPE_INT, out_info->height - priv->borders_h,
@@ -1069,6 +1160,8 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   }
 
   priv->borders_w = priv->borders_h = 0;
+  priv->dst_x = 0;
+  priv->dst_y = 0;
   if (to_dar_n != from_dar_n || to_dar_d != from_dar_d) {
     if (priv->add_borders) {
       gint n, d, to_h, to_w;
@@ -1092,6 +1185,30 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     } else {
       GST_DEBUG_OBJECT (self, "Can't keep DAR!");
     }
+  }
+
+  switch (priv->h_align) {
+    case GST_VIDEO_CONVERT_SCALE_HALIGN_LEFT:
+      priv->dst_x = 0;
+      break;
+    case GST_VIDEO_CONVERT_SCALE_HALIGN_CENTER:
+      priv->dst_x = priv->borders_w / 2;
+      break;
+    case GST_VIDEO_CONVERT_SCALE_HALIGN_RIGHT:
+      priv->dst_x = priv->borders_w;
+      break;
+  }
+
+  switch (priv->v_align) {
+    case GST_VIDEO_CONVERT_SCALE_VALIGN_TOP:
+      priv->dst_y = 0;
+      break;
+    case GST_VIDEO_CONVERT_SCALE_VALIGN_CENTER:
+      priv->dst_y = priv->borders_h / 2;
+      break;
+    case GST_VIDEO_CONVERT_SCALE_VALIGN_BOTTOM:
+      priv->dst_y = priv->borders_h;
+      break;
   }
 
   /* if present, these must match */

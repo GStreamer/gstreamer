@@ -15018,6 +15018,18 @@
                         "type": "GstVideoGammaMode",
                         "writable": true
                     },
+                    "halignment": {
+                        "blurb": "Horizontal alignment of the video content when adding borders",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "center (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoConvertScaleHAlign",
+                        "writable": true
+                    },
                     "matrix-mode": {
                         "blurb": "Matrix Conversion Mode",
                         "conditionally-available": false,
@@ -15094,6 +15106,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gdouble",
+                        "writable": true
+                    },
+                    "valignment": {
+                        "blurb": "Vertical alignment of the video content when adding borders",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "center (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoConvertScaleVAlign",
                         "writable": true
                     }
                 },
@@ -15283,6 +15307,18 @@
                         "type": "GstVideoGammaMode",
                         "writable": true
                     },
+                    "halignment": {
+                        "blurb": "Horizontal alignment of the video content when adding borders",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "center (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoConvertScaleHAlign",
+                        "writable": true
+                    },
                     "matrix-mode": {
                         "blurb": "Matrix Conversion Mode",
                         "conditionally-available": false,
@@ -15360,8 +15396,60 @@
                         "readable": true,
                         "type": "gdouble",
                         "writable": true
+                    },
+                    "valignment": {
+                        "blurb": "Vertical alignment of the video content when adding borders",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "center (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoConvertScaleVAlign",
+                        "writable": true
                     }
                 }
+            },
+            "GstVideoConvertScaleHAlign": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Left",
+                        "name": "left",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Center",
+                        "name": "center",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Right",
+                        "name": "right",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVideoConvertScaleVAlign": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Top",
+                        "name": "top",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Center",
+                        "name": "center",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Bottom",
+                        "name": "bottom",
+                        "value": "2"
+                    }
+                ]
             },
             "GstVideoScaleMethod": {
                 "kind": "enum",

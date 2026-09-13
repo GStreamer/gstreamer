@@ -70,6 +70,30 @@ typedef enum {
   GST_VIDEO_SCALE_MITCHELL
 } GstVideoScaleMethod;
 
+/**
+ * GstVideoConvertScaleVAlign:
+ *
+ * Since: 1.30
+ */
+typedef enum
+{
+  GST_VIDEO_CONVERT_SCALE_VALIGN_TOP,
+  GST_VIDEO_CONVERT_SCALE_VALIGN_CENTER,
+  GST_VIDEO_CONVERT_SCALE_VALIGN_BOTTOM,
+} GstVideoConvertScaleVAlign;
+
+/**
+ * GstVideoConvertScaleHAlign:
+ *
+ * Since: 1.30
+ */
+typedef enum
+{
+  GST_VIDEO_CONVERT_SCALE_HALIGN_LEFT,
+  GST_VIDEO_CONVERT_SCALE_HALIGN_CENTER,
+  GST_VIDEO_CONVERT_SCALE_HALIGN_RIGHT,
+} GstVideoConvertScaleHAlign;
+
 GST_ELEMENT_REGISTER_DECLARE (videoconvertscale);
 
 G_END_DECLS
