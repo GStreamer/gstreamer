@@ -114,6 +114,10 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
             GST_D3D12_ALL_FORMATS)));
 
+static GQuark _size_quark;
+static GQuark _scale_quark;
+static GQuark _matrix_quark;
+
 enum
 {
   PROP_SAMPLING_METHOD = 1,
@@ -354,6 +358,10 @@ gst_d3d12_base_convert_class_init (GstD3D12BaseConvertClass * klass)
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
       (GstPluginAPIFlags) 0);
+
+  _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
+  _scale_quark = gst_video_meta_transform_scale_get_quark ();
+  _matrix_quark = gst_video_meta_transform_matrix_get_quark ();
 }
 
 static void
@@ -1854,11 +1862,51 @@ gst_d3d12_base_convert_transform_meta (GstBaseTransform * trans,
    *   shader or video processor object. Then the conversion object will
    *   consider source cropping area automatically
    */
-  if (meta->info->api == GST_VIDEO_CROP_META_API_TYPE)
+  const auto info = meta->info;
+  if (info->api == GST_VIDEO_CROP_META_API_TYPE)
     return FALSE;
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
-      outbuf, meta, inbuf);
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    nullptr
+  };
+
+  if (!gst_meta_api_type_tags_contain_only (info->api, valid_tags))
+    return FALSE;
+
+  if (gst_meta_api_type_has_tag (info->api, _size_quark)) {
+    if (info->transform_func) {
+      auto base = GST_D3D12_BASE_FILTER (trans);
+      auto self = GST_D3D12_BASE_CONVERT (trans);
+      auto priv = self->priv;
+
+      GstVideoMetaTransformMatrix trans_matrix;
+      GstVideoMetaTransform trans = { &base->in_info, &base->out_info };
+      const GstVideoRectangle in_rectangle = { 0, 0,
+        GST_VIDEO_INFO_WIDTH (&base->in_info),
+        GST_VIDEO_INFO_HEIGHT (&base->in_info)
+      };
+      const GstVideoRectangle out_rectangle = {
+        (gint) priv->out_rect.left,
+        (gint) priv->out_rect.top,
+        (gint) (priv->out_rect.right - priv->out_rect.left),
+        (gint) (priv->out_rect.bottom - priv->out_rect.top),
+      };
+
+      gst_video_meta_transform_matrix_init (&trans_matrix,
+          &base->in_info, &in_rectangle, &base->out_info, &out_rectangle);
+
+      if (!info->transform_func (outbuf, meta, inbuf, _matrix_quark,
+              &trans_matrix))
+        info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+    }
+
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static void
