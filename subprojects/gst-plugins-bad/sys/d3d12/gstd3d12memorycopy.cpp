@@ -45,9 +45,6 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_memory_copy_debug);
 #define GST_CAT_DEFAULT gst_d3d12_memory_copy_debug
 
-#define META_TAG_VIDEO meta_tag_video_quark
-static GQuark meta_tag_video_quark;
-
 #ifdef HAVE_GST_D3D11
 #define SINK_STATIC_CAPS \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES \
@@ -489,8 +486,6 @@ gst_d3d12_memory_copy_class_init (GstD3D12MemoryCopyClass * klass)
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_d3d12_memory_copy_before_transform);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d12_memory_copy_transform);
-
-  meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MEMORY_COPY,
       (GstPluginAPIFlags) 0);
@@ -1362,14 +1357,16 @@ gst_d3d12_memory_copy_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
 {
   const GstMetaInfo *info = meta->info;
-  const gchar *const *tags;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    nullptr
+  };
 
-  tags = gst_meta_api_type_get_tags (info->api);
-
-  if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))) {
+  if (gst_meta_api_type_tags_contain_only (info->api, valid_tags))
     return TRUE;
-  }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
       meta, inbuf);
