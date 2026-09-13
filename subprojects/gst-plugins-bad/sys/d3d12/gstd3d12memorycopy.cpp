@@ -958,8 +958,19 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
   guint i = 0;
 
   for (i = 0; i < n; i++) {
-    gst_caps_set_features (tmp, i,
-        gst_caps_features_new_single_static_str (feature_name));
+    auto orig_features = gst_caps_get_features (tmp, i);
+
+    if (gst_caps_features_is_any (orig_features))
+      continue;
+
+    auto features = gst_caps_features_new_static_str (feature_name, nullptr);
+    if (gst_caps_features_contains (orig_features,
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
+      gst_caps_features_add (features,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    }
+
+    gst_caps_set_features (tmp, i, features);
   }
 
   return tmp;
