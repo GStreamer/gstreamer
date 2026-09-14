@@ -1390,6 +1390,10 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
       }
     }
 
+    segment =
+        &g_array_index (mux->index_table, MXFIndexTableSegment,
+        mux->current_index_pos);
+
     /* Leave temporal offset initialized at 0, above code will set it as necessary */
     ;
     if (is_keyframe)
