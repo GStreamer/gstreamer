@@ -221,6 +221,8 @@ static gboolean gst_hip_memory_copy_decide_allocation (GstBaseTransform *
 static GstFlowReturn
 gst_hip_memory_copy_generate_output (GstBaseTransform * trans,
     GstBuffer ** outbuf);
+static gboolean gst_hip_memory_copy_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static GstFlowReturn gst_hip_memory_copy_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
@@ -269,6 +271,8 @@ gst_hip_memory_copy_class_init (GstHipMemoryCopyClass * klass)
       GST_DEBUG_FUNCPTR (gst_hip_memory_copy_before_transform);
   trans_class->generate_output =
       GST_DEBUG_FUNCPTR (gst_hip_memory_copy_generate_output);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_hip_memory_copy_transform_meta);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_hip_memory_copy_transform);
 
   gst_type_mark_as_plugin_api (GST_TYPE_HIP_MEMORY_COPY, (GstPluginAPIFlags) 0);
@@ -1685,6 +1689,26 @@ gst_hip_memory_copy_generate_output (GstBaseTransform * trans,
   *outbuf = out;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_hip_memory_copy_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  auto info = meta->info;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    nullptr
+  };
+
+  if (gst_meta_api_type_tags_contain_only (info->api, valid_tags))
+    return TRUE;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
+      meta, inbuf);
 }
 
 static GstFlowReturn
