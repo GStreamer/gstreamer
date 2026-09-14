@@ -1090,7 +1090,8 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
-    if (!strcmp (in_plugin->name, "gif")) {
+    if (!strcmp (in_plugin->name, "gif")
+        || g_str_has_suffix (in_plugin->name, "_omx")) {
       GST_LOG ("Ignoring encoder %s", in_plugin->name);
       continue;
     }

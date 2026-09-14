@@ -904,7 +904,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "srt") ||
         !strcmp (in_plugin->name, "pgssub") ||
         !strcmp (in_plugin->name, "dvdsub") ||
-        !strcmp (in_plugin->name, "dvbsub")) {
+        !strcmp (in_plugin->name, "dvbsub") ||
+        g_str_has_suffix (in_plugin->name, "_omx")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
       continue;
     }
