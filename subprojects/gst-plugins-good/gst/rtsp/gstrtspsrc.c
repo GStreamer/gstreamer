@@ -8375,8 +8375,13 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
 
         sskip = (GstRTSPStream *) skip->data;
 
-        /* skip all streams with the same control url */
-        if (g_str_equal (stream->conninfo.location, sskip->conninfo.location)) {
+        /*
+         * Skip all streams with the same control URL. Streams without a control
+         * URL have no setup URL, are skipped above already and have a NULL
+         * location, so don't compare against those.
+         */
+        if (sskip->conninfo.location != NULL &&
+            g_str_equal (stream->conninfo.location, sskip->conninfo.location)) {
           GST_DEBUG_OBJECT (src, "found stream %p with same control %s",
               sskip, sskip->conninfo.location);
           sskip->skipped = TRUE;
