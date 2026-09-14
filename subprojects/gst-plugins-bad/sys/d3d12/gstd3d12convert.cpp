@@ -555,8 +555,6 @@ gst_d3d12_base_convert_caps_remove_format_info (GstCaps * caps)
   GstCapsFeatures *f;
   gint i, n;
   GstCaps *res;
-  GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -573,14 +571,13 @@ gst_d3d12_base_convert_caps_remove_format_info (GstCaps * caps)
     st = gst_structure_copy (st);
     /* Only remove format info for the cases when we can actually convert */
     if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f, feature)) {
+        && gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
       gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
           NULL);
     }
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
-  gst_caps_features_free (feature);
 
   return res;
 }
@@ -592,8 +589,6 @@ gst_d3d12_base_convert_caps_rangify_size_info (GstCaps * caps)
   GstCapsFeatures *f;
   gint i, n;
   GstCaps *res;
-  GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -610,7 +605,7 @@ gst_d3d12_base_convert_caps_rangify_size_info (GstCaps * caps)
     st = gst_structure_copy (st);
     /* Only remove format info for the cases when we can actually convert */
     if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f, feature)) {
+        && gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
       gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
@@ -623,7 +618,6 @@ gst_d3d12_base_convert_caps_rangify_size_info (GstCaps * caps)
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
-  gst_caps_features_free (feature);
 
   return res;
 }
@@ -635,9 +629,6 @@ gst_d3d12_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
   GstCapsFeatures *f;
   gint i, n;
   GstCaps *res;
-  GstCapsFeatures *feature =
-      gst_caps_features_new_single_static_str
-      (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -654,7 +645,7 @@ gst_d3d12_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
     st = gst_structure_copy (st);
     /* Only remove format info for the cases when we can actually convert */
     if (!gst_caps_features_is_any (f)
-        && gst_caps_features_is_equal (f, feature)) {
+        && gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY)) {
       gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, nullptr);
       /* if pixel aspect ratio, make a range of it */
@@ -668,7 +659,6 @@ gst_d3d12_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
 
     gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
-  gst_caps_features_free (feature);
 
   return res;
 }
