@@ -857,7 +857,8 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
     if (!strcmp (in_plugin->name, "vorbis")
-        || !strcmp (in_plugin->name, "flac")) {
+        || !strcmp (in_plugin->name, "flac") ||
+        g_str_has_suffix (in_plugin->name, "_omx")) {
       GST_LOG ("Ignoring encoder %s", in_plugin->name);
       continue;
     }
