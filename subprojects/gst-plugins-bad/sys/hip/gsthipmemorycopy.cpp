@@ -930,9 +930,14 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
   for (i = 0; i < n; i++) {
     auto s = gst_caps_get_structure (caps, i);
     auto new_s = gst_structure_copy (s);
-
-#ifndef G_OS_WIN32
     auto features = gst_caps_get_features (caps, i);
+
+    if (gst_caps_features_is_any (features)) {
+      gst_caps_append_structure_full (tmp, new_s,
+          gst_caps_features_copy (features));
+      continue;
+    }
+#ifndef G_OS_WIN32
     if (features && gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_DMABUF)) {
       /* remove/converts DMABUF specific ones to normal  */
@@ -954,8 +959,14 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
     }
 #endif
 
-    gst_caps_append_structure_full (tmp, new_s,
-        gst_caps_features_new_single (feature_name));
+    auto new_features = gst_caps_features_new_single (feature_name);
+    if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
+      gst_caps_features_add (new_features,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    }
+
+    gst_caps_append_structure_full (tmp, new_s, new_features);
   }
 
   return tmp;
@@ -971,6 +982,13 @@ _set_dmabuf_caps_features (const GstCaps * caps)
 
   for (i = 0; i < n; i++) {
     auto s = gst_caps_get_structure (caps, i);
+    auto features = gst_caps_get_features (caps, i);
+    if (gst_caps_features_is_any (features)) {
+      gst_caps_append_structure_full (tmp, gst_structure_copy (s),
+          gst_caps_features_copy (features));
+      continue;
+    }
+
     auto format_val = gst_structure_get_value (s, "format");
     if (!format_val)
       continue;
@@ -985,8 +1003,15 @@ _set_dmabuf_caps_features (const GstCaps * caps)
     gst_structure_set (new_s, "format", G_TYPE_STRING, "DMA_DRM", nullptr);
     gst_structure_set_value (new_s, "drm-format", &drm_formats);
 
-    gst_caps_append_structure_full (tmp, new_s,
-        gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_DMABUF));
+    auto new_features =
+        gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_DMABUF);
+    if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
+      gst_caps_features_add (new_features,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    }
+
+    gst_caps_append_structure_full (tmp, new_s, new_features);
   }
 
   return tmp;
@@ -1796,9 +1821,16 @@ gst_hip_upload_class_init (GstHipUploadClass * klass)
       "Uploads system memory into HIP device memory",
       "Seungha Yang <seungha@centricular.com>");
 
-  auto sys_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_HIP_FORMATS));
+  auto sys_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_HIP_FORMATS)
+      ";" GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
   auto hip_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY, GST_HIP_FORMATS));
+      (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY, GST_HIP_FORMATS) ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
 
   auto src_caps = gst_caps_merge (gst_caps_ref (hip_caps),
       gst_caps_ref (sys_caps));
@@ -1806,19 +1838,28 @@ gst_hip_upload_class_init (GstHipUploadClass * klass)
   auto sink_caps = sys_caps;
 #ifdef HAVE_GST_HIP_GL
   auto gl_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_HIP_FORMATS));
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_HIP_FORMATS) ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
   sink_caps = gst_caps_merge (sink_caps, gl_caps);
 #endif
 
 #ifdef HAVE_GST_CUDA
   auto cuda_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_HIP_FORMATS));
+      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_HIP_FORMATS) ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
   sink_caps = gst_caps_merge (sink_caps, cuda_caps);
 #endif
 
 #ifndef G_OS_WIN32
   auto dma_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_DMABUF, "DMA_DRM"));
+      (GST_CAPS_FEATURE_MEMORY_DMABUF, "DMA_DRM") ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          "DMA_DRM"));
   gst_caps_set_value (dma_caps, "drm-format", gst_hip_get_drm_formats_value ());
   sink_caps = gst_caps_merge (sink_caps, dma_caps);
 #endif
@@ -1896,9 +1937,16 @@ gst_hip_download_class_init (GstHipDownloadClass * klass)
       "Downloads HIP device memory into system memory",
       "Seungha Yang <seungha@centricular.com>");
 
-  auto sys_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_HIP_FORMATS));
+  auto sys_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_HIP_FORMATS)
+      ";" GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
   auto hip_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY, GST_HIP_FORMATS));
+      (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY, GST_HIP_FORMATS) ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
 
   auto sink_caps = gst_caps_merge (gst_caps_ref (hip_caps),
       gst_caps_ref (sys_caps));
@@ -1906,13 +1954,19 @@ gst_hip_download_class_init (GstHipDownloadClass * klass)
   auto src_caps = sys_caps;
 #ifdef HAVE_GST_HIP_GL
   auto gl_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_HIP_FORMATS));
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_HIP_FORMATS) ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
   src_caps = gst_caps_merge (src_caps, gl_caps);
 #endif
 
 #ifdef HAVE_GST_CUDA
   auto cuda_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_HIP_FORMATS));
+      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_HIP_FORMATS) ";"
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY ","
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+          GST_HIP_FORMATS));
   src_caps = gst_caps_merge (src_caps, cuda_caps);
 #endif
 
