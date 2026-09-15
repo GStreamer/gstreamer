@@ -121,7 +121,9 @@
 #endif
 
 #if HAVE_DIRECTML
-#include "gstonnx-dml.h"
+#include "gstonnximporter-dml.h"
+#else
+#define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
 #endif
 
 #if HAVE_GST_HIP
@@ -148,6 +150,8 @@
 #define DOC_CAPS_STR \
   GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS) "; " \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_HIP_MEMORY, \
+      GST_ONNX_VIDEO_FORMATS) "; " \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, \
       GST_ONNX_VIDEO_FORMATS)
 
 typedef enum
@@ -211,7 +215,7 @@ struct _GstOnnxInference
   GArray *output_pools;
 
 #if HAVE_DIRECTML
-  GstOnnxDmlCtx *dml_ctx;
+  GstD3D12Device *device12;
 #endif
 #ifdef HAVE_GST_HIP
   GstHipDevice *device_hip;
@@ -546,6 +550,15 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
 
   templ_caps =
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE (GST_ONNX_VIDEO_FORMATS));
+#if HAVE_DIRECTML
+  {
+    GstCaps *d3d12_caps = gst_caps_copy (templ_caps);
+    gst_caps_set_features_simple (d3d12_caps,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY));
+    gst_caps_append (templ_caps, d3d12_caps);
+  }
+#endif
 #if HAVE_GST_HIP
   if (gst_hip_rtc_load_library (GST_HIP_VENDOR_AMD)) {
     GstCaps *hip_caps = gst_caps_copy (templ_caps);
@@ -735,10 +748,15 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
 static void
 gst_onnx_inference_set_context (GstElement * element, GstContext * context)
 {
-#if HAVE_GST_HIP
+#if HAVE_GST_HIP || HAVE_DIRECTML
   GstOnnxInference *self = GST_ONNX_INFERENCE (element);
 
   g_rec_mutex_lock (&self->context_lock);
+#if HAVE_DIRECTML
+  gst_d3d12_handle_set_context (element, context, self->selected_device_id,
+      &self->device12);
+#endif
+#if HAVE_GST_HIP
 #ifdef G_OS_WIN32
   gst_hip_handle_set_context_for_adapter_luid (element, context,
       GST_HIP_VENDOR_AMD, self->adapter_luid, &self->device_hip);
@@ -751,6 +769,7 @@ gst_onnx_inference_set_context (GstElement * element, GstContext * context)
         GST_HIP_VENDOR_AMD, self->selected_device_id, &self->device_hip);
   }
 #endif
+#endif
   g_rec_mutex_unlock (&self->context_lock);
 #endif
 
@@ -761,14 +780,26 @@ static gboolean
 gst_onnx_inference_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
 {
-#if HAVE_GST_HIP
+#if HAVE_GST_HIP || HAVE_DIRECTML
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT) {
     gboolean ret;
     g_rec_mutex_lock (&self->context_lock);
+#if HAVE_DIRECTML
+    ret = gst_d3d12_handle_context_query (GST_ELEMENT (self),
+        query, self->device12);
+    if (ret) {
+      g_rec_mutex_unlock (&self->context_lock);
+      return TRUE;
+    }
+#endif
+#if HAVE_GST_HIP
     ret = gst_hip_handle_context_query (GST_ELEMENT (self),
         query, self->device_hip);
+#else
+    ret = FALSE;
+#endif
     g_rec_mutex_unlock (&self->context_lock);
     if (ret)
       return TRUE;
@@ -932,6 +963,12 @@ gst_onnx_inference_filter_memory_caps (GstOnnxInference * self, GstCaps * caps)
     if (is_hip && !have_hip)
       continue;
 
+    if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY) &&
+        (self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_DIRECTML ||
+            (self->session && !self->device_importer)))
+      continue;
+
     gst_caps_append_structure_full (ret,
         gst_structure_copy (gst_caps_get_structure (caps, i)),
         gst_caps_features_copy (features));
@@ -945,6 +982,17 @@ static GstCaps *
 gst_onnx_inference_add_memory_caps (GstOnnxInference * self, GstCaps * caps)
 {
   GstCaps *ret = gst_caps_copy (caps);
+
+#if HAVE_DIRECTML
+  if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_DIRECTML &&
+      (!self->session || self->device_importer)) {
+    GstCaps *d3d12_caps = gst_caps_copy (caps);
+    gst_caps_set_features_simple (d3d12_caps,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY));
+    gst_caps_append (ret, d3d12_caps);
+  }
+#endif
 
 #ifdef HAVE_GST_HIP
   if (gst_onnx_inference_can_use_hip (self)) {
@@ -1956,28 +2004,36 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 #if HAVE_DIRECTML
     {
       guint device_id = 0;
-      GstD3D12Device *device12;
-      GstOnnxDmlCtx *dml_ctx;
 
       if (self->device)
         device_id = (guint) g_ascii_strtoll (self->device, NULL, 10);
 
-      device12 = gst_d3d12_device_new (device_id);
-      if (!device12) {
+      GST_OBJECT_UNLOCK (self);
+      g_rec_mutex_lock (&self->context_lock);
+      self->selected_device_id = device_id;
+      if (self->device12) {
+        guint current_adapter;
+        g_object_get (self->device12, "adapter-index", &current_adapter, NULL);
+        if (current_adapter != device_id)
+          gst_clear_object (&self->device12);
+      }
+      gst_d3d12_ensure_element_data (GST_ELEMENT (self), device_id,
+          &self->device12);
+      g_rec_mutex_unlock (&self->context_lock);
+      GST_OBJECT_LOCK (self);
+      if (!self->device12) {
         GST_ERROR_OBJECT (self,
             "Couldn't create D3D12 device with adapter index %d", device_id);
         goto error;
       }
 
-      dml_ctx = gst_onnx_dml_create_context (device12, session_options, api);
-      gst_object_unref (device12);
-      if (!dml_ctx) {
+      self->device_importer = gst_onnx_importer_dml_new (api,
+          self->device12, session_options);
+      if (!self->device_importer) {
         GST_ERROR_OBJECT (self,
-            "Couldn't create DML context with adapter index %d", device_id);
+            "Couldn't create DML importer with adapter index %d", device_id);
         goto error;
       }
-
-      self->dml_ctx = dml_ctx;
     }
 #else
       GST_ERROR_OBJECT (self, "Compiled without DirectML support");
@@ -2724,7 +2780,6 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   GST_OBJECT_LOCK (self);
 
   gst_clear_object (&self->cpu_importer);
-  gst_clear_object (&self->device_importer);
   self->active_importer = NULL;
 
   // Clean up output names
@@ -2746,6 +2801,7 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   if (self->session)
     api->ReleaseSession (self->session);
   self->session = NULL;
+  gst_clear_object (&self->device_importer);
 
   /* Free cached input tensor metadata */
   if (self->input_name) {
@@ -2774,7 +2830,7 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   self->model_in_height = 0;
 
 #if HAVE_DIRECTML
-  g_clear_pointer (&self->dml_ctx, gst_onnx_dml_free_context);
+  gst_clear_object (&self->device12);
 #endif
 
 #if HAVE_GST_HIP

@@ -47,8 +47,12 @@ if host_system == 'windows' and not onnx_winml_opt.disabled()
       dml_dep = cc.find_library('directml', required: false)
       if dml_dep.found()
         have_directml = true
-        extra_deps += [gstd3d12_dep, dml_dep]
-        onnx_sources += ['gstonnx-dml.cpp']
+        extra_deps += [gstd3d12_dep, gstd3dshader_dep, dml_dep, dx_headers_dep]
+        extra_args += ['-DGST_D3D12_USE_DIRECTX_HEADERS']
+        if cc.get_argument_syntax() != 'msvc' and dx_headers_dep.type_name() != 'internal'
+          extra_args += ['-D__REQUIRED_RPCNDR_H_VERSION__=475']
+        endif
+        onnx_sources += ['gstonnximporter-dml.cpp']
       endif
     endif
   endif

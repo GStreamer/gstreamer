@@ -19,17 +19,17 @@
 
 #pragma once
 
+#include "gstonnximporter.h"
 #include <gst/d3d12/gstd3d12.h>
-#include <onnxruntime_c_api.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstOnnxDmlCtx GstOnnxDmlCtx;
+#define GST_TYPE_ONNX_IMPORTER_DML (gst_onnx_importer_dml_get_type ())
+G_DECLARE_FINAL_TYPE (GstOnnxImporterDml,
+    gst_onnx_importer_dml, GST, ONNX_IMPORTER_DML, GstOnnxImporter);
 
-GstOnnxDmlCtx * gst_onnx_dml_create_context (GstD3D12Device * device12,
-                                             OrtSessionOptions * opt,
-                                             const OrtApi * api);
-
-void gst_onnx_dml_free_context (GstOnnxDmlCtx * ctx);
+GstOnnxImporter * gst_onnx_importer_dml_new (const OrtApi * api,
+                                             GstD3D12Device * device,
+                                             OrtSessionOptions * options);
 
 G_END_DECLS
