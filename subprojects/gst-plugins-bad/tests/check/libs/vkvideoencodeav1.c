@@ -613,8 +613,10 @@ tear_down_encoder (GstVulkanEncoder * enc)
   }
   gst_clear_object (&video_queue);
   gst_clear_object (&graphics_queue);
-  gst_av1_parser_free (parser);
-  parser = NULL;
+  if (parser) {
+    gst_av1_parser_free (parser);
+    parser = NULL;
+  }
 }
 
 static void
