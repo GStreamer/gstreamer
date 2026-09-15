@@ -476,23 +476,38 @@ gst_vulkan_trash_fence_list_wait (GstVulkanTrashList * trash_list,
     VkFence *fences;
     GstVulkanDevice *device = NULL;
     GList *l = NULL;
+    guint n_fences = 0;
 
     fences = g_new0 (VkFence, n);
     for (i = 0, l = fence_list->list; i < n; i++, l = g_list_next (l)) {
       GstVulkanTrash *trash = l->data;
+      guint j;
 
       if (device == NULL)
         device = trash->fence->device;
 
-      fences[i] = trash->fence->fence;
+      /* an always-signalled fence has no handle and nothing to wait on */
+      if (trash->fence->fence == VK_NULL_HANDLE)
+        continue;
+
+      /* several trash objects can share one fence; passing duplicate handles
+       * makes vkWaitForFences fail on some drivers. No VUID covers this. */
+      for (j = 0; j < n_fences; j++) {
+        if (fences[j] == trash->fence->fence)
+          break;
+      }
+      if (j == n_fences)
+        fences[n_fences++] = trash->fence->fence;
 
       /* only support waiting on fences from the same device */
       g_assert (device == trash->fence->device);
     }
 
-    GST_TRACE_OBJECT (trash_list, "Waiting on %d fences with timeout %"
-        GST_TIME_FORMAT, n, GST_TIME_ARGS (timeout));
-    err = vkWaitForFences (device->device, n, fences, TRUE, timeout);
+    if (n_fences > 0) {
+      GST_TRACE_OBJECT (trash_list, "Waiting on %u fences with timeout %"
+          GST_TIME_FORMAT, n_fences, GST_TIME_ARGS (timeout));
+      err = vkWaitForFences (device->device, n_fences, fences, TRUE, timeout);
+    }
     g_free (fences);
 
     gst_vulkan_trash_fence_list_gc (trash_list);
