@@ -37,6 +37,12 @@ hlsl_sources = [
   ['CSMain_p010_to_a420_10_sample', 'cs'],
   ['CSMain_buffer_copy_2d', 'cs'],
   ['CSMain_buffer_copy_2d_unaligned', 'cs'],
+  ['CSMain_buffer_scale_2d_f32', 'cs'],
+  ['CSMain_buffer_scale_2d_u8', 'cs'],
+  ['CSMain_texture_copy_2d_u8', 'cs'],
+  ['CSMain_texture_scale_2d_u8', 'cs'],
+  ['CSMain_texture_copy_2d_f32', 'cs'],
+  ['CSMain_texture_scale_2d_f32', 'cs'],
 ]
 
 shader_model = '5_0'
