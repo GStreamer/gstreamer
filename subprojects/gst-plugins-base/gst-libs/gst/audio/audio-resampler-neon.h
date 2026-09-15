@@ -20,6 +20,18 @@
 #include <gst/gstcpuid.h>
 #include <stdint.h>
 
+#if defined(__thumb2__)
+/* Thumb-2: request the wide encoding explicitly. */
+#define ADD_W(x, y) "add.w " #x ", " #x ", %[" #y "]\n"
+#elif defined(__thumb__)
+/* Thumb-1 has no 3-operand ADD for high registers and no wide encodings. */
+#define ADD_W(x, y) "add " #x ", %[" #y "]\n"
+#else
+/* ARM (A32) has a single 32-bit ADD encoding and rejects the .w width
+ * suffix as invalid syntax, so emit a plain 3-operand ADD. */
+#define ADD_W(x, y) "add " #x ", " #x ", %[" #y "]\n"
+#endif
+
 static inline void
 inner_product_gint16_full_1_neon (gint16 * o, const gint16 * a,
     const gint16 * b, gint len, const gint16 * icoeff, gint bstride)
@@ -133,11 +145,11 @@ inner_product_gint16_cubic_1_neon (gint16 * o, const gint16 * a,
                   "1:"
                   "      mov r8, %[b]\n"
                   "      vld1.16 {d16, d17}, [%[b]]!\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.16 {d18, d19}, [r8]\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.16 {d20, d21}, [r8]\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.16 {d22, d23}, [r8]\n"
                   "      vld1.16 {d24, d25}, [%[a]]!\n"
                   "      subs %[len], %[len], #8\n"
@@ -214,11 +226,11 @@ interpolate_gint16_cubic_neon (gpointer op, const gpointer ap,
                   "1:"
                   "      mov r8, %[a]\n"
                   "      vld1.16 {d16, d17}, [%[a]]!\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.16 {d18, d19}, [r8]\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.16 {d20, d21}, [r8]\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.16 {d22, d23}, [r8]\n"
                   "      subs %[len], %[len], #8\n"
                   "      vmull.s16 q0, d16, d24\n"
@@ -340,11 +352,11 @@ inner_product_gint32_cubic_1_neon (gint32 * o, const gint32 * a,
                   "1:"
                   "      mov r8, %[b]\n"
                   "      vld1.32 {d16, d17}, [%[b]]!\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.32 {d18, d19}, [r8]\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.32 {d20, d21}, [r8]\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.32 {d22, d23}, [r8]\n"
                   "      vld1.32 {d24, d25}, [%[a]]!\n"
                   "      subs %[len], %[len], #4\n"
@@ -426,11 +438,11 @@ interpolate_gint32_cubic_neon (gpointer op, const gpointer ap,
                   "1:"
                   "      mov r8, %[a]\n"
                   "      vld1.32 {d16, d17}, [%[a]]!\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.32 {d18, d19}, [r8]\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.32 {d20, d21}, [r8]\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.32 {d22, d23}, [r8]\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmull.s32 q0, d16, d24\n"
@@ -545,11 +557,11 @@ inner_product_gfloat_cubic_1_neon (gfloat * o, const gfloat * a,
                   "1:"
                   "      mov r8, %[b]\n"
                   "      vld1.32 {q8}, [%[b]]!\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.32 {q9}, [r8]\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.32 {q10}, [r8]\n"
-                  "      add.w r8, r8, %[bstride]\n"
+                  ADD_W(r8, bstride)
                   "      vld1.32 {q11}, [r8]\n"
                   "      vld1.32 {q12}, [%[a]]!\n"
                   "      subs %[len], %[len], #4\n"
@@ -623,11 +635,11 @@ interpolate_gfloat_cubic_neon (gpointer op, const gpointer ap,
                   "1:"
                   "      mov r8, %[a]\n"
                   "      vld1.32 {q8}, [%[a]]!\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.32 {q9}, [r8]\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.32 {q10}, [r8]\n"
-                  "      add.w r8, r8, %[astride]\n"
+                  ADD_W(r8, astride)
                   "      vld1.32 {q11}, [r8]\n"
                   "      subs %[len], %[len], #4\n"
                   "      vmul.f32 q0, q8, q12\n"
