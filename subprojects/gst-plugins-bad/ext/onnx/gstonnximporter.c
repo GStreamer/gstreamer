@@ -25,8 +25,8 @@
 #include <math.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
-#define GST_CAT_DEFAULT onnx_inference_debug
+GST_DEBUG_CATEGORY_EXTERN (onnx_base_inference_debug);
+#define GST_CAT_DEFAULT onnx_base_inference_debug
 
 #define NORMALIZATION_EPSILON_UINT8  0.001
 #define NORMALIZATION_EPSILON_FLOAT  1e-6

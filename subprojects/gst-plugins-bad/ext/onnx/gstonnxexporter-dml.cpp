@@ -31,10 +31,10 @@
 
 /* *INDENT-OFF* */
 G_BEGIN_DECLS
-GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
+GST_DEBUG_CATEGORY_EXTERN (onnx_base_inference_debug);
 G_END_DECLS
 
-#define GST_CAT_DEFAULT onnx_inference_debug
+#define GST_CAT_DEFAULT onnx_base_inference_debug
 
 using namespace Microsoft::WRL;
 

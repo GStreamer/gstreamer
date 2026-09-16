@@ -24,8 +24,8 @@
 #include "gstonnximporter-hip.h"
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
-#define GST_CAT_DEFAULT onnx_inference_debug
+GST_DEBUG_CATEGORY_EXTERN (onnx_base_inference_debug);
+#define GST_CAT_DEFAULT onnx_base_inference_debug
 
 /* *INDENT-OFF* */
 static const gchar kernel_source[] =

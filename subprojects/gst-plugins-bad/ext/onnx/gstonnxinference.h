@@ -1,8 +1,6 @@
-/*
- * GStreamer gstreamer-onnxinference
+/* GStreamer
  * Copyright (C) 2023 Collabora Ltd
- *
- * gstonnxinference.h
+ * Copyright (C) 2026 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,21 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_ONNX_INFERENCE_H__
-#define __GST_ONNX_INFERENCE_H__
+#pragma once
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
+#include "gstonnxbaseinference.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ONNX_INFERENCE            (gst_onnx_inference_get_type())
+#define GST_TYPE_ONNX_INFERENCE (gst_onnx_inference_get_type())
 G_DECLARE_FINAL_TYPE (GstOnnxInference, gst_onnx_inference, GST,
-    ONNX_INFERENCE, GstBaseTransform)
+    ONNX_INFERENCE, GstOnnxBaseInference)
 
 GST_ELEMENT_REGISTER_DECLARE (onnx_inference)
 
 G_END_DECLS
-
-#endif /* __GST_ONNX_INFERENCE_H__ */

@@ -23,8 +23,8 @@
 #include "gstonnx-utils.h"
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
-#define GST_CAT_DEFAULT onnx_inference_debug
+GST_DEBUG_CATEGORY_EXTERN (onnx_base_inference_debug);
+#define GST_CAT_DEFAULT onnx_base_inference_debug
 
 #ifdef G_OS_WIN32
 #include <windows.h>
