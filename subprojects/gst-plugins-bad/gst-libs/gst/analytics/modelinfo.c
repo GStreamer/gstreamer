@@ -986,11 +986,32 @@ gst_analytics_modelinfo_get_input_caps (GstAnalyticsModelInfo * modelinfo,
   GKeyFile *kf = (GKeyFile *) modelinfo;
   gchar *caps_str = g_key_file_get_string (kf, tensor_name, "caps", NULL);
   GstCaps *caps = NULL;
+  guint i;
 
   if (caps_str)
     caps = gst_caps_from_string (caps_str);
 
   g_free (caps_str);
+
+  if (!caps)
+    return NULL;
+
+  caps = gst_caps_make_writable (caps);
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+
+    if (features && gst_caps_features_get_size (features) > 0) {
+      gchar *features_str = gst_caps_features_to_string (features);
+
+      GST_WARNING ("Tensor '%s' declares 'caps' with feature '%s', which "
+          "is not meaningful in a modelinfo file, stripping", tensor_name,
+          features_str);
+      g_free (features_str);
+
+      gst_caps_set_features (caps, i, NULL);
+    }
+  }
 
   return caps;
 }
