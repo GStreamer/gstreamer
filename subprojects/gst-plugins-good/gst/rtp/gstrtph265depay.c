@@ -128,6 +128,8 @@ static gboolean gst_rtp_h265_depay_handle_event (GstRTPBaseDepayload * depay,
     GstEvent * event);
 static GstBuffer *gst_rtp_h265_complete_au (GstRtpH265Depay * rtph265depay,
     GstClockTime * out_timestamp, gboolean * out_keyframe);
+static gboolean gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay,
+    GstBuffer * nal, GstClockTime in_timestamp, gboolean marker);
 static void gst_rtp_h265_depay_push (GstRtpH265Depay * rtph265depay,
     GstBuffer * outbuf, gboolean keyframe, GstClockTime timestamp,
     gboolean marker);
@@ -293,6 +295,8 @@ gst_rtp_h265_depay_reset (GstRtpH265Depay * rtph265depay, gboolean hard)
   rtph265depay->last_ts = 0;
   rtph265depay->current_fu_type = 0;
   rtph265depay->new_codec_data = FALSE;
+  gst_buffer_replace (&rtph265depay->meta_buf, NULL);
+  rtph265depay->meta_buf_ts = GST_CLOCK_TIME_NONE;
   g_ptr_array_set_size (rtph265depay->vps, 0);
   g_ptr_array_set_size (rtph265depay->sps, 0);
   g_ptr_array_set_size (rtph265depay->pps, 0);
@@ -330,6 +334,8 @@ gst_rtp_h265_depay_finalize (GObject * object)
 
   if (rtph265depay->codec_data)
     gst_buffer_unref (rtph265depay->codec_data);
+
+  gst_buffer_replace (&rtph265depay->meta_buf, NULL);
 
   g_object_unref (rtph265depay->adapter);
   g_object_unref (rtph265depay->picture_adapter);
@@ -1345,6 +1351,11 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
     /* add to adapter */
     gst_buffer_unmap (nal, &map);
 
+    if (rtph265depay->meta_buf && rtph265depay->meta_buf_ts == in_timestamp) {
+      nal = gst_buffer_make_writable (nal);
+      gst_rtp_copy_video_meta (rtph265depay, nal, rtph265depay->meta_buf);
+    }
+
     if (!rtph265depay->picture_start && start && out_keyframe) {
       rtph265depay->waiting_for_keyframe = FALSE;
       rtph265depay->requesting_keyframe = FALSE;
@@ -1364,6 +1375,11 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
     GST_DEBUG_OBJECT (depayload, "using NAL as output");
     outbuf = nal;
     gst_buffer_unmap (nal, &map);
+
+    if (rtph265depay->meta_buf && rtph265depay->meta_buf_ts == in_timestamp) {
+      outbuf = gst_buffer_make_writable (outbuf);
+      gst_rtp_copy_video_meta (rtph265depay, outbuf, rtph265depay->meta_buf);
+    }
   }
 
   if (outbuf) {
@@ -1479,6 +1495,13 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 #endif
 
     timestamp = GST_BUFFER_PTS (rtp->buffer);
+
+    /* Save the first RTP buffer of each new frame so that video meta can
+     * be re-applied after parameter-set diversion or FU adapter assembly. */
+    if (rtph265depay->meta_buf_ts != timestamp) {
+      gst_buffer_replace (&rtph265depay->meta_buf, rtp->buffer);
+      rtph265depay->meta_buf_ts = timestamp;
+    }
 
     payload_len = gst_rtp_buffer_get_payload_len (rtp);
     payload = gst_rtp_buffer_get_payload (rtp);
