@@ -272,6 +272,8 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay, gboolean hard)
   rtph264depay->new_codec_data = FALSE;
   g_ptr_array_set_size (rtph264depay->sps, 0);
   g_ptr_array_set_size (rtph264depay->pps, 0);
+  gst_buffer_replace (&rtph264depay->meta_buf, NULL);
+  rtph264depay->meta_buf_ts = GST_CLOCK_TIME_NONE;
 
   if (hard) {
     if (rtph264depay->allocator != NULL) {
@@ -306,6 +308,8 @@ gst_rtp_h264_depay_finalize (GObject * object)
 
   if (rtph264depay->codec_data)
     gst_buffer_unref (rtph264depay->codec_data);
+
+  gst_buffer_replace (&rtph264depay->meta_buf, NULL);
 
   g_object_unref (rtph264depay->adapter);
   g_object_unref (rtph264depay->picture_adapter);
@@ -1136,6 +1140,10 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     }
 
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
+    if (rtph264depay->meta_buf && rtph264depay->meta_buf_ts == in_timestamp) {
+      nal = gst_buffer_make_writable (nal);
+      gst_rtp_copy_video_meta (rtph264depay, nal, rtph264depay->meta_buf);
+    }
     gst_adapter_push (rtph264depay->picture_adapter, nal);
     rtph264depay->last_ts = in_timestamp;
     rtph264depay->last_keyframe |= keyframe;
@@ -1149,6 +1157,10 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     GST_DEBUG_OBJECT (depayload, "using NAL as output");
     outbuf = nal;
     gst_buffer_unmap (nal, &map);
+    if (rtph264depay->meta_buf && rtph264depay->meta_buf_ts == in_timestamp) {
+      outbuf = gst_buffer_make_writable (outbuf);
+      gst_rtp_copy_video_meta (rtph264depay, outbuf, rtph264depay->meta_buf);
+    }
   }
 
   if (outbuf) {
@@ -1275,6 +1287,13 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     gboolean consumed = FALSE;
 
     timestamp = GST_BUFFER_PTS (rtp->buffer);
+
+    /* Save the first RTP buffer of each new frame so that video meta can
+     * be re-applied after parameter-set diversion or FU adapter assembly. */
+    if (rtph264depay->meta_buf_ts != timestamp) {
+      gst_buffer_replace (&rtph264depay->meta_buf, rtp->buffer);
+      rtph264depay->meta_buf_ts = timestamp;
+    }
 
     payload_len = gst_rtp_buffer_get_payload_len (rtp);
     payload = gst_rtp_buffer_get_payload (rtp);
