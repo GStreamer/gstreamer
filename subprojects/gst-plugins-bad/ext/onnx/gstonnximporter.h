@@ -49,6 +49,21 @@ typedef struct _GstOnnxImporter GstOnnxImporter;
 typedef struct _GstOnnxImporterClass GstOnnxImporterClass;
 typedef struct _GstOnnxImporterPrivate GstOnnxImporterPrivate;
 typedef struct _GstOnnxImporterConfig GstOnnxImporterConfig;
+typedef struct _GstOnnxImporterWrapData GstOnnxImporterWrapData;
+
+typedef enum
+{
+  GST_ONNX_IMPORTER_PROC_CONVERT,
+  GST_ONNX_IMPORTER_PROC_WRAP,
+} GstOnnxImporterProcType;
+
+struct _GstOnnxImporterWrapData
+{
+  const OrtApi *api;
+  GstBuffer *buffer;
+  GstMapInfo map;
+  OrtValue *value;
+};
 
 struct _GstOnnxImporterConfig
 {
@@ -65,6 +80,8 @@ struct _GstOnnxImporter
   GstObject parent;
 
   const OrtApi *api;
+
+  GstOnnxImporterProcType proc_type;
 
   GstVideoInfo info;
   GstOnnxImporterConfig config;
@@ -86,15 +103,23 @@ struct _GstOnnxImporterClass
   OrtValue * (*prepare) (GstOnnxImporter * importer,
                          GstBuffer * buffer);
 
+  OrtValue * (*prepare_wrapped) (GstOnnxImporter * importer,
+                                 GstBuffer * buffer,
+                                 ONNXTensorElementDataType data_type,
+                                 const gint64 * dims,
+                                 gsize dims_count);
+
   void       (*unprepare) (GstOnnxImporter * importer);
 };
 
 GType       gst_onnx_importer_get_type (void);
 
-GstOnnxImporter * gst_onnx_importer_new (const OrtApi * api);
+GstOnnxImporter * gst_onnx_importer_new (const OrtApi * api,
+                                         GstOnnxImporterProcType proc_type);
 
 gboolean    gst_onnx_importer_create_system_memory_info (GstOnnxImporter * importer,
-                                                         const OrtApi * api);
+                                                         const OrtApi * api,
+                                                         GstOnnxImporterProcType proc_type);
 
 gboolean    gst_onnx_importer_setup (GstOnnxImporter * importer,
                                      const GstVideoInfo * info,
@@ -103,7 +128,15 @@ gboolean    gst_onnx_importer_setup (GstOnnxImporter * importer,
 OrtValue *  gst_onnx_importer_prepare (GstOnnxImporter * importer,
                                        GstBuffer * buffer);
 
+OrtValue *  gst_onnx_importer_prepare_wrapped (GstOnnxImporter * importer,
+                                               GstBuffer * buffer,
+                                               ONNXTensorElementDataType data_type,
+                                               const gint64 * dims,
+                                               gsize dims_count);
+
 void        gst_onnx_importer_unprepare (GstOnnxImporter * importer);
+
+void        gst_onnx_importer_wrap_data_clear (GstOnnxImporterWrapData * data);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstOnnxImporter, gst_object_unref)
 

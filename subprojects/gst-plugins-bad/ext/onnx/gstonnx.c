@@ -37,12 +37,16 @@
  */
 
 #include "gstonnxinference.h"
+#include "gstonnxtensorinference.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_plugin_set_static_features_flag (plugin);
-  return GST_ELEMENT_REGISTER (onnx_inference, plugin);
+  GST_ELEMENT_REGISTER (onnx_inference, plugin);
+  GST_ELEMENT_REGISTER (onnx_tensor_inference, plugin);
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

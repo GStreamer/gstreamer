@@ -249,6 +249,7 @@ struct _GstOnnxBaseInferencePrivate
 
   GPtrArray *input_tensors;
   GPtrArray *output_tensors;
+  GPtrArray *result_tensors;
 
   GArray *model_inputs;
   gchar **input_names;
@@ -291,6 +292,12 @@ static gboolean gst_onnx_base_inference_start (GstBaseTransform * trans);
 static gboolean gst_onnx_base_inference_stop (GstBaseTransform * trans);
 static GstFlowReturn gst_onnx_base_inference_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
+static void gst_onnx_base_inference_clear_result_tensors (GstOnnxBaseInference *
+    self);
+static GstFlowReturn
+gst_onnx_base_inference_end_inference_default (GstOnnxBaseInference * self,
+    GstBuffer * buf, GPtrArray * results, gsize num_tensors,
+    gboolean attach_meta);
 
 /**
  * GstOnnxBaseInference:
@@ -427,6 +434,9 @@ gst_onnx_base_inference_class_init (GstOnnxBaseInferenceClass * klass)
   trans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_onnx_base_inference_transform_ip);
 
+  klass->end_inference =
+      GST_DEBUG_FUNCPTR (gst_onnx_base_inference_end_inference_default);
+
   gst_type_mark_as_plugin_api (GST_TYPE_ONNX_OPTIMIZATION_LEVEL, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_ONNX_EXECUTION_PROVIDER, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_ONNX_BASE_INFERENCE, 0);
@@ -471,6 +481,7 @@ gst_onnx_base_inference_init (GstOnnxBaseInference * self)
   priv->input_tensors = g_ptr_array_new ();
   priv->output_tensors =
       g_ptr_array_new_full (0, (GDestroyNotify) release_ort_value);
+  priv->result_tensors = g_ptr_array_new ();
 
   g_rec_mutex_init (&priv->context_lock);
 
@@ -493,6 +504,8 @@ gst_onnx_base_inference_finalize (GObject * object)
   gst_clear_object (&priv->exporter);
   g_ptr_array_unref (priv->input_tensors);
   g_ptr_array_unref (priv->output_tensors);
+  gst_onnx_base_inference_clear_result_tensors (self);
+  g_ptr_array_unref (priv->result_tensors);
   gst_clear_structure (&priv->output_tensorgroups);
 
   g_rec_mutex_clear (&priv->context_lock);
@@ -1144,6 +1157,35 @@ get_tensor_type_size (GstTensorDataType data_type)
   };
 }
 
+static void
+gst_onnx_base_inference_clear_free_tensors (GstOnnxBaseInference * self,
+    GstTensor ** tensors)
+{
+  GstOnnxBaseInferencePrivate *priv = self->priv;
+
+  if (!tensors)
+    return;
+
+  for (gsize i = 0; i < priv->output_count; i++) {
+    if (tensors[i])
+      gst_tensor_free (tensors[i]);
+  }
+
+  g_free (tensors);
+}
+
+static void
+gst_onnx_base_inference_clear_result_tensors (GstOnnxBaseInference * self)
+{
+  GstOnnxBaseInferencePrivate *priv = self->priv;
+
+  for (guint i = 0; i < priv->result_tensors->len; i++) {
+    GstTensor **ret = g_ptr_array_index (priv->result_tensors, i);
+    gst_onnx_base_inference_clear_free_tensors (self, ret);
+  }
+
+  g_ptr_array_set_size (priv->result_tensors, 0);
+}
 
 static void
 gst_onnx_base_inference_reset (GstOnnxBaseInference * self)
@@ -1154,7 +1196,6 @@ gst_onnx_base_inference_reset (GstOnnxBaseInference * self)
   /* Free cached input tensor metadata */
   g_clear_pointer (&priv->input_names, g_free);
   g_array_set_size (priv->model_inputs, 0);
-  gst_clear_structure (&priv->output_tensorgroups);
 
   // Clean up output names
   if (priv->output_names) {
@@ -1164,12 +1205,17 @@ gst_onnx_base_inference_reset (GstOnnxBaseInference * self)
     }
   }
 
+  /* This must be done before resetting priv->output_count */
+  gst_onnx_base_inference_clear_result_tensors (self);
+
   g_clear_pointer (&priv->output_names, g_free);
   g_clear_pointer (&priv->output_ids, g_free);
   g_clear_pointer (&priv->output_dims_orders, g_free);
   priv->output_count = 0;
 
+  g_ptr_array_set_size (priv->input_tensors, 0);
   g_ptr_array_set_size (priv->output_tensors, 0);
+  gst_clear_structure (&priv->output_tensorgroups);
   gst_clear_object (&priv->exporter);
 
   if (priv->session) {
@@ -1218,7 +1264,7 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
   GstOnnxImporter *importer = NULL;
   size_t input_count = 0;
   size_t i;
-  GQuark group_id_quark = 0;
+  GstOnnxModelInfo parsed_info = { 0, };
   GArray *exporter_configs = NULL;
 
   if (!gst_onnx_base_inference_load_library (self))
@@ -1565,7 +1611,7 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
           &priv->device12);
       if (priv->device12)
         importer = gst_onnx_importer_dml_new (self->api,
-            priv->device12, session_options);
+            priv->device12, session_options, klass->proc_type);
       g_rec_mutex_unlock (&priv->context_lock);
 
       if (!importer) {
@@ -1700,7 +1746,8 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
 
     if (priv->device_hip) {
       GST_DEBUG_OBJECT (self, "Creating HIP importer");
-      importer = gst_onnx_importer_hip_new (self->api, priv->device_hip);
+      importer = gst_onnx_importer_hip_new (self->api,
+          priv->device_hip, klass->proc_type);
       if (!importer)
         GST_WARNING_OBJECT (self, "Couldn't create HIP importer");
     }
@@ -1709,7 +1756,7 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
 #endif /* HAVE_GST_HIP */
 
   if (!importer)
-    importer = gst_onnx_importer_new (self->api);
+    importer = gst_onnx_importer_new (self->api, klass->proc_type);
 
   if (!importer) {
     GST_ERROR_OBJECT (self, "Couldn't create importer");
@@ -1808,6 +1855,8 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
           "Unsupported input[%zu] tensor data type %d", i, element_type);
       goto input_error;
     }
+
+    input.data_type_onnx = element_type;
 
     /* Get input tensor name from ONNX file */
     status = self->api->SessionGetInputName (priv->session, i,
@@ -2185,7 +2234,7 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
 
     gst_structure_take_value (priv->output_tensorgroups,
         group_id, &v_tensors_set);
-    group_id_quark = g_quark_from_string (group_id);
+    parsed_info.group_id = g_quark_from_string (group_id);
     g_free (group_id);
   }
 
@@ -2218,8 +2267,10 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
     goto error;
   }
 
-  if (!klass->process_model_info (self, modelinfo, group_id_quark,
-          priv->model_inputs, priv->output_tensorgroups, importer)) {
+  parsed_info.inputs = priv->model_inputs;
+  parsed_info.output_tensorgroups = priv->output_tensorgroups;
+
+  if (!klass->process_model_info (self, modelinfo, &parsed_info, importer)) {
     GST_ERROR_OBJECT (self, "Failed to process model info");
     goto error;
   }
@@ -2268,25 +2319,27 @@ gst_onnx_base_inference_stop (GstBaseTransform * trans)
 }
 
 static GstFlowReturn
-gst_onnx_base_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+gst_onnx_base_inference_run (GstOnnxBaseInference * self, GstBuffer * buf,
+    gsize run_index, GstTensor *** results)
 {
-  GstOnnxBaseInference *self = GST_ONNX_BASE_INFERENCE (trans);
   GstOnnxBaseInferencePrivate *priv = self->priv;
   GstOnnxBaseInferenceClass *klass = GST_ONNX_BASE_INFERENCE_GET_CLASS (self);
   OrtStatus *status = NULL;
   OrtValue **output_tensors = NULL;
-  GstTensorMeta *tmeta = NULL;
   OrtIoBinding *binding = NULL;
   const OrtMemoryInfo **output_memory_infos = NULL;
   gboolean needs_binding = FALSE;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstTensor **output_tensors_gst = NULL;
+
+  *results = NULL;
 
   g_ptr_array_set_size (priv->input_tensors, 0);
   g_ptr_array_set_size (priv->output_tensors, 0);
 
   ret = klass->prepare_input_tensors (self, buf,
-      priv->model_inputs, priv->input_tensors);
+      priv->model_inputs, run_index, priv->input_tensors);
   if (ret != GST_FLOW_OK)
     goto done;
 
@@ -2410,9 +2463,7 @@ gst_onnx_base_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     binding = NULL;
   }
 
-  tmeta = gst_buffer_add_tensor_meta (buf);
-  tmeta->num_tensors = priv->output_count;
-  tmeta->tensors = g_new0 (GstTensor *, priv->output_count);
+  output_tensors_gst = g_new0 (GstTensor *, priv->output_count);
 
   for (size_t i = 0; i < priv->output_count; i++) {
     size_t j;
@@ -2464,7 +2515,7 @@ gst_onnx_base_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       }
 
       tensor = gst_tensor_alloc (num_dims);
-      tmeta->tensors[i] = tensor;
+      output_tensors_gst[i] = tensor;
       tensor->id = priv->output_ids[i];
       tensor->dims_order = priv->output_dims_orders[i];
 
@@ -2487,10 +2538,10 @@ gst_onnx_base_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
     if (tensor_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
       element_size = sizeof (float);
-      tmeta->tensors[i]->data_type = GST_TENSOR_DATA_TYPE_FLOAT32;
+      output_tensors_gst[i]->data_type = GST_TENSOR_DATA_TYPE_FLOAT32;
     } else if (tensor_type == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
       element_size = sizeof (int32_t);
-      tmeta->tensors[i]->data_type = GST_TENSOR_DATA_TYPE_INT32;
+      output_tensors_gst[i]->data_type = GST_TENSOR_DATA_TYPE_INT32;
     } else {
       GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
           ("Output tensor is not FLOAT32 or INT32, not supported"));
@@ -2506,16 +2557,17 @@ gst_onnx_base_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     }
 
     ret = gst_onnx_exporter_export (priv->exporter, (guint) i,
-        output_tensors[i], buffer_size, &tmeta->tensors[i]->data);
+        output_tensors[i], buffer_size, &output_tensors_gst[i]->data);
     if (ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Couldn't export output %zu", i);
       goto done;
     }
   }
 
-  tmeta = NULL;
+  *results = output_tensors_gst;
+  output_tensors_gst = NULL;
 
-  GST_TRACE_OBJECT (trans, "Num tensors:%zu", priv->output_count);
+  GST_TRACE_OBJECT (self, "Num tensors:%zu", priv->output_count);
 
 done:
   if (binding)
@@ -2534,10 +2586,83 @@ done:
   klass->unprepare_input_tensors (self, buf, priv->input_tensors);
   g_ptr_array_set_size (priv->input_tensors, 0);
 
-  if (tmeta)
-    gst_buffer_remove_meta (buf, (GstMeta *) tmeta);
+  gst_onnx_base_inference_clear_free_tensors (self, output_tensors_gst);
 
   return ret;
+}
+
+static GstFlowReturn
+gst_onnx_base_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+{
+  GstOnnxBaseInference *self = GST_ONNX_BASE_INFERENCE (trans);
+  GstOnnxBaseInferencePrivate *priv = self->priv;
+  GstOnnxBaseInferenceClass *klass = GST_ONNX_BASE_INFERENCE_GET_CLASS (self);
+  GstTensor **result = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gsize num_iterations = 1;
+
+  gst_onnx_base_inference_clear_result_tensors (self);
+
+  if (klass->start_inference) {
+    ret = klass->start_inference (self,
+        buf, priv->model_inputs, &num_iterations);
+    if (ret != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (self, "Failed to start inference");
+      return ret;
+    }
+  }
+
+  for (gsize i = 0; i < num_iterations; i++) {
+    result = NULL;
+    ret = gst_onnx_base_inference_run (self, buf, i, &result);
+    if (ret != GST_FLOW_OK)
+      break;
+
+    if (result) {
+      g_ptr_array_add (priv->result_tensors, result);
+    } else {
+      GST_WARNING_OBJECT (self, "No inference result for iteration %"
+          G_GSIZE_FORMAT, i);
+    }
+  }
+
+  if (klass->end_inference) {
+    GstFlowReturn end_ret = klass->end_inference (self,
+        buf, priv->result_tensors, priv->output_count, ret == GST_FLOW_OK);
+
+    if (ret == GST_FLOW_OK)
+      ret = end_ret;
+  }
+
+  gst_onnx_base_inference_clear_result_tensors (self);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_onnx_base_inference_end_inference_default (GstOnnxBaseInference * self,
+    GstBuffer * buf, GPtrArray * results, gsize num_tensors,
+    gboolean attach_meta)
+{
+  GstTensorMeta *tmeta;
+  GstTensor **tensors;
+
+  if (results->len == 0 || !attach_meta)
+    return GST_FLOW_OK;
+
+  /* default path is always single-run */
+  g_assert (results->len == 1);
+
+  tensors = g_ptr_array_index (results, 0);
+  tmeta = gst_buffer_add_tensor_meta (buf);
+  if (!tmeta)
+    return GST_FLOW_ERROR;
+
+  g_ptr_array_index (results, 0) = NULL;
+  tmeta->num_tensors = num_tensors;
+  tmeta->tensors = tensors;
+
+  return GST_FLOW_OK;
 }
 
 // This has to be last in this file to ensure that MIN_ORT_API_VERSION is

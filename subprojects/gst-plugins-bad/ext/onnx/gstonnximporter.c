@@ -38,6 +38,8 @@ struct _GstOnnxImporterPrivate
   guint8 *dest;
   gsize dest_size;
   OrtValue *value;
+
+  GArray *wrapped_array;
 };
 
 #define gst_onnx_importer_parent_class parent_class
@@ -47,6 +49,9 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstOnnxImporter,
 static void gst_onnx_importer_finalize (GObject * object);
 static OrtValue *gst_onnx_importer_prepare_default (GstOnnxImporter * importer,
     GstBuffer * buffer);
+static OrtValue *gst_onnx_importer_prepare_wrapped_default (GstOnnxImporter *
+    importer, GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count);
 static void gst_onnx_importer_unprepare_default (GstOnnxImporter * importer);
 
 static void
@@ -58,6 +63,7 @@ gst_onnx_importer_class_init (GstOnnxImporterClass * klass)
   object_class->finalize = gst_onnx_importer_finalize;
 
   importer_class->prepare = gst_onnx_importer_prepare_default;
+  importer_class->prepare_wrapped = gst_onnx_importer_prepare_wrapped_default;
   importer_class->unprepare = gst_onnx_importer_unprepare_default;
 }
 
@@ -75,6 +81,9 @@ gst_onnx_importer_finalize (GObject * object)
 
   gst_onnx_importer_unprepare_default (self);
   g_clear_pointer (&priv->dest, g_free);
+
+  if (priv->wrapped_array)
+    g_array_unref (priv->wrapped_array);
 
   if (priv->system_memory_info)
     self->api->ReleaseMemoryInfo (priv->system_memory_info);
@@ -107,6 +116,8 @@ gst_onnx_importer_setup (GstOnnxImporter * importer, const GstVideoInfo * info,
 {
   GstOnnxImporterClass *klass = GST_ONNX_IMPORTER_GET_CLASS (importer);
   GstOnnxImporterPrivate *priv = importer->priv;
+
+  g_assert (importer->proc_type == GST_ONNX_IMPORTER_PROC_CONVERT);
 
   switch (config->data_type) {
     case GST_TENSOR_DATA_TYPE_UINT8:
@@ -356,9 +367,56 @@ gst_onnx_importer_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
 {
   GstOnnxImporterClass *klass = GST_ONNX_IMPORTER_GET_CLASS (importer);
 
+  g_assert (importer->proc_type == GST_ONNX_IMPORTER_PROC_CONVERT);
   g_assert (klass->prepare);
 
   return klass->prepare (importer, buffer);
+}
+
+static OrtValue *
+gst_onnx_importer_prepare_wrapped_default (GstOnnxImporter * self,
+    GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count)
+{
+  GstOnnxImporterPrivate *priv = self->priv;
+  OrtStatus *status = NULL;
+  GstOnnxImporterWrapData data = { NULL, };
+
+  if (!gst_buffer_map (buffer, &data.map, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Couldn't map tensor buffer");
+    return NULL;
+  }
+
+  status = self->api->CreateTensorWithDataAsOrtValue (priv->system_memory_info,
+      data.map.data, data.map.size, dims, dims_count, data_type, &data.value);
+
+  if (status) {
+    GST_ERROR_OBJECT (self, "Couldn't create input: %s",
+        self->api->GetErrorMessage (status));
+    self->api->ReleaseStatus (status);
+    gst_buffer_unmap (buffer, &data.map);
+    return NULL;
+  }
+
+  data.api = self->api;
+  data.buffer = gst_buffer_ref (buffer);
+
+  g_array_append_val (priv->wrapped_array, data);
+
+  return data.value;
+}
+
+OrtValue *
+gst_onnx_importer_prepare_wrapped (GstOnnxImporter * importer,
+    GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count)
+{
+  GstOnnxImporterClass *klass = GST_ONNX_IMPORTER_GET_CLASS (importer);
+
+  g_assert (importer->proc_type == GST_ONNX_IMPORTER_PROC_WRAP);
+  g_assert (klass->prepare_wrapped);
+
+  return klass->prepare_wrapped (importer, buffer, data_type, dims, dims_count);
 }
 
 static void
@@ -370,6 +428,9 @@ gst_onnx_importer_unprepare_default (GstOnnxImporter * self)
     self->api->ReleaseValue (priv->value);
     priv->value = NULL;
   }
+
+  if (priv->wrapped_array)
+    g_array_set_size (priv->wrapped_array, 0);
 
   if (priv->frame.buffer)
     gst_video_frame_unmap (&priv->frame);
@@ -386,12 +447,12 @@ gst_onnx_importer_unprepare (GstOnnxImporter * importer)
 }
 
 GstOnnxImporter *
-gst_onnx_importer_new (const OrtApi * api)
+gst_onnx_importer_new (const OrtApi * api, GstOnnxImporterProcType proc_type)
 {
   GstOnnxImporter *self = g_object_new (GST_TYPE_ONNX_IMPORTER, NULL);
   gst_object_ref_sink (self);
 
-  if (!gst_onnx_importer_create_system_memory_info (self, api)) {
+  if (!gst_onnx_importer_create_system_memory_info (self, api, proc_type)) {
     gst_object_unref (self);
     return NULL;
   }
@@ -399,9 +460,26 @@ gst_onnx_importer_new (const OrtApi * api)
   return self;
 }
 
+void
+gst_onnx_importer_wrap_data_clear (GstOnnxImporterWrapData * data)
+{
+  if (!data)
+    return;
+
+  if (data->api && data->value)
+    data->api->ReleaseValue (data->value);
+
+  if (data->buffer) {
+    gst_buffer_unmap (data->buffer, &data->map);
+    gst_buffer_unref (data->buffer);
+  }
+
+  memset (data, 0, sizeof (GstOnnxImporterWrapData));
+}
+
 gboolean
 gst_onnx_importer_create_system_memory_info (GstOnnxImporter * importer,
-    const OrtApi * api)
+    const OrtApi * api, GstOnnxImporterProcType proc_type)
 {
   GstOnnxImporterPrivate *priv = importer->priv;
   OrtStatus *status;
@@ -420,7 +498,15 @@ gst_onnx_importer_create_system_memory_info (GstOnnxImporter * importer,
   }
 
   importer->api = api;
+  importer->proc_type = proc_type;
   priv->system_memory_info = memory_info;
+
+  if (proc_type == GST_ONNX_IMPORTER_PROC_WRAP) {
+    priv->wrapped_array = g_array_new (FALSE,
+        TRUE, sizeof (GstOnnxImporterWrapData));
+    g_array_set_clear_func (priv->wrapped_array,
+        (GDestroyNotify) gst_onnx_importer_wrap_data_clear);
+  }
 
   return TRUE;
 }

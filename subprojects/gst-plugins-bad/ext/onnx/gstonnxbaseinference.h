@@ -45,10 +45,18 @@ typedef struct
   gchar *modelinfo_name;
   GQuark id;
   GstTensorDataType data_type;
+  ONNXTensorElementDataType data_type_onnx;
   GstTensorDimOrder dims_order;
   gsize num_dims;
   gint64 dims[GST_ONNX_MAX_DIMS];
 } GstOnnxModelInput;
+
+typedef struct _GstOnnxModelInfo
+{
+  GQuark group_id;
+  const GArray *inputs;
+  const GstStructure *output_tensorgroups;
+} GstOnnxModelInfo;
 
 typedef enum
 {
@@ -76,23 +84,35 @@ struct _GstOnnxBaseInferenceClass
 {
   GstBaseTransformClass parent_class;
 
+  GstOnnxImporterProcType proc_type;
+
   void (*reset) (GstOnnxBaseInference * base);
 
   gboolean (*process_model_info) (GstOnnxBaseInference * base,
                                   GstAnalyticsModelInfo * modelinfo,
-                                  GQuark group_id,
-                                  const GArray * model_inputs,
-                                  GstStructure * output_tensorgroups,
+                                  const GstOnnxModelInfo * parsed_info,
                                   GstOnnxImporter * importer);
+
+  GstFlowReturn (*start_inference) (GstOnnxBaseInference * base,
+                                    GstBuffer * buffer,
+                                    const GArray * model_inputs,
+                                    gsize * num_iterations);
 
   GstFlowReturn (*prepare_input_tensors) (GstOnnxBaseInference * base,
                                           GstBuffer * buffer,
                                           const GArray * model_inputs,
+                                          gsize iteration,
                                           GPtrArray * input_tensors);
 
   void (*unprepare_input_tensors) (GstOnnxBaseInference * base,
                                    GstBuffer * buffer,
                                    GPtrArray * input_tensors);
+
+  GstFlowReturn (*end_inference) (GstOnnxBaseInference * base,
+                                  GstBuffer * buffer,
+                                  GPtrArray * results,
+                                  gsize num_tensors,
+                                  gboolean attach_meta);
 };
 
 GType gst_onnx_base_inference_get_type (void);

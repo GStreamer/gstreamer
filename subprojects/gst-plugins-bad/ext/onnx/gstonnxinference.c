@@ -190,12 +190,12 @@ gst_onnx_inference_propose_allocation (GstBaseTransform * trans,
 
 static void gst_onnx_inference_reset (GstOnnxBaseInference * base);
 static gboolean gst_onnx_inference_process_model_info (GstOnnxBaseInference *
-    base, GstAnalyticsModelInfo * modelinfo, GQuark group_id,
-    const GArray * model_inputs, GstStructure * output_tensorgroups,
-    GstOnnxImporter * importer);
+    base, GstAnalyticsModelInfo * modelinfo,
+    const GstOnnxModelInfo * parsed_info, GstOnnxImporter * importer);
 static GstFlowReturn
 gst_onnx_inference_prepare_input_tensors (GstOnnxBaseInference * base,
-    GstBuffer * buffer, const GArray * model_inputs, GPtrArray * input_tensors);
+    GstBuffer * buffer, const GArray * model_inputs, gsize iteration,
+    GPtrArray * input_tensors);
 static void gst_onnx_inference_unprepare_input_tensors (GstOnnxBaseInference *
     base, GstBuffer * buffer, GPtrArray * input_tensors);
 
@@ -273,6 +273,7 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       GST_DEBUG_FUNCPTR (gst_onnx_inference_prepare_input_tensors);
   onnx_class->unprepare_input_tensors =
       GST_DEBUG_FUNCPTR (gst_onnx_inference_unprepare_input_tensors);
+  onnx_class->proc_type = GST_ONNX_IMPORTER_PROC_CONVERT;
 
   GST_DEBUG_CATEGORY_INIT (onnx_inference_debug, "onnxinference", 0,
       "ONNX inference");
@@ -952,8 +953,7 @@ derive_details_from_tensor_dims_and_video_caps (GstOnnxInference * self,
 
 static gboolean
 gst_onnx_inference_process_model_info (GstOnnxBaseInference * base,
-    GstAnalyticsModelInfo * modelinfo, GQuark group_id,
-    const GArray * model_inputs, GstStructure * output_tensorgroups,
+    GstAnalyticsModelInfo * modelinfo, const GstOnnxModelInfo * parsed_info,
     GstOnnxImporter * importer)
 {
   GstOnnxInference *self = GST_ONNX_INFERENCE (base);
@@ -968,13 +968,13 @@ gst_onnx_inference_process_model_info (GstOnnxBaseInference * base,
   GstCaps *mi_caps = NULL;
   gsize i;
 
-  if (model_inputs->len != 1) {
+  if (parsed_info->inputs->len != 1) {
     GST_ERROR_OBJECT (self, "Only models with 1 input tensor are supported,"
-        " but model has %u inputs", model_inputs->len);
+        " but model has %u inputs", parsed_info->inputs->len);
     return FALSE;
   }
 
-  input = &g_array_index (model_inputs, GstOnnxModelInput, 0);
+  input = &g_array_index (parsed_info->inputs, GstOnnxModelInput, 0);
 
   if (input->num_dims < 2 || input->num_dims > 4) {
     GST_ERROR_OBJECT (self,
@@ -1183,10 +1183,10 @@ gst_onnx_inference_process_model_info (GstOnnxBaseInference * base,
   gst_clear_object (&self->importer);
   self->importer = gst_object_ref (importer);
   g_free (self->group_id);
-  self->group_id = g_strdup (g_quark_to_string (group_id));
+  self->group_id = g_strdup (g_quark_to_string (parsed_info->group_id));
 
   gst_caps_set_simple (self->output_tensors_caps, "tensors",
-      GST_TYPE_STRUCTURE, output_tensorgroups, NULL);
+      GST_TYPE_STRUCTURE, parsed_info->output_tensorgroups, NULL);
   g_mutex_unlock (&self->lock);
 
   return TRUE;
@@ -1194,7 +1194,8 @@ gst_onnx_inference_process_model_info (GstOnnxBaseInference * base,
 
 static GstFlowReturn
 gst_onnx_inference_prepare_input_tensors (GstOnnxBaseInference * base,
-    GstBuffer * buffer, const GArray * model_inputs, GPtrArray * input_tensors)
+    GstBuffer * buffer, const GArray * model_inputs, gsize iteration,
+    GPtrArray * input_tensors)
 {
   GstOnnxInference *self = GST_ONNX_INFERENCE (base);
   OrtValue *input = NULL;

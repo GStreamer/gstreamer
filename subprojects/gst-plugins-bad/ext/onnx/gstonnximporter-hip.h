@@ -29,6 +29,7 @@ G_DECLARE_FINAL_TYPE (GstOnnxImporterHip,
     gst_onnx_importer_hip, GST, ONNX_IMPORTER_HIP, GstOnnxImporter);
 
 GstOnnxImporter * gst_onnx_importer_hip_new (const OrtApi * api,
-                                             GstHipDevice * device);
+                                             GstHipDevice * device,
+                                             GstOnnxImporterProcType proc_type);
 
 G_END_DECLS

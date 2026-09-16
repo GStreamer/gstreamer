@@ -3,6 +3,7 @@ onnx_sources = [
   'gstonnx-utils.c',
   'gstonnxbaseinference.c',
   'gstonnxinference.c',
+  'gstonnxtensorinference.c',
   'gstonnximporter.c',
   'gstonnxexporter.c',
   'gstonnxexporter-cpu.c',
@@ -11,6 +12,7 @@ onnx_sources = [
 onnx_headers = [
   'gstonnxbaseinference.h',
   'gstonnxinference.h',
+  'gstonnxtensorinference.h',
 ]
 
 doc_sources = []

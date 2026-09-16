@@ -30,6 +30,7 @@ G_DECLARE_FINAL_TYPE (GstOnnxImporterDml,
 
 GstOnnxImporter * gst_onnx_importer_dml_new (const OrtApi * api,
                                              GstD3D12Device * device,
-                                             OrtSessionOptions * options);
+                                             OrtSessionOptions * options,
+                                             GstOnnxImporterProcType proc_type);
 
 G_END_DECLS

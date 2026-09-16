@@ -197,6 +197,7 @@ struct _GstOnnxImporterHip
 
   OrtMemoryInfo *memory_info;
   OrtValue *value;
+  GArray *wrapped_array;
 
   gboolean is_packed;
 
@@ -222,6 +223,9 @@ static void gst_onnx_importer_hip_setup (GstOnnxImporter * importer,
     const GstVideoInfo * info, const GstOnnxImporterConfig * config);
 static OrtValue *gst_onnx_importer_hip_prepare (GstOnnxImporter * importer,
     GstBuffer * buffer);
+static OrtValue *gst_onnx_importer_hip_prepare_wrapped (GstOnnxImporter *
+    importer, GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count);
 static void gst_onnx_importer_hip_unprepare (GstOnnxImporter * importer);
 
 #define gst_onnx_importer_hip_parent_class parent_class
@@ -238,6 +242,7 @@ gst_onnx_importer_hip_class_init (GstOnnxImporterHipClass * klass)
 
   importer_class->setup = gst_onnx_importer_hip_setup;
   importer_class->prepare = gst_onnx_importer_hip_prepare;
+  importer_class->prepare_wrapped = gst_onnx_importer_hip_prepare_wrapped;
   importer_class->unprepare = gst_onnx_importer_hip_unprepare;
 }
 
@@ -254,6 +259,9 @@ gst_onnx_importer_hip_unprepare_internal (GstOnnxImporterHip * self)
     base->api->ReleaseValue (self->value);
     self->value = NULL;
   }
+
+  if (self->wrapped_array)
+    g_array_set_size (self->wrapped_array, 0);
 
   if (self->frame.buffer)
     gst_video_frame_unmap (&self->frame);
@@ -293,6 +301,10 @@ gst_onnx_importer_hip_finalize (GObject * object)
   GstOnnxImporter *base = GST_ONNX_IMPORTER (object);
 
   gst_onnx_importer_hip_reset (self, TRUE);
+
+  if (self->wrapped_array)
+    g_array_unref (self->wrapped_array);
+
   if (self->memory_info)
     base->api->ReleaseMemoryInfo (self->memory_info);
 
@@ -353,6 +365,31 @@ gst_onnx_importer_hip_setup (GstOnnxImporter * importer,
   self->configured = TRUE;
 }
 
+static gboolean
+is_compatible_buffer (GstOnnxImporterHip * self, GstBuffer * buffer)
+{
+  guint n_mem = gst_buffer_n_memory (buffer);
+  if (n_mem != 1) {
+    /* GstHip expects a single memory per buffer */
+    GST_DEBUG_OBJECT (self, "Unexpected memory layout");
+    return FALSE;
+  }
+
+  GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_hip_memory (mem)) {
+    GST_DEBUG_OBJECT (self, "Not a HIP memory");
+    return FALSE;
+  }
+
+  GstHipMemory *hmem = GST_HIP_MEMORY_CAST (mem);
+  if (!gst_hip_device_is_equal (hmem->device, self->device)) {
+    GST_DEBUG_OBJECT (self, "Different device, need CPU fallback");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static OrtValue *
 gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
 {
@@ -374,26 +411,11 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
   if (!self->configured)
     return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
 
-  guint n_mem = gst_buffer_n_memory (buffer);
-  if (n_mem != 1) {
-    /* GstHip expects a single memory per buffer */
-    GST_DEBUG_OBJECT (self, "Unexpected memory layout");
+  if (!is_compatible_buffer (self, buffer))
     return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
-  }
 
   GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
-  if (!gst_is_hip_memory (mem)) {
-    GST_DEBUG_OBJECT (self, "Not a HIP memory");
-    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
-  }
-
   GstHipMemory *hmem = GST_HIP_MEMORY_CAST (mem);
-  if (gst_hip_device_get_vendor (hmem->device) != GST_HIP_VENDOR_AMD ||
-      gst_hip_device_get_device_id (hmem->device) !=
-      gst_hip_device_get_device_id (self->device)) {
-    GST_DEBUG_OBJECT (self, "Different device, need CPU fallback");
-    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
-  }
 
   if (!gst_video_frame_map (vframe, info, buffer,
           (GstMapFlags) (GST_MAP_READ_HIP | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
@@ -606,23 +628,57 @@ error:
   return NULL;
 }
 
-GstOnnxImporter *
-gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
+static OrtValue *
+gst_onnx_importer_hip_prepare_wrapped (GstOnnxImporter * importer,
+    GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count)
 {
-  OrtMemoryInfo *memory_info;
-  guint device_id = gst_hip_device_get_device_id (device);
+  GstOnnxImporterHip *self = GST_ONNX_IMPORTER_HIP (importer);
   OrtStatus *status = NULL;
+  GstOnnxImporterWrapData data = { NULL, };
+  const OrtApi *api = importer->api;
 
-  const gchar *blob = get_blob_for_device (device);
-  if (!blob) {
-    GST_WARNING_OBJECT (device, "Couldn't get compiled blob");
+  if (!is_compatible_buffer (self, buffer)) {
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare_wrapped (importer,
+        buffer, data_type, dims, dims_count);
+  }
+
+  if (!gst_buffer_map (buffer, &data.map, GST_MAP_READ_HIP)) {
+    GST_ERROR_OBJECT (self, "Couldn't map tensor buffer");
     return NULL;
   }
 
-  if (!gst_hip_device_set_current (device)) {
-    GST_ERROR_OBJECT (device, "Could't make device current");
+  GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
+  gst_hip_memory_sync (GST_HIP_MEMORY_CAST (mem));
+
+  status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
+      data.map.data, data.map.size, dims, dims_count, data_type, &data.value);
+  if (status) {
+    GST_ERROR_OBJECT (self, "Couldn't create input: %s",
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
+    gst_buffer_unmap (buffer, &data.map);
     return NULL;
   }
+
+  data.api = api;
+  data.buffer = gst_buffer_ref (buffer);
+
+  GST_DEBUG_OBJECT (self, "Wrapped tensor buffer %" GST_PTR_FORMAT, buffer);
+
+  g_array_append_val (self->wrapped_array, data);
+
+  return data.value;
+}
+
+GstOnnxImporter *
+gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device,
+    GstOnnxImporterProcType proc_type)
+{
+  guint device_id = gst_hip_device_get_device_id (device);
+  OrtMemoryInfo *memory_info;
+  OrtStatus *status = NULL;
+  hipModule_t kernel_module = NULL;
 
   GstOnnxImporterHip *self = g_object_new (GST_TYPE_ONNX_IMPORTER_HIP, NULL);
   gst_object_ref_sink (self);
@@ -630,12 +686,43 @@ gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
   self->device = (GstHipDevice *) gst_object_ref (device);
 
   GstOnnxImporter *base = GST_ONNX_IMPORTER (self);
-  if (!gst_onnx_importer_create_system_memory_info (base, api)) {
+  if (!gst_onnx_importer_create_system_memory_info (base, api, proc_type)) {
     gst_object_unref (self);
     return NULL;
   }
 
-  hipModule_t kernel_module = NULL;
+  status = api->CreateMemoryInfo ("Hip",
+      OrtDeviceAllocator, device_id, OrtMemTypeDefault, &memory_info);
+  if (status) {
+    GST_ERROR ("Couldn't create memory info: %s",
+        api->GetErrorMessage (status));
+    api->ReleaseStatus (status);
+    gst_object_unref (self);
+    return NULL;
+  }
+
+  self->memory_info = memory_info;
+
+  if (proc_type == GST_ONNX_IMPORTER_PROC_WRAP) {
+    self->wrapped_array = g_array_new (FALSE,
+        TRUE, sizeof (GstOnnxImporterWrapData));
+    g_array_set_clear_func (self->wrapped_array,
+        (GDestroyNotify) gst_onnx_importer_wrap_data_clear);
+
+    return base;
+  }
+
+  const gchar *blob = get_blob_for_device (device);
+  if (!blob) {
+    GST_WARNING_OBJECT (device, "Couldn't get compiled blob");
+    goto error;
+  }
+
+  if (!gst_hip_device_set_current (device)) {
+    GST_ERROR_OBJECT (device, "Could't make device current");
+    goto error;
+  }
+
   hipFunction_t scale_packed_func_f32;
   hipFunction_t scale_plane_func_f32;
   hipFunction_t scale_packed_func_u8;
@@ -676,16 +763,6 @@ gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
     goto error;
   }
 
-  status = api->CreateMemoryInfo ("Hip",
-      OrtDeviceAllocator, device_id, OrtMemTypeDefault, &memory_info);
-  if (status) {
-    GST_ERROR ("Couldn't create memory info: %s",
-        api->GetErrorMessage (status));
-    api->ReleaseStatus (status);
-    goto error;
-  }
-
-  self->memory_info = memory_info;
   self->stream = gst_hip_stream_new (GST_HIP_VENDOR_AMD, device_id);
   if (!self->stream) {
     GST_WARNING_OBJECT (self,

@@ -31,6 +31,7 @@
 #include <new>
 #include <vector>
 #include <string.h>
+#include <memory>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -44,6 +45,48 @@ G_BEGIN_DECLS
 GST_DEBUG_CATEGORY_EXTERN (onnx_base_inference_debug);
 G_END_DECLS
 #define GST_CAT_DEFAULT onnx_base_inference_debug
+
+struct GstOnnxDmlAllocation
+{
+  ~GstOnnxDmlAllocation ()
+  {
+    if (api && dml_api && allocation) {
+      auto status = dml_api->FreeGPUAllocation (allocation);
+      if (status) {
+        GST_ERROR ("Couldn't free DML allocation: %s",
+            api->GetErrorMessage (status));
+        api->ReleaseStatus (status);
+      }
+    }
+  }
+
+  const OrtApi *api = nullptr;
+  const OrtDmlApi *dml_api = nullptr;
+  void *allocation = nullptr;
+};
+
+struct GstOnnxImporterDmlWrapData
+{
+  GstOnnxImporterDmlWrapData () = delete;
+  GstOnnxImporterDmlWrapData (const OrtApi * api, const OrtDmlApi * dml_api)
+  {
+    alloc.api = api;
+    alloc.dml_api = dml_api;
+  }
+
+  ~GstOnnxImporterDmlWrapData ()
+  {
+    if (alloc.api && value)
+      alloc.api->ReleaseValue (value);
+
+    if (buffer)
+      gst_buffer_unref (buffer);
+  }
+
+  GstOnnxDmlAllocation alloc = { };
+  GstBuffer *buffer = nullptr;
+  OrtValue *value = nullptr;
+};
 
 struct GstOnnxImporterDmlPrivate
 {
@@ -60,11 +103,16 @@ struct GstOnnxImporterDmlPrivate
   const OrtApi *api = nullptr;
   const OrtDmlApi *dml_api = nullptr;
   OrtMemoryInfo *memory_info = nullptr;
+
+  /* owned by GstD3D12Memory, and GstD3D12Memory will release this handle */
   void *allocation = nullptr;
+
   OrtValue *value = nullptr;
+  std::vector<std::unique_ptr<GstOnnxImporterDmlWrapData>> wrapped_array;
 
   GstD3D12Device *device = nullptr;
   GstD3D12CmdQueue *queue = nullptr;
+  ID3D12Fence *queue_fence = nullptr;
   ComPtr<IDMLDevice> device_ml;
   GstD3D12Memory *tensor = nullptr;
   gsize allocated_tensor_size = 0;
@@ -115,6 +163,9 @@ static void gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
     const GstVideoInfo * info, const GstOnnxImporterConfig * config);
 static OrtValue *gst_onnx_importer_dml_prepare (GstOnnxImporter * importer,
     GstBuffer * buffer);
+static OrtValue *gst_onnx_importer_dml_prepare_wrapped (GstOnnxImporter *
+    importer, GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count);
 static void gst_onnx_importer_dml_unprepare (GstOnnxImporter * importer);
 
 #define gst_onnx_importer_dml_parent_class parent_class
@@ -127,8 +178,10 @@ CHECK_ORT (GstOnnxImporterDml * self, OrtStatus * status)
   if (!status)
     return TRUE;
 
-  GST_ERROR_OBJECT (self, "%s", self->priv->api->GetErrorMessage (status));
-  self->priv->api->ReleaseStatus (status);
+  const auto api = self->priv->api;
+
+  GST_ERROR_OBJECT (self, "%s", api->GetErrorMessage (status));
+  api->ReleaseStatus (status);
   return FALSE;
 }
 
@@ -139,8 +192,10 @@ gst_onnx_importer_dml_class_init (GstOnnxImporterDmlClass * klass)
   auto importer_class = GST_ONNX_IMPORTER_CLASS (klass);
 
   object_class->finalize = gst_onnx_importer_dml_finalize;
+
   importer_class->setup = gst_onnx_importer_dml_setup;
   importer_class->prepare = gst_onnx_importer_dml_prepare;
+  importer_class->prepare_wrapped = gst_onnx_importer_dml_prepare_wrapped;
   importer_class->unprepare = gst_onnx_importer_dml_unprepare;
 }
 
@@ -161,6 +216,8 @@ gst_onnx_importer_dml_unprepare_internal (GstOnnxImporterDml * self)
     priv->value = nullptr;
   }
 
+  priv->wrapped_array.clear ();
+
   if (priv->frame.buffer)
     gst_d3d12_frame_unmap (&priv->frame);
 
@@ -175,27 +232,6 @@ gst_onnx_importer_dml_unprepare (GstOnnxImporter * importer)
   gst_onnx_importer_dml_unprepare_internal (self);
 
   GST_ONNX_IMPORTER_CLASS (parent_class)->unprepare (importer);
-}
-
-struct GstOnnxDmlAllocation
-{
-  const OrtApi *api;
-  const OrtDmlApi *dml_api;
-  void *allocation;
-};
-
-static void
-gst_onnx_importer_dml_free_allocation (gpointer user_data)
-{
-  auto data = (GstOnnxDmlAllocation *) user_data;
-  auto status = data->dml_api->FreeGPUAllocation (data->allocation);
-
-  if (status) {
-    GST_ERROR ("Couldn't free DML allocation: %s",
-        data->api->GetErrorMessage (status));
-    data->api->ReleaseStatus (status);
-  }
-  g_free (data);
 }
 
 static void
@@ -368,16 +404,23 @@ gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
       return;
     }
 
-    auto data = g_new0 (GstOnnxDmlAllocation, 1);
+    auto data = new GstOnnxDmlAllocation ();
     data->api = priv->api;
     data->dml_api = priv->dml_api;
     data->allocation = priv->allocation;
+
     auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, priv->device,
-        tensor.Get (), 0, data, gst_onnx_importer_dml_free_allocation);
+        tensor.Get (), 0, data,[](gpointer user_data) {
+          auto alloc = (GstOnnxDmlAllocation *) user_data;
+          delete alloc;
+        }
+    );
+
     if (!mem) {
       GST_ERROR_OBJECT (self, "Couldn't wrap tensor buffer");
-      gst_onnx_importer_dml_free_allocation (data);
       priv->allocation = nullptr;
+      delete data;
+
       return;
     }
 
@@ -610,38 +653,49 @@ gst_onnx_importer_dml_record_commands (GstOnnxImporterDml * self,
   }
 }
 
-static OrtValue *
-gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
+static gboolean
+is_compatible_buffer (GstOnnxImporterDml * self, GstBuffer * buffer)
 {
-  auto self = GST_ONNX_IMPORTER_DML (importer);
   auto priv = self->priv;
-
-  /* We failed to configure, do CPU fallback */
-  if (!priv->configured)
-    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
-
-  gst_onnx_importer_dml_unprepare_internal (self);
-
   auto n_mem = gst_buffer_n_memory (buffer);
+
   if (!n_mem) {
     GST_ERROR_OBJECT (self, "Input buffer has no memory");
-    return nullptr;
+    return FALSE;
   }
 
   for (guint i = 0; i < n_mem; i++) {
     auto mem = gst_buffer_peek_memory (buffer, i);
     if (!gst_is_d3d12_memory (mem)) {
       GST_DEBUG_OBJECT (self, "Input memory %u is not D3D12 memory", i);
-      return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
+      return FALSE;
     }
 
     if (!gst_d3d12_device_is_equal (GST_D3D12_MEMORY_CAST (mem)->device,
             priv->device)) {
       GST_DEBUG_OBJECT (self,
           "Input memory %u belongs to a different device", i);
-      return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
+      return FALSE;
     }
   }
+
+  return TRUE;
+}
+
+static OrtValue *
+gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
+{
+  auto self = GST_ONNX_IMPORTER_DML (importer);
+  auto priv = self->priv;
+
+  gst_onnx_importer_dml_unprepare_internal (self);
+
+  /* We failed to configure, do CPU fallback */
+  if (!priv->configured)
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
+
+  if (!is_compatible_buffer (self, buffer))
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
 
   auto frame = &priv->frame;
   if (!gst_d3d12_frame_map (frame, &importer->info, buffer,
@@ -752,9 +806,102 @@ error:
   return nullptr;
 }
 
+static gboolean
+is_compatible_buffer_for_wrap (GstOnnxImporterDml * self, GstBuffer * buffer)
+{
+  auto priv = self->priv;
+
+  if (gst_buffer_n_memory (buffer) != 1) {
+    GST_DEBUG_OBJECT (self, "Not a single memory in a buffer");
+    return FALSE;
+  }
+
+  auto mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_d3d12_memory (mem)) {
+    GST_DEBUG_OBJECT (self, "Input memory is not D3D12 memory");
+    return FALSE;
+  }
+
+  if (!gst_d3d12_device_is_equal (GST_D3D12_MEMORY_CAST (mem)->device,
+          priv->device)) {
+    GST_DEBUG_OBJECT (self, "Input memory belongs to a different device");
+    return FALSE;
+  }
+
+  auto dmem = GST_D3D12_MEMORY_CAST (mem);
+  auto resource = gst_d3d12_memory_get_resource_handle (dmem);
+  auto desc = GetDesc (resource);
+  if (desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER) {
+    GST_DEBUG_OBJECT (self, "Not a buffer resource");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static OrtValue *
+gst_onnx_importer_dml_prepare_wrapped (GstOnnxImporter * importer,
+    GstBuffer * buffer, ONNXTensorElementDataType data_type,
+    const gint64 * dims, gsize dims_count)
+{
+  auto self = GST_ONNX_IMPORTER_DML (importer);
+  auto priv = self->priv;
+
+  if (!is_compatible_buffer_for_wrap (self, buffer)) {
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare_wrapped (importer,
+        buffer, data_type, dims, dims_count);
+  }
+
+  GstMapInfo map;
+  auto mem = gst_buffer_peek_memory (buffer, 0);
+  /* Map to perform pending upload or to make sure resident resource */
+  if (!gst_memory_map (mem, &map, GST_MAP_READ_D3D12)) {
+    GST_ERROR_OBJECT (self, "Couldn't map tensor buffer memory");
+    return nullptr;
+  }
+  gst_memory_unmap (mem, &map);
+
+  auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (buffer, 0);
+  auto resource = gst_d3d12_memory_get_resource_handle (dmem);
+  auto desc = GetDesc (resource);
+  auto data = std::make_unique < GstOnnxImporterDmlWrapData > (priv->api,
+      priv->dml_api);
+
+  data->buffer = gst_buffer_ref (buffer);
+  if (!CHECK_ORT (self,
+          priv->dml_api->CreateGPUAllocationFromD3DResource (resource,
+              &data->alloc.allocation))) {
+    GST_ERROR_OBJECT (self, "Couldn't create DML allocation for tensor buffer");
+    return nullptr;
+  }
+
+  if (!CHECK_ORT (self,
+          priv->api->CreateTensorWithDataAsOrtValue (priv->memory_info,
+              data->alloc.allocation, desc.Width, dims, dims_count, data_type,
+              &data->value))) {
+    GST_ERROR_OBJECT (self, "Couldn't create ONNX input tensor");
+    return nullptr;
+  }
+
+  ComPtr < ID3D12Fence > fence;
+  guint64 fence_val;
+
+  if (gst_d3d12_memory_get_fence (dmem, &fence, &fence_val)) {
+    if (fence.Get () != priv->queue_fence)
+      gst_d3d12_cmd_queue_execute_wait (priv->queue, fence.Get (), fence_val);
+  }
+
+  GST_DEBUG_OBJECT (self, "Wrapped tensor buffer %" GST_PTR_FORMAT, buffer);
+
+  auto ret = data->value;
+  priv->wrapped_array.push_back (std::move (data));
+
+  return ret;
+}
+
 GstOnnxImporter *
 gst_onnx_importer_dml_new (const OrtApi * api, GstD3D12Device * device,
-    OrtSessionOptions * options)
+    OrtSessionOptions * options, GstOnnxImporterProcType proc_type)
 {
   auto self = (GstOnnxImporterDml *)
       g_object_new (GST_TYPE_ONNX_IMPORTER_DML, nullptr);
@@ -765,13 +912,14 @@ gst_onnx_importer_dml_new (const OrtApi * api, GstD3D12Device * device,
   priv->device = (GstD3D12Device *) gst_object_ref (device);
   priv->queue = gst_d3d12_device_get_cmd_queue (device,
       D3D12_COMMAND_LIST_TYPE_COMPUTE);
+  priv->queue_fence = gst_d3d12_cmd_queue_get_fence_handle (priv->queue);
 
-  if (!gst_onnx_importer_create_system_memory_info (base, api)) {
+  if (!gst_onnx_importer_create_system_memory_info (base, api, proc_type)) {
     gst_object_unref (self);
     return nullptr;
   }
 
-  {
+  if (proc_type == GST_ONNX_IMPORTER_PROC_CONVERT) {
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     ComPtr < ID3DBlob > blob;
     if (!get_dml_rs_blob (device, &blob)) {
