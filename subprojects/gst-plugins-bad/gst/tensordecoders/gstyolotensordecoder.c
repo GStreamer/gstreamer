@@ -602,7 +602,8 @@ gst_yolo_tensor_decoder_decode_f32 (GstYoloTensorDecoder * self,
   GstMapInfo map_info_detections;
   gfloat iou;
   gboolean rv, keep;
-  gsize offset, x_offset, y_offset, w_offset, h_offset, offsets[5];
+  gsize offset, x_offset, y_offset, w_offset, h_offset;
+  gsize offsets[5] = { 0 };
   BBox bb;
   ConfidenceRange c_range;
   gsize max_class_offset = 0, class_index;
