@@ -397,6 +397,20 @@ _buffer_to_image_propose_allocation (gpointer impl, GstQuery * decide_query,
   gst_vulkan_upload_buffer_propose_allocation (impl, decide_query, query);
 }
 
+/* Takes ownership of @buffer and releases it once the last operation submitted
+ * on @exec has completed. */
+static void
+_unref_buffer_after_operation (GstVulkanOperation * exec, GstBuffer * buffer)
+{
+  GstVulkanTrashList *trash_list = gst_vulkan_operation_get_trash_list (exec);
+  GstVulkanFence *fence = gst_vulkan_operation_get_last_fence (exec);
+
+  gst_vulkan_trash_list_add (trash_list,
+      gst_vulkan_trash_list_acquire (trash_list, fence,
+          gst_vulkan_trash_mini_object_unref, GST_MINI_OBJECT_CAST (buffer)));
+  gst_vulkan_fence_unref (fence);
+}
+
 static GstFlowReturn
 _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
@@ -525,6 +539,8 @@ again:
     }
     goto error;
   }
+
+  _unref_buffer_after_operation (raw->exec, gst_buffer_ref (inbuf));
 
   ret = GST_FLOW_OK;
 
@@ -846,6 +862,13 @@ again:
       goto again;
     }
     goto error;
+  }
+
+  if (in_vk_copy) {
+    _unref_buffer_after_operation (raw->exec, in_vk_copy);
+    in_vk_copy = NULL;
+  } else {
+    _unref_buffer_after_operation (raw->exec, gst_buffer_ref (inbuf));
   }
 
   ret = GST_FLOW_OK;
