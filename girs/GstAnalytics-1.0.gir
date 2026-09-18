@@ -1897,6 +1897,34 @@ must have a #GstVideoMeta attached</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="add_tensor_provenance_mtd" c:identifier="gst_analytics_relation_meta_add_tensor_provenance_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Adds tensor provenance metadata for @tensor to @meta. The tensor is used only
+for its identity and is not referenced or stored by the metadata.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="group_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">group ID of the tensor</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="tensor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstTensor</doc>
+            <type name="Tensor" c:type="const GstTensor*"/>
+          </parameter>
+          <parameter name="tensor_provenance_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">location for the newly added
+  #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="add_text_mtd" c:identifier="gst_analytics_relation_meta_add_text_mtd" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.c">Adds text metadata to @meta. If location information is needed, it can be
 represented by separate metadata such as #GstAnalyticsODMtd and associated
@@ -2243,6 +2271,28 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Will be filled with relatable
    meta</doc>
             <type name="TensorMtd" c:type="GstAnalyticsTensorMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_tensor_provenance_mtd" c:identifier="gst_analytics_relation_meta_get_tensor_provenance_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Gets the #GstAnalyticsTensorProvenanceMtd identified by @an_meta_id from @meta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE if the metadata was found, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the identifier of the metadata</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">location for the #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd*"/>
           </parameter>
         </parameters>
       </method>
@@ -3012,6 +3062,286 @@ See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)</d
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">indicate the tensor is stored in a dense format in memory</doc>
       </member>
     </enumeration>
+    <record name="TensorListItem" c:type="GstTensorListItem" disguised="1" opaque="1" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">An opaque item containing a tensor set and its provenance information.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+    </record>
+    <record name="TensorListMeta" c:type="GstTensorListMeta" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">While #GstTensorMeta holds a single tensor set, which may contain multiple
+tensors (e.g., boxes, scores and classes from one inference run),
+#GstTensorListMeta holds one or more items, each containing a tensor set
+(e.g., one item for each inference run on a different ROI).
+
+Each item can also carry optional provenance, so downstream elements do not
+need to rely on the ordering of separate tensor metadata to associate results
+with their origins.
+
+|[
+  GstTensorListMeta
+    |
+    +-- item 0
+    |     +-- tensor A
+    |     +-- tensor B
+    |
+    +-- item 1
+          +-- tensor A
+          +-- tensor B
+]|
+
+Items are expected to represent instances of the same tensor group,
+although tensor dimensions may differ for dynamic dimensions. The number
+of items is independent of a batch or other dimension of the tensors.
+
+Each item can also carry provenance independently of its current tensors.
+For example, a preprocessing element can create one batched input tensor
+from three regions of a video buffer:
+
+|[
+  item 0
+    |
+    +-- tensor "image" [3, C, H, W]
+    |
+    +-- provenance
+          +-- "image" -&gt; [ 10, 11, 12 ]
+]|
+
+Here 10, 11 and 12 can identify the #GstAnalyticsTensorProvenanceMtd instances
+for the three input regions. The "image" key is the input tensor's ID, also
+stored in those provenance metadata instances.
+
+An inference element can replace the input tensor with its output while
+keeping the provenance unchanged:
+
+|[
+  item 0
+    |
+    +-- tensor "logits" [3, T, C]
+    |
+    +-- provenance
+          +-- "image" -&gt; [ 10, 11, 12 ]
+]|
+
+The provenance key therefore does not need to identify a tensor currently
+stored in the item. Correlation IDs are kept in producer-defined order.
+How that order maps to tensor data is a producer/consumer contract and does
+not imply a particular tensor dimension.
+
+This allows inference to preserve provenance without understanding the
+semantic mapping between its input and output tensors.
+gst_tensor_list_meta_append_item_from() can be used to replace a tensor set
+while copying the provenance from an existing item.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">parent</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="group_id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">the representative tensor group ID</doc>
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </field>
+      <field name="num_items" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">number of #GstTensorListItem</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="items" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">a #GstTensorListItem list</doc>
+        <array length="2" zero-terminated="0" c:type="GstTensorListItem**">
+          <type name="TensorListItem" c:type="GstTensorListItem*"/>
+        </array>
+      </field>
+      <method name="append_item" c:identifier="gst_tensor_list_meta_append_item" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Appends a tensor set without correlation information. Ownership of @tensors
+and its tensors is transferred only on success.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">%TRUE on success</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">a #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+          </instance-parameter>
+          <parameter name="num_tensors" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">number of tensors</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="tensors" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">tensor set</doc>
+            <array length="0" zero-terminated="0" c:type="GstTensor**">
+              <type name="Tensor" c:type="GstTensor*"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="append_item_from" c:identifier="gst_tensor_list_meta_append_item_from" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Appends a tensor set with provenance copied from the source item.
+Ownership of @tensors and its tensors transfers only on success.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">%TRUE on success</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">a #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+          </instance-parameter>
+          <parameter name="num_tensors" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">number of tensors</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="tensors" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">replacement tensor set</doc>
+            <array length="0" zero-terminated="0" c:type="GstTensor**">
+              <type name="Tensor" c:type="GstTensor*"/>
+            </array>
+          </parameter>
+          <parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">source #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="const GstTensorListMeta*"/>
+          </parameter>
+          <parameter name="source_item_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">item whose provenance should be copied</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="append_item_full" c:identifier="gst_tensor_list_meta_append_item_full" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Appends a tensor set with provenance information. Keys are typically the
+originating input tensor IDs, but need not match any tensor in @tensors.
+Keys must be non-zero and unique within the item, and correlation IDs
+must be non-zero.
+
+The meta copies the provenance information. Ownership of @tensors and
+its tensors transfers only on success.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">%TRUE on success</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">a #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+          </instance-parameter>
+          <parameter name="num_tensors" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">number of tensors</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="tensors" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">tensor set</doc>
+            <array length="0" zero-terminated="0" c:type="GstTensor**">
+              <type name="Tensor" c:type="GstTensor*"/>
+            </array>
+          </parameter>
+          <parameter name="num_provenance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">number of provenance entries</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="provenance" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">
+  caller-owned provenance descriptors</doc>
+            <array length="2" zero-terminated="0" c:type="const GstTensorProvenance*">
+              <type name="TensorProvenance" c:type="GstTensorProvenance"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_num_provenance" c:identifier="gst_tensor_list_meta_get_num_provenance" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Gets the number of provenance entries for the specified item</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">the number of provenance entries</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">a #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+          </instance-parameter>
+          <parameter name="item_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">item index</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_provenance" c:identifier="gst_tensor_list_meta_get_provenance" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Gets the provenance entry at the specified index. The returned correlation
+ID array belongs to @meta and remains valid until @meta is freed.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">a #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+          </instance-parameter>
+          <parameter name="item_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">item index</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="provenance_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">provenance entry index</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="provenance" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">location for the provenance descriptor</doc>
+            <type name="TensorProvenance" c:type="GstTensorProvenance*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_typed_tensor" c:identifier="gst_tensor_list_meta_get_typed_tensor" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Gets the tensor identified by @tensor_id from the specified @item_index
+and verifies that it matches the expected type and dimensions.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">the matching #GstTensor, or %NULL</doc>
+          <type name="Tensor" c:type="const GstTensor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">a #GstTensorListMeta</doc>
+            <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+          </instance-parameter>
+          <parameter name="item_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">item index</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="tensor_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">tensor ID</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">expected tensor data type</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="order" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">expected tensor dimension order</doc>
+            <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">expected number of dimensions</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">expected tensor dimensions</doc>
+            <array length="4" zero-terminated="0" c:type="const gsize*">
+              <type name="gsize" c:type="gsize"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_info" c:identifier="gst_tensor_list_meta_get_info" version="1.30" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">the tensor list meta information</doc>
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
     <record name="TensorMeta" c:type="GstTensorMeta" version="1.26">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
       <field name="meta" writable="1">
@@ -3194,6 +3524,319 @@ identified by @id is stored.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Opaque id of the #GstAnalyticsMtd type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
+    <record name="TensorProvenance" c:type="GstTensorProvenance" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">Caller-owned descriptor for a provenance entry. Neither the descriptor
+nor its correlation ID array is transferred to #GstTensorListMeta.
+
+#GstTensorListMeta copies the IDs when appending an item.
+
+A preprocessing element typically uses the input tensor's ID as the key.
+The key is preserved when inference replaces the input tensors with outputs,
+so it need not identify a tensor in that item.
+
+When filled by gst_tensor_list_meta_get_provenance(), the correlation ID
+array belongs to #GstTensorListMeta and remains valid until that meta is freed.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+      <field name="key" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">non-zero key, typically the ID of the originating input tensor</doc>
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </field>
+      <field name="num_correlation_ids" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">number of correlation IDs</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="correlation_ids" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h">ordered
+  correlation IDs, or %NULL when @num_correlation_ids is zero</doc>
+        <array length="1" zero-terminated="0" c:type="const gint64*">
+          <type name="gint64" c:type="gint64"/>
+        </array>
+      </field>
+    </record>
+    <record name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">#GstAnalyticsTensorProvenanceMtd stores provenance associated with a tensor
+without keeping the tensor data itself alive. It stores the group and
+tensor IDs of the associated tensor.
+
+Tensor provenance metadata can be related to other analytics metadata. For
+example, a preprocessing element can create a tensor from an object detection
+and keep the relation between them:
+
+|[
+  GstAnalyticsRelationMeta
+    |
+    +-- GstAnalyticsODMtd
+    |        ^
+    |        |
+    |     relation
+    |        |
+    +-- GstAnalyticsTensorProvenanceMtd
+             |
+             +-- correlation-id = 10
+]|
+
+The correlation ID can be stored as provenance in #GstTensorListMeta.
+This allows derived tensor data to be associated with its provenance metadata
+without keeping the original tensor alive:
+
+|[
+  GstTensorListMeta
+    |
+    +-- item
+          |
+          +-- tensor "image"
+          |
+          +-- provenance
+                +-- "image" -&gt; [ 10 ]
+                                     |
+                                     +--&gt; GstAnalyticsTensorProvenanceMtd
+                                            |
+                                            +-- relation --&gt; GstAnalyticsODMtd
+]|
+
+The correlation ID is preserved when the provenance metadata is copied or
+transformed. Multiple provenance records can have the same correlation ID
+after copy or transform.
+
+Tensor provenance metadata can also store a spatial transform from tensor
+coordinates to video buffer coordinates. A tensor decoder can use this
+transform to map spatial inference results back to the video buffer.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_correlation_id" c:identifier="gst_analytics_tensor_provenance_mtd_get_correlation_id" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Gets the correlation ID of @mtd. The ID can be used to associate derived
+tensor data with this provenance metadata and is preserved when the metadata
+is copied.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the correlation ID</doc>
+          <type name="gint64" c:type="gint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_group_id" c:identifier="gst_analytics_tensor_provenance_mtd_get_group_id" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Gets the tensor group identifier.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the tensor group identifier</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_spatial_transform" c:identifier="gst_analytics_tensor_provenance_mtd_get_spatial_transform" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Gets the spatial transformation matrix. The matrix transforms coordinates
+from the tensor coordinate space to the coordinate space of the video buffer
+carrying the #GstAnalyticsRelationMeta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE if spatial transformation information is available,
+  otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="transform" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">location
+  for the 3x3 spatial transformation matrix in row-major order</doc>
+            <array zero-terminated="0" c:type="gfloat*" fixed-size="9">
+              <type name="gfloat" c:type="gfloat"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_tensor_id" c:identifier="gst_analytics_tensor_provenance_mtd_get_tensor_id" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Gets the tensor identifier.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the tensor identifier</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_timestamp" c:identifier="gst_analytics_tensor_provenance_mtd_get_timestamp">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="timestamp" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+          <parameter name="duration" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="has_spatial_transform" c:identifier="gst_analytics_tensor_provenance_mtd_has_spatial_transform" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Checks whether @mtd contains spatial transformation information.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE if spatial transformation information is available,
+  otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_spatial_transform" c:identifier="gst_analytics_tensor_provenance_mtd_set_spatial_transform" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Sets a spatial transform from tensor coordinates to video buffer
+coordinates.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="transform" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a 3x3 transformation matrix in row-major order</doc>
+            <array zero-terminated="0" c:type="const gfloat*" fixed-size="9">
+              <type name="gfloat" c:type="gfloat"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_spatial_transform_from_rectangles" c:identifier="gst_analytics_tensor_provenance_mtd_set_spatial_transform_from_rectangles" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Sets a spatial transform that maps @tensor_rect to @video_rect.
+
+This is a convenience function for axis-aligned scale and translation.
+For other transformations, use
+gst_analytics_tensor_provenance_mtd_set_spatial_transform().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="tensor_rect" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">rectangle in tensor coordinates</doc>
+            <type name="GstVideo.VideoRectangle" c:type="const GstVideoRectangle*"/>
+          </parameter>
+          <parameter name="video_rect" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">rectangle in video buffer coordinates</doc>
+            <type name="GstVideo.VideoRectangle" c:type="const GstVideoRectangle*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_timestamp" c:identifier="gst_analytics_tensor_provenance_mtd_set_timestamp">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <type name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="timestamp" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+          <parameter name="duration" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="transform_point" c:identifier="gst_analytics_tensor_provenance_mtd_transform_point" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Transforms (@x, @y) from tensor coordinates to video buffer coordinates.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="x" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">x coordinate</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+          <parameter name="y" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">y coordinate</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="transform_rectangle" c:identifier="gst_analytics_tensor_provenance_mtd_transform_rectangle" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Transforms an axis-aligned rectangle from tensor coordinates to video
+buffer coordinates.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success. %FALSE if the transform is not available or
+  does not preserve an axis-aligned rectangle.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
+            <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
+          </instance-parameter>
+          <parameter name="x" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">x coordinate of the rectangle</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+          <parameter name="y" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">y coordinate of the rectangle</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+          <parameter name="width" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">width of the rectangle</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+          <parameter name="height" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">height of the rectangle</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_mtd_type" c:identifier="gst_analytics_tensor_provenance_mtd_get_mtd_type" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the #GstAnalyticsMtdType of #GstAnalyticsTensorProvenanceMtd</doc>
           <type name="MtdType" c:type="GstAnalyticsMtdType"/>
         </return-value>
       </function>
@@ -3414,6 +4057,24 @@ analysis meta.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_add_tensor_list_meta" c:identifier="gst_buffer_add_tensor_list_meta" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Adds a #GstTensorListMeta to a buffer</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">The new #GstTensorListMeta</doc>
+        <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">A #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="group_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">A representative group ID of the GstTensorListMeta</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_add_tensor_meta" c:identifier="gst_buffer_add_tensor_meta" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Adds a #GstTensorMeta to a buffer</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
@@ -3452,6 +4113,20 @@ analysis meta.</doc>
       <parameters>
         <parameter name="buffer" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_get_tensor_list_meta" c:identifier="gst_buffer_get_tensor_list_meta" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">Gets the #GstTensorListMeta from a buffer</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">The #GstTensorListMeta</doc>
+        <type name="TensorListMeta" c:type="GstTensorListMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">A #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
       </parameters>
@@ -3800,6 +4475,20 @@ fixed bit depth.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="tensor_list_meta_api_get_type" c:identifier="gst_tensor_list_meta_api_get_type" version="1.30" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">the tensor list meta API type</doc>
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="tensor_list_meta_get_info" c:identifier="gst_tensor_list_meta_get_info" moved-to="TensorListMeta.get_info" version="1.30" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensorlistmeta.c">the tensor list meta information</doc>
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
     <function name="tensor_meta_api_get_type" c:identifier="gst_tensor_meta_api_get_type" version="1.26" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
       <return-value transfer-ownership="none">
@@ -3817,6 +4506,13 @@ fixed bit depth.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.c">Opaque id of the #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="tensor_provenance_mtd_get_mtd_type" c:identifier="gst_analytics_tensor_provenance_mtd_get_mtd_type" moved-to="TensorProvenanceMtd.get_mtd_type" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the #GstAnalyticsMtdType of #GstAnalyticsTensorProvenanceMtd</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>

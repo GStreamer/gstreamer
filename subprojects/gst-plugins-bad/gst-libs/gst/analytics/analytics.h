@@ -33,8 +33,10 @@
 #include <gst/analytics/gstanalyticssegmentationmtd.h>
 #include <gst/analytics/gstanalyticsgroupmtd.h>
 #include <gst/analytics/gstanalyticskeypointmtd.h>
+#include <gst/analytics/gstanalyticstensorprovenancemtd.h>
 #include <gst/analytics/gstanalyticstensormtd.h>
 #include <gst/analytics/gstanalyticstextmtd.h>
+#include <gst/analytics/gsttensorlistmeta.h>
 #include <gst/analytics/gsttensormeta.h>
 #include <gst/analytics/gstanalyticsbatchmeta.h>
 #include <gst/analytics/gstanalytics_image_util.h>
