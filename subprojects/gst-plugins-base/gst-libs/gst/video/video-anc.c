@@ -996,6 +996,10 @@ gst_video_caption_meta_serialize (const GstMeta * meta,
   const guint32 data_size = emeta->size;
   const gsize total_size = 4 + 4 + data_size;
 
+  /* A data size of 0 is invalid and cannot be deserialized */
+  if (!emeta->size)
+    return FALSE;
+
   guint8 *bai_data = gst_byte_array_interface_append (bai, total_size);
   if (!bai_data)
     return FALSE;
@@ -1015,6 +1019,9 @@ gst_video_caption_meta_deserialize (const GstMetaInfo * info,
 {
   const gsize header_size = 4 + 4;      // caption_type + data_size
 
+  if (version != 0)
+    return NULL;
+
   if (ser_size < header_size) {
     GST_ERROR ("Bad serialized GstVideoCaptionMeta header."
         " Not enough data (%" G_GSIZE_FORMAT ")", ser_size);
@@ -1027,14 +1034,15 @@ gst_video_caption_meta_deserialize (const GstMetaInfo * info,
   ser_data += 4;
   const guint8 *data = ser_data;
 
-  const gsize total_size = data_size + header_size;
+  /* use 64 bit to avoid an integer overflow with 32 bit gsize */
+  const guint64 total_size = (guint64) data_size + header_size;
   if (data_size == 0) {
     GST_ERROR ("Bad serialized GstVideoCaptionMeta header. Data size = 0");
     return NULL;
   }
   if (total_size > ser_size) {
     GST_ERROR ("Bad serialized GstVideoCaptionMeta header."
-        " Data required = %" G_GSIZE_FORMAT
+        " Data required = %" G_GUINT64_FORMAT
         ", data available = %" G_GSIZE_FORMAT, total_size, ser_size);
     return NULL;
   }
