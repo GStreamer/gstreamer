@@ -174,8 +174,7 @@ static inline gboolean gst_ps_demux_scan_forward_ts (GstPsDemux * demux,
 static inline gboolean gst_ps_demux_scan_backward_ts (GstPsDemux * demux,
     guint64 * pos, SCAN_MODE mode, guint64 * rts, gint limit);
 
-static inline void gst_ps_demux_send_gap_updates (GstPsDemux * demux,
-    GstClockTime new_time);
+static inline void gst_ps_demux_send_gap_updates (GstPsDemux * demux);
 static inline void gst_ps_demux_clear_times (GstPsDemux * demux);
 
 static void gst_ps_demux_reset_psm (GstPsDemux * demux);
@@ -1007,11 +1006,13 @@ gst_ps_demux_clear_times (GstPsDemux * demux)
 }
 
 static inline void
-gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime time)
+gst_ps_demux_send_gap_updates (GstPsDemux * demux)
 {
   GstClockTime base_time, stop;
   gint i, count = demux->found_count;
   GstEvent *event = NULL;
+  /* use a time in same timeline as buffer timestamps (as opposed to SCR) */
+  GstClockTime time = demux->src_segment.position;
 
   if (time == GST_CLOCK_TIME_NONE)
     return;
@@ -1039,16 +1040,17 @@ gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime time)
       if (stream->last_ts + stream->gap_threshold < time &&
           stream->nb_out_buffers == stream->gap_ref_buffers &&
           stream->gap_ref_pts != stream->last_ts) {
+        guint64 stop = time - stream->gap_threshold;
         /* should send segment info before gap event */
         gst_ps_demux_send_segment (demux, stream, GST_CLOCK_TIME_NONE);
 
         GST_LOG_OBJECT (demux,
             "Sending gap update to pad %s from time %" GST_TIME_FORMAT " to %"
             GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
-            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (time));
-        event = gst_event_new_gap (stream->last_ts, time - stream->last_ts);
+            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (stop));
+        event = gst_event_new_gap (stream->last_ts, stop - stream->last_ts);
         gst_pad_push_event (stream->pad, event);
-        stream->last_ts = time;
+        stream->last_ts = stop;
       }
 
       /* Update GAP tracking vars so we don't re-check this stream for a while */
@@ -1969,10 +1971,12 @@ gst_ps_demux_parse_pack_start (GstPsDemux * demux)
    * adapter */
   demux->bytes_since_scr = avail;
 
-  /* Now check for all streams if they're behind the new SCR and if
-   * they are then move them forward to the SCR position */
-  gst_ps_demux_send_gap_updates (demux,
-      MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr));
+  /* Now check for all streams if they're behind the common PTS/DTS position
+   * and if they are then move them forward.
+   * Could alternatively do this in send_data() after every PES, but this
+   * probably suffices.
+   */
+  gst_ps_demux_send_gap_updates (demux);
 
 out:
   gst_adapter_unmap (demux->adapter);
