@@ -59,8 +59,12 @@
 #define SCAN_SCR_SZ                 12
 #define SCAN_PTS_SZ                 80
 
-#define DEFAULT_GAP_THRESHOLD (300*GST_MSECOND)
-#define VIDEO_GAP_THRESHOLD   (500*GST_MSECOND)
+/* align a bit more with e.g. matroskademux,
+ * as they more affect and relate to downstream queues etc than source material
+ */
+#define DEFAULT_GAP_THRESHOLD (2000*GST_MSECOND)
+#define VIDEO_GAP_THRESHOLD   (2000*GST_MSECOND)
+#define SUB_GAP_THRESHOLD     (500*GST_MSECOND)
 
 #define DURATION_SCAN_LIMIT         4 * 1024 * 1024
 
@@ -516,6 +520,7 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type,
       template = klass->subpicture_template;
       name = g_strdup_printf ("subpicture_%02x", id);
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
+      gap_threshold = SUB_GAP_THRESHOLD;
       break;
     case ST_GST_AUDIO_RAWA52:
       template = klass->audio_template;
