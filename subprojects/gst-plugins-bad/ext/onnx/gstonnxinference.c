@@ -114,7 +114,6 @@
 #define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
 #endif
 
-#include "gstonnximporter-cpu.h"
 #include "gstonnxexporter-cpu.h"
 
 #include <gst/gst.h>
@@ -222,10 +221,7 @@ struct _GstOnnxInference
   GstHipDevice *device_hip;
 #endif
   GstOnnxImporterConfig importer_config;
-  GstOnnxImporter *cpu_importer;
-  GstOnnxImporter *device_importer;
-  /* Currently active importer without holding ownership */
-  GstOnnxImporter *active_importer;
+  GstOnnxImporter *importer;
   /* DXGI adapter luid of selected device on Windows */
   gint64 adapter_luid;
   /* Device ID selected for the execution provider */
@@ -974,10 +970,10 @@ gst_onnx_inference_can_use_hip (GstOnnxInference * self)
     return FALSE;
   }
 
-  if (!self->session)
+  if (!self->importer)
     return TRUE;
 
-  if (!self->device_importer)
+  if (!GST_IS_ONNX_IMPORTER_HIP (self->importer))
     return FALSE;
 
   return TRUE;
@@ -1005,7 +1001,7 @@ gst_onnx_inference_filter_memory_caps (GstOnnxInference * self, GstCaps * caps)
     if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY) &&
         (self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_DIRECTML ||
-            (self->session && !self->device_importer)))
+            (self->importer && !GST_IS_ONNX_IMPORTER_DML (self->importer))))
       continue;
 
     gst_caps_append_structure_full (ret,
@@ -1024,7 +1020,7 @@ gst_onnx_inference_add_memory_caps (GstOnnxInference * self, GstCaps * caps)
 
 #if HAVE_DIRECTML
   if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_DIRECTML &&
-      (!self->session || self->device_importer)) {
+      (!self->importer || GST_IS_ONNX_IMPORTER_DML (self->importer))) {
     GstCaps *d3d12_caps = gst_caps_copy (caps);
     gst_caps_set_features_simple (d3d12_caps,
         gst_caps_features_new_single_static_str
@@ -2187,9 +2183,9 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         goto error;
       }
 
-      self->device_importer = gst_onnx_importer_dml_new (api,
+      self->importer = gst_onnx_importer_dml_new (api,
           self->device12, session_options);
-      if (!self->device_importer) {
+      if (!self->importer) {
         GST_ERROR_OBJECT (self,
             "Couldn't create DML importer with adapter index %d", device_id);
         goto error;
@@ -2322,15 +2318,17 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
     if (self->device_hip) {
       GST_DEBUG_OBJECT (self, "Creating HIP importer");
-      self->device_importer = gst_onnx_importer_hip_new (api, self->device_hip);
-      if (!self->device_importer)
+      self->importer = gst_onnx_importer_hip_new (api, self->device_hip);
+      if (!self->importer)
         GST_WARNING_OBJECT (self, "Couldn't create HIP importer");
     }
   }
 #endif /* HAVE_GST_HIP */
 
-  self->cpu_importer = gst_onnx_importer_cpu_new (api);
-  if (!self->cpu_importer) {
+  if (!self->importer)
+    self->importer = gst_onnx_importer_new (api);
+
+  if (!self->importer) {
     GST_ERROR_OBJECT (self, "Couldn't create importer");
     goto error;
   }
@@ -3013,8 +3011,6 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
 
   g_ptr_array_set_size (self->output_tensors, 0);
   gst_clear_object (&self->exporter);
-  gst_clear_object (&self->cpu_importer);
-  self->active_importer = NULL;
 
   // Clean up output names
   if (self->output_names) {
@@ -3039,7 +3035,7 @@ gst_onnx_inference_stop (GstBaseTransform * trans)
   if (self->session)
     api->ReleaseSession (self->session);
   self->session = NULL;
-  gst_clear_object (&self->device_importer);
+  gst_clear_object (&self->importer);
 
   /* Free cached input tensor metadata */
   if (self->input_name) {
@@ -3089,7 +3085,7 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
   GstOnnxImporterConfig *config = &self->importer_config;
 
-  if (!self->cpu_importer) {
+  if (!self->importer) {
     GST_ERROR_OBJECT (self, "Importer is not prepared");
     return FALSE;
   }
@@ -3153,18 +3149,8 @@ gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   }
 
   config->tensor_size = input_tensor_size;
-  self->active_importer = self->cpu_importer;
 
-  if (self->device_importer) {
-    if (!gst_onnx_importer_setup (self->device_importer,
-            &self->video_info, config)) {
-      GST_WARNING_OBJECT (self, "Couldn't setup device importer");
-    } else {
-      self->active_importer = self->device_importer;
-    }
-  }
-
-  if (!gst_onnx_importer_setup (self->cpu_importer, &self->video_info, config)) {
+  if (!gst_onnx_importer_setup (self->importer, &self->video_info, config)) {
     GST_ERROR_OBJECT (self, "Couldn't setup importer");
     return FALSE;
   }
@@ -3198,7 +3184,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
   GstOnnxImporterConfig *config = &self->importer_config;
-  GstOnnxImporter *target_importer = self->active_importer;
   GstFlowReturn ret = GST_FLOW_ERROR;
 
   GST_LOG_OBJECT (self, "Input dimensions: %" G_GINT64_FORMAT
@@ -3208,11 +3193,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       config->dims_count > 2 ? config->dims[2] : -1,
       config->dims_count > 3 ? config->dims[3] : -1);
 
-  input_tensor = gst_onnx_importer_prepare (target_importer, buf);
-  if (!input_tensor && target_importer != self->cpu_importer) {
-    target_importer = self->cpu_importer;
-    input_tensor = gst_onnx_importer_prepare (target_importer, buf);
-  }
+  input_tensor = gst_onnx_importer_prepare (self->importer, buf);
 
   if (!input_tensor) {
     GST_ERROR_OBJECT (self, "Couldn't create input tensor");
@@ -3414,7 +3395,7 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   gst_onnx_exporter_unprepare (self->exporter);
 
   GST_TRACE_OBJECT (trans, "Num tensors:%zu", self->output_count);
-  gst_onnx_importer_unprepare (target_importer);
+  gst_onnx_importer_unprepare (self->importer);
 
   return GST_FLOW_OK;
 
@@ -3436,7 +3417,7 @@ error:
   if (tmeta)
     gst_buffer_remove_meta (buf, (GstMeta *) tmeta);
 
-  gst_onnx_importer_unprepare (target_importer);
+  gst_onnx_importer_unprepare (self->importer);
 
   return ret;
 }

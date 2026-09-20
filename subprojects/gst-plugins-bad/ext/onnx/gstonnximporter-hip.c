@@ -195,21 +195,15 @@ struct _GstOnnxImporterHip
 {
   GstOnnxImporter parent;
 
-  const OrtApi *api;
   OrtMemoryInfo *memory_info;
 
-  GstVideoInfo info;
-  GstOnnxImporterConfig config;
-  ONNXTensorElementDataType data_type_onnx;
-  gboolean needs_normalization;
-
   gboolean is_packed;
-  gsize elem_size;
-  GstVideoFrame frame;
 
   GstHipDevice *device;
   GstHipStream *stream;
 
+  GstVideoFrame frame;
+  gsize device_ptr_size;
   gpointer device_ptr;
 
   hipModule_t kernel_module;
@@ -218,10 +212,12 @@ struct _GstOnnxImporterHip
   hipFunction_t scale_packed_func_u8;
   hipFunction_t scale_plane_func_u8;
   hipFunction_t active_func;
+
+  gboolean configured;
 };
 
 static void gst_onnx_importer_hip_finalize (GObject * object);
-static gboolean gst_onnx_importer_hip_setup (GstOnnxImporter * importer,
+static void gst_onnx_importer_hip_setup (GstOnnxImporter * importer,
     const GstVideoInfo * info, const GstOnnxImporterConfig * config);
 static OrtValue *gst_onnx_importer_hip_prepare (GstOnnxImporter * importer,
     GstBuffer * buffer);
@@ -250,13 +246,32 @@ gst_onnx_importer_hip_init (GstOnnxImporterHip * self)
 }
 
 static void
+gst_onnx_importer_hip_unprepare_internal (GstOnnxImporterHip * self)
+{
+  if (self->frame.buffer)
+    gst_video_frame_unmap (&self->frame);
+}
+
+static void
+gst_onnx_importer_hip_unprepare (GstOnnxImporter * importer)
+{
+  GstOnnxImporterHip *self = GST_ONNX_IMPORTER_HIP (importer);
+
+  gst_onnx_importer_hip_unprepare_internal (self);
+
+  GST_ONNX_IMPORTER_CLASS (parent_class)->unprepare (importer);
+}
+
+static void
 gst_onnx_importer_hip_reset (GstOnnxImporterHip * self, gboolean hard)
 {
-  gst_onnx_importer_hip_unprepare (GST_ONNX_IMPORTER (self));
+  self->configured = FALSE;
+
+  gst_onnx_importer_hip_unprepare_internal (self);
 
   if (hard) {
     gst_hip_device_set_current (self->device);
-    self->config.tensor_size = 0;
+    self->device_ptr_size = 0;
 
     if (self->device_ptr)
       HipFree (GST_HIP_VENDOR_AMD, self->device_ptr);
@@ -268,10 +283,11 @@ static void
 gst_onnx_importer_hip_finalize (GObject * object)
 {
   GstOnnxImporterHip *self = GST_ONNX_IMPORTER_HIP (object);
+  GstOnnxImporter *base = GST_ONNX_IMPORTER (object);
 
   gst_onnx_importer_hip_reset (self, TRUE);
   if (self->memory_info)
-    self->api->ReleaseMemoryInfo (self->memory_info);
+    base->api->ReleaseMemoryInfo (self->memory_info);
 
   gst_hip_device_set_current (self->device);
   if (self->kernel_module)
@@ -283,92 +299,85 @@ gst_onnx_importer_hip_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gboolean
+static void
 gst_onnx_importer_hip_setup (GstOnnxImporter * importer,
     const GstVideoInfo * info, const GstOnnxImporterConfig * config)
 {
   GstOnnxImporterHip *self = GST_ONNX_IMPORTER_HIP (importer);
   hipError_t hip_ret;
 
+  /* reset will clear configured flag */
   gst_onnx_importer_hip_reset (self, FALSE);
 
   if (!gst_hip_device_set_current (self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't make device current");
-    return FALSE;
+    return;
   }
 
   self->is_packed = GST_VIDEO_INFO_N_COMPONENTS (info) == 3 &&
       GST_VIDEO_INFO_N_PLANES (info) == 1;
 
-  switch (config->data_type) {
-    case GST_TENSOR_DATA_TYPE_UINT8:
-      self->data_type_onnx = ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8;
-      self->elem_size = sizeof (guint8);
-      self->active_func = self->is_packed ? self->scale_packed_func_u8 :
-          self->scale_plane_func_u8;
-      break;
-    case GST_TENSOR_DATA_TYPE_FLOAT32:
-      self->data_type_onnx = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
-      self->elem_size = sizeof (gfloat);
-      self->active_func = self->is_packed ?
-          self->scale_packed_func_f32 : self->scale_plane_func_f32;
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
+  if (config->data_type == GST_TENSOR_DATA_TYPE_FLOAT32) {
+    self->active_func = self->is_packed ?
+        self->scale_packed_func_f32 : self->scale_plane_func_f32;
+  } else {
+    self->active_func = self->is_packed ?
+        self->scale_packed_func_u8 : self->scale_plane_func_u8;
   }
 
-  if (self->config.tensor_size != config->tensor_size) {
+  if (self->device_ptr_size != config->tensor_size) {
     if (self->device_ptr)
       HipFree (GST_HIP_VENDOR_AMD, self->device_ptr);
     self->device_ptr = NULL;
+    self->device_ptr_size = 0;
   }
-
-  self->info = *info;
-  self->config = *config;
-  self->needs_normalization =
-      gst_onnx_importer_config_needs_normalization (config, info);
 
   if (!self->device_ptr) {
     hip_ret = HipMalloc (GST_HIP_VENDOR_AMD, &self->device_ptr,
         config->tensor_size);
     if (!gst_hip_result (hip_ret, GST_HIP_VENDOR_AMD)) {
-      GST_ERROR_OBJECT (self, "Couldn't allocate device memory");
-      return FALSE;
+      GST_ERROR_OBJECT (self, "Couldn't allocate memory");
+      return;
     }
+
+    self->device_ptr_size = config->tensor_size;
   }
 
-  return TRUE;
+  self->configured = TRUE;
 }
 
 static OrtValue *
 gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
 {
   GstOnnxImporterHip *self = GST_ONNX_IMPORTER_HIP (importer);
-  const GstVideoInfo *info = &self->info;
+  const GstVideoInfo *info = &importer->info;
   GstVideoFrame *vframe = &self->frame;
-  const OrtApi *api = self->api;
+  const OrtApi *api = importer->api;
   OrtStatus *status = NULL;
   OrtValue *ret = NULL;
   gpointer tensor_data = NULL;
   hipStream_t stream;
   GstHipStream *mem_stream;
   hipError_t hip_ret = hipSuccess;
-  const GstOnnxImporterConfig *config = &self->config;
+  const GstOnnxImporterConfig *config = &importer->config;
 
-  gst_onnx_importer_hip_unprepare (importer);
+  gst_onnx_importer_hip_unprepare_internal (self);
+
+  /* We failed to configure, do CPU fallback */
+  if (!self->configured)
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
 
   guint n_mem = gst_buffer_n_memory (buffer);
   if (n_mem != 1) {
     /* GstHip expects a single memory per buffer */
     GST_DEBUG_OBJECT (self, "Unexpected memory layout");
-    return NULL;
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
   }
 
   GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_hip_memory (mem)) {
     GST_DEBUG_OBJECT (self, "Not a HIP memory");
-    return NULL;
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
   }
 
   GstHipMemory *hmem = GST_HIP_MEMORY_CAST (mem);
@@ -376,7 +385,7 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
       gst_hip_device_get_device_id (hmem->device) !=
       gst_hip_device_get_device_id (self->device)) {
     GST_DEBUG_OBJECT (self, "Different device, need CPU fallback");
-    return NULL;
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
   }
 
   if (!gst_video_frame_map (vframe, info, buffer,
@@ -398,7 +407,7 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
 
   {
     guint n_planes = GST_VIDEO_INFO_N_PLANES (info);
-    gboolean direct = !self->needs_normalization;
+    gboolean direct = !importer->needs_normalization;
 
     if (direct) {
       for (guint p = 0; p < n_planes; p++) {
@@ -445,7 +454,7 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
         size_t src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0);
         gpointer dst = self->device_ptr;
 
-        if (self->needs_normalization) {
+        if (importer->needs_normalization) {
           float scale0 = (float) config->scales[0];
           float scale1 = (float) config->scales[1];
           float scale2 = (float) config->scales[2];
@@ -502,7 +511,7 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
           size_t src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, comp);
           guint8 *dst = (guint8 *) self->device_ptr + dst_offset;
 
-          if (self->needs_normalization) {
+          if (importer->needs_normalization) {
             float scale = (float) config->scales[comp];
             float offset = (float) config->offsets[comp];
 
@@ -548,7 +557,7 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
             goto error;
           }
 
-          dst_offset += self->elem_size * plane_width * plane_height;
+          dst_offset += importer->elem_size * plane_width * plane_height;
         }
       }
 
@@ -568,7 +577,7 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
 
   status = api->CreateTensorWithDataAsOrtValue (self->memory_info,
       tensor_data, config->tensor_size,
-      config->dims, config->dims_count, self->data_type_onnx, &ret);
+      config->dims, config->dims_count, importer->data_type_onnx, &ret);
   if (status)
     goto error;
 
@@ -583,19 +592,9 @@ error:
     api->ReleaseStatus (status);
   }
 
-  gst_onnx_importer_hip_unprepare (importer);
+  gst_onnx_importer_hip_unprepare_internal (self);
+
   return NULL;
-}
-
-static void
-gst_onnx_importer_hip_unprepare (GstOnnxImporter * importer)
-{
-  GstOnnxImporterHip *self = GST_ONNX_IMPORTER_HIP (importer);
-
-  if (self->frame.buffer)
-    gst_video_frame_unmap (&self->frame);
-
-  memset (&self->frame, 0, sizeof (GstVideoFrame));
 }
 
 GstOnnxImporter *
@@ -603,6 +602,7 @@ gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
 {
   OrtMemoryInfo *memory_info;
   guint device_id = gst_hip_device_get_device_id (device);
+  OrtStatus *status = NULL;
 
   const gchar *blob = get_blob_for_device (device);
   if (!blob) {
@@ -615,7 +615,18 @@ gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
     return NULL;
   }
 
-  hipModule_t kernel_module;
+  GstOnnxImporterHip *self = g_object_new (GST_TYPE_ONNX_IMPORTER_HIP, NULL);
+  gst_object_ref_sink (self);
+
+  self->device = (GstHipDevice *) gst_object_ref (device);
+
+  GstOnnxImporter *base = GST_ONNX_IMPORTER (self);
+  if (!gst_onnx_importer_create_system_memory_info (base, api)) {
+    gst_object_unref (self);
+    return NULL;
+  }
+
+  hipModule_t kernel_module = NULL;
   hipFunction_t scale_packed_func_f32;
   hipFunction_t scale_plane_func_f32;
   hipFunction_t scale_packed_func_u8;
@@ -625,57 +636,47 @@ gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
       HipModuleLoadData (GST_HIP_VENDOR_AMD, &kernel_module, blob);
   if (!gst_hip_result (hip_ret, GST_HIP_VENDOR_AMD)) {
     GST_ERROR_OBJECT (device, "Couldn't load kernel");
-    return NULL;
+    goto error;
   }
 
   hip_ret = HipModuleGetFunction (GST_HIP_VENDOR_AMD, &scale_packed_func_f32,
       kernel_module, "scale_packed_f32");
   if (!gst_hip_result (hip_ret, GST_HIP_VENDOR_AMD)) {
     GST_ERROR_OBJECT (device, "Couldn't get kernel function");
-    HipModuleUnload (GST_HIP_VENDOR_AMD, kernel_module);
-    return NULL;
+    goto error;
   }
 
   hip_ret = HipModuleGetFunction (GST_HIP_VENDOR_AMD, &scale_plane_func_f32,
       kernel_module, "scale_plane_f32");
   if (!gst_hip_result (hip_ret, GST_HIP_VENDOR_AMD)) {
     GST_ERROR_OBJECT (device, "Couldn't get kernel function");
-    HipModuleUnload (GST_HIP_VENDOR_AMD, kernel_module);
-    return NULL;
+    goto error;
   }
 
   hip_ret = HipModuleGetFunction (GST_HIP_VENDOR_AMD, &scale_packed_func_u8,
       kernel_module, "scale_packed_u8");
   if (!gst_hip_result (hip_ret, GST_HIP_VENDOR_AMD)) {
     GST_ERROR_OBJECT (device, "Couldn't get kernel function");
-    HipModuleUnload (GST_HIP_VENDOR_AMD, kernel_module);
-    return NULL;
+    goto error;
   }
 
   hip_ret = HipModuleGetFunction (GST_HIP_VENDOR_AMD, &scale_plane_func_u8,
       kernel_module, "scale_plane_u8");
   if (!gst_hip_result (hip_ret, GST_HIP_VENDOR_AMD)) {
     GST_ERROR_OBJECT (device, "Couldn't get kernel function");
-    HipModuleUnload (GST_HIP_VENDOR_AMD, kernel_module);
-    return NULL;
+    goto error;
   }
 
-  OrtStatus *status = api->CreateMemoryInfo ("Hip",
+  status = api->CreateMemoryInfo ("Hip",
       OrtDeviceAllocator, device_id, OrtMemTypeDefault, &memory_info);
   if (status) {
     GST_ERROR ("Couldn't create memory info: %s",
         api->GetErrorMessage (status));
     api->ReleaseStatus (status);
-    HipModuleUnload (GST_HIP_VENDOR_AMD, kernel_module);
-    return NULL;
+    goto error;
   }
 
-  GstOnnxImporterHip *self = g_object_new (GST_TYPE_ONNX_IMPORTER_HIP, NULL);
-
-  gst_object_ref_sink (self);
-  self->api = api;
   self->memory_info = memory_info;
-  self->device = (GstHipDevice *) gst_object_ref (device);
   self->stream = gst_hip_stream_new (GST_HIP_VENDOR_AMD, device_id);
   if (!self->stream) {
     GST_WARNING_OBJECT (self,
@@ -688,5 +689,12 @@ gst_onnx_importer_hip_new (const OrtApi * api, GstHipDevice * device)
   self->scale_packed_func_u8 = scale_packed_func_u8;
   self->scale_plane_func_u8 = scale_plane_func_u8;
 
-  return (GstOnnxImporter *) self;
+  return base;
+
+error:
+  if (kernel_module)
+    HipModuleUnload (GST_HIP_VENDOR_AMD, kernel_module);
+
+  gst_object_unref (self);
+  return NULL;
 }

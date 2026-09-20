@@ -65,22 +65,18 @@ struct GstOnnxImporterDmlPrivate
   GstD3D12CmdQueue *queue = nullptr;
   ComPtr<IDMLDevice> device_ml;
   GstD3D12Memory *tensor = nullptr;
+  gsize allocated_tensor_size = 0;
   ComPtr<ID3D12RootSignature> rs;
   ComPtr<ID3D12PipelineState> texture_pso;
   ComPtr<ID3D12PipelineState> buffer_pso;
   GstD3D12CmdAllocPool *ca_pool = nullptr;
   GstD3D12DescHeapPool *desc_pool = nullptr;
   ComPtr<ID3D12GraphicsCommandList> cl;
-  GstVideoInfo info = {};
-  GstOnnxImporterConfig config = {};
   GstD3D12Frame frame = {};
-  ONNXTensorElementDataType data_type_onnx =
-      ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-  guint elem_size = 0;
   guint channels = 0;
   guint num_planes = 0;
   gboolean is_packed = FALSE;
-  gboolean needs_normalization = FALSE;
+  gboolean configured = FALSE;
 };
 /* *INDENT-ON* */
 
@@ -113,7 +109,7 @@ struct GstOnnxDmlConstants
 G_STATIC_ASSERT (sizeof (GstOnnxDmlConstants) % 16 == 0);
 
 static void gst_onnx_importer_dml_finalize (GObject * object);
-static gboolean gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
+static void gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
     const GstVideoInfo * info, const GstOnnxImporterConfig * config);
 static OrtValue *gst_onnx_importer_dml_prepare (GstOnnxImporter * importer,
     GstBuffer * buffer);
@@ -154,15 +150,24 @@ gst_onnx_importer_dml_init (GstOnnxImporterDml * self)
 }
 
 static void
-gst_onnx_importer_dml_unprepare (GstOnnxImporter * importer)
+gst_onnx_importer_dml_unprepare_internal (GstOnnxImporterDml * self)
 {
-  auto self = GST_ONNX_IMPORTER_DML (importer);
   auto priv = self->priv;
 
   if (priv->frame.buffer)
     gst_d3d12_frame_unmap (&priv->frame);
 
   memset (&priv->frame, 0, sizeof (priv->frame));
+}
+
+static void
+gst_onnx_importer_dml_unprepare (GstOnnxImporter * importer)
+{
+  auto self = GST_ONNX_IMPORTER_DML (importer);
+
+  gst_onnx_importer_dml_unprepare_internal (self);
+
+  GST_ONNX_IMPORTER_CLASS (parent_class)->unprepare (importer);
 }
 
 struct GstOnnxDmlAllocation
@@ -195,6 +200,7 @@ gst_onnx_importer_dml_clear_tensor (GstOnnxImporterDml * self)
     gst_memory_unref (GST_MEMORY_CAST (priv->tensor));
   priv->allocation = nullptr;
   priv->tensor = nullptr;
+  priv->allocated_tensor_size = 0;
 }
 
 static void
@@ -203,7 +209,7 @@ gst_onnx_importer_dml_finalize (GObject * object)
   auto self = GST_ONNX_IMPORTER_DML (object);
   auto priv = self->priv;
 
-  gst_onnx_importer_dml_unprepare (GST_ONNX_IMPORTER (self));
+  gst_onnx_importer_dml_unprepare_internal (self);
   gst_onnx_importer_dml_clear_tensor (self);
 
   priv->~GstOnnxImporterDmlPrivate ();
@@ -272,27 +278,16 @@ gst_onnx_importer_dml_create_pipeline (GstOnnxImporterDml * self,
   return gst_d3d12_result (hr, priv->device);
 }
 
-static gboolean
+static void
 gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
     const GstVideoInfo * info, const GstOnnxImporterConfig * config)
 {
   auto self = GST_ONNX_IMPORTER_DML (importer);
   auto priv = self->priv;
-  gst_onnx_importer_dml_unprepare (importer);
 
-  switch (config->data_type) {
-    case GST_TENSOR_DATA_TYPE_UINT8:
-      priv->data_type_onnx = ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8;
-      priv->elem_size = sizeof (guint8);
-      break;
-    case GST_TENSOR_DATA_TYPE_FLOAT32:
-      priv->data_type_onnx = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
-      priv->elem_size = sizeof (gfloat);
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
-  }
+  priv->configured = FALSE;
+
+  gst_onnx_importer_dml_unprepare_internal (self);
 
   priv->channels = GST_VIDEO_INFO_N_COMPONENTS (info);
   priv->num_planes = GST_VIDEO_INFO_N_PLANES (info);
@@ -302,30 +297,28 @@ gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
       (priv->is_packed ? priv->channels : 1);
   /* add 3 to 255, accounting for up to 3 bytes of alignment mismatch before
    * aligned UAV word */
-  guint64 groups = priv->elem_size == 1 ?
+  guint64 groups = importer->elem_size == 1 ?
       (row_elements + 258) / 256 : (row_elements + 63) / 64;
   if (info->height > D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION ||
       groups > D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION ||
       tensor_size > G_MAXUINT - (D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT - 1)) {
-    GST_ERROR_OBJECT (self, "Tensor layout exceeds shader limits");
-    return FALSE;
+    GST_WARNING_OBJECT (self, "Tensor layout exceeds shader limits");
+    return;
   }
 
-  priv->needs_normalization =
-      gst_onnx_importer_config_needs_normalization (config, info);
   priv->texture_pso = nullptr;
   priv->buffer_pso = nullptr;
   auto device = gst_d3d12_device_get_device_handle (priv->device);
 
   GstD3DPluginCS texture_shader;
   GstD3DPluginCS buffer_shader;
-  if (priv->elem_size == 1) {
-    texture_shader = priv->needs_normalization ?
+  if (importer->elem_size == 1) {
+    texture_shader = importer->needs_normalization ?
         GST_D3D_PLUGIN_CS_TEXTURE_SCALE_2D_U8 :
         GST_D3D_PLUGIN_CS_TEXTURE_COPY_2D_U8;
     buffer_shader = GST_D3D_PLUGIN_CS_BUFFER_SCALE_2D_U8;
   } else {
-    texture_shader = priv->needs_normalization ?
+    texture_shader = importer->needs_normalization ?
         GST_D3D_PLUGIN_CS_TEXTURE_SCALE_2D_F32 :
         GST_D3D_PLUGIN_CS_TEXTURE_COPY_2D_F32;
     buffer_shader = GST_D3D_PLUGIN_CS_BUFFER_SCALE_2D_F32;
@@ -334,16 +327,16 @@ gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
   if (!gst_onnx_importer_dml_create_pipeline (self, texture_shader,
           &priv->texture_pso)) {
     GST_ERROR_OBJECT (self, "Couldn't create texture pipeline");
-    return FALSE;
+    return;
   }
 
   if (!gst_onnx_importer_dml_create_pipeline (self, buffer_shader,
           &priv->buffer_pso)) {
     GST_ERROR_OBJECT (self, "Couldn't create buffer pipeline");
-    return FALSE;
+    return;
   }
 
-  if (!priv->tensor || priv->config.tensor_size != config->tensor_size) {
+  if (!priv->tensor || priv->allocated_tensor_size != config->tensor_size) {
     gst_onnx_importer_dml_clear_tensor (self);
     CD3DX12_HEAP_PROPERTIES heap (D3D12_HEAP_TYPE_DEFAULT);
     auto size_aligned = GST_ROUND_UP_N (tensor_size,
@@ -357,7 +350,7 @@ gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
     if (!gst_d3d12_result (hr, priv->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create tensor buffer of size %"
           G_GSIZE_FORMAT, size_aligned);
-      return FALSE;
+      return;
     }
 
     if (!CHECK_ORT (self,
@@ -365,7 +358,7 @@ gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
                 &priv->allocation))) {
       GST_ERROR_OBJECT (self,
           "Couldn't create DML allocation for tensor buffer");
-      return FALSE;
+      return;
     }
 
     auto data = g_new0 (GstOnnxDmlAllocation, 1);
@@ -378,15 +371,14 @@ gst_onnx_importer_dml_setup (GstOnnxImporter * importer,
       GST_ERROR_OBJECT (self, "Couldn't wrap tensor buffer");
       gst_onnx_importer_dml_free_allocation (data);
       priv->allocation = nullptr;
-      return FALSE;
+      return;
     }
+
     priv->tensor = GST_D3D12_MEMORY_CAST (mem);
+    priv->allocated_tensor_size = config->tensor_size;
   }
 
-  priv->info = *info;
-  priv->config = *config;
-
-  return TRUE;
+  priv->configured = TRUE;
 }
 
 struct GstOnnxDmlLayout
@@ -406,16 +398,17 @@ static gboolean
 gst_onnx_importer_dml_get_layout (GstOnnxImporterDml * self,
     GstOnnxDmlLayout & layout)
 {
+  auto base = GST_ONNX_IMPORTER (self);
   auto priv = self->priv;
   auto frame = &priv->frame;
   auto device = gst_d3d12_device_get_device_handle (priv->device);
   auto tensor = gst_d3d12_memory_get_resource_handle (priv->tensor);
 
   layout = { };
-  layout.width = (guint) priv->info.width;
-  layout.height = (guint) priv->info.height;
+  layout.width = (guint) base->info.width;
+  layout.height = (guint) base->info.height;
   layout.components = priv->is_packed ? priv->channels : 1;
-  layout.row_size = layout.width * layout.components * priv->elem_size;
+  layout.row_size = layout.width * layout.components * base->elem_size;
   layout.plane_size = layout.row_size * layout.height;
 
   for (guint p = 0; p < priv->num_planes; p++) {
@@ -433,8 +426,8 @@ gst_onnx_importer_dml_get_layout (GstOnnxImporterDml * self,
           layout.row_size;
       if (frame->info.stride[p] < (gint) layout.row_size
           || frame->info.offset[p] > G_MAXUINT || end > G_MAXUINT - 3
-          || (priv->needs_normalization ? GST_ROUND_UP_4 (end) : end) >
-          desc.Width || (priv->elem_size == 4
+          || (base->needs_normalization ? GST_ROUND_UP_4 (end) : end) >
+          desc.Width || (base->elem_size == 4
               && ((frame->info.offset[p] | frame->info.stride[p]) & 3))) {
         GST_ERROR_OBJECT (self,
             "Invalid buffer layout for plane %u: " "offset %" G_GSIZE_FORMAT
@@ -447,7 +440,7 @@ gst_onnx_importer_dml_get_layout (GstOnnxImporterDml * self,
       if (priv->is_packed ||
           desc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D ||
           desc.SampleDesc.Count != 1 ||
-          desc.Format != (priv->elem_size == 1 ?
+          desc.Format != (base->elem_size == 1 ?
               DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_R32_FLOAT) ||
           frame->plane_rect[p].right < (LONG) layout.width ||
           frame->plane_rect[p].bottom < (LONG) layout.height) {
@@ -462,7 +455,7 @@ gst_onnx_importer_dml_get_layout (GstOnnxImporterDml * self,
       device->GetCopyableFootprints (&desc, frame->subresource_index[p], 1,
           (UINT64) layout.plane_size * p, &layout.layouts[p], nullptr, nullptr,
           &size);
-      layout.copy_texture[p] = !priv->needs_normalization &&
+      layout.copy_texture[p] = !base->needs_normalization &&
           layout.layouts[p].Offset == (UINT64) layout.plane_size * p &&
           layout.layouts[p].Footprint.RowPitch == layout.row_size &&
           layout.layouts[p].Footprint.Width == layout.width &&
@@ -476,7 +469,7 @@ gst_onnx_importer_dml_get_layout (GstOnnxImporterDml * self,
       }
     }
 
-    if ((priv->needs_normalization ||
+    if ((base->needs_normalization ||
             (!layout.is_buffer[p] && !layout.copy_texture[p])) &&
         (desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)) {
       GST_WARNING_OBJECT (self,
@@ -494,6 +487,7 @@ gst_onnx_importer_dml_dispatch_plane (GstOnnxImporterDml * self,
     CD3DX12_CPU_DESCRIPTOR_HANDLE & cpu, CD3DX12_GPU_DESCRIPTOR_HANDLE & gpu,
     guint increment)
 {
+  auto base = GST_ONNX_IMPORTER (self);
   auto priv = self->priv;
   auto frame = &priv->frame;
   auto device = gst_d3d12_device_get_device_handle (priv->device);
@@ -529,9 +523,9 @@ gst_onnx_importer_dml_dispatch_plane (GstOnnxImporterDml * self,
 
   GstOnnxDmlConstants constants = {
     layout.width, layout.height, layout.row_size, dst_offset, 0, 0,
-    (gfloat) priv->config.scales[p], (gfloat) priv->config.offsets[p],
-    (gfloat) priv->config.scales[1], (gfloat) priv->config.offsets[1],
-    (gfloat) priv->config.scales[2], (gfloat) priv->config.offsets[2],
+    (gfloat) base->config.scales[p], (gfloat) base->config.offsets[p],
+    (gfloat) base->config.scales[1], (gfloat) base->config.offsets[1],
+    (gfloat) base->config.scales[2], (gfloat) base->config.offsets[2],
     layout.components, (guint) frame->info.stride[p],
     (guint) frame->info.offset[p], 0,
   };
@@ -541,7 +535,7 @@ gst_onnx_importer_dml_dispatch_plane (GstOnnxImporterDml * self,
   cl->SetComputeRootDescriptorTable (1, gpu);
   /* add 3 to 255, accounting for up to 3 bytes of alignment mismatch before
    * aligned UAV word */
-  guint groups = priv->elem_size == 1 ?
+  guint groups = base->elem_size == 1 ?
       (layout.row_size + 258) / 256 : (layout.width * layout.components +
       63) / 64;
   cl->Dispatch (groups, layout.height, 1);
@@ -552,6 +546,7 @@ static void
 gst_onnx_importer_dml_record_commands (GstOnnxImporterDml * self,
     const GstOnnxDmlLayout & layout, GstD3D12DescHeap * desc_heap)
 {
+  auto base = GST_ONNX_IMPORTER (self);
   auto priv = self->priv;
   auto frame = &priv->frame;
   auto device = gst_d3d12_device_get_device_handle (priv->device);
@@ -576,7 +571,7 @@ gst_onnx_importer_dml_record_commands (GstOnnxImporterDml * self,
     auto subresource = frame->subresource_index[p];
     auto dst_offset = p * layout.plane_size;
     auto copy = layout.copy_texture[p] ||
-        (layout.is_buffer[p] && !priv->needs_normalization);
+        (layout.is_buffer[p] && !base->needs_normalization);
     auto next_state = copy ? D3D12_RESOURCE_STATE_COPY_DEST :
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
@@ -614,7 +609,11 @@ gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
   auto self = GST_ONNX_IMPORTER_DML (importer);
   auto priv = self->priv;
 
-  gst_onnx_importer_dml_unprepare (importer);
+  /* We failed to configure, do CPU fallback */
+  if (!priv->configured)
+    return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
+
+  gst_onnx_importer_dml_unprepare_internal (self);
 
   auto n_mem = gst_buffer_n_memory (buffer);
   if (!n_mem) {
@@ -626,18 +625,19 @@ gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
     auto mem = gst_buffer_peek_memory (buffer, i);
     if (!gst_is_d3d12_memory (mem)) {
       GST_DEBUG_OBJECT (self, "Input memory %u is not D3D12 memory", i);
-      return nullptr;
+      return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
     }
+
     if (!gst_d3d12_device_is_equal (GST_D3D12_MEMORY_CAST (mem)->device,
             priv->device)) {
       GST_DEBUG_OBJECT (self,
           "Input memory %u belongs to a different device", i);
-      return nullptr;
+      return GST_ONNX_IMPORTER_CLASS (parent_class)->prepare (importer, buffer);
     }
   }
 
   auto frame = &priv->frame;
-  if (!gst_d3d12_frame_map (frame, &priv->info, buffer,
+  if (!gst_d3d12_frame_map (frame, &importer->info, buffer,
           GST_MAP_READ_D3D12, GST_D3D12_FRAME_MAP_FLAG_NONE)) {
     GST_ERROR_OBJECT (self, "Couldn't map input D3D12 frame");
     return nullptr;
@@ -723,8 +723,9 @@ gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
     OrtValue *ret = nullptr;
     if (CHECK_ORT (self,
             priv->api->CreateTensorWithDataAsOrtValue (priv->memory_info,
-                priv->allocation, priv->config.tensor_size, priv->config.dims,
-                priv->config.dims_count, priv->data_type_onnx, &ret))) {
+                priv->allocation, importer->config.tensor_size,
+                importer->config.dims, importer->config.dims_count,
+                importer->data_type_onnx, &ret))) {
       GST_LOG_OBJECT (self, "Prepared DML tensor");
       return ret;
     }
@@ -736,7 +737,8 @@ error:
   if (fence_data)
     gst_d3d12_fence_data_unref (fence_data);
 
-  gst_onnx_importer_dml_unprepare (importer);
+  gst_onnx_importer_dml_unprepare_internal (self);
+
   return nullptr;
 }
 
@@ -746,12 +748,18 @@ gst_onnx_importer_dml_new (const OrtApi * api, GstD3D12Device * device,
 {
   auto self = (GstOnnxImporterDml *)
       g_object_new (GST_TYPE_ONNX_IMPORTER_DML, nullptr);
+  auto base = GST_ONNX_IMPORTER (self);
   gst_object_ref_sink (self);
   auto priv = self->priv;
   priv->api = api;
   priv->device = (GstD3D12Device *) gst_object_ref (device);
   priv->queue = gst_d3d12_device_get_cmd_queue (device,
       D3D12_COMMAND_LIST_TYPE_COMPUTE);
+
+  if (!gst_onnx_importer_create_system_memory_info (base, api)) {
+    gst_object_unref (self);
+    return nullptr;
+  }
 
   {
     auto device_handle = gst_d3d12_device_get_device_handle (device);
@@ -826,7 +834,7 @@ gst_onnx_importer_dml_new (const OrtApi * api, GstD3D12Device * device,
     goto error;
   }
 
-  return GST_ONNX_IMPORTER (self);
+  return base;
 
 error:
   gst_object_unref (self);

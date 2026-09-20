@@ -36,12 +36,21 @@ G_BEGIN_DECLS
 #define GST_ONNX_FORMAT_GRAY_F32  GST_VIDEO_FORMAT_GRAY_F32BE
 #endif
 
-#define GST_TYPE_ONNX_IMPORTER (gst_onnx_importer_get_type ())
-G_DECLARE_DERIVABLE_TYPE (GstOnnxImporter,
-    gst_onnx_importer, GST, ONNX_IMPORTER, GstObject);
-
 #define GST_ONNX_IMPORTER_MAX_DIMS 4
-typedef struct _GstOnnxImporterConfig
+
+#define GST_TYPE_ONNX_IMPORTER            (gst_onnx_importer_get_type ())
+#define GST_ONNX_IMPORTER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_ONNX_IMPORTER, GstOnnxImporter))
+#define GST_ONNX_IMPORTER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_ONNX_IMPORTER, GstOnnxImporterClass))
+#define GST_IS_ONNX_IMPORTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ONNX_IMPORTER))
+#define GST_IS_ONNX_IMPORTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ONNX_IMPORTER))
+#define GST_ONNX_IMPORTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ONNX_IMPORTER, GstOnnxImporterClass))
+
+typedef struct _GstOnnxImporter GstOnnxImporter;
+typedef struct _GstOnnxImporterClass GstOnnxImporterClass;
+typedef struct _GstOnnxImporterPrivate GstOnnxImporterPrivate;
+typedef struct _GstOnnxImporterConfig GstOnnxImporterConfig;
+
+struct _GstOnnxImporterConfig
 {
   GstTensorDataType data_type;
   gdouble scales[GST_ONNX_IMPORTER_MAX_DIMS];
@@ -49,15 +58,30 @@ typedef struct _GstOnnxImporterConfig
   gint64 dims[GST_ONNX_IMPORTER_MAX_DIMS];
   size_t dims_count;
   gsize tensor_size;
-} GstOnnxImporterConfig;
+};
+
+struct _GstOnnxImporter
+{
+  GstObject parent;
+
+  const OrtApi *api;
+
+  GstVideoInfo info;
+  GstOnnxImporterConfig config;
+  ONNXTensorElementDataType data_type_onnx;
+  gsize elem_size;
+  gboolean needs_normalization;
+
+  GstOnnxImporterPrivate *priv;
+};
 
 struct _GstOnnxImporterClass
 {
   GstObjectClass parent_class;
 
-  gboolean (*setup) (GstOnnxImporter * importer,
-                     const GstVideoInfo * info,
-                     const GstOnnxImporterConfig * config);
+  void       (*setup) (GstOnnxImporter * importer,
+                       const GstVideoInfo * info,
+                       const GstOnnxImporterConfig * config);
 
   OrtValue * (*prepare) (GstOnnxImporter * importer,
                          GstBuffer * buffer);
@@ -65,16 +89,22 @@ struct _GstOnnxImporterClass
   void       (*unprepare) (GstOnnxImporter * importer);
 };
 
-gboolean gst_onnx_importer_setup (GstOnnxImporter * importer,
-                                  const GstVideoInfo * info,
-                                  const GstOnnxImporterConfig * config);
+GType       gst_onnx_importer_get_type (void);
 
-OrtValue * gst_onnx_importer_prepare (GstOnnxImporter * importer,
-                                      GstBuffer * buffer);
+GstOnnxImporter * gst_onnx_importer_new (const OrtApi * api);
 
-void gst_onnx_importer_unprepare (GstOnnxImporter * importer);
+gboolean    gst_onnx_importer_create_system_memory_info (GstOnnxImporter * importer,
+                                                         const OrtApi * api);
 
-gboolean gst_onnx_importer_config_needs_normalization (const GstOnnxImporterConfig * config,
-                                                       const GstVideoInfo * info);
+gboolean    gst_onnx_importer_setup (GstOnnxImporter * importer,
+                                     const GstVideoInfo * info,
+                                     const GstOnnxImporterConfig * config);
+
+OrtValue *  gst_onnx_importer_prepare (GstOnnxImporter * importer,
+                                       GstBuffer * buffer);
+
+void        gst_onnx_importer_unprepare (GstOnnxImporter * importer);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstOnnxImporter, gst_object_unref)
 
 G_END_DECLS

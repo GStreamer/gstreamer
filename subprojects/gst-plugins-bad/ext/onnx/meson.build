@@ -3,7 +3,6 @@ onnx_sources = [
   'gstonnx-utils.c',
   'gstonnxinference.c',
   'gstonnximporter.c',
-  'gstonnximporter-cpu.c',
   'gstonnxexporter.c',
   'gstonnxexporter-cpu.c',
 ]
