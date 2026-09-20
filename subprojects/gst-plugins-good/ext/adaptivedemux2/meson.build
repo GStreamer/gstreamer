@@ -107,7 +107,6 @@ plugin_sources += {
 }
 
 # Used for unit tests, so need to be defined even if we skip the subdir
-hls_dep = dependency('', required : false)
 adaptivedemux2_dep = dependency('', required : false)
 
 adaptivedemux2_opt = get_option('adaptivedemux2')
