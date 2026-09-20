@@ -1439,7 +1439,7 @@ gst_amf_av1_enc_set_surface_prop (GstAmfEncoder * encoder,
   AMF_RESULT result;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
-    amf_int64 type = (amf_int64) AMF_VIDEO_ENCODER_AV1_FORCE_FRAME_TYPE_NONE;
+    amf_int64 type = (amf_int64) AMF_VIDEO_ENCODER_AV1_FORCE_FRAME_TYPE_KEY;
     result = surf->SetProperty (AMF_VIDEO_ENCODER_AV1_FORCE_FRAME_TYPE, type);
     if (result != AMF_OK) {
       GST_WARNING_OBJECT (encoder, "Failed to set force frame type, result %"
