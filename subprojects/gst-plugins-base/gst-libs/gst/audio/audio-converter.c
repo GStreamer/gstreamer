@@ -565,8 +565,10 @@ do_convert_out (AudioChain * chain, gpointer user_data)
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("convert out %p, %p %" G_GSIZE_FORMAT, in, out, num_samples);
 
-  for (i = 0; i < chain->blocks; i++)
-    convert->convert_out (out[i], in[i], num_samples * chain->inc);
+  if (in && out) {
+    for (i = 0; i < chain->blocks; i++)
+      convert->convert_out (out[i], in[i], num_samples * chain->inc);
+  }
 
   audio_chain_set_samples (chain, out, num_samples);
 
