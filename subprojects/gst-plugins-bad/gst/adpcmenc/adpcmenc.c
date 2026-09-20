@@ -304,7 +304,14 @@ adpcmenc_encode_ima_block (ADPCMEnc * enc, const gint16 * samples,
    */
   write_pos = HEADER_SIZE * enc->channels;
   read_pos = enc->channels;     /* the first sample is in the header. */
-  while (write_pos < enc->blocksize) {
+  /* Each iteration below consumes 8 * channels input samples
+   * (CHANNEL_CHUNK_SIZE == 8). Stop before an iteration that would read
+   * past the samples_per_block * channels samples the base class
+   * provides; otherwise block sizes whose data area is not a multiple
+   * of the chunk size cause an out-of-bounds read on the input. */
+  while (write_pos < enc->blocksize
+      && read_pos + 8 * enc->channels <=
+      enc->samples_per_block * enc->channels) {
     gint8 CHANNEL_CHUNK_SIZE = 8;
     for (channel = 0; channel < enc->channels; channel++) {
       /* convert eight samples (four bytes) per channel, then swap */
