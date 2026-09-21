@@ -196,6 +196,7 @@ struct _GstOnnxImporterHip
   GstOnnxImporter parent;
 
   OrtMemoryInfo *memory_info;
+  OrtValue *value;
 
   gboolean is_packed;
 
@@ -248,6 +249,12 @@ gst_onnx_importer_hip_init (GstOnnxImporterHip * self)
 static void
 gst_onnx_importer_hip_unprepare_internal (GstOnnxImporterHip * self)
 {
+  if (self->value) {
+    GstOnnxImporter *base = GST_ONNX_IMPORTER (self);
+    base->api->ReleaseValue (self->value);
+    self->value = NULL;
+  }
+
   if (self->frame.buffer)
     gst_video_frame_unmap (&self->frame);
 }
@@ -582,6 +589,8 @@ gst_onnx_importer_hip_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
     goto error;
 
   GST_LOG_OBJECT (self, "Exporting done");
+
+  self->value = ret;
 
   return ret;
 

@@ -37,6 +37,7 @@ struct _GstOnnxImporterPrivate
   GstVideoFrame frame;
   guint8 *dest;
   gsize dest_size;
+  OrtValue *value;
 };
 
 #define gst_onnx_importer_parent_class parent_class
@@ -334,6 +335,8 @@ gst_onnx_importer_prepare_default (GstOnnxImporter * self, GstBuffer * buffer)
   if (status)
     goto error;
 
+  priv->value = ret;
+
   return ret;
 
 error:
@@ -362,6 +365,11 @@ static void
 gst_onnx_importer_unprepare_default (GstOnnxImporter * self)
 {
   GstOnnxImporterPrivate *priv = self->priv;
+
+  if (priv->value) {
+    self->api->ReleaseValue (priv->value);
+    priv->value = NULL;
+  }
 
   if (priv->frame.buffer)
     gst_video_frame_unmap (&priv->frame);

@@ -61,6 +61,8 @@ struct GstOnnxImporterDmlPrivate
   const OrtDmlApi *dml_api = nullptr;
   OrtMemoryInfo *memory_info = nullptr;
   void *allocation = nullptr;
+  OrtValue *value = nullptr;
+
   GstD3D12Device *device = nullptr;
   GstD3D12CmdQueue *queue = nullptr;
   ComPtr<IDMLDevice> device_ml;
@@ -153,6 +155,11 @@ static void
 gst_onnx_importer_dml_unprepare_internal (GstOnnxImporterDml * self)
 {
   auto priv = self->priv;
+
+  if (priv->value) {
+    priv->api->ReleaseValue (priv->value);
+    priv->value = nullptr;
+  }
 
   if (priv->frame.buffer)
     gst_d3d12_frame_unmap (&priv->frame);
@@ -727,6 +734,9 @@ gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
                 importer->config.dims, importer->config.dims_count,
                 importer->data_type_onnx, &ret))) {
       GST_LOG_OBJECT (self, "Prepared DML tensor");
+
+      priv->value = ret;
+
       return ret;
     }
 

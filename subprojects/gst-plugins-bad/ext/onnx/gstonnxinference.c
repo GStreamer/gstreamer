@@ -3387,9 +3387,6 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     }
   }
 
-  api->ReleaseValue (input_tensor);
-  input_tensor = NULL;
-
   // Clean up output tensors
   g_ptr_array_set_size (self->output_tensors, 0);
   gst_onnx_exporter_unprepare (self->exporter);
@@ -3406,8 +3403,6 @@ error:
     api->ReleaseStatus (status);
   if (binding)
     api->ReleaseIoBinding (binding);
-  if (input_tensor)
-    api->ReleaseValue (input_tensor);
   g_ptr_array_set_size (self->output_tensors, 0);
   gst_onnx_exporter_unprepare (self->exporter);
 
