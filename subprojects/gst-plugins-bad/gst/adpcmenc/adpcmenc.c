@@ -152,6 +152,19 @@ adpcmenc_setup (ADPCMEnc * enc)
   switch (enc->layout) {
     case LAYOUT_ADPCM_DVI:
       layout = "dvi";
+      /* The encode loop writes 4 bytes per channel (8 samples) per
+       * iteration, so the block must hold the per-channel header plus a
+       * whole number of those chunks. Non-aligned block sizes would leave a
+       * partial, uninitialized chunk and do not correspond to any real
+       * ADPCM stream. */
+      if (enc->blocksize <= DVI_IMA_HEADER_SIZE * enc->channels
+          || (enc->blocksize - DVI_IMA_HEADER_SIZE * enc->channels)
+          % (4 * enc->channels) != 0) {
+        GST_WARNING_OBJECT (enc,
+            "block size %d is not valid for %d channel(s)", enc->blocksize,
+            enc->channels);
+        return FALSE;
+      }
       /* IMA ADPCM includes a 4-byte header per channel, */
       sample_bytes = enc->blocksize - (DVI_IMA_HEADER_SIZE * enc->channels);
       /* two samples per byte, plus a single sample in the header. */
