@@ -117,7 +117,7 @@ exe = executable('gst-ptp-helper', 'main.rs',
   install : true)
 
 # sanity checking
-if get_option('tests').enabled()
+if get_option('tests').allowed()
   exe_test = executable('gst_ptp_helper_test', 'main.rs',
     override_options : ['rust_std=2018'],
     rust_args : ['--test', rust_args],
