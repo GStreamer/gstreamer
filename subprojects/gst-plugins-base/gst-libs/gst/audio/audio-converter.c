@@ -453,10 +453,11 @@ do_unpack (AudioChain * chain, gpointer user_data)
   in_writable = convert->in_writable;
   num_samples = convert->in_frames;
 
-  if (!chain->allow_ip || !in_writable || !convert->in_default) {
+  if (!chain->allow_ip || !in_writable || !convert->in_default ||
+      !convert->in_data) {
     gint i;
 
-    if (in_writable && chain->allow_ip) {
+    if (in_writable && chain->allow_ip && convert->in_data) {
       tmp = convert->in_data;
       GST_LOG ("unpack in-place %p, %" G_GSIZE_FORMAT, tmp, num_samples);
     } else {
