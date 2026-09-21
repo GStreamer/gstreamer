@@ -205,7 +205,7 @@ mxf_jpeg2000_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   /* TODO: What about other field values? */
   caps =
       gst_caps_new_simple ("image/x-jpc", "colorspace",
-      G_TYPE_STRING, colorspace, NULL);
+      G_TYPE_STRING, colorspace, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
   if (p) {
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
   } else {
