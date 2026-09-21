@@ -1678,6 +1678,217 @@ GST_START_TEST (test_audio_meta_serialize_65_chans)
 
 GST_END_TEST;
 
+static const GstAudioChannelPosition stereo_positions[] = {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_NONE
+};
+
+static const GstAudioChannelPosition surround_51_positions[] = {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
+  GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_NONE
+};
+
+typedef struct
+{
+  GstAudioFormat in_format;
+  GstAudioLayout in_layout;
+  GstAudioFormat out_format;
+  GstAudioLayout out_layout;
+  gint in_rate;
+  gint out_rate;
+  gsize in_frames;
+  gint in_channels;
+  const GstAudioChannelPosition *in_positions;
+  gint out_channels;
+  const GstAudioChannelPosition *out_positions;
+  gboolean silence;
+  gboolean writable;
+} ConverterCase;
+
+static gboolean
+is_all_zero (const guint8 * data, gsize size)
+{
+  while (size > 0) {
+    if (*data)
+      return FALSE;
+    data++;
+    size--;
+  }
+  return TRUE;
+}
+
+static void
+run_converter_case (const ConverterCase * c)
+{
+  GstAudioInfo in_info, out_info;
+  GstAudioConverter *convert;
+  GstAudioConverterFlags flags;
+  gpointer *out_arg;
+  guint8 *in = NULL, *out = NULL;
+  guint8 **planes = NULL;
+  gsize out_frames, out_size, i;
+
+  gst_audio_info_init (&in_info);
+  gst_audio_info_set_format (&in_info, c->in_format, c->in_rate,
+      c->in_channels, c->in_positions);
+  in_info.layout = c->in_layout;
+  gst_audio_info_init (&out_info);
+  gst_audio_info_set_format (&out_info, c->out_format, c->out_rate,
+      c->out_channels, c->out_positions);
+  out_info.layout = c->out_layout;
+
+  flags =
+      c->writable ? GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE :
+      GST_AUDIO_CONVERTER_FLAG_NONE;
+
+  convert = gst_audio_converter_new (flags, &in_info, &out_info, NULL);
+  fail_unless (convert != NULL);
+
+  if (!c->silence) {
+    in = g_malloc (c->in_frames * in_info.bpf);
+    memset (in, 0x42, c->in_frames * in_info.bpf);
+  }
+
+  out_frames = gst_audio_converter_get_out_frames (convert, c->in_frames);
+  out_size = out_frames * out_info.bpf;
+
+  if (c->out_layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    planes = g_new (guint8 *, c->out_channels);
+    for (i = 0; i < c->out_channels; i++)
+      planes[i] = g_malloc (out_size / c->out_channels);
+    out_arg = (gpointer *) planes;
+  } else {
+    out = g_malloc (out_size);
+    out_arg = (gpointer *) & out;
+  }
+
+  fail_unless (gst_audio_converter_samples (convert, flags,
+          c->silence ? NULL : (gpointer *) & in, c->in_frames, out_arg,
+          out_frames));
+
+  if (out_frames > 0) {
+    if (c->silence) {
+      if (c->out_layout == GST_AUDIO_LAYOUT_INTERLEAVED) {
+        fail_unless (is_all_zero (out, out_size));
+      } else
+        for (i = 0; i < c->out_channels; i++)
+          fail_unless (is_all_zero (planes[i], out_size / c->out_channels));
+    } else {
+      if (c->out_layout == GST_AUDIO_LAYOUT_INTERLEAVED)
+        fail_unless (!is_all_zero (out, out_size));
+      else
+        for (i = 0; i < c->out_channels; i++)
+          fail_unless (!is_all_zero (planes[i], out_size / c->out_channels));
+    }
+  }
+
+  if (planes) {
+    for (i = 0; i < c->out_channels; i++)
+      g_free (planes[i]);
+    g_free (planes);
+  }
+  g_free (out);
+  g_free (in);
+  gst_audio_converter_free (convert);
+}
+
+GST_START_TEST (test_converter_samples)
+{
+  const ConverterCase cases[] = {
+    /* in_fmt, in_layout, out_fmt, out_layout, in_rate, out_rate,
+     * in_frames, in_channels, in_pos, out_channels, out_pos,
+     * silence (in == NULL), writable (IN_WRITABLE) */
+    /* rate change with input below the resampler latency, so the
+     * converter can produce 0 output frames */
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 48000, 10, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+    /* rate change + layout change with input below the resampler latency */
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+          44100, 48000, 10, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+    /* silence input with IN_WRITABLE and in-place format conversion */
+    {GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, TRUE, TRUE},
+    /* silence input with IN_WRITABLE, format and layout change */
+    {GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, TRUE, TRUE},
+    /* silence input without IN_WRITABLE */
+    {GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, TRUE, FALSE},
+    /* silence input with IN_WRITABLE and channel mixing */
+    {GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        6, surround_51_positions, TRUE, TRUE},
+    /* silence input in passthrough (no conversion at all) */
+    {GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, TRUE, TRUE},
+    /* silence input with endian conversion only */
+    {GST_AUDIO_FORMAT_S16LE, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16BE, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, TRUE, TRUE},
+    /* normal format conversion, same rate */
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+    /* normal format + layout conversion, same rate */
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+    /* normal channel mixing, same rate */
+    {GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        6, surround_51_positions, FALSE, FALSE},
+    /* normal passthrough copy (separate in/out buffers) */
+    {GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+    /* normal endian conversion */
+    {GST_AUDIO_FORMAT_S16LE, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16BE, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 44100, 100, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+    /* silence input with rate change and enough frames to produce
+     * output: verifies silence propagates through the full chain */
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 48000, 1024, 2, stereo_positions,
+        2, stereo_positions, TRUE, FALSE},
+    /* normal rate change with enough frames to produce output */
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_INTERLEAVED,
+          GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+          44100, 48000, 1024, 2, stereo_positions,
+        2, stereo_positions, FALSE, FALSE},
+  };
+
+  for (guint i = 0; i < G_N_ELEMENTS (cases); i++)
+    run_converter_case (&cases[i]);
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -1718,6 +1929,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_audio_make_raw_caps);
   tcase_add_test (tc_chain, test_audio_meta_serialize);
   tcase_add_test (tc_chain, test_audio_meta_serialize_65_chans);
+  tcase_add_test (tc_chain, test_converter_samples);
 
   return s;
 }
