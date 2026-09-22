@@ -521,44 +521,45 @@ static StdVideoH264LevelIdc
 _get_h264_level_idc (int level_idc)
 {
   switch (level_idc) {
-    case 10:
+    case GST_H264_LEVEL_L1:
+    case GST_H264_LEVEL_L1B:
       return STD_VIDEO_H264_LEVEL_IDC_1_0;
-    case 11:
+    case GST_H264_LEVEL_L1_1:
       return STD_VIDEO_H264_LEVEL_IDC_1_1;
-    case 12:
+    case GST_H264_LEVEL_L1_2:
       return STD_VIDEO_H264_LEVEL_IDC_1_2;
-    case 13:
+    case GST_H264_LEVEL_L1_3:
       return STD_VIDEO_H264_LEVEL_IDC_1_3;
-    case 20:
+    case GST_H264_LEVEL_L2:
       return STD_VIDEO_H264_LEVEL_IDC_2_0;
-    case 21:
+    case GST_H264_LEVEL_L2_1:
       return STD_VIDEO_H264_LEVEL_IDC_2_1;
-    case 22:
+    case GST_H264_LEVEL_L2_2:
       return STD_VIDEO_H264_LEVEL_IDC_2_2;
-    case 30:
+    case GST_H264_LEVEL_L3:
       return STD_VIDEO_H264_LEVEL_IDC_3_0;
-    case 31:
+    case GST_H264_LEVEL_L3_1:
       return STD_VIDEO_H264_LEVEL_IDC_3_1;
-    case 32:
+    case GST_H264_LEVEL_L3_2:
       return STD_VIDEO_H264_LEVEL_IDC_3_2;
-    case 40:
+    case GST_H264_LEVEL_L4:
       return STD_VIDEO_H264_LEVEL_IDC_4_0;
-    case 41:
+    case GST_H264_LEVEL_L4_1:
       return STD_VIDEO_H264_LEVEL_IDC_4_1;
-    case 42:
+    case GST_H264_LEVEL_L4_2:
       return STD_VIDEO_H264_LEVEL_IDC_4_2;
-    case 50:
+    case GST_H264_LEVEL_L5:
       return STD_VIDEO_H264_LEVEL_IDC_5_0;
-    case 51:
+    case GST_H264_LEVEL_L5_1:
       return STD_VIDEO_H264_LEVEL_IDC_5_1;
-    case 52:
+    case GST_H264_LEVEL_L5_2:
       return STD_VIDEO_H264_LEVEL_IDC_5_2;
-    case 60:
+    case GST_H264_LEVEL_L6:
       return STD_VIDEO_H264_LEVEL_IDC_6_0;
-    case 61:
+    case GST_H264_LEVEL_L6_1:
       return STD_VIDEO_H264_LEVEL_IDC_6_1;
     default:
-    case 62:
+    case GST_H264_LEVEL_L6_2:
       return STD_VIDEO_H264_LEVEL_IDC_6_2;
   }
 }
