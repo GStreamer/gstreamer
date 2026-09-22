@@ -1,9 +1,9 @@
 [wrap-file]
-directory = dssim-3.4.0
-source_url = https://github.com/kornelski/dssim/archive/refs/tags/3.4.0.tar.gz
-source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dssim/3.4.0.tar.gz
-source_filename = 3.4.0.tar.gz
-source_hash = 5267e79f4604558d9f24ce02aa20597396a9b052d0ad1b2f8000d4d6bd162126
+directory = dssim-a40c62b95fa2a4223218c973a85dc183e610070a
+source_url = https://github.com/kornelski/dssim/archive/a40c62b95fa2a4223218c973a85dc183e610070a.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dssim/a40c62b95fa2a4223218c973a85dc183e610070a.tar.gz
+source_filename = a40c62b95fa2a4223218c973a85dc183e610070a.tar.gz
+source_hash = 7447b86ae3055c5b71b92a1251d77c19b138ac29d4e8bd25c931f963b6703b73
 
 [provide]
 dssim = dssim_dep
