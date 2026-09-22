@@ -6268,7 +6268,7 @@ strip_chars (gchar * str)
     str[len] = '\0';
   }
   for (s = str; *s && IS_STRIP_CHAR (*s); s++);
-  memmove (str, s, len + 1);
+  memmove (str, s, strlen (s) + 1);
 }
 
 /**
