@@ -452,12 +452,13 @@ main (gint argc, gchar ** argv)
       break;
   }
 
-  g_free (codec);
-
   if (idx == G_N_ELEMENTS (elements_map)) {
     gst_printerrln ("Unsupported codec: %s", codec);
+    g_free (codec);
     exit (1);
   }
+
+  g_free (codec);
 
   pipeline = gst_pipeline_new (NULL);
 
