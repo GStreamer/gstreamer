@@ -690,9 +690,9 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstJpegSegment * seg)
 
   buf = (const gchar *) data;
   /* buggy avid, it puts EOI only at every 10th frame */
-  if (g_str_has_prefix (buf, "AVID")) {
+  if (size >= 4 && memcmp (buf, "AVID", 4) == 0) {
     parse_avid (parse, data, size);
-  } else if (g_str_has_prefix (buf, "MULTISCOPE II")) {
+  } else if (size >= 13 && memcmp (buf, "MULTISCOPE II", 13) == 0) {
     parse->par_num = 1;
     parse->par_den = 2;
     parse->multiscope = TRUE;
