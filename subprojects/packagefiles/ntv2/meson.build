@@ -47,7 +47,7 @@ endif
 
 conf_data = configuration_data()
 conf_data.set('AJA_NTV2_SDK_VERSION_MAJOR', '18')
-conf_data.set('AJA_NTV2_SDK_VERSION_MINOR', '1')
+conf_data.set('AJA_NTV2_SDK_VERSION_MINOR', '0')
 conf_data.set('AJA_NTV2_SDK_VERSION_POINT', '0')
 conf_data.set('AJA_NTV2_SDK_BUILD_NUMBER', '0')
 conf_data.set('AJA_NTV2_SDK_BUILD_DATETIME', '2026-06-19T22:57:37Z')
