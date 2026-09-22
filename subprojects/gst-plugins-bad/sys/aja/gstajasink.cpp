@@ -188,8 +188,8 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
       gobject_class, PROP_START_FRAME,
       g_param_spec_uint(
           "start-frame", "Start Frame",
-          "Start frame buffer to be used for output (auto if same number as "
-          "end-frame).",
+          "Start frame buffer to be used for output (automatically assign "
+          "that many frames if same number as end-frame).",
           0, G_MAXINT, DEFAULT_START_FRAME,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -197,8 +197,8 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
       gobject_class, PROP_END_FRAME,
       g_param_spec_uint(
           "end-frame", "End Frame",
-          "End frame buffer to be used for output (auto if same number as "
-          "start-frame).",
+          "End frame buffer to be used for output (automatically assign "
+          "that many frames if same number as start-frame).",
           0, G_MAXINT, DEFAULT_END_FRAME,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -1990,10 +1990,12 @@ restart:
     guint16 start_frame = self->start_frame;
     guint16 end_frame = self->end_frame;
 
-    // If both are the same, try to find queue_size/2 unallocated frames and
-    // use those.
+    // If both are the same, try to find that many unallocated frames and use
+    // those, like ajasrc does. With the 0/0 default, fall back to
+    // queue_size/2 frames.
     if (start_frame == end_frame) {
-      guint16 num_frames = self->queue_size / 2;
+      guint16 num_frames =
+          start_frame != 0 ? start_frame : self->queue_size / 2;
 
       gint assigned_start_frame = gst_aja_ntv2_device_find_unallocated_frames(
           self->device, self->channel, num_frames);

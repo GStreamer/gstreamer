@@ -549,7 +549,7 @@
                         "writable": true
                     },
                     "end-frame": {
-                        "blurb": "End frame buffer to be used for output (auto if same number as start-frame).",
+                        "blurb": "End frame buffer to be used for output (automatically assign that many frames if same number as start-frame).",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
@@ -651,7 +651,7 @@
                         "writable": true
                     },
                     "start-frame": {
-                        "blurb": "Start frame buffer to be used for output (auto if same number as end-frame).",
+                        "blurb": "Start frame buffer to be used for output (automatically assign that many frames if same number as end-frame).",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
