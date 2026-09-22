@@ -793,7 +793,8 @@ gst_sdp_message_as_uri (const gchar * scheme, const GstSDPMessage * msg)
       g_string_append_c (lines, *p);
     else {
       /* escape */
-      g_string_append_printf (lines, "%%%c%c", hex[*p >> 4], hex[*p & 0xf]);
+      g_string_append_printf (lines, "%%%c%c", hex[((guchar) * p) >> 4],
+          hex[*p & 0xf]);
     }
   }
 
