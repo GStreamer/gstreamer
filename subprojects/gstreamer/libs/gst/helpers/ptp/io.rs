@@ -472,7 +472,7 @@ mod imp {
         net::UdpSocket,
         os::windows::{io::AsRawSocket, raw::HANDLE},
         ptr,
-        sync::{Arc, Condvar, Mutex, OnceLock},
+        sync::{Arc, Condvar, Mutex},
         thread,
     };
 
@@ -1310,18 +1310,24 @@ mod imp {
     ///
     /// This does not implement any locking so usage from multiple threads at once will likely
     /// cause interleaved output.
+    #[cfg(not(test))]
     pub struct Stderr(HANDLE);
 
+    #[cfg(not(test))]
     struct SyncHandle(HANDLE);
     // SAFETY: This is a single-threaded application and even otherwise writing from
     // multiple threads at once to a pipe is safe and will only cause interleaved output.
+    #[cfg(not(test))]
     unsafe impl Send for SyncHandle {}
+    #[cfg(not(test))]
     unsafe impl Sync for SyncHandle {}
 
     /// Lazily-initialized stderr handle. Set once, either by `init_named_pipe` (before any
     /// logging) or on first `acquire()` call via the inherited standard error handle.
-    static STDERR_HANDLE: OnceLock<SyncHandle> = OnceLock::new();
+    #[cfg(not(test))]
+    static STDERR_HANDLE: std::sync::OnceLock<SyncHandle> = std::sync::OnceLock::new();
 
+    #[cfg(not(test))]
     impl Stderr {
         /// Open a named pipe for writing and use it as the stderr handle.
         ///
@@ -1355,7 +1361,6 @@ mod imp {
             Ok(())
         }
 
-        #[cfg(not(test))]
         pub fn acquire() -> Self {
             let sync_handle = STDERR_HANDLE.get_or_init(|| {
                 // SAFETY: GetStdHandle returns a borrowed handle, or 0 if none is set or -1 if an
@@ -1394,6 +1399,7 @@ mod imp {
         }
     }
 
+    #[cfg(not(test))]
     impl Write for Stderr {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             <&Stderr as Write>::write(&mut &*self, buf)
@@ -1404,6 +1410,7 @@ mod imp {
         }
     }
 
+    #[cfg(not(test))]
     impl Write for &Stderr {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             if self.0 == INVALID_HANDLE_VALUE {
@@ -1438,7 +1445,7 @@ mod imp {
 }
 
 // `Stderr` is not used when tests are enabled as no logging is performed to stderr.
-#[cfg_attr(test, allow(unused_imports))]
+#[cfg(not(test))]
 pub use self::imp::Stderr;
 pub use self::imp::{Poll, Stdin, Stdout};
 

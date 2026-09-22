@@ -120,6 +120,7 @@ fn run() -> Result<(), Error> {
     let args = args::parse_args().context("Failed parsing commandline parameters")?;
 
     #[cfg(windows)]
+    #[cfg(not(test))]
     if let Some(ref pipe_err) = args.pipe_err {
         io::Stderr::init_named_pipe(pipe_err).context("Failed initializing stderr named pipe")?;
     }
