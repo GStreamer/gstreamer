@@ -227,6 +227,8 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       rtpsv3vdepay->height = resolutions[res].height;
     } else {
       /* extended width/height, they're contained in the following 24bit */
+      if (payload_len < 6)
+        goto bad_packet;
       rtpsv3vdepay->width = ((payload[2] & 0x1f) << 7) | (payload[3] >> 1);
       rtpsv3vdepay->height =
           (payload[3] & 0x1) << 11 | payload[4] << 3 | (payload[5] >> 5);
