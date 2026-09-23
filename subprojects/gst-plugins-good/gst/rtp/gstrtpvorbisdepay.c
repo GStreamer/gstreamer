@@ -342,7 +342,7 @@ gst_rtp_vorbis_depay_parse_inband_configuration (GstRtpVorbisDepay *
     return FALSE;
 
   /* transform inline to out-of-band and parse that one */
-  confbuf = gst_buffer_new_and_alloc (size + 9);
+  confbuf = gst_buffer_new_and_alloc (length + 9);
   gst_buffer_map (confbuf, &map, GST_MAP_WRITE);
   /* 1 header */
   GST_WRITE_UINT32_BE (map.data, 1);
@@ -351,7 +351,7 @@ gst_rtp_vorbis_depay_parse_inband_configuration (GstRtpVorbisDepay *
   /* write sort-of-length */
   GST_WRITE_UINT16_BE (map.data + 7, length);
   /* copy remainder */
-  memcpy (map.data + 9, configuration, size);
+  memcpy (map.data + 9, configuration, length);
   gst_buffer_unmap (confbuf, &map);
 
   return gst_rtp_vorbis_depay_parse_configuration (rtpvorbisdepay, confbuf);
