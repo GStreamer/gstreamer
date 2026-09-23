@@ -674,6 +674,13 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
     cea608_2_len = MAX_CEA608_LEN;
   }
 
+  if (cc_data_len > MAX_CDP_PACKET_LEN) {
+    GST_WARNING_OBJECT (buf,
+        "Truncating CEA708 cc_data of %u bytes to %u bytes",
+        cc_data_len, MAX_CDP_PACKET_LEN);
+    cc_data_len = MAX_CDP_PACKET_LEN;
+  }
+
   if (cea608_1 && cea608_1_len > 0) {
     guint out_i = 0;
     for (i = 0; i < cea608_1_len / 2; i++) {
@@ -723,6 +730,13 @@ cc_buffer_push_cc_data (CCBuffer * buf, const guint8 * cc_data,
   guint cea608_1_len = MAX_CEA608_LEN;
   guint cea608_2_len = MAX_CEA608_LEN;
   int ccp_offset;
+
+  if (cc_data_len > MAX_CDP_PACKET_LEN) {
+    GST_WARNING_OBJECT (buf,
+        "Truncating CEA708 cc_data of %u bytes to %u bytes",
+        cc_data_len, MAX_CDP_PACKET_LEN);
+    cc_data_len = MAX_CDP_PACKET_LEN;
+  }
 
   memcpy (cc_data_copy, cc_data, cc_data_len);
 
