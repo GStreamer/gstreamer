@@ -106,7 +106,8 @@ check_av1_obu (guint8 * bitstream, gsize size, GstAV1OBU * obu)
         fail_unless (tile_group.num_tiles > 0);
         break;
       }
-
+      case GST_AV1_OBU_PADDING:
+        break;
       default:
         GST_ERROR ("Unknown OBU type: %d", obu->obu_type);
         fail_unless (0);
