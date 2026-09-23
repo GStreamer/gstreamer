@@ -196,6 +196,15 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
     goto end;
   }
 
+  /* The H.264 NAL unit type is read from the first byte of h264_data, so we
+   * need at least one byte of H.264 data in addition to the header */
+  if (G_UNLIKELY (map->size < AVTP_CVF_H264_HEADER_SIZE + 1)) {
+    GST_DEBUG_OBJECT (avtpcvfdepay,
+        "Incomplete H.264 payload, expected it to have size of %zd, got %zd",
+        AVTP_CVF_H264_HEADER_SIZE + 1, map->size);
+    goto end;
+  }
+
   pdu = (struct avtp_stream_pdu *) map->data;
 
   r = avtp_pdu_get ((struct avtp_common_pdu *) pdu, AVTP_FIELD_SUBTYPE, &val32);
