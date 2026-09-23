@@ -53,6 +53,7 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   (*p_context)->type = GST_MATROSKA_TRACK_TYPE_VIDEO;
   video_context->display_width = 0;
   video_context->display_height = 0;
+  video_context->display_unit = GST_MATROSKA_VIDEO_DISPLAY_UNIT_PIXELS;
   video_context->pixel_width = 0;
   video_context->pixel_height = 0;
   video_context->asr_mode = 0;
