@@ -455,6 +455,11 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (L) {
       /* L bit set, len contains the length of the packet */
       packet_len = len_offs;
+      if (packet_len == 0) {
+        GST_WARNING_OBJECT (depay, "Zero length ASF packet, ignoring rest of "
+            "payload");
+        break;
+      }
     } else {
       /* else it contains an offset which we don't handle yet */
       GST_LOG_OBJECT (depay, "We have a fragmented packet");
