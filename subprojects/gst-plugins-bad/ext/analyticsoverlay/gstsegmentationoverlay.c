@@ -638,8 +638,13 @@ gst_segmentation_overlay_transform_frame_ip (GstVideoFilter * filter,
           GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, canvas_w, canvas_h);
       /* Allocate buffer to store canvas */
       canvas = gst_buffer_new_and_alloc (canvas_info.size);
-      cvmeta = gst_buffer_add_video_meta (canvas, GST_VIDEO_FRAME_FLAG_NONE,
-          GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, canvas_w, canvas_h);
+      cvmeta = gst_buffer_add_video_meta_full (canvas,
+          GST_VIDEO_FRAME_FLAG_NONE,
+          GST_VIDEO_INFO_FORMAT (&canvas_info),
+          GST_VIDEO_INFO_WIDTH (&canvas_info),
+          GST_VIDEO_INFO_HEIGHT (&canvas_info),
+          GST_VIDEO_INFO_N_PLANES (&canvas_info),
+          canvas_info.offset, canvas_info.stride);
 
       /* Keep an handle on canvas to free it if required */
       gst_buffer_replace (&overlay->canvas, canvas);
@@ -735,11 +740,11 @@ gst_segmentation_overlay_update_mask_filter (GstSegmentationOverlay * overlay,
 
 static void
 gst_segmentation_overlay_resampling (GstSegmentationOverlay * overlay,
-    gint32 * canvas_data, guint8 * mask_data, GstVideoMeta * cvmeta,
+    guint8 * canvas_data, guint8 * mask_data, GstVideoMeta * cvmeta,
     GstVideoMeta * mvmeta)
 {
   gsize mask_col_idx, mask_line_idx, last_mask_line_idx = -1;
-  gint32 *cline = canvas_data, *pcline = NULL;
+  gint32 *cline = (gint32 *) canvas_data, *pcline = NULL;
   guint8 *mline = mask_data;
   gsize color_count = overlay->color_table_size + 1;
   guint32 *color_table = overlay->color_table;
@@ -760,16 +765,16 @@ gst_segmentation_overlay_resampling (GstSegmentationOverlay * overlay,
           cline[cc] = overlay->bg_color;
         }
       }
+      last_mask_line_idx = mask_line_idx;
+      mline = mask_data + (mask_line_idx * mvmeta->stride[0]);
+      pcline = cline;
     } else {
       /* If current line would be generate from the same line from the mask
        * as the previous line in canvas we can simply copy the previous
        * line into the current line */
       memcpy (cline, pcline, sizeof (guint32) * cvmeta->width);
     }
-    last_mask_line_idx = mask_line_idx;
-    pcline = cline;
-    cline += cvmeta->width;
-    mline = (mask_line_idx * mvmeta->width) + mask_data;
+    cline = (gint32 *) (canvas_data + cl * cvmeta->stride[0]);
   }
 }
 
@@ -789,7 +794,7 @@ gst_segmentation_overlay_fill_canvas (GstSegmentationOverlay * overlay,
 
     gst_buffer_map (mask, &mmap, GST_MAP_READ);
     gst_segmentation_overlay_resampling (overlay,
-        (gint32 *) cmap->data, mmap.data, cvmeta, mvmeta);
+        cmap->data, mmap.data, cvmeta, mvmeta);
     gst_buffer_unmap (mask, &mmap);
   }
   gst_buffer_unref (mask);
