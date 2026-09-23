@@ -1509,8 +1509,8 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
     GST_DEBUG_OBJECT (rtph265depay, "receiving %d bytes", payload_len);
 
-    if (payload_len == 0)
-      goto empty_packet;
+    if (payload_len < 2)
+      goto short_payload;
 
     /* +---------------+---------------+
      * |0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|
@@ -1632,6 +1632,9 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       case 49:
       {
         GST_DEBUG_OBJECT (rtph265depay, "Processing Fragmentation Unit");
+
+        if (payload_len < header_len + 1)
+          goto short_payload;
 
         /* Fragmentation units (FUs)  Section 4.8 */
 
@@ -1850,9 +1853,9 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   return NULL;
 
   /* ERRORS */
-empty_packet:
+short_payload:
   {
-    GST_DEBUG_OBJECT (rtph265depay, "empty packet");
+    GST_DEBUG_OBJECT (rtph265depay, "short payload");
     gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
