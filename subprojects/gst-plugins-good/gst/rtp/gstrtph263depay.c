@@ -336,36 +336,47 @@ gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
    * from buggy payloaders or hw */
   I = rtph263depay->psc_I;
 
+  GstBuffer *tmp;
+  guint8 first = 0;
+
+  if (!EBIT) {
+    /* Take the entire buffer */
+    tmp = gst_rtp_buffer_get_payload_subbuffer (rtp, header_len, payload_len);
+  } else {
+    /* Take the entire buffer except for the last byte */
+    tmp = gst_rtp_buffer_get_payload_subbuffer (rtp, header_len,
+        payload_len - 1);
+  }
+
   if (SBIT) {
-    /* take the leftover and merge it at the beginning, FIXME make the buffer
-     * data writable. */
+    /* take the leftover and merge it at the beginning */
     GST_LOG ("payload[0] : 0x%x", payload[0]);
-    payload[0] &= 0xFF >> SBIT;
-    GST_LOG ("payload[0] : 0x%x", payload[0]);
-    payload[0] |= rtph263depay->leftover;
-    GST_LOG ("payload[0] : 0x%x", payload[0]);
+    first = payload[0] & (0xFF >> SBIT);
+    GST_LOG ("payload[0] : 0x%x", first);
+    first |= rtph263depay->leftover;
+    GST_LOG ("payload[0] : 0x%x", first);
+    tmp = gst_buffer_make_writable (tmp);
+    gst_buffer_fill (tmp, 0, &first, 1);
     rtph263depay->leftover = 0;
     rtph263depay->offset = 0;
   }
 
-  if (!EBIT) {
-    GstBuffer *tmp;
+  gst_adapter_push (rtph263depay->adapter, tmp);
 
-    /* Take the entire buffer */
-    tmp = gst_rtp_buffer_get_payload_subbuffer (rtp, header_len, payload_len);
-    gst_adapter_push (rtph263depay->adapter, tmp);
-  } else {
-    GstBuffer *tmp;
-
-    /* Take the entire buffer except for the last byte */
-    tmp = gst_rtp_buffer_get_payload_subbuffer (rtp, header_len,
-        payload_len - 1);
-    gst_adapter_push (rtph263depay->adapter, tmp);
+  if (EBIT) {
+    guint8 last;
 
     /* Put the last byte into the leftover */
-    GST_DEBUG ("payload[payload_len - 1] : 0x%x", payload[payload_len - 1]);
+    if (SBIT && payload_len == 1) {
+      /* Single-byte payload: the subbuffer is 0 bytes so the merged value
+       * was not stored in it. Use the merged first byte directly. */
+      last = first;
+    } else {
+      last = payload[payload_len - 1];
+    }
+    GST_DEBUG ("last byte : 0x%x", last);
     GST_DEBUG ("mask : 0x%x", 0xFF << EBIT);
-    rtph263depay->leftover = (payload[payload_len - 1] >> EBIT) << EBIT;
+    rtph263depay->leftover = (last >> EBIT) << EBIT;
     rtph263depay->offset = 1;
     GST_DEBUG ("leftover : 0x%x", rtph263depay->leftover);
   }
