@@ -125,11 +125,17 @@ gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   if (!depay->start) {
     /* Check for picture start code */
-    guint32 bits = GST_READ_UINT32_BE (payload) << header->sbit;
-    if (payload_len > 4 && bits >> 12 == 0x10) {
-      GST_DEBUG_OBJECT (depay, "Found picture start code");
-      depay->start = TRUE;
-    } else {
+
+    if (payload_len >= 4) {
+      guint32 bits = GST_READ_UINT32_BE (payload) << header->sbit;
+
+      if (bits >> 12 == 0x10) {
+        GST_DEBUG_OBJECT (depay, "Found picture start code");
+        depay->start = TRUE;
+      }
+    }
+
+    if (!depay->start) {
       GST_DEBUG_OBJECT (depay, "No picture start code yet, skipping payload");
       goto skip;
     }
