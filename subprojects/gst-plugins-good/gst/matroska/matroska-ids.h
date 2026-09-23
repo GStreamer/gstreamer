@@ -519,6 +519,14 @@ typedef enum {
   GST_MATROSKA_ASPECT_RATIO_MODE_FIXED = 0x2,
 } GstMatroskaAspectRatioMode;
 
+typedef enum {
+  GST_MATROSKA_VIDEO_DISPLAY_UNIT_PIXELS      = 0,
+  GST_MATROSKA_VIDEO_DISPLAY_UNIT_CENTIMETERS = 1,
+  GST_MATROSKA_VIDEO_DISPLAY_UNIT_INCHES      = 2,
+  GST_MATROSKA_VIDEO_DISPLAY_UNIT_DAR         = 3,
+  GST_MATROSKA_VIDEO_DISPLAY_UNIT_UNKNOWN     = 4,
+} GstMatroskaVideoDisplayUnit;
+
 /*
  * These aren't in any way "matroska-form" things,
  * it's just something I use in the muxer/demuxer.
@@ -654,6 +662,7 @@ typedef struct _GstMatroskaTrackVideoContext {
 
   guint         pixel_width, pixel_height;
   guint         display_width, display_height;
+  GstMatroskaVideoDisplayUnit display_unit;
   gdouble       default_fps;
   GstMatroskaAspectRatioMode asr_mode;
   guint32       fourcc;
