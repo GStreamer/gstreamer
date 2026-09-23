@@ -5448,9 +5448,10 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
       GstCaps *format_caps = gst_caps_new_empty ();
 
       if (dmabuf_tmpl) {
-        gst_caps_append_structure (format_caps,
-            gst_structure_copy (dmabuf_tmpl));
-        gst_caps_set_features (filter, 0,
+        /* Tag the candidate structure itself with the DMABuf memory feature
+         * instead of corrupting the caller owned filter caps. */
+        gst_caps_append_structure_full (format_caps,
+            gst_structure_copy (dmabuf_tmpl),
             gst_caps_features_new_single_static_str
             (GST_CAPS_FEATURE_MEMORY_DMABUF));
         add_alternate_variant (v4l2object, format_caps, dmabuf_tmpl,
