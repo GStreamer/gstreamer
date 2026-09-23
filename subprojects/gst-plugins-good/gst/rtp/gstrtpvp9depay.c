@@ -401,6 +401,8 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
         guint t = (ss[sssize] & 0xe0) >> 5;
         guint u = (ss[sssize] & 0x10) >> 4;
         guint r = (ss[sssize] & 0x0c) >> 2;
+        if (G_UNLIKELY (size < hdrsize + sssize + 1 + r))
+          goto too_small;
         GST_TRACE_OBJECT (self, "N_G[%u]: 0x%02x -> T=%u, U=%u, R=%u", i,
             ss[sssize], t, u, r);
         for (j = 0; j < r; j++)
