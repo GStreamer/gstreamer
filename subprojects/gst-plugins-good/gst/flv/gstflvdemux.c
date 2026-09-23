@@ -1692,7 +1692,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
     if (audio_packet_type == FLV_AUDIO_PACKET_TYPE_SEQUENCE_END) {
       GST_INFO_OBJECT (demux, "received sequence end");
-      ret = GST_FLOW_EOS;
+      ret = GST_FLOW_OK;
       goto beach;
     }
 
@@ -2517,7 +2517,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
         break;
       case FLV_VIDEO_PACKET_TYPE_SEQUENCE_END:
         GST_LOG_OBJECT (demux, "got end of sequence packet");
-        ret = GST_FLOW_EOS;
+        ret = GST_FLOW_OK;
         goto beach;
       case FLV_VIDEO_PACKET_TYPE_METADATA:
         // TODO: implement metadata packet parsing
