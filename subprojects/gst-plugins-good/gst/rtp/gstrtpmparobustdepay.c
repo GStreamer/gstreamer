@@ -682,18 +682,19 @@ gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
    */
   while (payload_len) {
     if (G_LIKELY (rtpmpadepay->has_descriptor)) {
+      if (payload_len < 2)
+        goto short_read;
+
       cont = !!(payload[offset] & 0x80);
       dtype = !!(payload[offset] & 0x40);
       if (dtype) {
         size = (payload[offset] & 0x3f) << 8 | payload[offset + 1];
         payload_len--;
         offset++;
-      } else if (payload_len >= 2) {
+      } else {
         size = (payload[offset] & 0x3f);
         payload_len -= 2;
         offset += 2;
-      } else {
-        goto short_read;
       }
     } else {
       cont = FALSE;
