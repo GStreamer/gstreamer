@@ -307,6 +307,14 @@ gst_avtp_rvf_depay_validate_avtpdu (GstAvtpRvfDepay * avtprvfdepay,
         goto end;
       }
 
+      if (G_UNLIKELY (val <= sizeof (uint64_t))) {
+        GST_DEBUG_OBJECT (avtprvfdepay,
+            "Stream data length %" G_GUINT64_FORMAT
+            " too small, must be greater than %" G_GSIZE_FORMAT,
+            val, sizeof (uint64_t));
+        goto end;
+      }
+
       GST_DEBUG_OBJECT (avtprvfdepay,
           "Data length of the video format %" G_GSIZE_FORMAT, val);
       avtprvfdepay->stream_data_length = (guint) val;
