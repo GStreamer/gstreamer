@@ -4097,6 +4097,11 @@ gst_asf_demux_process_simple_index (GstASFDemux * demux, guint8 * data,
   interval = gst_asf_demux_get_uint64 (&data, &size) * (GstClockTime) 100;
   gst_asf_demux_skip_bytes (4, &data, &size);
   count = gst_asf_demux_get_uint32 (&data, &size);
+
+  /* clamp to the actual available number of entries */
+  if (G_UNLIKELY (count > size / 6))
+    count = (guint32) MIN (size / 6, (guint64) G_MAXUINT32);
+
   if (count > 0) {
     demux->sidx_interval = interval;
     demux->sidx_num_entries = count;
