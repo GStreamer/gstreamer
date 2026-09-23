@@ -582,6 +582,11 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
 
       g_return_val_if_fail (payload != NULL, NULL);
 
+      if (GST_DP_HEADER_PAYLOAD_LENGTH (header) < 32) {
+        GST_WARNING ("GDP 0.2 SEEK event payload too short");
+        return NULL;
+      }
+
       /* FIXME, read rate */
       rate = 1.0;
       format = (GstFormat) GST_READ_UINT32_BE (payload);
