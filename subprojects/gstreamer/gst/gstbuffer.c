@@ -467,13 +467,25 @@ _memory_add (GstBuffer * buffer, gint idx, GstMemory * mem)
   GST_CAT_LOG (GST_CAT_BUFFER, "buffer %p, idx %d, mem %p", buffer, idx, mem);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
+    GstMemory *merged;
+
     /* too many buffer, span them. */
     /* FIXME, there is room for improvement here: We could only try to merge
      * 2 buffers to make some room. If we can't efficiently merge 2 buffers we
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
         buffer);
-    _replace_memory (buffer, len, 0, len, _get_merged_memory (buffer, 0, len));
+    merged = _get_merged_memory (buffer, 0, len);
+    if (G_UNLIKELY (merged == NULL)) {
+      /* failed to merge, e.g. because a memory is still writably mapped.
+       * drop the new memory instead of corrupting the buffer. */
+      g_critical ("failed to merge memories of buffer %p, dropping memory %p",
+          buffer, mem);
+      gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
+      gst_memory_unref (mem);
+      return;
+    }
+    _replace_memory (buffer, len, 0, len, merged);
     /* we now have 1 single spanned buffer */
     len = 1;
   }

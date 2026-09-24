@@ -1106,6 +1106,47 @@ GST_START_TEST (test_set_and_cmp)
 
 GST_END_TEST;
 
+GST_START_TEST (test_append_memory_write_locked)
+{
+  GstBuffer *buf;
+  GstMapInfo map;
+  guint max_mem, i;
+  guint8 expected[8];
+
+  max_mem = gst_buffer_get_max_memory ();
+
+  buf = gst_buffer_new ();
+
+  /* first memory stays write mapped */
+  gst_buffer_append_memory (buf, gst_allocator_alloc (NULL, 8, NULL));
+  fail_unless (gst_buffer_map_range (buf, 0, 1, &map, GST_MAP_WRITE));
+  memset (map.data, 0xab, 8);
+  memset (expected, 0xab, 8);
+
+  /* fill up the buffer until no more memories can be added */
+  for (i = 1; i < max_mem; i++)
+    gst_buffer_append_memory (buf, gst_allocator_alloc (NULL, 4, NULL));
+  fail_unless_equals_int (gst_buffer_n_memory (buf), max_mem);
+
+  /* appending one more forces a merge that cannot read the write mapped
+   * memory. the new memory is dropped instead of corrupting the buffer */
+  ASSERT_CRITICAL (gst_buffer_append_memory (buf, gst_allocator_alloc (NULL,
+              4, NULL)));
+  fail_unless_equals_int (gst_buffer_n_memory (buf), max_mem);
+  fail_unless_equals_uint64 ((guint64) gst_buffer_get_size (buf),
+      (guint64) 8 + 4 * (max_mem - 1));
+
+  /* the buffer is still usable and the data is intact */
+  gst_buffer_unmap (buf, &map);
+  fail_unless (gst_buffer_map_range (buf, 0, 1, &map, GST_MAP_READ));
+  fail_unless (memcmp (map.data, expected, 8) == 0);
+  gst_buffer_unmap (buf, &map);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_buffer_suite (void)
@@ -1138,6 +1179,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain,
       test_reference_timestamp_meta_with_info_serialization);
   tcase_add_test (tc_chain, test_set_and_cmp);
+  tcase_add_test (tc_chain, test_append_memory_write_locked);
 
   return s;
 }
