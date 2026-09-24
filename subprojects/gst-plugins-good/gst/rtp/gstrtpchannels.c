@@ -299,11 +299,14 @@ gst_rtp_channels_get_by_index (gint channels, guint idx)
  * #GST_AUDIO_CHANNEL_POSITION_NONE.
  */
 void
-gst_rtp_channels_create_default (gint channels, GstAudioChannelPosition * posn)
+gst_rtp_channels_create_default (gint channels,
+    GstAudioChannelPosition * posn, gsize n_posn)
 {
   gint i;
 
   g_return_if_fail (channels > 0);
+
+  channels = MIN (channels, n_posn);
 
   for (i = 0; i < channels; i++)
     posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
