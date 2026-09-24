@@ -1049,6 +1049,24 @@ _reset_buffer_access (GstVulkanEncoder * self, GstBuffer * buffer)
       info.parent.pipeline_stages, VK_ACCESS_NONE_KHR, info.image_layout, NULL);
 }
 
+static gboolean
+_add_dpb_dependency_and_barrier (GstVulkanOperation * exec, GstBuffer * buffer,
+    VkAccessFlags2 access)
+{
+  if (!gst_vulkan_operation_add_dependency_frame (exec, buffer,
+          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR))
+    return FALSE;
+
+  if (!gst_vulkan_operation_add_frame_barrier (exec, buffer,
+          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR, access,
+          VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL))
+    return FALSE;
+
+  return TRUE;
+}
+
 /**
  * gst_vulkan_encoder_encode:
  * @self: a #GstVulkanEncoder
@@ -1230,17 +1248,18 @@ again:
           VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR, NULL))
     goto reset_and_error;
 
-  if (!gst_vulkan_operation_add_dependency_frame (priv->exec, pic->dpb_buffer,
-          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR))
+  /* this also adds the layered dpb if it's the case */
+  if (!_add_dpb_dependency_and_barrier (priv->exec, pic->dpb_buffer,
+          VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR))
     goto reset_and_error;
 
-  if (!gst_vulkan_operation_add_frame_barrier (priv->exec, pic->dpb_buffer,
-          VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-          VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
-          VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR,
-          VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL))
-    goto reset_and_error;
+  if (!priv->layered_dpb) {
+    for (i = 0; i < nb_refs; i++) {
+      if (!_add_dpb_dependency_and_barrier (priv->exec,
+              ref_pics[i]->dpb_buffer, VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR))
+        goto reset_and_error;
+    }
+  }
 
   barriers = gst_vulkan_operation_get_barriers (priv->exec);
   gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf,
