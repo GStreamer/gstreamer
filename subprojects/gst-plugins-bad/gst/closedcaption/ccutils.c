@@ -550,7 +550,7 @@ compact_cc_data (guint8 * cc_data, guint cc_data_len)
       continue;
     }
 
-    if (cc_type & 0x10)
+    if (cc_type & 0x02)
       started_ccp = TRUE;
 
     if (!cc_valid)
