@@ -1179,6 +1179,8 @@ gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload * basepayload,
   GST_BUFFER_PTS (outbuf) = pts;
   GST_BUFFER_DTS (outbuf) = dts;
 
+  gst_rtp_buffer_unmap (&rtp);
+
   /* insert payload memory block */
   gst_rtp_copy_video_meta (basepayload, outbuf, paybuf);
   outbuf = gst_buffer_append (outbuf, paybuf);
@@ -1187,8 +1189,6 @@ gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload * basepayload,
 
   /* add the buffer to the buffer list */
   gst_buffer_list_add (outlist, outbuf);
-
-  gst_rtp_buffer_unmap (&rtp);
 
   /* push the list to the next element in the pipe */
   return gst_rtp_base_payload_push_list (basepayload, outlist);
