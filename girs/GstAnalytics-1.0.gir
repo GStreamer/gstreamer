@@ -1769,7 +1769,12 @@ new struct sub-classing GstAnalyticsRelatableMtd.</doc>
 correspond to the segmentation masks stored in @buffer. For example if the
 segmentation masks stored in @buffer describe the segmented regions for the
 entire image the rectangular area will be (@masks_loc_x = 0, @masks_loc_y = 0,
-@masks_loc_w = image_width, @masks_loc_h = image_height).</doc>
+@masks_loc_w = image_width, @masks_loc_h = image_height).
+
+The @buffer must have #GstVideoMeta attached describing the buffer pixel format,
+mask dimensions, padding etc. The buffer must be in GRAY8 or GRAY16 (LE or BE) pixel format.
+
+See gst_analytics_segmentation_mtd_get_mask() for more details</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">TRUE if added successfully, otherwise FALSE</doc>
@@ -2520,7 +2525,14 @@ rectangle: they come from the #GstVideoMeta attached to the returned buffer,
 which the producer is required to attach (see
 gst_analytics_relation_meta_add_segmentation_mtd()). Read them with
 gst_buffer_get_video_meta(); the mask is a single-plane GRAY8 or GRAY16 image
-whose pixel values are region ids.</doc>
+whose pixel values are region ids.
+
+The format of the mask limits how many region ids can be represented. Pixels
+in GRAY8 format can take 256 values, which means up to 255 segmented regions can
+be represented, as 0 is the special 'no mask' value.
+
+When there are more than 255 regions to identify, GRAY16 pixel format can be used
+to expand the range up to a maximum of 65535 regions.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Segmentation mask data stored in a #GstBuffer</doc>

@@ -185,21 +185,28 @@ static const GstAnalyticsMtdImpl segmentation_impl = {
 
 /*
  * GstAnalyticsSegMtdData:
- * @type: #GstSegmentationType indicate if the mask values are object/region-id
+ * @type: #GstSegmentationType indicates if the mask values are object/region-id
  * (in the case of instance segmentation) or object/region-type (in the case
  * of semantic segmentation).
  * @masks: #GstBuffer used to store segmentation masks
  * @region_count: Number of region in the segmentation masks
  * @region_ids: Indexed region ids
  *
- * Store segmentation results where each value represent a group to which
- * belong the corresponding pixel from original image where segmentation was
- * performed. All values equal in @masks form a mask defining all the
- * pixel belonging to the same segmented region from the original image. The
- * GstVideoMeta attached to the @masks, describe masks resolution, padding,
- * format, ... The format in video meta has a special meaning in the context
- * of the mask, GRAY8 mean that @masks value can take 256 values which mean
- * 256 segmented region can be represented.
+ * Store segmentation results, where the pixel values in @masks represent
+ * which group the corresponding pixel from the original image (where
+ * segmentation was performed) belong to. All pixels with the same value in
+ * @masks form a mask marking all the pixels belonging to the same segmented
+ * region from the original image.
+ *
+ * The pixel format, resolution and any padding of the @masks buffer are described
+ * in the #GstVideoMeta attached to the buffer.
+ *
+ * The format in video meta has a special meaning in the context
+ * of the mask: pixels in GRAY8 format can take 256 values, which means
+ * up to 255 segmented regions can be represented, as 0 is the special 'no mask' value.
+ *
+ * When there are more than 255 regions to identify, GRAY16 pixel format can be used
+ * to expand the range up to a maximum of 65535 regions.
  *
  */
 typedef struct _GstAnalyticsSegMtdData
@@ -259,6 +266,13 @@ gst_analytics_segmentation_mtd_get_mtd_type (void)
  * gst_analytics_relation_meta_add_segmentation_mtd()). Read them with
  * gst_buffer_get_video_meta(); the mask is a single-plane GRAY8 or GRAY16 image
  * whose pixel values are region ids.
+ *
+ * The format of the mask limits how many region ids can be represented. Pixels
+ * in GRAY8 format can take 256 values, which means up to 255 segmented regions can
+ * be represented, as 0 is the special 'no mask' value.
+ *
+ * When there are more than 255 regions to identify, GRAY16 pixel format can be used
+ * to expand the range up to a maximum of 65535 regions.
  *
  * Returns: (transfer full) (nullable): Segmentation mask data stored in a #GstBuffer
  *
@@ -395,6 +409,11 @@ gst_analytics_segmentation_mtd_get_region_count (const
  * segmentation masks stored in @buffer describe the segmented regions for the
  * entire image the rectangular area will be (@masks_loc_x = 0, @masks_loc_y = 0,
  * @masks_loc_w = image_width, @masks_loc_h = image_height).
+ *
+ * The @buffer must have #GstVideoMeta attached describing the buffer pixel format,
+ * mask dimensions, padding etc. The buffer must be in GRAY8 or GRAY16 (LE or BE) pixel format.
+ *
+ * See gst_analytics_segmentation_mtd_get_mask() for more details
  *
  * Returns: TRUE if added successfully, otherwise FALSE
  *
