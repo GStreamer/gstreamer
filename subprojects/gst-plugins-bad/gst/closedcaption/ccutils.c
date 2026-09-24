@@ -677,10 +677,10 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
   if (cea608_1 && cea608_1_len > 0) {
     guint out_i = 0;
     for (i = 0; i < cea608_1_len / 2; i++) {
-      if (!remove_cea608_padding || cea608_1[i] != 0x80
-          || cea608_1[i + 1] != 0x80) {
-        cea608_1_copy[out_i++] = cea608_1[i];
-        cea608_1_copy[out_i++] = cea608_1[i + 1];
+      if (!remove_cea608_padding || cea608_1[i * 2] != 0x80
+          || cea608_1[i * 2 + 1] != 0x80) {
+        cea608_1_copy[out_i++] = cea608_1[i * 2];
+        cea608_1_copy[out_i++] = cea608_1[i * 2 + 1];
       }
     }
     cea608_1_len = out_i;
@@ -691,10 +691,10 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
   if (cea608_2 && cea608_2_len > 0) {
     guint out_i = 0;
     for (i = 0; i < cea608_2_len / 2; i++) {
-      if (!remove_cea608_padding || cea608_2[i] != 0x80
-          || cea608_2[i + 1] != 0x80) {
-        cea608_2_copy[out_i++] = cea608_2[i];
-        cea608_2_copy[out_i++] = cea608_2[i + 1];
+      if (!remove_cea608_padding || cea608_2[i * 2] != 0x80
+          || cea608_2[i * 2 + 1] != 0x80) {
+        cea608_2_copy[out_i++] = cea608_2[i * 2];
+        cea608_2_copy[out_i++] = cea608_2[i * 2 + 1];
       }
     }
     cea608_2_len = out_i;
