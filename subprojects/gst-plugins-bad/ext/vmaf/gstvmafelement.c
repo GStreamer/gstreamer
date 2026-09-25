@@ -1162,7 +1162,8 @@ gst_vmaf_class_init (GstVmafClass * klass)
       g_param_spec_uint ("threads", "threads",
           "The number of threads (0 = automatic)",
           0, G_MAXINT, DEFAULT_NUM_THREADS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
 
   g_object_class_install_property (gobject_class, PROP_SUBSAMPLE,
       g_param_spec_uint ("subsample",
