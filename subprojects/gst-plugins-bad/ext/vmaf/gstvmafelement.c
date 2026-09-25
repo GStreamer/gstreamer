@@ -1116,36 +1116,41 @@ gst_vmaf_class_init (GstVmafClass * klass)
       g_param_spec_string ("model-filename",
           "model-filename",
           "Model *.pkl abs filename, or file version for built in models",
-          DEFAULT_MODEL_FILENAME, G_PARAM_READWRITE));
+          DEFAULT_MODEL_FILENAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DISABLE_CLIP,
       g_param_spec_boolean ("disable-clip",
           "disable-clip",
           "Disable clipping VMAF values",
-          DEFAULT_DISABLE_CLIP, G_PARAM_READWRITE));
+          DEFAULT_DISABLE_CLIP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ENABLE_TRANSFORM,
       g_param_spec_boolean ("enable-transform",
           "enable-transform",
           "Enable transform VMAF scores",
-          DEFAULT_ENABLE_TRANSFORM, G_PARAM_READWRITE));
+          DEFAULT_ENABLE_TRANSFORM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PHONE_MODEL,
       g_param_spec_boolean ("phone-model",
           "phone-model",
-          "Use VMAF phone model", DEFAULT_PHONE_MODEL, G_PARAM_READWRITE));
+          "Use VMAF phone model", DEFAULT_PHONE_MODEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PSNR,
       g_param_spec_boolean ("psnr", "psnr",
-          "Estimate PSNR", DEFAULT_PSNR, G_PARAM_READWRITE));
+          "Estimate PSNR", DEFAULT_PSNR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SSIM,
       g_param_spec_boolean ("ssim", "ssim",
-          "Estimate SSIM", DEFAULT_SSIM, G_PARAM_READWRITE));
+          "Estimate SSIM", DEFAULT_SSIM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MS_SSIM,
       g_param_spec_boolean ("ms-ssim", "ms-ssim",
-          "Estimate MS-SSIM", DEFAULT_MS_SSIM, G_PARAM_READWRITE));
+          "Estimate MS-SSIM", DEFAULT_MS_SSIM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_POOL_METHOD,
       g_param_spec_enum ("pool-method", "pool-method",
@@ -1156,30 +1161,34 @@ gst_vmaf_class_init (GstVmafClass * klass)
   g_object_class_install_property (gobject_class, PROP_NUM_THREADS,
       g_param_spec_uint ("threads", "threads",
           "The number of threads (0 = automatic)",
-          0, G_MAXINT, DEFAULT_NUM_THREADS, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_NUM_THREADS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SUBSAMPLE,
       g_param_spec_uint ("subsample",
           "subsample",
           "Computing on one of every N frames",
-          1, 128, DEFAULT_SUBSAMPLE, G_PARAM_READWRITE));
+          1, 128, DEFAULT_SUBSAMPLE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONF_INT,
       g_param_spec_boolean ("conf-interval",
           "conf-interval",
-          "Enable confidence intervals", DEFAULT_CONF_INT, G_PARAM_READWRITE));
+          "Enable confidence intervals", DEFAULT_CONF_INT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FRAME_MESSAGING,
       g_param_spec_boolean ("frame-message",
           "frame-message",
           "Enable frame level score messaging", DEFAULT_FRAME_MESSAGING,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_VMAF_RESULTS_FILENAME,
       g_param_spec_string ("results-filename",
           "results-filename",
           "VMAF results filename for scores",
-          DEFAULT_VMAF_RESULTS_FILENAME, G_PARAM_READWRITE));
+          DEFAULT_VMAF_RESULTS_FILENAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_VMAF_RESULTS_FORMAT,
       g_param_spec_enum ("results-format", "results-format",
