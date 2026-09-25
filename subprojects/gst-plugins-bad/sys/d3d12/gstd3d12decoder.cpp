@@ -798,10 +798,10 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   DecoderSessionHandle session_handle (decoder_session);
   auto session = gst_d3d12_decoder_get_session_data (decoder_session);
   bool session_reused = session != nullptr;
+  std::unique_ptr < DecoderSessionData > new_session;
   if (!session) {
-    session = new DecoderSessionData ();
-    gst_d3d12_decoder_session_set_data (decoder_session, session,
-        gst_d3d12_decoder_session_data_free);
+    new_session = std::make_unique < DecoderSessionData > ();
+    session = new_session.get ();
   }
 
   if (reuse)
@@ -1020,6 +1020,8 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
       session->array_of_textures);
 
   session->heap_desc = heap_desc;
+  gst_d3d12_decoder_session_set_data (decoder_session, new_session.release (),
+      gst_d3d12_decoder_session_data_free);
   priv->configured_ref_pics.clear ();
   priv->session = session_handle.release ();
   priv->last_flow = GST_FLOW_OK;
