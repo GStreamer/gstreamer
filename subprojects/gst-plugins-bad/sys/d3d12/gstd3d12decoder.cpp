@@ -333,6 +333,8 @@ struct DecoderSessionData
   bool reference_only = false;
 
   GstD3D12DecoderOutputType output_type = GST_D3D12_DECODER_OUTPUT_SYSTEM;
+  GstD3D12DecoderSessionReuse reuse =
+      GST_D3D12_DECODER_SESSION_REUSE_DISABLED;
 
   D3D12_FEATURE_DATA_VIDEO_DECODE_SUPPORT support = { 0, };
 
@@ -451,6 +453,23 @@ gst_d3d12_decoder_session_data_free (gpointer data)
 }
 
 static void
+gst_d3d12_decoder_clear_pools (DecoderSessionData * session)
+{
+  if (session->dpb_pool) {
+    gst_buffer_pool_set_active (session->dpb_pool, FALSE);
+    gst_clear_object (&session->dpb_pool);
+  }
+
+  if (session->output_pool) {
+    gst_buffer_pool_set_active (session->output_pool, FALSE);
+    gst_clear_object (&session->output_pool);
+  }
+
+  session->dpb = nullptr;
+  session->staging = nullptr;
+}
+
+static void
 gst_d3d12_decoder_clear_session (GstD3D12DecoderSession ** session)
 {
   if (!*session)
@@ -467,6 +486,13 @@ gst_d3d12_decoder_clear_session (GstD3D12DecoderSession ** session)
     g_clear_pointer (&data->output_state, gst_video_codec_state_unref);
     data->output_type = GST_D3D12_DECODER_OUTPUT_SYSTEM;
     data->use_crop_meta = false;
+
+    /* The GPU is done with the texture resources after the fence wait above,
+     * and they are recreated on the next configure(). The ID3D12VideoDecoder
+     * and its heap are kept: recreating those is what leaks on some drivers,
+     * recreating plain textures does not. */
+    if (data->reuse == GST_D3D12_DECODER_SESSION_REUSE_WITHOUT_TEXTURES)
+      gst_d3d12_decoder_clear_pools (data);
   }
 
   gst_d3d12_decoder_session_unref (*session);
@@ -684,6 +710,124 @@ gst_d3d12_decoder_close (GstD3D12Decoder * decoder)
   return TRUE;
 }
 
+/* Creates the per-stream texture resources of a session (DPB pool, output pool
+ * and DPB slot table). Split out of gst_d3d12_decoder_configure() so that a
+ * session returning to the pool can release them and a reused session can
+ * allocate them again, while the ID3D12VideoDecoder and its heap stay cached.
+ */
+static GstFlowReturn
+gst_d3d12_decoder_create_pools (GstD3D12Decoder * decoder,
+    DecoderSessionData * session)
+{
+  const auto & support = session->support;
+  auto info = &session->info;
+
+  guint max_buffers = session->dpb_size;
+  if (support.DecodeTier == D3D12_VIDEO_DECODE_TIER_1) {
+    session->array_of_textures = false;
+  } else {
+    session->array_of_textures = true;
+    max_buffers = 0;
+  }
+
+  D3D12_RESOURCE_FLAGS resource_flags;
+  if ((support.ConfigurationFlags &
+          D3D12_VIDEO_DECODE_CONFIGURATION_FLAG_REFERENCE_ONLY_ALLOCATIONS_REQUIRED)
+      != 0 || !session->array_of_textures) {
+    resource_flags =
+        D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY |
+        D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+    session->reference_only = true;
+  } else {
+    resource_flags = D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    session->reference_only = false;
+  }
+
+  GST_DEBUG_OBJECT (decoder, "reference only: %d, array-of-textures: %d",
+      session->reference_only, session->array_of_textures);
+
+  GstVideoAlignment align;
+  gst_video_alignment_reset (&align);
+  align.padding_right = session->aligned_width - info->width;
+  align.padding_bottom = session->aligned_height - info->height;
+
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (decoder->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
+  if (!session->reference_only)
+    heap_flags |= D3D12_HEAP_FLAG_SHARED;
+
+  auto params = gst_d3d12_allocation_params_new (decoder->device, info,
+      GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags, heap_flags);
+  gst_d3d12_allocation_params_alignment (params, &align);
+  if (!session->array_of_textures)
+    gst_d3d12_allocation_params_set_array_size (params, session->dpb_size);
+
+  session->dpb_pool = gst_d3d12_buffer_pool_new (decoder->device);
+  auto config = gst_buffer_pool_get_config (session->dpb_pool);
+  auto caps = gst_video_info_to_caps (info);
+
+  gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
+  gst_d3d12_allocation_params_free (params);
+  gst_buffer_pool_config_set_params (config, caps, info->size, 0, max_buffers);
+  if (!gst_buffer_pool_set_config (session->dpb_pool, config)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't set pool config");
+    gst_caps_unref (caps);
+    gst_d3d12_decoder_clear_pools (session);
+    return GST_FLOW_ERROR;
+  }
+
+  if (!gst_buffer_pool_set_active (session->dpb_pool, TRUE)) {
+    GST_ERROR_OBJECT (decoder, "Set active failed");
+    gst_caps_unref (caps);
+    gst_d3d12_decoder_clear_pools (session);
+    return GST_FLOW_ERROR;
+  }
+
+  if (session->reference_only) {
+    GST_DEBUG_OBJECT (decoder, "Creating output only pool");
+    session->output_pool = gst_d3d12_buffer_pool_new (decoder->device);
+    config = gst_buffer_pool_get_config (session->output_pool);
+
+    heap_flags = D3D12_HEAP_FLAG_NONE;
+    if (gst_d3d12_device_non_zeroed_supported (decoder->device))
+      heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
+    params = gst_d3d12_allocation_params_new (decoder->device, info,
+        GST_D3D12_ALLOCATION_FLAG_DEFAULT,
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+        heap_flags | D3D12_HEAP_FLAG_SHARED);
+    gst_d3d12_allocation_params_alignment (params, &align);
+    gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
+    gst_d3d12_allocation_params_free (params);
+    gst_buffer_pool_config_set_params (config, caps, info->size, 0, 0);
+
+    if (!gst_buffer_pool_set_config (session->output_pool, config)) {
+      GST_ERROR_OBJECT (decoder, "Couldn't set pool config");
+      gst_caps_unref (caps);
+      gst_d3d12_decoder_clear_pools (session);
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_buffer_pool_set_active (session->output_pool, TRUE)) {
+      GST_ERROR_OBJECT (decoder, "Set active failed");
+      gst_caps_unref (caps);
+      gst_d3d12_decoder_clear_pools (session);
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  gst_caps_unref (caps);
+
+  session->dpb = std::make_shared < GstD3D12Dpb > ((guint8) session->dpb_size,
+      session->array_of_textures);
+
+  return GST_FLOW_OK;
+}
+
 GstFlowReturn
 gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     GstVideoDecoder * videodec, GstVideoCodecState * input_state,
@@ -722,10 +866,10 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  gboolean reuse = FALSE;
+  auto reuse = GST_D3D12_DECODER_SESSION_REUSE_DISABLED;
   g_object_get (decoder->device, "reuse-decoder-session", &reuse, nullptr);
 
-  if (reuse) {
+  if (reuse != GST_D3D12_DECODER_SESSION_REUSE_DISABLED) {
     /* Reserve the codec's maximum DPB, including the current picture.
      * Keep larger requests to accommodate any additional output delay */
     guint max_dpb_size = dpb_size;
@@ -770,7 +914,7 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   }
 
   GstD3D12DecoderSession *decoder_session = nullptr;
-  if (reuse) {
+  if (reuse != GST_D3D12_DECODER_SESSION_REUSE_DISABLED) {
     DecoderSessionConfig session_config = {
       decoder->codec,
       GST_VIDEO_INFO_WIDTH (info),
@@ -804,8 +948,9 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     session = new_session.get ();
   }
 
-  if (reuse)
+  if (reuse != GST_D3D12_DECODER_SESSION_REUSE_DISABLED)
     session->queue = (GstD3D12CmdQueue *) gst_object_ref (priv->cmd->queue);
+  session->reuse = reuse;
   session->codec = decoder->codec;
   session->input_state = gst_video_codec_state_ref (input_state);
   session->info = *info;
@@ -821,6 +966,19 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   if (session_reused) {
     GST_DEBUG_OBJECT (decoder, "Reusing decoder session %p",
         (gpointer) session);
+
+    /* The pools are gone if the session was parked in without-textures mode.
+     * The mode can also have changed while the session was parked, so
+     * decide from the pools themselves rather than from the current mode. */
+    if (!session->dpb_pool) {
+      auto pool_ret = gst_d3d12_decoder_create_pools (decoder, session);
+      if (pool_ret != GST_FLOW_OK) {
+        auto failed_session = session_handle.release ();
+        gst_d3d12_decoder_clear_session (&failed_session);
+        return pool_ret;
+      }
+    }
+
     priv->configured_ref_pics.clear ();
     priv->session = session_handle.release ();
     priv->last_flow = GST_FLOW_OK;
@@ -920,104 +1078,9 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  guint max_buffers = session->dpb_size;
-  if (support.DecodeTier == D3D12_VIDEO_DECODE_TIER_1) {
-    session->array_of_textures = false;
-  } else {
-    session->array_of_textures = true;
-    max_buffers = 0;
-  }
-
-  D3D12_RESOURCE_FLAGS resource_flags;
-  if ((support.ConfigurationFlags &
-          D3D12_VIDEO_DECODE_CONFIGURATION_FLAG_REFERENCE_ONLY_ALLOCATIONS_REQUIRED)
-      != 0 || !session->array_of_textures) {
-    resource_flags =
-        D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY |
-        D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
-    session->reference_only = true;
-  } else {
-    resource_flags = D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    session->reference_only = false;
-  }
-
-  GST_DEBUG_OBJECT (decoder, "reference only: %d, array-of-textures: %d",
-      session->reference_only, session->array_of_textures);
-
-  GstVideoAlignment align;
-  gst_video_alignment_reset (&align);
-  align.padding_right = session->aligned_width - info->width;
-  align.padding_bottom = session->aligned_height - info->height;
-
-  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
-  if (gst_d3d12_device_non_zeroed_supported (decoder->device))
-    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
-
-  if (!session->reference_only)
-    heap_flags |= D3D12_HEAP_FLAG_SHARED;
-
-  auto params = gst_d3d12_allocation_params_new (decoder->device, info,
-      GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags, heap_flags);
-  gst_d3d12_allocation_params_alignment (params, &align);
-  if (!session->array_of_textures)
-    gst_d3d12_allocation_params_set_array_size (params, session->dpb_size);
-
-  session->dpb_pool = gst_d3d12_buffer_pool_new (decoder->device);
-  auto config = gst_buffer_pool_get_config (session->dpb_pool);
-  auto caps = gst_video_info_to_caps (info);
-
-  gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
-  gst_d3d12_allocation_params_free (params);
-  gst_buffer_pool_config_set_params (config, caps, info->size, 0, max_buffers);
-  if (!gst_buffer_pool_set_config (session->dpb_pool, config)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't set pool config");
-    gst_caps_unref (caps);
-    return GST_FLOW_ERROR;
-  }
-
-  if (!gst_buffer_pool_set_active (session->dpb_pool, TRUE)) {
-    GST_ERROR_OBJECT (decoder, "Set active failed");
-    gst_caps_unref (caps);
-    return GST_FLOW_ERROR;
-  }
-
-  if (session->reference_only) {
-    GST_DEBUG_OBJECT (decoder, "Creating output only pool");
-    session->output_pool = gst_d3d12_buffer_pool_new (decoder->device);
-    config = gst_buffer_pool_get_config (session->output_pool);
-
-    heap_flags = D3D12_HEAP_FLAG_NONE;
-    if (gst_d3d12_device_non_zeroed_supported (decoder->device))
-      heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
-
-    params = gst_d3d12_allocation_params_new (decoder->device, info,
-        GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-        heap_flags | D3D12_HEAP_FLAG_SHARED);
-    gst_d3d12_allocation_params_alignment (params, &align);
-    gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
-    gst_d3d12_allocation_params_free (params);
-    gst_buffer_pool_config_set_params (config, caps, info->size, 0, 0);
-
-    if (!gst_buffer_pool_set_config (session->output_pool, config)) {
-      GST_ERROR_OBJECT (decoder, "Couldn't set pool config");
-      gst_caps_unref (caps);
-      return GST_FLOW_ERROR;
-    }
-
-    if (!gst_buffer_pool_set_active (session->output_pool, TRUE)) {
-      GST_ERROR_OBJECT (decoder, "Set active failed");
-      gst_caps_unref (caps);
-      return GST_FLOW_ERROR;
-    }
-  }
-
-  gst_caps_unref (caps);
-
-  session->dpb = std::make_shared < GstD3D12Dpb > ((guint8) session->dpb_size,
-      session->array_of_textures);
+  auto pool_ret = gst_d3d12_decoder_create_pools (decoder, session);
+  if (pool_ret != GST_FLOW_OK)
+    return pool_ret;
 
   session->heap_desc = heap_desc;
   gst_d3d12_decoder_session_set_data (decoder_session, new_session.release (),

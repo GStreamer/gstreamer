@@ -1,0 +1,3 @@
+## d3d12: decoder session reuse
+
+New `reuse-decoder-session` property on `GstD3D12Device` to keep video decoder sessions alive after decoder instances are destroyed and reuse them for compatible streams. This primarily works around a leak in the Intel GPU driver when decoder sessions are repeatedly created and destroyed. `all` keeps complete sessions, textures included, so that reusing one needs no allocation. `without-textures` keeps the decoder and its heap but releases the textures of sessions that are not in use, which keeps memory usage down when the codec or resolution of the streams changes often. The default `disabled` preserves the existing behavior.

@@ -120,7 +120,28 @@ enum
 static GParamSpec *pspec_removed_reason = nullptr;
 
 #define DEFAULT_OVER_BUDGET_FACTOR 0.8
-#define DEFAULT_REUSE_DECODER_SESSION FALSE
+#define DEFAULT_REUSE_DECODER_SESSION GST_D3D12_DECODER_SESSION_REUSE_DISABLED
+
+GType
+gst_d3d12_decoder_session_reuse_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue reuse_modes[] = {
+    {GST_D3D12_DECODER_SESSION_REUSE_DISABLED,
+        "GST_D3D12_DECODER_SESSION_REUSE_DISABLED", "disabled"},
+    {GST_D3D12_DECODER_SESSION_REUSE_ALL,
+        "GST_D3D12_DECODER_SESSION_REUSE_ALL", "all"},
+    {GST_D3D12_DECODER_SESSION_REUSE_WITHOUT_TEXTURES,
+        "GST_D3D12_DECODER_SESSION_REUSE_WITHOUT_TEXTURES", "without-textures"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D12DecoderSessionReuse", reuse_modes);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return type;
+}
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -335,7 +356,8 @@ struct DeviceInner
   std::atomic<gint64> resident_size = { 0 };
   std::atomic<double> overbudget_factor = { DEFAULT_OVER_BUDGET_FACTOR };
   std::atomic<bool> is_over_budget = { false };
-  std::atomic<gboolean> reuse_decoder_session = { DEFAULT_REUSE_DECODER_SESSION };
+  std::atomic<GstD3D12DecoderSessionReuse> reuse_decoder_session =
+      { DEFAULT_REUSE_DECODER_SESSION };
 
   std::vector<GstD3D12Device*> clients;
 
@@ -835,13 +857,21 @@ gst_d3d12_device_class_init (GstD3D12DeviceClass * klass)
    * This avoids repeatedly creating and destroying D3D12 video decoder
    * resources when compatible decoder instances are created sequentially.
    *
+   * %GST_D3D12_DECODER_SESSION_REUSE_ALL keeps sessions that are not in use
+   * complete, textures included, so that reusing one needs no allocation.
+   *
+   * %GST_D3D12_DECODER_SESSION_REUSE_WITHOUT_TEXTURES keeps the decoder and
+   * its heap alive but releases the textures of sessions that are not in
+   * use. It suits use cases where the codec or resolution of the streams
+   * changes often.
+   *
    * Since: 1.30
    */
   g_object_class_install_property (gobject_class, PROP_REUSE_DECODER_SESSION,
-      g_param_spec_boolean ("reuse-decoder-session",
+      g_param_spec_enum ("reuse-decoder-session",
           "Reuse Decoder Session",
           "Keep and reuse compatible video decoder sessions",
-          DEFAULT_REUSE_DECODER_SESSION,
+          GST_TYPE_D3D12_DECODER_SESSION_REUSE, DEFAULT_REUSE_DECODER_SESSION,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
@@ -915,7 +945,7 @@ gst_d3d12_device_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, priv->overbudget_factor.load ());
       break;
     case PROP_REUSE_DECODER_SESSION:
-      g_value_set_boolean (value, priv->reuse_decoder_session.load ());
+      g_value_set_enum (value, priv->reuse_decoder_session.load ());
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -935,7 +965,8 @@ gst_d3d12_device_set_property (GObject * object, guint prop_id,
       priv->overbudget_factor = g_value_get_double (value);
       break;
     case PROP_REUSE_DECODER_SESSION:
-      priv->reuse_decoder_session = g_value_get_boolean (value);
+      priv->reuse_decoder_session =
+          (GstD3D12DecoderSessionReuse) g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
