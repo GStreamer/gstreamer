@@ -276,7 +276,7 @@ vmeta->width = 640;
 vmeta->height = 480;
 ```
 
-To iterate the different metainfo structures, one can use the
+To iterate the different `GstMeta` structures, one can use the
 `gst_buffer_iterate_meta()` methods.
 
 ``` c
