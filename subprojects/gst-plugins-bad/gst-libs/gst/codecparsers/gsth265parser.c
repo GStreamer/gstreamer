@@ -3207,6 +3207,21 @@ nal_reader_has_more_data_in_payload (NalReader * nr,
   return TRUE;
 }
 
+static guint
+nal_reader_get_remaining_payload_bits (NalReader * nr)
+{
+  NalReader tmp = *nr;
+  guint remaining = 0;
+
+  while (nal_reader_has_more_data (&tmp)) {
+    if (!nal_reader_skip (&tmp, 8))
+      break;
+    remaining += 8;
+  }
+
+  return remaining;
+}
+
 static GstH265ParserResult
 gst_h265_parser_parse_sei_message (GstH265Parser * parser,
     guint8 nal_type, NalReader * nr, GstH265SEIMessage * sei)
@@ -3232,7 +3247,11 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
   }
   while (payload_size_byte == 0xff);
 
-  remaining = nal_reader_get_remaining (nr);
+  /* nal_reader_get_remaining() includes emulation prevention bytes, but
+   * payloadSize counts RBSP bytes. Also tolerate broken streams which count
+   * emulation prevention bytes in payloadSize by limiting the payload to the
+   * RBSP data that is actually available. */
+  remaining = nal_reader_get_remaining_payload_bits (nr);
   payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
 
   payload_start_pos_bit = nal_reader_get_pos (nr);
