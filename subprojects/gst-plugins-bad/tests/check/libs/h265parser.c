@@ -133,6 +133,17 @@ static guint8 h265_sei_user_data_unregistered[] = {
   0x80
 };
 
+/* Broken stream where payloadSize includes the emulation_prevention_three_byte
+ * in the UUID. */
+static guint8 h265_sei_user_data_unregistered_ebsp_size[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01,
+  0x05, 0x18,
+  0x01, 0x00, 0x00, 0x03, 0x00, 0x02, 0x03, 0x04,
+  0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+  0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+  0x80
+};
+
 static guint8 h265_sei_time_code[] = {
   0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x88, 0x06, 0x60, 0x40, 0x00, 0x00, 0x03,
   0x00, 0x10, 0x80
@@ -239,6 +250,46 @@ GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
   assert_equals_int (nalu.type, GST_H265_NAL_EOB);
   assert_equals_int (nalu.size, 2);
 
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_sei_user_data_unregistered_ebsp_size)
+{
+  static const guint8 expected_uuid[] = {
+    0x01, 0x00, 0x00, 0x00, 0x02, 0x03, 0x04, 0x05,
+    0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d
+  };
+  static const guint8 expected_data[] = {
+    0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17
+  };
+  GstH265Parser *parser = gst_h265_parser_new ();
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GArray *messages = NULL;
+  GstH265SEIMessage *sei;
+  GstH265UserDataUnregistered *user_data;
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_user_data_unregistered_ebsp_size, 0,
+      G_N_ELEMENTS (h265_sei_user_data_unregistered_ebsp_size), &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+
+  res = gst_h265_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH265SEIMessage, 0);
+  assert_equals_int (sei->payloadType, GST_H265_SEI_USER_DATA_UNREGISTERED);
+  user_data = &sei->payload.user_data_unregistered;
+  fail_unless (memcmp (user_data->uuid, expected_uuid,
+          sizeof (expected_uuid)) == 0);
+  assert_equals_int (user_data->size, sizeof (expected_data));
+  fail_unless (memcmp (user_data->data, expected_data,
+          sizeof (expected_data)) == 0);
+
+  g_array_unref (messages);
   gst_h265_parser_free (parser);
 }
 
@@ -1903,6 +1954,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_parse_scc);
   tcase_add_test (tc_chain, test_h265_nal_type_classification);
   tcase_add_test (tc_chain, test_h265_sei_registered_user_data);
+  tcase_add_test (tc_chain, test_h265_sei_user_data_unregistered_ebsp_size);
   tcase_add_test (tc_chain, test_h265_sei_dsc_initialization);
   tcase_add_test (tc_chain, test_h265_sei_dsc_selection);
   tcase_add_test (tc_chain, test_h265_sei_dsc_verification);
