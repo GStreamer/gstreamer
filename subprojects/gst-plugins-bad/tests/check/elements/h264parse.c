@@ -2079,6 +2079,66 @@ GST_START_TEST (test_non_vcl_nal_duration)
 
 GST_END_TEST;
 
+/* Some cameras (seen with ACTi) append a metadata trailer to every slice
+ * NAL. It starts with an MPEG start code and, depending on the counter it
+ * carries, can contain a real 4-byte start code as well:
+ *
+ *   00 00 01 b2 05 00 00 00 01 4a 00 00 46 ... 00 00 00 00
+ *
+ * In AU alignment the parser ends the AU at the first bogus start code and
+ * the trailer becomes the next frame: "b2 05" is collected, "4a" is a
+ * 1-byte NAL, and the rest holds no start code at all. That NO_NAL result
+ * used to finish a zero-sized frame and crash baseparse. */
+static const guint8 h264_acti_trailer[] = {
+  0x00, 0x00, 0x01, 0xb2, 0x05, 0x00, 0x00, 0x00, 0x01, 0x4a, 0x00, 0x00,
+  0x46, 0xc5, 0xea, 0x64, 0x0c, 0x01, 0x00, 0x03, 0xd3, 0x0a, 0x04, 0x00,
+  0x45, 0x12, 0x00, 0x1e, 0x46, 0xc5, 0xea, 0x64, 0x8a, 0x4f, 0x0a, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+GST_START_TEST (test_parse_bytestream_junk_after_au)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  gsize au_size;
+
+  h = gst_harness_new ("h264parse");
+  gst_harness_set_caps_str (h,
+      "video/x-h264, stream-format=byte-stream, alignment=au",
+      "video/x-h264, stream-format=byte-stream, alignment=au");
+
+  /* One AU (SPS, PPS, IDR) followed by the trailer, as a depayloader in AU
+   * alignment would deliver it */
+  au_size = sizeof (h264_sps) + sizeof (h264_pps) + sizeof (h264_idrframe);
+  buf = composite_buffer (100, 0, 4, h264_sps, sizeof (h264_sps),
+      h264_pps, sizeof (h264_pps), h264_idrframe, sizeof (h264_idrframe),
+      h264_acti_trailer, sizeof (h264_acti_trailer));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Draining what is left of the trailer must not crash either */
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  /* The real AU comes out intact (with the AUD the parser inserts in AU
+   * alignment), before anything made of the trailer */
+  fail_unless (gst_harness_buffers_in_queue (h) >= 1);
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (gst_buffer_get_size (buf),
+      sizeof (h264_aud) + au_size);
+  fail_unless (gst_buffer_memcmp (buf, 0, h264_aud, sizeof (h264_aud)) == 0);
+  fail_unless (gst_buffer_memcmp (buf, sizeof (h264_aud), h264_sps,
+          sizeof (h264_sps)) == 0);
+  fail_unless (gst_buffer_memcmp (buf, sizeof (h264_aud) + sizeof (h264_sps),
+          h264_pps, sizeof (h264_pps)) == 0);
+  fail_unless (gst_buffer_memcmp (buf,
+          sizeof (h264_aud) + sizeof (h264_sps) + sizeof (h264_pps),
+          h264_idrframe, sizeof (h264_idrframe)) == 0);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 /*
  * TODO:
@@ -2197,6 +2257,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_parse_to_avc3_without_sps);
     tcase_add_test (tc_chain, test_packetized_avc_drop_corrupt);
     tcase_add_test (tc_chain, test_non_vcl_nal_duration);
+    tcase_add_test (tc_chain, test_parse_bytestream_junk_after_au);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
