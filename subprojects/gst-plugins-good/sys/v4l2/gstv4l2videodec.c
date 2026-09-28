@@ -370,6 +370,8 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
       GST_V4L2_FLOW_RESOLUTION_CHANGE || self->draining)
     gst_v4l2_object_stop (self->v4l2capture);
 
+  self->draining = FALSE;
+
   return TRUE;
 }
 
@@ -620,9 +622,6 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Finishing decoding");
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
-  /* If we are in the middle of a source change, cancel it */
-  self->draining = FALSE;
 
   if (gst_v4l2_decoder_cmd (self->v4l2output, V4L2_DEC_CMD_STOP, 0)) {
     GstTask *task;
