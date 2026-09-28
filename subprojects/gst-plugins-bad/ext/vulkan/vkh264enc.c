@@ -514,8 +514,12 @@ _configure_rate_control (GstVulkanH264Encoder * self,
 
   {
     GstTagList *tags = gst_tag_list_new_empty ();
+    /* the bitrate tags are expressed in bits/s while self->rc values
+     * are in kbps */
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
-        self->rc.bitrate, GST_TAG_MAXIMUM_BITRATE, self->rc.max_bitrate,
+        (guint) MIN ((guint64) self->rc.bitrate * 1024, G_MAXUINT),
+        GST_TAG_MAXIMUM_BITRATE,
+        (guint) MIN ((guint64) self->rc.max_bitrate * 1024, G_MAXUINT),
         GST_TAG_CODEC, "H.264", GST_TAG_ENCODER, "vulkanh264enc", NULL);
 
     gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (self), tags,
