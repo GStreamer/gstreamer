@@ -674,13 +674,6 @@ gst_h264_encoder_flush_lists (GstH264Encoder * self)
       (GDestroyNotify) gst_video_codec_frame_unref);
   g_queue_clear_full (&priv->reorder_list,
       (GDestroyNotify) gst_video_codec_frame_unref);
-
-  gst_clear_object (&priv->gop.mapper);
-
-  g_clear_pointer (&priv->dts_queue, gst_vec_deque_free);
-
-  g_clear_pointer (&priv->ref_list0, g_array_unref);
-  g_clear_pointer (&priv->ref_list1, g_array_unref);
 }
 
 static gboolean
@@ -699,6 +692,8 @@ gst_h264_encoder_stop (GstVideoEncoder * encoder)
   GstH264EncoderPrivate *priv = _GET_PRIV (self);
 
   gst_h264_encoder_flush_lists (self);
+
+  gst_vec_deque_clear (priv->dts_queue);
 
   g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
 
@@ -2914,7 +2909,15 @@ gst_h264_encoder_init (GstH264Encoder * self)
 static void
 gst_h264_encoder_dispose (GObject * object)
 {
-  gst_h264_encoder_flush_lists (GST_H264_ENCODER (object));
+  GstH264Encoder *self = GST_H264_ENCODER (object);
+  GstH264EncoderPrivate *priv = _GET_PRIV (self);
+
+  gst_h264_encoder_flush_lists (self);
+
+  gst_clear_object (&priv->gop.mapper);
+  g_clear_pointer (&priv->dts_queue, gst_vec_deque_free);
+  g_clear_pointer (&priv->ref_list0, g_array_unref);
+  g_clear_pointer (&priv->ref_list1, g_array_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
