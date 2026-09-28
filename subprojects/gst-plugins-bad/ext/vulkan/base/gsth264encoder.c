@@ -1522,7 +1522,7 @@ gst_h264_encoder_encode_frame_with_ref_lists (GstH264Encoder * self,
   GstH264SliceHdr slice_hdr;
   gint i;
 
-  g_return_val_if_fail (frame, FALSE);
+  g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
 
   h264_frame = _GET_FRAME (frame);
 
