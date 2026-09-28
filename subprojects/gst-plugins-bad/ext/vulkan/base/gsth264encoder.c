@@ -3320,7 +3320,7 @@ gst_h264_get_cpb_nal_factor (GstH264Profile profile)
 /**
  * gst_h264_get_level_descriptor:
  * @profile: (type gint): a #GstH264Profile
- * @bitrate: bit rate in bytes per second
+ * @bitrate: bit rate in bits per second
  * @in_info: raw stream's #GstVideoInfo
  * @max_dec_frame_buffering: the max size of DPB
  *
