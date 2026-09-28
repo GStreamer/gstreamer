@@ -905,7 +905,9 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     }
 
     if (next == 0) {
-      ret = TRUE;
+      /* The frame is invalid and we have enough data to know that. Skip one
+       * byte and continue scanning for the next frame start. Don't treat it
+       * as a valid frame of size 0. */
     } else if (next > map.size) {
       GST_DEBUG_OBJECT (flacparse, "Requesting %u bytes", next);
       *skipsize = 0;
