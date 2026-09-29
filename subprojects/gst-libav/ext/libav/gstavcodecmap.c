@@ -861,6 +861,9 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
       case AV_CODEC_ID_TRUEHD:
         maxchannels = 8;
         break;
+      case AV_CODEC_ID_TTA:
+        maxchannels = 16;
+        break;
       default:
         break;
     }
