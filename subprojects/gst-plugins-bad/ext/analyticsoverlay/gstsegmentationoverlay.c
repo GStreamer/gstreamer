@@ -754,8 +754,10 @@ gst_segmentation_overlay_resampling (GstSegmentationOverlay * overlay,
 #define MASK_FILTER(val) (mask_filter == NULL || mask_filter [mline [val]])
 
   for (gint cl = 0; cl < cvmeta->height; cl++) {
+    cline = (gint32 *) (canvas_data + cl * cvmeta->stride[0]);
     mask_line_idx = (cl * mvmeta->height) / cvmeta->height;
     if (last_mask_line_idx != mask_line_idx) {
+      mline = mask_data + (mask_line_idx * mvmeta->stride[0]);
       mask_col_idx = 0;
       for (gint cc = 0; cc < cvmeta->width; cc++) {
         mask_col_idx = (cc * mvmeta->width) / cvmeta->width;
@@ -766,7 +768,6 @@ gst_segmentation_overlay_resampling (GstSegmentationOverlay * overlay,
         }
       }
       last_mask_line_idx = mask_line_idx;
-      mline = mask_data + (mask_line_idx * mvmeta->stride[0]);
       pcline = cline;
     } else {
       /* If current line would be generate from the same line from the mask
@@ -774,7 +775,6 @@ gst_segmentation_overlay_resampling (GstSegmentationOverlay * overlay,
        * line into the current line */
       memcpy (cline, pcline, sizeof (guint32) * cvmeta->width);
     }
-    cline = (gint32 *) (canvas_data + cl * cvmeta->stride[0]);
   }
 }
 
