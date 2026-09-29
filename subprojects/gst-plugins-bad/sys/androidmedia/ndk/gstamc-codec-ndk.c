@@ -516,8 +516,12 @@ gst_amc_codec_ndk_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
 
   ret = a_media_codec.dequeue_input_buffer (codec->ndk_media_codec, timeoutUs);
 
-  /* AMediaCodec's error code is the same as Java's MediaCodec, thus no
-   * translation is required. */
+  /* AMEDIA_ERROR_* codes are not INFO_* values; callers expect G_MININT. */
+  if (ret < 0 && ret != AMEDIACODEC_INFO_TRY_AGAIN_LATER) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to dequeue input buffer: %d", ret);
+    return G_MININT;
+  }
 
   return ret;
 }
@@ -537,10 +541,15 @@ gst_amc_codec_ndk_dequeue_output_buffer (GstAmcCodec * codec,
   if (ret == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED) {
     return gst_amc_codec_ndk_dequeue_output_buffer (codec, info, timeoutUs,
         err);
-  } else if (ret < 0) {
-    /* AMediaCodec's error code is the same as Java's MediaCodec, thus no
-     * translation is required. */
+  } else if (ret == AMEDIACODEC_INFO_TRY_AGAIN_LATER
+      || ret == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED) {
     return ret;
+  } else if (ret < 0) {
+    /* AMEDIA_ERROR_* codes (e.g. dequeue cancelled by a concurrent flush)
+     * are not INFO_* values; callers expect G_MININT. */
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Failed to dequeue output buffer: %d", ret);
+    return G_MININT;
   }
 
   info->flags = a_info.flags;
