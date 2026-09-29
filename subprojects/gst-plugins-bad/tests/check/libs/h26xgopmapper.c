@@ -235,7 +235,7 @@ GST_START_TEST (test_gop_with_b_frames)
 
 GST_END_TEST;
 
- /* Test for a GOP with B frames */
+/* Test for a GOP with B frames and b pyramid */
 GST_START_TEST (test_gop_with_b_pyramid)
 {
   gboolean ret;
@@ -247,8 +247,10 @@ GST_START_TEST (test_gop_with_b_pyramid)
     .b_pyramid = TRUE,          /* B pyramid */
     .highest_pyramid_level = 1,
     .num_iframes = 0,
+    .poc_step = 1,              /* H.265 POC spacing */
   };
   guint num_p_frames, num_b_frames, num_i_frames;
+  guint i;
 
   fail_unless (mapper != NULL, "Failed to create mapper");
 
@@ -272,6 +274,37 @@ GST_START_TEST (test_gop_with_b_pyramid)
   fail_unless (num_p_frames == 4, "Should have exactly 4 P frames");
   /* last B frame is replaced by a P frame */
   fail_unless (num_b_frames == 11, "Should have exactly 11 B frames");
+
+  /* Check the pyramid structure of the B frames: the reference POC offsets
+   * shall follow the POC spacing (poc_step), pointing at the surrounding
+   * reference frames, and no two B frames shall reference each other. */
+  gst_h26x_gop_mapper_reset_index (mapper);
+  for (i = 0; i < params.idr_period; i++) {
+    GstH26XGOP *gop = gst_h26x_gop_mapper_get_next (mapper);
+
+    if (gop->type != GST_H26X_GOP_TYPE_B)
+      continue;
+
+    switch (i % params.ip_period) {
+      case 1:                  /* first B in the mini-GOP */
+      case 3:                  /* last B in the mini-GOP */
+        fail_unless (gop->pyramid_level == 1 && !gop->is_ref,
+            "B frame at %u should be level 1 and non-ref", i);
+        fail_unless (gop->left_ref_poc_diff == -1
+            && gop->right_ref_poc_diff == 1,
+            "B frame at %u should reference its adjacent frames", i);
+        break;
+      case 2:                  /* the B acting as reference */
+        fail_unless (gop->pyramid_level == 0 && gop->is_ref,
+            "B frame at %u should be level 0 and ref", i);
+        fail_unless (gop->left_ref_poc_diff == -2
+            && gop->right_ref_poc_diff == 2,
+            "B frame at %u should reference the surrounding I/P frames", i);
+        break;
+      default:
+        fail ("Unexpected B frame at %u", i);
+    }
+  }
 }
 
 GST_END_TEST;

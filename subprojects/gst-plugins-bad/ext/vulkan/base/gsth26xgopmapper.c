@@ -129,17 +129,18 @@ struct PyramidInfo
 /* recursive function */
 static void
 gst_h26x_gop_mapper_set_b_pyramid_info (struct PyramidInfo *info, guint len,
-    guint current_level, guint highest_level)
+    guint current_level, guint highest_level, guint poc_step)
 {
   guint index;
+  gint step = poc_step;
 
   g_assert (len >= 1 && len <= 31);
 
   if (current_level == highest_level || len == 1) {
     for (index = 0; index < len; index++) {
       info[index].level = current_level;
-      info[index].left_ref_poc_diff = (index + 1) * -2;
-      info[index].right_ref_poc_diff = (len - index) * 2;
+      info[index].left_ref_poc_diff = (index + 1) * -step;
+      info[index].right_ref_poc_diff = (len - index) * step;
     }
 
     return;
@@ -147,19 +148,19 @@ gst_h26x_gop_mapper_set_b_pyramid_info (struct PyramidInfo *info, guint len,
 
   index = len / 2;
   info[index].level = current_level;
-  info[index].left_ref_poc_diff = (index + 1) * -2;
-  info[index].right_ref_poc_diff = (len - index) * 2;
+  info[index].left_ref_poc_diff = (index + 1) * -step;
+  info[index].right_ref_poc_diff = (len - index) * step;
 
   current_level++;
 
   if (index > 0) {
     gst_h26x_gop_mapper_set_b_pyramid_info (info, index, current_level,
-        highest_level);
+        highest_level, poc_step);
   }
 
   if (index + 1 < len) {
     gst_h26x_gop_mapper_set_b_pyramid_info (&info[index + 1], len - (index + 1),
-        current_level, highest_level);
+        current_level, highest_level, poc_step);
   }
 }
 
@@ -171,6 +172,9 @@ gst_h26x_gop_mapper_validate_params (GstH26XGOPParameters * params)
     return FALSE;
 
   if (params->b_pyramid && params->highest_pyramid_level == 0)
+    return FALSE;
+
+  if (params->b_pyramid && params->poc_step == 0)
     return FALSE;
 
   /* num_bframes must be <= 31 (maximum supported by pyramid_info array) */
@@ -213,7 +217,7 @@ gst_h26x_gop_mapper_generate (GstH26XGOPMapper * self)
 
   if (params->highest_pyramid_level > 0) {
     gst_h26x_gop_mapper_set_b_pyramid_info (pyramid_info, params->num_bframes,
-        0, params->highest_pyramid_level);
+        0, params->highest_pyramid_level, params->poc_step);
   }
 
   if (!self->frame_map) {

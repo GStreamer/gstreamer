@@ -84,6 +84,10 @@ struct _GstH26XGOPParameters
   guint32 highest_pyramid_level;
   /* I frames within a GOP. */
   guint32 num_iframes;
+  /* The POC increment between two consecutive frames in the GOP, used to
+   * compute the B pyramid reference POC offsets. H.264 encoders use 2,
+   * H.265 encoders use 1. Only meaningful when b_pyramid is set. */
+  guint32 poc_step;
 };
 
 /**

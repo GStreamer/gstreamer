@@ -712,6 +712,8 @@ gst_h264_encoder_reset (GstH264Encoder * self)
   priv->gop.params.num_bframes = priv->prop.num_bframes;
   priv->gop.params.num_iframes = priv->prop.num_iframes;
   priv->gop.params.b_pyramid = priv->prop.b_pyramid;
+  /* H.264 POC increments by 2 per frame. */
+  priv->gop.params.poc_step = 2;
   GST_OBJECT_UNLOCK (self);
 
   priv->stream.profile = GST_H264_PROFILE_INVALID;
