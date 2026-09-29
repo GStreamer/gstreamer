@@ -913,6 +913,30 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
   return TRUE;
 }
 
+static gboolean
+dpb_caps_is_equal (const GstCaps * a, const GstCaps * b)
+{
+  const GstStructure *as, *bs;
+  const gchar *afmt, *bfmt;
+  gint aw, ah, bw, bh;
+
+  as = gst_caps_get_structure (a, 0);
+  bs = gst_caps_get_structure (b, 0);
+
+  if (!gst_structure_get_int (as, "width", &aw)
+      || !gst_structure_get_int (as, "height", &ah)
+      || !gst_structure_get_int (bs, "width", &bw)
+      || !gst_structure_get_int (bs, "height", &bh))
+    return FALSE;
+
+  afmt = gst_structure_get_string (as, "format");
+  bfmt = gst_structure_get_string (bs, "format");
+  if (!(afmt && bfmt))
+    return FALSE;
+
+  return aw == bw && ah == bh && g_strcmp0 (afmt, bfmt) == 0;
+}
+
 /**
  * gst_vulkan_encoder_create_dpb_pool:
  * @self: a #GstVulkanEncoder
@@ -940,9 +964,22 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
   if (!priv->started)
     return FALSE;
 
-  if ((!priv->layered_dpb && priv->dpb_pool)
-      || (priv->layered_dpb && priv->layered_buffer))
+  if (priv->dpb_pool) {
+    GstCaps *old_caps = NULL;
+    gboolean keep_pool;
+
+    config = gst_buffer_pool_get_config (priv->dpb_pool);
+    gst_buffer_pool_config_get_params (config, &old_caps, NULL, NULL, NULL);
+    keep_pool = dpb_caps_is_equal (caps, old_caps);
+    gst_structure_free (config);
+
+    if (keep_pool) {
+      GST_INFO_OBJECT (self, "Reusing existing DPB pool");
+      return TRUE;
+    }
+
     _clear_dpb_pool (self);
+  }
 
   if (priv->layered_dpb) {
     min_buffers = max_buffers = 1;
@@ -983,8 +1020,6 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
     priv->layered_view =
         gst_vulkan_video_image_create_view (priv->layered_buffer,
         priv->layered_dpb, FALSE, NULL);
-
-    gst_clear_object (&priv->dpb_pool);
   }
 
   return TRUE;
