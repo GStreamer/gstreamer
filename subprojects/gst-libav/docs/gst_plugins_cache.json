@@ -78186,12 +78186,12 @@
                 "klass": "Codec/Encoder/Audio",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n       channels: [ 1, 2 ]\n           rate: [ 4000, 96000 ]\n         format: { U8, S16LE, S32LE }\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n       channels: [ 1, 16 ]\n           rate: [ 4000, 96000 ]\n         format: { U8, S16LE, S32LE }\n         layout: interleaved\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-tta:\n       channels: [ 1, 2 ]\n           rate: [ 4000, 96000 ]\n",
+                        "caps": "audio/x-tta:\n       channels: [ 1, 16 ]\n           rate: [ 4000, 96000 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -87558,7 +87558,7 @@
                 "klass": "Codec/Muxer",
                 "pad-templates": {
                     "audio_%%u": {
-                        "caps": "audio/x-tta:\n       channels: [ 1, 2 ]\n           rate: [ 4000, 96000 ]\n",
+                        "caps": "audio/x-tta:\n       channels: [ 1, 16 ]\n           rate: [ 4000, 96000 ]\n",
                         "direction": "sink",
                         "presence": "request"
                     },

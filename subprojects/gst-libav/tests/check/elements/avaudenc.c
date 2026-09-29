@@ -121,15 +121,11 @@ GST_START_TEST (test_audioenc_16_channels)
   GstBuffer *in_buf;
   GstCaps *caps;
   gint size;
-  GstAudioChannelPosition position[16];
-  /* 16ch hexadecagonal layout */
-  guint64 channel_mask = 0x3137D37;
 
-  h = gst_harness_new ("avenc_aac");
+  h = gst_harness_new ("avenc_tta");
   fail_unless (h != NULL);
 
-  gst_audio_channel_positions_from_mask (16, channel_mask, position);
-  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 44100, 16, position);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S32, 44100, 16, NULL);
 
   caps = gst_audio_info_to_caps (&info);
   gst_harness_set_src_caps (h, caps);
