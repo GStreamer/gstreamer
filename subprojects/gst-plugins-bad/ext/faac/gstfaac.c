@@ -518,7 +518,11 @@ gst_faac_open_encoder (GstFaac * faac, GstAudioInfo * info)
   /* clean up in case of re-configure */
   gst_faac_close_encoder (faac);
 
+#if FAAC_VERSION_MAJOR >= 2
+  if (faac_params_init (&params, sizeof (params)) < 0)
+#else
   if (faac_params_init (&params) < 0)
+#endif
     goto setup_failed;
 
   params.sample_rate = info->rate;
