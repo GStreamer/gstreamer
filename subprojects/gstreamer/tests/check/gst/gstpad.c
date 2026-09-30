@@ -2758,6 +2758,70 @@ GST_START_TEST (test_flush_stop_removes_sticky_events)
 
 GST_END_TEST;
 
+static gint instant_rate_change_count;
+
+static gboolean
+count_instant_rate_change_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_CHANGE)
+    instant_rate_change_count++;
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
+static GstPad *
+new_instant_rate_change_counting_sinkpad (void)
+{
+  GstPad *sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+
+  gst_pad_set_event_function (sinkpad, count_instant_rate_change_event);
+  gst_pad_set_chain_function (sinkpad, test_sticky_chain);
+  gst_pad_set_active (sinkpad, TRUE);
+  return sinkpad;
+}
+
+GST_START_TEST (test_non_serialized_sticky_event_pushed_only_once)
+{
+  GstPad *srcpad, *sinkpad, *new_sinkpad;
+  GstSegment seg;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  sinkpad = new_instant_rate_change_counting_sinkpad ();
+  gst_pad_set_active (srcpad, TRUE);
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start ("test")));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+
+  /* an old bug could cause such events to be sent out 2 times:
+   * once right after it's pushed, and again before a buffer is sent */
+  instant_rate_change_count = 0;
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_instant_rate_change (2.0, GST_SEGMENT_FLAG_NONE)));
+  fail_unless_equals_int (instant_rate_change_count, 1);
+
+  /* no accidental extra copies */
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless_equals_int (instant_rate_change_count, 1);
+
+  /* make sure that a new peer still gets it, though */
+  new_sinkpad = new_instant_rate_change_counting_sinkpad ();
+  fail_unless (gst_pad_unlink (srcpad, sinkpad));
+  fail_unless (gst_pad_link (srcpad, new_sinkpad) == GST_PAD_LINK_OK);
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless_equals_int (instant_rate_change_count, 2);
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (new_sinkpad);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   GstPad *srcpad;
@@ -3710,6 +3774,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
   tcase_add_test (tc_chain, test_sticky_events);
   tcase_add_test (tc_chain, test_flush_stop_removes_sticky_events);
+  tcase_add_test (tc_chain, test_non_serialized_sticky_event_pushed_only_once);
   tcase_add_test (tc_chain, test_sticky_events_relink_during_repush);
   tcase_add_test (tc_chain, test_last_flow_return_push);
   tcase_add_test (tc_chain, test_last_flow_return_pull);

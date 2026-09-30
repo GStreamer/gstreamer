@@ -537,6 +537,16 @@ found:
 
 /* should be called with OBJECT lock */
 static void
+mark_stored_event_received (GstPad * pad, GstEvent * event)
+{
+  PadEvent *ev = find_event (pad, event);
+
+  if (ev)
+    ev->received = TRUE;
+}
+
+/* should be called with OBJECT lock */
+static void
 remove_event_by_type (GstPad * pad, GstEventType type)
 {
   guint i, len;
@@ -5908,6 +5918,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     res = (check_sticky (pad, event) == GST_FLOW_OK);
   }
   if (!serialized || !sticky) {
+    GstEvent *stored = sticky ? gst_event_ref (event) : NULL;
     GstFlowReturn ret;
 
     /* non-serialized and non-sticky events are pushed right away. */
@@ -5915,6 +5926,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     /* dropped events by a probe are not an error */
     res = (ret == GST_FLOW_OK || ret == GST_FLOW_PROBE_DROPPED
         || ret == GST_FLOW_PROBE_HANDLED);
+
+    if (stored) {
+      if (ret == GST_FLOW_OK || ret == GST_FLOW_PROBE_HANDLED)
+        mark_stored_event_received (pad, stored);
+      gst_event_unref (stored);
+    }
   } else {
     /* Errors in sticky event pushing are no problem and ignored here
      * as they will cause more meaningful errors during data flow.
