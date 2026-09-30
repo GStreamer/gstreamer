@@ -128,9 +128,33 @@ create_sampler (GstVulkanFullScreenQuad * self, GError ** error)
   return TRUE;
 }
 
+/* Input images are sampled through one view per memory when an immutable
+ * (YCbCr conversion) sampler is set or the format has no planes (e.g.
+ * AHARDWARE_BUFFER), and through one view per plane otherwise, which also
+ * covers composite multi-planar images. */
+static gboolean
+use_in_memory_views (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
+
+  return priv->immutable_sampler
+      || GST_VIDEO_INFO_N_PLANES (&self->in_info) == 0;
+}
+
+static guint
+get_n_in_views (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
+
+  if (use_in_memory_views (self))
+    return gst_buffer_n_memory (priv->inbuf);
+
+  return GST_VIDEO_INFO_N_PLANES (&self->in_info);
+}
+
 static GstVulkanDescriptorSet *
 get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
-    GstVulkanImageView ** views, guint n_mems, GError ** error)
+    GstVulkanImageView ** views, GError ** error)
 {
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   GstVulkanDescriptorSet *set;
@@ -170,7 +194,7 @@ get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
       };
     }
 
-    for (i = 0; i < n_mems; i++) {
+    for (i = 0; i < get_n_in_views (self); i++) {
       image_info[i] = (VkDescriptorImageInfo) {
           .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
           .imageView = views[i]->view,
@@ -207,7 +231,7 @@ create_descriptor_set_layout (GstVulkanFullScreenQuad * self, GError ** error)
   VkDescriptorSetLayout descriptor_set_layout;
   int descriptor_n = 0;
   VkResult err;
-  int i, n_mems;
+  int i;
 
   /* *INDENT-OFF* */
   bindings[descriptor_n++] = (VkDescriptorSetLayoutBinding) {
@@ -217,11 +241,10 @@ create_descriptor_set_layout (GstVulkanFullScreenQuad * self, GError ** error)
       .pImmutableSamplers = NULL,
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
   };
-  n_mems = gst_buffer_n_memory (priv->inbuf);
   if (priv->immutable_sampler)
     immutable_sampler = (VkSampler) priv->immutable_sampler->handle;
 
-  for (i = 0; i < n_mems; i++) {
+  for (i = 0; i < get_n_in_views (self); i++) {
     /*
      * See the Vulkan spec "Sampler YCbCr Conversion" section:
      * VkSamplerYcbcrConversion must be fixed at pipeline creation time, which
@@ -310,10 +333,9 @@ create_render_pass (GstVulkanFullScreenQuad * self, GError ** error)
   VkSubpassDescription subpass;
   VkRenderPass render_pass;
   VkResult err;
-  int i, n_mems;
+  int i;
 
-  n_mems = gst_buffer_n_memory (priv->outbuf);
-  for (i = 0; i < n_mems; i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
     /* *INDENT-OFF* */
     color_attachments[i] = (VkAttachmentDescription) {
         .format = gst_vulkan_format_from_video_info (&self->out_info, i),
@@ -337,14 +359,14 @@ create_render_pass (GstVulkanFullScreenQuad * self, GError ** error)
   /* *INDENT-OFF* */
   subpass = (VkSubpassDescription) {
       .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-      .colorAttachmentCount = n_mems,
+      .colorAttachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
       .pColorAttachments = color_attachment_refs
   };
 
   render_pass_info = (VkRenderPassCreateInfo) {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
       .pNext = NULL,
-      .attachmentCount = n_mems,
+      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
       .pAttachments = color_attachments,
       .subpassCount = 1,
       .pSubpasses = &subpass
@@ -545,7 +567,7 @@ create_pipeline (GstVulkanFullScreenQuad * self, GError ** error)
       .pNext = NULL,
       .logicOpEnable = VK_FALSE,
       .logicOp = VK_LOGIC_OP_COPY,
-      .attachmentCount = gst_buffer_n_memory (priv->outbuf),
+      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
       .pAttachments = color_blend_attachments,
       .blendConstants = { 0.0f, 0.0f, 0.0f, 0.0f }
   };
@@ -585,7 +607,6 @@ create_pipeline (GstVulkanFullScreenQuad * self, GError ** error)
 static gboolean
 create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
 {
-  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   VkDescriptorPoolCreateInfo pool_info;
   gsize max_sets = 32;          /* FIXME: don't hardcode this! */
   VkDescriptorPoolSize pool_sizes[2];
@@ -596,7 +617,7 @@ create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
   /* *INDENT-OFF* */
   pool_sizes[0] = (VkDescriptorPoolSize) {
       .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-      .descriptorCount = max_sets * gst_buffer_n_memory (priv->inbuf),
+      .descriptorCount = max_sets * get_n_in_views (self),
   };
 
   pool_sizes[1] = (VkDescriptorPoolSize) {
@@ -633,7 +654,7 @@ create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
 
 static gboolean
 create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
-    guint n_mems, GError ** error)
+    GError ** error)
 {
   VkImageView attachments[GST_VIDEO_MAX_PLANES] = { 0, };
   VkFramebufferCreateInfo framebuffer_info;
@@ -641,7 +662,7 @@ create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
   VkResult err;
   int i;
 
-  for (i = 0; i < n_mems; i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
     attachments[i] = views[i]->view;
   }
 
@@ -650,7 +671,7 @@ create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
       .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
       .pNext = NULL,
       .renderPass = (VkRenderPass) self->render_pass->handle,
-      .attachmentCount = n_mems,
+      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
       .pAttachments = attachments,
       .width = GST_VIDEO_INFO_WIDTH (&self->out_info),
       .height = GST_VIDEO_INFO_HEIGHT (&self->out_info),
@@ -1386,7 +1407,7 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self, GError ** error)
   GstVulkanFullScreenQuadPrivate *priv;
   GstVulkanImageView *in_views[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanImageView *out_views[GST_VIDEO_MAX_PLANES] = { NULL, };
-  int i, n_mems;
+  int i;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
 
@@ -1404,24 +1425,40 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self, GError ** error)
       goto error;
 
   if (!self->descriptor_set) {
-    n_mems = gst_buffer_n_memory (priv->inbuf);
-    for (i = 0; i < n_mems; i++) {
-      GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->inbuf, i);
-      if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
-        g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
-            "Input memory must be a GstVulkanImageMemory");
+    guint n_in_views = get_n_in_views (self);
+
+    for (i = 0; i < n_in_views; i++) {
+      if (use_in_memory_views (self)) {
+        GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->inbuf, i);
+        if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
+          g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+              "Input memory must be a GstVulkanImageMemory");
+          goto error;
+        }
+        in_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
+        if (!in_views[i]) {
+          g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+              "Failed to create image view");
+          goto error;
+        }
+      } else if (!(in_views[i] = gst_vulkan_get_or_create_image_view_for_plane
+              (priv->inbuf, &self->in_info, i, error))) {
         goto error;
       }
-      in_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
     }
     if (!(self->descriptor_set =
-            get_and_update_descriptor_set (self, in_views, n_mems, error)))
+            get_and_update_descriptor_set (self, in_views, error)))
       goto error;
   }
 
   if (!self->framebuffer) {
-    n_mems = gst_buffer_n_memory (priv->outbuf);
-    for (i = 0; i < n_mems; i++) {
+    if (gst_buffer_n_memory (priv->outbuf) !=
+        GST_VIDEO_INFO_N_PLANES (&self->out_info)) {
+      g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+          "Composite multi-plane output images are not supported");
+      goto error;
+    }
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
       GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->outbuf, i);
       if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
         g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1430,7 +1467,7 @@ prepare_draw_internal (GstVulkanFullScreenQuad * self, GError ** error)
       }
       out_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
     }
-    if (!create_framebuffer (self, out_views, n_mems, error))
+    if (!create_framebuffer (self, out_views, error))
       goto error;
   }
 
@@ -1479,7 +1516,6 @@ fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
     GstVulkanCommandBuffer * cmd, GError ** error)
 {
   GstVulkanFullScreenQuadPrivate *priv;
-  guint n_out_mems;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
   g_return_val_if_fail (cmd != NULL, FALSE);
@@ -1491,8 +1527,6 @@ fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
   }
 
   priv = GET_PRIV (self);
-
-  n_out_mems = gst_buffer_n_memory (priv->outbuf);
 
   gst_vulkan_operation_add_dependency_frame (self->exec, priv->inbuf,
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
@@ -1528,7 +1562,7 @@ fill_command_buffer_internal (GstVulkanFullScreenQuad * self,
             GST_VIDEO_INFO_WIDTH (&self->out_info),
             GST_VIDEO_INFO_HEIGHT (&self->out_info)
         },
-        .clearValueCount = n_out_mems,
+        .clearValueCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
         .pClearValues = clearColors,
     };
     /* *INDENT-ON* */

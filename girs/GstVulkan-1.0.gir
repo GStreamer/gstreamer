@@ -8743,6 +8743,38 @@ properties.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="vulkan_get_or_create_image_view_for_plane" c:identifier="gst_vulkan_get_or_create_image_view_for_plane" version="1.30" throws="1">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">Like gst_vulkan_get_or_create_image_view(), but also handles @plane being
+packed into a single composite #GstVulkanImageMemory (@buffer has one
+memory), by deriving a single-plane view via the plane's own format and
+VK_IMAGE_ASPECT_PLANE_0_BIT &lt;&lt; @plane. That requires the image to be
+created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT (and
+VK_IMAGE_CREATE_EXTENDED_USAGE_BIT if its usage isn't supported by the
+plane's format); if it is missing, @error is set and %NULL is returned.
+
+Any other combination (more than one but fewer memories than planes) fails,
+as do formats without planes (e.g. %GST_VIDEO_FORMAT_DMA_DRM).</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">a #GstVulkanImageView for @plane, or
+         %NULL on failure</doc>
+        <type name="VulkanImageView" c:type="GstVulkanImageView*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">a #GstBuffer holding Vulkan image memories</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">the #GstVideoInfo describing @buffer's video format</doc>
+          <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+        </parameter>
+        <parameter name="plane" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">the video plane index to get a view for</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="vulkan_get_or_create_image_view_with_info" c:identifier="gst_vulkan_get_or_create_image_view_with_info" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">Create a new #GstVulkanImageView with a specific @create_info.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.h"/>

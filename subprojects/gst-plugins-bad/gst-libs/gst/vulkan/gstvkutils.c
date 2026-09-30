@@ -637,9 +637,20 @@ gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
         &_create_info);
     create_info = &_create_info;
   } else {
-    g_return_val_if_fail (create_info->format == image->create_info.format,
-        NULL);
     g_return_val_if_fail (create_info->image == image->image, NULL);
+    /* Differing format allowed only for a single-plane view (exactly one
+     * VK_IMAGE_ASPECT_PLANE_n_BIT, nothing else) of a mutable-format
+     * composite multi-plane image -- the one legitimate case this relaxes
+     * for (see gst_vulkan_get_or_create_image_view_for_plane()). Any other
+     * aspect mask combination still requires an exact format match. */
+    g_return_val_if_fail (create_info->format == image->create_info.format
+        || ((image->create_info.flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT)
+            && (create_info->subresourceRange.aspectMask ==
+                VK_IMAGE_ASPECT_PLANE_0_BIT
+                || create_info->subresourceRange.aspectMask ==
+                VK_IMAGE_ASPECT_PLANE_1_BIT
+                || create_info->subresourceRange.aspectMask ==
+                VK_IMAGE_ASPECT_PLANE_2_BIT)), NULL);
   }
 
   ret = gst_vulkan_image_memory_find_view (image,
@@ -651,6 +662,144 @@ gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
   }
 
   return ret;
+}
+
+/**
+ * gst_vulkan_get_or_create_image_view_for_plane:
+ * @buffer: a #GstBuffer holding Vulkan image memories
+ * @info: the #GstVideoInfo describing @buffer's video format
+ * @plane: the video plane index to get a view for
+ * @error: (out) (optional): a #GError to fill on failure
+ *
+ * Like gst_vulkan_get_or_create_image_view(), but also handles @plane being
+ * packed into a single composite #GstVulkanImageMemory (@buffer has one
+ * memory), by deriving a single-plane view via the plane's own format and
+ * VK_IMAGE_ASPECT_PLANE_0_BIT << @plane. That requires the image to be
+ * created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT (and
+ * VK_IMAGE_CREATE_EXTENDED_USAGE_BIT if its usage isn't supported by the
+ * plane's format); if it is missing, @error is set and %NULL is returned.
+ *
+ * Any other combination (more than one but fewer memories than planes) fails,
+ * as do formats without planes (e.g. %GST_VIDEO_FORMAT_DMA_DRM).
+ *
+ * Returns: (transfer full) (nullable): a #GstVulkanImageView for @plane, or
+ *          %NULL on failure
+ *
+ * Since: 1.30
+ */
+GstVulkanImageView *
+gst_vulkan_get_or_create_image_view_for_plane (GstBuffer * buffer,
+    const GstVideoInfo * info, guint plane, GError ** error)
+{
+  const GstVulkanFormatInfo *img_finfo;
+  guint n_planes, n_mems;
+  GstMemory *mem;
+  GstVulkanImageMemory *img_mem;
+  GstVulkanImageView *view;
+  VkFormat plane_format;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+
+  n_mems = gst_buffer_n_memory (buffer);
+  n_planes = GST_VIDEO_INFO_N_PLANES (info);
+  if (n_planes == 0) {
+    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Per-plane views are not supported for opaque format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+    return NULL;
+  }
+  g_return_val_if_fail (plane < n_planes, NULL);
+
+  if (n_mems == n_planes) {
+    mem = gst_buffer_peek_memory (buffer, plane);
+    if (!gst_is_vulkan_image_memory (mem)) {
+      g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+          "Buffer memory must be a GstVulkanImageMemory");
+      return NULL;
+    }
+    view = gst_vulkan_get_or_create_image_view ((GstVulkanImageMemory *) mem);
+    if (!view) {
+      g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+          "Failed to create image view");
+    }
+    return view;
+  }
+
+  if (n_mems != 1) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Buffers with more than one but fewer memories than video planes "
+        "are not supported");
+    return NULL;
+  }
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_vulkan_image_memory (mem)) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Buffer memory must be a GstVulkanImageMemory");
+    return NULL;
+  }
+  img_mem = (GstVulkanImageMemory *) mem;
+
+  img_finfo = gst_vulkan_format_get_info (img_mem->create_info.format);
+  if (!img_finfo || !(img_finfo->aspect & (VK_IMAGE_ASPECT_PLANE_0_BIT <<
+              plane))) {
+    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Image of format %i has no plane %u", img_mem->create_info.format,
+        plane);
+    return NULL;
+  }
+
+  /* info is only read, the function just isn't const-correct */
+  plane_format = gst_vulkan_format_from_video_info ((GstVideoInfo *) info,
+      plane);
+  if (plane_format == VK_FORMAT_UNDEFINED) {
+    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "No Vulkan format for plane %u of %s", plane,
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+    return NULL;
+  }
+
+  /* A view with a format other than the image's own requires a mutable-format
+   * image, e.g. images allocated for video decoding by drivers that don't
+   * allow it for the video profile. */
+  if (plane_format != img_mem->create_info.format
+      && !(img_mem->create_info.flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT)) {
+    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Cannot create a view for plane %u of a composite multi-plane image "
+        "created without VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT", plane);
+    return NULL;
+  }
+
+  /* Create plane view with VK_IMAGE_ASPECT_PLANE_X_BIT */
+
+  /* *INDENT-OFF* */
+  VkImageViewCreateInfo view_info = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .pNext = NULL,
+      .image = img_mem->image,
+      .format = plane_format,
+      .viewType = VK_IMAGE_VIEW_TYPE_2D,
+      .flags = 0,
+      .components = (VkComponentMapping) {
+          VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G,
+          VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A
+      },
+      .subresourceRange = (VkImageSubresourceRange) {
+          .aspectMask = VK_IMAGE_ASPECT_PLANE_0_BIT << plane,
+          .baseMipLevel = 0,
+          .levelCount = 1,
+          .baseArrayLayer = 0,
+          .layerCount = 1,
+      }
+  };
+  /* *INDENT-ON* */
+  view = gst_vulkan_get_or_create_image_view_with_info (img_mem, &view_info);
+  if (!view) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Failed to create image view with info");
+  }
+  return view;
 }
 
 #define SPIRV_MAGIC_NUMBER_NE 0x07230203

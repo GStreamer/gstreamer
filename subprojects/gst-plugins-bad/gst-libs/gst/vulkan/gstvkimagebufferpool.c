@@ -265,6 +265,59 @@ internal_config_get_allocation_params (GstStructure * config,
     gst_structure_get (config, "encode-caps", GST_TYPE_CAPS, encode_caps, NULL);
 }
 
+/* Returns the VkImageCreateFlags the driver allows for video images of
+ * @format with @usage, for every video profile of the pool, or 0 if they
+ * cannot be determined (e.g. no profiles, or @format not supported for
+ * @usage). */
+static VkImageCreateFlags
+_get_video_image_create_flags (GstVulkanImageBufferPool * vk_pool,
+    VkFormat format, VkImageUsageFlags usage)
+{
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
+  VkImageCreateFlags flags = ~((VkImageCreateFlags) 0);
+  guint i, j;
+
+  if (priv->n_profiles == 0)
+    return 0;
+
+  for (i = 0; i < priv->n_profiles; i++) {
+    GError *error = NULL;
+    GArray *fmts;
+    gboolean found = FALSE;
+
+    fmts = gst_vulkan_physical_device_get_video_formats (gpu, usage,
+        &priv->profiles[i].profile, &error);
+    if (!fmts) {
+      GST_DEBUG_OBJECT (vk_pool, "Failed to query video formats: %s",
+          error ? error->message : "unknown error");
+      g_clear_error (&error);
+      return 0;
+    }
+
+    for (j = 0; j < fmts->len; j++) {
+      VkVideoFormatPropertiesKHR *props =
+          &g_array_index (fmts, VkVideoFormatPropertiesKHR, j);
+
+      if (props->format == format) {
+        flags &= props->imageCreateFlags;
+        found = TRUE;
+        break;
+      }
+    }
+    g_array_unref (fmts);
+
+    if (!found)
+      return 0;
+  }
+
+  return flags;
+#else
+  return 0;
+#endif
+}
+
 static gboolean
 _is_video_usage (VkImageUsageFlags requested_usage)
 {
@@ -704,36 +757,42 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   if (_is_video_usage (requested_usage)) {
     GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
-    if (!gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)
-        || !_is_video_profile_independent (requested_usage)) {
-      guint n = 0;
+    /* Profile-independent images don't need the profiles to be created, but
+     * they are still used to query the video format properties (see
+     * _get_video_image_create_flags()) */
+    const gboolean profiles_required =
+        !gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)
+        || !_is_video_profile_independent (requested_usage);
+    guint n = 0;
 
 #if defined(VK_KHR_video_decode_queue)
-      if (decode_caps && ((requested_usage
-                  & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-                      | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
-        n++;
-        if (gst_vulkan_video_profile_from_caps (&priv->
-                profiles[priv->n_profiles], decode_caps,
-                GST_VULKAN_VIDEO_OPERATION_DECODE))
-          priv->n_profiles++;
-      }
+    if (decode_caps && ((requested_usage
+                & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+                    | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
+      n++;
+      if (gst_vulkan_video_profile_from_caps (&priv->profiles[priv->n_profiles],
+              decode_caps, GST_VULKAN_VIDEO_OPERATION_DECODE))
+        priv->n_profiles++;
+    }
 #endif
 #if defined(VK_KHR_video_encode_queue)
-      if (encode_caps && ((requested_usage
-                  & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
-                      | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
-        n++;
-        if (gst_vulkan_video_profile_from_caps (&priv->
-                profiles[priv->n_profiles], encode_caps,
-                GST_VULKAN_VIDEO_OPERATION_ENCODE))
-          priv->n_profiles++;
-      }
+    if (encode_caps && ((requested_usage
+                & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+                    | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
+      n++;
+      if (gst_vulkan_video_profile_from_caps (&priv->profiles[priv->n_profiles],
+              encode_caps, GST_VULKAN_VIDEO_OPERATION_ENCODE))
+        priv->n_profiles++;
+    }
 #endif
+    if (profiles_required) {
       if (priv->n_profiles != n)
         goto missing_profile;
       if (priv->n_profiles == 0)
         GST_WARNING ("Vulkan video image allocation without video profiles");
+    } else if (priv->n_profiles != n) {
+      /* an incomplete profile set only disables the per-plane view flags */
+      priv->n_profiles = 0;
     }
   }
 #endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
@@ -757,22 +816,42 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     goto no_vk_format;
 
   {
-    gboolean sampleable;
-    const GstVulkanFormatMap *vkmap;
-
-    sampleable = ((requested_usage &
+    const gboolean sampleable = ((requested_usage &
             (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)) != 0);
 
     priv->img_flags = 0;
 
-    if (sampleable && !_is_video_usage (requested_usage)) {
-      vkmap = gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
+    if (sampleable) {
+      const GstVulkanFormatMap *vkmap =
+          gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
       const gboolean is_per_plane_alloc = vkmap->vkfrmt != priv->vk_fmts[0];
-      priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
-      if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1
-          && (is_per_plane_alloc || want_multiplanar_opt)) {
-        priv->img_flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
-            | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT;
+      const gboolean is_video_usage = _is_video_usage (requested_usage);
+      const VkImageCreateFlags mutable_extended_flags =
+          VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+          | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT;
+      const gboolean is_multiplane =
+          GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1;
+      gboolean video_allows_plane_views = FALSE;
+
+      /* video images may use these flags only if the driver allows them for
+       * the video profiles and the actual usage of the images */
+      if (is_video_usage && is_multiplane) {
+        VkImageCreateFlags video_flags =
+            _get_video_image_create_flags (vk_pool, priv->vk_fmts[0],
+            requested_usage);
+
+        video_allows_plane_views =
+            (video_flags & mutable_extended_flags) == mutable_extended_flags;
+        GST_DEBUG_OBJECT (pool, "video image create flags 0x%x, per-plane "
+            "views %sallowed", video_flags,
+            video_allows_plane_views ? "" : "not ");
+      }
+
+      if (!is_video_usage)
+        priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
+      if (is_multiplane && (is_video_usage ? video_allows_plane_views
+              : (is_per_plane_alloc || want_multiplanar_opt))) {
+        priv->img_flags |= mutable_extended_flags;
       }
     }
   }

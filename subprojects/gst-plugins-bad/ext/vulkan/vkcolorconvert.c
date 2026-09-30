@@ -33,6 +33,7 @@
 
 #include "vkcolorconvert.h"
 
+#include "gstvkutils.h"
 #include "shaders/identity.vert.h"
 #include "shaders/swizzle.frag.h"
 #include "shaders/swizzle_and_clobber_alpha.frag.h"
@@ -612,9 +613,9 @@ calculate_reorder_indexes (GstVideoFormat in_format,
   out_finfo = gst_video_format_get_info (out_format);
 
   for (i = 0; i < in_finfo->n_planes; i++)
-    in_vk_formats[i] = in_views[i]->image->create_info.format;
+    in_vk_formats[i] = in_views[i]->create_info.format;
   for (i = 0; i < out_finfo->n_planes; i++)
-    out_vk_formats[i] = out_views[i]->image->create_info.format;
+    out_vk_formats[i] = out_views[i]->create_info.format;
 
   get_vulkan_format_swizzle_order (in_format, in_vk_formats, in_vk_order);
   video_format_to_reorder (in_format, in_reorder, TRUE);
@@ -1268,6 +1269,47 @@ gst_vulkan_color_convert_stop (GstBaseTransform * bt)
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (bt);
 }
 
+/* Copies the top-left plane-sized region of the scratch render of @plane
+ * (sub-sampled planes are already rendered down-sampled into that corner, see
+ * the blit below) into the matching plane of the composite multi-planar image
+ * @dst. */
+static void
+copy_plane_to_composite (GstVulkanColorConvert * conv,
+    GstVulkanCommandBuffer * cmd_buf, GstVulkanImageMemory * scratch,
+    GstVulkanImageMemory * dst, guint plane)
+{
+  GstVulkanBarrierState *barriers =
+      gst_vulkan_operation_get_barriers (conv->quad->exec);
+  VkImageCopy copy = { 0, };
+  gint plane_width, plane_height;
+
+  video_info_get_plane_dimensions (&conv->quad->out_info, plane, &plane_width,
+      &plane_height);
+
+  gst_vulkan_barrier_state_add_image_barrier (barriers, scratch,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, NULL);
+  gst_vulkan_barrier_state_add_image_barrier (barriers, dst,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, NULL);
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, cmd_buf, 0);
+
+  copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  copy.srcSubresource.layerCount = 1;
+  copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_PLANE_0_BIT << plane;
+  copy.dstSubresource.layerCount = 1;
+  copy.extent.width = plane_width;
+  copy.extent.height = plane_height;
+  copy.extent.depth = 1;
+
+  GST_LOG_OBJECT (conv, "copying plane %u into composite image %p", plane, dst);
+  vkCmdCopyImage (cmd_buf->cmd, scratch->image,
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+}
+
 static GstFlowReturn
 gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -1282,29 +1324,38 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstBuffer *render_buf = NULL;
   GError *error = NULL;
   int i;
-  guint in_n_mems, out_n_mems;
+  guint out_n_mems;
+  guint in_n_planes, out_n_planes;
   gboolean need_render_buf = FALSE;
+  gboolean composite_out;
 
-  in_n_mems = gst_buffer_n_memory (inbuf);
   out_n_mems = gst_buffer_n_memory (outbuf);
+  out_n_planes = GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info);
+  in_n_planes = GST_VIDEO_INFO_N_PLANES (&conv->quad->in_info);
+
+  /* All planes packed into a single composite multi-planar image */
+  composite_out = (out_n_mems == 1 && out_n_planes > 1);
+
+  if (out_n_mems != out_n_planes && !composite_out) {
+    g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Output buffers with more than one but fewer memories than video "
+        "planes are not supported");
+    goto error;
+  }
 
   if (!gst_vulkan_full_screen_quad_set_input_buffer (conv->quad, inbuf, &error))
     goto error;
 
-  for (i = 0; i < in_n_mems; i++) {
-    GstMemory *img_mem = gst_buffer_peek_memory (inbuf, i);
-    if (!gst_is_vulkan_image_memory (img_mem)) {
-      g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
-          "Input memory must be a GstVulkanImageMemory");
+  for (i = 0; i < in_n_planes; i++) {
+    if (!(in_img_views[i] = gst_vulkan_get_or_create_image_view_for_plane
+            (inbuf, &conv->quad->in_info, i, &error)))
       goto error;
-    }
-    in_img_views[i] =
-        gst_vulkan_get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
-    // image views are kept alive by the parent image
   }
 
-  for (i = 0; i < out_n_mems; i++) {
-    GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
+  for (i = 0; i < out_n_planes; i++) {
+    GstMemory *mem =
+        gst_vulkan_buffer_peek_plane_memory (outbuf, &conv->quad->out_info, i,
+        NULL);
     gint plane_width, plane_height;
 
     if (!gst_is_vulkan_image_memory (mem)) {
@@ -1316,7 +1367,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
     video_info_get_plane_dimensions (&conv->quad->out_info, i, &plane_width,
         &plane_height);
-    if (GST_VIDEO_INFO_WIDTH (&conv->quad->out_info) ==
+    if (!composite_out && GST_VIDEO_INFO_WIDTH (&conv->quad->out_info) ==
         plane_width
         && GST_VIDEO_INFO_HEIGHT (&conv->quad->out_info) == plane_height) {
       render_img_mems[i] = out_img_mems[i];
@@ -1347,7 +1398,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
   if (need_render_buf) {
     render_buf = gst_buffer_new ();
-    for (i = 0; i < out_n_mems; i++) {
+    for (i = 0; i < out_n_planes; i++) {
       if (render_img_mems[i] == out_img_mems[i])
         gst_memory_ref ((GstMemory *) render_img_mems[i]);
 
@@ -1357,7 +1408,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     render_buf = outbuf;
   }
 
-  for (i = 0; i < out_n_mems; i++) {
+  for (i = 0; i < out_n_planes; i++) {
     GstMemory *img_mem = gst_buffer_peek_memory (render_buf, i);
     if (!gst_is_vulkan_image_memory (img_mem)) {
       g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1398,8 +1449,11 @@ again:
   }
   gst_vulkan_command_buffer_unlock (cmd_buf);
 
-  for (i = 0; i < out_n_mems; i++) {
-    if (render_img_mems[i] != out_img_mems[i]) {
+  for (i = 0; i < out_n_planes; i++) {
+    if (composite_out) {
+      copy_plane_to_composite (conv, cmd_buf, render_img_mems[i],
+          out_img_mems[i], i);
+    } else if (render_img_mems[i] != out_img_mems[i]) {
       GstVulkanBarrierState *barriers =
           gst_vulkan_operation_get_barriers (conv->quad->exec);
       VkImageBlit blit;
@@ -1467,9 +1521,9 @@ again:
     goto error;
   }
 
-  for (i = 0; i < in_n_mems; i++)
+  for (i = 0; i < in_n_planes; i++)
     gst_clear_vulkan_image_view (&in_img_views[i]);
-  for (i = 0; i < out_n_mems; i++)
+  for (i = 0; i < out_n_planes; i++)
     gst_clear_vulkan_image_view (&render_img_views[i]);
 
   if (need_render_buf) {
@@ -1490,9 +1544,9 @@ again:
   return GST_FLOW_OK;
 
 error:
-  for (i = 0; i < in_n_mems; i++)
+  for (i = 0; i < in_n_planes; i++)
     gst_clear_vulkan_image_view (&in_img_views[i]);
-  for (i = 0; i < out_n_mems; i++)
+  for (i = 0; i < out_n_planes; i++)
     gst_clear_vulkan_image_view (&render_img_views[i]);
 
   if (need_render_buf)
