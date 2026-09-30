@@ -55,6 +55,7 @@
 /* OpenGL for desktop systems */
 #if GST_GL_HAVE_OPENGL
 # ifdef __APPLE__
+#  include <AvailabilityMacros.h>
 #  if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
 #   define GL_SILENCE_DEPRECATION
 #  endif

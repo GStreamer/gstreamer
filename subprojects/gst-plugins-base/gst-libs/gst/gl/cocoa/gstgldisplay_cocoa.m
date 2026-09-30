@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <AvailabilityMacros.h>
+
 #if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
 # define GL_SILENCE_DEPRECATION
 #endif
@@ -39,6 +41,10 @@ static guintptr gst_gl_display_cocoa_get_handle (GstGLDisplay * display);
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSEventMaskAny                       NSAnyEventMask
+#endif
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
 #endif
 
 static void
@@ -85,3 +91,7 @@ gst_gl_display_cocoa_get_handle (GstGLDisplay * display)
 {
   return (guintptr) NSApp;
 }
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_END_IGNORE_DEPRECATIONS;
+#endif

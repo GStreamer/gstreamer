@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <AvailabilityMacros.h>
+
 #if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
 # define GL_SILENCE_DEPRECATION
 #endif
@@ -70,6 +72,10 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
   context_class->get_config =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_get_config);
 }
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+#endif
 
 static void
 gst_gl_context_cocoa_init (GstGLContextCocoa * context)
@@ -425,3 +431,7 @@ gst_gl_context_cocoa_get_config (GstGLContext * context)
 
   return cgl_pixel_format_to_structure (cocoa->priv->pixel_format);
 }
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_END_IGNORE_DEPRECATIONS;
+#endif

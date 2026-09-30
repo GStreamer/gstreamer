@@ -29,6 +29,8 @@
 #include "config.h"
 #endif
 
+#include <AvailabilityMacros.h>
+
 #include "avsamplevideosink.h"
 #include "helpers.h"
 
@@ -76,6 +78,11 @@ G_DEFINE_TYPE_WITH_CODE (GstAVSampleVideoSink, gst_av_sample_video_sink,
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avsamplebufferlayersink,
     "avsamplebufferlayersink", GST_RANK_NONE,
     GST_TYPE_AV_SAMPLE_VIDEO_SINK, gst_applemedia_init_once ());
+
+/* Undeprecate AVFoundation sample buffer APIs -- starting 15.0 */
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 150000
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+#endif
 
 static void
 gst_av_sample_video_sink_class_init (GstAVSampleVideoSinkClass * klass)
@@ -843,3 +850,7 @@ config_failed:
     return FALSE;
   }
 }
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 150000
+G_GNUC_END_IGNORE_DEPRECATIONS;
+#endif

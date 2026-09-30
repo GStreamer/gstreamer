@@ -47,6 +47,8 @@
 #  include <config.h>
 #endif
 
+#include <AvailabilityMacros.h>
+
 #include "avfassetsrc.h"
 #include "helpers.h"
 #include "coremediabuffer.h"
@@ -145,6 +147,11 @@ static void gst_avf_asset_src_uri_handler_init (gpointer g_iface,
 
 static void gst_avf_asset_src_send_audio_eos (GstAVFAssetSrc * self);
 static void gst_avf_asset_src_send_video_eos (GstAVFAssetSrc * self);
+
+/* Undeprecate AVFoundation track APIs -- starting 15.0 */
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 150000
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+#endif
 
 static gboolean
 gst_avf_asset_src_register_supplemental_decoders_if_needed (NSArray * tracks)
@@ -1438,3 +1445,7 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 }
 
 @end
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 150000
+G_GNUC_END_IGNORE_DEPRECATIONS;
+#endif

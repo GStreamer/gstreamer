@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <AvailabilityMacros.h>
+
 #if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
 # define GL_SILENCE_DEPRECATION
 #endif
@@ -46,6 +48,10 @@ _init_debug (void)
     g_once_init_leave (&_init, 1);
   }
 }
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+#endif
 
 @implementation GstGLCAOpenGLLayer
 - (void)dealloc {
@@ -318,3 +324,7 @@ _context_ready (gpointer data)
 }
 
 @end
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_END_IGNORE_DEPRECATIONS;
+#endif

@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <AvailabilityMacros.h>
+
 #if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
 # define GL_SILENCE_DEPRECATION
 #endif
@@ -95,6 +97,10 @@ gst_gl_cocoa_keycode_to_keyname (NSEvent *event)
     default: return [event characters].UTF8String;
   }
 }
+
+#if defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+#endif
 
 /* =============================================================*/
 /*                                                              */
@@ -937,6 +943,10 @@ close_window_cb (gpointer data)
 }
 
 @end
+
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 260000
+G_GNUC_END_IGNORE_DEPRECATIONS;
+#endif
 
 void
 _gst_gl_invoke_on_main (GstGLWindowCB func, gpointer data, GDestroyNotify notify)
