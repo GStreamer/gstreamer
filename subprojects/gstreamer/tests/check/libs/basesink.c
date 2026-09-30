@@ -345,6 +345,70 @@ GST_START_TEST (basesink_stream_start_after_eos)
 
 GST_END_TEST;
 
+GST_START_TEST (basesink_instant_rate_change_segment)
+{
+  GstElement *pipeline, *sink;
+  GstPad *pad;
+  GstEvent *ev;
+  GstSegment segment;
+  GstSegment *sink_segment;
+  gint64 position_before, position_after;
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "async", FALSE, "sync", TRUE, NULL);
+  pad = gst_element_get_static_pad (sink, "sink");
+  sink_segment = &GST_BASE_SINK (sink)->segment;
+
+  pipeline = gst_pipeline_new (NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+
+  ev = gst_event_new_stream_start ("test");
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  /* time, applied rate and flags shouldn't change
+   * after just an instant rate change */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 20 * GST_SECOND;
+  segment.position = 20 * GST_SECOND;
+  segment.time = 10 * GST_SECOND;
+  segment.applied_rate = 0.5;
+  segment.flags = GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS;
+  ev = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  fail_unless (gst_element_query_position (pipeline, GST_FORMAT_TIME,
+          &position_before));
+
+  /* sink posts instant-rate-request, pipeline answers with
+   * instant-rate-sync-time and then sink updates its segment */
+  ev = gst_event_new_instant_rate_change (2.0, 0);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  /* only the rate changes */
+  fail_unless_equals_float (sink_segment->rate, 2.0);
+  fail_unless_equals_uint64 (sink_segment->time, 10 * GST_SECOND);
+  fail_unless_equals_float (sink_segment->applied_rate, 0.5);
+  fail_unless_equals_int (sink_segment->flags,
+      GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS);
+
+  /* time != start in our initial segment, so if time was reset by the seek,
+   * we'd see the position jump */
+  fail_unless (gst_element_query_position (pipeline, GST_FORMAT_TIME,
+          &position_after));
+  fail_unless_equals_int64 (position_after, position_before);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -358,6 +422,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesink_test_eos_after_playing);
   tcase_add_test (tc, basesink_position_query_handles_segment_offset);
   tcase_add_test (tc, basesink_stream_start_after_eos);
+  tcase_add_test (tc, basesink_instant_rate_change_segment);
 
   return s;
 }

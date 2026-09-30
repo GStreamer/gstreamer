@@ -4539,6 +4539,9 @@ gst_base_sink_perform_instant_rate_change (GstBaseSink * sink, GstPad * pad,
 
   GstClockTime switch_time;
   gint res;
+  guint64 segment_time;
+  gdouble segment_applied_rate;
+  GstSegmentFlags segment_flags;
 
   priv = sink->priv;
 
@@ -4607,10 +4610,18 @@ gst_base_sink_perform_instant_rate_change (GstBaseSink * sink, GstPad * pad,
   /* Calculate new output rate based on upstream value */
   rate *= sink->priv->upstream_segment.rate;
 
-  gst_segment_do_seek (&sink->segment, rate, GST_FORMAT_TIME,
-      sink->segment.flags & (~GST_SEEK_FLAG_FLUSH) &
-      GST_SEEK_FLAG_INSTANT_RATE_CHANGE, GST_SEEK_TYPE_NONE, -1,
-      GST_SEEK_TYPE_NONE, -1, NULL);
+  /* do_seek() below can change these, but an instant rate change shouldn't,
+   * so let's manually restore them afterwards to avoid e.g. stream time jumps */
+  segment_time = sink->segment.time;
+  segment_applied_rate = sink->segment.applied_rate;
+  segment_flags = sink->segment.flags;
+
+  gst_segment_do_seek (&sink->segment, rate, GST_FORMAT_TIME, 0,
+      GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_NONE, -1, NULL);
+
+  sink->segment.time = segment_time;
+  sink->segment.applied_rate = segment_applied_rate;
+  sink->segment.flags = segment_flags;
 
   GST_DEBUG_OBJECT (sink, "Adjusted segment is now %" GST_SEGMENT_FORMAT,
       &sink->segment);
