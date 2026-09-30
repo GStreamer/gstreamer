@@ -612,12 +612,14 @@ build vs2022 amd64 full-static:
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
   variables:
+    # Disable old decklink plugin due to symbol conflicts in their separate SDKs
     MESON_ARGS: >-
       -Dintrospection=disabled
       -Dpython=disabled
       -Dlibav=disabled
       -Ddoc=disabled
       -Dgst-full-target-type=static_library
+      -Dgst-plugins-bad:decklink=disabled
     # Work around Meson issues if this env var contains characters that
     # cannot be represented in the active code page (e.g. CP1252)
     CI_COMMIT_AUTHOR: null
