@@ -22,6 +22,8 @@
 
 #include <gst/vulkan/gstvkqueue.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_VULKAN_OPERATION         (gst_vulkan_operation_get_type())
 #define GST_VULKAN_OPERATION(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_OPERATION, GstVulkanOperation))
 #define GST_VULKAN_OPERATION_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_VULKAN_OPERATION, GstVulkanOperationClass))
@@ -153,3 +155,5 @@ gboolean                gst_vulkan_operation_end_query          (GstVulkanOperat
                                                                  guint32 id);
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_use_sync2          (GstVulkanOperation * self);
+
+G_END_DECLS

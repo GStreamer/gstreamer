@@ -22,6 +22,8 @@
 
 #include <gst/vulkan/gstvkdevice.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_VULKAN_BARRIER_STATE         (gst_vulkan_barrier_state_get_type())
 #define GST_VULKAN_BARRIER_STATE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_BARRIER_STATE, GstVulkanBarrierState))
 #define GST_VULKAN_BARRIER_STATE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_VULKAN_BARRIER_STATE, GstVulkanBarrierStateClass))
@@ -148,3 +150,5 @@ void                    gst_vulkan_barrier_state_foreach_timeline_semaphore_unlo
 GST_VULKAN_API
 void                    gst_vulkan_barrier_state_unlock         (GstVulkanBarrierState *self,
                                                                  gpointer state);
+
+G_END_DECLS
