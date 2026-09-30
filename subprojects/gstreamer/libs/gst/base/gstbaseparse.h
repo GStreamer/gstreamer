@@ -244,7 +244,9 @@ struct _GstBaseParseClass {
 
   /**
    * GstBaseParseClass::handle_frame:
-   * @skipsize: (out):
+   * @skipsize: (out): amount of bytes to skip from the start of the
+   *   frame if no frame could be parsed, 0 if no skipping is needed.
+   *   Negative values are invalid.
    *
    * Parses the input data into valid frames as defined by subclass
    * which should be passed to gst_base_parse_finish_frame().
