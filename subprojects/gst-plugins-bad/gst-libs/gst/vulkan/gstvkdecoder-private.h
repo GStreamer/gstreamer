@@ -209,4 +209,7 @@ gboolean               gst_vulkan_decoder_wait                  (GstVulkanDecode
 GST_VULKAN_API
 gboolean               gst_vulkan_decoder_has_feature           (GstVulkanDecoder * self, guint32 feature);
 
+GST_VULKAN_API
+VkImageUsageFlags      gst_vulkan_decoder_output_usage          (GstBufferPool * pool);
+
 G_END_DECLS

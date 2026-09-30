@@ -401,8 +401,7 @@ gst_vulkan_h265_decoder_decide_allocation (GstVideoDecoder * decoder,
     pool = gst_vulkan_image_buffer_pool_new (self->device);
   }
 
-  usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
-      | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR;
+  usage = gst_vulkan_decoder_output_usage (pool);
 
   if (!self->decoder->dedicated_dpb) {
     min = MAX (min, MIN (self->dpb_size, vk_caps.caps.maxDpbSlots));

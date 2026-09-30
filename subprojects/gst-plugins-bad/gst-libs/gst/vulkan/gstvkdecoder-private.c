@@ -24,6 +24,7 @@
 
 #include "gstvkdecoder-private.h"
 
+#include "gstvkimagebufferpool.h"
 #include "gstvkoperation.h"
 #include "gstvkphysicaldevice-private.h"
 #include "gstvkvideo-private.h"
@@ -1354,4 +1355,39 @@ gst_vulkan_decoder_has_feature (GstVulkanDecoder * self, guint32 features)
   priv = gst_vulkan_decoder_get_instance_private (self);
 
   return ((priv->features & features) != 0);
+}
+
+/* Usage flags the decoder always requires for its output images. */
+#define GST_VULKAN_DECODER_IMAGE_USAGE_DEFAULT \
+  ((VkImageUsageFlags) (VK_IMAGE_USAGE_TRANSFER_SRC_BIT | \
+   VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR))
+
+/* Peer pool usage bits safe to combine with video-decode output usage.
+ * Excludes the bits already in GST_VULKAN_DECODER_IMAGE_USAGE_DEFAULT. */
+#define GST_VULKAN_DECODER_PEER_IMAGE_USAGE_MASK \
+  ((VkImageUsageFlags) (VK_IMAGE_USAGE_TRANSFER_DST_BIT | \
+   VK_IMAGE_USAGE_STORAGE_BIT))
+
+/**
+ * gst_vulkan_decoder_output_usage:
+ * @pool: a #GstVulkanImageBufferPool
+ *
+ * Returns: the usage flags required by the decoder for its output images,
+ * combined with the usage flags explicitly configured on @pool that are safe
+ * to use alongside video decode output
+ */
+VkImageUsageFlags
+gst_vulkan_decoder_output_usage (GstBufferPool * pool)
+{
+  GstStructure *config;
+  VkImageUsageFlags pool_usage = 0;
+
+  g_return_val_if_fail (GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool), 0);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_structure_get_uint (config, "usage", &pool_usage);
+  gst_structure_free (config);
+
+  return GST_VULKAN_DECODER_IMAGE_USAGE_DEFAULT |
+      (pool_usage & GST_VULKAN_DECODER_PEER_IMAGE_USAGE_MASK);
 }
