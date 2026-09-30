@@ -131,6 +131,23 @@ nal_reader_get_remaining (const NalReader * nr)
   return (nr->size - nr->byte) * 8 + nr->bits_in_cache;
 }
 
+/* Like nal_reader_get_remaining() but only counts the remaining RBSP payload
+ * bits, i.e. skips emulation prevention bytes and any RBSP trailing bits. */
+guint
+nal_reader_get_remaining_payload_bits (NalReader * nr)
+{
+  NalReader tmp = *nr;
+  guint remaining = 0;
+
+  while (nal_reader_has_more_data (&tmp)) {
+    if (!nal_reader_skip (&tmp, 8))
+      break;
+    remaining += 8;
+  }
+
+  return remaining;
+}
+
 guint
 nal_reader_get_epb_count (const NalReader * nr)
 {
