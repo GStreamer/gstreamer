@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvkimagememory.h"
+#include "gstvkphysicaldevice-private.h"
 
 /**
  * SECTION:vkimagememory
@@ -76,12 +77,23 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_image_memory_init_with_external_semaphore:
+ * @ext_flags: VkExternalSemaphoreHandleTypeFlags
+ *
+ * Like gst_vulkan_image_memory_init() but also creates the backing timeline
+ * semaphore with the export capability given by @ext_flags.
+ *
+ * Returns: whether the memory was initialized
+ *
+ * Since: 1.30
+ */
 gboolean
-gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
-    GstAllocator * allocator, GstMemory * parent, GstVulkanDevice * device,
+gst_vulkan_image_memory_init_with_external_semaphore (GstVulkanImageMemory *
+    mem, GstAllocator * allocator, GstMemory * parent, GstVulkanDevice * device,
     VkFormat format, VkImageUsageFlags usage, VkImageLayout layout,
     GstAllocationParams * params, gsize size, gpointer user_data,
-    GDestroyNotify notify)
+    GDestroyNotify notify, VkExternalSemaphoreHandleTypeFlags ext_flags)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -119,7 +131,10 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
 
   mem->views = g_ptr_array_new ();
   mem->outstanding_views = g_ptr_array_new ();
-  mem->timeline_semaphore = gst_vulkan_timeline_semaphore_new (device);
+  mem->timeline_semaphore =
+      gst_vulkan_timeline_semaphore_new_with_exportable (device, ext_flags);
+  if (!mem->timeline_semaphore)
+    return FALSE;
 
   GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY,
       "new Vulkan Image memory:%p size:%" G_GSIZE_FORMAT, mem, maxsize);
@@ -127,11 +142,61 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
   return TRUE;
 }
 
+gboolean
+gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
+    GstAllocator * allocator, GstMemory * parent, GstVulkanDevice * device,
+    VkFormat format, VkImageUsageFlags usage, VkImageLayout layout,
+    GstAllocationParams * params, gsize size, gpointer user_data,
+    GDestroyNotify notify)
+{
+  return gst_vulkan_image_memory_init_with_external_semaphore (mem, allocator,
+      parent, device, format, usage, layout, params, size, user_data, notify,
+      0);
+}
+
+static void
+gst_get_memory_requirements2 (GstVulkanDevice * device, VkImage image,
+    VkMemoryRequirements * requirements, void *pNext)
+{
+  VkMemoryRequirements2 reqs2 = {
+    .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+    .pNext = pNext,
+  };
+  VkImageMemoryRequirementsInfo2 reqs_info = {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
+    .pNext = NULL,
+    .image = image,
+  };
+  PFN_vkGetImageMemoryRequirements2KHR get_reqs2 = NULL;
+
+  if (gst_vulkan_physical_device_check_api_version (device->physical_device,
+          1, 1, 0)) {
+    get_reqs2 = (PFN_vkGetImageMemoryRequirements2)
+        gst_vulkan_device_get_proc_address (device,
+        "vkGetImageMemoryRequirements2");
+  }
+  if (!get_reqs2 && gst_vulkan_device_is_extension_enabled (device,
+          VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME)) {
+    get_reqs2 = (PFN_vkGetImageMemoryRequirements2KHR)
+        gst_vulkan_device_get_proc_address (device,
+        "vkGetImageMemoryRequirements2KHR");
+  }
+
+  if (get_reqs2) {
+    get_reqs2 (device->device, &reqs_info, &reqs2);
+    *requirements = reqs2.memoryRequirements;
+  } else {
+    /* No 2-variant available: base query, no dedicated-allocation hint. */
+    vkGetImageMemoryRequirements (device->device, image, requirements);
+  }
+}
+
 static GstVulkanImageMemory *
 _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
     GstMemory * parent, GstVulkanDevice * device,
     const VkImageCreateInfo * image_info, VkMemoryPropertyFlags mem_prop_flags,
-    gpointer user_data, GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify,
+    VkExternalSemaphoreHandleTypeFlags ext_sem_handle_types)
 {
   GstVulkanImageMemory *mem = NULL;
   GstAllocationParams params = { 0, };
@@ -141,6 +206,13 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   guint32 type_idx;
   VkImage image;
   VkResult err;
+  gboolean wants_dedicated = FALSE;
+  VkExternalMemoryImageCreateInfo *pInfoStruct =
+      (VkExternalMemoryImageCreateInfo *) vk_find_struct (image_info->pNext,
+      VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO);
+
+  VkExternalMemoryHandleTypeFlags ext_mem_handle_types =
+      pInfoStruct ? pInfoStruct->handleTypes : 0;
 
   gpu = gst_vulkan_device_get_physical_device (device);
 
@@ -170,11 +242,21 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
 
   mem = g_new0 (GstVulkanImageMemory, 1);
 
-  vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
+  /* Ask the driver whether this image needs (or prefers) a dedicated
+   * allocation for this external-memory export */
+  VkMemoryDedicatedRequirements dedicated_reqs = {
+    .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,
+    .pNext = NULL,
+  };
+  gst_get_memory_requirements2 (device, image, &mem->requirements,
+      &dedicated_reqs);
+  wants_dedicated = dedicated_reqs.requiresDedicatedAllocation
+      || dedicated_reqs.prefersDedicatedAllocation;
 
-  gst_vulkan_image_memory_init (mem, allocator, parent, device,
-      info.format, info.usage, info.initialLayout, &params,
-      mem->requirements.size, user_data, notify);
+  if (!gst_vulkan_image_memory_init_with_external_semaphore (mem, allocator,
+          parent, device, info.format, info.usage, info.initialLayout, &params,
+          mem->requirements.size, user_data, notify, ext_sem_handle_types))
+    goto vk_error;
   mem->create_info = info;
 
   /* avoid handling pNext lifetime */
@@ -182,6 +264,7 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   mem->image = image;
   mem->create_info.queueFamilyIndexCount = 0;
   mem->create_info.pQueueFamilyIndices = NULL;
+  mem->exportable_handle_types = ext_mem_handle_types;
 
   err = vkGetPhysicalDeviceImageFormatProperties (gpu, info.format,
       info.imageType, info.tiling, info.usage, info.flags,
@@ -200,8 +283,25 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
     goto error;
   }
   params.align = mem->requirements.alignment - 1;
-  mem->vk_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,
-      &params, mem->requirements.size, mem_prop_flags);
+  if (ext_mem_handle_types != 0) {
+    VkMemoryDedicatedAllocateInfo dedicated_allocate_info = {
+      .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO,
+      .pNext = NULL,
+      .buffer = VK_NULL_HANDLE,
+      .image = image,
+    };
+    VkExportMemoryAllocateInfo export_info = {
+      .sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
+      .pNext = wants_dedicated ? &dedicated_allocate_info : NULL,
+      .handleTypes = ext_mem_handle_types,
+    };
+    mem->vk_mem = (GstVulkanMemory *)
+        gst_vulkan_memory_alloc_with_pnext (device, type_idx, &params,
+        mem->requirements.size, mem_prop_flags, &export_info);
+  } else {
+    mem->vk_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,
+        &params, mem->requirements.size, mem_prop_flags);
+  }
   if (!mem->vk_mem)
     goto error;
 
@@ -243,7 +343,7 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   }
 
   return _vk_image_mem_new_alloc_with_image_info (allocator, parent, device,
-      &image_info, mem_prop_flags, user_data, notify);
+      &image_info, mem_prop_flags, user_data, notify, 0);
 }
 
 static GstVulkanImageMemory *
@@ -528,7 +628,7 @@ _vk_image_mem_copy (GstVulkanImageMemory * src, gssize offset, gssize size)
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
   dst = _vk_image_mem_new_alloc_with_image_info (_vulkan_image_memory_allocator,
-      NULL, src->device, &image_info, mem_prop_flags, NULL, NULL);
+      NULL, src->device, &image_info, mem_prop_flags, NULL, NULL, 0);
   if (!dst)
     return NULL;
 
@@ -716,7 +816,39 @@ gst_vulkan_image_memory_alloc_with_image_info (GstVulkanDevice * device,
       && image_info->sType == VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, NULL);
 
   mem = _vk_image_mem_new_alloc_with_image_info (_vulkan_image_memory_allocator,
-      NULL, device, image_info, mem_prop_flags, NULL, NULL);
+      NULL, device, image_info, mem_prop_flags, NULL, NULL, 0);
+
+  return (GstMemory *) mem;
+}
+
+/**
+ * gst_vulkan_image_memory_alloc_with_image_info2:
+ * @device: a #GstVulkanDevice
+ * @image_info: VkImageCreateInfo structure
+ * @mem_prop_flags: VkMemoryPropertyFlags flags
+ * @ext_sem_handle_types: VkExternalSemaphoreHandleTypeFlags
+ *
+ * Like gst_vulkan_image_memory_alloc_with_image_info() but also creates the
+ * backing timeline semaphore with the export capability given by
+ * @ext_sem_handle_types.
+ *
+ * Returns: a #GstMemory object backed by a vulkan device memory
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_vulkan_image_memory_alloc_with_image_info2 (GstVulkanDevice * device,
+    VkImageCreateInfo * image_info, VkMemoryPropertyFlags mem_prop_flags,
+    VkExternalSemaphoreHandleTypeFlags ext_sem_handle_types)
+{
+  GstVulkanImageMemory *mem;
+
+  g_return_val_if_fail (image_info
+      && image_info->sType == VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, NULL);
+
+  mem = _vk_image_mem_new_alloc_with_image_info (_vulkan_image_memory_allocator,
+      NULL, device, image_info, mem_prop_flags, NULL, NULL,
+      ext_sem_handle_types);
 
   return (GstMemory *) mem;
 }

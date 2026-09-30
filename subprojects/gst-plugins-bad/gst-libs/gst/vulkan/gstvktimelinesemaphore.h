@@ -113,7 +113,9 @@ gst_clear_vulkan_timeline_semaphore (GstVulkanTimelineSemaphore ** timeline_ptr)
 
 GST_VULKAN_API
 GstVulkanTimelineSemaphore * gst_vulkan_timeline_semaphore_new (GstVulkanDevice * device);
-
+GST_VULKAN_API
+GstVulkanTimelineSemaphore * gst_vulkan_timeline_semaphore_new_with_exportable (GstVulkanDevice * device,
+                                                                  VkExternalSemaphoreHandleTypeFlags ext_flags);
 GST_VULKAN_API
 void            gst_vulkan_timeline_semaphore_lock            (GstVulkanTimelineSemaphore * timeline);
 GST_VULKAN_API

@@ -147,6 +147,15 @@ GstMemory *     gst_vulkan_memory_alloc         (GstVulkanDevice * device,
                                                  VkMemoryPropertyFlags mem_prop_flags);
 
 GST_VULKAN_API
+GstMemory *     gst_vulkan_memory_alloc_with_pnext
+                                                (GstVulkanDevice * device,
+                                                 guint32 memory_type_index,
+                                                 GstAllocationParams * params,
+                                                 gsize size,
+                                                 VkMemoryPropertyFlags mem_prop_flags,
+                                                 gconstpointer alloc_pnext);
+
+GST_VULKAN_API
 gboolean       gst_vulkan_memory_find_memory_type_index_with_requirements       (GstVulkanDevice * device,
                                                                                  const VkMemoryRequirements * req,
                                                                                  VkMemoryPropertyFlags properties,

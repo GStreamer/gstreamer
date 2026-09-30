@@ -120,6 +120,18 @@ void            gst_vulkan_image_buffer_pool_config_set_encode_caps
                                                         (GstStructure * config,
                                                          GstCaps * caps);
 
+GST_VULKAN_API
+void            gst_vulkan_image_buffer_pool_config_set_export_handle_types
+                                                        (GstStructure * config,
+                                                         VkExternalMemoryHandleTypeFlags mem_handle_types,
+                                                         VkExternalSemaphoreHandleTypeFlags sem_handle_types);
+
+GST_VULKAN_API
+void            gst_vulkan_image_buffer_pool_config_get_export_handle_types
+                                                        (GstStructure * config,
+                                                         VkExternalMemoryHandleTypeFlags * mem_handle_types,
+                                                         VkExternalSemaphoreHandleTypeFlags * sem_handle_types);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_IMAGE_BUFFER_POOL_H__ */

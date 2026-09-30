@@ -65,6 +65,9 @@ struct _GstVulkanImageBufferPoolPrivate
 #endif
   GstVulkanOperation *exec;
   gboolean add_videometa;
+  /* Set via gst_vulkan_image_buffer_pool_config_set_export_handle_types(). */
+  VkExternalMemoryHandleTypeFlags export_mem_handle_types;
+  VkExternalSemaphoreHandleTypeFlags export_sem_handle_types;
 };
 
 static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
@@ -150,6 +153,60 @@ gst_vulkan_image_buffer_pool_config_set_encode_caps (GstStructure * config,
 }
 
 /**
+ * gst_vulkan_image_buffer_pool_config_set_export_handle_types:
+ * @config: the #GstStructure with the pool's configuration.
+ * @mem_handle_types: the VkExternalMemoryHandleTypeFlags to request.
+ * @sem_handle_types: the VkExternalSemaphoreHandleTypeFlags to request.
+ *
+ * Activates exportable-memory mode: a non-zero @mem_handle_types or
+ * @sem_handle_types requests the matching Vulkan export capability for each
+ * allocation.
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_image_buffer_pool_config_set_export_handle_types (GstStructure *
+    config, VkExternalMemoryHandleTypeFlags mem_handle_types,
+    VkExternalSemaphoreHandleTypeFlags sem_handle_types)
+{
+  g_return_if_fail (GST_IS_STRUCTURE (config));
+
+  gst_structure_set (config, "export-memory-handle-types", G_TYPE_UINT,
+      (guint) mem_handle_types, NULL);
+  gst_structure_set (config, "export-semaphore-handle-types", G_TYPE_UINT,
+      (guint) sem_handle_types, NULL);
+}
+
+/**
+ * gst_vulkan_image_buffer_pool_config_get_export_handle_types:
+ * @config: the #GstStructure with the pool's configuration.
+ * @mem_handle_types: (out): the VkExternalMemoryHandleTypeFlags value.
+ * @sem_handle_types: (out): the VkExternalSemaphoreHandleTypeFlags value.
+ *
+ * Gets the handle types previously set via
+ * gst_vulkan_image_buffer_pool_config_set_export_handle_types().
+ *
+ * Since: 1.30
+ */
+void
+gst_vulkan_image_buffer_pool_config_get_export_handle_types (GstStructure *
+    config, VkExternalMemoryHandleTypeFlags * mem_handle_types,
+    VkExternalSemaphoreHandleTypeFlags * sem_handle_types)
+{
+  g_return_if_fail (GST_IS_STRUCTURE (config));
+  g_return_if_fail (mem_handle_types != NULL);
+  g_return_if_fail (sem_handle_types != NULL);
+
+  if (!gst_structure_get_uint (config, "export-memory-handle-types",
+          (guint *) mem_handle_types))
+    *mem_handle_types = 0;
+  if (!gst_structure_get_uint (config, "export-semaphore-handle-types",
+          (guint *) sem_handle_types))
+    *sem_handle_types = 0;
+
+}
+
+/**
  * gst_vulkan_image_buffer_pool_config_get_allocation_params:
  * @config: the #GstStructure with the pool's configuration.
  * @usage: (out) (optional): The Vulkan image usage flags.
@@ -225,6 +282,7 @@ _is_video_usage (VkImageUsageFlags requested_usage)
   return ((requested_usage & video_usage) != 0);
 }
 
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 static gboolean
 _is_video_profile_independent (VkImageUsageFlags requested_usage)
 {
@@ -248,6 +306,263 @@ _is_video_profile_independent (VkImageUsageFlags requested_usage)
   return ((requested_usage & video_dependent) == 0);
 }
 
+/* Resolves how an image/format configured with video decode/encode usage
+ * bits must satisfy the Vulkan video-profile requirement (see
+ * VUID-VkPhysicalDeviceImageFormatInfo2-pNext-pNext and its
+ * VkImageCreateInfo equivalent): either the profile-independent creation
+ * flag, or a VkVideoProfileListInfoKHR naming the pool's configured
+ * profiles. Shared between the real image creation in fill_buffer() and the
+ * capability probe in _check_exportable_memory_support(), so both see
+ * exactly the same video-profile info.
+ *
+ * @profiles and @profile_list are caller-owned storage filled in when a
+ * profile list is needed; the return value is that same @profile_list
+ * pointer, or %NULL if no pNext chaining is required (no video usage, or
+ * the profile-independent flag already covers it). @extra_flags is always
+ * set to the VkImageCreateFlags bits (if any) the caller must OR in. */
+static VkVideoProfileListInfoKHR *
+_get_video_profile_list (GstVulkanImageBufferPool * vk_pool,
+    VkImageUsageFlags usage, VkVideoProfileInfoKHR profiles[2],
+    VkVideoProfileListInfoKHR * profile_list, VkImageCreateFlags * extra_flags)
+{
+  GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+
+  *extra_flags = 0;
+
+  if (!_is_video_usage (usage))
+    return NULL;
+
+  if (gst_vulkan_physical_device_has_feature_video_maintenance1
+      (vk_pool->device->physical_device)
+      && _is_video_profile_independent (usage)) {
+#if defined(VK_KHR_video_maintenance1)
+    *extra_flags = VK_IMAGE_CREATE_VIDEO_PROFILE_INDEPENDENT_BIT_KHR;
+#endif
+    return NULL;
+  }
+
+  if (priv->n_profiles > 0) {
+    int i;
+
+    for (i = 0; i < priv->n_profiles; i++)
+      profiles[i] = priv->profiles[i].profile;
+
+    *profile_list = (VkVideoProfileListInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,.profileCount =
+          priv->n_profiles,.pProfiles = profiles,};
+    return profile_list;
+  }
+
+  return NULL;
+}
+#endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
+
+static gpointer
+_get_vulkan_func_pointer (GstVulkanImageBufferPool * vk_pool, guint major,
+    guint minor, guint patch, const char *func_name, const char *func_name2,
+    const char *log_addon)
+{
+  GstVulkanDevice *device = vk_pool->device;
+  gpointer func = NULL;
+
+  if (gst_vulkan_physical_device_check_api_version (device->physical_device,
+          major, minor, patch)) {
+    func = gst_vulkan_instance_get_proc_address (device->instance, func_name);
+  }
+  if (!func) {
+    func = gst_vulkan_instance_get_proc_address (device->instance, func_name2);
+  }
+  if (!func) {
+    GST_WARNING_OBJECT (vk_pool,
+        "Neither %s nor %s is available. %s", func_name, func_name2, log_addon);
+    return NULL;
+  }
+  return func;
+}
+
+/* Verify that the driver actually advertises external-memory export for
+ * the requested format/usage/tiling combination. We test every VkFormat
+ * the pool plans to allocate: per-plane allocation goes through multiple
+ * VkFormats (e.g. R8 + R8G8 for NV12), so all of them have to report
+ * VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT or the import will fail on
+ * the last plane and leave us with half-valid state. */
+static gboolean
+_check_exportable_memory_support (GstVulkanImageBufferPool * vk_pool,
+    VkImageTiling tiling, VkImageUsageFlags usage,
+    VkExternalMemoryHandleTypeFlags handle_types)
+{
+  GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  GstVulkanDevice *device = vk_pool->device;
+  VkPhysicalDevice gpu = gst_vulkan_device_get_physical_device (device);
+  PFN_vkGetPhysicalDeviceImageFormatProperties2KHR get_format_props2 = NULL;
+  int i;
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  VkVideoProfileInfoKHR video_profiles[2];
+  VkVideoProfileListInfoKHR video_profile_list;
+#endif
+  gpointer video_profile_list_ptr = NULL;
+  VkImageCreateFlags video_extra_flags = 0;
+
+  get_format_props2 = (PFN_vkGetPhysicalDeviceImageFormatProperties2KHR)
+      _get_vulkan_func_pointer (vk_pool, 1, 1, 0,
+      "vkGetPhysicalDeviceImageFormatProperties2",
+      "vkGetPhysicalDeviceImageFormatProperties2KHR",
+      "Cannot verify external-memory export support");
+  if (!get_format_props2)
+    return FALSE;
+
+  /* A video-usage query must chain the same VkVideoProfileListInfoKHR (or
+   * carry the same profile-independent flag) the real image creation would
+   * use, per VUID-VkPhysicalDeviceImageFormatInfo2-pNext-pNext. */
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  video_profile_list_ptr = _get_video_profile_list (vk_pool, usage,
+      video_profiles, &video_profile_list, &video_extra_flags);
+#endif
+
+  for (i = 0; i < priv->n_imgs; i++) {
+    /* handleType takes exactly one bit per the spec's valid usage rules, so
+     * a multi-bit handle_types mask has to be probed one bit at a time. */
+    for (VkFlags bit = 1u; bit; bit <<= 1u) {
+      if ((bit & handle_types) == 0)
+        continue;
+
+      VkPhysicalDeviceExternalImageFormatInfo ext_info = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO,
+        .pNext = video_profile_list_ptr,
+        .handleType = bit,
+      };
+      VkPhysicalDeviceImageFormatInfo2 fmt_info = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2,
+        .pNext = &ext_info,
+        .format = priv->vk_fmts[i],
+        .type = VK_IMAGE_TYPE_2D,
+        .tiling = tiling,
+        .usage = usage,
+        .flags = priv->img_flags | video_extra_flags,
+      };
+      VkExternalImageFormatProperties ext_props = {
+        .sType = VK_STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES,
+        .pNext = NULL,
+      };
+      VkImageFormatProperties2 fmt_props = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2,
+        .pNext = &ext_props,
+      };
+      VkResult err = get_format_props2 (gpu, &fmt_info, &fmt_props);
+
+      if (err != VK_SUCCESS) {
+        GST_WARNING_OBJECT (vk_pool,
+            "vkGetPhysicalDeviceImageFormatProperties2 failed for "
+            "vk_fmt=%d usage=0x%x flags=0x%x tiling=%d handle=0x%x: %d",
+            (gint) priv->vk_fmts[i], (guint) usage, (guint) priv->img_flags,
+            (gint) tiling, (guint) bit, (int) err);
+        return FALSE;
+      }
+
+      if ((ext_props.externalMemoryProperties.externalMemoryFeatures
+              & VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT) == 0) {
+        GST_WARNING_OBJECT (vk_pool,
+            "driver does not advertise EXPORTABLE for "
+            "vk_fmt=%d usage=0x%x flags=0x%x tiling=%d handle=0x%x "
+            "(features=0x%x compatHandles=0x%x exportFromImportedHandles=0x%x)",
+            (gint) priv->vk_fmts[i], (guint) usage, (guint) priv->img_flags,
+            (gint) tiling, (guint) bit,
+            (guint) ext_props.externalMemoryProperties.externalMemoryFeatures,
+            (guint) ext_props.externalMemoryProperties.compatibleHandleTypes,
+            (guint) ext_props.externalMemoryProperties.
+            exportFromImportedHandleTypes);
+        return FALSE;
+      }
+
+      /* For a multi-bit handle_types mask, every other requested bit must
+       * also be reported as compatible with this one, or the driver can't
+       * actually export a single allocation satisfying all of them. */
+      VkExternalMemoryHandleTypeFlags others = handle_types & ~bit;
+      if (others & ~ext_props.externalMemoryProperties.compatibleHandleTypes) {
+        GST_WARNING_OBJECT (vk_pool,
+            "driver does not advertise handle=0x%x as compatible with the "
+            "other requested handle types (0x%x) for vk_fmt=%d usage=0x%x "
+            "flags=0x%x tiling=%d (compatHandles=0x%x)",
+            (guint) bit, (guint) others, (gint) priv->vk_fmts[i],
+            (guint) usage, (guint) priv->img_flags, (gint) tiling,
+            (guint) ext_props.externalMemoryProperties.compatibleHandleTypes);
+        return FALSE;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
+/* Verify that the driver advertises export support for the timeline
+ * semaphore handle type the pool was configured with. Unlike the image
+ * memory query, this has no format/tiling/usage dependency, so it only
+ * needs to be probed once per requested handle type. */
+static gboolean
+_check_exportable_semaphore_support (GstVulkanImageBufferPool * vk_pool,
+    VkExternalSemaphoreHandleTypeFlags handle_types)
+{
+  GstVulkanDevice *device = vk_pool->device;
+  VkPhysicalDevice gpu = gst_vulkan_device_get_physical_device (device);
+  PFN_vkGetPhysicalDeviceExternalSemaphorePropertiesKHR
+      get_external_semaphore_props = NULL;
+
+  get_external_semaphore_props =
+      (PFN_vkGetPhysicalDeviceExternalSemaphorePropertiesKHR)
+      _get_vulkan_func_pointer (vk_pool, 1, 1, 0,
+      "vkGetPhysicalDeviceExternalSemaphoreProperties",
+      "vkGetPhysicalDeviceExternalSemaphorePropertiesKHR",
+      "Cannot verify external-semaphore export support");
+  if (!get_external_semaphore_props)
+    return FALSE;
+
+  /* handleType takes exactly one bit per the spec's valid usage rules, so
+   * a multi-bit handle_types mask has to be probed one bit at a time. */
+  for (VkFlags bit = 1u; bit; bit <<= 1u) {
+    if ((bit & handle_types) == 0)
+      continue;
+
+    VkPhysicalDeviceExternalSemaphoreInfo ext_info = {
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO,
+      .pNext = NULL,
+      .handleType = bit,
+    };
+    VkExternalSemaphoreProperties sem_props = {
+      .sType = VK_STRUCTURE_TYPE_EXTERNAL_SEMAPHORE_PROPERTIES,
+      .pNext = NULL,
+    };
+
+    get_external_semaphore_props (gpu, &ext_info, &sem_props);
+
+    if ((sem_props.externalSemaphoreFeatures
+            & VK_EXTERNAL_SEMAPHORE_FEATURE_EXPORTABLE_BIT) == 0) {
+      GST_WARNING_OBJECT (vk_pool,
+          "driver does not advertise EXPORTABLE for timeline semaphore "
+          "handle=0x%x (features=0x%x compatHandles=0x%x "
+          "exportFromImportedHandles=0x%x)",
+          (guint) bit, (guint) sem_props.externalSemaphoreFeatures,
+          (guint) sem_props.compatibleHandleTypes,
+          (guint) sem_props.exportFromImportedHandleTypes);
+      return FALSE;
+    }
+
+    /* For a multi-bit handle_types mask, every other requested bit must
+     * also be reported as compatible with this one, or the driver can't
+     * actually export a single semaphore satisfying all of them. */
+    VkExternalSemaphoreHandleTypeFlags others = handle_types & ~bit;
+    if (others & ~sem_props.compatibleHandleTypes) {
+      GST_WARNING_OBJECT (vk_pool,
+          "driver does not advertise timeline semaphore handle=0x%x as "
+          "compatible with the other requested handle types (0x%x) "
+          "(compatHandles=0x%x)",
+          (guint) bit, (guint) others, (guint) sem_props.compatibleHandleTypes);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
     VkImageTiling tiling, gsize offset[GST_VIDEO_MAX_PLANES],
@@ -256,20 +571,26 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   int i;
   VkImageCreateInfo image_info;
+  VkExternalMemoryImageCreateInfo ext_image_info = {
+    .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
+    .pNext = NULL,
+    .handleTypes = priv->export_mem_handle_types,
+  };
+  gpointer profile_list_ptr = NULL;
+  VkImageCreateFlags video_extra_flags = 0;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   VkVideoProfileInfoKHR profiles[2];
-  VkVideoProfileListInfoKHR profile_list = {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
-    .profileCount = priv->n_profiles,
-    .pProfiles = profiles,
-  };
+  VkVideoProfileListInfoKHR profile_list;
+
+  profile_list_ptr = _get_video_profile_list (vk_pool, priv->usage, profiles,
+      &profile_list, &video_extra_flags);
 #endif
 
   /* *INDENT-OFF* */
   image_info = (VkImageCreateInfo) {
     .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-    .pNext = NULL,
-    .flags = priv->img_flags,
+    .pNext = profile_list_ptr,
+    .flags = priv->img_flags | video_extra_flags,
     .imageType = VK_IMAGE_TYPE_2D,
     /* .format = fill per image,  */
     /* .extent = fill per plane, */
@@ -286,21 +607,15 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
                      : VK_IMAGE_LAYOUT_UNDEFINED,
   };
   /* *INDENT-ON* */
-  if (_is_video_usage (priv->usage)) {
-    GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
-    if (gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)
-        && _is_video_profile_independent (priv->usage)) {
-#if defined(VK_KHR_video_maintenance1)
-      image_info.flags |= VK_IMAGE_CREATE_VIDEO_PROFILE_INDEPENDENT_BIT_KHR;
-#endif
-    } else if (priv->n_profiles > 0) {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-      for (i = 0; i < priv->n_profiles; i++)
-        profiles[i] = priv->profiles[i].profile;
 
-      image_info.pNext = &profile_list;
-#endif
-    }
+  /* Chain VkExternalMemoryImageCreateInfo on top of whatever pNext was
+   * already set (NULL or the video profile list). The backing allocator
+   * (gstvkimagememory.c) scans this same pNext chain to discover the
+   * requested handle types and mirrors them into a
+   * VkExportMemoryAllocateInfo for vkAllocateMemory. */
+  if (priv->export_mem_handle_types != 0) {
+    ext_image_info.pNext = image_info.pNext;
+    image_info.pNext = &ext_image_info;
   }
 
   priv->v_info.size = 0;
@@ -324,8 +639,8 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
     image_info.extent = (VkExtent3D) { width, height, 1 };
     /* *INDENT-ON* */
 
-    mem = gst_vulkan_image_memory_alloc_with_image_info (vk_pool->device,
-        &image_info, priv->mem_props);
+    mem = gst_vulkan_image_memory_alloc_with_image_info2 (vk_pool->device,
+        &image_info, priv->mem_props, priv->export_sem_handle_types);
     if (!mem)
       return FALSE;
 
@@ -464,6 +779,32 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
   priv->usage = requested_usage;
 
+  /* Exportable-memory: activated when the caller sets a non-zero handle-types
+   * value via gst_vulkan_image_buffer_pool_config_set_export_handle_types(). */
+  priv->export_mem_handle_types = 0;
+  priv->export_sem_handle_types = 0;
+  gst_vulkan_image_buffer_pool_config_get_export_handle_types (config,
+      &priv->export_mem_handle_types, &priv->export_sem_handle_types);
+  if (priv->export_mem_handle_types != 0 &&
+      !_check_exportable_memory_support (vk_pool, tiling, requested_usage,
+          priv->export_mem_handle_types))
+    goto exportable_mem_unsupported;
+  if (priv->export_sem_handle_types != 0 &&
+      !_check_exportable_semaphore_support (vk_pool,
+          priv->export_sem_handle_types))
+    goto exportable_sem_unsupported;
+
+  GST_DEBUG_OBJECT (pool,
+      "pool config: usage=0x%x img_flags=0x%x n_imgs=%d vk_fmt[0]=%d "
+      "video-usage=%d sampleable=%d export_mem_handle_types=0x%x "
+      "export_sem_handle_types=0x%x",
+      (guint) priv->usage, (guint) priv->img_flags, priv->n_imgs,
+      (gint) priv->vk_fmts[0], _is_video_usage (requested_usage),
+      ((requested_usage & (VK_IMAGE_USAGE_SAMPLED_BIT
+                  | VK_IMAGE_USAGE_STORAGE_BIT)) != 0),
+      (guint) priv->export_mem_handle_types,
+      (guint) priv->export_sem_handle_types);
+
   /* get the size of the buffer to allocate */
   if (!gst_vulkan_image_buffer_pool_fill_buffer (vk_pool, tiling, NULL, NULL))
     goto image_failed;
@@ -513,6 +854,22 @@ missing_profile:
 image_failed:
   {
     GST_WARNING_OBJECT (pool, "Failed to allocate image");
+    return FALSE;
+  }
+exportable_mem_unsupported:
+  {
+    GST_WARNING_OBJECT (pool,
+        "Exportable external memory (mem_handle_types=0x%x) is not advertised "
+        "by this driver for the requested format/usage/tiling.",
+        (guint) priv->export_mem_handle_types);
+    return FALSE;
+  }
+exportable_sem_unsupported:
+  {
+    GST_WARNING_OBJECT (pool,
+        "Exportable external timeline semaphore (sem_handle_types=0x%x) is "
+        "not advertised by this driver.",
+        (guint) priv->export_sem_handle_types);
     return FALSE;
   }
 }

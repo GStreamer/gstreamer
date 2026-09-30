@@ -94,8 +94,8 @@ static GstVulkanMemory *
 _vk_mem_new (GstAllocator * allocator, GstMemory * parent,
     GstVulkanDevice * device, guint32 memory_type_index,
     GstAllocationParams * params, gsize size,
-    VkMemoryPropertyFlags mem_props_flags, gpointer user_data,
-    GDestroyNotify notify)
+    VkMemoryPropertyFlags mem_props_flags, gconstpointer alloc_pnext,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstVulkanMemory *mem = g_new0 (GstVulkanMemory, 1);
   GError *error = NULL;
@@ -104,8 +104,17 @@ _vk_mem_new (GstAllocator * allocator, GstMemory * parent,
   _vk_mem_init (mem, allocator, parent, device, memory_type_index, params,
       size, mem_props_flags, user_data, notify);
 
+  /* Callers that need extra allocate-info structs (e.g.
+   * VkExportMemoryAllocateInfo for DMA-BUF export) pass them via
+   * @alloc_pnext. The struct(s) must out-live this call but not the
+   * resulting GstVulkanMemory - vkAllocateMemory copies what it needs. */
+  mem->alloc_info.pNext = alloc_pnext;
+
   err =
       vkAllocateMemory (device->device, &mem->alloc_info, NULL, &mem->mem_ptr);
+  /* @alloc_pnext pointed at caller-owned (often stack) structs needed only for
+   * the call above; drop it so nothing later dereferences a dangling pointer. */
+  mem->alloc_info.pNext = NULL;
   if (gst_vulkan_error_to_g_error (err, &error, "vkAllocMemory") < 0) {
     GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Failed to allocate device memory %s",
         error->message);
@@ -341,7 +350,40 @@ gst_vulkan_memory_alloc (GstVulkanDevice * device, guint32 memory_type_index,
   GstVulkanMemory *mem;
 
   mem = _vk_mem_new (_vulkan_memory_allocator, NULL, device, memory_type_index,
-      params, size, mem_flags, NULL, NULL);
+      params, size, mem_flags, NULL, NULL, NULL);
+
+  return (GstMemory *) mem;
+}
+
+/**
+ * gst_vulkan_memory_alloc_with_pnext:
+ * @device: a #GstVulkanDevice
+ * @memory_type_index: the Vulkan memory type index
+ * @params: (nullable): a #GstAllocationParams
+ * @size: the size to allocate
+ * @mem_prop_flags: VkMemoryPropertyFlags flags
+ * @alloc_pnext: (nullable): pointer to a Vulkan struct to chain into
+ *     VkMemoryAllocateInfo.pNext (e.g. VkExportMemoryAllocateInfo). The
+ *     pointed-to memory must stay valid for the duration of this call.
+ *
+ * Like gst_vulkan_memory_alloc() but lets the caller extend the
+ * VkMemoryAllocateInfo.pNext chain. Needed for external-memory export
+ * (DMA-BUF / OPAQUE_FD) and similar allocate-time extensions.
+ *
+ * Returns: (transfer full) (nullable): a #GstMemory object backed by a
+ *     vulkan device memory, or %NULL on failure
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_vulkan_memory_alloc_with_pnext (GstVulkanDevice * device,
+    guint32 memory_type_index, GstAllocationParams * params, gsize size,
+    VkMemoryPropertyFlags mem_flags, gconstpointer alloc_pnext)
+{
+  GstVulkanMemory *mem;
+
+  mem = _vk_mem_new (_vulkan_memory_allocator, NULL, device, memory_type_index,
+      params, size, mem_flags, alloc_pnext, NULL, NULL);
 
   return (GstMemory *) mem;
 }

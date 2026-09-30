@@ -70,18 +70,39 @@ gst_vulkan_timeline_semaphore_init (GstVulkanTimelineSemaphore * timeline,
 GST_DEFINE_MINI_OBJECT_TYPE (GstVulkanTimelineSemaphore,
     gst_vulkan_timeline_semaphore);
 
+/**
+ * gst_vulkan_timeline_semaphore_new_with_exportable:
+ * @device: a #GstVulkanDevice
+ * @ext_flags: VkExternalSemaphoreHandleTypeFlags, or 0 for a non-exportable
+ *             semaphore
+ *
+ * Like gst_vulkan_timeline_semaphore_new() but creates the timeline semaphore
+ * with the export capability given by @ext_flags.
+ *
+ * Returns: (transfer full) (nullable): a new #GstVulkanTimelineSemaphore, or
+ *          %NULL if timeline semaphores are not supported or creation failed
+ *
+ * Since: 1.30
+ */
 GstVulkanTimelineSemaphore *
-gst_vulkan_timeline_semaphore_new (GstVulkanDevice * device)
+gst_vulkan_timeline_semaphore_new_with_exportable (GstVulkanDevice * device,
+    VkExternalSemaphoreHandleTypeFlags ext_flags)
 {
 #if defined(VK_KHR_timeline_semaphore)
   if (gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
           2, 0) || gst_vulkan_device_is_extension_enabled (device,
           VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME)) {
     VkSemaphore semaphore = VK_NULL_HANDLE;
+    VkExportSemaphoreCreateInfo exportInfo = {
+      .sType = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
+      .handleTypes = ext_flags,
+    };
+
     VkSemaphoreTypeCreateInfo semaphore_type_info = {
       .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
       .semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
       .initialValue = 0,
+      .pNext = ext_flags ? &exportInfo : NULL,
     };
     VkSemaphoreCreateInfo semaphore_create_info = {
       .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -105,6 +126,12 @@ gst_vulkan_timeline_semaphore_new (GstVulkanDevice * device)
 #endif
 
   return NULL;
+}
+
+GstVulkanTimelineSemaphore *
+gst_vulkan_timeline_semaphore_new (GstVulkanDevice * device)
+{
+  return gst_vulkan_timeline_semaphore_new_with_exportable (device, 0);
 }
 
 /**

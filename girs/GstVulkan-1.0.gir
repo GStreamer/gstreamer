@@ -4439,6 +4439,28 @@ inside @handle.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="config_get_export_handle_types" c:identifier="gst_vulkan_image_buffer_pool_config_get_export_handle_types" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Gets the handle types previously set via
+gst_vulkan_image_buffer_pool_config_set_export_handle_types().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="mem_handle_types" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the VkExternalMemoryHandleTypeFlags value.</doc>
+            <type name="Vulkan.ExternalMemoryHandleTypeFlags" c:type="VkExternalMemoryHandleTypeFlags*"/>
+          </parameter>
+          <parameter name="sem_handle_types" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the VkExternalSemaphoreHandleTypeFlags value.</doc>
+            <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_set_allocation_params" c:identifier="gst_vulkan_image_buffer_pool_config_set_allocation_params" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Sets the @usage and @mem_properties, @initial_layout and @initial_access of
 the images to setup.
@@ -4507,6 +4529,29 @@ src or DPB images.</doc>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Upstream encode caps.</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_export_handle_types" c:identifier="gst_vulkan_image_buffer_pool_config_set_export_handle_types" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Activates exportable-memory mode: a non-zero @mem_handle_types or
+@sem_handle_types requests the matching Vulkan export capability for each
+allocation.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="mem_handle_types" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the VkExternalMemoryHandleTypeFlags to request.</doc>
+            <type name="Vulkan.ExternalMemoryHandleTypeFlags" c:type="VkExternalMemoryHandleTypeFlags"/>
+          </parameter>
+          <parameter name="sem_handle_types" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the VkExternalSemaphoreHandleTypeFlags to request.</doc>
+            <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags"/>
           </parameter>
         </parameters>
       </function>
@@ -4602,6 +4647,9 @@ src or DPB images.</doc>
       </field>
       <field name="timeline_semaphore" readable="0" private="1">
         <type name="VulkanTimelineSemaphore" c:type="GstVulkanTimelineSemaphore*"/>
+      </field>
+      <field name="exportable_handle_types" readable="0" private="1">
+        <type name="Vulkan.ExternalMemoryHandleTypeFlags" c:type="VkExternalMemoryHandleTypeFlags"/>
       </field>
       <field name="_padding" readable="0" private="1">
         <array zero-terminated="0" fixed-size="4">
@@ -4739,6 +4787,54 @@ Must be called with gst_vulkan_image_memory_lock() called.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="init_with_external_semaphore" c:identifier="gst_vulkan_image_memory_init_with_external_semaphore" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">Like gst_vulkan_image_memory_init() but also creates the backing timeline
+semaphore with the export capability given by @ext_flags.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">whether the memory was initialized</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <type name="VulkanImageMemory" c:type="GstVulkanImageMemory*"/>
+          </instance-parameter>
+          <parameter name="allocator" transfer-ownership="none">
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="parent" transfer-ownership="none">
+            <type name="Gst.Memory" c:type="GstMemory*"/>
+          </parameter>
+          <parameter name="device" transfer-ownership="none">
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </parameter>
+          <parameter name="format" transfer-ownership="none">
+            <type name="Vulkan.Format" c:type="VkFormat"/>
+          </parameter>
+          <parameter name="usage" transfer-ownership="none">
+            <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+          </parameter>
+          <parameter name="initial_layout" transfer-ownership="none">
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
+          </parameter>
+          <parameter name="params" transfer-ownership="none">
+            <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="notify" transfer-ownership="none" scope="async">
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+          <parameter name="ext_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkExternalSemaphoreHandleTypeFlags</doc>
+            <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="lock" c:identifier="gst_vulkan_image_memory_lock" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">Exclusively lock the image memory.
 
@@ -4844,6 +4940,34 @@ Must be called with gst_vulkan_image_memory_lock() called.</doc>
           <parameter name="mem_prop_flags" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkMemoryPropertyFlags flags</doc>
             <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="alloc_with_image_info2" c:identifier="gst_vulkan_image_memory_alloc_with_image_info2" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">Like gst_vulkan_image_memory_alloc_with_image_info() but also creates the
+backing timeline semaphore with the export capability given by
+@ext_sem_handle_types.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GstMemory object backed by a vulkan device memory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GstVulkanDevice</doc>
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </parameter>
+          <parameter name="image_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkImageCreateInfo structure</doc>
+            <type name="Vulkan.ImageCreateInfo" c:type="VkImageCreateInfo*"/>
+          </parameter>
+          <parameter name="mem_prop_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkMemoryPropertyFlags flags</doc>
+            <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+          </parameter>
+          <parameter name="ext_sem_handle_types" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkExternalSemaphoreHandleTypeFlags</doc>
+            <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags"/>
           </parameter>
         </parameters>
       </function>
@@ -5578,6 +5702,45 @@ It can be called from any thread.</doc>
           </parameter>
           <parameter name="mem_prop_flags" transfer-ownership="none">
             <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="alloc_with_pnext" c:identifier="gst_vulkan_memory_alloc_with_pnext" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">Like gst_vulkan_memory_alloc() but lets the caller extend the
+VkMemoryAllocateInfo.pNext chain. Needed for external-memory export
+(DMA-BUF / OPAQUE_FD) and similar allocate-time extensions.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">a #GstMemory object backed by a
+    vulkan device memory, or %NULL on failure</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">a #GstVulkanDevice</doc>
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </parameter>
+          <parameter name="memory_type_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">the Vulkan memory type index</doc>
+            <type name="guint32" c:type="guint32"/>
+          </parameter>
+          <parameter name="params" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">a #GstAllocationParams</doc>
+            <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">the size to allocate</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="mem_prop_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">VkMemoryPropertyFlags flags</doc>
+            <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+          </parameter>
+          <parameter name="alloc_pnext" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">pointer to a Vulkan struct to chain into
+    VkMemoryAllocateInfo.pNext (e.g. VkExportMemoryAllocateInfo). The
+    pointed-to memory must stay valid for the duration of this call.</doc>
+            <type name="gpointer" c:type="gconstpointer"/>
           </parameter>
         </parameters>
       </function>
@@ -6717,6 +6880,27 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         <parameters>
           <parameter name="device" transfer-ownership="none">
             <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_with_exportable" c:identifier="gst_vulkan_timeline_semaphore_new_with_exportable" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.c">Like gst_vulkan_timeline_semaphore_new() but creates the timeline semaphore
+with the export capability given by @ext_flags.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.c">a new #GstVulkanTimelineSemaphore, or
+         %NULL if timeline semaphores are not supported or creation failed</doc>
+          <type name="VulkanTimelineSemaphore" c:type="GstVulkanTimelineSemaphore*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.c">a #GstVulkanDevice</doc>
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </parameter>
+          <parameter name="ext_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.c">VkExternalSemaphoreHandleTypeFlags, or 0 for a non-exportable
+            semaphore</doc>
+            <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags"/>
           </parameter>
         </parameters>
       </constructor>
@@ -8734,6 +8918,34 @@ the result in @display or @instance respectively.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="vulkan_image_memory_alloc_with_image_info2" c:identifier="gst_vulkan_image_memory_alloc_with_image_info2" moved-to="VulkanImageMemory.alloc_with_image_info2" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">Like gst_vulkan_image_memory_alloc_with_image_info() but also creates the
+backing timeline semaphore with the export capability given by
+@ext_sem_handle_types.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GstMemory object backed by a vulkan device memory</doc>
+        <type name="Gst.Memory" c:type="GstMemory*"/>
+      </return-value>
+      <parameters>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">a #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+        </parameter>
+        <parameter name="image_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkImageCreateInfo structure</doc>
+          <type name="Vulkan.ImageCreateInfo" c:type="VkImageCreateInfo*"/>
+        </parameter>
+        <parameter name="mem_prop_flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkMemoryPropertyFlags flags</doc>
+          <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+        </parameter>
+        <parameter name="ext_sem_handle_types" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">VkExternalSemaphoreHandleTypeFlags</doc>
+          <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="vulkan_image_memory_init_once" c:identifier="gst_vulkan_image_memory_init_once" moved-to="VulkanImageMemory.init_once" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">Initializes the Vulkan image memory allocator. It is safe to call this function
 multiple times.  This must be called before any other #GstVulkanImageMemory operation.</doc>
@@ -8861,6 +9073,45 @@ other elements in the pipeline</doc>
         </parameter>
         <parameter name="mem_prop_flags" transfer-ownership="none">
           <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_memory_alloc_with_pnext" c:identifier="gst_vulkan_memory_alloc_with_pnext" moved-to="VulkanMemory.alloc_with_pnext" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">Like gst_vulkan_memory_alloc() but lets the caller extend the
+VkMemoryAllocateInfo.pNext chain. Needed for external-memory export
+(DMA-BUF / OPAQUE_FD) and similar allocate-time extensions.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">a #GstMemory object backed by a
+    vulkan device memory, or %NULL on failure</doc>
+        <type name="Gst.Memory" c:type="GstMemory*"/>
+      </return-value>
+      <parameters>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">a #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+        </parameter>
+        <parameter name="memory_type_index" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">the Vulkan memory type index</doc>
+          <type name="guint32" c:type="guint32"/>
+        </parameter>
+        <parameter name="params" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">a #GstAllocationParams</doc>
+          <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">the size to allocate</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="mem_prop_flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">VkMemoryPropertyFlags flags</doc>
+          <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+        </parameter>
+        <parameter name="alloc_pnext" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">pointer to a Vulkan struct to chain into
+    VkMemoryAllocateInfo.pNext (e.g. VkExportMemoryAllocateInfo). The
+    pointed-to memory must stay valid for the duration of this call.</doc>
+          <type name="gpointer" c:type="gconstpointer"/>
         </parameter>
       </parameters>
     </function>

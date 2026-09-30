@@ -125,6 +125,8 @@ struct _GstVulkanImageMemory
 
   GstVulkanTimelineSemaphore *timeline_semaphore;
 
+  VkExternalMemoryHandleTypeFlags exportable_handle_types;
+
   gpointer _padding[GST_PADDING];
 };
 
@@ -191,10 +193,31 @@ gboolean        gst_vulkan_image_memory_init            (GstVulkanImageMemory * 
                                                          GDestroyNotify notify);
 
 GST_VULKAN_API
+gboolean        gst_vulkan_image_memory_init_with_external_semaphore           (GstVulkanImageMemory * mem,
+                                                         GstAllocator * allocator,
+                                                         GstMemory * parent,
+                                                         GstVulkanDevice * device,
+                                                         VkFormat format,
+                                                         VkImageUsageFlags usage,
+                                                         VkImageLayout initial_layout,
+                                                         GstAllocationParams * params,
+                                                         gsize size,
+                                                         gpointer user_data,
+                                                         GDestroyNotify notify,
+                                                         VkExternalSemaphoreHandleTypeFlags ext_flags);
+
+GST_VULKAN_API
 GstMemory *     gst_vulkan_image_memory_alloc_with_image_info
                                                        (GstVulkanDevice * device,
                                                         VkImageCreateInfo * image_info,
                                                         VkMemoryPropertyFlags mem_prop_flags);
+
+GST_VULKAN_API
+GstMemory *     gst_vulkan_image_memory_alloc_with_image_info2
+                                                       (GstVulkanDevice * device,
+                                                        VkImageCreateInfo * image_info,
+                                                        VkMemoryPropertyFlags mem_prop_flags,
+                                                        VkExternalSemaphoreHandleTypeFlags ext_sem_handle_types);
 
 GST_VULKAN_API
 GstMemory *     gst_vulkan_image_memory_alloc           (GstVulkanDevice * device,
