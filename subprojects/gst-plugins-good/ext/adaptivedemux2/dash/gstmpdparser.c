@@ -419,6 +419,7 @@ gst_mpdparser_parse_mult_seg_base_node (GstMPDMultSegmentBaseNode *
   if (xmlStrcmp (a_node->parent->name, (xmlChar *) "Representation") == 0
       && !has_duration && !has_timeline) {
     GST_ERROR ("segment has neither duration nor timeline");
+    return FALSE;
   }
 
   return TRUE;
