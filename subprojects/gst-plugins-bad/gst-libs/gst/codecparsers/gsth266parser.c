@@ -6076,7 +6076,11 @@ gst_h266_parser_parse_sei_message (GstH266SEIMessage * sei, NalReader * nr,
     payloadSize += payload_size_byte;
   } while (payload_size_byte == 0xff);
 
-  remaining = nal_reader_get_remaining (nr);
+  /* nal_reader_get_remaining() includes emulation prevention bytes, but
+   * payloadSize counts RBSP bytes. Also tolerate broken streams which count
+   * emulation prevention bytes in payloadSize by limiting the payload to the
+   * RBSP data that is actually available. */
+  remaining = nal_reader_get_remaining_payload_bits (nr);
   payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
   payload_start_pos_bit = nal_reader_get_pos (nr);
 

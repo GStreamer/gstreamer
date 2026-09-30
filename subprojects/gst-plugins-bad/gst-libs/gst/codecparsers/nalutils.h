@@ -81,6 +81,9 @@ G_GNUC_INTERNAL
 guint nal_reader_get_remaining (const NalReader * nr);
 
 G_GNUC_INTERNAL
+guint nal_reader_get_remaining_payload_bits (NalReader * nr);
+
+G_GNUC_INTERNAL
 guint nal_reader_get_epb_count (const NalReader * nr);
 
 G_GNUC_INTERNAL

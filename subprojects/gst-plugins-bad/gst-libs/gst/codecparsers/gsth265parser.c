@@ -3359,21 +3359,6 @@ nal_reader_has_more_data_in_payload (NalReader * nr,
   return TRUE;
 }
 
-static guint
-nal_reader_get_remaining_payload_bits (NalReader * nr)
-{
-  NalReader tmp = *nr;
-  guint remaining = 0;
-
-  while (nal_reader_has_more_data (&tmp)) {
-    if (!nal_reader_skip (&tmp, 8))
-      break;
-    remaining += 8;
-  }
-
-  return remaining;
-}
-
 static GstH265ParserResult
 gst_h265_parser_parse_sei_message (GstH265Parser * parser,
     guint8 nal_type, NalReader * nr, GstH265SEIMessage * sei)
