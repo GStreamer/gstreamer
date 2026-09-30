@@ -5688,11 +5688,12 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 
       GST_PAD_UNSET_FLUSHING (pad);
 
-      /* Remove sticky EOS events */
-      GST_LOG_OBJECT (pad, "Removing pending EOS events");
+      /* Remove sticky events that don't survive a flush */
+      GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT related events");
       remove_event_by_type (pad, GST_EVENT_EOS);
       remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
       remove_event_by_type (pad, GST_EVENT_SEGMENT);
+      remove_event_by_type (pad, GST_EVENT_INSTANT_RATE_CHANGE);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
       pad->ABI.abi.last_flowret = GST_FLOW_OK;
 
@@ -6040,11 +6041,12 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
       GST_PAD_UNSET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
-      /* Remove pending EOS events */
-      GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT events");
+      /* Remove sticky events that don't survive a flush */
+      GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT related events");
       remove_event_by_type (pad, GST_EVENT_EOS);
       remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
       remove_event_by_type (pad, GST_EVENT_SEGMENT);
+      remove_event_by_type (pad, GST_EVENT_INSTANT_RATE_CHANGE);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
       pad->ABI.abi.last_flowret = GST_FLOW_OK;
 

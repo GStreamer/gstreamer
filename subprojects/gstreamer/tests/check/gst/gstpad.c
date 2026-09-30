@@ -2692,6 +2692,72 @@ GST_START_TEST (test_sticky_events)
 
 GST_END_TEST;
 
+static gboolean
+has_sticky_event (GstPad * pad, GstEventType type)
+{
+  GstEvent *event = gst_pad_get_sticky_event (pad, type, 0);
+
+  if (!event)
+    return FALSE;
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
+GST_START_TEST (test_flush_stop_removes_sticky_events)
+{
+  GstEventType removed_events[] = {
+    GST_EVENT_SEGMENT,
+    GST_EVENT_INSTANT_RATE_CHANGE,
+    GST_EVENT_STREAM_GROUP_DONE,
+    GST_EVENT_EOS,
+  };
+  GstPad *srcpad, *sinkpad;
+  GstSegment seg;
+  guint i;
+
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start ("test")));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_instant_rate_change (2.0, GST_SEGMENT_FLAG_NONE)));
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_group_done (gst_util_group_id_next ())));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_eos ()));
+
+  for (i = 0; i < G_N_ELEMENTS (removed_events); i++) {
+    const gchar *name = gst_event_type_get_name (removed_events[i]);
+
+    fail_unless (has_sticky_event (srcpad, removed_events[i]), "%s", name);
+    fail_unless (has_sticky_event (sinkpad, removed_events[i]), "%s", name);
+  }
+
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_flush_start ()));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_flush_stop (TRUE)));
+
+  fail_unless (has_sticky_event (srcpad, GST_EVENT_STREAM_START));
+  fail_unless (has_sticky_event (sinkpad, GST_EVENT_STREAM_START));
+
+  for (i = 0; i < G_N_ELEMENTS (removed_events); i++) {
+    const gchar *name = gst_event_type_get_name (removed_events[i]);
+
+    fail_if (has_sticky_event (srcpad, removed_events[i]), "%s", name);
+    fail_if (has_sticky_event (sinkpad, removed_events[i]), "%s", name);
+  }
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   GstPad *srcpad;
@@ -3643,6 +3709,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async_full_destroy_dispose);
   tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
   tcase_add_test (tc_chain, test_sticky_events);
+  tcase_add_test (tc_chain, test_flush_stop_removes_sticky_events);
   tcase_add_test (tc_chain, test_sticky_events_relink_during_repush);
   tcase_add_test (tc_chain, test_last_flow_return_push);
   tcase_add_test (tc_chain, test_last_flow_return_pull);
