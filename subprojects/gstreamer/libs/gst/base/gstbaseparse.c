@@ -2333,6 +2333,8 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
 
   /* subclass can only do one of these, or semantics are too unclear */
   g_assert (*skip == 0 || *flushed == 0);
+  /* negative skips are invalid and lead to infinite loops below */
+  g_assert (*skip >= 0);
 
   /* track skipping */
   if (*skip > 0) {

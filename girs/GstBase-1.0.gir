@@ -3265,6 +3265,9 @@ if desired.</doc>
             <type name="BaseParseFrame" c:type="GstBaseParseFrame*"/>
           </parameter>
           <parameter name="skipsize" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">amount of bytes to skip from the start of the
+  frame if no frame could be parsed, 0 if no skipping is needed.
+  Negative values are invalid.</doc>
             <type name="gint" c:type="gint*"/>
           </parameter>
         </parameters>
@@ -3971,6 +3974,9 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
               <type name="BaseParseFrame" c:type="GstBaseParseFrame*"/>
             </parameter>
             <parameter name="skipsize" direction="out" caller-allocates="0" transfer-ownership="full">
+              <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">amount of bytes to skip from the start of the
+  frame if no frame could be parsed, 0 if no skipping is needed.
+  Negative values are invalid.</doc>
               <type name="gint" c:type="gint*"/>
             </parameter>
           </parameters>
