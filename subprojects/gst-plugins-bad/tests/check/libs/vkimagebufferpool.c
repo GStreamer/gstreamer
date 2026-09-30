@@ -116,10 +116,11 @@ assert_multi_memory_plane_offsets (const gchar * format)
   gst_caps_unref (caps);
 }
 
+/* Returns NULL if the pool doesn't accept the configuration */
 static GstBufferPool *
-create_buffer_pool (const char *format, VkImageUsageFlags usage,
+try_create_buffer_pool (const char *format, VkImageUsageFlags usage,
     VkImageLayout initial_layout, guint64 initial_access, GstCaps * dec_caps,
-    gboolean multiplanar_opt)
+    const gchar * option)
 {
   GstCaps *caps;
   GstBufferPool *pool;
@@ -138,9 +139,8 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   gst_buffer_pool_config_set_params (config, caps, 1024, 1, 0);
   gst_caps_unref (caps);
 
-  if (multiplanar_opt)
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV);
+  if (option)
+    gst_buffer_pool_config_add_option (config, option);
 
   if (usage != 0) {
     gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
@@ -151,8 +151,24 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   if (dec_caps)
     gst_vulkan_image_buffer_pool_config_set_decode_caps (config, dec_caps);
 
-  fail_unless (gst_buffer_pool_set_config (pool, config));
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    gst_object_unref (pool);
+    return NULL;
+  }
   gst_buffer_pool_set_active (pool, TRUE);
+
+  return pool;
+}
+
+static GstBufferPool *
+create_buffer_pool (const char *format, VkImageUsageFlags usage,
+    VkImageLayout initial_layout, guint64 initial_access, GstCaps * dec_caps,
+    const gchar * option)
+{
+  GstBufferPool *pool = try_create_buffer_pool (format, usage, initial_layout,
+      initial_access, dec_caps, option);
+
+  fail_unless (pool != NULL);
 
   return pool;
 }
@@ -165,7 +181,7 @@ GST_START_TEST (test_image)
 
   setup_queue (VK_QUEUE_COMPUTE_BIT);
   pool = create_buffer_pool ("NV12", 0, VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL,
-      FALSE);
+      NULL);
 
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
   fail_unless (ret == GST_FLOW_OK);
@@ -192,18 +208,11 @@ GST_END_TEST;
 GST_START_TEST (test_multiplanar_option_advertised)
 {
   GstBufferPool *pool = gst_vulkan_image_buffer_pool_new (device);
-  const gchar **opts = gst_buffer_pool_get_options (pool);
-  gboolean found = FALSE;
 
-  for (guint i = 0; opts && opts[i]; i++) {
-    if (g_strcmp0 (opts[i],
-            GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV) == 0) {
-      found = TRUE;
-      break;
-    }
-  }
-
-  fail_unless (found);
+  fail_unless (gst_buffer_pool_has_option (pool,
+          GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV));
+  fail_unless (gst_buffer_pool_has_option (pool,
+          GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV));
   gst_object_unref (pool);
 }
 
@@ -236,7 +245,8 @@ GST_START_TEST (test_multiplanar_opt_in_single_image)
       &n_imgs, NULL) && n_imgs == 1;
 
   pool = create_buffer_pool ("NV12", VK_IMAGE_USAGE_SAMPLED_BIT,
-      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL, TRUE);
+      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL,
+      GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV);
   fail_unless (pool != NULL);
 
   fail_unless (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL)
@@ -279,7 +289,7 @@ GST_START_TEST (test_multiplanar_default_per_plane)
           780));
 
   pool = create_buffer_pool ("NV12", VK_IMAGE_USAGE_SAMPLED_BIT,
-      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL, FALSE);
+      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL, NULL);
   fail_unless (pool != NULL);
 
   fail_unless (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL)
@@ -307,7 +317,7 @@ GST_START_TEST (test_reconfigure_resets_image_flags)
 
   pool = create_buffer_pool ("NV12",
       VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL, FALSE);
+      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL, NULL);
   gst_buffer_pool_set_active (pool, FALSE);
 
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "NV12",
@@ -333,6 +343,98 @@ GST_START_TEST (test_reconfigure_resets_image_flags)
 
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
+/* With STORAGE usage, a YUV format is backed by a single composite VkImage if
+ * the format supports STORAGE natively. With the force opt-in, also if the
+ * driver accepts it through VK_IMAGE_CREATE_EXTENDED_USAGE_BIT. Otherwise the
+ * pool falls back to per-plane allocation, or with the force opt-in rejects
+ * the configuration. */
+static void
+check_multiplanar_storage (GstVideoFormat format, gboolean force)
+{
+  const VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT
+      | VK_IMAGE_USAGE_STORAGE_BIT;
+  GstBufferPool *pool;
+  GstBuffer *buffer = NULL;
+  GstVideoInfo info;
+  VkFormat vk_fmts[GST_VIDEO_MAX_PLANES] = { 0, };
+  int n_imgs = 0;
+  gboolean found, composite, extended = FALSE, expect_fail;
+
+  fail_unless (gst_video_info_set_format (&info, format, 1024, 780));
+
+  /* Keep this in sync with gst_vulkan_image_buffer_pool set_config (). */
+  found = gst_vulkan_format_from_video_info_2 (device, &info,
+      VK_IMAGE_TILING_OPTIMAL, FALSE, usage, vk_fmts, &n_imgs, NULL);
+
+  composite = found && n_imgs == 1;
+  if (force && !composite && gst_vulkan_format_from_video_info_2 (device, &info,
+          VK_IMAGE_TILING_OPTIMAL, FALSE, usage & ~VK_IMAGE_USAGE_STORAGE_BIT,
+          vk_fmts, &n_imgs, NULL) && n_imgs == 1) {
+    VkPhysicalDevice gpu = gst_vulkan_device_get_physical_device (device);
+    VkImageFormatProperties props;
+
+    composite = extended = vkGetPhysicalDeviceImageFormatProperties (gpu,
+        vk_fmts[0], VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, usage,
+        VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+        | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT, &props) == VK_SUCCESS;
+  }
+
+  /* no per-plane fallback with the force opt-in */
+  expect_fail = force ? !composite : !found;
+
+  pool = try_create_buffer_pool (gst_video_format_to_string (format), usage,
+      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL,
+      force ? GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV :
+      GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV);
+  if (expect_fail) {
+    fail_unless (pool == NULL);
+    return;
+  }
+  fail_unless (pool != NULL);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL)
+      == GST_FLOW_OK);
+  fail_unless (buffer != NULL);
+
+  if (composite) {
+    GstVulkanImageMemory *vk_mem;
+    gboolean has_extended;
+
+    fail_unless_equals_int (gst_buffer_n_memory (buffer), 1);
+    vk_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, 0);
+    fail_unless (vk_mem->create_info.usage & VK_IMAGE_USAGE_STORAGE_BIT);
+    /* EXTENDED_USAGE only if the composite format lacks STORAGE itself */
+    has_extended = (vk_mem->create_info.flags &
+        VK_IMAGE_CREATE_EXTENDED_USAGE_BIT) != 0;
+    fail_unless_equals_int (has_extended, extended);
+  } else {
+    fail_unless_equals_int (gst_buffer_n_memory (buffer),
+        GST_VIDEO_INFO_N_PLANES (&info));
+  }
+
+  gst_buffer_unref (buffer);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+}
+
+GST_START_TEST (test_multiplanar_opt_in_storage)
+{
+  setup_queue (VK_QUEUE_COMPUTE_BIT);
+  check_multiplanar_storage (GST_VIDEO_FORMAT_NV12, FALSE);
+  check_multiplanar_storage (GST_VIDEO_FORMAT_P010_10LE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_force_multiplanar_opt_in_storage)
+{
+  setup_queue (VK_QUEUE_COMPUTE_BIT);
+  check_multiplanar_storage (GST_VIDEO_FORMAT_NV12, TRUE);
+  check_multiplanar_storage (GST_VIDEO_FORMAT_P010_10LE, TRUE);
 }
 
 GST_END_TEST;
@@ -420,7 +522,7 @@ GST_START_TEST (test_decoding_image)
 
   pool = create_buffer_pool ("NV12", VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR,
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR, VK_ACCESS_TRANSFER_WRITE_BIT,
-      dec_caps, FALSE);
+      dec_caps, NULL);
 
   gst_caps_unref (dec_caps);
 
@@ -455,6 +557,8 @@ vkimagebufferpool_suite (void)
     tcase_add_test (tc_basic, test_multiplanar_opt_in_single_image);
     tcase_add_test (tc_basic, test_multiplanar_default_per_plane);
     tcase_add_test (tc_basic, test_reconfigure_resets_image_flags);
+    tcase_add_test (tc_basic, test_multiplanar_opt_in_storage);
+    tcase_add_test (tc_basic, test_force_multiplanar_opt_in_storage);
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
     tcase_add_test (tc_basic, test_decoding_image);
     tcase_add_test (tc_basic, test_vulkan_profiles);

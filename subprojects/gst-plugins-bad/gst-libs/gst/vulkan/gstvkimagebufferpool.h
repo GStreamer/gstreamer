@@ -55,6 +55,20 @@ GType gst_vulkan_image_buffer_pool_get_type (void);
 #define GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV \
     "GstBufferPoolOptionVulkanImageMultiplanarYUV"
 
+/**
+ * GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV:
+ *
+ * Like %GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV, which it
+ * implies, but for VK_IMAGE_USAGE_STORAGE_BIT usage the image is always a
+ * single multi-planar VkImage. If its format doesn't support STORAGE itself,
+ * it's created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT and
+ * VK_IMAGE_CREATE_EXTENDED_USAGE_BIT, and STORAGE is only valid for its
+ * per-plane views. If that isn't supported, the pool configuration fails.
+ *
+ * Since: 1.30
+ */
+#define GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV \
+    "GstBufferPoolOptionVulkanImageForceMultiplanarYUV"
 
 /**
  * GstVulkanImageBufferPool:

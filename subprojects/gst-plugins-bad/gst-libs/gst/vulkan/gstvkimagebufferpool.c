@@ -751,6 +751,42 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
 }
 
 static gboolean
+_gst_try_keep_multiplanar_with_storage_bit (GstVulkanImageBufferPool * vk_pool,
+    VkImageTiling tiling, VkImageUsageFlags requested_usage)
+{
+  GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  GstVulkanDevice *device = vk_pool->device;
+  VkFormat fmts[GST_VIDEO_MAX_PLANES] = { 0, };
+  int n_imgs = 0;
+
+  if (!gst_vulkan_format_from_video_info_2 (device, &priv->v_info, tiling,
+          FALSE, requested_usage & ~VK_IMAGE_USAGE_STORAGE_BIT, fmts, &n_imgs,
+          NULL) || n_imgs != 1) {
+    GST_DEBUG_OBJECT (vk_pool, "composite format doesn't support usage 0x%x "
+        "even without STORAGE", requested_usage & ~VK_IMAGE_USAGE_STORAGE_BIT);
+    return FALSE;
+  }
+
+  /* _check_image_create_flags() checks the pool's formats. On failure the
+   * pool configuration fails, so they aren't restored. */
+  memcpy (priv->vk_fmts, fmts, sizeof (fmts));
+  priv->n_imgs = 1;
+
+  /* fmts was probed without STORAGE: validate it with the real usage and
+   * the flags that make STORAGE valid through the per-plane views */
+  if (!_check_image_create_flags (vk_pool, tiling, requested_usage,
+          VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+          | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT)) {
+    GST_DEBUG_OBJECT (vk_pool, "composite format %d doesn't support usage "
+        "0x%x with MUTABLE_FORMAT and EXTENDED_USAGE flags", fmts[0],
+        requested_usage);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     GstStructure * config)
 {
@@ -761,7 +797,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL, *decode_caps = NULL, *encode_caps = NULL;
   GstCapsFeatures *features;
-  gboolean found, no_multiplane;
+  gboolean found = FALSE, no_multiplane;
+  gboolean want_multiplanar_opt, want_force_multiplanar_opt;
+  gboolean need_extended_usage = FALSE;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
           &max_buffers))
@@ -835,7 +873,10 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   gst_clear_caps (&decode_caps);
   gst_clear_caps (&encode_caps);
 
-  gboolean want_multiplanar_opt = gst_buffer_pool_config_has_option (config,
+  want_force_multiplanar_opt = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV);
+  want_multiplanar_opt = want_force_multiplanar_opt
+      || gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV);
   /* Composite YUV VkImage on two paths: Vulkan Video usage
    * (traditional), or explicit opt-in for non-video consumers
@@ -847,6 +888,20 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device,
       &priv->v_info, tiling, no_multiplane, requested_usage, priv->vk_fmts,
       &priv->n_imgs, NULL);
+
+  /* Drivers often report STORAGE only on the per-plane formats, so the probe
+   * above falls back to per-plane images, or fails. With FORCE_MULTIPLANAR_YUV
+   * keep the composite image if EXTENDED_USAGE makes STORAGE valid through its
+   * plane views, or fail. */
+  if (want_force_multiplanar_opt && !no_multiplane
+      && (requested_usage & VK_IMAGE_USAGE_STORAGE_BIT) != 0
+      && GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1
+      && (!found || priv->n_imgs > 1)) {
+    if (!_gst_try_keep_multiplanar_with_storage_bit (vk_pool, tiling,
+            requested_usage))
+      goto no_composite_format;
+    found = need_extended_usage = TRUE;
+  }
   if (!found)
     goto no_vk_format;
 
@@ -864,18 +919,12 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
       const gboolean is_multiplane =
           GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1;
 
-      /* video images are never aliased */
-      if (!is_video_usage) {
-        if (_check_image_create_flags (vk_pool, tiling, requested_usage,
-                VK_IMAGE_CREATE_ALIAS_BIT)) {
-          priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
-        } else {
-          GST_INFO_OBJECT (pool, "ALIAS create flag isn't supported by the "
-              "driver for usage 0x%x, not setting it", requested_usage);
-        }
-      }
-
-      if (is_multiplane && is_single_allocation) {
+      /* Required for STORAGE (which makes the usage sampleable), already
+       * validated by _gst_try_keep_multiplanar_with_storage_bit() */
+      if (need_extended_usage) {
+        priv->img_flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+            | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT;
+      } else if (is_multiplane && is_single_allocation) {
         if (_check_image_create_flags (vk_pool, tiling, requested_usage,
                 VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT)) {
           priv->img_flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
@@ -887,17 +936,17 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
         }
       }
 
-      /* Each create flag was validated alone above, but the driver might
-       * still reject their combination. MUTABLE_FORMAT is needed for
-       * per-plane image views, so drop ALIAS instead.
-       * (flags & (flags - 1)) is non-zero when more than one bit is set */
-      if ((priv->img_flags & (priv->img_flags - 1))
-          && !_check_image_create_flags (vk_pool, tiling, requested_usage,
-              priv->img_flags)) {
-        GST_INFO_OBJECT (pool, "create flags 0x%x aren't supported together "
-            "by the driver for usage 0x%x, dropping ALIAS", priv->img_flags,
-            requested_usage);
-        priv->img_flags &= ~VK_IMAGE_CREATE_ALIAS_BIT;
+      /* video images are never aliased. ALIAS is probed along with the flags
+       * set above, so the ones needed for per-plane views win over it. */
+      if (!is_video_usage) {
+        if (_check_image_create_flags (vk_pool, tiling, requested_usage,
+                priv->img_flags | VK_IMAGE_CREATE_ALIAS_BIT)) {
+          priv->img_flags |= VK_IMAGE_CREATE_ALIAS_BIT;
+        } else {
+          GST_INFO_OBJECT (pool, "create flags 0x%x aren't supported by the "
+              "driver for usage 0x%x, not setting ALIAS",
+              priv->img_flags | VK_IMAGE_CREATE_ALIAS_BIT, requested_usage);
+        }
       }
     }
   }
@@ -964,6 +1013,15 @@ no_vk_format:
   {
     GST_WARNING_OBJECT (pool, "no Vulkan format available for %s",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&priv->v_info)));
+    return FALSE;
+  }
+no_composite_format:
+  {
+    GST_WARNING_OBJECT (pool, "%s is requested, but no single multi-planar "
+        "image of %s supports usage 0x%x",
+        GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV,
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&priv->v_info)),
+        requested_usage);
     return FALSE;
   }
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
@@ -1150,6 +1208,7 @@ gst_vulkan_image_buffer_pool_get_options (GstBufferPool * pool)
   static const gchar *options[] = {
     GST_BUFFER_POOL_OPTION_VIDEO_META,
     GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV,
+    GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV,
     NULL,
   };
   return options;

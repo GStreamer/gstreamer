@@ -14,6 +14,16 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h"/>
       <type name="guint64" c:type="uint64_t"/>
     </alias>
+    <constant name="BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV" value="GstBufferPoolOptionVulkanImageForceMultiplanarYUV" c:type="GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_FORCE_MULTIPLANAR_YUV" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h">Like %GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV, which it
+implies, but for VK_IMAGE_USAGE_STORAGE_BIT usage the image is always a
+single multi-planar VkImage. If its format doesn't support STORAGE itself,
+it's created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT and
+VK_IMAGE_CREATE_EXTENDED_USAGE_BIT, and STORAGE is only valid for its
+per-plane views. If that isn't supported, the pool configuration fails.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <constant name="BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV" value="GstBufferPoolOptionVulkanImageMultiplanarYUV" c:type="GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h">Opt-in for a single multi-planar VkImage (e.g. NV12) instead of
 per-plane images when the format and usage allow it. Use for
