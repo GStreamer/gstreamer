@@ -1364,9 +1364,24 @@ gst_h266_parse_handle_frame (GstBaseParse * parse,
             ("Error parsing H.266 stream"), ("Invalid H.266 stream"));
         goto invalid_stream;
       case GST_H266_PARSER_NO_NAL:
-        GST_ELEMENT_ERROR (h266parse, STREAM, FORMAT,
-            ("Error parsing H.266 stream"), ("No H.266 NAL unit found"));
-        goto invalid_stream;
+        /* In NAL alignment, assume the NAL is broken */
+        if (h266parse->in_align == GST_H266_PARSE_ALIGN_NAL ||
+            h266parse->in_align == GST_H266_PARSE_ALIGN_AU) {
+          /* There is no start code between current_off and the end of the
+           * buffer. gst_h266_parser_identify_nalu() leaves nalu zeroed in
+           * that case, so it still describes the previous NAL (or nothing at
+           * all when this is the first iteration of a resumed parse). Make it
+           * describe the unparseable tail instead, so that "broken" below
+           * skips all of it at the start of a frame, or terminates the AU
+           * right after the last good NAL. Terminating at a stale sc_offset
+           * of 0 finishes a zero-sized frame, which leaves baseparse with a
+           * consumed frame->buffer leading to a crash. */
+          nalu.sc_offset = current_off;
+          nalu.offset = size;
+          nalu.size = 0;
+          goto broken;
+        }
+        goto more;
       case GST_H266_PARSER_BROKEN_DATA:
         GST_WARNING_OBJECT (h266parse, "input stream is corrupt; "
             "it contains a NAL unit of length %u", nalu.size);
