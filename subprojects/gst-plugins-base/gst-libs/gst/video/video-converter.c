@@ -1968,7 +1968,7 @@ static GstLineCache *
 chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   gboolean do_gamma, do_conversion, pass_alloc = FALSE;
-  gboolean same_matrix, same_primaries, same_bits;
+  gboolean same_matrix, same_primaries, same_bits, same_ranges;
   MatrixData p1, p2;
 
   same_bits = convert->unpack_bits == convert->pack_bits;
@@ -1986,6 +1986,16 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     same_primaries =
         gst_video_color_primaries_is_equivalent (convert->in_info.
         colorimetry.primaries, convert->out_info.colorimetry.primaries);
+  }
+
+  same_ranges = TRUE;
+
+  if (convert->in_info.colorimetry.range != convert->out_info.colorimetry.range) {
+    // All other combinations are equivalent
+    if (convert->in_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235 ||
+        convert->out_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+      same_ranges = FALSE;
+    }
   }
 
   GST_LOG ("matrix %d -> %d (%d)", convert->in_info.colorimetry.matrix,
@@ -2065,7 +2075,7 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     convert->convert_in_float = in_float;
     convert->convert_out_float = out_float;
 
-    if (!same_bits || !same_matrix || !same_primaries) {
+    if (!same_bits || !same_matrix || !same_primaries || !same_ranges) {
       /* float is already represented in [0, 1], so do not need to do scaling
        * below. Matrix conversion below will handle conversion between
        * normalized and integer range if needed. */
@@ -2100,7 +2110,7 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
       }
 
       do_conversion = TRUE;
-      if (!same_matrix || !same_primaries || use_float) {
+      if (!same_matrix || !same_primaries || use_float || !same_ranges) {
         if (idx == 0)
           prepare_matrix (convert, &convert->convert_matrix);
       }
@@ -10414,7 +10424,8 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   int i;
   GstVideoFormat in_format, out_format;
   GstVideoTransferFunction in_transf, out_transf;
-  gboolean interlaced, same_matrix, same_primaries, same_size, crop, border;
+  gboolean interlaced, same_matrix, same_primaries, same_size, same_ranges,
+      crop, border;
   gboolean need_copy, need_set, need_mult;
   gint width, height;
   guint in_bpp, out_bpp;
@@ -10469,6 +10480,16 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
         out_primaries);
   }
 
+  same_ranges = TRUE;
+
+  if (convert->in_info.colorimetry.range != convert->out_info.colorimetry.range) {
+    // All other combinations are equivalent
+    if (convert->in_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235 ||
+        convert->out_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+      same_ranges = FALSE;
+    }
+  }
+
   interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info);
   interlaced |= GST_VIDEO_INFO_IS_INTERLACED (&convert->out_info);
 
@@ -10483,7 +10504,8 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
     if (transforms[i].in_format == in_format &&
         transforms[i].out_format == out_format &&
         (transforms[i].keeps_interlaced || !interlaced) &&
-        (transforms[i].needs_color_matrix || (same_matrix && same_primaries))
+        (transforms[i].needs_color_matrix || (same_matrix && same_primaries
+                && same_ranges))
         && (!transforms[i].keeps_size || same_size)
         && (transforms[i].width_align & width) == 0
         && (transforms[i].height_align & height) == 0
