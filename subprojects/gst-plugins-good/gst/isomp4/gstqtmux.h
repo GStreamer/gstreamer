@@ -139,6 +139,7 @@ struct _GstQTMuxPad
    * know if there are late streams */
   /* subjected to dts adjustment */
   GstClockTime first_ts;
+  GstClockTime earliest_pts;
   GstClockTime first_dts;
 
   gint64 dts; /* the signed version of the DTS converted to running time. */
