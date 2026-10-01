@@ -675,6 +675,7 @@ gst_qt_mux_pad_reset (GstQTMuxPad * qtpad)
   qtpad->sample_offset = 0;
   qtpad->dts_adjustment = GST_CLOCK_TIME_NONE;
   qtpad->first_ts = GST_CLOCK_TIME_NONE;
+  qtpad->earliest_pts = GST_CLOCK_TIME_NONE;
   qtpad->first_dts = GST_CLOCK_TIME_NONE;
   qtpad->prepare_buf_func = NULL;
   qtpad->create_empty_buffer = NULL;
@@ -3445,6 +3446,8 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
 
     if (qpad->first_ts == GST_CLOCK_TIME_NONE)
       qpad->first_ts = timestamp;
+    if (qpad->earliest_pts == GST_CLOCK_TIME_NONE)
+      qpad->earliest_pts = timestamp;
     if (qpad->first_dts == GST_CLOCK_TIME_NONE)
       qpad->first_dts = timestamp;
 
@@ -3893,6 +3896,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
         qtpad->total_bytes = 0;
         qtpad->total_duration = 0;
         qtpad->first_dts = qtpad->first_ts = GST_CLOCK_TIME_NONE;
+        qtpad->earliest_pts = GST_CLOCK_TIME_NONE;
         qtpad->last_dts = GST_CLOCK_TIME_NONE;
         qtpad->sample_offset = 0;
       }
@@ -4037,8 +4041,8 @@ gst_qt_mux_update_global_statistics (GstQTMux * qtmux)
     }
 
     /* having flushed above, can check for buffers now */
-    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
-      GstClockTime first_pts_in = qtpad->first_ts;
+    if (GST_CLOCK_TIME_IS_VALID (qtpad->earliest_pts)) {
+      GstClockTime first_pts_in = qtpad->earliest_pts;
       /* it should be, since we got first_ts by adding adjustment
        * to a positive incoming PTS */
       if (qtpad->dts_adjustment <= first_pts_in)
@@ -4118,17 +4122,18 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
 
     atom_trak_edts_clear (qtpad->trak);
 
-    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts)) {
+    if (GST_CLOCK_TIME_IS_VALID (qtpad->earliest_pts)) {
       guint32 lateness = 0;
       guint32 duration = qtpad->trak->tkhd.duration;
       gboolean has_gap;
 
-      has_gap = (qtpad->first_ts > (qtmux->first_ts + qtpad->dts_adjustment));
+      has_gap =
+          (qtpad->earliest_pts > (qtmux->first_ts + qtpad->dts_adjustment));
 
       if (has_gap) {
         GstClockTime diff, trak_lateness;
 
-        diff = qtpad->first_ts - (qtmux->first_ts + qtpad->dts_adjustment);
+        diff = qtpad->earliest_pts - (qtmux->first_ts + qtpad->dts_adjustment);
         lateness = gst_util_uint64_scale_round (diff,
             qtmux->timescale, GST_SECOND);
 
@@ -4157,8 +4162,8 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
         GstClockTime ctts = 0;
         guint32 media_start;
 
-        if (qtpad->first_ts > qtpad->first_dts)
-          ctts = qtpad->first_ts - qtpad->first_dts;
+        if (qtpad->earliest_pts > qtpad->first_dts)
+          ctts = qtpad->earliest_pts - qtpad->first_dts;
 
         media_start = gst_util_uint64_scale_round (ctts,
             atom_trak_get_timescale (qtpad->trak), GST_SECOND);
@@ -5586,6 +5591,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTMuxPad * pad, GstBuffer * buf)
 
   if (!GST_BUFFER_PTS_IS_VALID (last_buf))
     goto no_pts;
+
+  if (!GST_CLOCK_TIME_IS_VALID (pad->earliest_pts) ||
+      GST_BUFFER_PTS (last_buf) < pad->earliest_pts)
+    pad->earliest_pts = GST_BUFFER_PTS (last_buf);
 
   /* if this is the first buffer, store the timestamp */
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE)) {
