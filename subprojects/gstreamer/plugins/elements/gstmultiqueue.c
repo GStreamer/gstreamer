@@ -2728,7 +2728,14 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
     default:
       if (!(GST_EVENT_IS_SERIALIZED (event))) {
+        gboolean was_sticky = GST_EVENT_IS_STICKY (event);
+
         res = gst_pad_push_event (srcpad, event);
+        if (!res && was_sticky) {
+          GST_DEBUG_ID (sq->debug_id,
+              "Ignoring failure to forward sticky non-serialized event");
+          res = TRUE;
+        }
         goto done;
       }
       break;
