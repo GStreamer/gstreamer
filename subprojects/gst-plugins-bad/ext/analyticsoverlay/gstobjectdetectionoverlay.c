@@ -714,6 +714,7 @@ gst_object_detection_overlay_stop (GstBaseTransform * trans)
   g_clear_object (&overlay->pango_layout);
   g_clear_object (&overlay->pango_context);
   gst_clear_buffer (&overlay->canvas);
+  g_clear_pointer (&overlay->composition, gst_video_overlay_composition_unref);
 
   return TRUE;
 }
