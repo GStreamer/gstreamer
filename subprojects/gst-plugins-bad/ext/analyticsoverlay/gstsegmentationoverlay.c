@@ -659,6 +659,8 @@ gst_segmentation_overlay_stop (GstBaseTransform * trans)
 {
   GstSegmentationOverlay *overlay = GST_SEGMENTATION_OVERLAY (trans);
   gst_clear_buffer (&overlay->canvas);
+  g_clear_pointer (&overlay->composition, gst_video_overlay_composition_unref);
+  overlay->upstream_composition = NULL;
   g_free (overlay->color_table);
   overlay->color_table = NULL;
   g_free (overlay->mask_filter);
