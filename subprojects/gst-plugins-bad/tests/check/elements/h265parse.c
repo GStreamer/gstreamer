@@ -24,8 +24,10 @@
  */
 
 #include <gst/check/check.h>
+#include <gst/video/video.h>
 #include <gst/video/video-sei.h>
 #include <gst/pbutils/pbutils.h>
+#include "gst-libs/gst/codecparsers/gsth265bitwriter.h"
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h265, parsed=(boolean)false"
@@ -532,6 +534,138 @@ GST_START_TEST (test_parse_detect_stream_with_hdrplus_sei)
 
 GST_END_TEST;
 
+/* An SPS that signals video_full_range_flag without a colour description.
+ * Per the H.265 VUI syntax video_full_range_flag is present whenever
+ * video_signal_type_present_flag is set, independently of
+ * colour_description_present_flag. h265parse must expose the (full) range and
+ * fill the matrix/transfer/primaries from the resolution (here 640x480, so
+ * SD defaults) to produce a complete colorimetry. */
+GST_START_TEST (test_parse_full_range_no_colour_description)
+{
+  GstH265VPS vps = {
+    .id = 0,
+    .max_layers_minus1 = 0,
+    .max_sub_layers_minus1 = 0,
+    .temporal_id_nesting_flag = 1,
+    .profile_tier_level = {
+          .profile_space = 0,
+          .tier_flag = 0,
+          .profile_idc = 1,
+          .progressive_source_flag = 1,
+          .frame_only_constraint_flag = 1,
+          .level_idc = 60,
+        },
+    .sub_layer_ordering_info_present_flag = 1,
+    .max_dec_pic_buffering_minus1 = {1,},
+  };
+  GstH265SPS sps = {
+    .id = 0,
+    .vps = &vps,
+    .max_sub_layers_minus1 = 0,
+    .temporal_id_nesting_flag = 1,
+    .profile_tier_level = {
+          .profile_space = 0,
+          .tier_flag = 0,
+          .profile_idc = 1,
+          .progressive_source_flag = 1,
+          .frame_only_constraint_flag = 1,
+          .level_idc = 60,
+        },
+    .chroma_format_idc = 1,
+    .pic_width_in_luma_samples = 640,
+    .pic_height_in_luma_samples = 480,
+    .conformance_window_flag = 0,
+    .bit_depth_luma_minus8 = 0,
+    .bit_depth_chroma_minus8 = 0,
+    .log2_max_pic_order_cnt_lsb_minus4 = 0,
+    .sub_layer_ordering_info_present_flag = 1,
+    .max_dec_pic_buffering_minus1 = {1,},
+    .log2_min_luma_coding_block_size_minus3 = 0,
+    .log2_diff_max_min_luma_coding_block_size = 3,
+    .log2_min_transform_block_size_minus2 = 0,
+    .log2_diff_max_min_transform_block_size = 3,
+    .sample_adaptive_offset_enabled_flag = 1,
+    .num_short_term_ref_pic_sets = 0,
+    .vui_parameters_present_flag = 1,
+    .vui_params = {
+          .video_signal_type_present_flag = 1,
+          .video_format = 5,
+          .video_full_range_flag = 1,
+          .colour_description_present_flag = 0,
+        },
+  };
+  GstH265PPS pps = {
+    .id = 0,
+    .sps = &sps,
+  };
+  GstH265SliceHdr slice = {
+    .first_slice_segment_in_pic_flag = 1,
+    .type = GST_H265_I_SLICE,
+    .pic_order_cnt_lsb = 0,
+    .pps = &pps,
+  };
+  GstHarness *h;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstStructure *s;
+  const gchar *colorimetry;
+  GstVideoColorimetry ci;
+  guint8 data[512];
+  guint size, offset = 0;
+
+  /* VPS */
+  size = sizeof (data);
+  fail_unless (gst_h265_bit_writer_vps (&vps, TRUE, data,
+          &size) == GST_H265_BIT_WRITER_OK);
+  offset += size;
+
+  /* SPS */
+  size = sizeof (data) - offset;
+  fail_unless (gst_h265_bit_writer_sps (&sps, TRUE, data + offset,
+          &size) == GST_H265_BIT_WRITER_OK);
+  offset += size;
+
+  /* PPS */
+  size = sizeof (data) - offset;
+  fail_unless (gst_h265_bit_writer_pps (&pps, TRUE, data + offset,
+          &size) == GST_H265_BIT_WRITER_OK);
+  offset += size;
+
+  /* IDR slice */
+  size = sizeof (data) - offset;
+  fail_unless (gst_h265_bit_writer_slice_hdr (&slice, TRUE,
+          GST_H265_NAL_SLICE_IDR_W_RADL, data + offset,
+          &size) == GST_H265_BIT_WRITER_OK);
+  offset += size;
+
+  h = gst_harness_new ("h265parse");
+  gst_harness_set_caps_str (h,
+      "video/x-h265, stream-format=(string)byte-stream",
+      "video/x-h265, parsed=(boolean)true, alignment=(string)au");
+
+  buf = gst_buffer_new_and_alloc (offset);
+  gst_buffer_fill (buf, 0, data, offset);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  caps = gst_pad_get_current_caps (h->sinkpad);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  colorimetry = gst_structure_get_string (s, "colorimetry");
+  fail_unless (colorimetry != NULL,
+      "colorimetry missing from caps: %" GST_PTR_FORMAT, caps);
+  fail_unless (gst_video_colorimetry_from_string (&ci, colorimetry));
+  fail_unless_equals_int (ci.range, GST_VIDEO_COLOR_RANGE_0_255);
+  fail_unless_equals_int (ci.matrix, GST_VIDEO_COLOR_MATRIX_BT601);
+  fail_unless_equals_int (ci.transfer, GST_VIDEO_TRANSFER_BT601);
+  fail_unless_equals_int (ci.primaries, GST_VIDEO_COLOR_PRIMARIES_SMPTE170M);
+
+  gst_caps_unref (caps);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parse_suite (void)
 {
@@ -546,6 +680,7 @@ h265parse_suite (void)
   tcase_add_test (tc_chain, test_parse_detect_stream_with_hdr_sei);
   tcase_add_test (tc_chain, test_parse_detect_stream_hdr_sei_expiry);
   tcase_add_test (tc_chain, test_parse_detect_stream_with_hdrplus_sei);
+  tcase_add_test (tc_chain, test_parse_full_range_no_colour_description);
 
   return s;
 }

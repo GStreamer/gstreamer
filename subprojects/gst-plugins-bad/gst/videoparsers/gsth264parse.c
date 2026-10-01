@@ -2376,23 +2376,38 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       }
     }
 
-    if (vui->video_signal_type_present_flag &&
-        vui->colour_description_present_flag) {
+    if (vui->video_signal_type_present_flag) {
       GstVideoColorimetry ci = { 0, };
       gchar *old_colorimetry = NULL;
 
-      ci.matrix = gst_video_color_matrix_from_iso (vui->matrix_coefficients);
-      ci.transfer =
-          gst_video_transfer_function_from_iso (vui->transfer_characteristics);
-      ci.primaries = gst_video_color_primaries_from_iso (vui->colour_primaries);
+      /* video_full_range_flag is signalled by video_signal_type_present_flag
+       * alone, independently of colour_description_present_flag. */
+      if (vui->video_full_range_flag)
+        ci.range = GST_VIDEO_COLOR_RANGE_0_255;
+      else
+        ci.range = GST_VIDEO_COLOR_RANGE_16_235;
 
-      if (ci.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN
-          && ci.transfer != GST_VIDEO_TRANSFER_UNKNOWN
-          && ci.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN) {
-        if (vui->video_full_range_flag)
-          ci.range = GST_VIDEO_COLOR_RANGE_0_255;
-        else
-          ci.range = GST_VIDEO_COLOR_RANGE_16_235;
+      if (vui->colour_description_present_flag) {
+        ci.matrix = gst_video_color_matrix_from_iso (vui->matrix_coefficients);
+        ci.transfer =
+            gst_video_transfer_function_from_iso
+            (vui->transfer_characteristics);
+        ci.primaries =
+            gst_video_color_primaries_from_iso (vui->colour_primaries);
+      } else {
+        /* No colour description present: guess matrix/transfer/primaries from
+         * the resolution (matching GstVideoInfo's default colorimetry) so that
+         * downstream gets a complete colorimetry instead of a partial one with
+         * unknown fields, which can break negotiation. */
+        if (h264parse->height > 576) {
+          ci.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+          ci.transfer = GST_VIDEO_TRANSFER_BT709;
+          ci.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+        } else {
+          ci.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+          ci.transfer = GST_VIDEO_TRANSFER_BT601;
+          ci.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+        }
       }
 
       old_colorimetry =

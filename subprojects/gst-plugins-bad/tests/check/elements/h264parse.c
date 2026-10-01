@@ -31,6 +31,7 @@
 #include <gst/video/video.h>
 #include <gst/video/video-sei.h>
 #include "gst-libs/gst/codecparsers/gsth264parser.h"
+#include "gst-libs/gst/codecparsers/gsth264bitwriter.h"
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h264, parsed=(boolean)false"
@@ -2192,6 +2193,122 @@ GST_START_TEST (test_parse_bytestream_junk_after_au)
 
 GST_END_TEST;
 
+/* An SPS that signals video_full_range_flag without a colour description.
+ * Per the H.264 VUI syntax video_full_range_flag is present whenever
+ * video_signal_type_present_flag is set, independently of
+ * colour_description_present_flag. h264parse must expose the (full) range and
+ * fill the matrix/transfer/primaries from the resolution (here 640x480, so
+ * SD defaults) to produce a complete colorimetry. */
+GST_START_TEST (test_parse_full_range_no_colour_description)
+{
+  GstH264SPS sps = {
+    .id = 0,
+    .profile_idc = 100,
+    .level_idc = 30,
+    .chroma_format_idc = 1,
+    .bit_depth_luma_minus8 = 0,
+    .bit_depth_chroma_minus8 = 0,
+    .scaling_matrix_present_flag = 0,
+    .log2_max_frame_num_minus4 = 0,
+    .pic_order_cnt_type = 0,
+    .log2_max_pic_order_cnt_lsb_minus4 = 0,
+    .num_ref_frames = 1,
+    .pic_width_in_mbs_minus1 = 39,
+    .pic_height_in_map_units_minus1 = 29,
+    .frame_mbs_only_flag = 1,
+    .direct_8x8_inference_flag = 1,
+    .frame_cropping_flag = 0,
+    .vui_parameters_present_flag = 1,
+    .vui_parameters = {
+          .video_signal_type_present_flag = 1,
+          .video_format = 5,
+          .video_full_range_flag = 1,
+          .colour_description_present_flag = 0,
+        },
+  };
+  GstH264PPS pps = {
+    .id = 0,
+    .sequence = &sps,
+  };
+  GstH264SliceHdr slice = {
+    .first_mb_in_slice = 0,
+    .type = GST_H264_I_SLICE,
+    .frame_num = 0,
+    .idr_pic_id = 0,
+    .pic_order_cnt_lsb = 0,
+    .pps = &pps,
+  };
+  GstHarness *h;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstStructure *s;
+  const gchar *colorimetry;
+  GstVideoColorimetry ci;
+  guint8 raw[256];
+  guint8 nal[256];
+  guint8 stream[768];
+  guint raw_size, nal_size, trail_bits, offset = 0;
+
+  /* SPS */
+  raw_size = sizeof (raw);
+  fail_unless (gst_h264_bit_writer_sps (&sps, TRUE, raw,
+          &raw_size) == GST_H264_BIT_WRITER_OK);
+  nal_size = sizeof (nal);
+  fail_unless (gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
+          raw, raw_size * 8, nal, &nal_size) == GST_H264_BIT_WRITER_OK);
+  memcpy (stream + offset, nal, nal_size);
+  offset += nal_size;
+
+  /* PPS */
+  raw_size = sizeof (raw);
+  fail_unless (gst_h264_bit_writer_pps (&pps, TRUE, raw,
+          &raw_size) == GST_H264_BIT_WRITER_OK);
+  nal_size = sizeof (nal);
+  fail_unless (gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
+          raw, raw_size * 8, nal, &nal_size) == GST_H264_BIT_WRITER_OK);
+  memcpy (stream + offset, nal, nal_size);
+  offset += nal_size;
+
+  /* IDR slice (header only is enough for the parser to form an AU) */
+  raw_size = sizeof (raw);
+  fail_unless (gst_h264_bit_writer_slice_hdr (&slice, TRUE,
+          GST_H264_NAL_SLICE_IDR, TRUE, raw, &raw_size,
+          &trail_bits) == GST_H264_BIT_WRITER_OK);
+  nal_size = sizeof (nal);
+  fail_unless (gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, TRUE,
+          raw, raw_size * 8 + trail_bits, nal,
+          &nal_size) == GST_H264_BIT_WRITER_OK);
+  memcpy (stream + offset, nal, nal_size);
+  offset += nal_size;
+
+  h = gst_harness_new ("h264parse");
+  gst_harness_set_caps_str (h,
+      "video/x-h264, stream-format=(string)byte-stream",
+      "video/x-h264, parsed=(boolean)true, alignment=(string)au");
+
+  buf = gst_buffer_new_and_alloc (offset);
+  gst_buffer_fill (buf, 0, stream, offset);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  caps = gst_pad_get_current_caps (h->sinkpad);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  colorimetry = gst_structure_get_string (s, "colorimetry");
+  fail_unless (colorimetry != NULL,
+      "colorimetry missing from caps: %" GST_PTR_FORMAT, caps);
+  fail_unless (gst_video_colorimetry_from_string (&ci, colorimetry));
+  fail_unless_equals_int (ci.range, GST_VIDEO_COLOR_RANGE_0_255);
+  fail_unless_equals_int (ci.matrix, GST_VIDEO_COLOR_MATRIX_BT601);
+  fail_unless_equals_int (ci.transfer, GST_VIDEO_TRANSFER_BT601);
+  fail_unless_equals_int (ci.primaries, GST_VIDEO_COLOR_PRIMARIES_SMPTE170M);
+
+  gst_caps_unref (caps);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 /*
  * TODO:
@@ -2311,6 +2428,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_packetized_avc_drop_corrupt);
     tcase_add_test (tc_chain, test_non_vcl_nal_duration);
     tcase_add_test (tc_chain, test_parse_bytestream_junk_after_au);
+    tcase_add_test (tc_chain, test_parse_full_range_no_colour_description);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
