@@ -1,6 +1,7 @@
 // GStreamer
 //
 // Copyright (C) 2026 Edward Hervey <edward@centricular.com>
+// Copyright (C) 2026 Sebastian Dröge <sebastian@centricular.com>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public License, v2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -12,19 +13,381 @@
 
 #[allow(unused, non_camel_case_types, non_upper_case_globals, non_snake_case)]
 use crate::bindings;
-use bindings::{
-    gboolean, gst_caps_from_string, gst_type_find_register, GstPlugin, GST_TYPE_FIND_MAXIMUM,
-};
+use bindings::{GstPlugin, gboolean, gst_caps_from_string, gst_caps_unref, gst_type_find_register};
 
 use std::ffi::{CStr, CString};
 use std::ptr;
 
 use crate::bindings::gpointer;
-use crate::helpers::{opt, read_u16_le, read_u32_le, suggest, typefinder, Feature, TypeFind};
+use crate::helpers::{
+    Feature, TypeFind, magic_eq, opt, read_u16_le, read_u32_le, suggest, typefinder,
+};
 #[allow(unused_imports)]
 use bindings::{
     GST_RANK_MARGINAL as MARGINAL, GST_RANK_PRIMARY as PRIMARY, GST_RANK_SECONDARY as SECONDARY,
 };
+
+extern "C" fn swf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<3>(0)
+        && (data == b"FWS" || data == b"CWS")
+    {
+        suggest!(tf, MAXIMUM, c"application/x-shockwave-flash");
+    }
+}
+
+extern "C" fn tiff_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<4>(0) else { return };
+
+    let endian = if data == &[0x49, 0x49, 0x2a, 0x00] {
+        bindings::G_LITTLE_ENDIAN
+    } else if data == &[0x4d, 0x4d, 0x00, 0x2a] {
+        bindings::G_BIG_ENDIAN
+    } else {
+        return;
+    };
+    suggest!(tf, MAXIMUM, c"image/tiff", [
+        (c"endianness", i32 : endian as i32),
+    ]);
+}
+
+extern "C" fn flv_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"FLV") {
+        suggest!(tf, MAXIMUM, c"video/x-flv");
+    }
+}
+
+extern "C" fn gif_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"GIF8") {
+        suggest!(tf, MAXIMUM, c"image/gif");
+    }
+}
+
+extern "C" fn gz_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"\x1f\x8b") {
+        suggest!(tf, LIKELY, c"application/x-gzip");
+    }
+}
+
+extern "C" fn zip_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"PK\x03\x04") {
+        suggest!(tf, LIKELY, c"application/zip");
+    }
+}
+
+extern "C" fn ar_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<32>(0)
+        && data[..7] == *b"!<arch>"
+        && data[7] == b'\n'
+    {
+        // First member header starts at offset 8; file name field (16 bytes) is @8–23.
+        let name_valid = (8..=23).all(|i| data[i].is_ascii_graphic() || data[i] == b' ');
+        if name_valid {
+            suggest!(tf, NEARLY_CERTAIN, c"application/x-ar");
+        } else {
+            suggest!(tf, POSSIBLE, c"application/x-ar");
+        }
+    }
+}
+
+extern "C" fn asf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const MAGIC: [u8; 16] = [
+        0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce,
+        0x6c,
+    ];
+    if tf.starts_with(&MAGIC) {
+        suggest!(tf, MAXIMUM, c"video/x-ms-asf");
+    }
+}
+
+extern "C" fn cmml_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<10>(0)
+        && data[..8] == *b"CMML\0\0\0\0"
+        && read_u16_le(&data[8..]).is_some_and(|v| v >= 2)
+    {
+        suggest!(tf, MAXIMUM, c"text/x-cmml");
+    }
+}
+
+extern "C" fn webvtt_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<10>(0) {
+        // Check for WEBVTT with optional BOM prefix.
+        let (magic_off, magic_end) =
+            if data.len() >= 3 && data[0] == 0xef && data[1] == 0xbb && data[2] == 0xbf {
+                (3, 9) // UTF-8 BOM + WEBVTT + separator
+            } else {
+                (0, 6) // No BOM: WEBVTT + separator
+            };
+
+        if magic_off + 6 > data.len() {
+            return;
+        }
+        if !magic_eq(&data[magic_off..magic_off + 6], b"WEBVTT") {
+            return;
+        }
+
+        // Separator must be space, tab, LF, or CR.
+        let sep = data[magic_end];
+        if matches!(sep, b' ' | b'\t' | b'\n' | b'\r') {
+            suggest!(tf, MAXIMUM, c"application/x-subtitle-vtt", [
+                (c"parsed", bool : false),
+            ]);
+        }
+    }
+}
+
+// VCD — video/x-vcd
+// MPEG-1 disc image magic at offset 0.
+extern "C" fn vcd_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<12>(0)
+        && data[0] == 0x00
+        && (1..10).all(|i| data[i] == 0xff)
+        && data[10] == 0xff
+        && data[11] == 0x00
+    {
+        suggest!(tf, MAXIMUM, c"video/x-vcd");
+    }
+}
+
+// iMelody — audio/x-imelody
+extern "C" fn imelody_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"BEGIN:IMELODY") {
+        suggest!(tf, MAXIMUM, c"audio/x-imelody");
+    }
+}
+
+// SCC — application/x-scc
+extern "C" fn scc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"Scenarist_SCC V1.0") {
+        suggest!(tf, MAXIMUM, c"application/x-scc");
+    }
+}
+
+// RMF — application/vnd.rn-realmedia
+extern "C" fn rmf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b".RMF") {
+        suggest!(tf, MAXIMUM, c"application/vnd.rn-realmedia");
+    }
+}
+
+// RAM — application/x-pn-realaudio
+// `.ra\xfd` @ 0.
+extern "C" fn ram_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b".ra\xfd") {
+        suggest!(tf, MAXIMUM, c"application/x-pn-realaudio");
+    }
+}
+
+// NIST — audio/x-nist
+extern "C" fn nist_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"NIST") {
+        suggest!(tf, MAXIMUM, c"audio/x-nist");
+    }
+}
+
+// VOC — audio/x-voc
+extern "C" fn voc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"Creative") {
+        suggest!(tf, MAXIMUM, c"audio/x-voc");
+    }
+}
+
+// RF64 — audio/x-rf64
+extern "C" fn rf64_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"RF64") {
+        suggest!(tf, MAXIMUM, c"audio/x-rf64");
+    }
+}
+
+// SID — audio/x-sid
+extern "C" fn sid_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"PSID") {
+        suggest!(tf, MAXIMUM, c"audio/x-sid");
+    }
+}
+
+// XCF — image/x-xcf
+extern "C" fn xcf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"gimp xcf") {
+        suggest!(tf, MAXIMUM, c"image/x-xcf");
+    }
+}
+
+// MNG — video/x-mng
+const MNG_MAGIC: [u8; 8] = [0x8a, 0x4d, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+extern "C" fn mng_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(&MNG_MAGIC) {
+        suggest!(tf, MAXIMUM, c"video/x-mng");
+    }
+}
+
+// JNG — image/x-jng
+const JNG_MAGIC: [u8; 8] = [0x8b, 0x4a, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+extern "C" fn jng_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(&JNG_MAGIC) {
+        suggest!(tf, MAXIMUM, c"image/x-jng");
+    }
+}
+
+// RAS — image/x-sun-raster
+const RAS_MAGIC: [u8; 4] = [0x59, 0xa6, 0x6a, 0x95];
+extern "C" fn ras_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(&RAS_MAGIC) {
+        suggest!(tf, MAXIMUM, c"image/x-sun-raster");
+    }
+}
+
+// BZIP2 — application/x-bzip
+extern "C" fn bz2_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"BZh") {
+        suggest!(tf, LIKELY, c"application/x-bzip");
+    }
+}
+
+// COMPRESS — application/x-compress
+extern "C" fn z_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"\x1f\x9d") {
+        suggest!(tf, LIKELY, c"application/x-compress");
+    }
+}
+
+// ELF — application/x-executable
+extern "C" fn elf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"\x7fELF") {
+        suggest!(tf, MAXIMUM, c"application/x-executable");
+    }
+}
+
+// SPC — audio/x-spc
+extern "C" fn spc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"SNES-SPC700 Sound File Data") {
+        suggest!(tf, MAXIMUM, c"audio/x-spc");
+    }
+}
+
+// CAF — audio/x-caf
+extern "C" fn caf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"caff\x00\x01") {
+        suggest!(tf, MAXIMUM, c"audio/x-caf");
+    }
+}
+
+// RAR — application/x-rar
+extern "C" fn rar_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"Rar!") {
+        suggest!(tf, LIKELY, c"application/x-rar");
+    }
+}
+
+// NSF — audio/x-nsf
+extern "C" fn nsf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"NESM\x1a") {
+        suggest!(tf, MAXIMUM, c"audio/x-nsf");
+    }
+}
+
+// GYM — audio/x-gym
+extern "C" fn gym_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"GYMX") {
+        suggest!(tf, MAXIMUM, c"audio/x-gym");
+    }
+}
+
+// AY — audio/x-ay
+extern "C" fn ay_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"ZXAYEMUL") {
+        suggest!(tf, MAXIMUM, c"audio/x-ay");
+    }
+}
+
+// GBS — audio/x-gbs
+extern "C" fn gbs_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"GBS\x01") {
+        suggest!(tf, MAXIMUM, c"audio/x-gbs");
+    }
+}
+
+// VGM — audio/x-vgm
+extern "C" fn vgm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"Vgm ") {
+        suggest!(tf, MAXIMUM, c"audio/x-vgm");
+    }
+}
+
+// SAP — audio/x-sap
+extern "C" fn sap_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"SAP\r\nAUTHOR ") {
+        suggest!(tf, MAXIMUM, c"audio/x-sap");
+    }
+}
+
+// IVF — video/x-ivf
+extern "C" fn ivf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"DKIF") {
+        suggest!(tf, NEARLY_CERTAIN, c"video/x-ivf");
+    }
+}
+
+// KSS — audio/x-kss
+extern "C" fn kss_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"KSSX\x00") {
+        suggest!(tf, MAXIMUM, c"audio/x-kss");
+    }
+}
+
+// PDF — application/pdf
+extern "C" fn pdf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"%PDF-") {
+        suggest!(tf, LIKELY, c"application/pdf");
+    }
+}
+
+// DOC — application/msword (legacy .doc)
+const DOC_MAGIC: [u8; 8] = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
+extern "C" fn doc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(&DOC_MAGIC) {
+        suggest!(tf, LIKELY, c"application/msword");
+    }
+}
+
+// DS_Store — application/octet-stream
+extern "C" fn ds_store_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"\x00\x00\x00\x01Bud1") {
+        suggest!(tf, LIKELY, c"application/octet-stream");
+    }
+}
+
+// DMP — audio/x-tap-dmp (Tape2029)
+extern "C" fn dmp_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"DC2N-TAP-RAW") {
+        suggest!(tf, LIKELY, c"audio/x-tap-dmp");
+    }
+}
+
+// AVS — video/x-avs
+const AVS_MAGIC: [u8; 4] = [0x77, 0x57, 0x10, 0x00];
+extern "C" fn avs_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(&AVS_MAGIC) {
+        suggest!(tf, LIKELY, c"video/x-avs");
+    }
+}
+
+// PSD — image/vnd.adobe.photoshop
+extern "C" fn psd_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"8BPS\x00\x01\x00\x00\x00\x00") {
+        suggest!(tf, LIKELY, c"image/vnd.adobe.photoshop");
+    }
+}
+
+// XI — audio/x-xi
+extern "C" fn xi_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"Extended Instrument: ") {
+        suggest!(tf, MAXIMUM, c"audio/x-xi");
+    }
+}
+
+// =============================================================================
+// Complex finder — BMP (DIB structure validation)
+// =============================================================================
 
 // BMP — image/bmp
 // Magic "BM" @0, DIB header validation at offsets 14–28/32.
@@ -78,28 +441,119 @@ extern "C" fn bmp_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     }
 
-    suggest!(tf, GST_TYPE_FIND_MAXIMUM,
+    suggest!(tf, MAXIMUM,
              c"image/bmp",
              [ (c"width", i32 : w as i32),
                (c"height", i32 : h as i32),
                (c"bpp", i32 : bpp as i32), ]);
 }
 
+// =============================================================================
+// Registration table and entry point
+// =============================================================================
+
 /// Registration table: one entry per typefinder.
 /// The `typefinder!` macro expands to a `Feature` tuple.
 ///
-/// Signature: `typefinder!("mime/type", RANK, func_name, "exts"?)`
+/// Signatures:
+/// - `typefinder!("mime/type", RANK, func_name)` — no extensions
+/// - `typefinder!("mime/type", RANK, func_name, "exts")` — with extensions
+/// - `typefinder!("mime/type", RANK, func_name, "exts", "custom caps")` — custom caps
+///
 /// - `"mime/type"`  – feature name and default caps
 /// - `RANK`         – PRIMARY, SECONDARY, MARGINAL (or offset like PRIMARY+103)
 /// - `func_name`    – the typefind function, or `none` for extension-only registration
 /// - `"exts"`       – comma-separated extensions string (optional)
-///
-/// To add a row after implementing a typefinder:
-///   typefinder!("audio/x-musepack", PRIMARY, musepack_type_find, "mpc")
-const FEATURES: &[Feature] = &[typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp")];
+const FEATURES: &[Feature] = &[
+    // Trivial finders — magic bytes only
+    typefinder!(
+        "application/x-shockwave-flash",
+        SECONDARY,
+        swf_type_find,
+        "swf,swfl"
+    ),
+    typefinder!(
+        "image/tiff",
+        PRIMARY,
+        tiff_type_find,
+        "tif,tiff",
+        "image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }"
+    ),
+    typefinder!("video/x-flv", SECONDARY, flv_type_find, "flv"),
+    typefinder!("image/gif", PRIMARY, gif_type_find, "gif"),
+    typefinder!("application/x-gzip", SECONDARY, gz_type_find, "gz"),
+    typefinder!("application/zip", SECONDARY, zip_type_find, "zip"),
+    typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
+    typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
+    typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
+    typefinder!(
+        "application/x-subtitle-vtt",
+        MARGINAL,
+        webvtt_type_find,
+        "vtt",
+        "application/x-subtitle-vtt, parsed=(boolean)false"
+    ),
+    // Complex finder — DIB structure validation
+    typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp"),
+    // Additional startswith finders
+    typefinder!("video/x-vcd", PRIMARY, vcd_type_find, "dat"),
+    typefinder!(
+        "audio/x-imelody",
+        PRIMARY,
+        imelody_type_find,
+        "imy,ime,imelody"
+    ),
+    typefinder!("application/x-scc", PRIMARY, scc_type_find, "scc"),
+    typefinder!(
+        "application/vnd.rn-realmedia",
+        SECONDARY,
+        rmf_type_find,
+        "ra,ram,rm,rmvb"
+    ),
+    typefinder!(
+        "application/x-pn-realaudio",
+        SECONDARY,
+        ram_type_find,
+        "ra,ram,rm,rmvb"
+    ),
+    typefinder!("audio/x-nist", SECONDARY, nist_type_find, "nist"),
+    typefinder!("audio/x-voc", SECONDARY, voc_type_find, "voc"),
+    typefinder!("audio/x-rf64", PRIMARY, rf64_type_find, "rf64"),
+    typefinder!("audio/x-sid", MARGINAL, sid_type_find, "sid"),
+    typefinder!("image/x-xcf", SECONDARY, xcf_type_find, "xcf"),
+    typefinder!("video/x-mng", SECONDARY, mng_type_find, "mng"),
+    typefinder!("image/x-jng", SECONDARY, jng_type_find, "jng"),
+    typefinder!("image/x-sun-raster", SECONDARY, ras_type_find, "ras"),
+    typefinder!("application/x-bzip", SECONDARY, bz2_type_find, "bz2"),
+    typefinder!("application/x-compress", SECONDARY, z_type_find, "Z"),
+    typefinder!("application/x-executable", MARGINAL, elf_type_find),
+    typefinder!("audio/x-spc", SECONDARY, spc_type_find, "spc"),
+    typefinder!("audio/x-caf", SECONDARY, caf_type_find, "caf"),
+    typefinder!("application/x-rar", SECONDARY, rar_type_find, "rar"),
+    typefinder!("audio/x-nsf", SECONDARY, nsf_type_find, "nsf"),
+    typefinder!("audio/x-gym", SECONDARY, gym_type_find, "gym"),
+    typefinder!("audio/x-ay", SECONDARY, ay_type_find, "ay"),
+    typefinder!("audio/x-gbs", SECONDARY, gbs_type_find, "gbs"),
+    typefinder!("audio/x-vgm", SECONDARY, vgm_type_find, "vgm"),
+    typefinder!("audio/x-sap", SECONDARY, sap_type_find, "sap"),
+    typefinder!("video/x-ivf", SECONDARY, ivf_type_find, "ivf"),
+    typefinder!("audio/x-kss", SECONDARY, kss_type_find, "kss"),
+    typefinder!("application/pdf", SECONDARY, pdf_type_find, "pdf"),
+    typefinder!("application/msword", SECONDARY, doc_type_find, "doc"),
+    typefinder!(
+        "application/octet-stream",
+        SECONDARY,
+        ds_store_type_find,
+        "DS_Store"
+    ),
+    typefinder!("audio/x-tap-dmp", SECONDARY, dmp_type_find, "dmp"),
+    typefinder!("video/x-avs", SECONDARY, avs_type_find),
+    typefinder!("image/vnd.adobe.photoshop", SECONDARY, psd_type_find, "psd"),
+    typefinder!("audio/x-xi", SECONDARY, xi_type_find, "xi"),
+];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> gboolean {
     let cs = |s: &str| CString::new(s).expect("NULL in registration table string");
 
@@ -124,6 +578,12 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
                 ptr::null_mut(),
                 None,
             );
+            // Register takes its own ref on the caps (gst_caps_replace refs via
+            // gst_mini_object_replace); release our initial ref from
+            // gst_caps_from_string, as C's sw_data_destroy does.
+            if !caps.is_null() {
+                gst_caps_unref(caps);
+            }
         }
     }
     true as gboolean

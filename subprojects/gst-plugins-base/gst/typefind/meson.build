@@ -63,7 +63,7 @@ if get_option('typefind_rust')
   # only the crate root is passed to rustc; modules are tracked via depfile
   typefindfunctions_rs = static_library('typefindfunctions_rs',
     sources : 'rust/src/lib.rs',
-    override_options : ['rust_std=2021'],
+    override_options : ['rust_std=2024'],
     rust_abi : 'c',
     dependencies : [gst_dep, pbutils_dep],
   )
@@ -72,7 +72,7 @@ if get_option('typefind_rust')
   if get_option('tests').allowed()
     typefindfunctions_rs_test = executable('typefindfunctions_rs_test',
       sources : 'rust/src/lib.rs',
-      override_options : ['rust_std=2021'],
+      override_options : ['rust_std=2024'],
       rust_args : ['--test'],
       dependencies : [gst_dep, pbutils_dep],
     )

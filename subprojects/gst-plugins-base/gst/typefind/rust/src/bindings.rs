@@ -1,6 +1,7 @@
 // GStreamer
 //
 // Copyright (C) 2026 Edward Hervey <edward@centricular.com>
+// Copyright (C) 2026 Sebastian Dröge <sebastian@centricular.com>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public License, v2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -72,7 +73,7 @@ pub const G_TYPE_BOOLEAN: GType = 20;
 pub const G_TYPE_INT: GType = 24;
 pub const G_TYPE_STRING: GType = 64;
 
-extern "C" {
+unsafe extern "C" {
     pub fn gst_type_find_peek(find: *mut GstTypeFind, offset: i64, size: c_uint) -> *const u8;
 
     pub fn gst_type_find_get_length(find: *mut GstTypeFind) -> u64;
@@ -101,4 +102,5 @@ extern "C" {
     ) -> gboolean;
 
     pub fn gst_caps_from_string(string: *const c_char) -> *mut GstCaps;
+    pub fn gst_caps_unref(caps: *mut GstCaps);
 }

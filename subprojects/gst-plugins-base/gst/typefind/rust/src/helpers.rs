@@ -1,6 +1,7 @@
 // GStreamer
 //
 // Copyright (C) 2026 Edward Hervey <edward@centricular.com>
+// Copyright (C) 2026 Sebastian Dröge <sebastian@centricular.com>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public License, v2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -45,6 +46,12 @@ impl TypeFind {
     pub fn length(&mut self) -> u64 {
         unsafe { bindings::gst_type_find_get_length(&mut self.0) }
     }
+
+    /// Peek N bytes from offset 0 and compare with a magic array.
+    /// Returns `true` only when enough data is available and matches.
+    pub fn starts_with<const N: usize>(&mut self, magic: &[u8; N]) -> bool {
+        matches!(self.peek::<N>(0), Some(data) if data == magic)
+    }
 }
 
 /// Registered typefind function ABI, C signature
@@ -59,6 +66,15 @@ pub(crate) struct Feature(
     pub(crate) Option<&'static str>, // extensions
     pub(crate) Option<&'static str>, // caps string
 );
+
+/// Compare `pat` bytes against `data`. Returns true only when `data.len()`
+/// ≥ `pat.len()` and all bytes match in order.
+pub(crate) fn magic_eq(data: &[u8], pat: &[u8]) -> bool {
+    if data.len() < pat.len() {
+        return false;
+    }
+    pat.iter().enumerate().all(|(i, &b)| data[i] == b)
+}
 
 /// Read a 16-bit little-endian value from a byte slice. Returns None if the
 /// slice is shorter than 2 bytes.
@@ -96,6 +112,29 @@ macro_rules! map_type_name {
     };
 }
 
+/// Maps a probability suffix (MAXIMUM, NEARLY_CERTAIN, ...) to the full
+/// `GST_TYPE_FIND_*` constant. Callers write just the suffix.
+macro_rules! map_prob_suffix {
+    (NONE) => {
+        bindings::GST_TYPE_FIND_NONE
+    };
+    (MINIMUM) => {
+        bindings::GST_TYPE_FIND_MINIMUM
+    };
+    (POSSIBLE) => {
+        bindings::GST_TYPE_FIND_POSSIBLE
+    };
+    (LIKELY) => {
+        bindings::GST_TYPE_FIND_LIKELY
+    };
+    (NEARLY_CERTAIN) => {
+        bindings::GST_TYPE_FIND_NEARLY_CERTAIN
+    };
+    (MAXIMUM) => {
+        bindings::GST_TYPE_FIND_MAXIMUM
+    };
+}
+
 /// Maps a type name literal and value to the value used in the call.
 macro_rules! map_value {
     (i32, $val:expr) => {{
@@ -109,11 +148,7 @@ macro_rules! map_value {
     .as_ptr()};
     (bool, $val:expr) => {{
         $crate::helpers::type_check::<bool>(&$val);
-        if $val {
-            1i32
-        } else {
-            0i32
-        }
+        if $val { 1i32 } else { 0i32 }
     }};
 }
 
@@ -122,23 +157,22 @@ macro_rules! map_value {
 /// Usage:
 /// ```ignore
 /// // Type only (no caps fields)
-/// suggest!(tf, GST_TYPE_FIND_MAXIMUM, c"image/bmp");
+/// suggest!(tf, MAXIMUM, c"image/bmp");
 ///
 /// // Type with caps fields: `suggest!(tf, prob, "mime", [(key, type : value), ...])`
 /// // Field types: `i32`, `str`, `bool` — compile-time checked against GType
-/// suggest!(tf, GST_TYPE_FIND_MAXIMUM, c"image/bmp",
+/// suggest!(tf, MAXIMUM, c"image/bmp",
 ///     [ (c"width", i32 : 640),
 ///       (c"height", i32 : 480) ]);
 /// ```
 macro_rules! suggest {
-    ($tf:expr, $prob:expr, $name:expr $(,)?) => {
-        $crate::helpers::suggest!($tf, $prob, $name, []);
-    };
-    ($tf:expr, $prob:expr, $name:expr, []) => {
+    // Outer arm: caller passes suffix (MAXIMUM, NEARLY_CERTAIN, ...)
+    ($tf:expr, $prob:ident, $name:expr $(,)?) => {{
+        let _p = $crate::helpers::map_prob_suffix!($prob);
         unsafe {
             bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
-                $prob,
+                _p,
                 {
                     $crate::helpers::type_check::<std::ffi::CStr>(&$name);
                     $name
@@ -146,12 +180,12 @@ macro_rules! suggest {
                 std::ptr::null::<::std::os::raw::c_char>(),
             );
         }
-    };
-    ($tf:expr, $prob:expr, $name:expr, [ $( ($key:expr, $type:ident : $val:expr) , )*] $(,)?) => {
+    }};
+    ($tf:expr, $prob:ident, $name:expr, [ $( ($key:expr, $type:ident : $val:expr) , )*] $(,)?) => {
         unsafe {
             bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
-                $prob,
+                $crate::helpers::map_prob_suffix!($prob),
                 {
                     $crate::helpers::type_check::<std::ffi::CStr>(&$name);
                     $name
@@ -184,30 +218,29 @@ macro_rules! opt {
 /// One row of the registration table (typefindfunctions.rs::FEATURES), in
 /// gst_type_find_register() argument order. Strings stay plain Rust data;
 /// NULL-terminated conversion happens in gst_typefindfunctions_rs_register().
-/// Caps default to the feature name, which is only correct when the C
-/// registration uses it as caps; musepack, id3v1/id3v2 and tiff do not, so
-/// verify each row against the C caps string.
+/// Caps default to the feature name; verify each row against the C caps string.
 ///
 /// - `typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp")`
-///   extensions "bmp", caps = feature name
-/// - `typefinder!("subtitle/x-kate", MARGINAL, kate_type_find, none, none)`
-///   NULL extensions, NULL caps; a both-NULL row needs all five arguments
+///   extensions "bmp", caps = feature name (default)
+/// - `typefinder!("subtitle/x-kate", MARGINAL, none, "gsm")`
+///   NULL func, NULL caps; extension-only registration
 /// - `typefinder!("image/tiff", PRIMARY, tiff_type_find, "tif,tiff", "image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }")`
 ///   caps differing from the feature name
 ///
-/// `none` stands for a C NULL argument, also for the function (extension-only
-/// registrations like gsm). Ranks are the bare PRIMARY/SECONDARY/MARGINAL
-/// aliases, offset like C where needed (`PRIMARY + 103`).
+/// Ranks: PRIMARY/SECONDARY/MARGINAL (or offsets like `PRIMARY+103`).
+/// `none` = C NULL argument. 3-arg form defaults to caps = name,
+/// extensions = None.
 macro_rules! typefinder {
     ($name:expr, $rank:expr, $func:expr) => {
-        typefinder!($name, $rank, $func, none)
+        Feature($name, $rank, opt!($func), None, Some($name))
     };
     ($name:expr, $rank:expr, $func:expr, $exts:expr) => {
-        typefinder!($name, $rank, $func, $exts, $name)
+        Feature($name, $rank, opt!($func), Some($exts), Some($name))
     };
     ($name:expr, $rank:expr, $func:expr, $exts:expr, $caps:expr) => {
         Feature($name, $rank, opt!($func), opt!($exts), opt!($caps))
     };
 }
 
-pub(crate) use {map_type_name, map_value, opt, suggest, typefinder};
+// Re-export macros and items needed by typefindfunctions.rs.
+pub(crate) use {map_prob_suffix, map_type_name, map_value, opt, suggest, typefinder};

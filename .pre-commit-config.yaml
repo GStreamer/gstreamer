@@ -32,7 +32,7 @@ repos:
     -   id: rustfmt
         name: rustfmt
         language: system
-        entry: rustfmt --verbose --edition 2021
+        entry: rustfmt --verbose --edition 2024
         types_or: ["rust"]
     -   id: validatetest-fmt
         name: validatetest-fmt
