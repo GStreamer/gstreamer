@@ -1,0 +1,14 @@
+[package]
+name = "gst-typefind-rs"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Rust type finders for gst-plugins-base (internal, not published)"
+
+[lib]
+# C-linkable static library, linked into the gsttypefind plugin.
+crate-type = ["staticlib"]
+
+# Intentionally no dependencies (and no build script): the FFI surface is
+# hand-written in src/bindings.rs, so the crate builds offline and this
+# file doubles as the rust-analyzer project root.

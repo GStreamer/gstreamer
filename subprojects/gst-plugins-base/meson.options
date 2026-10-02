@@ -49,6 +49,8 @@ option('rawparse', type : 'feature', value : 'auto')
 option('subparse', type : 'feature', value : 'auto')
 option('tcp', type : 'feature', value : 'auto')
 option('typefind', type : 'feature', value : 'auto')
+# Build the typefinders from the rust crate instead of the C sources.
+option('typefind_rust', type : 'boolean', value : false)
 option('videoconvertscale', type : 'feature', value : 'auto')
 option('videorate', type : 'feature', value : 'auto')
 option('videotestsrc', type : 'feature', value : 'auto')
