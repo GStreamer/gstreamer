@@ -1838,8 +1838,9 @@ add_non_colorimetry_caps (GstV4l2Object * v4l2object, GstCaps * caps)
     GstStructure *structure = gst_caps_get_structure (caps, i);
     GstCapsFeatures *features = gst_caps_get_features (caps, i);
 
-    if (gst_structure_has_name (structure, "video/x-raw")
-        && gst_structure_has_field (structure, "colorimetry")) {
+    if (gst_structure_has_field (structure, "colorimetry")
+        && (gst_structure_has_name (structure, "video/x-raw")
+            || V4L2_TYPE_IS_OUTPUT (v4l2object->type))) {
       GstStructure *alt_s = gst_structure_copy (structure);
       gst_structure_remove_field (alt_s, "colorimetry");
       if (gst_caps_features_contains (features,
