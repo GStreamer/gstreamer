@@ -75,3 +75,13 @@ gst_vulkan_create_feature_name (GstVulkanDevice * device,
   if (*rank > 0)
     *rank -= 1;
 }
+
+gboolean
+gst_vulkan_register_feature (GstPlugin * plugin, GstVulkanDevice * device,
+    GType type, const gchar * feature_name, guint rank)
+{
+  if (device->physical_device->device_index != 0)
+    gst_element_type_set_skip_documentation (type);
+
+  return gst_element_register (plugin, feature_name, rank, type);
+}

@@ -38,5 +38,10 @@ void gst_vulkan_create_feature_name (GstVulkanDevice * device,
                                      gchar ** feature_name,
                                      gchar ** desc,
                                      guint * rank);
+gboolean gst_vulkan_register_feature (GstPlugin * plugin,
+                                      GstVulkanDevice * device,
+                                      GType type,
+                                      const gchar * feature_name,
+                                      guint rank);
 
 #endif /* __GST_VULKAN_ELEMENTS_H__ */

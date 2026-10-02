@@ -1203,7 +1203,7 @@ gst_vulkan_vp9_decoder_register (GstPlugin * plugin, GstVulkanDevice * device,
   type = g_type_register_static (GST_TYPE_VP9_DECODER,
       type_name, &type_info, 0);
 
-  ret = gst_element_register (plugin, feature_name, rank, type);
+  ret = gst_vulkan_register_feature (plugin, device, type, feature_name, rank);
 
   g_free (type_name);
   g_free (feature_name);

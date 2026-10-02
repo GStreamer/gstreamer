@@ -238,7 +238,8 @@ gst_vulkan_sink_register (GstPlugin * plugin, GstVulkanDevice * device,
   G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
       gst_vulkan_sink_navigation_interface_init);
 
-  ret = gst_element_register (plugin, feature_name, rank, g_define_type_id);
+  ret = gst_vulkan_register_feature (plugin, device, g_define_type_id,
+      feature_name, rank);
 
   g_free (type_name);
   g_free (feature_name);
