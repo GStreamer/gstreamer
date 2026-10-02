@@ -2173,6 +2173,7 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
   if (priv->converter_config_changed || update_config ||
       !gst_video_info_is_equal (&priv->last_frame_vinfo, &in_frame->info)) {
     GstStructure *options;
+    GstVideoInfo converter_in_info = in_frame->info;
 
     if (priv->converter_config)
       options = gst_structure_copy (priv->converter_config);
@@ -2195,6 +2196,10 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
           GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, cmeta->width,
           GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, cmeta->height, NULL);
     } else if (!priv->converter_config) {
+      /* The meta may describe padded dimensions. Keep its layout, but use the
+       * visible dimensions from caps to avoid resampling the padding. */
+      converter_in_info.width = filter->in_info.width;
+      converter_in_info.height = filter->in_info.height;
       gst_structure_remove_fields (options,
           GST_VIDEO_CONVERTER_OPT_SRC_X,
           GST_VIDEO_CONVERTER_OPT_SRC_Y,
@@ -2205,7 +2210,8 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
     gst_video_converter_free (priv->convert);
     priv->convert =
         gst_video_convert_scale_create_converter (GST_VIDEO_CONVERT_SCALE
-        (filter), &in_frame->info, &filter->out_info, options);
+        (filter), &converter_in_info, &filter->out_info, options);
+    priv->last_frame_vinfo = in_frame->info;
 
     priv->converter_config_changed = FALSE;
   }
