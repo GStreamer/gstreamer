@@ -198,6 +198,78 @@ extern "C" fn rf64_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// AMR — audio/x-amr-nb-sh
+extern "C" fn amr_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"#!AMR") {
+        suggest!(tf, LIKELY, c"audio/x-amr-nb-sh");
+    }
+}
+
+// AMR WB — audio/x-amr-wb-sh
+extern "C" fn amr_wb_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"#!AMR-WB") {
+        suggest!(tf, MAXIMUM, c"audio/x-amr-wb-sh");
+    }
+}
+
+// MVE — video/x-mve
+// "Interplay MVE File" (18 bytes) + 1a 00 1a 00 00 01 33 11 @18–25.
+const MVE_MAGIC: [u8; 26] = [
+    b'I', b'n', b't', b'e', b'r', b'p', b'l', b'a', b'y', b' ', b'M', b'V', b'E', b' ', b'F', b'i',
+    b'l', b'e', 0x1a, 0x00, 0x1a, 0x00, 0x00, 0x01, 0x33, 0x11,
+];
+extern "C" fn mve_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(&MVE_MAGIC) {
+        suggest!(tf, MAXIMUM, c"video/x-mve");
+    }
+}
+
+// W64 — audio/x-w64
+extern "C" fn w64_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"riff") {
+        suggest!(tf, MAXIMUM, c"audio/x-w64");
+    }
+}
+
+// XPM — image/x-xpixmap
+extern "C" fn xpm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"/* XPM */") {
+        suggest!(tf, MAXIMUM, c"image/x-xpixmap");
+    }
+}
+
+extern "C" fn xbm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"/* XBM */") {
+        suggest!(tf, MAXIMUM, c"image/x-xbitmap");
+    }
+}
+
+extern "C" fn farbfeld_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"farbfeld") {
+        suggest!(tf, NEARLY_CERTAIN, c"image/x-farbfeld");
+    }
+}
+extern "C" fn qoif_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"qoif") {
+        suggest!(tf, NEARLY_CERTAIN, c"image/qoi");
+    }
+}
+extern "C" fn dds_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"DDS ") {
+        suggest!(tf, NEARLY_CERTAIN, c"image/vnd.ms-dds");
+    }
+}
+
+// Y4M — application/x-yuv4mpeg
+// "YUV4MPEG2 " includes the trailing space; the version is always 2.
+extern "C" fn y4m_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"YUV4MPEG2 ") {
+        suggest!(tf, MAXIMUM, c"application/x-yuv4mpeg", [
+            (c"y4mversion", i32 : 2),
+        ]);
+    }
+}
+
 // SID — audio/x-sid
 extern "C" fn sid_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"PSID") {
@@ -496,6 +568,8 @@ const FEATURES: &[Feature] = &[
     // Complex finder — DIB structure validation
     typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp"),
     // Additional startswith finders
+    typefinder!("audio/x-amr-nb-sh", PRIMARY, amr_type_find, "amr"),
+    typefinder!("audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, "amr"),
     typefinder!("video/x-vcd", PRIMARY, vcd_type_find, "dat"),
     typefinder!(
         "audio/x-imelody",
@@ -503,6 +577,7 @@ const FEATURES: &[Feature] = &[
         imelody_type_find,
         "imy,ime,imelody"
     ),
+    typefinder!("application/x-yuv4mpeg", PRIMARY, y4m_type_find, "y4m"),
     typefinder!("application/x-scc", PRIMARY, scc_type_find, "scc"),
     typefinder!(
         "application/vnd.rn-realmedia",
@@ -522,6 +597,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-sid", MARGINAL, sid_type_find, "sid"),
     typefinder!("image/x-xcf", SECONDARY, xcf_type_find, "xcf"),
     typefinder!("video/x-mng", SECONDARY, mng_type_find, "mng"),
+    typefinder!("video/x-mve", SECONDARY, mve_type_find, "mve"),
     typefinder!("image/x-jng", SECONDARY, jng_type_find, "jng"),
     typefinder!("image/x-sun-raster", SECONDARY, ras_type_find, "ras"),
     typefinder!("application/x-bzip", SECONDARY, bz2_type_find, "bz2"),
@@ -535,6 +611,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-ay", SECONDARY, ay_type_find, "ay"),
     typefinder!("audio/x-gbs", SECONDARY, gbs_type_find, "gbs"),
     typefinder!("audio/x-vgm", SECONDARY, vgm_type_find, "vgm"),
+    typefinder!("audio/x-w64", SECONDARY, w64_type_find, "w64"),
     typefinder!("audio/x-sap", SECONDARY, sap_type_find, "sap"),
     typefinder!("video/x-ivf", SECONDARY, ivf_type_find, "ivf"),
     typefinder!("audio/x-kss", SECONDARY, kss_type_find, "kss"),
@@ -550,6 +627,11 @@ const FEATURES: &[Feature] = &[
     typefinder!("video/x-avs", SECONDARY, avs_type_find),
     typefinder!("image/vnd.adobe.photoshop", SECONDARY, psd_type_find, "psd"),
     typefinder!("audio/x-xi", SECONDARY, xi_type_find, "xi"),
+    typefinder!("image/x-xpixmap", SECONDARY, xpm_type_find, "xpm"),
+    typefinder!("image/x-xbitmap", SECONDARY, xbm_type_find, "xbm"),
+    typefinder!("image/x-farbfeld", SECONDARY, farbfeld_type_find, "ff"),
+    typefinder!("image/qoi", SECONDARY, qoif_type_find, "qoi"),
+    typefinder!("image/vnd.ms-dds", SECONDARY, dds_type_find, "dds"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
