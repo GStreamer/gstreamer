@@ -2810,6 +2810,11 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
           data);
 
       if (type == GST_RTCP_SDES_PRIV) {
+        if (len < data[0] + 1) {
+          GST_WARNING ("malformed SDES packet, ignoring item %d (SSRC %08x) "
+              "entry %d and the rest of the packet", i, ssrc, j);
+          break;
+        }
         name = g_strndup ((const gchar *) &data[1], data[0]);
         len -= data[0] + 1;
         data += data[0] + 1;

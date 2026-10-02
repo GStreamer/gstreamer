@@ -1966,6 +1966,7 @@ validate_sdes_priv (GstBuffer * buf, const char *name_ref, const char *value)
         fail_unless (gst_rtcp_packet_sdes_get_entry (&pkt, &type, &len, &data));
 
         if (type == GST_RTCP_SDES_PRIV) {
+          fail_unless (data[0] + 1 <= len);
           char *name = g_strndup ((const gchar *) &data[1], data[0]);
           len -= data[0] + 1;
           data += data[0] + 1;
