@@ -18,6 +18,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-vulkanav1dec
+ * @title: vulkanav1dec
+ * @short_description: A Vulkan based AV1 video decoder
+ *
+ * vulkanav1dec decodes AV1 bitstreams into raw video surfaces using
+ * Vulkan video extensions.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=video.webm ! matroskademux ! av1parse ! vulkanav1dec ! vulkandownload ! videoconvert ! autovideosink
+ * ```
+ *
+ * Since: 1.28
+ */
+
 #include "vkav1dec.h"
 
 #include <gst/video/video.h>

@@ -257108,6 +257108,33 @@
     "vulkan": {
         "description": "Vulkan plugin",
         "elements": {
+            "vulkanav1dec": {
+                "author": "Daniel Almeida <daniel.almeida@collabora.com>",
+                "description": "An AV1 video decoder based on Vulkan",
+                "hierarchy": [
+                    "GstVulkanAV1Decoder",
+                    "GstAV1Decoder",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-av1:\n        profile: { (string)main, (string)high }\n      alignment: frame\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VulkanImage):\n         format: NV12\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            },
             "vulkancolorconvert": {
                 "author": "Matthew Waters <matthew@centricular.com>",
                 "description": "A Vulkan Color Convert",
@@ -257180,7 +257207,7 @@
                 "klass": "Codec/Decoder/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-h264:\n        profile: { (string)high, (string)main, (string)constrained-baseline, (string)baseline, (string)extended }\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n",
+                        "caps": "video/x-h264:\n        profile: { (string)high, (string)main, (string)constrained-baseline }\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -257215,7 +257242,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h264:\n        profile: { (string)main, (string)high, (string)constrained-baseline }\n  stream-format: byte-stream\n      alignment: au\n",
+                        "caps": "video/x-h264:\n        profile: { (string)high, (string)main, (string)constrained-baseline }\n  stream-format: byte-stream\n      alignment: au\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -257361,7 +257388,7 @@
                 "klass": "Codec/Decoder/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-h265:\n        profile: main\n  stream-format: { (string)hvc1, (string)hev1, (string)byte-stream }\n      alignment: au\n",
+                        "caps": "video/x-h265:\n        profile: { (string)main, (string)main-10 }\n  stream-format: { (string)hvc1, (string)hev1, (string)byte-stream }\n      alignment: au\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -257686,6 +257713,33 @@
                         "readable": true,
                         "type": "GstVideoMultiviewMode",
                         "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "vulkanvp9dec": {
+                "author": "Stephane Cerveau <scerveau@igalia.com>",
+                "description": "A VP9 video decoder based on Vulkan",
+                "hierarchy": [
+                    "GstVulkanVp9Decoder",
+                    "GstVp9Decoder",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp9:\n        profile: { (string)0, (string)1, (string)2, (string)3 }\n      alignment: frame\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VulkanImage):\n         format: NV12\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
                     }
                 },
                 "rank": "none"
