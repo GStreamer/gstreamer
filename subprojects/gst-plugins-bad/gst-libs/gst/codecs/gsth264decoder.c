@@ -489,23 +489,48 @@ gst_h264_decoder_clear_output_frame (GstH264DecoderOutputFrame * output_frame)
 }
 
 static void
+gst_h264_decoder_release_picture_frame (GstH264Decoder * self,
+    GstH264Picture * picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
+  GstVideoCodecFrame *frame;
+
+  /* The discarded field and the current picture may belong to the same
+   * codec frame. Keep the frame for the current picture in that case */
+  if (priv->current_frame && GST_CODEC_PICTURE_FRAME_NUMBER (picture) ==
+      priv->current_frame->system_frame_number) {
+    return;
+  }
+
+  frame = gst_video_decoder_get_frame (decoder,
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
+
+  if (frame)
+    gst_video_decoder_release_frame (decoder, frame);
+}
+
+static void
 gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
 {
-  GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
-  GstH264Picture *picture;
 
   /* If we are not flushing now, videodecoder baseclass will hold
    * GstVideoCodecFrame. Release frames manually */
   if (!flush) {
-    while ((picture = gst_h264_dpb_bump (priv->dpb, TRUE)) != NULL) {
-      GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
-          GST_CODEC_PICTURE_FRAME_NUMBER (picture));
+    GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
+    guint i;
 
-      if (frame)
-        gst_video_decoder_release_frame (decoder, frame);
-      gst_h264_picture_unref (picture);
+    /* Bumping skips incomplete field pictures. Release their frames too */
+    for (i = 0; i < pictures->len; i++) {
+      GstH264Picture *picture = g_array_index (pictures, GstH264Picture *, i);
+      gst_h264_decoder_release_picture_frame (self, picture);
     }
+
+    g_array_unref (pictures);
+
+    if (priv->last_field)
+      gst_h264_decoder_release_picture_frame (self, priv->last_field);
   }
 
   gst_vec_deque_clear (priv->output_queue);
@@ -1165,16 +1190,15 @@ gst_h264_decoder_new_field_picture (GstH264Decoder * self,
   return new_picture;
 }
 
-static gboolean
+static GstH264Picture *
 gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
-    GstH264Slice * slice, GstH264Picture ** first_field)
+    GstH264Slice * slice)
 {
   GstH264DecoderPrivate *priv = self->priv;
   const GstH264SliceHdr *slice_hdr = &slice->header;
   GstH264Picture *prev_field;
   gboolean in_dpb;
 
-  *first_field = NULL;
   prev_field = NULL;
   in_dpb = FALSE;
   if (gst_h264_dpb_get_interlaced (priv->dpb)) {
@@ -1204,7 +1228,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
   /* This is not a field picture */
   if (!slice_hdr->field_pic_flag) {
     if (!prev_field)
-      return TRUE;
+      return NULL;
 
     GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
         prev_field, prev_field->pic_order_cnt);
@@ -1213,7 +1237,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
 
   /* OK, this is the first field. */
   if (!prev_field)
-    return TRUE;
+    return NULL;
 
   if (prev_field->frame_num != slice_hdr->frame_num) {
     GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
@@ -1231,17 +1255,23 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
     }
   }
 
-  *first_field = gst_h264_picture_ref (prev_field);
-  return TRUE;
+  return gst_h264_picture_ref (prev_field);
 
 error:
+  /* The missing field cannot be output */
+  gst_h264_decoder_release_picture_frame (self, prev_field);
+
   if (!in_dpb) {
     gst_clear_h264_picture (&priv->last_field);
   } else {
-    /* FIXME: implement fill gap field picture if it is already in DPB */
+    /* And remove associated prev field picture from the DPB */
+    prev_field->needed_for_output = FALSE;
+    gst_h264_picture_set_reference (prev_field, GST_H264_PICTURE_REF_NONE,
+        FALSE);
+    gst_h264_dpb_delete_unused (priv->dpb);
   }
 
-  return FALSE;
+  return NULL;
 }
 
 static GstFlowReturn
@@ -1302,11 +1332,8 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 
     g_assert (priv->current_frame);
 
-    if (!gst_h264_decoder_find_first_field_picture (self,
-            &priv->current_slice, &first_field)) {
-      GST_ERROR_OBJECT (self, "Couldn't find or determine first picture");
-      return GST_FLOW_ERROR;
-    }
+    first_field = gst_h264_decoder_find_first_field_picture (self,
+        &priv->current_slice);
 
     if (first_field) {
       picture = gst_h264_decoder_new_field_picture (self, first_field);
@@ -1962,8 +1989,7 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
 
   gst_h264_decoder_drain_output_queue (self, 0, &ret);
 
-  gst_clear_h264_picture (&priv->last_field);
-  gst_h264_dpb_clear (priv->dpb);
+  gst_h264_decoder_clear_dpb (self, FALSE);
 
   return ret;
 }
