@@ -2007,6 +2007,7 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
   if (priv->converter_config_changed ||
       !gst_video_info_is_equal (&priv->last_frame_vinfo, &in_frame->info)) {
     GstStructure *options;
+    GstVideoInfo converter_in_info = in_frame->info;
 
     if (priv->converter_config)
       options = gst_structure_copy (priv->converter_config);
@@ -2022,10 +2023,18 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
       options =
           gst_structure_copy (gst_video_converter_get_config (priv->convert));
 
+    if (!priv->converter_config) {
+      /* The meta may describe padded dimensions. Keep its layout, but use the
+       * visible dimensions from caps to avoid resampling the padding. */
+      converter_in_info.width = filter->in_info.width;
+      converter_in_info.height = filter->in_info.height;
+    }
+
     gst_video_converter_free (priv->convert);
     priv->convert =
         gst_video_convert_scale_create_converter (GST_VIDEO_CONVERT_SCALE
-        (filter), &in_frame->info, &filter->out_info, options);
+        (filter), &converter_in_info, &filter->out_info, options);
+    priv->last_frame_vinfo = in_frame->info;
 
     priv->converter_config_changed = FALSE;
   }

@@ -256,6 +256,57 @@ GST_START_TEST (test_videometa_layout_changes)
 
 GST_END_TEST;
 
+static GstBuffer *
+create_black_gray8_2x2_buffer (void)
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+  gsize offsets[GST_VIDEO_MAX_PLANES] = { 0, 0, 0, 0 };
+  gint strides[GST_VIDEO_MAX_PLANES] = { 2, 0, 0, 0 };
+
+  buffer = gst_buffer_new_allocate (NULL, 4, NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_WRITE));
+  memset (map.data, 0, map.size);
+  gst_buffer_unmap (buffer, &map);
+
+  gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_GRAY8, 2, 2, 1, offsets, strides);
+
+  return buffer;
+}
+
+/* A GstVideoMeta may describe a buffer that is larger than the negotiated
+ * caps, for example a decoder output buffer carrying its coded size, or any
+ * buffer allocated with a GstVideoAlignment. Without a GstVideoCropMeta the
+ * picture is the top-left region of that buffer, so the padding must be
+ * cropped out and not scaled in. */
+GST_START_TEST (test_videometa_larger_than_caps)
+{
+  GstHarness *h;
+  GstBuffer *padded;
+  GstBuffer *exact;
+
+  h = gst_harness_new ("videoconvertscale");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=GRAY8,width=2,height=2,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,format=RGB,width=2,height=2,framerate=30/1");
+
+  /* The top-left 2x2 region of this 4x4 buffer is black, the padding is not */
+  padded = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
+  fail_unless (padded != NULL);
+  exact = gst_harness_push_and_pull (h, create_black_gray8_2x2_buffer ());
+  fail_unless (exact != NULL);
+
+  fail_unless (rgb_buffer_pixels_equal (padded, exact));
+
+  gst_buffer_unref (exact);
+  gst_buffer_unref (padded);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /* Test that runtime converter configuration updates rebuild the converter */
 GST_START_TEST (test_converter_config_update)
 {
@@ -274,9 +325,11 @@ GST_START_TEST (test_converter_config_update)
   full_frame = gst_harness_push_and_pull (h, create_gray8_4x4_buffer ());
   fail_unless (full_frame != NULL);
 
+  /* The default source rectangle is the top-left 2x2 region described by the
+   * caps, so configure the opposite corner to tell the two apart. */
   config = gst_structure_new ("GstVideoConverter",
-      GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, 0,
-      GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, 0,
+      GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, 2,
+      GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, 2,
       GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, 2,
       GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, 2, NULL);
   g_object_set (h->element, "converter-config", config, NULL);
@@ -299,6 +352,129 @@ GST_START_TEST (test_converter_config_update)
 
 GST_END_TEST;
 
+
+/* A single top field of a 2x4 alternate-interlaced picture, in a buffer whose
+ * GstVideoMeta claims @meta_height rows. Everything past the first two rows
+ * of the field is padding, filled with @pad_value. */
+static GstBuffer *
+create_alternate_gray8_field (gint meta_height, guint8 pad_value)
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+  gsize offsets[GST_VIDEO_MAX_PLANES] = { 0, 0, 0, 0 };
+  gint strides[GST_VIDEO_MAX_PLANES] = { 2, 0, 0, 0 };
+
+  buffer = gst_buffer_new_allocate (NULL, 2 * meta_height, NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_WRITE));
+  memset (map.data, 0, map.size);
+  if (map.size > 4)
+    memset (map.data + 4, pad_value, map.size - 4);
+  gst_buffer_unmap (buffer, &map);
+
+  gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_GRAY8, 2, meta_height, 1, offsets, strides);
+  GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
+
+  return buffer;
+}
+
+/* Same as test_videometa_larger_than_caps, but for split-field (alternate)
+ * interlacing, where the caps height is the height of the whole frame while
+ * each buffer only holds a single field. */
+GST_START_TEST (test_videometa_larger_than_caps_alternate)
+{
+  GstHarness *h;
+  GstBuffer *padded;
+  GstBuffer *exact;
+
+  h = gst_harness_new ("videoconvertscale");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw(format:Interlaced),format=GRAY8,width=2,height=4,"
+      "interlace-mode=alternate,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw(format:Interlaced),format=RGB,width=2,height=4,"
+      "interlace-mode=alternate,framerate=30/1");
+
+  /* The caps describe 4 rows, so 2 rows per field. The meta describes 6 rows,
+   * so 3 rows per field, making the third row of the field padding. */
+  padded = gst_harness_push_and_pull (h, create_alternate_gray8_field (6, 255));
+  fail_unless (padded != NULL);
+  exact = gst_harness_push_and_pull (h, create_alternate_gray8_field (4, 0));
+  fail_unless (exact != NULL);
+
+  /* Each output buffer contains one 2x2 field; ignore row padding. */
+  fail_unless (rgb_buffer_pixels_equal (padded, exact));
+
+  gst_buffer_unref (exact);
+  gst_buffer_unref (padded);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+static GstBuffer *
+create_nv12_10x8_buffer (gint meta_width, gint meta_height)
+{
+  GstVideoInfo info;
+  GstBuffer *buffer;
+  GstMapInfo map;
+  guint x, y;
+
+  fail_unless (gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12,
+          meta_width, meta_height));
+  buffer = gst_buffer_new_allocate (NULL, info.size, NULL);
+  fail_unless (gst_buffer_map (buffer, &map, GST_MAP_WRITE));
+  memset (map.data, 255, map.size);
+  for (y = 0; y < 8; y++)
+    for (x = 0; x < 10; x++)
+      map.data[info.offset[0] + y * info.stride[0] + x] = x + y;
+  for (y = 0; y < 4; y++)
+    for (x = 0; x < 10; x++)
+      map.data[info.offset[1] + y * info.stride[1] + x] = x + y;
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_FORMAT_NV12, meta_width, meta_height, 2, info.offset,
+      info.stride);
+  return buffer;
+}
+
+/* Padded GstVideoMeta must not shift chroma during NV12 to I420 conversion. */
+GST_START_TEST (test_videometa_larger_than_caps_nv12)
+{
+  GstHarness *h;
+  GstBuffer *padded;
+  GstBuffer *exact;
+  GstVideoInfo info;
+  GstVideoFrame a, b;
+  guint plane, y;
+
+  h = gst_harness_new ("videoconvertscale");
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw,format=NV12,width=10,height=8,framerate=30/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw,format=I420,width=10,height=8,framerate=30/1");
+  padded = gst_harness_push_and_pull (h, create_nv12_10x8_buffer (16, 16));
+  exact = gst_harness_push_and_pull (h, create_nv12_10x8_buffer (10, 8));
+  fail_unless (padded != NULL && exact != NULL);
+  fail_unless (gst_video_info_set_format (&info, GST_VIDEO_FORMAT_I420, 10, 8));
+  fail_unless (gst_video_frame_map (&a, &info, padded, GST_MAP_READ));
+  fail_unless (gst_video_frame_map (&b, &info, exact, GST_MAP_READ));
+  for (plane = 0; plane < 3; plane++)
+    for (y = 0; y < (plane ? 4 : 8); y++)
+      fail_unless (memcmp ((guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&a, plane) +
+              y * GST_VIDEO_FRAME_PLANE_STRIDE (&a, plane),
+              (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&b, plane) +
+              y * GST_VIDEO_FRAME_PLANE_STRIDE (&b, plane),
+              plane ? 5 : 10) == 0);
+  gst_video_frame_unmap (&b);
+  gst_video_frame_unmap (&a);
+  gst_buffer_unref (exact);
+  gst_buffer_unref (padded);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 videoconvert_suite (void)
 {
@@ -310,6 +486,9 @@ videoconvert_suite (void)
   tcase_add_test (tc_chain, test_template_formats);
   tcase_add_test (tc_chain, test_negotiate_alternate);
   tcase_add_test (tc_chain, test_videometa_layout_changes);
+  tcase_add_test (tc_chain, test_videometa_larger_than_caps);
+  tcase_add_test (tc_chain, test_videometa_larger_than_caps_alternate);
+  tcase_add_test (tc_chain, test_videometa_larger_than_caps_nv12);
   tcase_add_test (tc_chain, test_converter_config_update);
 
   return s;
