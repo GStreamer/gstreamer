@@ -262,7 +262,12 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
    *
    * The "non-existing" frame is stored in an empty frame buffer and is marked
    * as "not needed for output", and the DPB fullness is incremented by one */
-  if (!picture->nonexisting) {
+  if (!picture->nonexisting ||
+      /* Special handling for a gap field. If the current field picture is a gap
+       * but its complementary field is still needed for output,
+       * mark the gap field as needed for output as well */
+      (picture->second_field && picture->other_field &&
+          picture->other_field->needed_for_output)) {
     picture->needed_for_output = TRUE;
 
     if (GST_H264_PICTURE_IS_FRAME (picture)) {
@@ -916,8 +921,14 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
 
     /* FIXME: need to check picture timing SEI for the case where top/bottom poc
      * are identical */
-    if (picture->pic_order_cnt < other_picture->pic_order_cnt)
+    if (other_picture->nonexisting) {
+      /* The missing field's POC is unknown. Assume the decoded field is the
+       * leading field in display order */
+      if (picture->field == GST_H264_PICTURE_FIELD_TOP_FIELD)
+        picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
+    } else if (picture->pic_order_cnt < other_picture->pic_order_cnt) {
       picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
+    }
 
     if (!other_picture->ref) {
       for (i = 0; i < dpb->pic_list->len; i++) {
