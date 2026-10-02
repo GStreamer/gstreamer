@@ -305,6 +305,54 @@ GST_START_TEST (test_big_gop)
 
 GST_END_TEST;
 
+/* Test that only the first frame of the GOP is an IDR when I frames are
+ * inserted within the GOP */
+GST_START_TEST (test_idr_with_inserted_i_frames)
+{
+  GstH26XGOP *gop;
+  guint i;
+  GstH26XGOPParameters params = {
+    .idr_period = 30,           /* GOP size */
+    .ip_period = 1,             /* No B frames */
+    .i_period = 15,             /* An I frame every 15 frames */
+    .num_iframes = 1,           /* Not including the IDR */
+  };
+
+  fail_unless (mapper != NULL, "Failed to create mapper");
+  fail_unless (gst_h26x_gop_mapper_set_params (mapper, &params),
+      "Failed to set parameters");
+
+  gst_h26x_gop_mapper_generate (mapper);
+
+  gst_h26x_gop_mapper_reset_index (mapper);
+  for (i = 0; i < params.idr_period; i++) {
+    gop = gst_h26x_gop_mapper_get_next (mapper);
+    fail_unless (gop != NULL, "Expected GOP frame at index %u but got NULL", i);
+
+    if (i == 0 || i == params.i_period) {
+      fail_unless (GST_H26X_GOP_IS (gop, I) && gop->is_ref,
+          "Frame at index %u should be a reference I frame", i);
+    }
+
+    fail_unless (GST_H26X_GOP_IS_IDR (gop) == (i == 0),
+        "Only the frame at index 0 should be IDR, index %u is %s", i,
+        GST_H26X_GOP_IS_IDR (gop) ? "IDR" : "not IDR");
+  }
+
+  /* The next GOP starts with an IDR */
+  gop = gst_h26x_gop_mapper_get_next (mapper);
+  fail_unless (gop && GST_H26X_GOP_IS_IDR (gop), "Expected IDR GOP frame");
+
+  /* A forced key frame resets the index and takes the IDR entry */
+  gst_h26x_gop_mapper_set_current_index (mapper, 7);
+  gst_h26x_gop_mapper_reset_index (mapper);
+  gop = gst_h26x_gop_mapper_get_next (mapper);
+  fail_unless (gop && GST_H26X_GOP_IS_IDR (gop),
+      "Expected IDR GOP frame after reset");
+}
+
+GST_END_TEST;
+
 /* Test suite */
 static Suite *
 gsth26xgopmapper_suite (void)
@@ -319,6 +367,7 @@ gsth26xgopmapper_suite (void)
   tcase_add_test (tc_chain, test_gop_with_b_frames);
   tcase_add_test (tc_chain, test_gop_with_b_pyramid);
   tcase_add_test (tc_chain, test_big_gop);
+  tcase_add_test (tc_chain, test_idr_with_inserted_i_frames);
   suite_add_tcase (s, tc_chain);
 
   return s;

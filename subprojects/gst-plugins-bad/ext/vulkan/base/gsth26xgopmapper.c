@@ -227,9 +227,12 @@ gst_h26x_gop_mapper_generate (GstH26XGOPMapper * self)
   for (i = 0; i < params->idr_period; i++) {
     GstH26XGOP *pic = &g_array_index (self->frame_map, GstH26XGOP, i);
 
+    pic->is_idr = FALSE;
+
     if (i == 0) {
       pic->type = GST_H26X_GOP_TYPE_I;
       pic->is_ref = TRUE;
+      pic->is_idr = TRUE;
       continue;
     }
 
