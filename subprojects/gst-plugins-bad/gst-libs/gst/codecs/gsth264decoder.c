@@ -84,6 +84,7 @@ typedef enum
 struct _GstH264DecoderPrivate
 {
   GstH264DecoderCompliance compliance;
+  gboolean gap_field_aware;
 
   guint8 profile_idc;
   gint width, height;
@@ -1191,20 +1192,14 @@ gst_h264_decoder_new_field_picture (GstH264Decoder * self,
 }
 
 static GstH264Picture *
-gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
-    GstH264Slice * slice)
+gst_h264_decoder_get_incomplete_field (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  const GstH264SliceHdr *slice_hdr = &slice->header;
-  GstH264Picture *prev_field;
-  gboolean in_dpb;
+  GstH264Picture *prev_field = NULL;
 
-  prev_field = NULL;
-  in_dpb = FALSE;
   if (gst_h264_dpb_get_interlaced (priv->dpb)) {
     if (priv->last_field) {
       prev_field = priv->last_field;
-      in_dpb = FALSE;
     } else if (gst_h264_dpb_get_size (priv->dpb) > 0) {
       GstH264Picture *prev_picture;
       GArray *pictures;
@@ -1218,12 +1213,101 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
       if (!GST_H264_PICTURE_IS_FRAME (prev_picture)
           && !prev_picture->other_field) {
         prev_field = prev_picture;
-        in_dpb = TRUE;
       }
     }
   } else {
     g_assert (priv->last_field == NULL);
   }
+
+  return prev_field;
+}
+
+/* Returns TRUE if @picture can be recovered by filling a gap field picture.
+ * FALSE otherwise, indicating that the picture could not be recovered and
+ * should be discarded */
+static gboolean
+gst_h264_decoder_try_fill_gap_field (GstH264Decoder * self,
+    GstH264Picture * picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  GstH264Picture *gap;
+  GstVideoCodecFrame *frame;
+
+  /* Subclass is not gap field aware, so we cannot fill gap field.
+   * Discard this picture */
+  if (!priv->gap_field_aware)
+    return FALSE;
+
+  /* Current field is also non-existing. Drop entire frame instead of
+   * combining two gap fields into useless frame */
+  if (picture->nonexisting)
+    return FALSE;
+
+  /* The current codec frame may contain the incomplete field followed by
+   * another picture. The codec frame is still needed for that picture */
+  if (priv->current_frame && GST_CODEC_PICTURE_FRAME_NUMBER (picture) ==
+      priv->current_frame->system_frame_number) {
+    return FALSE;
+  }
+
+  /* No associated codec frame for @picture. This shouldn't happen, but there's
+   * nothing we can do other than discard the incomplete field picture */
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
+  if (!frame)
+    return FALSE;
+
+  gap = gst_h264_decoder_new_field_picture (self, picture);
+  if (!gap) {
+    /* Subclass could not create a new field picture for the gap, give up */
+    gst_video_codec_frame_unref (frame);
+    return FALSE;
+  }
+
+  gap->nonexisting = TRUE;
+  gap->field_pic_flag = TRUE;
+  gap->field = picture->field == GST_H264_PICTURE_FIELD_TOP_FIELD ?
+      GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FIELD_TOP_FIELD;
+
+  /* We don't know the missing field's POC. Just copy the POC of existing field
+   * to gap field so that DPB can combine the pair correctly.
+   *
+   * gap->pic_num and gap->long_term_pic_num depend on the current picture and
+   * will be assigned by update_pic_nums() before reference list construction
+   * and reference marking. */
+  gap->pic_order_cnt = picture->pic_order_cnt;
+  gap->top_field_order_cnt = picture->pic_order_cnt;
+  gap->bottom_field_order_cnt = picture->pic_order_cnt;
+  gap->frame_num = picture->frame_num;
+  gap->frame_num_wrap = picture->frame_num_wrap;
+  gap->frame_num_offset = picture->frame_num_offset;
+  gap->ref = picture->ref;
+  gap->ref_pic = picture->ref_pic;
+  gap->long_term_frame_idx = picture->long_term_frame_idx;
+
+  GST_CODEC_PICTURE_COPY_FRAME_NUMBER (gap, picture);
+
+  GST_VIDEO_CODEC_FRAME_FLAG_SET (frame, GST_VIDEO_CODEC_FRAME_FLAG_CORRUPTED);
+  gst_video_codec_frame_unref (frame);
+
+  GST_DEBUG_OBJECT (self, "Completing field picture %p (poc %d) with a gap",
+      picture, picture->pic_order_cnt);
+
+  if (picture == priv->last_field)
+    output_picture_directly (self, gap, &priv->last_flow);
+  else
+    gst_h264_dpb_add (priv->dpb, gap);
+
+  return TRUE;
+}
+
+static GstH264Picture *
+gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
+    GstH264Slice * slice)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  const GstH264SliceHdr *slice_hdr = &slice->header;
+  GstH264Picture *prev_field = gst_h264_decoder_get_incomplete_field (self);
 
   /* This is not a field picture */
   if (!slice_hdr->field_pic_flag) {
@@ -1258,10 +1342,13 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
   return gst_h264_picture_ref (prev_field);
 
 error:
+  if (gst_h264_decoder_try_fill_gap_field (self, prev_field))
+    return NULL;
+
   /* The missing field cannot be output */
   gst_h264_decoder_release_picture_frame (self, prev_field);
 
-  if (!in_dpb) {
+  if (prev_field == priv->last_field) {
     gst_clear_h264_picture (&priv->last_field);
   } else {
     /* And remove associated prev field picture from the DPB */
@@ -1982,6 +2069,10 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264Picture *picture;
   GstFlowReturn ret = GST_FLOW_OK;
+
+  picture = gst_h264_decoder_get_incomplete_field (self);
+  if (picture)
+    gst_h264_decoder_try_fill_gap_field (self, picture);
 
   while ((picture = gst_h264_dpb_bump (priv->dpb, TRUE)) != NULL) {
     gst_h264_decoder_do_output_picture (self, picture, &ret);
@@ -3408,4 +3499,28 @@ gst_h264_decoder_get_picture (GstH264Decoder * decoder,
     guint32 system_frame_number)
 {
   return gst_h264_dpb_get_picture (decoder->priv->dpb, system_frame_number);
+}
+
+/**
+ * gst_h264_decoder_set_gap_field_aware:
+ * @decoder: a #GstH264Decoder
+ * @aware: whether subclass supports gap fields
+ *
+ * Allows completing an incomplete field picture with a non-existing gap field.
+ * The subclass must support output without decoding the missing complementary
+ * field in the backend and handle non-existing fields in reference pictures.
+ *
+ * If disabled, an incomplete field picture and its associated frame are
+ * discarded when the complementary field is missing.
+ *
+ * Defaults to %FALSE.
+ *
+ * Since: 1.30
+ */
+void
+gst_h264_decoder_set_gap_field_aware (GstH264Decoder * decoder, gboolean aware)
+{
+  g_return_if_fail (GST_IS_H264_DECODER (decoder));
+
+  decoder->priv->gap_field_aware = aware;
 }

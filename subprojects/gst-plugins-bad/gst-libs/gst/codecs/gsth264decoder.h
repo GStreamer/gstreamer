@@ -251,6 +251,10 @@ GST_CODECS_API
 GstH264Picture * gst_h264_decoder_get_picture   (GstH264Decoder * decoder,
                                                  guint32 system_frame_number) G_GNUC_WARN_UNUSED_RESULT;
 
+GST_CODECS_API
+void gst_h264_decoder_set_gap_field_aware (GstH264Decoder * decoder,
+                                           gboolean aware);
+
 G_END_DECLS
 
 #endif /* __GST_H264_DECODER_H__ */
