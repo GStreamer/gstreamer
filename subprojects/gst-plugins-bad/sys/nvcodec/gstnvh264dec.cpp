@@ -383,6 +383,8 @@ gst_nv_h264_dec_init (GstNvH264Dec * self)
 
   self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
   self->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
+
+  gst_h264_decoder_set_gap_field_aware (GST_H264_DECODER (self), TRUE);
 }
 
 static void
@@ -869,7 +871,7 @@ gst_nv_h264_dec_fill_dpb (GstNvH264Dec * self, GstH264Picture * ref,
     case GST_H264_PICTURE_FIELD_TOP_FIELD:
       dpb->FieldOrderCnt[0] = ref->top_field_order_cnt;
       dpb->used_for_reference = 0x1;
-      if (ref->other_field) {
+      if (ref->other_field && !ref->other_field->nonexisting) {
         dpb->FieldOrderCnt[1] = ref->other_field->bottom_field_order_cnt;
         dpb->used_for_reference |= 0x2;
       } else {
@@ -879,7 +881,7 @@ gst_nv_h264_dec_fill_dpb (GstNvH264Dec * self, GstH264Picture * ref,
     case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
       dpb->FieldOrderCnt[1] = ref->bottom_field_order_cnt;
       dpb->used_for_reference = 0x2;
-      if (ref->other_field) {
+      if (ref->other_field && !ref->other_field->nonexisting) {
         dpb->FieldOrderCnt[0] = ref->other_field->top_field_order_cnt;
         dpb->used_for_reference |= 0x1;
       } else {
