@@ -880,7 +880,7 @@ gst_nv_h264_dec_fill_dpb (GstNvH264Dec * self, GstH264Picture * ref,
       dpb->FieldOrderCnt[1] = ref->bottom_field_order_cnt;
       dpb->used_for_reference = 0x2;
       if (ref->other_field) {
-        dpb->FieldOrderCnt[0] = ref->other_field->bottom_field_order_cnt;
+        dpb->FieldOrderCnt[0] = ref->other_field->top_field_order_cnt;
         dpb->used_for_reference |= 0x1;
       } else {
         dpb->FieldOrderCnt[0] = 0;
