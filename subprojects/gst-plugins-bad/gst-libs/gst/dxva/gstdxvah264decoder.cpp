@@ -121,6 +121,8 @@ gst_dxva_h264_decoder_init (GstDxvaH264Decoder * self)
 {
   self->priv = new GstDxvaH264DecoderPrivate ();
   self->priv->ref_pics = g_ptr_array_new ();
+
+  gst_h264_decoder_set_gap_field_aware (GST_H264_DECODER (self), TRUE);
 }
 
 static void
@@ -496,7 +498,7 @@ gst_dxva_h264_decoder_start_picture (GstH264Decoder * decoder,
         break;
     }
 
-    if (other->other_field) {
+    if (other->other_field && !other->other_field->nonexisting) {
       GstH264Picture *other_field = other->other_field;
 
       switch (other_field->field) {
