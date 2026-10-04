@@ -1811,7 +1811,7 @@ gst_asio_object_install_callback (GstAsioObject * obj,
   g_mutex_lock (&obj->api_lock);
   cb = g_new0 (GstAsioObjectCallbacksPrivate, 1);
   cb->callbacks = *callbacks;
-  cb->callback_id = obj->next_callback_id;
+  cb->callback_id = obj->next_callback_id++;
 
   switch (type) {
     case GST_ASIO_DEVICE_CLASS_CAPTURE:
