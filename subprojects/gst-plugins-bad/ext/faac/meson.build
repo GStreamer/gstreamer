@@ -15,13 +15,21 @@ plugin_sources += {
   'faac': pathsep.join(doc_sources)
 }
 
-faac_dep = cc.find_library('faac', required : get_option('faac'))
-have_faac_h = cc.has_header_symbol('faac.h', 'faacEncOpen') or cc.has_header_symbol('faac.h', 'faac_encoder_open')
-if not have_faac_h and get_option('faac').enabled()
-  error('faac plugin enabled: found libfaac, but not faac.h')
+if get_option('faac').disabled()
+  faac_dep = dependency('', required: false)
+  subdir_done()
 endif
 
-if faac_dep.found() and have_faac_h
+# faac >= 1.31 ships a pkg-config file, so try that first
+faac_dep = dependency('faac', required : false)
+if not faac_dep.found() and (cc.has_header_symbol('faac.h', 'faacEncOpen') or cc.has_header_symbol('faac.h', 'faac_encoder_open'))
+  faac_dep = cc.find_library('faac', required : false)
+endif
+if not faac_dep.found() and get_option('faac').enabled()
+  error('faac plugin enabled, but libfaac not found')
+endif
+
+if faac_dep.found()
   gstfaac = library('gstfaac',
     faac_sources,
     c_args : gst_plugins_bad_args,

@@ -25,7 +25,11 @@
 
 #include <faac.h>
 
-/* faac < 2.0 (legacy faacEnc* API) does not define version macros */
+/* FAAC_VERSION_MAJOR is the faac API version, not the release version:
+ *   faac < 2.0:     not defined (legacy faacEnc* API), treated as 0
+ *   faac 2.0 - 2.1: 1 (faac_* API)
+ *   faac >= 2.2:    2 (faac_params_init() takes a caller_size argument)
+ */
 #ifndef FAAC_VERSION_MAJOR
 #define FAAC_VERSION_MAJOR 0
 #endif
