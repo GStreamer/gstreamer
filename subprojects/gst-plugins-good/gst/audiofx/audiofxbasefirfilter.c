@@ -1,5 +1,5 @@
 /* -*- c-basic-offset: 2 -*-
- * 
+ *
  * GStreamer
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
@@ -19,7 +19,7 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
- * 
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -372,6 +372,7 @@ static void
   gst_fft_f64_free (self->ifft);
   self->ifft = NULL;
   g_free (self->frequency_response);
+  self->frequency_response = NULL;
   self->frequency_response_length = 0;
   g_free (self->fft_buffer);
   self->fft_buffer = NULL;
