@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
- * 
+ *
  */
 
 /**
@@ -119,7 +119,7 @@ gst_audio_fir_filter_class_init (GstAudioFIRFilterClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LATENCY,
-      g_param_spec_uint64 ("latency", "Latecy",
+      g_param_spec_uint64 ("latency", "Latency",
           "Filter latency in samples",
           0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
