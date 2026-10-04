@@ -678,8 +678,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
       step_gensamples = self->process (self, zeroes, out, step_insamples);
       g_free (zeroes);
 
-      memcpy (map.data + gensamples * bps, out, MIN (step_gensamples,
-              outsamples - gensamples) * bps);
+      memcpy (map.data + gensamples * channels * bps, out, MIN (step_gensamples,
+              outsamples - gensamples) * channels * bps);
       gensamples += MIN (step_gensamples, outsamples - gensamples);
 
       g_free (out);
