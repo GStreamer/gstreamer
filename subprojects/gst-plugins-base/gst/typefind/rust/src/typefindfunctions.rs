@@ -231,6 +231,69 @@ extern "C" fn w64_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// Helper for RIFF variants
+fn is_riff_variant(tf: &mut TypeFind, fourcc: &[u8; 4]) -> bool {
+    let Some(data) = tf.peek::<12>(0) else {
+        return false;
+    };
+    data[..4] == *b"RIFF" && data[8..12] == *fourcc
+}
+
+extern "C" fn avi_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"AVI ") {
+        suggest!(tf, MAXIMUM, c"video/x-msvideo");
+    } else if let Some(data) = tf.peek::<12>(0)
+        && data[..4] == *b"AVF0"
+        && data[8..12] == *b"AVI "
+    {
+        // Handle some old school recorders which were essentially AVI, but
+        // where `RIFF` was replaced by `AVF0`
+        suggest!(tf, MAXIMUM, c"video/x-msvideo");
+    }
+}
+
+extern "C" fn wav_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"WAVE") {
+        suggest!(tf, MAXIMUM, c"audio/x-wav");
+    }
+}
+
+extern "C" fn webp_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"WEBP") {
+        suggest!(tf, MAXIMUM, c"image/webp");
+    }
+}
+
+extern "C" fn fourxm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"4XMV") {
+        suggest!(tf, MAXIMUM, c"video/x-4xm");
+    }
+}
+
+extern "C" fn qcp_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"QLCM") {
+        suggest!(tf, MAXIMUM, c"audio/qcelp");
+    }
+}
+
+extern "C" fn cdxa_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"CDXA") {
+        suggest!(tf, MAXIMUM, c"video/x-cdxa");
+    }
+}
+
+extern "C" fn riff_mid_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"RMID") {
+        suggest!(tf, MAXIMUM, c"audio/riff-midi");
+    }
+}
+
+extern "C" fn xwma_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if is_riff_variant(tf, b"XWMA") {
+        suggest!(tf, MAXIMUM, c"audio/x-xwma");
+    }
+}
+
 // XPM — image/x-xpixmap
 extern "C" fn xpm_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"/* XPM */") {
@@ -617,6 +680,15 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-kss", SECONDARY, kss_type_find, "kss"),
     typefinder!("application/pdf", SECONDARY, pdf_type_find, "pdf"),
     typefinder!("application/msword", SECONDARY, doc_type_find, "doc"),
+    // RIFF variants
+    typefinder!("video/x-4xm", PRIMARY, fourxm_type_find),
+    typefinder!("video/x-msvideo", PRIMARY, avi_type_find, "avi,avf"),
+    typefinder!("audio/qcelp", PRIMARY, qcp_type_find, "qcp"),
+    typefinder!("video/x-cdxa", PRIMARY, cdxa_type_find, "dat"),
+    typefinder!("audio/riff-midi", PRIMARY, riff_mid_type_find, "mid,midi"),
+    typefinder!("audio/x-wav", PRIMARY, wav_type_find, "wav"),
+    typefinder!("image/webp", PRIMARY, webp_type_find, "webp"),
+    typefinder!("audio/x-xwma", PRIMARY, xwma_type_find),
     typefinder!(
         "application/octet-stream",
         SECONDARY,
