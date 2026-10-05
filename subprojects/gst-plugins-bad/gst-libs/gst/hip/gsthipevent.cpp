@@ -461,6 +461,14 @@ gst_hip_event_synchronize (GstHipEvent * event)
   return HipEventSynchronize (event->vendor, event->handle);
 }
 
+hipEvent_t
+gst_hip_event_get_handle (GstHipEvent * event)
+{
+  g_return_val_if_fail (event, nullptr);
+
+  return event->handle;
+}
+
 /**
  * gst_hip_event_ref:
  * @event: a #GstHipEvent

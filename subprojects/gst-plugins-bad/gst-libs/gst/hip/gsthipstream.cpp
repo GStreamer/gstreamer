@@ -23,6 +23,7 @@
 
 #include "gsthip-config.h"
 #include "gsthip.h"
+#include "gsthip-private.h"
 #include <mutex>
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -205,6 +206,45 @@ gst_hip_stream_record_event (GstHipStream * stream, GstHipEvent ** event)
   *event = new_event;
 
   return TRUE;
+}
+
+/**
+ * gst_hip_stream_wait_event:
+ * @stream: a #GstHipStream
+ * @event: a #GstHipEvent
+ *
+ * Makes @stream wait for @event to complete
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_stream_wait_event (GstHipStream * stream, GstHipEvent * event)
+{
+  g_return_val_if_fail (stream, FALSE);
+  g_return_val_if_fail (event, FALSE);
+
+  if (stream->vendor != gst_hip_event_get_vendor (event)) {
+    GST_ERROR ("Stream and event belong to different vendors");
+    return FALSE;
+  }
+
+  if (stream->device_id != gst_hip_event_get_device_id (event)) {
+    GST_ERROR ("Stream and event belong to different devices");
+    return FALSE;
+  }
+
+  auto hip_ret = HipSetDevice (stream->vendor, stream->device_id);
+  if (!gst_hip_result (hip_ret, stream->vendor)) {
+    GST_ERROR ("Couldn't set device");
+    return FALSE;
+  }
+
+  hip_ret = HipStreamWaitEvent (stream->vendor, stream->handle,
+      gst_hip_event_get_handle (event), 0);
+
+  return gst_hip_result (hip_ret, stream->vendor);
 }
 
 /**

@@ -46,6 +46,10 @@ gboolean       gst_hip_stream_record_event (GstHipStream * stream,
                                             GstHipEvent ** event);
 
 GST_HIP_API
+gboolean       gst_hip_stream_wait_event (GstHipStream * stream,
+                                          GstHipEvent * event);
+
+GST_HIP_API
 GstHipStream * gst_hip_stream_ref (GstHipStream * stream);
 
 GST_HIP_API

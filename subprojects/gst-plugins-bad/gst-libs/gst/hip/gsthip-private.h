@@ -30,6 +30,9 @@ void  gst_hip_memory_init_once (void);
 GST_HIP_API
 void  gst_hip_flush_all_devices (void);
 
+GST_HIP_API
+hipEvent_t gst_hip_event_get_handle (GstHipEvent * event);
+
 G_END_DECLS
 
 #ifdef __cplusplus
