@@ -199,10 +199,14 @@ if host_system == 'darwin'
   videotoolbox_dep = dependency('VideoToolbox')
   avfoundation_test_dep = dependency('appleframeworks', modules : ['Foundation', 'AVFoundation'])
   iosurface_test_dep = dependency('IOSurface')
+  vtdec_test_deps = []
+  if gstgl_dep.found()
+    vtdec_test_deps += [declare_dependency(compile_args : ['-DHAVE_GST_GL'])]
+  endif
   base_tests += [
     [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep], [], false],
     [['pipelines/avfsources-output-paths.c'], false, [avfoundation_test_dep, iosurface_test_dep, gstallocators_dep], [], false],
-    [['elements/vtdec.c']],
+    [['elements/vtdec.c'], false, vtdec_test_deps],
     [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
     [['pipelines/avfassetsrc-partial.c']],
     [['pipelines/vtdec-output-paths.c'], false, [iosurface_test_dep, gstallocators_dep]],

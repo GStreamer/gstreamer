@@ -261,7 +261,9 @@
 #include <gst/pbutils/codec-utils.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
+#ifdef HAVE_GST_GL
 #include <gst/gl/gstglcontext.h>
+#endif
 #include <gst/allocators/gstiosurface.h>
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/codecparsers/gsth264parser.h>
@@ -271,7 +273,9 @@
 #include "helpers.h"
 #include "corevideobuffer.h"
 #include "coremediabuffer.h"
+#ifdef HAVE_GST_GL
 #include "videotexturecache-gl.h"
+#endif
 
 #ifdef APPLEMEDIA_MOLTENVK
 #include <MoltenVK/mvk_private_api.h>
@@ -501,10 +505,17 @@ static SupplementalSupport gst_vtdec_codec_support = NoneSupported;
 #define VIDEO_SRC_CAPS_GL_FORMATS "{ NV12 }"
 #define VIDEO_SRC_CAPS_VULKAN_FORMATS "{ NV12, BGRA }"
 
-#define VIDEO_SRC_CAPS_NATIVE                                           \
+#ifdef HAVE_GST_GL
+#define VIDEO_SRC_CAPS_GL                                               \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
         VIDEO_SRC_CAPS_GL_FORMATS) ", "                                 \
-    "texture-target = (string) rectangle ;"                              \
+    "texture-target = (string) rectangle ;"
+#else
+#define VIDEO_SRC_CAPS_GL
+#endif
+
+#define VIDEO_SRC_CAPS_NATIVE                                           \
+    VIDEO_SRC_CAPS_GL                                                   \
     GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_NATIVE_FORMATS) ";"              \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_IOSURFACE,\
         VIDEO_SRC_CAPS_NATIVE_FORMATS)
@@ -637,8 +648,10 @@ gst_vtdec_start (GstVideoDecoder * decoder)
   gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
   vtdec->pause_task = FALSE;
 
+#ifdef HAVE_GST_GL
   if (!vtdec->ctxh)
     vtdec->ctxh = gst_gl_context_helper_new (GST_ELEMENT (decoder));
+#endif
 
   return TRUE;
 }
@@ -675,9 +688,11 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     g_object_unref (vtdec->texture_cache);
   vtdec->texture_cache = NULL;
 
+#ifdef HAVE_GST_GL
   if (vtdec->ctxh)
     gst_gl_context_helper_free (vtdec->ctxh);
   vtdec->ctxh = NULL;
+#endif
 
   if (vtdec->format_description)
     CFRelease (vtdec->format_description);
@@ -818,6 +833,7 @@ gst_vtdec_pause_output_loop (GstVtdec * vtdec)
   g_mutex_unlock (&vtdec->queue_mutex);
 }
 
+#if defined(HAVE_GST_GL) || defined(APPLEMEDIA_MOLTENVK)
 static void
 setup_texture_cache (GstVtdec * vtdec, GstVideoFormat format)
 {
@@ -829,6 +845,7 @@ setup_texture_cache (GstVtdec * vtdec, GstVideoFormat format)
       output_state->caps);
   gst_video_codec_state_unref (output_state);
 }
+#endif
 
 /*
  * Unconditionally output a high bit-depth + alpha format when decoding Apple
@@ -919,7 +936,9 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   GstVtdec *vtdec;
   OSStatus err = noErr;
   GstCapsFeatures *features = NULL;
+#ifdef HAVE_GST_GL
   gboolean output_textures = FALSE;
+#endif
 #ifdef APPLEMEDIA_MOLTENVK
   gboolean output_vulkan = FALSE;
 #endif
@@ -1002,7 +1021,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   if (features) {
     gst_caps_set_features (output_state->caps, 0, features);
 
-#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
+#if defined(HAVE_GST_GL) && (TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV)
     output_textures =
         gst_caps_features_contains (features,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
@@ -1055,19 +1074,28 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   }
   gst_video_codec_state_unref (output_state);
 
-  if (vtdec->texture_cache != NULL
-      && ((GST_IS_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache)
-              && !output_textures)
-#ifdef APPLEMEDIA_MOLTENVK
-          || (GST_IS_VIDEO_TEXTURE_CACHE_VULKAN (vtdec->texture_cache)
-              && !output_vulkan)
+  if (vtdec->texture_cache != NULL) {
+    gboolean clear_texture_cache = FALSE;
+
+#ifdef HAVE_GST_GL
+    if (GST_IS_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache)
+        && !output_textures)
+      clear_texture_cache = TRUE;
 #endif
-      )) {
-    g_object_unref (vtdec->texture_cache);
-    vtdec->texture_cache = NULL;
+#ifdef APPLEMEDIA_MOLTENVK
+    if (GST_IS_VIDEO_TEXTURE_CACHE_VULKAN (vtdec->texture_cache)
+        && !output_vulkan)
+      clear_texture_cache = TRUE;
+#endif
+
+    if (clear_texture_cache) {
+      g_object_unref (vtdec->texture_cache);
+      vtdec->texture_cache = NULL;
+    }
   }
 
   if (err == noErr) {
+#ifdef HAVE_GST_GL
     if (output_textures) {
       GstVideoTextureCacheGL *cache_gl = NULL;
 
@@ -1094,6 +1122,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         setup_texture_cache (vtdec, format);
       }
     }
+#endif
 #ifdef APPLEMEDIA_MOLTENVK
     if (output_vulkan) {
       GstVideoTextureCacheVulkan *cache_vulkan = NULL;
@@ -2693,14 +2722,18 @@ gst_vtdec_av1_config_record_has_seq_hdr_obu (const GstAV1DecoderConfigRecord *
 static void
 gst_vtdec_set_context (GstElement * element, GstContext * context)
 {
+#if defined(HAVE_GST_GL) || defined(APPLEMEDIA_MOLTENVK)
   GstVtdec *vtdec = GST_VTDEC (element);
+#endif
 
   GST_INFO_OBJECT (element, "setting context %s",
       gst_context_get_context_type (context));
+#ifdef HAVE_GST_GL
   if (!vtdec->ctxh)
     vtdec->ctxh = gst_gl_context_helper_new (element);
   gst_gl_handle_set_context (element, context,
       &vtdec->ctxh->display, &vtdec->ctxh->other_context);
+#endif
 
 #ifdef APPLEMEDIA_MOLTENVK
   gst_vulkan_handle_set_context (element, context, NULL, &vtdec->instance);

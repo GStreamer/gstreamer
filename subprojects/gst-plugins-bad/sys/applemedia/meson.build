@@ -4,10 +4,8 @@ applemedia_sources = [
   'coremediabuffer.c',
   'corevideobuffer.c',
   'corevideomemory.c',
-  'glcontexthelper.c',
   'helpers.m',
   'plugin.m',
-  'videotexturecache-gl.m',
   'videotexturecache.m',
   'vtenc.c',
   'vtdec.c',
@@ -22,15 +20,8 @@ applemedia_headers = [
   'coremediabuffer.h',
   'corevideobuffer.h',
   'corevideomemory.h',
-  'glcontexthelper.h',
   'helpers.h',
   'iosassetsrc.h',
-  'iosglmemory.h',
-  'iosurfaceglmemory.h',
-  'iosurfacevulkanmemory.h',
-  'metal-helpers.h',
-  'videotexturecache-gl.h',
-  'videotexturecache-vulkan.h',
   'videotexturecache.h',
   'vtdec.h',
   'vtenc.h',
@@ -55,11 +46,23 @@ ios_deprecated_sources = [
   'iosassetsrc.m',
 ]
 
-ios_sources = [
+gl_sources = [
+  'glcontexthelper.c',
+  'videotexturecache-gl.m',
+]
+
+gl_headers = [
+  'glcontexthelper.h',
+  'iosglmemory.h',
+  'iosurfaceglmemory.h',
+  'videotexturecache-gl.h',
+]
+
+ios_gl_sources = [
   'iosglmemory.c',
 ]
 
-non_ios_sources = [
+macos_gl_sources = [
   'iosurfaceglmemory.c'
 ]
 
@@ -68,8 +71,14 @@ vulkan_sources = [
   'iosurfacevulkanmemory.c',
 ]
 
+vulkan_headers = [
+  'iosurfacevulkanmemory.h',
+  'metal-helpers.h',
+  'videotexturecache-vulkan.h',
+]
+
 doc_sources = []
-foreach s: applemedia_sources + avcapturedevice_sources + ios_sources + ios_deprecated_sources + non_ios_sources + vulkan_sources + applemedia_headers
+foreach s: applemedia_sources + avcapturedevice_sources + gl_sources + ios_gl_sources + ios_deprecated_sources + macos_gl_sources + vulkan_sources + applemedia_headers + gl_headers + vulkan_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
 
@@ -78,6 +87,14 @@ plugin_sources += {
 }
 
 applemedia_objc_args = []
+applemedia_deps = [
+  gstvideo_dep,
+  gstpbutils_dep,
+  gst_dep,
+  gstbase_dep,
+  gstcodecparsers_dep,
+  gstallocators_dep,
+]
 applemedia_found_deps = false
 applemedia_option = get_option('applemedia')
 if host_system != 'darwin' or applemedia_option.disabled() or not have_objcpp
@@ -116,13 +133,10 @@ if not subsystem.startswith('watchos')
 endif
 
 if subsystem == 'macos'
-  applemedia_sources += non_ios_sources
   cocoa_dep = dependency('Cocoa', required : applemedia_option)
   iosurface_dep = dependency('IOSurface', required : applemedia_option)
-  applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
-  applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
+  applemedia_frameworks += [cocoa_dep, iosurface_dep]
 else
-  applemedia_sources += ios_sources
   if subsystem.startswith('ios')
     applemedia_sources += ios_deprecated_sources
     ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
@@ -132,6 +146,19 @@ else
   iosurface_dep = dependency('IOSurface', required : applemedia_option)
   applemedia_frameworks += [ios_media_dep, iosurface_dep]
   applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
+endif
+
+if gstgl_dep.found()
+  applemedia_sources += gl_sources
+  applemedia_deps += [gstgl_dep, gstglproto_dep]
+  applemedia_args += ['-DHAVE_GST_GL']
+
+  if subsystem == 'macos'
+    applemedia_sources += macos_gl_sources
+    applemedia_frameworks += [dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)]
+  elif subsystem.startswith('ios') or subsystem.startswith('tvos')
+    applemedia_sources += ios_gl_sources
+  endif
 endif
 
 applemedia_found_deps = true
@@ -178,7 +205,7 @@ if applemedia_found_deps
     link_args : noseh_link_args,
     kwargs: applemedia_kwargs,
     include_directories : [configinc, libsinc],
-    dependencies : [gstvideo_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep, gstcodecparsers_dep, gstallocators_dep] + applemedia_frameworks,
+    dependencies : applemedia_deps + applemedia_frameworks,
     override_options : ['cpp_std=c++11'],
     install : true,
     install_dir : plugins_install_dir,

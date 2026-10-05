@@ -23,7 +23,6 @@
 #endif
 
 #include "avfvideosrc.h"
-#include "glcontexthelper.h"
 
 #include <TargetConditionals.h>
 #import <AVFoundation/AVFoundation.h>
@@ -34,10 +33,13 @@
 #endif
 
 #include <gst/video/video.h>
+#ifdef HAVE_GST_GL
 #include <gst/gl/gstglcontext.h>
+#include "glcontexthelper.h"
+#include "videotexturecache-gl.h"
+#endif
 #include <gst/allocators/gstiosurface.h>
 #include "coremediabuffer.h"
-#include "videotexturecache-gl.h"
 #include "helpers.h"
 
 #define DEFAULT_DEVICE_INDEX  -1
@@ -210,6 +212,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (
+#ifdef HAVE_GST_GL
 #if TARGET_OS_OSX
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
@@ -220,6 +223,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
             "NV12") ", "
         "texture-target = " GST_GL_TEXTURE_TARGET_2D_STR "; "
+#endif
 #endif
         AVF_VIDEO_SRC_CAPS_SYSTEM_MEMORY
         (AVF_VIDEO_SRC_CAPTURE_FORMATS) "; "
@@ -366,7 +370,9 @@ gst_avf_video_source_device_type_get_type (void)
 #endif
 
   BOOL useVideoMeta;
+#ifdef HAVE_GST_GL
   GstGLContextHelper *ctxh;
+#endif
   GstVideoTextureCache *textureCache;
 }
 
@@ -508,7 +514,9 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 #endif
     useVideoMeta = NO;
     textureCache = NULL;
+#ifdef HAVE_GST_GL
     ctxh = gst_gl_context_helper_new (element);
+#endif
     mainQueue =
         dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc.main", NULL);
     workerQueue =
@@ -1075,9 +1083,11 @@ G_GNUC_END_IGNORE_DEPRECATIONS
     g_object_unref (textureCache);
   textureCache = NULL;
 
+#ifdef HAVE_GST_GL
   if (ctxh)
     gst_gl_context_helper_free (ctxh);
   ctxh = NULL;
+#endif
 
   [self closeDevice];
 
@@ -1265,6 +1275,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     useVideoMeta = TRUE;
   }
 
+#ifdef HAVE_GST_GL
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     GstVideoTextureCacheGL *cache_gl;
@@ -1282,6 +1293,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       textureCache = gst_video_texture_cache_gl_new (ctxh->context);
     gst_video_texture_cache_set_format (textureCache, format, alloc_caps);
   }
+#endif
 
   return TRUE;
 }
@@ -1290,8 +1302,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
   GST_INFO_OBJECT (element, "setting context %s",
           gst_context_get_context_type (context));
+#ifdef HAVE_GST_GL
   gst_gl_handle_set_context (element, context,
           &ctxh->display, &ctxh->other_context);
+#endif
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
@@ -1846,8 +1860,9 @@ gst_avf_video_src_set_context (GstElement * element, GstContext * context)
 GstCaps*
 gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation)
 {
-  GstCaps *result_caps, *result_gl_caps, *result_iosurface_caps;
-#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
+  GstCaps *result_caps, *result_iosurface_caps;
+#if defined(HAVE_GST_GL) && (TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV)
+  GstCaps *result_gl_caps;
   gboolean is_gl_format;
 #if TARGET_OS_OSX
   GstVideoFormat gl_formats[] = { GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, 0 };
@@ -1857,7 +1872,9 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
 #endif
 
   result_caps = gst_caps_new_empty ();
+#ifdef HAVE_GST_GL
   result_gl_caps = gst_caps_new_empty ();
+#endif
   result_iosurface_caps = gst_caps_new_empty ();
 
   /* Iterate in reverse order so UYVY is first and BGRA is last */
@@ -1905,7 +1922,7 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
             gst_applemedia_copy_caps_with_feature (caps,
                 GST_CAPS_FEATURE_MEMORY_IOSURFACE));
 
-#if TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV
+#if defined(HAVE_GST_GL) && (TARGET_OS_OSX || TARGET_OS_IOS || TARGET_OS_TV)
         is_gl_format = FALSE;
         for (int i = 0; i < G_N_ELEMENTS (gl_formats); i++) {
           if (gst_format == gl_formats[i]) {
@@ -1939,12 +1956,13 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
     }
   }
 
-  result_gl_caps =
-      gst_caps_simplify (gst_caps_merge (result_gl_caps, result_caps));
-  result_gl_caps =
-      gst_caps_merge (result_gl_caps, gst_caps_simplify (result_iosurface_caps));
-
-  return result_gl_caps;
+#ifdef HAVE_GST_GL
+  result_caps =
+      gst_caps_merge (result_gl_caps, result_caps);
+#endif
+  result_caps =
+      gst_caps_simplify (result_caps);
+  return gst_caps_merge (result_caps, gst_caps_simplify (result_iosurface_caps));
 }
 
 #if TARGET_OS_OSX

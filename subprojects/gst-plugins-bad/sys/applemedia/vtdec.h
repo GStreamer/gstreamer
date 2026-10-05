@@ -28,7 +28,9 @@
 #include <CoreMedia/CoreMedia.h>
 #include <VideoToolbox/VideoToolbox.h>
 #include "videotexturecache.h"
+#ifdef HAVE_GST_GL
 #include "glcontexthelper.h"
+#endif
 #ifdef APPLEMEDIA_MOLTENVK
 #include <gst/vulkan/vulkan.h>
 #endif
@@ -55,7 +57,9 @@ struct _GstVtdec
   CMFormatDescriptionRef format_description;
   VTDecompressionSessionRef session;
   GstVideoTextureCache *texture_cache;
+#ifdef HAVE_GST_GL
   GstGLContextHelper *ctxh;
+#endif
 
   GstVecDeque *reorder_queue;
   gint dbp_size;

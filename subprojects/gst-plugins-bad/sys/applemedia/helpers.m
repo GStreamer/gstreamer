@@ -27,7 +27,7 @@
 #include "helpers.h"
 #include "corevideomemory.h"
 
-#if TARGET_OS_IOS || TARGET_OS_TV
+#if defined(HAVE_GST_GL) && (TARGET_OS_IOS || TARGET_OS_TV)
 #include "iosglmemory.h"
 #endif
 
@@ -144,7 +144,7 @@ gst_applemedia_init_once (void)
 
   if (g_once_init_enter (&init_once)) {
     gst_apple_core_video_memory_init ();
-#if TARGET_OS_IOS || TARGET_OS_TV
+#if defined(HAVE_GST_GL) && (TARGET_OS_IOS || TARGET_OS_TV)
     gst_ios_gl_memory_init ();
 #endif
 #if TARGET_OS_OSX

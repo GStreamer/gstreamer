@@ -73,7 +73,7 @@ require_factory_or_skip (const gchar * name)
 }
 
 static GstCaps *
-get_sink_template_caps (GstElementFactory * factory)
+get_template_caps (GstElementFactory * factory, GstPadDirection direction)
 {
   const GList *templates;
 
@@ -81,11 +81,26 @@ get_sink_template_caps (GstElementFactory * factory)
       templates; templates = templates->next) {
     GstStaticPadTemplate *static_template = templates->data;
 
-    if (static_template->direction == GST_PAD_SINK)
+    if (static_template->direction == direction)
       return gst_static_caps_get (&static_template->static_caps);
   }
 
   return NULL;
+}
+
+static gboolean
+caps_have_feature (GstCaps * caps, const gchar * feature)
+{
+  guint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+
+    if (gst_caps_features_contains (features, feature))
+      return TRUE;
+  }
+
+  return FALSE;
 }
 
 static void
@@ -125,7 +140,7 @@ assert_factory_sink_caps (const gchar * name,
   expected_caps = gst_caps_from_string (expected_caps_string);
   fail_unless (expected_caps != NULL);
 
-  caps = get_sink_template_caps (factory);
+  caps = get_template_caps (factory, GST_PAD_SINK);
   fail_unless (caps != NULL, "Missing sink pad template for %s", name);
   fail_unless (gst_caps_is_equal (caps, expected_caps),
       "Unexpected sink caps for %s: expected %" GST_PTR_FORMAT ", got %"
@@ -150,7 +165,7 @@ assert_factory_sink_caps_if_registered (const gchar * name,
   expected_caps = gst_caps_from_string (expected_caps_string);
   fail_unless (expected_caps != NULL);
 
-  caps = get_sink_template_caps (factory);
+  caps = get_template_caps (factory, GST_PAD_SINK);
   fail_unless (caps != NULL, "Missing sink pad template for %s", name);
   fail_unless (gst_caps_is_equal (caps, expected_caps),
       "Unexpected sink caps for %s: expected %" GST_PTR_FORMAT ", got %"
@@ -250,6 +265,36 @@ GST_START_TEST (test_hw_factories_match_codec_sink_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_src_caps_match_gl_support)
+{
+  GstElementFactory *factory;
+  GstCaps *caps;
+  gboolean have_gl_memory;
+
+  if (!require_factory_or_skip ("vtdec"))
+    return;
+
+  factory = gst_element_factory_find ("vtdec");
+  fail_unless (factory != NULL);
+
+  caps = get_template_caps (factory, GST_PAD_SRC);
+  fail_unless (caps != NULL, "Missing src pad template for vtdec");
+  have_gl_memory = caps_have_feature (caps, "memory:GLMemory");
+
+#ifdef HAVE_GST_GL
+  fail_unless (have_gl_memory,
+      "vtdec does not advertise GLMemory although GL support is enabled");
+#else
+  fail_if (have_gl_memory,
+      "vtdec advertises GLMemory although GL support is disabled");
+#endif
+
+  gst_caps_unref (caps);
+  gst_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 vtdec_suite (void)
 {
@@ -261,6 +306,7 @@ vtdec_suite (void)
   tcase_add_test (tc_chain, test_codec_factories_have_codec_specific_sink_caps);
   tcase_add_test (tc_chain, test_codec_factories_are_ranked);
   tcase_add_test (tc_chain, test_hw_factories_match_codec_sink_caps);
+  tcase_add_test (tc_chain, test_src_caps_match_gl_support);
 
   return s;
 }
