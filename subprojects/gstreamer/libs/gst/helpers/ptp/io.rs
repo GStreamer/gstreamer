@@ -62,7 +62,10 @@ mod imp {
         io::{self, Read, Write},
         mem,
         net::UdpSocket,
-        os::unix::io::{AsRawFd, RawFd},
+        os::{
+            raw::c_void,
+            unix::io::{AsRawFd, RawFd},
+        },
     };
 
     use crate::{bail, error::Error, ffi::unix::*};
@@ -124,7 +127,7 @@ mod imp {
             // The fd is valid by construction as is the buffer.
             //
             // read() will return the number of bytes read or a negative value on errors.
-            let res = unsafe { read(self.read, buf.as_mut_ptr(), buf.len()) };
+            let res = unsafe { read(self.read, buf.as_mut_ptr().cast::<c_void>(), buf.len()) };
 
             if res < 0 {
                 Err(std::io::Error::last_os_error())
@@ -141,7 +144,7 @@ mod imp {
             // The fd is valid by construction as is the buffer.
             //
             // write() will return the number of bytes written or a negative value on errors.
-            let res = unsafe { write(self.write, buf.as_ptr(), buf.len()) };
+            let res = unsafe { write(self.write, buf.as_ptr().cast::<c_void>(), buf.len()) };
 
             if res == -1 {
                 Err(std::io::Error::last_os_error())
@@ -360,7 +363,7 @@ mod imp {
             // The fd is valid by construction as is the buffer.
             //
             // read() will return the number of bytes read or a negative value on errors.
-            let res = unsafe { read(self.0, buf.as_mut_ptr(), buf.len()) };
+            let res = unsafe { read(self.0, buf.as_mut_ptr().cast::<c_void>(), buf.len()) };
 
             if res < 0 {
                 Err(std::io::Error::last_os_error())
@@ -397,7 +400,7 @@ mod imp {
             // The fd is valid by construction as is the buffer.
             //
             // write() will return the number of bytes written or a negative value on errors.
-            let res = unsafe { write(self.0, buf.as_ptr(), buf.len()) };
+            let res = unsafe { write(self.0, buf.as_ptr().cast::<c_void>(), buf.len()) };
 
             if res == -1 {
                 Err(std::io::Error::last_os_error())
@@ -443,7 +446,7 @@ mod imp {
             // The fd is valid by construction as is the buffer.
             //
             // write() will return the number of bytes written or a negative value on errors.
-            let res = unsafe { write(self.0, buf.as_ptr(), buf.len()) };
+            let res = unsafe { write(self.0, buf.as_ptr().cast::<c_void>(), buf.len()) };
 
             if res == -1 {
                 Err(std::io::Error::last_os_error())
