@@ -735,8 +735,38 @@ gst_hip_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       break;
   }
 
+  if (copy_type == CopyHtoD && hip_ret == hipSuccess) {
+    GstHipEvent *event = nullptr;
+    if (gst_hip_stream_record_event (stream, &event)) {
+      auto frame_to_hold = g_new0 (GstVideoFrame, 1);
+      *frame_to_hold = in_frame;
+
+      gst_hip_memory_set_event (GST_HIP_MEMORY_CAST (out_mem), event);
+      gst_hip_event_set_notify (event, frame_to_hold,[](gpointer user_data) {
+            auto frame_to_hold = (GstVideoFrame *) user_data;
+            gst_video_frame_unmap (frame_to_hold);
+            g_free (frame_to_hold);
+          }
+      );
+
+      gst_hip_event_unref (event);
+      gst_video_frame_unmap (&out_frame);
+
+      return TRUE;
+    }
+
+    auto sync_ret = HipStreamSynchronize (vendor, stream_handle);
+    gst_hip_result (sync_ret, vendor);
+    gst_video_frame_unmap (&out_frame);
+    gst_video_frame_unmap (&in_frame);
+    return FALSE;
+  }
+
+  /* Also finish already submitted planes if a later copy failed */
+  auto sync_ret = HipStreamSynchronize (vendor, stream_handle);
+  gst_hip_result (sync_ret, vendor);
   if (hip_ret == hipSuccess)
-    hip_ret = HipStreamSynchronize (vendor, stream_handle);
+    hip_ret = sync_ret;
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);

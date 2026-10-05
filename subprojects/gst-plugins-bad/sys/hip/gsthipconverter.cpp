@@ -743,6 +743,8 @@ struct _GstHipConverterPrivate
   GstVideoInfo in_info;
   GstVideoInfo out_info;
   hipStream_t stream = nullptr;
+  GstHipStream *active_stream = nullptr;
+  GstHipEvent *last_event = nullptr;
 
   GstStructure *config = nullptr;
 
@@ -839,6 +841,12 @@ gst_hip_converter_dispose (GObject * object)
   auto self = GST_HIP_CONVERTER (object);
   auto priv = self->priv;
 
+  if (priv->last_event) {
+    auto ret = gst_hip_event_synchronize (priv->last_event);
+    gst_hip_result (ret, priv->vendor);
+    gst_clear_hip_event (&priv->last_event);
+  }
+
   if (self->device && gst_hip_device_set_current (self->device)) {
     if (priv->unpack_module) {
       HipModuleUnload (priv->vendor, priv->unpack_module);
@@ -873,6 +881,7 @@ gst_hip_converter_dispose (GObject * object)
     }
   }
 
+  gst_clear_hip_stream (&priv->active_stream);
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -1897,6 +1906,10 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   g_return_val_if_fail (GST_IS_BUFFER (out_buf), FALSE);
 
   auto priv = converter->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+
+  if (!priv->fill_border && (priv->dest_width <= 0 || priv->dest_height <= 0))
+    return TRUE;
 
   if (!gst_hip_device_set_current (converter->device)) {
     GST_ERROR_OBJECT (converter, "Couldn't set device");
@@ -1922,26 +1935,39 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   auto in_stream = gst_hip_memory_get_stream (in_hmem);
   auto out_stream = gst_hip_memory_get_stream (out_hmem);
 
-  gboolean set_event = FALSE;
-  /* Avoid sync if in/out mem use the same hip stream */
-  priv->stream = gst_hip_stream_get_handle (out_stream);
-  if (in_stream != out_stream) {
-    gst_hip_memory_sync (in_hmem);
-  } else if (!gst_hip_memory_is_imported (in_hmem)) {
-    /* Imported input cannot use lazy synchronization even if in/out use the
-     * same stream. Unlike GstHip-owned memory, imported memory has no implicit
-     * synchronization point on free(), and the completion event is stored
-     * only in output memory */
-    set_event = TRUE;
+  if (!out_stream)
+    out_stream = gst_hip_device_get_stream (converter->device);
+
+  /* Wait before reusing internal resources such as fallback_buffer and
+   * unpack_buffer on another stream */
+  if (priv->active_stream != out_stream) {
+    if (priv->last_event) {
+      auto ret = gst_hip_event_synchronize (priv->last_event);
+      if (!gst_hip_result (ret, priv->vendor)) {
+        gst_video_frame_unmap (&out_frame);
+        gst_video_frame_unmap (&in_frame);
+        return FALSE;
+      }
+
+      gst_clear_hip_event (&priv->last_event);
+    }
+
+    gst_clear_hip_stream (&priv->active_stream);
+    priv->active_stream = gst_hip_stream_ref (out_stream);
   }
 
-  priv = converter->priv;
+  priv->stream = gst_hip_stream_get_handle (out_stream);
+
+  /* Synchronize input dependency when using a different stream */
+  if (in_stream != out_stream) {
+    /* FIXME: Use hipStreamWaitEvent() instead of blocking the CPU */
+    gst_hip_memory_sync (in_hmem);
+  }
+
   format = priv->texture_fmt;
 
-  std::lock_guard < std::mutex > lk (priv->lock);
-  if (!priv->fill_border && (priv->dest_width <= 0 || priv->dest_height <= 0))
-    return TRUE;
-
+  gboolean ret = FALSE;
+  hipError_t hip_ret;
   gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
     &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1], &stride[2],
     &stride[3], priv->const_buf, &off_x, &off_y
@@ -1951,17 +1977,13 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
 
   if (priv->unpack_func) {
     if (!gst_hip_converter_unpack_rgb (converter, &in_frame)) {
-      gst_video_frame_unmap (&out_frame);
-      gst_video_frame_unmap (&in_frame);
-      return FALSE;
+      goto done;
     }
 
     texture[0] = priv->unpack_buffer.texture;
     if (!texture[0]) {
       GST_ERROR_OBJECT (converter, "Unpack texture is unavailable");
-      gst_video_frame_unmap (&out_frame);
-      gst_video_frame_unmap (&in_frame);
-      return FALSE;
+      goto done;
     }
   } else {
     for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
@@ -1977,9 +1999,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
 
       if (!texture[i]) {
         GST_ERROR_OBJECT (converter, "Couldn't create texture %d", i);
-        gst_video_frame_unmap (&out_frame);
-        gst_video_frame_unmap (&in_frame);
-        return FALSE;
+        goto done;
       }
     }
   }
@@ -2004,28 +2024,35 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     stride[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
   }
 
-  auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->main_func,
+  hip_ret = HipModuleLaunchKernel (priv->vendor, priv->main_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
-      HIP_BLOCK_X, HIP_BLOCK_Y, 1,
-      0, priv->stream, args, nullptr);
+      HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, priv->stream, args, nullptr);
+
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
+    GST_ERROR_OBJECT (converter, "Couldn't convert frame");
+    goto done;
+  }
+
+  ret = TRUE;
+
+done:
+  GstHipEvent * event = nullptr;
+  if (gst_hip_stream_record_event (out_stream, &event)) {
+    gst_hip_memory_set_event (out_hmem, event);
+    gst_clear_hip_event (&priv->last_event);
+    priv->last_event = gst_hip_event_ref (event);
+    gst_hip_event_set_notify (event, gst_buffer_ref (in_buf),
+        (GDestroyNotify) gst_buffer_unref);
+    gst_hip_event_unref (event);
+  } else {
+    /* Earlier unpack/copy work may have been submitted even on failure. */
+    auto hip_ret = HipStreamSynchronize (priv->vendor, priv->stream);
+    gst_hip_result (hip_ret, priv->vendor);
+    ret = FALSE;
+  }
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
 
-  if (!gst_hip_result (hip_ret, priv->vendor)) {
-    GST_ERROR_OBJECT (converter, "Couldn't convert frame");
-    return FALSE;
-  }
-
-  auto stream = gst_hip_device_get_stream (converter->device);
-  GstHipEvent *event;
-  if (set_event && gst_hip_stream_record_event (stream, &event)) {
-    auto hmem = (GstHipMemory *) gst_buffer_peek_memory (out_buf, 0);
-    gst_hip_memory_set_event (hmem, event);
-    gst_hip_event_unref (event);
-  } else {
-    HipStreamSynchronize (priv->vendor, priv->stream);
-  }
-
-  return TRUE;
+  return ret;
 }
