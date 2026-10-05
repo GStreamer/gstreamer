@@ -31,10 +31,15 @@
 #include "gstqt6glutility.h"
 
 #include <QtCore/QDateTime>
+#include <QtCore/QPointer>
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickOpenGLUtils>
 #include <QtQuick/QQuickWindow>
 #include <QQuickRenderTarget>
+
+#include <condition_variable>
+#include <memory>
+#include <mutex>
 
 /* compatibility definitions... */
 #ifndef GL_READ_FRAMEBUFFER
@@ -52,6 +57,46 @@
 
 GST_DEBUG_CATEGORY_STATIC (qt6_gl_window_debug);
 #define GST_CAT_DEFAULT qt6_gl_window_debug
+
+namespace {
+
+class CallbackGuard
+{
+public:
+  template <typename Callback>
+  void run (Callback callback)
+  {
+    {
+      std::lock_guard<std::mutex> lock (mutex);
+      if (closing)
+        return;
+      ++activeCallbacks;
+    }
+
+    callback ();
+
+    {
+      std::lock_guard<std::mutex> lock (mutex);
+      if (--activeCallbacks == 0)
+        callbacksFinished.notify_all ();
+    }
+  }
+
+  void close ()
+  {
+    std::unique_lock<std::mutex> lock (mutex);
+    closing = true;
+    callbacksFinished.wait (lock, [this] { return activeCallbacks == 0; });
+  }
+
+private:
+  std::mutex mutex;
+  std::condition_variable callbacksFinished;
+  guint activeCallbacks = 0;
+  bool closing = false;
+};
+
+} // namespace
 
 struct _Qt6GLWindowPrivate
 {
@@ -78,6 +123,8 @@ struct _Qt6GLWindowPrivate
 
   gboolean new_caps;
   GstBuffer *produced_buffer;
+  std::shared_ptr<CallbackGuard> callbackGuard;
+  QPointer<QQuickWindow> sourceWindow;
 };
 
 Qt6GLWindow::Qt6GLWindow (QQuickWindow *src, QObject *parent)
@@ -93,7 +140,9 @@ Qt6GLWindow::Qt6GLWindow (QQuickWindow *src, QObject *parent)
     g_once_init_leave (&_debug, 1);
   }
 
-  this->priv = g_new0 (Qt6GLWindowPrivate, 1);
+  this->priv = new Qt6GLWindowPrivate{};
+  this->priv->callbackGuard = std::make_shared<CallbackGuard> ();
+  this->priv->sourceWindow = source;
 
   g_mutex_init (&this->priv->lock);
   g_cond_init (&this->priv->update_cond);
@@ -102,14 +151,29 @@ Qt6GLWindow::Qt6GLWindow (QQuickWindow *src, QObject *parent)
   this->priv->result = TRUE;
   this->priv->internal_format = GL_RGBA;
 
-  connect (source, SIGNAL(beforeRendering()), this, SLOT(beforeRendering()), Qt::DirectConnection);
-  connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
+  auto callbackGuard = this->priv->callbackGuard;
+  connect (source, &QQuickWindow::beforeRendering, this,
+      [this, callbackGuard] {
+        callbackGuard->run ([this] { beforeRendering (); });
+      }, Qt::DirectConnection);
+  connect (source, &QQuickWindow::afterRendering, this,
+      [this, callbackGuard] {
+        callbackGuard->run ([this] { afterRendering (); });
+      }, Qt::DirectConnection);
   if (source->isSceneGraphInitialized())
-    source->scheduleRenderJob(new RenderJob(std::bind(&Qt6GLWindow::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
+    source->scheduleRenderJob(new RenderJob([this, callbackGuard] {
+      callbackGuard->run ([this] { onSceneGraphInitialized (); });
+    }), QQuickWindow::BeforeSynchronizingStage);
   else
-    connect (source, SIGNAL(sceneGraphInitialized()), this, SLOT(onSceneGraphInitialized()), Qt::DirectConnection);
+    connect (source, &QQuickWindow::sceneGraphInitialized, this,
+        [this, callbackGuard] {
+          callbackGuard->run ([this] { onSceneGraphInitialized (); });
+        }, Qt::DirectConnection);
 
-  connect (source, SIGNAL(sceneGraphInvalidated()), this, SLOT(onSceneGraphInvalidated()), Qt::DirectConnection);
+  connect (source, &QQuickWindow::sceneGraphInvalidated, this,
+      [this, callbackGuard] {
+        callbackGuard->run ([this] { onSceneGraphInvalidated (); });
+      }, Qt::DirectConnection);
 
   GST_DEBUG ("%p init Qt Window", this->priv->display);
 }
@@ -117,6 +181,13 @@ Qt6GLWindow::Qt6GLWindow (QQuickWindow *src, QObject *parent)
 Qt6GLWindow::~Qt6GLWindow()
 {
   GST_DEBUG ("deinit Qt Window");
+
+  /* Callbacks run on Qt's render thread and are not stopped by disconnect().
+   * The source may already be destroyed, in which case Qt dropped the connections. */
+  if (this->priv->sourceWindow)
+    QObject::disconnect (this->priv->sourceWindow, nullptr, this, nullptr);
+  this->priv->callbackGuard->close ();
+
   g_mutex_clear (&this->priv->lock);
   g_cond_clear (&this->priv->update_cond);
   gst_clear_object (&this->priv->other_context);
@@ -126,7 +197,7 @@ Qt6GLWindow::~Qt6GLWindow()
   gst_clear_object (&this->priv->display);
   gst_clear_object (&this->priv->context);
 
-  g_free (this->priv);
+  delete this->priv;
   this->priv = NULL;
 }
 
