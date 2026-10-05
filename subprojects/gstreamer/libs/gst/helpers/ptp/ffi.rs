@@ -279,17 +279,17 @@ pub mod unix {
             all(target_os = "macos", target_arch = "x86"),
             link_name = "open$UNIX2003"
         )]
-        pub fn open(path: *const u8, oflag: c_int, ...) -> i32;
+        pub fn open(path: *const c_char, oflag: c_int, ...) -> c_int;
         #[cfg_attr(
             all(target_os = "macos", target_arch = "x86"),
             link_name = "read$UNIX2003"
         )]
-        pub fn read(fd: RawFd, buf: *mut u8, count: usize) -> isize;
+        pub fn read(fd: RawFd, buf: *mut c_void, count: usize) -> isize;
         #[cfg_attr(
             all(target_os = "macos", target_arch = "x86"),
             link_name = "write$UNIX2003"
         )]
-        pub fn write(fd: RawFd, buf: *const u8, count: usize) -> isize;
+        pub fn write(fd: RawFd, buf: *const c_void, count: usize) -> isize;
 
         #[cfg_attr(
             all(target_os = "macos", target_arch = "x86"),

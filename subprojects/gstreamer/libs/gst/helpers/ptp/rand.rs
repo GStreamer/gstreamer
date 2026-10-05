@@ -52,7 +52,10 @@ mod unix {
     /// Try reading random numbers from /dev/urandom.
     pub fn dev_urandom() -> io::Result<[u8; 8]> {
         use crate::ffi::unix::*;
-        use std::{io::Read, os::raw::c_int};
+        use std::{
+            io::Read,
+            os::raw::{c_char, c_int, c_void},
+        };
 
         struct Fd(c_int);
 
@@ -74,7 +77,7 @@ mod unix {
                 // The fd is valid by construction as is the buffer.
                 //
                 // read() will return the number of bytes read or a negative value on errors.
-                let res = unsafe { read(self.0, buf.as_mut_ptr(), buf.len()) };
+                let res = unsafe { read(self.0, buf.as_mut_ptr().cast::<c_void>(), buf.len()) };
                 if res < 0 {
                     Err(std::io::Error::last_os_error())
                 } else {
@@ -87,7 +90,7 @@ mod unix {
             // SAFETY: open() requires a NUL-terminated file path and will
             // return an integer in any case. A negative value is an invalid fd
             // and signals an error. On EINTR, opening can be retried.
-            let fd = unsafe { open(b"/dev/urandom\0".as_ptr(), O_RDONLY) };
+            let fd = unsafe { open(b"/dev/urandom\0".as_ptr().cast::<c_char>(), O_RDONLY) };
             if fd < 0 {
                 let err = std::io::Error::last_os_error();
                 if err.kind() == std::io::ErrorKind::Interrupted {
