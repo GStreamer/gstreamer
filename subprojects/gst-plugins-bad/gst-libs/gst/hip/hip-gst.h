@@ -97,6 +97,12 @@ hipError_t HipStreamSynchronize (GstHipVendor vendor,
                                  hipStream_t stream);
 
 GST_HIP_API
+hipError_t HipStreamWaitEvent (GstHipVendor vendor,
+                               hipStream_t stream,
+                               hipEvent_t event,
+                               unsigned int flags);
+
+GST_HIP_API
 hipError_t HipEventCreateWithFlags (GstHipVendor vendor,
                                     hipEvent_t* event,
                                     unsigned flags);
