@@ -29,13 +29,23 @@
 
 #include <gst/gst.h>
 #include <gst/hip/gsthip.h>
+#include <gst/hip/gsthip-private.h>
 #include "gsthipmemorycopy.h"
 #include "gsthipconvertscale.h"
 #include "gsthipcompositor.h"
 
+static void
+plugin_deinit (gpointer data)
+{
+  gst_hip_flush_all_devices ();
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  g_object_set_data_full (G_OBJECT (plugin), "plugin-hip-shutdown",
+      (gpointer) "shutdown-data", plugin_deinit);
+
   auto device = gst_hip_device_new (GST_HIP_VENDOR_UNKNOWN, 0);
   if (!device)
     return TRUE;

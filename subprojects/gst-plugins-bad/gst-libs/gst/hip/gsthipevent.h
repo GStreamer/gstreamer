@@ -103,5 +103,10 @@ void              gst_hip_event_unref (GstHipEvent * event);
 GST_HIP_API
 void              gst_clear_hip_event (GstHipEvent ** event);
 
+GST_HIP_API
+void              gst_hip_event_set_notify (GstHipEvent * event,
+                                            gpointer user_data,
+                                            GDestroyNotify notify);
+
 G_END_DECLS
 

@@ -23,6 +23,10 @@
 
 #include "gsthip-config.h"
 #include "gsthip.h"
+#include "gsthip-private.h"
+#include <condition_variable>
+#include <map>
+#include <memory>
 #include <mutex>
 #include <queue>
 
@@ -58,6 +62,7 @@ struct _GstHipEvent : public GstMiniObject
 
   GstHipEventPool *pool = nullptr;
   hipEvent_t handle = nullptr;
+  gboolean recorded = FALSE;
   GstHipVendor vendor;
   guint device_id;
 };
@@ -77,6 +82,118 @@ struct _GstHipEventPoolPrivate
   guint device_id;
   std::mutex lock;
   std::queue<GstHipEvent *>event_pool;
+};
+
+struct HipNotifyData
+{
+  GstHipEvent *event = nullptr;
+  gpointer user_data = nullptr;
+  GDestroyNotify notify = nullptr;
+};
+
+
+struct HipCompletionWorker
+{
+  HipCompletionWorker ()
+  {
+    thread_ = g_thread_new ("GstHipGc", Run, this);
+  }
+
+  ~HipCompletionWorker ()
+  {
+    {
+      std::lock_guard<std::mutex> lk (lock_);
+      shutdown_ = true;
+      cond_.notify_one ();
+    }
+    g_thread_join (thread_);
+  }
+
+  void
+  Push (GstHipEvent *event, gpointer user_data, GDestroyNotify notify)
+  {
+    std::lock_guard<std::mutex> lk (lock_);
+    pending_.push ({ gst_hip_event_ref (event), user_data, notify });
+    cond_.notify_one ();
+  }
+
+private:
+  static gpointer
+  Run (gpointer data)
+  {
+    auto self = static_cast<HipCompletionWorker *> (data);
+    std::unique_lock<std::mutex> lk (self->lock_);
+    while (true) {
+      while (!self->shutdown_ && self->pending_.empty ())
+        self->cond_.wait (lk);
+
+      /* Keep processing pending notifications even if we are shutting down */
+      if (self->pending_.empty ())
+        break;
+
+      auto item = self->pending_.front ();
+      self->pending_.pop ();
+      lk.unlock ();
+
+      auto ret = gst_hip_event_query (item.event);
+      if (ret == hipErrorNotReady)
+        ret = gst_hip_event_synchronize (item.event);
+      gst_hip_result (ret, gst_hip_event_get_vendor (item.event));
+
+      if (item.notify)
+        item.notify (item.user_data);
+      gst_hip_event_unref (item.event);
+      lk.lock ();
+    }
+
+    return nullptr;
+  }
+
+  std::mutex lock_;
+  std::condition_variable cond_;
+  std::queue<HipNotifyData> pending_;
+  bool shutdown_ = false;
+  GThread *thread_ = nullptr;
+};
+
+struct HipCompletionManager
+{
+  static HipCompletionManager * GetInstance ()
+  {
+    static auto manager = new HipCompletionManager ();
+    return manager;
+  }
+
+  void Push (GstHipEvent *event, gpointer user_data, GDestroyNotify notify)
+  {
+    std::lock_guard<std::mutex> lk (lock_);
+    auto key = std::make_pair (event->vendor, event->device_id);
+    auto &worker = workers_[key];
+    if (!worker)
+      worker = std::make_unique<HipCompletionWorker> ();
+
+    worker->Push (event, user_data, notify);
+  }
+
+  void Flush ()
+  {
+    std::lock_guard<std::mutex> flush_lk (flush_lock_);
+    WorkerMap workers;
+    {
+      std::lock_guard<std::mutex> lk (lock_);
+      workers.swap (workers_);
+    }
+
+    /* Joining also waits for callbacks, without holding the registry lock */
+    workers.clear ();
+  }
+
+private:
+  using WorkerMap = std::map<std::pair<GstHipVendor, guint>,
+      std::unique_ptr<HipCompletionWorker>>;
+  std::mutex lock_;
+  std::mutex flush_lock_;
+  WorkerMap workers_;
 };
 /* *INDENT-ON* */
 
@@ -147,6 +264,7 @@ gst_hip_event_pool_release (GstHipEventPool * pool, GstHipEvent * event)
     std::lock_guard < std::mutex > lk (priv->lock);
     event->dispose = nullptr;
     event->pool = nullptr;
+    event->recorded = FALSE;
     priv->event_pool.push (event);
   }
 
@@ -286,11 +404,17 @@ gst_hip_event_record (GstHipEvent * event, hipStream_t stream)
 {
   g_return_val_if_fail (event, hipErrorInvalidValue);
 
+  event->recorded = FALSE;
+
   auto hip_ret = HipSetDevice (event->vendor, event->device_id);
   if (!gst_hip_result (hip_ret, event->vendor))
     return hip_ret;
 
-  return HipEventRecord (event->vendor, event->handle, stream);
+  hip_ret = HipEventRecord (event->vendor, event->handle, stream);
+  if (hip_ret == hipSuccess)
+    event->recorded = TRUE;
+
+  return hip_ret;
 }
 
 /**
@@ -379,4 +503,37 @@ void
 gst_clear_hip_event (GstHipEvent ** event)
 {
   gst_clear_mini_object (event);
+}
+
+/**
+ * gst_hip_event_set_notify:
+ * @event: a #GstHipEvent
+ * @user_data: user data
+ * @notify: a #GDestroyNotify
+ *
+ * Schedules oneshot @notify callback.
+ *
+ * @event must have been successfully recorded using gst_hip_event_record() or
+ * gst_hip_stream_record_event() before calling this function.
+ *
+ * This method can be used to keep resources associated with HIP operations
+ * alive until @event is completed. @notify will be called with @user_data
+ * from an internal worker thread once the event is completed.
+ *
+ * Since: 1.30
+ */
+void
+gst_hip_event_set_notify (GstHipEvent * event, gpointer user_data,
+    GDestroyNotify notify)
+{
+  g_return_if_fail (event);
+  g_return_if_fail (event->recorded);
+
+  HipCompletionManager::GetInstance ()->Push (event, user_data, notify);
+}
+
+void
+gst_hip_flush_all_devices (void)
+{
+  HipCompletionManager::GetInstance ()->Flush ();
 }
