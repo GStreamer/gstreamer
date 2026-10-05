@@ -27,6 +27,58 @@ use bindings::{
     GST_RANK_MARGINAL as MARGINAL, GST_RANK_PRIMARY as PRIMARY, GST_RANK_SECONDARY as SECONDARY,
 };
 
+// MIDI — audio/midi
+// Magic `MThd` @ 0.
+extern "C" fn mid_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"MThd") {
+        suggest!(tf, MAXIMUM, c"audio/midi");
+    }
+}
+
+// AU — audio/x-au
+// Magic `.snd` or `dns.` @ 0.
+extern "C" fn au_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b".snd") || tf.starts_with(b"dns.") {
+        suggest!(tf, MAXIMUM, c"audio/x-au");
+    }
+}
+
+// APE — application/x-ape
+// Magic `MAC ` @ 0.
+extern "C" fn ape_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"MAC ") {
+        suggest!(tf, NEARLY_CERTAIN, c"application/x-ape");
+    }
+}
+
+// SHN — audio/x-shorten
+// Magic `ajkg` @ 0 or `SHNAMPSK` at file tail (−8).
+extern "C" fn shn_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"ajkg") {
+        suggest!(tf, MAXIMUM, c"audio/x-shorten");
+    } else if let Some(data) = tf.peek_var(-8, 8)
+        && magic_eq(data, b"SHNAMPSK")
+    {
+        suggest!(tf, MAXIMUM, c"audio/x-shorten");
+    }
+}
+
+// PARIS — audio/x-paris
+// Magic ` paf` or `fap ` @ 0.
+extern "C" fn paris_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b" paf") || tf.starts_with(b"fap ") {
+        suggest!(tf, MAXIMUM, c"audio/x-paris");
+    }
+}
+
+// TTA — audio/x-ttafile
+// Magic `TTA` @ 0.
+extern "C" fn tta_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"TTA") {
+        suggest!(tf, MAXIMUM, c"audio/x-ttafile");
+    }
+}
+
 extern "C" fn swf_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<3>(0)
         && (data == b"FWS" || data == b"CWS")
@@ -794,6 +846,12 @@ const FEATURES: &[Feature] = &[
     typefinder!("image/png", PRIMARY + 14, png_type_find, "png"),
     typefinder!("image/jpeg", PRIMARY + 15, jpeg_type_find, "jpg,jpe,jpeg"),
     // Additional startswith finders
+    typefinder!("audio/midi", PRIMARY, mid_type_find, "mid,midi"),
+    typefinder!("audio/x-ttafile", PRIMARY, tta_type_find, "tta"),
+    typefinder!("application/x-ape", SECONDARY, ape_type_find, "ape"),
+    typefinder!("audio/x-au", 1, au_type_find, "au,snd"),
+    typefinder!("audio/x-shorten", SECONDARY, shn_type_find, "shn"),
+    typefinder!("audio/x-paris", SECONDARY, paris_type_find, "paf"),
     typefinder!("audio/x-amr-nb-sh", PRIMARY, amr_type_find, "amr"),
     typefinder!("audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, "amr"),
     typefinder!("video/x-vcd", PRIMARY, vcd_type_find, "dat"),
