@@ -20,7 +20,7 @@ use std::ptr;
 
 use crate::bindings::gpointer;
 use crate::helpers::{
-    Feature, TypeFind, magic_eq, opt, read_u16_le, read_u32_le, suggest, typefinder,
+    Feature, Scanner, TypeFind, magic_eq, opt, read_u16_le, read_u32_le, suggest, typefinder,
 };
 #[allow(unused_imports)]
 use bindings::{
@@ -583,6 +583,167 @@ extern "C" fn bmp_type_find(tf: &mut TypeFind, _private: gpointer) {
                (c"bpp", i32 : bpp as i32), ]);
 }
 
+// PNG — image/png
+// Signature @0, then walk chunk headers (length u32 BE + fourcc + payload
+// + 4 CRC bytes): acTL/PLTE raise the confidence, IDAT settles it.
+extern "C" fn png_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const PNG_MAGIC: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
+    if !tf.starts_with(&PNG_MAGIC) {
+        return;
+    }
+
+    let (level, animated) = {
+        let mut scan = Scanner::new(tf, 8); // after the signature
+        let (mut level, mut animated) = (0, false);
+        for _ in 0..25 {
+            let Some(chunk_header) = scan.peek(8) else {
+                break;
+            };
+            let chunk_data_len = u32::from_be_bytes([
+                chunk_header[0],
+                chunk_header[1],
+                chunk_header[2],
+                chunk_header[3],
+            ]);
+            match &chunk_header[4..8] {
+                b"acTL" => {
+                    level = 1;
+                    animated = true;
+                }
+                b"PLTE" => level = 1,
+                b"IDAT" => {
+                    level = 2;
+                    break;
+                }
+                _ => {}
+            }
+            scan.consume(usize::saturating_add(chunk_data_len as usize, 12));
+        }
+        (level, animated)
+    };
+
+    match level {
+        2 => {
+            if animated {
+                suggest!(tf, MAXIMUM, c"image/png", [
+                    (c"animated", bool : true),
+                ]);
+            } else {
+                suggest!(tf, MAXIMUM, c"image/png");
+            }
+        }
+        1 => {
+            if animated {
+                suggest!(tf, NEARLY_CERTAIN, c"image/png", [
+                    (c"animated", bool : true),
+                ]);
+            } else {
+                suggest!(tf, NEARLY_CERTAIN, c"image/png");
+            }
+        }
+        _ => suggest!(tf, LIKELY, c"image/png"),
+    }
+}
+
+// JPEG — image/jpeg
+// SOI @0, then walk marker segments (FF xx, length u16 BE, payload).
+// APP0 JFIF / APP1 Exif and a SOF with nonzero dimensions raise confidence.
+extern "C" fn jpeg_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const MAX_WALK: i64 = 200 * 1024;
+    if !tf.starts_with(&[0xff, 0xd8]) {
+        return;
+    }
+
+    let (markers, app_found, fields) = {
+        let mut scan = Scanner::new(tf, 2); // after the SOI
+        let mut markers = 1; // the SOI counts as a marker
+        let mut app_found = false;
+        let mut fields: Option<(u32, u32, u8)> = None;
+
+        // Nine bytes cover the header (FF xx, length), the APP0/APP1
+        // signature and the SOF dimensions.
+        while scan.offset() < MAX_WALK {
+            let Some(seg) = scan.peek(9) else {
+                break;
+            };
+            if seg[0] != 0xff {
+                break;
+            }
+            let marker = seg[1];
+            // TEM, RST0–7, SOI and EOI carry no length.
+            if marker == 0x01 || (0xd0..=0xd9).contains(&marker) {
+                scan.consume(2);
+                continue;
+            }
+            let seg_len = u16::from_be_bytes([seg[2], seg[3]]) as usize;
+
+            match marker {
+                // Fill bytes: skip one, re-check next iteration.
+                0xff => {
+                    scan.consume(1);
+                    continue;
+                }
+
+                // Start Of Frame: extract dimensions from payload.
+                m if (0xc0..=0xcf).contains(&m)
+                    && m != 0xc4
+                    && m != 0xc8
+                    && m != 0xcc
+                    && seg_len >= 10 =>
+                {
+                    let height = u16::from_be_bytes([seg[5], seg[6]]) as u32;
+                    let width = u16::from_be_bytes([seg[7], seg[8]]) as u32;
+                    if width != 0 && height != 0 {
+                        fields = Some((width, height, m & 0x0f));
+                        break;
+                    }
+                }
+
+                // JFIF / Exif: detect from payload.
+                m if matches!(m, 0xe0 | 0xe1)
+                    && seg_len >= 6
+                    && seg[4..8] == if m == 0xe0 { *b"JFIF" } else { *b"Exif" } =>
+                {
+                    app_found = true
+                }
+
+                // Counted segments (DHT/DAC/DQT/DRI/COM).
+                0xc4 | 0xcc | 0xdb | 0xdd | 0xfe => markers += 1,
+
+                // Generic APPn: count but don't inspect payload.
+                m if (0xe0..=0xef).contains(&m) => markers += 1,
+
+                _ => {} // unknown marker: skip and keep walking
+            }
+            scan.consume(2 + seg_len);
+        }
+        (markers, app_found, fields)
+    };
+
+    let Some((width, height, sof_marker)) = fields else {
+        if app_found {
+            suggest!(tf, MAXIMUM, c"image/jpeg");
+        } else {
+            suggest!(tf, POSSIBLE, c"image/jpeg");
+        }
+        return;
+    };
+
+    if markers >= 5 || app_found {
+        suggest!(tf, MAXIMUM, c"image/jpeg", [
+            (c"width", i32 : width as i32),
+            (c"height", i32 : height as i32),
+            (c"sof-marker", i32 : sof_marker as i32),
+        ]);
+    } else {
+        suggest!(tf, LIKELY, c"image/jpeg", [
+            (c"width", i32 : width as i32),
+            (c"height", i32 : height as i32),
+            (c"sof-marker", i32 : sof_marker as i32),
+        ]);
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -628,8 +789,10 @@ const FEATURES: &[Feature] = &[
         "vtt",
         "application/x-subtitle-vtt, parsed=(boolean)false"
     ),
-    // Complex finder — DIB structure validation
+    // Complex finders — structure validation and chunk/marker walking
     typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp"),
+    typefinder!("image/png", PRIMARY + 14, png_type_find, "png"),
+    typefinder!("image/jpeg", PRIMARY + 15, jpeg_type_find, "jpg,jpe,jpeg"),
     // Additional startswith finders
     typefinder!("audio/x-amr-nb-sh", PRIMARY, amr_type_find, "amr"),
     typefinder!("audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, "amr"),

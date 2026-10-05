@@ -11,6 +11,7 @@
 
 use crate::bindings::{self, gpointer};
 use std::os::raw::c_uint;
+use std::ptr;
 
 #[repr(transparent)]
 pub struct TypeFind(pub(crate) bindings::GstTypeFind);
@@ -51,6 +52,81 @@ impl TypeFind {
     /// Returns `true` only when enough data is available and matches.
     pub fn starts_with<const N: usize>(&mut self, magic: &[u8; N]) -> bool {
         matches!(self.peek::<N>(0), Some(data) if data == magic)
+    }
+}
+
+/// Zero-copy windowed cursor over the typefind stream, in the spirit of
+/// `std::io::BufRead`: `peek()` serves bytes from a cached window and only
+/// queries the engine again when the window cannot cover the request;
+/// `consume()` advances.
+///
+/// The scanner owns `&mut TypeFind` for the walk; scope it in a block so it
+/// is dead before `suggest!`. A cached window is only read until the next
+/// query replaces it.
+const WINDOW: usize = 4096;
+
+pub struct Scanner<'a> {
+    tf: &'a mut TypeFind,
+    base: *const u8, // cached window
+    offset: i64,     // stream offset of `base`
+    len: usize,      // window length
+    pos: usize,      // cursor within the window
+}
+
+impl<'a> Scanner<'a> {
+    pub fn new(tf: &'a mut TypeFind, offset: i64) -> Self {
+        Self {
+            tf,
+            base: ptr::null(),
+            offset,
+            len: 0,
+            pos: 0,
+        }
+    }
+
+    /// Serve exactly `min` bytes at the cursor, querying the engine again
+    /// when the cached window cannot cover them. `None` when fewer than
+    /// `min` bytes remain in the stream.
+    pub fn peek(&mut self, min: usize) -> Option<&[u8]> {
+        if self.len.saturating_sub(self.pos) < min {
+            let offset = self.offset + self.pos as i64;
+            let (base, len) = self.refill(offset, min)?;
+            self.base = base;
+            self.offset = offset;
+            self.len = len;
+            self.pos = 0;
+        }
+        // Sound: the slice lives no longer than the exclusive borrow of the
+        // scanner, and the window it points into is only read until the next
+        // query replaces it.
+        Some(unsafe { std::slice::from_raw_parts(self.base.add(self.pos), min) })
+    }
+
+    /// Declare the next `n` bytes consumed. May run past the window end; the
+    /// next `peek` queries the engine at the right offset.
+    pub fn consume(&mut self, n: usize) {
+        self.pos += n;
+    }
+
+    /// Current stream position of the cursor.
+    pub fn offset(&self) -> i64 {
+        self.offset + self.pos as i64
+    }
+
+    /// Query the engine for up to `WINDOW` bytes at `offset`, falling back
+    /// to whatever the stream has left (at least `min`) for short tails.
+    fn refill(&mut self, offset: i64, min: usize) -> Option<(*const u8, usize)> {
+        let chunk = WINDOW.max(min) as u32;
+        let base = unsafe { bindings::gst_type_find_peek(&mut self.tf.0, offset, chunk) };
+        if !base.is_null() {
+            return Some((base, chunk as usize));
+        }
+        // Short tail: the stream ends before a full window. An unknown
+        // length (0) lands here and asks for `min`.
+        let left = self.tf.length().saturating_sub(offset as u64);
+        let len = left.clamp(min as u64, chunk as u64) as u32;
+        let base = unsafe { bindings::gst_type_find_peek(&mut self.tf.0, offset, len) };
+        (!base.is_null()).then_some((base, len as usize))
     }
 }
 
