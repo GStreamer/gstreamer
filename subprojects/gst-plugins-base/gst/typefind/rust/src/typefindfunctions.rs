@@ -707,56 +707,38 @@ extern "C" fn png_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     }
 
-    let (level, animated) = {
-        let mut scan = Scanner::new(tf, 8); // after the signature
-        let (mut level, mut animated) = (0, false);
-        for _ in 0..25 {
-            let Some(chunk_header) = scan.peek(8) else {
-                break;
-            };
-            let chunk_data_len = u32::from_be_bytes([
-                chunk_header[0],
-                chunk_header[1],
-                chunk_header[2],
-                chunk_header[3],
-            ]);
-            match &chunk_header[4..8] {
-                b"acTL" => {
-                    level = 1;
-                    animated = true;
-                }
-                b"PLTE" => level = 1,
-                b"IDAT" => {
-                    level = 2;
-                    break;
-                }
-                _ => {}
-            }
-            scan.consume(usize::saturating_add(chunk_data_len as usize, 12));
-        }
-        (level, animated)
-    };
+    let mut scan = Scanner::new(tf, 8); // after the signature
+    let mut prob = Prob::LIKELY; // sig match is baseline confidence
+    let mut animated = false;
 
-    match level {
-        2 => {
-            if animated {
-                suggest!(tf, Prob::MAXIMUM, c"image/png", [
-                    (c"animated", bool : true),
-                ]);
-            } else {
-                suggest!(tf, Prob::MAXIMUM, c"image/png");
+    for _ in 0..25 {
+        let Some(chunk_header) = scan.peek(8) else {
+            break;
+        };
+        let chunk_data_len = u32::from_be_bytes([
+            chunk_header[0],
+            chunk_header[1],
+            chunk_header[2],
+            chunk_header[3],
+        ]);
+        match &chunk_header[4..8] {
+            b"acTL" => {
+                prob = Prob::NEARLY_CERTAIN;
+                animated = true;
             }
-        }
-        1 => {
-            if animated {
-                suggest!(tf, Prob::NEARLY_CERTAIN, c"image/png", [
-                    (c"animated", bool : true),
-                ]);
-            } else {
-                suggest!(tf, Prob::NEARLY_CERTAIN, c"image/png");
+            b"PLTE" => prob = Prob::NEARLY_CERTAIN,
+            b"IDAT" => {
+                prob = Prob::MAXIMUM;
+                break;
             }
+            _ => {}
         }
-        _ => suggest!(tf, Prob::LIKELY, c"image/png"),
+        scan.consume(usize::saturating_add(chunk_data_len as usize, 12));
+    }
+    if animated {
+        suggest!(tf, prob, c"image/png", [(c"animated", bool : true),]);
+    } else {
+        suggest!(tf, prob, c"image/png");
     }
 }
 
@@ -769,94 +751,89 @@ extern "C" fn jpeg_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     }
 
-    let (markers, app_found, fields) = {
-        let mut scan = Scanner::new(tf, 2); // after the SOI
-        let mut markers = 1; // the SOI counts as a marker
-        let mut app_found = false;
-        let mut fields: Option<(u32, u32, u8)> = None;
+    let mut scan = Scanner::new(tf, 2); // after the SOI
+    let mut markers = 1; // the SOI counts as a marker
+    let mut app_found = false;
+    let mut fields: Option<(u32, u32, u8)> = None;
 
-        // Nine bytes cover the header (FF xx, length), the APP0/APP1
-        // signature and the SOF dimensions.
-        while scan.offset() < MAX_WALK {
-            let Some(seg) = scan.peek(9) else {
-                break;
-            };
-            if seg[0] != 0xff {
-                break;
-            }
-            let marker = seg[1];
-            // TEM, RST0–7, SOI and EOI carry no length.
-            if marker == 0x01 || (0xd0..=0xd9).contains(&marker) {
-                scan.consume(2);
+    // Nine bytes cover the header (FF xx, length), the APP0/APP1
+    // signature and the SOF dimensions.
+    while scan.offset() < MAX_WALK {
+        let Some(seg) = scan.peek(9) else {
+            break;
+        };
+        if seg[0] != 0xff {
+            break;
+        }
+        let marker = seg[1];
+        // TEM, RST0–7, SOI and EOI carry no length.
+        if marker == 0x01 || (0xd0..=0xd9).contains(&marker) {
+            scan.consume(2);
+            continue;
+        }
+        let seg_len = u16::from_be_bytes([seg[2], seg[3]]) as usize;
+
+        match marker {
+            // Fill bytes: skip one, re-check next iteration.
+            0xff => {
+                scan.consume(1);
                 continue;
             }
-            let seg_len = u16::from_be_bytes([seg[2], seg[3]]) as usize;
 
-            match marker {
-                // Fill bytes: skip one, re-check next iteration.
-                0xff => {
-                    scan.consume(1);
-                    continue;
+            // Start Of Frame: extract dimensions from payload.
+            m if (0xc0..=0xcf).contains(&m)
+                && m != 0xc4
+                && m != 0xc8
+                && m != 0xcc
+                && seg_len >= 10 =>
+            {
+                let height = u16::from_be_bytes([seg[5], seg[6]]) as u32;
+                let width = u16::from_be_bytes([seg[7], seg[8]]) as u32;
+                if width != 0 && height != 0 {
+                    fields = Some((width, height, m & 0x0f));
+                    break;
                 }
-
-                // Start Of Frame: extract dimensions from payload.
-                m if (0xc0..=0xcf).contains(&m)
-                    && m != 0xc4
-                    && m != 0xc8
-                    && m != 0xcc
-                    && seg_len >= 10 =>
-                {
-                    let height = u16::from_be_bytes([seg[5], seg[6]]) as u32;
-                    let width = u16::from_be_bytes([seg[7], seg[8]]) as u32;
-                    if width != 0 && height != 0 {
-                        fields = Some((width, height, m & 0x0f));
-                        break;
-                    }
-                }
-
-                // JFIF / Exif: detect from payload.
-                m if matches!(m, 0xe0 | 0xe1)
-                    && seg_len >= 6
-                    && seg[4..8] == if m == 0xe0 { *b"JFIF" } else { *b"Exif" } =>
-                {
-                    app_found = true
-                }
-
-                // Counted segments (DHT/DAC/DQT/DRI/COM).
-                0xc4 | 0xcc | 0xdb | 0xdd | 0xfe => markers += 1,
-
-                // Generic APPn: count but don't inspect payload.
-                m if (0xe0..=0xef).contains(&m) => markers += 1,
-
-                _ => {} // unknown marker: skip and keep walking
             }
-            scan.consume(2 + seg_len);
+
+            // JFIF / Exif: detect from payload.
+            m if matches!(m, 0xe0 | 0xe1)
+                && seg_len >= 6
+                && seg[4..8] == if m == 0xe0 { *b"JFIF" } else { *b"Exif" } =>
+            {
+                app_found = true;
+            }
+
+            // Counted segments (DHT/DAC/DQT/DRI/COM).
+            0xc4 | 0xcc | 0xdb | 0xdd | 0xfe => markers += 1,
+
+            // Generic APPn: count but don't inspect payload.
+            m if (0xe0..=0xef).contains(&m) => markers += 1,
+
+            _ => {} // unknown marker: skip and keep walking
         }
-        (markers, app_found, fields)
-    };
+        scan.consume(2 + seg_len);
+    }
 
     let Some((width, height, sof_marker)) = fields else {
-        if app_found {
-            suggest!(tf, Prob::MAXIMUM, c"image/jpeg");
+        // With no dimensions to report an APP marker is the only thing to rate.
+        let prob = if app_found {
+            Prob::MAXIMUM
         } else {
-            suggest!(tf, Prob::POSSIBLE, c"image/jpeg");
-        }
+            Prob::POSSIBLE
+        };
+        suggest!(tf, prob, c"image/jpeg");
         return;
     };
-
-    if markers >= 5 || app_found {
-        suggest!(tf, Prob::MAXIMUM, c"image/jpeg", [
-            (c"width", i32 : width as i32),
-            (c"height", i32 : height as i32),
-            (c"sof-marker", i32 : sof_marker as i32),
-        ]);
+    let prob = if markers >= 5 || app_found {
+        Prob::MAXIMUM
     } else {
-        suggest!(tf, Prob::LIKELY, c"image/jpeg", [
-            (c"width", i32 : width as i32),
-            (c"height", i32 : height as i32),
-            (c"sof-marker", i32 : sof_marker as i32),
-        ]);
-    }
+        Prob::LIKELY
+    };
+    suggest!(tf, prob, c"image/jpeg", [
+        (c"width", i32 : width as i32),
+        (c"height", i32 : height as i32),
+        (c"sof-marker", i32 : sof_marker as i32),
+    ]);
 }
 
 // =============================================================================
