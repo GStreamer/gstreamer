@@ -188,27 +188,37 @@ macro_rules! map_type_name {
     };
 }
 
-/// Maps a probability suffix (MAXIMUM, NEARLY_CERTAIN, ...) to the full
-/// `GST_TYPE_FIND_*` constant. Callers write just the suffix.
-macro_rules! map_prob_suffix {
-    (NONE) => {
-        bindings::GST_TYPE_FIND_NONE
-    };
-    (MINIMUM) => {
-        bindings::GST_TYPE_FIND_MINIMUM
-    };
-    (POSSIBLE) => {
-        bindings::GST_TYPE_FIND_POSSIBLE
-    };
-    (LIKELY) => {
-        bindings::GST_TYPE_FIND_LIKELY
-    };
-    (NEARLY_CERTAIN) => {
-        bindings::GST_TYPE_FIND_NEARLY_CERTAIN
-    };
-    (MAXIMUM) => {
-        bindings::GST_TYPE_FIND_MAXIMUM
-    };
+/// Typefind probability / confidence level.
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct TypeFindProbability(c_uint);
+
+impl TypeFindProbability {
+    pub const NONE: Self = Self(bindings::GST_TYPE_FIND_NONE);
+    pub const MINIMUM: Self = Self(bindings::GST_TYPE_FIND_MINIMUM);
+    pub const POSSIBLE: Self = Self(bindings::GST_TYPE_FIND_POSSIBLE);
+    pub const LIKELY: Self = Self(bindings::GST_TYPE_FIND_LIKELY);
+    pub const NEARLY_CERTAIN: Self = Self(bindings::GST_TYPE_FIND_NEARLY_CERTAIN);
+    pub const MAXIMUM: Self = Self(bindings::GST_TYPE_FIND_MAXIMUM);
+
+    #[inline]
+    pub fn get(self) -> c_uint {
+        self.0
+    }
+}
+
+impl From<c_uint> for TypeFindProbability {
+    #[inline]
+    fn from(v: c_uint) -> Self {
+        Self(v)
+    }
+}
+
+impl From<TypeFindProbability> for c_uint {
+    #[inline]
+    fn from(p: TypeFindProbability) -> Self {
+        p.0
+    }
 }
 
 /// Maps a type name literal and value to the value used in the call.
@@ -230,25 +240,20 @@ macro_rules! map_value {
 
 /// Suggest a media type and optional caps fields to the typefind engine.
 ///
-/// Usage:
+/// The probability can be a named constant or any numeric literal:
 /// ```ignore
-/// // Type only (no caps fields)
-/// suggest!(tf, MAXIMUM, c"image/bmp");
+/// // Named constants (from `helpers::TypeFindProbability`)
+/// suggest!(tf, Prob::MAXIMUM, c"image/bmp");
 ///
-/// // Type with caps fields: `suggest!(tf, prob, "mime", [(key, type : value), ...])`
-/// // Field types: `i32`, `str`, `bool` — compile-time checked against GType
-/// suggest!(tf, MAXIMUM, c"image/bmp",
-///     [ (c"width", i32 : 640),
-///       (c"height", i32 : 480) ]);
+/// // Raw numeric value (arbitrary confidence)
+/// suggest!(tf, 90, c"application/x-ape");
 /// ```
 macro_rules! suggest {
-    // Outer arm: caller passes suffix (MAXIMUM, NEARLY_CERTAIN, ...)
-    ($tf:expr, $prob:ident, $name:expr $(,)?) => {{
-        let _p = $crate::helpers::map_prob_suffix!($prob);
+    ($tf:expr, $prob:expr, $name:expr $(,)?) => {{
         unsafe {
             bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
-                _p,
+                $crate::helpers::TypeFindProbability::from($prob).into(),
                 {
                     $crate::helpers::type_check::<std::ffi::CStr>(&$name);
                     $name
@@ -257,11 +262,12 @@ macro_rules! suggest {
             );
         }
     }};
-    ($tf:expr, $prob:ident, $name:expr, [ $( ($key:expr, $type:ident : $val:expr) , )*] $(,)?) => {
+    ($tf:expr, $prob:expr, $name:expr, [ $( ($key:expr, $type:ident : $val:expr) , )*] $(,)?) => {
+        let _p = $crate::helpers::TypeFindProbability::from($prob).into();
         unsafe {
             bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
-                $crate::helpers::map_prob_suffix!($prob),
+                _p,
                 {
                     $crate::helpers::type_check::<std::ffi::CStr>(&$name);
                     $name
@@ -318,5 +324,8 @@ macro_rules! typefinder {
     };
 }
 
+// Alias for callers who want the short name.
+pub(crate) use TypeFindProbability as Prob;
+
 // Re-export macros and items needed by typefindfunctions.rs.
-pub(crate) use {map_prob_suffix, map_type_name, map_value, opt, suggest, typefinder};
+pub(crate) use {map_type_name, map_value, opt, suggest, typefinder};
