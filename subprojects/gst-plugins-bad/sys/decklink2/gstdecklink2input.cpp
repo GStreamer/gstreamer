@@ -429,6 +429,7 @@ struct GstDeckLink2InputPrivate
   GstDeckLink2InputMetadata frame_metadata = { };
   GstCaps *frame_caps = nullptr;
   bool api_failed = false;
+  bool restarting_streams = false;
   bool aspect_ratio_mismatch_warned = false;
 
   std::mutex lock;
@@ -2189,7 +2190,7 @@ gst_decklink2_input_on_frame_arrived (GstDeckLink2Input * self,
     return;
   }
 
-  if (priv->api_failed)
+  if (priv->api_failed || priv->restarting_streams)
     return;
 
   if (frame) {
@@ -2216,6 +2217,45 @@ gst_decklink2_input_on_frame_arrived (GstDeckLink2Input * self,
         gst_vec_deque_clear (self->audio_queue);
         gst_vec_deque_clear (self->queue);
         self->next_audio_offset = INVALID_AUDIO_OFFSET;
+
+        /* https://www.blackmagicdesign.com/developer/support/faq/desktop-video-developer-support-faqs#
+         * A no-signal -> signal transition might cause an audio/video
+         * stream time offset. Restart streams as recommended by Blackmagic */
+        self->av_sync = 0;
+        self->discont = TRUE;
+        priv->restarting_streams = true;
+        lk.unlock ();
+
+        GST_INFO_OBJECT (self,
+            "Signal recovered, restarting streams with Stop/Flush/Start");
+        hr = gst_decklink2_input_stop_streams (self);
+        if (hr != S_OK) {
+          GST_ERROR_OBJECT (self, "StopStreams failed, hr: 0x%x", (guint) hr);
+        } else if (!priv->stopping) {
+          hr = gst_decklink2_input_flush_streams (self);
+          if (hr != S_OK) {
+            GST_ERROR_OBJECT (self,
+                "FlushStreams failed, hr: 0x%x", (guint) hr);
+          } else if (!priv->stopping) {
+            hr = gst_decklink2_input_start_streams (self);
+            if (hr != S_OK)
+              GST_ERROR_OBJECT (self, "StartStreams failed, hr: 0x%x",
+                  (guint) hr);
+          }
+        }
+        lk.lock ();
+
+        priv->restarting_streams = false;
+        if (self->started && !priv->stopping) {
+          if (hr == S_OK)
+            priv->was_restarted = true;
+          else
+            priv->api_failed = true;
+        }
+
+        priv->cond.notify_all ();
+
+        return;
       } else {
         priv->signal = true;
       }
@@ -2622,7 +2662,8 @@ out:
 }
 
 static void
-gst_decklink2_input_stop_unlocked (GstDeckLink2Input * self)
+gst_decklink2_input_stop_unlocked (GstDeckLink2Input * self,
+    std::unique_lock < std::mutex > &lk)
 {
   GstDeckLink2InputPrivate *priv = self->priv;
   HRESULT hr;
@@ -2630,7 +2671,13 @@ gst_decklink2_input_stop_unlocked (GstDeckLink2Input * self)
   /* Temporarily unlock mutex. below API call may be blocked by callback thread
    * which takes our mutex too */
   priv->stopping = true;
-  priv->lock.unlock ();
+
+  /* Wait for ongoing restart if any */
+  while (priv->restarting_streams)
+    priv->cond.wait (lk);
+
+  lk.unlock ();
+
   hr = gst_decklink2_input_stop_streams (self);
   /* For logging */
   gst_decklink2_result (hr);
@@ -2644,7 +2691,7 @@ gst_decklink2_input_stop_unlocked (GstDeckLink2Input * self)
   hr = gst_decklink2_input_set_callback (self, NULL);
   gst_decklink2_result (hr);
 
-  priv->lock.lock ();
+  lk.lock ();
   priv->stopping = false;
   gst_vec_deque_clear (self->queue);
   gst_vec_deque_clear (self->audio_queue);
@@ -2670,11 +2717,11 @@ gst_decklink2_input_start (GstDeckLink2Input * input, GstElement * client,
     const GstDeckLink2InputAudioConfig * audio_config)
 {
   GstDeckLink2InputPrivate *priv = input->priv;
-  std::lock_guard < std::mutex > lk (priv->lock);
+  std::unique_lock < std::mutex > lk (priv->lock);
   HRESULT hr;
   BMDVideoInputFlags input_flags = bmdVideoInputFlagDefault;
 
-  gst_decklink2_input_stop_unlocked (input);
+  gst_decklink2_input_stop_unlocked (input, lk);
   gst_decklink2_input_reset_time_mapping (input);
 
   if (skip_first_time > 0 && GST_CLOCK_TIME_IS_VALID (skip_first_time))
@@ -2877,7 +2924,7 @@ gst_decklink2_input_start (GstDeckLink2Input * input, GstElement * client,
   return S_OK;
 
 error:
-  gst_decklink2_input_stop_unlocked (input);
+  gst_decklink2_input_stop_unlocked (input, lk);
   input->client = NULL;
   return E_FAIL;
 }
@@ -2886,9 +2933,9 @@ void
 gst_decklink2_input_stop (GstDeckLink2Input * input)
 {
   GstDeckLink2InputPrivate *priv = input->priv;
-  std::lock_guard < std::mutex > lk (priv->lock);
+  std::unique_lock < std::mutex > lk (priv->lock);
 
-  gst_decklink2_input_stop_unlocked (input);
+  gst_decklink2_input_stop_unlocked (input, lk);
   input->client = NULL;
 
   priv->cond.notify_all ();

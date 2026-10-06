@@ -677,8 +677,7 @@ retry:
   }
   gst_clear_caps (&caps);
 
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
-    is_gap_buf = TRUE;
+  is_gap_buf = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP);
 
   if (is_gap_buf != priv->is_gap_buf) {
     priv->is_gap_buf = is_gap_buf;
