@@ -60,6 +60,8 @@ struct _GstHipMemoryPrivate
       gst_memory_unref (external_mem);
   }
 
+  GstHipMemory mem = { };
+
   GstVideoInfo info = { };
   gboolean is_video = FALSE;
   GstHipVendor vendor;
@@ -152,9 +154,9 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
     return nullptr;
   }
 
-  auto mem = g_new0 (GstHipMemory, 1);
-  mem->device = (GstHipDevice *) gst_object_ref (device);
   auto priv = new GstHipMemoryPrivate ();
+  auto mem = &priv->mem;
+  mem->device = (GstHipDevice *) gst_object_ref (device);
   mem->priv = priv;
 
   priv->info = alloc_info;
@@ -210,9 +212,7 @@ gst_hip_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
   gst_object_unref (hmem->device);
 
-  delete hmem->priv;
-
-  g_free (mem);
+  delete priv;
 }
 
 static gboolean
@@ -776,9 +776,9 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
     if (gst_hip_device_is_equal (device, mem_dev)) {
       auto device_ptr = gst_hip_host_memory_get_device_pointer (hmem);
       if (device_ptr) {
-        auto mem = g_new0 (GstHipMemory, 1);
-        mem->device = (GstHipDevice *) gst_object_ref (device);
         auto priv = new GstHipMemoryPrivate ();
+        auto mem = &priv->mem;
+        mem->device = (GstHipDevice *) gst_object_ref (device);
         mem->priv = priv;
 
         priv->info = *info;
@@ -938,9 +938,9 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
     }
   }
 
-  auto mem = g_new0 (GstHipMemory, 1);
-  mem->device = (GstHipDevice *) gst_object_ref (device);
   auto priv = new GstHipMemoryPrivate ();
+  auto mem = &priv->mem;
+  mem->device = (GstHipDevice *) gst_object_ref (device);
   mem->priv = priv;
 
   priv->info = *info;
