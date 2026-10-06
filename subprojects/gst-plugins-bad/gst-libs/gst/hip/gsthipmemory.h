@@ -149,6 +149,11 @@ GstMemory * gst_hip_allocator_alloc (GstHipAllocator * allocator,
                                      const GstVideoInfo * info);
 
 GST_HIP_API
+GstMemory * gst_hip_allocator_alloc_bytes (GstHipAllocator * allocator,
+                                           GstHipDevice * device,
+                                           gsize size);
+
+GST_HIP_API
 gboolean    gst_hip_allocator_set_active (GstHipAllocator * allocator,
                                           gboolean active);
 
@@ -197,11 +202,15 @@ GType                 gst_hip_pool_allocator_get_type (void);
 
 GST_HIP_API
 GstHipPoolAllocator * gst_hip_pool_allocator_new (GstHipDevice * device,
-                                                   const GstVideoInfo * info);
+                                                  const GstVideoInfo * info);
+
+GST_HIP_API
+GstHipPoolAllocator * gst_hip_pool_allocator_new_for_bytes (GstHipDevice * device,
+                                                            gsize size);
 
 GST_HIP_API
 GstFlowReturn         gst_hip_pool_allocator_acquire_memory (GstHipPoolAllocator * allocator,
-                                                               GstMemory ** memory);
+                                                             GstMemory ** memory);
 
 G_END_DECLS
 

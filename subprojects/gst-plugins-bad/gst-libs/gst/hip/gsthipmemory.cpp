@@ -72,6 +72,7 @@ struct _GstHipMemoryPrivate
   GstHipStream *stream = nullptr;
   GstHipEvent *event = nullptr;
   GstMemory *external_mem = nullptr;
+  gsize alloc_size = 0;
 
   std::mutex lock;
 };
@@ -130,25 +131,19 @@ gst_hip_allocator_init (GstHipAllocator * allocator)
 }
 
 static GstMemory *
-gst_hip_allocator_alloc_internal (GstHipAllocator * self,
-    GstHipDevice * device, const GstVideoInfo * info, GstHipStream * stream)
+gst_hip_allocator_alloc_bytes_internal (GstHipAllocator * self,
+    GstHipDevice * device, gsize size, GstHipStream * stream)
 {
   hipError_t hip_ret = hipSuccess;
 
-  if (!gst_hip_device_set_current (device))
-    return nullptr;
-
-  auto vendor = gst_hip_device_get_vendor (device);
-  GstVideoInfo alloc_info;
-  gboolean texture_support = FALSE;
-  if (!gst_hip_device_align_video_info_for_texture (device,
-          info, &alloc_info, &texture_support)) {
-    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
+  if (!gst_hip_device_set_current (device)) {
+    GST_ERROR_OBJECT (self, "Failed to set device as current");
     return nullptr;
   }
 
+  auto vendor = gst_hip_device_get_vendor (device);
   void *data;
-  hip_ret = HipMalloc (vendor, &data, alloc_info.size);
+  hip_ret = HipMalloc (vendor, &data, size);
   if (!gst_hip_result (hip_ret, vendor)) {
     GST_ERROR_OBJECT (self, "Failed to allocate memory");
     return nullptr;
@@ -159,23 +154,47 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   mem->device = (GstHipDevice *) gst_object_ref (device);
   mem->priv = priv;
 
-  priv->info = alloc_info;
-  priv->is_video = TRUE;
-
   priv->data = data;
   priv->vendor = vendor;
+  priv->alloc_size = size;
   priv->stream = stream;
   if (stream)
     gst_hip_stream_ref (stream);
 
-  if (texture_support)
-    g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
-
   gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags) 0,
-      GST_ALLOCATOR_CAST (self), nullptr, alloc_info.size, 0, 0,
-      alloc_info.size);
+      GST_ALLOCATOR_CAST (self), nullptr, size, 0, 0, size);
 
   return GST_MEMORY_CAST (mem);
+}
+
+static GstMemory *
+gst_hip_allocator_alloc_internal (GstHipAllocator * self,
+    GstHipDevice * device, const GstVideoInfo * info, GstHipStream * stream)
+{
+  if (!gst_hip_device_set_current (device)) {
+    GST_ERROR_OBJECT (self, "Failed to set device as current");
+    return nullptr;
+  }
+
+  GstVideoInfo alloc_info;
+  gboolean texture_support = FALSE;
+  if (!gst_hip_device_align_video_info_for_texture (device,
+          info, &alloc_info, &texture_support)) {
+    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
+    return nullptr;
+  }
+
+  auto mem = gst_hip_allocator_alloc_bytes_internal (self, device,
+      alloc_info.size, stream);
+  if (!mem)
+    return nullptr;
+
+  auto priv = GST_HIP_MEMORY_CAST (mem)->priv;
+  priv->info = alloc_info;
+  priv->is_video = TRUE;
+  priv->texture_support = texture_support;
+
+  return mem;
 }
 
 static void
@@ -232,7 +251,7 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
 
   auto stream = gst_hip_stream_get_handle (priv->stream);
   auto hip_ret = HipMemcpyHtoDAsync (priv->vendor, priv->data, priv->staging,
-      mem->mem.size, stream);
+      priv->alloc_size, stream);
 
   if (gst_hip_result (hip_ret, priv->vendor))
     hip_ret = HipStreamSynchronize (priv->vendor, stream);
@@ -260,7 +279,7 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
 
   if (!priv->staging) {
     auto hip_ret = HipHostMalloc (priv->vendor,
-        &priv->staging, GST_MEMORY_CAST (mem)->size, 0);
+        &priv->staging, priv->alloc_size, 0);
 
     if (!gst_hip_result (hip_ret, priv->vendor)) {
       GST_ERROR_OBJECT (self, "Failed to allocate staging memory");
@@ -270,7 +289,7 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
 
   auto stream = gst_hip_stream_get_handle (priv->stream);
   auto hip_ret = HipMemcpyDtoHAsync (priv->vendor, priv->staging, priv->data,
-      mem->mem.size, stream);
+      priv->alloc_size, stream);
   if (gst_hip_result (hip_ret, priv->vendor))
     hip_ret = HipStreamSynchronize (priv->vendor, stream);
 
@@ -344,10 +363,10 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   if (!copy) {
     GstVideoInfo info;
-    if (!gst_hip_memory_get_video_info (src_mem, &info))
-      return nullptr;
-
-    copy = gst_hip_allocator_alloc_internal (self, device, &info, stream);
+    if (gst_hip_memory_get_video_info (src_mem, &info))
+      copy = gst_hip_allocator_alloc_internal (self, device, &info, stream);
+    else
+      copy = gst_hip_allocator_alloc_bytes (self, device, mem->size);
   }
 
   if (!copy) {
@@ -687,6 +706,37 @@ gst_hip_allocator_alloc (GstHipAllocator * allocator,
 }
 
 /**
+ * gst_hip_allocator_alloc_bytes:
+ * @allocator: (nullable): a #GstHipAllocator
+ * @device: a #GstHipDevice
+ * @size: allocation size in bytes, greater than zero
+ *
+ * Allocates a new #GstHipMemory without video information
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstHipMemory,
+ * or %NULL if allocation failed
+ *
+ * Since: 1.30
+ */
+GstMemory *
+gst_hip_allocator_alloc_bytes (GstHipAllocator * allocator,
+    GstHipDevice * device, gsize size)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), nullptr);
+  g_return_val_if_fail (size > 0, nullptr);
+  g_return_val_if_fail (!allocator ||
+      GST_IS_HIP_ALLOCATOR (allocator), nullptr);
+
+  if (!allocator) {
+    gst_hip_memory_init_once ();
+    allocator = _hip_memory_allocator;
+  }
+
+  return gst_hip_allocator_alloc_bytes_internal (allocator, device, size,
+      gst_hip_device_get_stream (device));
+}
+
+/**
  * gst_hip_allocator_set_active:
  * @allocator: a #GstHipAllocator
  * @active: the new active state
@@ -786,6 +836,7 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
 
         priv->external_mem = gst_memory_ref (external);
         priv->data = device_ptr;
+        priv->alloc_size = external->size;
         priv->vendor = gst_hip_device_get_vendor (device);
         priv->stream = gst_hip_device_get_stream (device);
         if (priv->stream)
@@ -949,6 +1000,7 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
   priv->external_mem = gst_memory_ref (external);
   priv->data = import_cache->mapped_ptr;
   priv->vendor = vendor;
+  priv->alloc_size = external->size;
   priv->stream = gst_hip_device_get_stream (device);
   if (priv->stream)
     gst_hip_stream_ref (priv->stream);
@@ -962,8 +1014,12 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
 #endif
 }
 
+/* *INDENT-OFF* */
 struct _GstHipPoolAllocatorPrivate
 {
+  gboolean is_video = TRUE;
+  gsize size = 0;
+
   std::queue < GstMemory * >queue;
 
   std::mutex lock;
@@ -975,6 +1031,7 @@ struct _GstHipPoolAllocatorPrivate
   guint cur_mems = 0;
   gboolean flushing = FALSE;
 };
+/* *INDENT-ON* */
 
 static void gst_hip_pool_allocator_finalize (GObject * object);
 
@@ -1172,8 +1229,16 @@ gst_hip_pool_allocator_alloc (GstHipPoolAllocator * self, GstMemory ** mem)
 {
   auto priv = self->priv;
 
-  auto new_mem = gst_hip_allocator_alloc_internal (_hip_memory_allocator,
-      self->device, &self->info, gst_hip_device_get_stream (self->device));
+  auto stream = gst_hip_device_get_stream (self->device);
+  GstMemory *new_mem = nullptr;
+
+  if (priv->is_video) {
+    new_mem = gst_hip_allocator_alloc_internal (_hip_memory_allocator,
+        self->device, &self->info, stream);
+  } else {
+    new_mem = gst_hip_allocator_alloc_bytes_internal (_hip_memory_allocator,
+        self->device, priv->size, stream);
+  }
 
   if (!new_mem) {
     GST_ERROR_OBJECT (self, "Failed to allocate new memory");
@@ -1246,6 +1311,34 @@ gst_hip_pool_allocator_new (GstHipDevice * device, const GstVideoInfo * info)
 
   self->device = (GstHipDevice *) gst_object_ref (device);
   self->info = *info;
+
+  return self;
+}
+
+/**
+ * gst_hip_pool_allocator_new_for_bytes:
+ * @device: a #GstHipDevice
+ * @size: allocation size in bytes, greater than zero
+ *
+ * Creates a pool of fixed-size #GstHipMemory without video information.
+ *
+ * Returns: (transfer full): a new #GstHipPoolAllocator
+ *
+ * Since: 1.30
+ */
+GstHipPoolAllocator *
+gst_hip_pool_allocator_new_for_bytes (GstHipDevice * device, gsize size)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), nullptr);
+  g_return_val_if_fail (size > 0, nullptr);
+
+  auto self = (GstHipPoolAllocator *) g_object_new (GST_TYPE_HIP_POOL_ALLOCATOR,
+      nullptr);
+  gst_object_ref_sink (self);
+
+  self->device = (GstHipDevice *) gst_object_ref (device);
+  self->priv->is_video = FALSE;
+  self->priv->size = size;
 
   return self;
 }
