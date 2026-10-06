@@ -1900,6 +1900,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   gint off_x = 0;
   gint off_y = 0;
   GstVideoFrame in_frame, out_frame;
+  GstHipEvent *event = nullptr;
 
   g_return_val_if_fail (GST_IS_HIP_CONVERTER (converter), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
@@ -1960,8 +1961,20 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
 
   /* Synchronize input dependency when using a different stream */
   if (in_stream != out_stream) {
-    /* FIXME: Use hipStreamWaitEvent() instead of blocking the CPU */
-    gst_hip_memory_sync (in_hmem);
+    gboolean sync_ret = FALSE;
+
+    if (gst_hip_memory_get_event (in_hmem, &event)) {
+      sync_ret = gst_hip_stream_wait_event (out_stream, event);
+      gst_clear_hip_event (&event);
+    }
+
+    if (!sync_ret) {
+      /* If the input has no configured event or gst_hip_stream_wait_event()
+       * failed, fallback to gst_hip_memory_sync(). HIP memory currently does
+       * nothing in gst_hip_memory_sync() without an associated event, but keep
+       * the call for possible future implementation changes */
+      gst_hip_memory_sync (in_hmem);
+    }
   }
 
   format = priv->texture_fmt;
@@ -2036,7 +2049,6 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   ret = TRUE;
 
 done:
-  GstHipEvent * event = nullptr;
   if (gst_hip_stream_record_event (out_stream, &event)) {
     gst_hip_memory_set_event (out_hmem, event);
     gst_clear_hip_event (&priv->last_event);
