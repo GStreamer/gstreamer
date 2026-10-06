@@ -552,6 +552,36 @@ gst_hip_memory_set_event (GstHipMemory * mem, GstHipEvent * event)
 }
 
 /**
+ * gst_hip_memory_get_event:
+ * @mem: a #GstHipMemory
+ * @event: (out) (transfer full): a #GstHipEvent
+ *
+ * Gets the event associated with @mem
+ *
+ * Returns: %TRUE if @event is available
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_memory_get_event (GstHipMemory * mem, GstHipEvent ** event)
+{
+  g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (event, FALSE);
+
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->event) {
+    gst_hip_event_ref (priv->event);
+    *event = priv->event;
+    return TRUE;
+  }
+
+  *event = nullptr;
+  return FALSE;
+}
+
+/**
  * gst_hip_memory_sync:
  * @mem: a #GstHipMemory
  *
