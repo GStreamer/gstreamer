@@ -352,8 +352,10 @@ Qt6GLWindow::onSceneGraphInvalidated()
     gst_gl_context_activate (this->priv->other_context, FALSE);
   }
 
+  g_mutex_lock (&this->priv->lock);
   gst_clear_buffer (&this->priv->buffer);
   gst_clear_buffer (&this->priv->produced_buffer);
+  g_mutex_unlock (&this->priv->lock);
 }
 
 bool
