@@ -673,7 +673,7 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
   for (i = 0; i < priv->queues->len; i++) {
     VkDeviceQueueCreateInfo *qi =
         &g_array_index (priv->queues, VkDeviceQueueCreateInfo, i);
-    if (qi->queueFamilyIndex == queue_family && qi->queueCount >= queue_i)
+    if (qi->queueFamilyIndex == queue_family && queue_i < qi->queueCount)
       break;
   }
 
