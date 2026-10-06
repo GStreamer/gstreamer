@@ -68,7 +68,6 @@ struct _GstHipMemory
 
   /*< public >*/
   GstHipDevice *device;
-  GstVideoInfo info;
 
   /*< private >*/
   GstHipMemoryPrivate *priv;
@@ -77,6 +76,10 @@ struct _GstHipMemory
 
 GST_HIP_API
 gboolean  gst_is_hip_memory   (GstMemory * mem);
+
+GST_HIP_API
+gboolean  gst_hip_memory_get_video_info (GstHipMemory * mem,
+                                         GstVideoInfo * info);
 
 GST_HIP_API
 gboolean  gst_hip_memory_get_texture (GstHipMemory * mem,

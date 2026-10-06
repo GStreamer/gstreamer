@@ -149,11 +149,17 @@ gst_hip_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   }
 
   auto hmem = GST_HIP_MEMORY_CAST (mem);
+  GstVideoInfo alloc_info;
+  if (!gst_hip_memory_get_video_info (hmem, &alloc_info)) {
+    GST_ERROR_OBJECT (self, "Failed to get video info from allocated memory");
+    gst_memory_unref (mem);
+    return FALSE;
+  }
 
   gst_buffer_pool_config_set_params (config, caps,
-      GST_VIDEO_INFO_SIZE (&hmem->info), min_buffers, max_buffers);
+      GST_VIDEO_INFO_SIZE (&alloc_info), min_buffers, max_buffers);
 
-  priv->info = info;
+  priv->info = alloc_info;
 
   gst_memory_unref (mem);
 
@@ -181,10 +187,11 @@ gst_hip_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   auto hmem = GST_HIP_MEMORY_CAST (mem);
   gst_hip_memory_sync (hmem);
+
   gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
       GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
       GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
-      hmem->info.offset, hmem->info.stride);
+      info->offset, info->stride);
 
   *buffer = buf;
 

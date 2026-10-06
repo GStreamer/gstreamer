@@ -60,6 +60,8 @@ struct _GstHipMemoryPrivate
       gst_memory_unref (external_mem);
   }
 
+  GstVideoInfo info = { };
+  gboolean is_video = FALSE;
   GstHipVendor vendor;
   void *data = nullptr;
   void *staging = nullptr;
@@ -152,10 +154,11 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
 
   auto mem = g_new0 (GstHipMemory, 1);
   mem->device = (GstHipDevice *) gst_object_ref (device);
-  mem->info = alloc_info;
-
   auto priv = new GstHipMemoryPrivate ();
   mem->priv = priv;
+
+  priv->info = alloc_info;
+  priv->is_video = TRUE;
 
   priv->data = data;
   priv->vendor = vendor;
@@ -340,8 +343,11 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   }
 
   if (!copy) {
-    copy = gst_hip_allocator_alloc_internal (self,
-        device, &src_mem->info, stream);
+    GstVideoInfo info;
+    if (!gst_hip_memory_get_video_info (src_mem, &info))
+      return nullptr;
+
+    copy = gst_hip_allocator_alloc_internal (self, device, &info, stream);
   }
 
   if (!copy) {
@@ -420,6 +426,32 @@ gst_is_hip_memory (GstMemory * mem)
 }
 
 /**
+ * gst_hip_memory_get_video_info:
+ * @mem: a #GstHipMemory
+ * @info: (out caller-allocates) (optional): a #GstVideoInfo
+ *
+ * Gets video information associated with @mem
+ *
+ * Returns: %TRUE if @mem contains video data
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_memory_get_video_info (GstHipMemory * mem, GstVideoInfo * info)
+{
+  g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), FALSE);
+
+  auto priv = mem->priv;
+  if (!priv->is_video)
+    return FALSE;
+
+  if (info)
+    *info = priv->info;
+
+  return TRUE;
+}
+
+/**
  * gst_hip_memory_get_texture:
  * @mem: a #GstHipMemory
  * @plane: the plane index
@@ -439,10 +471,15 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
     hipTextureObject_t * texture)
 {
   g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_N_PLANES (&mem->info) > plane, FALSE);
   g_return_val_if_fail (texture, FALSE);
 
   auto priv = mem->priv;
+  if (!priv->is_video)
+    return FALSE;
+
+  const auto & info = priv->info;
+  if (GST_VIDEO_INFO_N_PLANES (&info) <= plane)
+    return FALSE;
 
   if (!priv->texture_support) {
     GST_LOG_OBJECT (mem->device, "Texture not supported");
@@ -457,7 +494,7 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
 
   GstHipFormat hip_format = { };
   if (!gst_hip_device_get_format (mem->device,
-          GST_VIDEO_INFO_FORMAT (&mem->info), &hip_format)
+          GST_VIDEO_INFO_FORMAT (&info), &hip_format)
       || (hip_format.format_flags & GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) !=
       GST_HIP_FORMAT_FLAG_SUPPORT_TEXTURE_2D) {
     /* Must be checked during alloc time already */
@@ -471,7 +508,7 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
     return FALSE;
   }
 
-  auto src_ptr = ((guint8 *) priv->data) + mem->info.offset[plane];
+  auto src_ptr = ((guint8 *) priv->data) + info.offset[plane];
 
   HIP_RESOURCE_DESC res_desc = { };
   HIP_TEXTURE_DESC tex_desc = { };
@@ -479,10 +516,10 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   res_desc.resType = HIP_RESOURCE_TYPE_PITCH2D;
   res_desc.res.pitch2D.format = hip_format.array_format[plane];
   res_desc.res.pitch2D.numChannels = hip_format.channels[plane];
-  res_desc.res.pitch2D.width = GST_VIDEO_INFO_COMP_WIDTH (&mem->info, plane);
-  res_desc.res.pitch2D.height = GST_VIDEO_INFO_COMP_HEIGHT (&mem->info, plane);
+  res_desc.res.pitch2D.width = GST_VIDEO_INFO_COMP_WIDTH (&info, plane);
+  res_desc.res.pitch2D.height = GST_VIDEO_INFO_COMP_HEIGHT (&info, plane);
   res_desc.res.pitch2D.pitchInBytes =
-      GST_VIDEO_INFO_PLANE_STRIDE (&mem->info, plane);
+      GST_VIDEO_INFO_PLANE_STRIDE (&info, plane);
   res_desc.res.pitch2D.devPtr = src_ptr;
 
   tex_desc.filterMode = (HIPfilter_mode) filter_mode;
@@ -741,10 +778,11 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
       if (device_ptr) {
         auto mem = g_new0 (GstHipMemory, 1);
         mem->device = (GstHipDevice *) gst_object_ref (device);
-        mem->info = *info;
-
         auto priv = new GstHipMemoryPrivate ();
         mem->priv = priv;
+
+        priv->info = *info;
+        priv->is_video = TRUE;
 
         priv->external_mem = gst_memory_ref (external);
         priv->data = device_ptr;
@@ -902,10 +940,11 @@ gst_hip_allocator_import_external_memory (GstHipAllocator * allocator,
 
   auto mem = g_new0 (GstHipMemory, 1);
   mem->device = (GstHipDevice *) gst_object_ref (device);
-  mem->info = *info;
-
   auto priv = new GstHipMemoryPrivate ();
   mem->priv = priv;
+
+  priv->info = *info;
+  priv->is_video = TRUE;
 
   priv->external_mem = gst_memory_ref (external);
   priv->data = import_cache->mapped_ptr;
