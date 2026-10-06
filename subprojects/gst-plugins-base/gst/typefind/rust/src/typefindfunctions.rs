@@ -71,6 +71,69 @@ extern "C" fn paris_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// CELT — audio/x-celt
+// Magic `CELT    ` (8 bytes with trailing spaces) @ 0.
+extern "C" fn celt_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"CELT    ") {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-celt");
+    }
+}
+
+// SVX — audio/x-svx
+// Magic `FORM` @ 0 + `8SVX`/`16SV` @ 8.
+extern "C" fn svx_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<4>(0)
+        && *data == *b"FORM"
+        && let Some(fmt) = tf.peek::<4>(8)
+        && (*fmt == *b"8SVX" || *fmt == *b"16SV")
+    {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-svx");
+    }
+}
+
+// iLBC — audio/iLBC-sh
+// Magic `#!iLBC30` or `#!iLBC20` @ 0.
+extern "C" fn ilbc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"#!iLBC30") || tf.starts_with(b"#!iLBC20") {
+        suggest!(tf, Prob::LIKELY, c"audio/iLBC-sh");
+    }
+}
+
+// DSF — audio/x-dsf
+// Magic `DSD ` @ 0; u64 BE @ 4 != 28.
+extern "C" fn dsf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<12>(0)
+        && data[..4] == *b"DSD "
+    {
+        let mut size_bytes = [0u8; 8];
+        size_bytes.copy_from_slice(&data[4..12]);
+        let size = u64::from_be_bytes(size_bytes);
+        if size != 28 {
+            suggest!(tf, Prob::MAXIMUM, c"audio/x-dsf");
+        }
+    }
+}
+
+// AIFF — audio/x-aiff
+// Magic `FORM` @ 0 + `AIFF`/`AIFC` @ 8.
+extern "C" fn aiff_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<4>(0)
+        && *data == *b"FORM"
+        && let Some(fmt) = tf.peek::<4>(8)
+        && (*fmt == *b"AIFF" || *fmt == *b"AIFC")
+    {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-aiff");
+    }
+}
+
+// TAP — audio/x-tap-tap
+// Magic `C64-TAPE-RAW` or `C16-TAPE-RAW` @ 0.
+extern "C" fn tap_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"C64-TAPE-RAW") || tf.starts_with(b"C16-TAPE-RAW") {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-tap-tap");
+    }
+}
+
 // TTA — audio/x-ttafile
 // Magic `TTA` @ 0.
 extern "C" fn tta_type_find(tf: &mut TypeFind, _private: gpointer) {
@@ -852,6 +915,12 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-au", 1, au_type_find, "au,snd"),
     typefinder!("audio/x-shorten", SECONDARY, shn_type_find, "shn"),
     typefinder!("audio/x-paris", SECONDARY, paris_type_find, "paf"),
+    typefinder!("audio/x-celt", PRIMARY, celt_type_find),
+    typefinder!("audio/x-svx", SECONDARY, svx_type_find, "iff,svx"),
+    typefinder!("audio/iLBC-sh", PRIMARY, ilbc_type_find, "ilbc"),
+    typefinder!("audio/x-dsf", PRIMARY, dsf_type_find),
+    typefinder!("audio/x-aiff", SECONDARY, aiff_type_find, "aiff,aif,aifc"),
+    typefinder!("audio/x-tap-tap", PRIMARY, tap_type_find, "tap"),
     typefinder!("audio/x-amr-nb-sh", PRIMARY, amr_type_find, "amr"),
     typefinder!("audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, "amr"),
     typefinder!("video/x-vcd", PRIMARY, vcd_type_find, "dat"),
