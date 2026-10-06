@@ -34,6 +34,7 @@
 #include <gst/hip/gsthip-interop.h>
 #include <gst/hip/gsthipbufferpool.h>
 #include <gst/hip/gsthipbufferpool-host.h>
+#include <gst/hip/gsthipconverter.h>
 #include <gst/hip/gsthipdevice.h>
 #include <gst/hip/gsthipevent.h>
 #include <gst/hip/gsthiploader.h>

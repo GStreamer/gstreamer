@@ -22,7 +22,7 @@
 #endif
 
 #include "gsthipconvertscale.h"
-#include "gsthipconverter.h"
+#include <gst/hip/gsthipconverter.h>
 #include <mutex>
 
 GST_DEBUG_CATEGORY_STATIC (gst_hip_base_convert_debug);

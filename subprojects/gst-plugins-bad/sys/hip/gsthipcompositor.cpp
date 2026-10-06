@@ -23,7 +23,7 @@
 
 #include <gst/hip/gsthip.h>
 #include "gsthipcompositor.h"
-#include "gsthipconverter.h"
+#include <gst/hip/gsthipconverter.h>
 #include <mutex>
 
 GST_DEBUG_CATEGORY_STATIC (gst_hip_compositor_debug);

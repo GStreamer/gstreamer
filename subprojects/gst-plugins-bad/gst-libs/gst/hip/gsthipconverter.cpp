@@ -24,6 +24,7 @@
 #include "gsthip-config.h"
 
 #include "gsthipconverter.h"
+#include <gst/hip/gsthip.h>
 #include <string.h>
 #include <mutex>
 #include <unordered_map>
@@ -1709,6 +1710,19 @@ gst_hip_converter_set_config (GstHipConverter * self, GstStructure * config)
   gst_structure_free (config);
 }
 
+/**
+ * gst_hip_converter_new:
+ * @device: a #GstHipDevice
+ * @in_info: input video information
+ * @out_info: output video information
+ * @config: (transfer full) (nullable): conversion configuration
+ *
+ * Creates a HIP video converter.
+ *
+ * Returns: (transfer full) (nullable): a new #GstHipConverter
+ *
+ * Since: 1.30
+ */
 GstHipConverter *
 gst_hip_converter_new (GstHipDevice * device, const GstVideoInfo * in_info,
     const GstVideoInfo * out_info, GstStructure * config)
@@ -1888,6 +1902,18 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
   return TRUE;
 }
 
+/**
+ * gst_hip_converter_convert_frame:
+ * @converter: a #GstHipConverter
+ * @in_buf: input buffer
+ * @out_buf: output buffer
+ *
+ * Converts @in_buf into @out_buf.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.30
+ */
 gboolean
 gst_hip_converter_convert_frame (GstHipConverter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf)

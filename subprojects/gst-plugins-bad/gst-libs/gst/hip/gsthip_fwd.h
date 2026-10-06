@@ -25,6 +25,10 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstHipConverter GstHipConverter;
+typedef struct _GstHipConverterClass GstHipConverterClass;
+typedef struct _GstHipConverterPrivate GstHipConverterPrivate;
+
 typedef struct _GstHipDevice GstHipDevice;
 typedef struct _GstHipDeviceClass GstHipDeviceClass;
 typedef struct _GstHipDevicePrivate GstHipDevicePrivate;

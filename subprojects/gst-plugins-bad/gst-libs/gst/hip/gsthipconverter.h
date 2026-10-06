@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include <gst/hip/gsthip.h>
+#include <gst/hip/gsthip_fwd.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -31,10 +32,11 @@ G_BEGIN_DECLS
 #define GST_IS_HIP_CONVERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_HIP_CONVERTER))
 #define GST_HIP_CONVERTER_CAST(obj)        ((GstHipConverter*)(obj))
 
-typedef struct _GstHipConverter GstHipConverter;
-typedef struct _GstHipConverterClass GstHipConverterClass;
-typedef struct _GstHipConverterPrivate GstHipConverterPrivate;
-
+/**
+ * GstHipConverter:
+ *
+ * Since: 1.30
+ */
 struct _GstHipConverter
 {
   GstObject parent;
@@ -46,6 +48,11 @@ struct _GstHipConverter
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstHipConverterClass:
+ *
+ * Since: 1.30
+ */
 struct _GstHipConverterClass
 {
   GstObjectClass parent_class;
@@ -54,13 +61,16 @@ struct _GstHipConverterClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_HIP_API
 GType gst_hip_converter_get_type (void);
 
+GST_HIP_API
 GstHipConverter *  gst_hip_converter_new (GstHipDevice * device,
                                           const GstVideoInfo * in_info,
                                           const GstVideoInfo * out_info,
                                           GstStructure * config);
 
+GST_HIP_API
 gboolean           gst_hip_converter_convert_frame (GstHipConverter * converter,
                                                     GstBuffer * in_buf,
                                                     GstBuffer * out_buf);

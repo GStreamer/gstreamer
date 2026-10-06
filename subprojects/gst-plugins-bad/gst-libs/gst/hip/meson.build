@@ -3,6 +3,7 @@ hip_sources = [
   'gsthip-interop.cpp',
   'gsthipbufferpool.cpp',
   'gsthipbufferpool-host.cpp',
+  'gsthipconverter.cpp',
   'gsthipdevice.cpp',
   'gsthipevent.cpp',
   'gsthipformat.cpp',
@@ -21,6 +22,7 @@ hip_headers = [
   'gsthip.h',
   'gsthipbufferpool.h',
   'gsthipbufferpool-host.h',
+  'gsthipconverter.h',
   'gsthipdevice.h',
   'gsthipevent.h',
   'gsthiploader.h',
@@ -66,6 +68,42 @@ extra_args = [
 extra_deps = []
 
 hip_cdata = configuration_data()
+
+hip_amd_precompiled = []
+hip_nvidia_precompiled = []
+hip_precompile_amd_opt = get_option('hip-amd-precompile')
+hip_precompile_nvidia_opt = get_option('hip-nvidia-precompile')
+have_hipcc = false
+have_nvcc = false
+if not hip_precompile_amd_opt.disabled() and not meson.is_cross_build()
+  if host_system == 'windows'
+    hipcc = find_program('hipcc.bin', 'hipcc.exe', required: false)
+    if not hipcc.found()
+      hip_root = run_command(python3, '-c', 'import os; print(os.environ.get("HIP_PATH"))', check: false).stdout().strip()
+      if hip_root != '' and hip_root != 'None'
+        hip_bin_path = join_paths(hip_root, 'bin')
+        hipcc = find_program('hipcc.bin', 'hipcc.exe',
+                              dirs: [hip_bin_path],
+                              required: hip_precompile_amd_opt)
+      endif
+    endif
+  else
+    hipcc = find_program('hipcc', required: hip_precompile_amd_opt)
+  endif
+  have_hipcc = hipcc.found()
+endif
+
+if not hip_precompile_nvidia_opt.disabled() and not meson.is_cross_build()
+  nvcc = find_program('nvcc', required: hip_precompile_nvidia_opt)
+  have_nvcc = nvcc.found()
+endif
+
+if have_hipcc or have_nvcc
+  hip_cdata.set('HIP_AMD_PRECOMPILED', have_hipcc)
+  hip_cdata.set('HIP_NVIDIA_PRECOMPILED', have_nvcc)
+  subdir('kernel')
+endif
+
 if gstgl_dep.found()
   hip_cdata.set('HAVE_GST_GL', true)
   extra_deps += [gstgl_dep]
@@ -80,7 +118,7 @@ hipstub_incdir = include_directories('./stub')
 
 pkg_name = 'gstreamer-hip-' + api_version
 gsthip = library('gsthip-' + api_version,
-  hip_sources,
+  hip_sources + hip_amd_precompiled + hip_nvidia_precompiled,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, libsinc, hipstub_incdir],
