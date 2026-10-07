@@ -248,6 +248,32 @@ gst_hip_stream_wait_event (GstHipStream * stream, GstHipEvent * event)
 }
 
 /**
+ * gst_hip_stream_synchronize:
+ * @stream: a #GstHipStream
+ *
+ * Synchronizes @stream.
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_stream_synchronize (GstHipStream * stream)
+{
+  g_return_val_if_fail (stream, FALSE);
+
+  auto hip_ret = HipSetDevice (stream->vendor, stream->device_id);
+  if (!gst_hip_result (hip_ret, stream->vendor)) {
+    GST_ERROR ("Couldn't set device");
+    return FALSE;
+  }
+
+  hip_ret = HipStreamSynchronize (stream->vendor, stream->handle);
+
+  return gst_hip_result (hip_ret, stream->vendor);
+}
+
+/**
  * gst_hip_stream_ref:
  * @stream: a #GstHipStream
  *
