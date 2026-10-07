@@ -987,6 +987,52 @@ extern "C" fn tar_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// MXMF — audio/mobile-xmf
+// `XMF_` @ 0, `2.00` @ 4, XmfFileTypeID (BE u32 @ 8) == 2
+// (Mobile XMF; checked via the low byte @ 11, per RFC 4723).
+extern "C" fn mxmf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<12>(0)
+        && data[..8] == *b"XMF_2.00"
+        && data[11] == 2
+    {
+        suggest!(tf, Prob::MAXIMUM, c"audio/mobile-xmf");
+    }
+}
+
+// OpenEXR version-field validity (the u32 after the magic):
+// version (bits 0-7) is 1 or 2, and if bit 9 (tiled) is set,
+// bits 11 (deep) and 12 (multipart) must be 0.
+fn exr_version_field_ok(flags: u32) -> bool {
+    ((flags & 0xff) == 1 || (flags & 0xff) == 2) && ((flags & 0x200) == 0 || (flags & 0x1800) == 0)
+}
+
+// EXR — image/x-exr
+// u32 LE @ 0 == 0x01312f76 (magic), valid version field @ 4.
+extern "C" fn exr_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<8>(0)
+        && read_u32_le(&data[0..4]) == Some(0x01312f76)
+        && let Some(flags) = read_u32_le(&data[4..8])
+        && exr_version_field_ok(flags)
+    {
+        suggest!(tf, Prob::MAXIMUM, c"image/x-exr");
+    }
+}
+
+// JPEG 2000 — image/jp2 or video/mj2
+// 12-byte JP2 signature @ 0 + ftyp box with major brand.
+extern "C" fn jp2_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<24>(0)
+        && data[..12] == *b"\x00\x00\x00\x0cjP  \r\n\x87\n"
+        && data[16..20] == *b"ftyp"
+    {
+        match &data[20..24] {
+            b"jp2 " => suggest!(tf, Prob::MAXIMUM, c"image/jp2"),
+            b"mjp2" => suggest!(tf, Prob::MAXIMUM, c"video/mj2"),
+            _ => {}
+        }
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -1032,6 +1078,7 @@ const FEATURES: &[Feature] = &[
         "application/x-id3"
     ),
     typefinder!("audio/x-m4a", PRIMARY, m4a_type_find, "m4a"),
+    typefinder!("audio/mobile-xmf", PRIMARY, mxmf_type_find, "mxmf"),
     typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
     typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
     typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
@@ -1045,6 +1092,10 @@ const FEATURES: &[Feature] = &[
     // Complex finders — structure validation and chunk/marker walking
     typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp"),
     typefinder!("image/png", PRIMARY + 14, png_type_find, "png"),
+    typefinder!("image/x-exr", PRIMARY, exr_type_find, "exr"),
+    // JP2 can also detect MJ2 — register as both
+    typefinder!("image/jp2", PRIMARY, jp2_type_find, "jp2"),
+    typefinder!("video/mj2", PRIMARY, jp2_type_find, "mj2"),
     typefinder!("image/jpeg", PRIMARY + 15, jpeg_type_find, "jpg,jpe,jpeg"),
     // Additional startswith finders
     typefinder!("audio/midi", PRIMARY, mid_type_find, "mid,midi"),
