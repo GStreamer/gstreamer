@@ -1736,6 +1736,9 @@ gst_hip_converter_new (GstHipDevice * device, const GstVideoInfo * in_info,
   g_object_get (device, "texture2d-support", &tex_support, nullptr);
   if (!tex_support) {
     GST_WARNING_OBJECT (device, "Texture not supported");
+    if (config)
+      gst_structure_free (config);
+
     return nullptr;
   }
 
@@ -1744,6 +1747,9 @@ gst_hip_converter_new (GstHipDevice * device, const GstVideoInfo * in_info,
       hipDeviceAttributeTextureAlignment, &tex_align);
   if (hip_ret != hipSuccess || tex_align <= 0) {
     GST_WARNING_OBJECT (device, "Unknown texture alignment");
+    if (config)
+      gst_structure_free (config);
+
     return nullptr;
   }
 
