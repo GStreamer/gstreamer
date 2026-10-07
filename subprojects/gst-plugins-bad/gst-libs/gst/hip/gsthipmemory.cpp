@@ -490,6 +490,7 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
     GST_ERROR_OBJECT (self, "Failed to set device");
     gst_memory_unmap (mem, &src_info);
     gst_memory_unmap (copy, &dst_info);
+    gst_memory_unref (copy);
 
     return nullptr;
   }
