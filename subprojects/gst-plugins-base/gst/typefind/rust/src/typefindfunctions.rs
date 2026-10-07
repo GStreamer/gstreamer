@@ -889,6 +889,40 @@ extern "C" fn film_cpk_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// ID3v2 — application/x-id3
+// `ID3` @ 0; bytes 3–4 not 0xFF; top bit clear in size bytes 6–9.
+extern "C" fn id3v2_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<10>(0)
+        && data[..3] == *b"ID3"
+        && data[3] != 0xFF
+        && data[4] != 0xFF
+        && data[6] & 0x80 == 0
+        && data[7] & 0x80 == 0
+        && data[8] & 0x80 == 0
+        && data[9] & 0x80 == 0
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-id3");
+    }
+}
+
+// ID3v1 — application/x-id3
+// `TAG` at −128 (file end).
+extern "C" fn id3v1_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek_var(-128, 3)
+        && data == *b"TAG"
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-id3");
+    }
+}
+
+// APE tag — application/x-apetag
+// `APETAGEX` @ 0 or at file tail (−32).
+extern "C" fn apetag_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"APETAGEX") || tf.peek_var(-32, 8).is_some_and(|d| d == *b"APETAGEX") {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-apetag");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -925,6 +959,13 @@ const FEATURES: &[Feature] = &[
     typefinder!("video/x-dirac", PRIMARY, dirac_type_find),
     typefinder!("application/x-gzip", SECONDARY, gz_type_find, "gz"),
     typefinder!("application/zip", SECONDARY, zip_type_find, "zip"),
+    typefinder!(
+        "application/x-id3v2",
+        PRIMARY + 103,
+        id3v2_type_find,
+        "mp3,mp2,mp1,mpga,ogg,flac,tta",
+        "application/x-id3"
+    ),
     typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
     typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
     typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
@@ -942,6 +983,12 @@ const FEATURES: &[Feature] = &[
     // Additional startswith finders
     typefinder!("audio/midi", PRIMARY, mid_type_find, "mid,midi"),
     typefinder!("audio/x-ttafile", PRIMARY, tta_type_find, "tta"),
+    typefinder!(
+        "application/x-apetag",
+        PRIMARY + 102,
+        apetag_type_find,
+        "mp3,ape,mpc,wv"
+    ),
     typefinder!("application/x-ape", SECONDARY, ape_type_find, "ape"),
     typefinder!("audio/x-au", 1, au_type_find, "au,snd"),
     typefinder!("audio/x-shorten", SECONDARY, shn_type_find, "shn"),
@@ -986,6 +1033,13 @@ const FEATURES: &[Feature] = &[
     typefinder!("video/x-mve", SECONDARY, mve_type_find, "mve"),
     typefinder!("video/x-pva", SECONDARY, pva_type_find, "pva"),
     typefinder!("video/x-film-cpk", SECONDARY, film_cpk_type_find, "cpk"),
+    typefinder!(
+        "application/x-id3v1",
+        PRIMARY + 101,
+        id3v1_type_find,
+        "mp3,mp2,mp1,mpga,ogg,flac,tta",
+        "application/x-id3"
+    ),
     typefinder!("image/x-jng", SECONDARY, jng_type_find, "jng"),
     typefinder!("image/x-sun-raster", SECONDARY, ras_type_find, "ras"),
     typefinder!("application/x-bzip", SECONDARY, bz2_type_find, "bz2"),
