@@ -923,6 +923,70 @@ extern "C" fn apetag_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// M4A — audio/x-m4a
+// `ftypM4A ` @ 4 (ISO base media).
+extern "C" fn m4a_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<8>(4)
+        && *data == *b"ftypM4A "
+    {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-m4a");
+    }
+}
+
+// Theora — video/x-theora
+// `\x80theora` @ 0.
+extern "C" fn theora_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"\x80theora") {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-theora");
+    }
+}
+
+// Ogg Skeleton — application/x-ogg-skeleton
+// `fishead\0` @ 0; u16 LE version == 3.0 at offsets 8–12.
+extern "C" fn oggskel_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<12>(0)
+        && data[..8] == *b"fishead\0"
+        && read_u16_le(&data[8..]) == Some(3)
+        && read_u16_le(&data[10..]) == Some(0)
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-ogg-skeleton", [
+            (c"parsed", bool : false),
+        ]);
+    }
+}
+
+// PostScript — application/postscript
+// Optional leading 0x04, then `%!`.
+extern "C" fn postscript_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<3>(0) else {
+        return;
+    };
+    // Optional leading 0x04
+    if data
+        .strip_prefix(b"\x04")
+        .unwrap_or(data)
+        .starts_with(b"%!")
+    {
+        suggest!(tf, Prob::POSSIBLE, c"application/postscript");
+    }
+}
+
+// TAR — application/x-tar
+// `ustar  \0` (old GNU, 8 bytes) or `ustar\0` + 2 digits @ offset 257.
+extern "C" fn tar_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_var(257, 8) else {
+        return;
+    };
+    // Old GNU: "ustar  \0" (8 bytes)
+    let old_gnu = magic_eq(data, b"ustar  \0");
+    // New GNU: "ustar\0" + 2 ASCII digits
+    let new_gnu =
+        data.starts_with(b"ustar\0") && data[6].is_ascii_digit() && data[7].is_ascii_digit();
+    if old_gnu || new_gnu {
+        suggest!(tf, Prob::NEARLY_CERTAIN, c"application/x-tar");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -957,6 +1021,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("video/x-flv", SECONDARY, flv_type_find, "flv"),
     typefinder!("image/gif", PRIMARY, gif_type_find, "gif"),
     typefinder!("video/x-dirac", PRIMARY, dirac_type_find),
+    typefinder!("video/x-theora", PRIMARY, theora_type_find),
     typefinder!("application/x-gzip", SECONDARY, gz_type_find, "gz"),
     typefinder!("application/zip", SECONDARY, zip_type_find, "zip"),
     typefinder!(
@@ -966,6 +1031,7 @@ const FEATURES: &[Feature] = &[
         "mp3,mp2,mp1,mpga,ogg,flac,tta",
         "application/x-id3"
     ),
+    typefinder!("audio/x-m4a", PRIMARY, m4a_type_find, "m4a"),
     typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
     typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
     typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
@@ -1010,6 +1076,14 @@ const FEATURES: &[Feature] = &[
         imelody_type_find,
         "imy,ime,imelody"
     ),
+    // Ogg Skeleton — no extensions; custom caps with parsed=false
+    typefinder!(
+        "application/x-ogg-skeleton",
+        PRIMARY,
+        oggskel_type_find,
+        none,
+        "application/x-ogg-skeleton, parsed=(boolean)FALSE"
+    ),
     typefinder!("application/x-yuv4mpeg", PRIMARY, y4m_type_find, "y4m"),
     typefinder!("application/x-scc", PRIMARY, scc_type_find, "scc"),
     typefinder!(
@@ -1042,6 +1116,7 @@ const FEATURES: &[Feature] = &[
     ),
     typefinder!("image/x-jng", SECONDARY, jng_type_find, "jng"),
     typefinder!("image/x-sun-raster", SECONDARY, ras_type_find, "ras"),
+    typefinder!("application/x-tar", SECONDARY, tar_type_find, "tar"),
     typefinder!("application/x-bzip", SECONDARY, bz2_type_find, "bz2"),
     typefinder!("application/x-compress", SECONDARY, z_type_find, "Z"),
     typefinder!("application/x-executable", MARGINAL, elf_type_find),
@@ -1061,6 +1136,12 @@ const FEATURES: &[Feature] = &[
     typefinder!("application/msword", SECONDARY, doc_type_find, "doc"),
     // RIFF variants
     typefinder!("video/x-4xm", PRIMARY, fourxm_type_find),
+    typefinder!(
+        "application/postscript",
+        SECONDARY,
+        postscript_type_find,
+        "ps"
+    ),
     typefinder!("video/x-msvideo", PRIMARY, avi_type_find, "avi,avf"),
     typefinder!("audio/qcelp", PRIMARY, qcp_type_find, "qcp"),
     typefinder!("video/x-cdxa", PRIMARY, cdxa_type_find, "dat"),

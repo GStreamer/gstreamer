@@ -319,6 +319,9 @@ macro_rules! typefinder {
     ($name:expr, $rank:expr, $func:expr, $exts:expr) => {
         Feature($name, $rank, opt!($func), Some($exts), Some($name))
     };
+    ($name:expr, $rank:expr, $func:expr, none, $caps:expr) => {
+        Feature($name, $rank, opt!($func), None, opt!($caps))
+    };
     ($name:expr, $rank:expr, $func:expr, $exts:expr, $caps:expr) => {
         Feature($name, $rank, opt!($func), opt!($exts), opt!($caps))
     };
