@@ -621,7 +621,7 @@ gst_hip_allocator_alloc (GstHipAllocator * allocator,
 
 /**
  * gst_hip_allocator_set_active:
- * @allocator: a #GstCudaAllocator
+ * @allocator: a #GstHipAllocator
  * @active: the new active state
  *
  * Controls the active state of @allocator.

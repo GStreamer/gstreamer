@@ -261,7 +261,7 @@ and/or use gtk-doc annotations.  -->
         </return-value>
         <parameters>
           <instance-parameter name="allocator" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstCudaAllocator</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipAllocator</doc>
             <type name="HipAllocator" c:type="GstHipAllocator*"/>
           </instance-parameter>
           <parameter name="active" transfer-ownership="none">
@@ -337,7 +337,7 @@ interoperability. The imported mapping will be cached for the lifetime of
         </return-value>
         <parameters>
           <instance-parameter name="allocator" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstCudaAllocator</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipAllocator</doc>
             <type name="HipAllocator" c:type="GstHipAllocator*"/>
           </instance-parameter>
           <parameter name="active" transfer-ownership="none">
@@ -373,7 +373,7 @@ interoperability. The imported mapping will be cached for the lifetime of
           </return-value>
           <parameters>
             <parameter name="allocator" transfer-ownership="none">
-              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstCudaAllocator</doc>
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipmemory.cpp">a #GstHipAllocator</doc>
               <type name="HipAllocator" c:type="GstHipAllocator*"/>
             </parameter>
             <parameter name="active" transfer-ownership="none">
