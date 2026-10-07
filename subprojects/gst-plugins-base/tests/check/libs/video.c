@@ -3126,6 +3126,62 @@ GST_START_TEST (test_video_color_convert_rgb_rgb)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_color_convert_rgb_rgb_clip_matrix)
+{
+  GstVideoInfo src_info;
+  GstVideoInfo dst_info;
+  GstBuffer *src_buf, *dst_buf;
+  GstVideoFrame src_frame;
+  GstVideoFrame dst_frame;
+  GstVideoConverter *convert;
+
+  fail_unless (gst_video_info_set_format (&src_info,
+          GST_VIDEO_FORMAT_ARGB, 1, 1));
+
+  src_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+
+  src_buf = gst_buffer_new_and_alloc (src_info.size);
+  fail_unless (gst_video_frame_map (&src_frame, &src_info,
+          src_buf, GST_MAP_READWRITE));
+  {
+    // Limited range red
+    const guint8 argb[] = { 0xff, 0xeb, 0x10, 0x10 };
+    gpointer data[GST_VIDEO_MAX_PLANES] = { NULL, };
+    gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    data[0] = GST_VIDEO_FRAME_PLANE_DATA (&src_frame, 0);
+    stride[0] = GST_VIDEO_FRAME_PLANE_STRIDE (&src_frame, 0);
+
+    src_info.finfo->pack_func (src_info.finfo, GST_VIDEO_PACK_FLAG_NONE,
+        (gpointer) argb, sizeof (argb), data, stride,
+        GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, 1);
+  }
+
+  fail_unless (gst_video_info_set_format (&dst_info,
+          GST_VIDEO_FORMAT_ARGB, 1, 1));
+
+  dst_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+
+  dst_buf = gst_buffer_new_and_alloc (dst_info.size);
+  gst_buffer_memset (dst_buf, 0, 0, dst_info.size);
+
+  fail_unless (gst_video_frame_map (&dst_frame, &dst_info,
+          dst_buf, GST_MAP_READWRITE));
+  convert = gst_video_converter_new (&src_info, &dst_info, NULL);
+
+  gst_video_converter_frame (convert, &src_frame, &dst_frame);
+
+  assert_equals_int (((guint8 *) dst_frame.data[0])[1], 0xff);
+
+  gst_video_frame_unmap (&dst_frame);
+  gst_buffer_unref (dst_buf);
+  gst_video_converter_free (convert);
+  gst_video_frame_unmap (&src_frame);
+  gst_buffer_unref (src_buf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_color_convert_rgb_yuv)
 {
   run_video_color_convert (RGB, YUV);
@@ -5959,6 +6015,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_chroma_site);
   tcase_add_test (tc_chain, test_video_scaler);
   tcase_add_test (tc_chain, test_video_color_convert_rgb_rgb);
+  tcase_add_test (tc_chain, test_video_color_convert_rgb_rgb_clip_matrix);
   tcase_add_test (tc_chain, test_video_color_convert_rgb_yuv);
   tcase_add_test (tc_chain, test_video_color_convert_yuv_yuv);
   tcase_add_test (tc_chain, test_video_color_convert_yuv_rgb);
