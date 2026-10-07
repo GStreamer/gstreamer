@@ -48,7 +48,9 @@ _gst_vulkan_buffer_peek_plane_memory (GstBuffer * buffer,
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (vinfo, NULL);
   g_return_val_if_fail (plane >= 0 && plane <= GST_VIDEO_MAX_PLANES, NULL);
+#ifndef GST_DISABLE_GST_DEBUG
   g_return_val_if_fail (cat, NULL);
+#endif
 
   vmeta = gst_buffer_get_video_meta (buffer);
   if (vmeta)
