@@ -58,7 +58,6 @@ struct _WebRTCTransceiver
 
   gboolean                 mline_locked;
 
-  GstElement               *ulpfecdec;
   GstElement               *ulpfecenc;
   GstElement               *redenc;
 };

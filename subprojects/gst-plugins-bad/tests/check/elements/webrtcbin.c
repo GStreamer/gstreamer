@@ -5993,10 +5993,46 @@ on_pad_added_validate_props (struct test_webrtc *t, GstElement * element,
   gst_clear_object (&rtp_trans);
 }
 
-GST_START_TEST (test_max_bundle_fec)
+/* rtpbin creates one FEC decoder per received SSRC. Every one of them must be
+ * configured: one left with passthrough=FALSE and pt=0 renumbers packets and
+ * hides packet loss from the depayloader. */
+static void
+check_fec_decoders (GstElement * webrtc, guint expected, gboolean fec)
+{
+  GstIterator *it = gst_bin_iterate_recurse (GST_BIN (webrtc));
+  GValue item = G_VALUE_INIT;
+  guint n_fecdecs = 0;
+
+  while (gst_iterator_next (it, &item) == GST_ITERATOR_OK) {
+    GstElement *element = g_value_get_object (&item);
+    GstElementFactory *factory = gst_element_get_factory (element);
+
+    if (factory && g_strcmp0 (GST_OBJECT_NAME (factory), "rtpulpfecdec") == 0) {
+      gboolean passthrough;
+      guint pt;
+
+      g_object_get (element, "passthrough", &passthrough, "pt", &pt, NULL);
+      GST_INFO ("%" GST_PTR_FORMAT " passthrough %d pt %u", element,
+          passthrough, pt);
+      fail_unless_equals_int (passthrough, !fec);
+      if (fec)
+        fail_unless (pt != 0, "%s has no FEC payload type",
+            GST_OBJECT_NAME (element));
+      n_fecdecs++;
+    }
+    g_value_reset (&item);
+  }
+  g_value_unset (&item);
+  gst_iterator_free (it);
+
+  fail_unless_equals_int (n_fecdecs, expected);
+}
+
+static void
+do_test_max_bundle_fec (gboolean enable_fec)
 {
   struct test_webrtc *t = test_webrtc_new ();
-  guint media_format_count[] = { 5, 5, };
+  guint media_format_count[] = { enable_fec ? 5 : 1, enable_fec ? 5 : 1, };
   VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
       media_format_count, NULL);
   VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL,
@@ -6048,10 +6084,12 @@ GST_START_TEST (test_max_bundle_fec)
       G_CALLBACK (new_jitterbuffer_set_fast_start), NULL);
   g_object_unref (rtpbin2);
 
-  g_signal_connect (t->webrtc1, "on-new-transceiver",
-      G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
-  g_signal_connect (t->webrtc2, "on-new-transceiver",
-      G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+  if (enable_fec) {
+    g_signal_connect (t->webrtc1, "on-new-transceiver",
+        G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+    g_signal_connect (t->webrtc2, "on-new-transceiver",
+        G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+  }
 
   src0 = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
   add_audio_test_src_harness (src0, ssrcs[0]);
@@ -6128,10 +6166,24 @@ GST_START_TEST (test_max_bundle_fec)
   GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (t->webrtc2), GST_DEBUG_GRAPH_SHOW_ALL,
       "webrtc2-fec-final");
 
+  check_fec_decoders (t->webrtc2, G_N_ELEMENTS (ssrcs), enable_fec);
+
   test_webrtc_free (t);
   g_list_free (pad_added_data.sink_harnesses);
 
   g_array_unref (ssrcs_received);
+}
+
+GST_START_TEST (test_max_bundle_fec)
+{
+  do_test_max_bundle_fec (TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_max_bundle_no_fec)
+{
+  do_test_max_bundle_fec (FALSE);
 }
 
 GST_END_TEST;
@@ -7456,6 +7508,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_renego_rtx);
     tcase_add_test (tc, test_bundle_mid_header_extension);
     tcase_add_test (tc, test_max_bundle_fec);
+    tcase_add_test (tc, test_max_bundle_no_fec);
     tcase_add_test (tc, test_simulcast);
     tcase_add_test (tc, test_simulcast_fec_rtx);
     tcase_add_test (tc, test_bundle_multiple_media_rtx_payload_mapping);

@@ -5188,14 +5188,13 @@ _merge_structure (const GstIdStr * fieldname, const GValue * value,
 #define GST_WEBRTC_PAYLOAD_TYPE "gst.webrtcbin.payload.type"
 
 static void
-try_match_transceiver_with_fec_decoder (GstWebRTCBin * webrtc,
-    WebRTCTransceiver * trans)
+configure_fec_decoders (GstWebRTCBin * webrtc, WebRTCTransceiver * trans,
+    gint ulpfec_pt)
 {
   GList *l;
 
   for (l = trans->stream->fecdecs; l; l = l->next) {
     GstElement *fecdec = GST_ELEMENT (l->data);
-    gboolean found_transceiver = FALSE;
     int original_pt;
     guint i;
 
@@ -5215,19 +5214,12 @@ try_match_transceiver_with_fec_decoder (GstWebRTCBin * webrtc,
       /* FIXME: this only works for a 1-1 original_pt->fec_pt mapping */
       if (original_pt == item->pt && item->media_idx != -1
           && item->media_idx == trans->parent.mline) {
-        if (trans->ulpfecdec) {
-          GST_FIXME_OBJECT (trans, "cannot");
-          gst_clear_object (&trans->ulpfecdec);
-        }
-        trans->ulpfecdec = gst_object_ref (fecdec);
-        found_transceiver = TRUE;
+        GST_DEBUG_OBJECT (trans, "configuring fec decoder %" GST_PTR_FORMAT
+            " for pt %d with fec pt %d", fecdec, original_pt, ulpfec_pt);
+        g_object_set (fecdec, "passthrough", ulpfec_pt == 0, "pt", ulpfec_pt,
+            NULL);
         break;
       }
-    }
-
-    if (!found_transceiver) {
-      GST_WARNING_OBJECT (trans, "failed to match fec decoder with "
-          "transceiver");
     }
   }
 }
@@ -5365,11 +5357,7 @@ _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
             trans->fec_percentage, NULL);
       }
 
-      try_match_transceiver_with_fec_decoder (webrtc, trans);
-      if (trans->ulpfecdec) {
-        g_object_set (trans->ulpfecdec, "passthrough", ulpfec_pt == 0, "pt",
-            ulpfec_pt, NULL);
-      }
+      configure_fec_decoders (webrtc, trans, ulpfec_pt);
 
       if (trans->redenc) {
         gboolean always_produce = TRUE;
@@ -8066,7 +8054,10 @@ on_rtpbin_request_fec_decoder_full (GstElement * rtpbin, guint session_id,
   g_signal_emit_by_name (webrtc->rtpbin, "get-internal-storage", session_id,
       &internal_storage);
 
-  g_object_set (ret, "storage", internal_storage, NULL);
+  /* Until a transceiver claims it, the decoder must not touch the stream:
+   * outside passthrough it renumbers packets and hides packet loss from the
+   * depayloader. */
+  g_object_set (ret, "storage", internal_storage, "passthrough", TRUE, NULL);
   g_clear_object (&internal_storage);
 
   g_object_set_data (G_OBJECT (ret), GST_WEBRTC_PAYLOAD_TYPE,
