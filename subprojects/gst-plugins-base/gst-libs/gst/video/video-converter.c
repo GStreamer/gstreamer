@@ -290,6 +290,8 @@ typedef struct _GstLineCache GstLineCache;
 
 #define SCALE    (8)
 #define SCALE_F  ((float) (1 << SCALE))
+/* half a unit, to round rather than truncate in video_orc_matrix8() */
+#define MATRIX8_ROUND (1 << (SCALE - 1))
 
 typedef struct _MatrixData MatrixData;
 
@@ -1164,17 +1166,20 @@ _custom_video_orc_matrix8 (guint8 * ORC_RESTRICT d1,
   a23 = (gint16) (p4 >> 48);
 
   for (i = 0; i < n; i++) {
-    r = s1[i * 4 + 1];
-    g = s1[i * 4 + 2];
-    b = s1[i * 4 + 3];
+    r = s1[i * 4 + 1] - 128;
+    g = s1[i * 4 + 2] - 128;
+    b = s1[i * 4 + 3] - 128;
 
-    y = ((a00 * r + a01 * g + a02 * b) >> SCALE) + a03;
-    u = ((a10 * r + a11 * g + a12 * b) >> SCALE) + a13;
-    v = ((a20 * r + a21 * g + a22 * b) >> SCALE) + a23;
+    y = ((a00 * r) >> SCALE) + ((a01 * g) >> SCALE) + ((a02 * b) >> SCALE) +
+        a03;
+    u = ((a10 * r) >> SCALE) + ((a11 * g) >> SCALE) + ((a12 * b) >> SCALE) +
+        a13;
+    v = ((a20 * r) >> SCALE) + ((a21 * g) >> SCALE) + ((a22 * b) >> SCALE) +
+        a23;
 
-    d1[i * 4 + 1] = CLAMP (y, 0, 255);
-    d1[i * 4 + 2] = CLAMP (u, 0, 255);
-    d1[i * 4 + 3] = CLAMP (v, 0, 255);
+    d1[i * 4 + 1] = CLAMP (y, -128, 127) + 128;
+    d1[i * 4 + 2] = CLAMP (u, -128, 127) + 128;
+    d1[i * 4 + 3] = CLAMP (v, -128, 127) + 128;
   }
 }
 
@@ -1365,6 +1370,23 @@ is_float_format (GstVideoFormat format)
   return GST_VIDEO_FORMAT_INFO_IS_FLOAT (finfo);
 }
 
+/* video_orc_matrix8() works on values recentred around 128 and truncates each
+ * product term on its own, so the translation column has to absorb both the
+ * recentring and a rounding bias for every truncation that can lose a bit. */
+static gint
+matrix8_offset (MatrixData * data, gint row)
+{
+  gint i, sum = 0, bias = MATRIX8_ROUND;
+
+  for (i = 0; i < 3; i++) {
+    sum += data->im[row][i];
+    if (data->im[row][i] != 0)
+      bias += MATRIX8_ROUND;
+  }
+
+  return ((data->im[row][3] + 128 * sum + bias) >> SCALE) - 128;
+}
+
 static void
 prepare_matrix (GstVideoConverter * convert, MatrixData * data)
 {
@@ -1409,9 +1431,9 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
           (((guint64) (guint16) data->im[1][2]) << 32) |
           (((guint64) (guint16) data->im[0][2]) << 16);
 
-      a03 = data->im[0][3] >> SCALE;
-      a13 = data->im[1][3] >> SCALE;
-      a23 = data->im[2][3] >> SCALE;
+      a03 = matrix8_offset (data, 0);
+      a13 = matrix8_offset (data, 1);
+      a23 = matrix8_offset (data, 2);
 
       data->orc_p4 = (((guint64) (guint16) a23) << 48) |
           (((guint64) (guint16) a13) << 32) | (((guint64) (guint16) a03) << 16);

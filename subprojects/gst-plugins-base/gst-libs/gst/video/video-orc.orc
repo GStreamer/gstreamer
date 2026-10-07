@@ -2085,6 +2085,7 @@ x4 addb argb, x, c128
 .longparam 8 p3
 .longparam 8 p4
 .const 1 c128 128
+.const 1 c0 0
 .temp 2 w1
 .temp 2 w2
 .temp 1 b1
@@ -2096,10 +2097,12 @@ x4 addb argb, x, c128
 .temp 8 pr1
 .temp 8 pr2
 .temp 8 pr3
+.temp 8 pr4
 
 loadpq pr1, p1
 loadpq pr2, p2
 loadpq pr3, p3
+loadpq pr4, p4
 
 x4 subb l1, argb, c128
 
@@ -2111,21 +2114,22 @@ select1wb b2, w1
 convubw w1, b1
 convuwl l1, w1
 x4 mergebw aq, l1, l1
+x4 addw aq, aq, pr4
 
 splatbl l1, b2
-mergelq q1, l1, l1
+x4 mergebw q1, c0, l1
 x4 mulhsw q1, q1, pr1
 x4 addw aq, aq, q1
 
 select0wb b1, w2
 splatbl l1,b1
-mergelq q1, l1, l1
+x4 mergebw q1, c0, l1
 x4 mulhsw q1, q1, pr2
 x4 addw aq, aq, q1
 
 select1wb b2, w2
 splatbl l1, b2
-mergelq q1, l1, l1
+x4 mergebw q1, c0, l1
 x4 mulhsw q1, q1, pr3
 x4 addw aq, aq, q1
 
