@@ -33,6 +33,21 @@ void  gst_hip_flush_all_devices (void);
 GST_HIP_API
 hipEvent_t gst_hip_event_get_handle (GstHipEvent * event);
 
+GST_HIP_API
+gpointer gst_hip_memory_get_pointer (GstHipMemory * mem);
+
+GST_HIP_API
+gchar * gst_hip_rtc_compile_full (GstHipDevice * device,
+                                  const gchar * source,
+                                  const gchar ** options,
+                                  guint num_options,
+                                  GError ** error);
+
+GST_HIP_API
+void gst_hip_kernel_args_add_scalar (GstHipKernelArgs * args,
+                                     gconstpointer value,
+                                     gsize size);
+
 G_END_DECLS
 
 #ifdef __cplusplus

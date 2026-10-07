@@ -22,6 +22,7 @@
 #endif
 
 #include "gsthip.h"
+#include "gsthip-private.h"
 #include <hip/hiprtc.h>
 #include <mutex>
 #include <vector>
@@ -298,7 +299,8 @@ gst_hip_rtc_load_library (GstHipVendor vendor)
 
 static gchar *
 gst_hip_rtc_compile_amd (GstHipDevice * device,
-    const gchar * source, const gchar ** options, guint num_options)
+    const gchar * source, const gchar ** options, guint num_options,
+    GError ** error)
 {
   hiprtcProgram prog;
   auto rtc_ret = amd_ftable.hiprtcCreateProgram (&prog, source, "program.cpp",
@@ -306,6 +308,8 @@ gst_hip_rtc_compile_amd (GstHipDevice * device,
 
   if (rtc_ret != HIPRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't create program, ret: %d", rtc_ret);
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't create program: %d", rtc_ret);
     return nullptr;
   }
 
@@ -313,8 +317,8 @@ gst_hip_rtc_compile_amd (GstHipDevice * device,
   if (rtc_ret != HIPRTC_SUCCESS) {
     size_t log_size = 0;
     gchar *err_str = nullptr;
-    rtc_ret = amd_ftable.hiprtcGetProgramLogSize (prog, &log_size);
-    if (rtc_ret == HIPRTC_SUCCESS) {
+    auto log_ret = amd_ftable.hiprtcGetProgramLogSize (prog, &log_size);
+    if (log_ret == HIPRTC_SUCCESS && log_size > 0) {
       err_str = (gchar *) g_malloc0 (log_size);
       err_str[log_size - 1] = '\0';
       amd_ftable.hiprtcGetProgramLog (prog, err_str);
@@ -322,7 +326,10 @@ gst_hip_rtc_compile_amd (GstHipDevice * device,
 
     GST_ERROR_OBJECT (device, "Couldn't compile program, ret: %d (%s)",
         rtc_ret, GST_STR_NULL (err_str));
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't compile program: %d (%s)", rtc_ret, GST_STR_NULL (err_str));
     g_free (err_str);
+    amd_ftable.hiprtcDestroyProgram (&prog);
     return nullptr;
   }
 
@@ -330,6 +337,9 @@ gst_hip_rtc_compile_amd (GstHipDevice * device,
   rtc_ret = amd_ftable.hiprtcGetCodeSize (prog, &code_size);
   if (rtc_ret != HIPRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't get code size, ret: %d", rtc_ret);
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't get code size: %d", rtc_ret);
+    amd_ftable.hiprtcDestroyProgram (&prog);
     return nullptr;
   }
 
@@ -338,7 +348,10 @@ gst_hip_rtc_compile_amd (GstHipDevice * device,
 
   if (rtc_ret != HIPRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't get code, ret: %d", rtc_ret);
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't get code: %d", rtc_ret);
     g_free (code);
+    amd_ftable.hiprtcDestroyProgram (&prog);
     return nullptr;
   }
 
@@ -349,7 +362,8 @@ gst_hip_rtc_compile_amd (GstHipDevice * device,
 
 static gchar *
 gst_hip_rtc_compile_nvidia (GstHipDevice * device,
-    const gchar * source, const gchar ** options, guint num_options)
+    const gchar * source, const gchar ** options, guint num_options,
+    GError ** error)
 {
   nvrtcProgram prog;
   auto rtc_ret = nvidia_ftable.nvrtcCreateProgram (&prog, source, "program.cpp",
@@ -357,6 +371,8 @@ gst_hip_rtc_compile_nvidia (GstHipDevice * device,
 
   if (rtc_ret != NVRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't create program, ret: %d", rtc_ret);
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't create program: %d", rtc_ret);
     return nullptr;
   }
 
@@ -364,8 +380,8 @@ gst_hip_rtc_compile_nvidia (GstHipDevice * device,
   if (rtc_ret != NVRTC_SUCCESS) {
     size_t log_size = 0;
     gchar *err_str = nullptr;
-    rtc_ret = nvidia_ftable.nvrtcGetProgramLogSize (prog, &log_size);
-    if (rtc_ret == NVRTC_SUCCESS) {
+    auto log_ret = nvidia_ftable.nvrtcGetProgramLogSize (prog, &log_size);
+    if (log_ret == NVRTC_SUCCESS && log_size > 0) {
       err_str = (gchar *) g_malloc0 (log_size);
       err_str[log_size - 1] = '\0';
       nvidia_ftable.nvrtcGetProgramLog (prog, err_str);
@@ -373,7 +389,10 @@ gst_hip_rtc_compile_nvidia (GstHipDevice * device,
 
     GST_ERROR_OBJECT (device, "Couldn't compile program, ret: %d (%s)",
         rtc_ret, GST_STR_NULL (err_str));
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't compile program: %d (%s)", rtc_ret, GST_STR_NULL (err_str));
     g_free (err_str);
+    nvidia_ftable.nvrtcDestroyProgram (&prog);
     return nullptr;
   }
 
@@ -381,6 +400,9 @@ gst_hip_rtc_compile_nvidia (GstHipDevice * device,
   rtc_ret = nvidia_ftable.nvrtcGetPTXSize (prog, &code_size);
   if (rtc_ret != NVRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't get code size, ret: %d", rtc_ret);
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't get code size: %d", rtc_ret);
+    nvidia_ftable.nvrtcDestroyProgram (&prog);
     return nullptr;
   }
 
@@ -389,7 +411,10 @@ gst_hip_rtc_compile_nvidia (GstHipDevice * device,
 
   if (rtc_ret != NVRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't get code, ret: %d", rtc_ret);
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Couldn't get code: %d", rtc_ret);
     g_free (code);
+    nvidia_ftable.nvrtcDestroyProgram (&prog);
     return nullptr;
   }
 
@@ -415,18 +440,39 @@ gchar *
 gst_hip_rtc_compile (GstHipDevice * device,
     const gchar * source, const gchar ** options, guint num_options)
 {
-  auto vendor = gst_hip_device_get_vendor (device);
-  if (!gst_hip_rtc_load_library (vendor))
+  return gst_hip_rtc_compile_full (device, source, options, num_options,
+      nullptr);
+}
+
+gchar *
+gst_hip_rtc_compile_full (GstHipDevice * device, const gchar * source,
+    const gchar ** options, guint num_options, GError ** error)
+{
+  if (!gst_hip_device_set_current (device)) {
+    g_set_error_literal (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT,
+        "Couldn't set HIP device");
     return nullptr;
+  }
+
+  auto vendor = gst_hip_device_get_vendor (device);
+  if (!gst_hip_rtc_load_library (vendor)) {
+    g_set_error_literal (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT,
+        "Couldn't load HIP runtime compiler");
+    return nullptr;
+  }
 
   switch (vendor) {
     case GST_HIP_VENDOR_AMD:
-      return gst_hip_rtc_compile_amd (device, source, options, num_options);
+      return gst_hip_rtc_compile_amd (device, source, options, num_options,
+          error);
     case GST_HIP_VENDOR_NVIDIA:
-      return gst_hip_rtc_compile_nvidia (device, source, options, num_options);
+      return gst_hip_rtc_compile_nvidia (device, source, options, num_options,
+          error);
     default:
       break;
   }
 
+  g_set_error_literal (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "Unsupported HIP vendor");
   return nullptr;
 }

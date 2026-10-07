@@ -444,6 +444,12 @@ gst_is_hip_memory (GstMemory * mem)
       GST_IS_HIP_ALLOCATOR (mem->allocator);
 }
 
+gpointer
+gst_hip_memory_get_pointer (GstHipMemory * mem)
+{
+  return (guint8 *) mem->priv->data + mem->mem.offset;
+}
+
 /**
  * gst_hip_memory_get_video_info:
  * @mem: a #GstHipMemory
