@@ -836,6 +836,59 @@ extern "C" fn jpeg_type_find(tf: &mut TypeFind, _private: gpointer) {
     ]);
 }
 
+// Dirac — video/x-dirac
+// BBCD @ 0 or KW-DIRAC @ 0.
+extern "C" fn dirac_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"BBCD") || tf.starts_with(b"KW-DIRAC") {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-dirac");
+    }
+}
+
+// BRSTM — audio/x-brstm
+// `RSTM` @ 0 + u32 LE @ 4 in {0xFFFE, 0xFEFF}.
+extern "C" fn brstm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<8>(0)
+        && data[..4] == *b"RSTM"
+        && matches!(read_u32_le(&data[4..]), Some(0xFFFE | 0xFEFF))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-brstm");
+    }
+}
+
+// BFSTM — audio/x-bfstm
+// `FSTM`/`CSTM` @ 0 + u32 LE @ 4 in {0xFFFE, 0xFEFF}.
+extern "C" fn bfstm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<8>(0)
+        && (data[..4] == *b"FSTM" || data[..4] == *b"CSTM")
+        && matches!(read_u32_le(&data[4..]), Some(0xFFFE | 0xFEFF))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-bfstm");
+    }
+}
+
+// PVA — video/x-pva
+// `AV` @ 0, byte[2] < 3, byte[4] == 0x55.
+extern "C" fn pva_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<5>(0)
+        && data[..2] == *b"AV"
+        && data[2] < 3
+        && data[4] == 0x55
+    {
+        suggest!(tf, Prob::NEARLY_CERTAIN, c"video/x-pva");
+    }
+}
+
+// Film CPK — video/x-film-cpk
+// `FILM` @ 0 + `FDSC` @ 16.
+extern "C" fn film_cpk_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<20>(0)
+        && data[..4] == *b"FILM"
+        && data[16..20] == *b"FDSC"
+    {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-film-cpk");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -869,6 +922,7 @@ const FEATURES: &[Feature] = &[
     ),
     typefinder!("video/x-flv", SECONDARY, flv_type_find, "flv"),
     typefinder!("image/gif", PRIMARY, gif_type_find, "gif"),
+    typefinder!("video/x-dirac", PRIMARY, dirac_type_find),
     typefinder!("application/x-gzip", SECONDARY, gz_type_find, "gz"),
     typefinder!("application/zip", SECONDARY, zip_type_find, "zip"),
     typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
@@ -897,6 +951,8 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/iLBC-sh", PRIMARY, ilbc_type_find, "ilbc"),
     typefinder!("audio/x-dsf", PRIMARY, dsf_type_find),
     typefinder!("audio/x-aiff", SECONDARY, aiff_type_find, "aiff,aif,aifc"),
+    typefinder!("audio/x-brstm", SECONDARY, brstm_type_find, "brstm"),
+    typefinder!("audio/x-bfstm", SECONDARY, bfstm_type_find, "bfstm,bcstm"),
     typefinder!("audio/x-tap-tap", PRIMARY, tap_type_find, "tap"),
     typefinder!("audio/x-amr-nb-sh", PRIMARY, amr_type_find, "amr"),
     typefinder!("audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, "amr"),
@@ -928,6 +984,8 @@ const FEATURES: &[Feature] = &[
     typefinder!("image/x-xcf", SECONDARY, xcf_type_find, "xcf"),
     typefinder!("video/x-mng", SECONDARY, mng_type_find, "mng"),
     typefinder!("video/x-mve", SECONDARY, mve_type_find, "mve"),
+    typefinder!("video/x-pva", SECONDARY, pva_type_find, "pva"),
+    typefinder!("video/x-film-cpk", SECONDARY, film_cpk_type_find, "cpk"),
     typefinder!("image/x-jng", SECONDARY, jng_type_find, "jng"),
     typefinder!("image/x-sun-raster", SECONDARY, ras_type_find, "ras"),
     typefinder!("application/x-bzip", SECONDARY, bz2_type_find, "bz2"),
