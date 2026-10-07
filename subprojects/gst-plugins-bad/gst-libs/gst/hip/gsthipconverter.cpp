@@ -24,6 +24,7 @@
 #include "gsthip-config.h"
 
 #include "gsthipconverter.h"
+#include "gsthip-private.h"
 #include <gst/hip/gsthip.h>
 #include <string.h>
 #include <mutex>
@@ -729,6 +730,8 @@ struct _GstHipConverterPrivate
   {
     config = gst_structure_new_empty ("converter-config");
     const_buf = g_new0 (ConstBuffer, 1);
+    main_args = gst_hip_kernel_args_new ();
+    unpack_args = gst_hip_kernel_args_new ();
   }
 
    ~_GstHipConverterPrivate ()
@@ -736,6 +739,8 @@ struct _GstHipConverterPrivate
     if (config)
       gst_structure_free (config);
     g_free (const_buf);
+    gst_hip_kernel_args_free (main_args);
+    gst_hip_kernel_args_free (unpack_args);
   }
 
   std::mutex lock;
@@ -757,11 +762,12 @@ struct _GstHipConverterPrivate
   TextureBuffer unpack_buffer;
   ConstBuffer *const_buf = nullptr;
 
-  hipModule_t main_module = nullptr;
-  hipFunction_t main_func = nullptr;
+  GstHipKernelModule *main_module = nullptr;
+  GstHipKernelArgs *main_args = nullptr;
 
-  hipModule_t unpack_module = nullptr;
-  hipFunction_t unpack_func = nullptr;
+  GstHipKernelModule *unpack_module = nullptr;
+  GstHipKernelArgs *unpack_args = nullptr;
+  std::string unpack_name;
 
   gboolean update_const_buf = TRUE;
 
@@ -849,15 +855,8 @@ gst_hip_converter_dispose (GObject * object)
   }
 
   if (self->device && gst_hip_device_set_current (self->device)) {
-    if (priv->unpack_module) {
-      HipModuleUnload (priv->vendor, priv->unpack_module);
-      priv->unpack_module = nullptr;
-    }
-
-    if (priv->main_module) {
-      HipModuleUnload (priv->vendor, priv->main_module);
-      priv->main_module = nullptr;
-    }
+    g_clear_pointer (&priv->unpack_module, gst_hip_kernel_module_unref);
+    g_clear_pointer (&priv->main_module, gst_hip_kernel_module_unref);
 
     for (guint i = 0; i < G_N_ELEMENTS (priv->fallback_buffer); i++) {
       if (priv->fallback_buffer[i].ptr) {
@@ -1484,10 +1483,10 @@ gst_hip_converter_setup (GstHipConverter * self)
   }
 
   if (program) {
-    ret = HipModuleLoadData (priv->vendor, &priv->main_module, program);
-    if (ret != hipSuccess) {
-      GST_WARNING_OBJECT (self,
-          "Could not load module from precompiled, ret %d", ret);
+    priv->main_module = gst_hip_kernel_module_new_from_blob (self->device,
+        program, nullptr);
+    if (!priv->main_module) {
+      GST_WARNING_OBJECT (self, "Could not load module from precompiled");
       program = nullptr;
       priv->main_module = nullptr;
     } else {
@@ -1542,9 +1541,10 @@ gst_hip_converter_setup (GstHipConverter * self)
     if (program && !priv->main_module) {
       GST_DEBUG_OBJECT (self, "Loading PTX module");
       gst_hip_device_set_current (self->device);
-      ret = HipModuleLoadData (priv->vendor, &priv->main_module, program);
-      if (ret != hipSuccess) {
-        GST_ERROR_OBJECT (self, "Could not load module from PTX, ret %d", ret);
+      priv->main_module = gst_hip_kernel_module_new_from_blob (self->device,
+          program, nullptr);
+      if (!priv->main_module) {
+        GST_ERROR_OBJECT (self, "Could not load module from PTX");
         program = nullptr;
         priv->main_module = nullptr;
       }
@@ -1556,9 +1556,8 @@ gst_hip_converter_setup (GstHipConverter * self)
     return FALSE;
   }
 
-  ret = HipModuleGetFunction (priv->vendor, &priv->main_func,
-      priv->main_module, "GstHipConverterMain");
-  if (!gst_hip_result (ret, priv->vendor)) {
+  if (!gst_hip_kernel_module_ensure_entry_point (priv->main_module,
+          "GstHipConverterMain")) {
     GST_ERROR_OBJECT (self, "Could not get main function");
     return FALSE;
   }
@@ -1621,10 +1620,10 @@ gst_hip_converter_setup (GstHipConverter * self)
     }
 
     if (program) {
-      ret = HipModuleLoadData (priv->vendor, &priv->unpack_module, program);
-      if (ret != hipSuccess) {
-        GST_WARNING_OBJECT (self,
-            "Could not load module from precompiled, ret %d", ret);
+      priv->unpack_module = gst_hip_kernel_module_new_from_blob (self->device,
+          program, nullptr);
+      if (!priv->unpack_module) {
+        GST_WARNING_OBJECT (self, "Could not load module from precompiled");
         program = nullptr;
         priv->unpack_module = nullptr;
       } else {
@@ -1667,8 +1666,9 @@ gst_hip_converter_setup (GstHipConverter * self)
 
       if (program && !priv->unpack_module) {
         GST_DEBUG_OBJECT (self, "PTX CUBIN module");
-        ret = HipModuleLoadData (priv->vendor, &priv->unpack_module, program);
-        if (!gst_hip_result (ret, priv->vendor)) {
+        priv->unpack_module = gst_hip_kernel_module_new_from_blob (self->device,
+            program, nullptr);
+        if (!priv->unpack_module) {
           GST_ERROR_OBJECT (self, "Could not load module from PTX");
           program = nullptr;
           priv->unpack_module = nullptr;
@@ -1681,12 +1681,13 @@ gst_hip_converter_setup (GstHipConverter * self)
       return FALSE;
     }
 
-    ret = HipModuleGetFunction (priv->vendor, &priv->unpack_func,
-        priv->unpack_module, unpack_name.c_str ());
-    if (!gst_hip_result (ret, priv->vendor)) {
+    if (!gst_hip_kernel_module_ensure_entry_point (priv->unpack_module,
+            unpack_name.c_str ())) {
       GST_ERROR_OBJECT (self, "Could not get unpack function");
       return FALSE;
     }
+
+    priv->unpack_name = unpack_name;
   }
 
   return TRUE;
@@ -1878,9 +1879,7 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
   auto priv = self->priv;
   gpointer src;
   gint width, height, src_stride, dst_stride;
-  gpointer args[] = { &src, &priv->unpack_buffer.ptr,
-    &width, &height, &src_stride, &dst_stride
-  };
+  auto args = priv->unpack_args;
 
   g_assert (priv->unpack_buffer.ptr);
   g_assert (priv->unpack_buffer.stride > 0);
@@ -1891,10 +1890,18 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
   src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
   dst_stride = (gint) priv->unpack_buffer.stride;
 
-  auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->unpack_func,
-      DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
-      HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, priv->stream, args, nullptr);
-  if (!gst_hip_result (hip_ret, priv->vendor)) {
+  gst_hip_kernel_args_clear (args);
+  gst_hip_kernel_args_add (args, src);
+  gst_hip_kernel_args_add (args, priv->unpack_buffer.ptr);
+  gst_hip_kernel_args_add (args, width);
+  gst_hip_kernel_args_add (args, height);
+  gst_hip_kernel_args_add (args, src_stride);
+  gst_hip_kernel_args_add (args, dst_stride);
+
+  if (!gst_hip_kernel_module_launch (priv->unpack_module,
+          priv->unpack_name.c_str (), priv->active_stream,
+          DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
+          HIP_BLOCK_X, HIP_BLOCK_Y, 1, args)) {
     GST_ERROR_OBJECT (self, "Couldn't unpack source RGB");
     return FALSE;
   }
@@ -2006,15 +2013,11 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   format = priv->texture_fmt;
 
   gboolean ret = FALSE;
-  hipError_t hip_ret;
-  gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
-    &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1], &stride[2],
-    &stride[3], priv->const_buf, &off_x, &off_y
-  };
+  auto args = priv->main_args;
 
   auto cmem = (GstHipMemory *) gst_buffer_peek_memory (in_buf, 0);
 
-  if (priv->unpack_func) {
+  if (priv->unpack_module) {
     if (!gst_hip_converter_unpack_rgb (converter, &in_frame)) {
       goto done;
     }
@@ -2063,11 +2066,20 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     stride[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
   }
 
-  hip_ret = HipModuleLaunchKernel (priv->vendor, priv->main_func,
-      DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
-      HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, priv->stream, args, nullptr);
+  gst_hip_kernel_args_clear (args);
+  for (guint i = 0; i < G_N_ELEMENTS (texture); i++)
+    gst_hip_kernel_args_add (args, texture[i]);
+  for (guint i = 0; i < G_N_ELEMENTS (dst); i++)
+    gst_hip_kernel_args_add (args, dst[i]);
+  for (guint i = 0; i < G_N_ELEMENTS (stride); i++)
+    gst_hip_kernel_args_add (args, stride[i]);
+  gst_hip_kernel_args_add (args, *priv->const_buf);
+  gst_hip_kernel_args_add (args, off_x);
+  gst_hip_kernel_args_add (args, off_y);
 
-  if (!gst_hip_result (hip_ret, priv->vendor)) {
+  if (!gst_hip_kernel_module_launch (priv->main_module, "GstHipConverterMain",
+          out_stream, DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y),
+          1, HIP_BLOCK_X, HIP_BLOCK_Y, 1, args)) {
     GST_ERROR_OBJECT (converter, "Couldn't convert frame");
     goto done;
   }

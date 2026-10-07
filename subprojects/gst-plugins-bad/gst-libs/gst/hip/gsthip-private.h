@@ -52,10 +52,21 @@ G_END_DECLS
 
 #ifdef __cplusplus
 #include <mutex>
+#include <type_traits>
 
 #define GST_HIP_CALL_ONCE_BEGIN \
     static std::once_flag __once_flag; \
     std::call_once (__once_flag, [&]()
 
 #define GST_HIP_CALL_ONCE_END )
+
+template <typename T>
+static inline void
+gst_hip_kernel_args_add (GstHipKernelArgs * args, const T & value)
+{
+  if (std::is_scalar<T>::value)
+    gst_hip_kernel_args_add_scalar (args, &value, sizeof (value));
+  else
+    gst_hip_kernel_args_add_value (args, &value, sizeof (value), alignof (T));
+}
 #endif
