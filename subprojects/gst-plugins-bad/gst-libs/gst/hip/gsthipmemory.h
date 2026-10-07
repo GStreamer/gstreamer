@@ -43,10 +43,49 @@ G_BEGIN_DECLS
 #define GST_HIP_POOL_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_HIP_POOL_ALLOCATOR, GstHipPoolAllocatorClass))
 #define GST_HIP_POOL_ALLOCATOR_CAST(obj)       ((GstHipPoolAllocator *)obj)
 
+/**
+ * GST_HIP_MEMORY_NAME:
+ *
+ * The name of the HIP memory
+ *
+ * Since: 1.28
+ */
 #define GST_HIP_MEMORY_NAME "HIPMemory"
+
+/**
+ * GST_CAPS_FEATURE_MEMORY_HIP_MEMORY:
+ *
+ * Name of the caps feature for indicating the use of #GstHipMemory
+ *
+ * Since: 1.28
+ */
 #define GST_CAPS_FEATURE_MEMORY_HIP_MEMORY "memory:HIPMemory"
+
+/**
+ * GST_MAP_HIP: (value 131072) (type GstMapFlags)
+ *
+ * Flag indicating that we should map the HIP resource instead of to system memory.
+ *
+ * Since: 1.28
+ */
 #define GST_MAP_HIP ((GstMapFlags) (GST_MAP_FLAG_LAST << 1))
+
+/**
+ * GST_MAP_READ_HIP: (value 131073) (type GstMapFlags)
+ *
+ * GstMapFlags value alias for GST_MAP_READ | GST_MAP_HIP
+ *
+ * Since: 1.28
+ */
 #define GST_MAP_READ_HIP ((GstMapFlags) (GST_MAP_READ | GST_MAP_HIP))
+
+/**
+ * GST_MAP_WRITE_HIP: (value 131074) (type GstMapFlags)
+ *
+ * GstMapFlags value alias for GST_MAP_WRITE | GST_MAP_HIP
+ *
+ * Since: 1.28
+ */
 #define GST_MAP_WRITE_HIP ((GstMapFlags) (GST_MAP_WRITE | GST_MAP_HIP))
 
 typedef enum
