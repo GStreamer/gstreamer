@@ -267,7 +267,7 @@ gst_hip_event_get_device_id (GstHipEvent * event)
 {
   g_return_val_if_fail (event, G_MAXUINT);
 
-  return event->vendor;
+  return event->device_id;
 }
 
 /**
