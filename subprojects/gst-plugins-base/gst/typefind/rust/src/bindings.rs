@@ -11,7 +11,7 @@
 
 //! Hand-written FFI declarations for the GStreamer typefind API.
 //!
-//! Deliberately minimal — only what this crate uses. Source of truth is
+//! Deliberately minimal - only what this crate uses. Source of truth is
 //! gst/gsttypefind.h plus the glib/GObject constants below; extend by hand
 //! if the used API surface grows. No bindgen, no build script: bindgen needs
 //! libclang at build time, which complicates offline and cross builds, and it
