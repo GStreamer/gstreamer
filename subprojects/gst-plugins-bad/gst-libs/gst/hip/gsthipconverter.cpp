@@ -1095,42 +1095,12 @@ convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
   *yuv = tmp;
 }
 
-static gboolean
-gst_hip_converter_setup (GstHipConverter * self)
+static const gchar *
+get_output_name (GstVideoFormat format)
 {
-  auto priv = self->priv;
-  const GstVideoInfo *in_info;
-  const GstVideoInfo *out_info;
-  const GstVideoInfo *texture_info;
-  GstHipColorMatrix convert_matrix;
-  GstHipColorMatrix border_color_matrix;
-  gdouble border_color[4];
-  guint i, j;
-  const GstVideoColorimetry *in_color;
-  const GstVideoColorimetry *out_color;
-  gchar *str = nullptr;
-  hipError_t ret;
-  std::string output_name;
-  std::string unpack_name;
-  GstVideoInfo matrix_in_info;
-  GstVideoInfo matrix_out_info;
+  const gchar *output_name = "";
 
-  in_info = &priv->in_info;
-  out_info = &priv->out_info;
-  texture_info = &priv->texture_info;
-  in_color = &in_info->colorimetry;
-  out_color = &out_info->colorimetry;
-
-  convert_info_gray_to_yuv (in_info, &matrix_in_info);
-  convert_info_gray_to_yuv (out_info, &matrix_out_info);
-
-  const GstVideoInfo *matrix_in = &matrix_in_info;
-  const GstVideoInfo *matrix_out = &matrix_out_info;
-
-  memset (&convert_matrix, 0, sizeof (GstHipColorMatrix));
-  color_matrix_identity (&convert_matrix);
-
-  switch (GST_VIDEO_INFO_FORMAT (out_info)) {
+  switch (format) {
     case GST_VIDEO_FORMAT_I420:
       output_name = "I420";
       break;
@@ -1272,6 +1242,107 @@ gst_hip_converter_setup (GstHipConverter * self)
       break;
   }
 
+  return output_name;
+}
+
+static GstVideoFormat
+get_texture_format (GstVideoFormat format, const gchar ** unpack_name)
+{
+  *unpack_name = nullptr;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGB:
+      format = GST_VIDEO_FORMAT_RGBx;
+      *unpack_name = "GstHipConverterUnpack_RGB_RGBx";
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      format = GST_VIDEO_FORMAT_BGRx;
+      *unpack_name = "GstHipConverterUnpack_RGB_RGBx";
+      break;
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+      format = GST_VIDEO_FORMAT_ARGB64;
+      *unpack_name = "GstHipConverterUnpack_RGB10A2_ARGB64";
+      break;
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      format = GST_VIDEO_FORMAT_ARGB64;
+      *unpack_name = "GstHipConverterUnpack_BGR10A2_ARGB64";
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      format = GST_VIDEO_FORMAT_VUYA;
+      *unpack_name = "GstHipConverterUnpack_UYVY_VUYA";
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      format = GST_VIDEO_FORMAT_VUYA;
+      *unpack_name = "GstHipConverterUnpack_YUY2_VUYA";
+      break;
+    case GST_VIDEO_FORMAT_RGB_F32LE:
+      format = GST_VIDEO_FORMAT_RGBA_F32LE;
+      *unpack_name = "GstHipConverterUnpack_RGB_F32_RGBA_F32";
+      break;
+    case GST_VIDEO_FORMAT_RGB_F16LE:
+      format = GST_VIDEO_FORMAT_RGBA_F16LE;
+      *unpack_name = "GstHipConverterUnpack_RGB_F16_RGBA_F16";
+      break;
+    default:
+      break;
+  }
+
+  return format;
+}
+
+gboolean
+gst_hip_converter_check_format_support (GstVideoFormat format)
+{
+  auto name = get_output_name (format);
+  if (name[0] == '\0')
+    return FALSE;
+
+  const gchar *unpack_name = nullptr;
+  auto texture_format = get_texture_format (format, &unpack_name);
+  for (guint i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].format == texture_format)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_hip_converter_setup (GstHipConverter * self)
+{
+  auto priv = self->priv;
+  const GstVideoInfo *in_info;
+  const GstVideoInfo *out_info;
+  const GstVideoInfo *texture_info;
+  GstHipColorMatrix convert_matrix;
+  GstHipColorMatrix border_color_matrix;
+  gdouble border_color[4];
+  guint i, j;
+  const GstVideoColorimetry *in_color;
+  const GstVideoColorimetry *out_color;
+  gchar *str = nullptr;
+  hipError_t ret;
+  std::string output_name;
+  std::string unpack_name;
+  GstVideoInfo matrix_in_info;
+  GstVideoInfo matrix_out_info;
+
+  in_info = &priv->in_info;
+  out_info = &priv->out_info;
+  texture_info = &priv->texture_info;
+  in_color = &in_info->colorimetry;
+  out_color = &out_info->colorimetry;
+
+  convert_info_gray_to_yuv (in_info, &matrix_in_info);
+  convert_info_gray_to_yuv (out_info, &matrix_out_info);
+
+  const GstVideoInfo *matrix_in = &matrix_in_info;
+  const GstVideoInfo *matrix_out = &matrix_out_info;
+
+  memset (&convert_matrix, 0, sizeof (GstHipColorMatrix));
+  color_matrix_identity (&convert_matrix);
+
+  output_name = get_output_name (GST_VIDEO_INFO_FORMAT (out_info));
   if (output_name.empty ()) {
     GST_ERROR_OBJECT (self, "Unknown write function for format %s",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
@@ -1281,57 +1352,14 @@ gst_hip_converter_setup (GstHipConverter * self)
   /* Decide texture info to use, 3 channel RGB or 10bits packed RGB
    * need be converted to other format */
   priv->texture_info = priv->in_info;
-  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
-    case GST_VIDEO_FORMAT_RGB:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_RGBx, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_RGB_RGBx";
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_BGRx, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_RGB_RGBx";
-      break;
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_ARGB64, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_RGB10A2_ARGB64";
-      break;
-    case GST_VIDEO_FORMAT_BGR10A2_LE:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_ARGB64, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_BGR10A2_ARGB64";
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_VUYA, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_UYVY_VUYA";
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_VUYA, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_YUY2_VUYA";
-      break;
-    case GST_VIDEO_FORMAT_RGB_F32LE:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_RGBA_F32LE, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_RGB_F32_RGBA_F32";
-      break;
-    case GST_VIDEO_FORMAT_RGB_F16LE:
-      gst_video_info_set_format (&priv->texture_info,
-          GST_VIDEO_FORMAT_RGBA_F16LE, GST_VIDEO_INFO_WIDTH (in_info),
-          GST_VIDEO_INFO_HEIGHT (in_info));
-      unpack_name = "GstHipConverterUnpack_RGB_F16_RGBA_F16";
-      break;
-    default:
-      break;
+  const gchar *unpack = nullptr;
+  auto texture_format = get_texture_format (GST_VIDEO_INFO_FORMAT (in_info),
+      &unpack);
+  if (unpack)
+    unpack_name = unpack;
+  if (texture_format != GST_VIDEO_INFO_FORMAT (in_info)) {
+    gst_video_info_set_format (&priv->texture_info, texture_format,
+        GST_VIDEO_INFO_WIDTH (in_info), GST_VIDEO_INFO_HEIGHT (in_info));
   }
 
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {

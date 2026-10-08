@@ -119,6 +119,41 @@ static const GstHipFormat format_map[] = {
   MAKE_FORMAT_GRAY (GRAY_F32LE, FLOAT),
 };
 
+/**
+ * gst_hip_check_format_support:
+ * @format: a #GstVideoFormat
+ * @support: (out): supported HIP operations
+ *
+ * Queries device-independent HIP video format support.
+ *
+ * Returns: %TRUE if @format is valid and @support was set. Unsupported
+ * formats have %GST_HIP_FORMAT_SUPPORT_NONE.
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_check_format_support (GstVideoFormat format,
+    GstHipFormatSupport * support)
+{
+  g_return_val_if_fail (support, FALSE);
+  g_return_val_if_fail (gst_video_format_get_info (format), FALSE);
+
+  guint flags = GST_HIP_FORMAT_SUPPORT_NONE;
+  for (guint i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].format == format) {
+      flags |= GST_HIP_FORMAT_SUPPORT_MEMORY;
+      break;
+    }
+  }
+
+  if (gst_hip_converter_check_format_support (format))
+    flags |= GST_HIP_FORMAT_SUPPORT_CONVERTER;
+
+  *support = (GstHipFormatSupport) flags;
+
+  return TRUE;
+}
+
 gboolean
 gst_hip_device_get_format (GstHipDevice * device, GstVideoFormat format,
     GstHipFormat * hip_format)

@@ -26,6 +26,7 @@ hip_headers = [
   'gsthipconverter.h',
   'gsthipdevice.h',
   'gsthipevent.h',
+  'gsthipformat.h',
   'gsthipkernel.h',
   'gsthiploader.h',
   'gsthipmemory.h',

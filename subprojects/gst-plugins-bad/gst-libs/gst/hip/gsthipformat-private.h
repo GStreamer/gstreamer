@@ -54,5 +54,8 @@ GST_HIP_API
 gboolean  gst_hip_device_check_texture_support (GstHipDevice * device,
                                                 const GstVideoInfo * info);
 
+GST_HIP_API
+gboolean  gst_hip_converter_check_format_support (GstVideoFormat format);
+
 G_END_DECLS
 
