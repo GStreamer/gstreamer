@@ -1549,7 +1549,7 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
 static gboolean
 pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
 {
-  guint64 bitrate;
+  guint64 min_diff;
   GstBuffer *buf = NULL;
   GstMapInfo map;
   gboolean ret = TRUE;
@@ -1572,53 +1572,59 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
   ret = FALSE;
   start_n_bytes = mux->n_bytes;
   do {
+    gint64 new_pcr;
+
     GST_LOG ("Transport stream bitrate: %" G_GUINT64_FORMAT " over %"
         G_GUINT64_FORMAT " bytes, duration %" GST_TIME_FORMAT,
         gst_util_uint64_scale (mux->n_bytes * 8, TSMUX_CLOCK_FREQ, diff),
         mux->n_bytes, GST_TIME_ARGS (diff * GST_SECOND / TSMUX_CLOCK_FREQ));
 
-    /* calculate what the overall bitrate will be if we add 1 more packet */
-    bitrate =
-        gst_util_uint64_scale ((mux->n_bytes + TSMUX_PACKET_LENGTH) * 8,
-        TSMUX_CLOCK_FREQ, diff);
+    /* Check whether the overall bitrate would still be within the target if
+     * we add 1 more packet, i.e. whether
+     *   (n_bytes + packet) * 8 / diff <= bitrate   (diff in 90 kHz ticks).
+     * Compare exactly, by rounding the required duration up: truncating the
+     * rate to whole bits/s would let the mux run up to 1 bit/s too fast,
+     * making PCR gain on DTS by 1/bitrate per second. */
+    min_diff =
+        gst_util_uint64_scale_ceil ((mux->n_bytes + TSMUX_PACKET_LENGTH) * 8,
+        TSMUX_CLOCK_FREQ, mux->bitrate);
 
-    if (bitrate <= mux->bitrate) {
-      gint64 new_pcr;
+    if (min_diff > (guint64) diff)
+      break;                    /* We are done padding */
 
-      if (!tsmux_get_buffer (mux, &buf))
-        goto done;
+    if (!tsmux_get_buffer (mux, &buf))
+      goto done;
 
-      if (!gst_buffer_map (buf, &map, GST_MAP_WRITE)) {
+    if (!gst_buffer_map (buf, &map, GST_MAP_WRITE)) {
+      gst_buffer_unref (buf);
+      goto done;
+    }
+
+    new_pcr = write_new_pcr (mux, stream, get_current_pcr (mux, cur_ts),
+        get_next_pcr (mux, cur_ts));
+
+    gboolean pcr_checks = TRUE;
+    if (new_pcr != -1) {
+      GST_LOG ("Writing PCR-only packet on PID 0x%04x", stream->pi.pid);
+      tsmux_write_ts_header (mux, map.data, &stream->pi, 0, NULL, NULL);
+      pcr_checks = FALSE;
+    } else {
+      GST_LOG ("Writing null stuffing packet");
+      if (!rewrite_si (mux, cur_ts)) {
+        gst_buffer_unmap (buf, &map);
         gst_buffer_unref (buf);
         goto done;
       }
-
-      new_pcr = write_new_pcr (mux, stream, get_current_pcr (mux, cur_ts),
-          get_next_pcr (mux, cur_ts));
-
-      gboolean pcr_checks = TRUE;
-      if (new_pcr != -1) {
-        GST_LOG ("Writing PCR-only packet on PID 0x%04x", stream->pi.pid);
-        tsmux_write_ts_header (mux, map.data, &stream->pi, 0, NULL, NULL);
-        pcr_checks = FALSE;
-      } else {
-        GST_LOG ("Writing null stuffing packet");
-        if (!rewrite_si (mux, cur_ts)) {
-          gst_buffer_unmap (buf, &map);
-          gst_buffer_unref (buf);
-          goto done;
-        }
-        tsmux_write_null_ts_header (map.data);
-        memset (map.data + TSMUX_HEADER_LENGTH, 0xFF, TSMUX_PAYLOAD_LENGTH);
-      }
-
-      gst_buffer_unmap (buf, &map);
-
-      stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-      if (!tsmux_packet_out (mux, buf, new_pcr, pcr_checks))
-        goto done;
+      tsmux_write_null_ts_header (map.data);
+      memset (map.data + TSMUX_HEADER_LENGTH, 0xFF, TSMUX_PAYLOAD_LENGTH);
     }
-  } while (bitrate < mux->bitrate);
+
+    gst_buffer_unmap (buf, &map);
+
+    stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+    if (!tsmux_packet_out (mux, buf, new_pcr, pcr_checks))
+      goto done;
+  } while (TRUE);
 
   if (mux->n_bytes != start_n_bytes) {
     GST_LOG ("Finished padding the mux");

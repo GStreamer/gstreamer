@@ -755,6 +755,21 @@ push_small_buffer_pts_only (GstClockTime ts)
   return gst_pad_push (mysrcpad, buffer);
 }
 
+static GstFlowReturn
+push_small_buffer (GstClockTime ts)
+{
+  /* Large enough for three TS packets: the muxer pads before each one, and
+   * all of them see the same timestamp, like the packets of a video frame */
+  GstBuffer *buffer = gst_buffer_new_and_alloc (400);
+
+  gst_buffer_memset (buffer, 0, 0, 400);
+  GST_BUFFER_PTS (buffer) = ts;
+  GST_BUFFER_DTS (buffer) = ts;
+  GST_BUFFER_DURATION (buffer) = 2 * GST_SECOND;
+
+  return gst_pad_push (mysrcpad, buffer);
+}
+
 static void
 drain_tsmux (void)
 {
@@ -763,6 +778,53 @@ drain_tsmux (void)
   gst_pad_peer_query (mysrcpad, drain);
   gst_query_unref (drain);
 }
+
+/* With a constant bitrate, the muxer pads the output with stuffing packets
+ * so that the bytes written follow the timestamps. The padding decision used
+ * to compare the running bitrate truncated to whole bits per second, which
+ * let the muxer run up to 1 bit/s too fast, so the PCR (derived from the byte
+ * count) gained on the PTS/DTS by 1/bitrate seconds for every second of
+ * stream.
+ *
+ * Feed one small buffer every two seconds of stream time for twelve hours; the
+ * timestamps are made up, so the test does not take that long. The bytes
+ * written must stay within a few packets of bitrate * duration. The old
+ * comparison overshoots by duration * 1 bit/s, i.e. about 29 packets more. */
+GST_START_TEST (test_constant_bitrate_does_not_drift)
+{
+  const guint n_seconds = 12 * 3600;
+  gchar *padname;
+  GstElement *mux;
+  gint64 expected, excess;
+  guint i;
+
+  mux = setup_low_bitrate_tsmux (&padname);
+
+  for (i = 0; i <= n_seconds; i += 2) {
+    GstFlowReturn flow = push_small_buffer (i * GST_SECOND);
+    fail_unless (flow == GST_FLOW_OK, "Got %s flow instead of OK at %us",
+        gst_flow_get_name (flow), i);
+  }
+  drain_tsmux ();
+
+  expected = (gint64) (LOW_BITRATE * n_seconds / 8);
+  excess = (gint64) get_out_bytes () - expected;
+  GST_INFO ("wrote %" G_GUINT64_FORMAT " bytes, expected about %"
+      G_GINT64_FORMAT ", excess %" G_GINT64_FORMAT " bytes (%.1f packets)",
+      get_out_bytes (), expected, excess, excess / 188.0);
+
+  /* The packets before the first padding decision and the last PES are not
+   * accounted for, which is a handful of packets at most */
+  fail_unless (excess > -16 * 188 && excess < 16 * 188,
+      "Wrote %" G_GUINT64_FORMAT " bytes for a stream that should take about "
+      "%" G_GINT64_FORMAT " (%.1f packets too many)", get_out_bytes (),
+      expected, excess / 188.0);
+
+  cleanup_counting_tsmux (mux, padname);
+  g_free (padname);
+}
+
+GST_END_TEST;
 
 /* The padding decision is based on the time elapsed since the first
  * timestamp of the PCR stream, which is its DTS or, if it has none, its PTS.
@@ -813,6 +875,7 @@ mpegtsmux_suite (void)
   tcase_add_test (tc_chain, test_reappearing_pad_while_stopped);
   tcase_add_test (tc_chain, test_unused_pad);
   tcase_add_test (tc_chain, test_caps_noop_change);
+  tcase_add_test (tc_chain, test_constant_bitrate_does_not_drift);
   tcase_add_test (tc_chain, test_no_endless_padding_before_first_pts);
 
   return s;
