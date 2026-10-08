@@ -229,9 +229,8 @@ macro_rules! map_value {
     }};
     (str, $val:expr) => {{
         $crate::helpers::type_check::<std::ffi::CStr>(&$val);
-        $val
-    }
-    .as_ptr()};
+        $val.as_ptr()
+    }};
     (bool, $val:expr) => {{
         $crate::helpers::type_check::<bool>(&$val);
         if $val { 1i32 } else { 0i32 }
