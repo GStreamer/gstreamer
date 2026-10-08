@@ -1566,7 +1566,7 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
     stream->first_ts = cur_ts;
 
   diff = GST_CLOCK_DIFF (stream->first_ts, cur_ts);
-  if (diff == 0)
+  if (diff <= 0)
     goto done;
 
   ret = FALSE;

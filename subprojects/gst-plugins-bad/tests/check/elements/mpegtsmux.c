@@ -640,6 +640,162 @@ GST_START_TEST (test_caps_noop_change)
 
 GST_END_TEST;
 
+/* A sink for tests that generate a lot of output: it only counts the bytes */
+G_LOCK_DEFINE_STATIC (out_lock);
+static guint64 out_bytes;
+
+static GstFlowReturn
+counting_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  G_LOCK (out_lock);
+  out_bytes += gst_buffer_get_size (buffer);
+  G_UNLOCK (out_lock);
+
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
+static guint64
+get_out_bytes (void)
+{
+  guint64 ret;
+
+  G_LOCK (out_lock);
+  ret = out_bytes;
+  G_UNLOCK (out_lock);
+
+  return ret;
+}
+
+/* A very low constant bitrate (about three TS packets per second) keeps the
+ * amount of output small even for a stream spanning many hours. It is
+ * deliberately not a multiple of the TS packet size, so that the padding
+ * decision has to round. The PSI and PCR are made rare so the muxer has room
+ * to pad. */
+#define LOW_BITRATE G_GUINT64_CONSTANT (4511)
+
+static GstElement *
+setup_counting_tsmux (gchar ** padname)
+{
+  GstElement *mux;
+  GstPad *srcpad;
+
+  mux = gst_check_setup_element ("mpegtsmux");
+
+  /* Set before the pad is requested: the PMT interval is applied to the
+   * program when its pad gets one */
+  g_object_set (mux, "bitrate", LOW_BITRATE, "pat-interval", 450000,
+      "pmt-interval", 450000, "si-interval", 450000, "pcr-interval", 450000,
+      NULL);
+
+  mysrcpad = setup_src_pad (mux, &audio_src_template, "sink_%d", padname);
+  mysinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (mysinkpad, counting_chain_func);
+
+  srcpad = gst_element_get_static_pad (mux, "src");
+  fail_unless (gst_pad_link (srcpad, mysinkpad) == GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  G_LOCK (out_lock);
+  out_bytes = 0;
+  G_UNLOCK (out_lock);
+
+  return mux;
+}
+
+static void
+cleanup_counting_tsmux (GstElement * mux, const gchar * padname)
+{
+  GstPad *srcpad;
+
+  gst_element_set_state (mux, GST_STATE_NULL);
+
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
+  teardown_src_pad (mux, padname);
+
+  srcpad = gst_element_get_static_pad (mux, "src");
+  gst_pad_unlink (srcpad, mysinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (mysinkpad);
+
+  gst_check_teardown_element (mux);
+}
+
+static GstElement *
+setup_low_bitrate_tsmux (gchar ** padname)
+{
+  GstElement *mux = setup_counting_tsmux (padname);
+  GstCaps *caps;
+
+  fail_unless (gst_element_set_state (mux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (AUDIO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, mux, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  return mux;
+}
+
+static GstFlowReturn
+push_small_buffer_pts_only (GstClockTime ts)
+{
+  GstBuffer *buffer = gst_buffer_new_and_alloc (400);
+
+  gst_buffer_memset (buffer, 0, 0, 400);
+  GST_BUFFER_PTS (buffer) = ts;
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buffer) = 2 * GST_SECOND;
+
+  return gst_pad_push (mysrcpad, buffer);
+}
+
+static void
+drain_tsmux (void)
+{
+  GstQuery *drain = gst_query_new_drain ();
+
+  gst_pad_peer_query (mysrcpad, drain);
+  gst_query_unref (drain);
+}
+
+/* The padding decision is based on the time elapsed since the first
+ * timestamp of the PCR stream, which is its DTS or, if it has none, its PTS.
+ * A backwards DTS is clipped by the muxer, but a PTS going backwards (for a
+ * stream with PTS only, e.g. reordered) is not, so the elapsed time can be
+ * negative. The muxer must not treat that as a huge elapsed time, which makes
+ * it write stuffing packets forever. */
+GST_START_TEST (test_no_endless_padding_before_first_pts)
+{
+  gchar *padname;
+  GstElement *mux;
+
+  mux = setup_low_bitrate_tsmux (&padname);
+
+  /* Drain after each buffer, so the muxer does not accumulate them into a
+   * single PES packet */
+  fail_unless (push_small_buffer_pts_only (1000 * GST_SECOND) == GST_FLOW_OK);
+  drain_tsmux ();
+  fail_unless (push_small_buffer_pts_only (500 * GST_SECOND) == GST_FLOW_OK);
+  drain_tsmux ();
+  fail_unless (push_small_buffer_pts_only (1001 * GST_SECOND) == GST_FLOW_OK);
+  drain_tsmux ();
+
+  fail_unless (get_out_bytes () < 64 * 1024,
+      "Wrote %" G_GUINT64_FORMAT " bytes for three small buffers",
+      get_out_bytes ());
+
+  cleanup_counting_tsmux (mux, padname);
+  g_free (padname);
+}
+
+GST_END_TEST;
+
 static Suite *
 mpegtsmux_suite (void)
 {
@@ -657,6 +813,7 @@ mpegtsmux_suite (void)
   tcase_add_test (tc_chain, test_reappearing_pad_while_stopped);
   tcase_add_test (tc_chain, test_unused_pad);
   tcase_add_test (tc_chain, test_caps_noop_change);
+  tcase_add_test (tc_chain, test_no_endless_padding_before_first_pts);
 
   return s;
 }
