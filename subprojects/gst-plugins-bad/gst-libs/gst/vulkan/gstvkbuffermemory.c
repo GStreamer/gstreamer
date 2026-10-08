@@ -32,6 +32,15 @@
  *
  * #GstVulkanBufferMemory is a #GstMemory subclass providing support for the
  * mapping of Vulkan device memory.
+ *
+ * gst_memory_copy() is supported for the whole memory of buffers that are not
+ * wrapped. The copy is a new buffer with the same size, usage and memory
+ * properties. Buffers have no timeline semaphore, so the copy is not ordered
+ * after pending GPU work: as for a mapping, GPU writes to the memory must have
+ * completed before calling gst_memory_copy(). Host visible memory is copied
+ * on the CPU. Other memory requires `VK_BUFFER_USAGE_TRANSFER_SRC_BIT` and is
+ * copied with `vkCmdCopyBuffer` on a queue of the #GstVulkanDevice, and
+ * gst_memory_copy() waits for the copy to complete.
  */
 
 #define GST_CAT_DEFUALT GST_CAT_VULKAN_BUFFER_MEMORY
@@ -233,9 +242,170 @@ _vk_buffer_mem_unmap_full (GstVulkanBufferMemory * mem, GstMapInfo * info)
   g_free (info->user_data[0]);
 }
 
+static gboolean
+_vk_buffer_mem_copy_host (GstVulkanBufferMemory * src,
+    GstVulkanBufferMemory * dst)
+{
+  GstMapInfo src_info, dst_info;
+
+  if (!gst_memory_map (GST_MEMORY_CAST (src), &src_info, GST_MAP_READ))
+    return FALSE;
+
+  if (!gst_memory_map (GST_MEMORY_CAST (dst), &dst_info, GST_MAP_WRITE)) {
+    gst_memory_unmap (GST_MEMORY_CAST (src), &src_info);
+    return FALSE;
+  }
+
+  memcpy (dst_info.data, src_info.data, src_info.size);
+
+  gst_memory_unmap (GST_MEMORY_CAST (dst), &dst_info);
+  gst_memory_unmap (GST_MEMORY_CAST (src), &src_info);
+
+  return TRUE;
+}
+
+static gboolean
+_vk_buffer_mem_copy_device (GstVulkanBufferMemory * src,
+    GstVulkanBufferMemory * dst, GError ** error)
+{
+  GstVulkanQueue *queue;
+  GstVulkanCommandPool *cmd_pool = NULL;
+  GstVulkanOperation *exec = NULL;
+  GstVulkanBarrierState *barriers;
+  VkBufferCopy region;
+  gboolean ret = FALSE;
+
+  queue = gst_vulkan_device_select_queue (src->device, VK_QUEUE_GRAPHICS_BIT);
+  if (!queue) {
+    queue = gst_vulkan_device_select_queue (src->device,
+        VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
+  }
+  if (!queue) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "No queue supporting transfer operations");
+    return FALSE;
+  }
+
+  cmd_pool = gst_vulkan_queue_create_command_pool (queue, error);
+  if (!cmd_pool)
+    goto out;
+  exec = gst_vulkan_operation_new (cmd_pool);
+
+  /* *INDENT-OFF* */
+  region = (VkBufferCopy) {
+    .srcOffset = src->parent.offset,
+    .dstOffset = dst->parent.offset,
+    .size = src->parent.size,
+  };
+  /* *INDENT-ON* */
+
+again:
+  if (!gst_vulkan_operation_begin (exec, error))
+    goto out;
+
+  barriers = gst_vulkan_operation_get_barriers (exec);
+  if (!gst_vulkan_barrier_state_add_buffer_barrier (barriers, src,
+          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_READ_BIT, NULL)
+      || !gst_vulkan_barrier_state_add_buffer_barrier (barriers, dst,
+          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_WRITE_BIT, NULL)) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Failed to add buffer barriers");
+    gst_vulkan_operation_reset (exec);
+    goto out;
+  }
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, exec->cmd_buf, 0);
+
+  gst_vulkan_command_buffer_lock (exec->cmd_buf);
+  vkCmdCopyBuffer (exec->cmd_buf->cmd, src->buffer, dst->buffer, 1, &region);
+  gst_vulkan_command_buffer_unlock (exec->cmd_buf);
+
+  if (!gst_vulkan_operation_end (exec, error)) {
+    if (g_error_matches (*error, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_CAT_DEBUG (GST_CAT_VULKAN_BUFFER_MEMORY, "buffer memory %p: barrier "
+          "state changed during the copy, retrying", src);
+      g_clear_error (error);
+      goto again;
+    }
+    goto out;
+  }
+
+  if (!gst_vulkan_operation_wait (exec)) {
+    g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Failed to wait for the copy");
+    goto out;
+  }
+
+  ret = TRUE;
+
+out:
+  gst_clear_object (&exec);
+  gst_clear_object (&cmd_pool);
+  gst_object_unref (queue);
+
+  return ret;
+}
+
 static GstMemory *
 _vk_buffer_mem_copy (GstVulkanBufferMemory * src, gssize offset, gssize size)
 {
+  GstVulkanBufferMemory *dst;
+  VkBufferUsageFlags usage = src->usage;
+  gboolean host_visible;
+  GError *error = NULL;
+
+  if (offset != 0 || (size != -1 && size != src->parent.size)) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_BUFFER_MEMORY, "buffer memory %p: only "
+        "copies of the whole memory are supported", src);
+    return NULL;
+  }
+
+  if (src->wrapped || !src->vk_mem) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_BUFFER_MEMORY, "buffer memory %p: cannot "
+        "copy a wrapped buffer", src);
+    return NULL;
+  }
+
+  host_visible =
+      (src->vk_mem->properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0;
+
+  if (!host_visible) {
+    if (!(src->usage & VK_BUFFER_USAGE_TRANSFER_SRC_BIT)) {
+      GST_CAT_DEBUG (GST_CAT_VULKAN_BUFFER_MEMORY, "buffer memory %p: cannot "
+          "copy a buffer that is not host visible and was created without "
+          "VK_BUFFER_USAGE_TRANSFER_SRC_BIT", src);
+      return NULL;
+    }
+    usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+  }
+
+  dst = _vk_buffer_mem_new_alloc (_vulkan_buffer_memory_allocator, NULL,
+      src->device, src->parent.size, usage, src->vk_mem->properties, NULL,
+      NULL);
+  if (!dst)
+    return NULL;
+
+  if (host_visible) {
+    if (!_vk_buffer_mem_copy_host (src, dst)) {
+      g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+          "Failed to map the buffer memory");
+      goto error;
+    }
+  } else if (!_vk_buffer_mem_copy_device (src, dst, &error)) {
+    goto error;
+  }
+
+  GST_CAT_TRACE (GST_CAT_VULKAN_BUFFER_MEMORY, "copied buffer memory %p into "
+      "%p", src, dst);
+
+  return GST_MEMORY_CAST (dst);
+
+error:
+  GST_CAT_WARNING (GST_CAT_VULKAN_BUFFER_MEMORY, "Failed to copy buffer "
+      "memory %p: %s", src, error ? error->message : "unknown error");
+  g_clear_error (&error);
+  gst_memory_unref (GST_MEMORY_CAST (dst));
   return NULL;
 }
 

@@ -8054,7 +8054,16 @@ applied within a command buffer.</doc>
     </docsection>
     <docsection name="vkbuffermemory">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">#GstVulkanBufferMemory is a #GstMemory subclass providing support for the
-mapping of Vulkan device memory.</doc>
+mapping of Vulkan device memory.
+
+gst_memory_copy() is supported for the whole memory of buffers that are not
+wrapped. The copy is a new buffer with the same size, usage and memory
+properties. Buffers have no timeline semaphore, so the copy is not ordered
+after pending GPU work: as for a mapping, GPU writes to the memory must have
+completed before calling gst_memory_copy(). Host visible memory is copied
+on the CPU. Other memory requires `VK_BUFFER_USAGE_TRANSFER_SRC_BIT` and is
+copied with `vkCmdCopyBuffer` on a queue of the #GstVulkanDevice, and
+gst_memory_copy() waits for the copy to complete.</doc>
     </docsection>
     <docsection name="vkbufferpool">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">a #GstVulkanBufferPool is an object that allocates buffers with #GstVulkanBufferMemory
