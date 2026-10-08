@@ -1426,6 +1426,7 @@ gst_vulkan_barrier_state_pipeline_barrier (GstVulkanBarrierState * self,
 
     g_array_set_size (priv->image_barriers, 0);
     g_array_set_size (priv->buffer_barriers, 0);
+    g_array_set_size (priv->memory_barriers, 0);
   } else
 #endif
   {
