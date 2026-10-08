@@ -881,6 +881,33 @@ struct OutputBGRx : public IOutput
   }
 };
 
+struct OutputARGB64 : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    unsigned short *dst = (unsigned short *) &dst0[x * 8 + y * stride0];
+    dst[0] = scale_to_ushort (sample.w);
+    dst[1] = scale_to_ushort (sample.x);
+    dst[2] = scale_to_ushort (sample.y);
+    dst[3] = scale_to_ushort (sample.z);
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    unsigned short *dst = (unsigned short *) &dst0[x * 8 + y * stride0];
+    dst[0] = blend_ushort (dst[0], 1.0f, sample.w);
+    dst[1] = blend_ushort (dst[1], sample.x, sample.w);
+    dst[2] = blend_ushort (dst[2], sample.y, sample.w);
+    dst[3] = blend_ushort (dst[3], sample.z, sample.w);
+  }
+};
+
 struct OutputARGB : public IOutput
 {
   __device__ void
@@ -1393,6 +1420,35 @@ struct OutputVUYA : public IOutput
     dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);
     dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);
     dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);
+  }
+};
+
+struct OutputUYVY : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    unsigned int pos = x * 2 + y * stride0;
+    dst0[pos + 1] = scale_to_uchar (sample.x);
+    if (x % 2 == 0) {
+      dst0[pos] = scale_to_uchar (sample.y);
+      dst0[pos + 2] = scale_to_uchar (sample.z);
+    }
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1, int stride2, int stride3)
+  {
+    unsigned int pos = x * 2 + y * stride0;
+    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.x, sample.w);
+    if (x % 2 == 0) {
+      dst0[pos] = blend_uchar (dst0[pos], sample.y, sample.w);
+      dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);
+    }
   }
 };
 
@@ -2667,6 +2723,33 @@ static const char ConverterMain_str[] =
 "  }\n"
 "};\n"
 "\n"
+"struct OutputARGB64 : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    unsigned short *dst = (unsigned short *) &dst0[x * 8 + y * stride0];\n"
+"    dst[0] = scale_to_ushort (sample.w);\n"
+"    dst[1] = scale_to_ushort (sample.x);\n"
+"    dst[2] = scale_to_ushort (sample.y);\n"
+"    dst[3] = scale_to_ushort (sample.z);\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    unsigned short *dst = (unsigned short *) &dst0[x * 8 + y * stride0];\n"
+"    dst[0] = blend_ushort (dst[0], 1.0f, sample.w);\n"
+"    dst[1] = blend_ushort (dst[1], sample.x, sample.w);\n"
+"    dst[2] = blend_ushort (dst[2], sample.y, sample.w);\n"
+"    dst[3] = blend_ushort (dst[3], sample.z, sample.w);\n"
+"  }\n"
+"};\n"
+"\n"
 "struct OutputARGB : public IOutput\n"
 "{\n"
 "  __device__ void\n"
@@ -3179,6 +3262,35 @@ static const char ConverterMain_str[] =
 "    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
 "    dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
 "    dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0f, sample.w);\n"
+"  }\n"
+"};\n"
+"\n"
+"struct OutputUYVY : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    unsigned int pos = x * 2 + y * stride0;\n"
+"    dst0[pos + 1] = scale_to_uchar (sample.x);\n"
+"    if (x % 2 == 0) {\n"
+"      dst0[pos] = scale_to_uchar (sample.y);\n"
+"      dst0[pos + 2] = scale_to_uchar (sample.z);\n"
+"    }\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1, int stride2, int stride3)\n"
+"  {\n"
+"    unsigned int pos = x * 2 + y * stride0;\n"
+"    dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.x, sample.w);\n"
+"    if (x % 2 == 0) {\n"
+"      dst0[pos] = blend_uchar (dst0[pos], sample.y, sample.w);\n"
+"      dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);\n"
+"    }\n"
 "  }\n"
 "};\n"
 "\n"
