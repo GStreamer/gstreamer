@@ -22,6 +22,7 @@
 #endif
 
 #include "gsthip.h"
+#include "gsthipformat-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_hip_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_hip_buffer_pool_debug
@@ -106,7 +107,6 @@ gst_hip_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCaps *caps = nullptr;
   guint size, min_buffers, max_buffers;
   GstVideoInfo info;
-  GstMemory *mem = nullptr;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers)) {
@@ -136,23 +136,11 @@ gst_hip_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     return FALSE;
   }
 
-  if (!gst_hip_allocator_set_active (GST_HIP_ALLOCATOR (priv->alloc), TRUE)) {
-    GST_ERROR_OBJECT (self, "Couldn't set active");
-    return FALSE;
-  }
-
-  gst_hip_pool_allocator_acquire_memory (priv->alloc, &mem);
-  gst_hip_allocator_set_active (GST_HIP_ALLOCATOR (priv->alloc), FALSE);
-  if (!mem) {
-    GST_WARNING_OBJECT (self, "Failed to allocate memory");
-    return FALSE;
-  }
-
-  auto hmem = GST_HIP_MEMORY_CAST (mem);
   GstVideoInfo alloc_info;
-  if (!gst_hip_memory_get_video_info (hmem, &alloc_info)) {
-    GST_ERROR_OBJECT (self, "Failed to get video info from allocated memory");
-    gst_memory_unref (mem);
+  gboolean dummy;
+  if (!gst_hip_device_align_video_info_for_texture (self->device,
+          &info, &alloc_info, &dummy)) {
+    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
     return FALSE;
   }
 
@@ -160,8 +148,6 @@ gst_hip_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       GST_VIDEO_INFO_SIZE (&alloc_info), min_buffers, max_buffers);
 
   priv->info = alloc_info;
-
-  gst_memory_unref (mem);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 }
