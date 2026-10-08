@@ -170,7 +170,7 @@ gst_hip_stream_get_handle (GstHipStream * stream)
 /**
  * gst_hip_stream_record_event:
  * @stream: a #GstHipStream
- * @event: (out) (transfer full) (nullable): a location to store #GstHipEvent
+ * @event: (out) (transfer full): a location to store #GstHipEvent
  *
  * Records currently scheduled operations in @stream to #GstHipEvent
  *

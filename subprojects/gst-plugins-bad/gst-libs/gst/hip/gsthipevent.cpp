@@ -292,7 +292,7 @@ gst_hip_event_free (GstHipEvent * event)
 /**
  * gst_hip_event_pool_acquire:
  * @pool: a #GstHipEventPool
- * @event: (out) (transfer full) (nullable): a location to store #GstHipEvent
+ * @event: (out) (transfer full): a location to store #GstHipEvent
  *
  * Acquires #GstHipEvent from @pool
  *
