@@ -751,6 +751,7 @@ struct _GstHipConverterPrivate
   hipStream_t stream = nullptr;
   GstHipStream *active_stream = nullptr;
   GstHipEvent *last_event = nullptr;
+  gboolean submitted = FALSE;
 
   GstStructure *config = nullptr;
 
@@ -1901,6 +1902,7 @@ gst_hip_converter_create_texture (GstHipConverter * self,
       * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
       params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
 
+  priv->submitted = TRUE;
   auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &params, priv->stream);
   if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
@@ -1944,6 +1946,7 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
   gst_hip_kernel_args_add (args, src_stride);
   gst_hip_kernel_args_add (args, dst_stride);
 
+  priv->submitted = TRUE;
   if (!gst_hip_kernel_module_launch (priv->unpack_module,
           priv->unpack_name.c_str (), priv->active_stream,
           DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
@@ -1987,6 +1990,8 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
 
   auto priv = converter->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
+
+  priv->submitted = FALSE;
 
   if (!priv->fill_border && (priv->dest_width <= 0 || priv->dest_height <= 0))
     return TRUE;
@@ -2123,6 +2128,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   gst_hip_kernel_args_add (args, off_x);
   gst_hip_kernel_args_add (args, off_y);
 
+  priv->submitted = TRUE;
   if (!gst_hip_kernel_module_launch (priv->main_module, "GstHipConverterMain",
           out_stream, DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y),
           1, HIP_BLOCK_X, HIP_BLOCK_Y, 1, args)) {
@@ -2133,18 +2139,22 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   ret = TRUE;
 
 done:
-  if (gst_hip_stream_record_event (out_stream, &event)) {
-    gst_hip_memory_set_event (out_hmem, event);
-    gst_clear_hip_event (&priv->last_event);
-    priv->last_event = gst_hip_event_ref (event);
-    gst_hip_event_set_notify (event, gst_buffer_ref (in_buf),
-        (GDestroyNotify) gst_buffer_unref);
-    gst_hip_event_unref (event);
-  } else {
-    /* Earlier unpack/copy work may have been submitted even on failure. */
+  if (ret) {
+    if (gst_hip_stream_record_event (out_stream, &event)) {
+      gst_hip_memory_set_event (out_hmem, event);
+      gst_clear_hip_event (&priv->last_event);
+      priv->last_event = gst_hip_event_ref (event);
+      gst_hip_event_set_notify (event, gst_buffer_ref (in_buf),
+          (GDestroyNotify) gst_buffer_unref);
+      gst_hip_event_unref (event);
+    } else {
+      ret = FALSE;
+    }
+  }
+
+  if (!ret && priv->submitted) {
     auto hip_ret = HipStreamSynchronize (priv->vendor, priv->stream);
     gst_hip_result (hip_ret, priv->vendor);
-    ret = FALSE;
   }
 
   gst_video_frame_unmap (&out_frame);
