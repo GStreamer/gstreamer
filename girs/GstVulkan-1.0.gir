@@ -8099,7 +8099,15 @@ A #GstVulkanImageBufferPool is created with gst_vulkan_image_buffer_pool_new()</
     </docsection>
     <docsection name="vkimagememory">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">GstVulkanImageMemory is a #GstMemory subclass providing support for the
-mapping of Vulkan device memory.</doc>
+mapping of Vulkan device memory.
+
+gst_memory_copy() is supported for the whole memory of images with one mip
+level and one array layer that were created with
+`VK_IMAGE_USAGE_TRANSFER_SRC_BIT`. The copy is a new image with the same
+format, extent, tiling and memory properties, and the usage of the source
+image without the video usage flags. The image data is copied with
+`vkCmdCopyImage` after the pending work signalled on the timeline semaphore
+of the source image, and gst_memory_copy() waits for the copy to complete.</doc>
     </docsection>
     <docsection name="vkimageview">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.c">#GstVulkanImageView is a wrapper around a `VkImageView` mostly for

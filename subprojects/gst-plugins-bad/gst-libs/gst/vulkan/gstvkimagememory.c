@@ -32,6 +32,14 @@
  *
  * GstVulkanImageMemory is a #GstMemory subclass providing support for the
  * mapping of Vulkan device memory.
+ *
+ * gst_memory_copy() is supported for the whole memory of images with one mip
+ * level and one array layer that were created with
+ * `VK_IMAGE_USAGE_TRANSFER_SRC_BIT`. The copy is a new image with the same
+ * format, extent, tiling and memory properties, and the usage of the source
+ * image without the video usage flags. The image data is copied with
+ * `vkCmdCopyImage` after the pending work signalled on the timeline semaphore
+ * of the source image, and gst_memory_copy() waits for the copy to complete.
  */
 
 #define GST_CAT_DEFUALT GST_CAT_VULKAN_IMAGE_MEMORY
@@ -353,9 +361,268 @@ _vk_image_mem_unmap_full (GstVulkanImageMemory * mem, GstMapInfo * info)
   g_free (info->user_data[0]);
 }
 
+static guint
+_fill_copy_regions (GstVulkanImageMemory * mem, VkImageCopy * regions)
+{
+  const GstVulkanFormatInfo *finfo = NULL;
+  VkImageAspectFlags aspect;
+  guint i, j, n_planes = 1;
+
+  aspect = gst_vulkan_format_get_aspect (mem->create_info.format);
+  if (aspect != VK_IMAGE_ASPECT_COLOR_BIT) {
+    if (!(aspect & VK_IMAGE_ASPECT_PLANE_0_BIT))
+      return 0;
+    finfo = gst_vulkan_format_get_info (mem->create_info.format);
+    if (!finfo)
+      return 0;
+    n_planes = finfo->n_planes;
+  }
+
+  for (i = 0; i < n_planes; i++) {
+    VkImageAspectFlags plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+    guint32 width = mem->create_info.extent.width;
+    guint32 height = mem->create_info.extent.height;
+
+    if (finfo) {
+      plane_aspect = VK_IMAGE_ASPECT_PLANE_0_BIT << i;
+      for (j = 0; j < finfo->n_components; j++) {
+        if (finfo->plane[j] == i) {
+          width = GST_VIDEO_SUB_SCALE (finfo->w_sub[j], width);
+          height = GST_VIDEO_SUB_SCALE (finfo->h_sub[j], height);
+          break;
+        }
+      }
+    }
+
+    VkImageSubresourceLayers subresource = {
+      .aspectMask = plane_aspect,
+      .mipLevel = 0,
+      .baseArrayLayer = 0,
+      .layerCount = 1,
+    };
+    VkImageCopy region = {
+      .srcSubresource = subresource,
+      .dstSubresource = subresource,
+      .extent = {width, height, 1},
+    };
+
+    regions[i] = region;
+  }
+
+  return n_planes;
+}
+
+static gboolean
+_drop_video_access (GstVulkanBarrierState * barriers,
+    GstVulkanImageMemory * mem)
+{
+  GstVulkanBarrierImageInfo before = { 0, }, after = { 0, };
+  guint64 video_access = 0;
+  gboolean ret;
+
+#if defined(VK_KHR_synchronization2)
+#if defined(VK_KHR_video_decode_queue)
+  video_access |= VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR
+      | VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR;
+#endif
+#if defined(VK_KHR_video_encode_queue)
+  video_access |= VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR
+      | VK_ACCESS_2_VIDEO_ENCODE_WRITE_BIT_KHR;
+#endif
+#endif
+
+  gst_vulkan_image_memory_lock (mem);
+  gst_vulkan_image_memory_peek_barrier_unlocked (mem, &before);
+  gst_vulkan_image_memory_unlock (mem);
+
+  if (!(before.parent.access_flags & video_access)) {
+    gst_vulkan_barrier_image_info_clear (&before);
+    return TRUE;
+  }
+
+  gst_vulkan_barrier_state_update_image_barrier (barriers, mem,
+      before.parent.pipeline_stages,
+      before.parent.access_flags & ~video_access, before.image_layout,
+      before.parent.queue);
+
+  gst_vulkan_image_memory_lock (mem);
+  gst_vulkan_image_memory_peek_barrier_unlocked (mem, &after);
+  gst_vulkan_image_memory_unlock (mem);
+
+  ret = gst_vulkan_barrier_image_info_is_equal (&before, &after);
+
+  gst_vulkan_barrier_image_info_clear (&before);
+  gst_vulkan_barrier_image_info_clear (&after);
+
+  return ret;
+}
+
 static GstMemory *
 _vk_image_mem_copy (GstVulkanImageMemory * src, gssize offset, gssize size)
 {
+  VkImageUsageFlags video_usage = 0;
+  VkImageCopy regions[GST_VULKAN_MAX_COMPONENTS];
+  VkMemoryPropertyFlags mem_prop_flags;
+  VkImageCreateInfo image_info;
+  GstVulkanImageMemory *dst = NULL;
+  GstVulkanQueue *queue = NULL;
+  GstVulkanCommandPool *cmd_pool = NULL;
+  GstVulkanOperation *exec = NULL;
+  GstVulkanBarrierState *barriers;
+  GstBuffer *frame = NULL;
+  GError *error = NULL;
+  guint n_regions;
+
+  if (offset != 0 || (size != -1 && size != src->parent.size)) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: only "
+        "copies of the whole memory are supported", src);
+    return NULL;
+  }
+
+  if (!(src->usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: cannot "
+        "copy an image without VK_IMAGE_USAGE_TRANSFER_SRC_BIT", src);
+    return NULL;
+  }
+
+  if (src->create_info.mipLevels != 1 || src->create_info.arrayLayers != 1) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: only "
+        "images with one mip level and one array layer can be copied", src);
+    return NULL;
+  }
+
+  n_regions = _fill_copy_regions (src, regions);
+  if (n_regions == 0) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: cannot "
+        "copy an image with format %u", src, src->create_info.format);
+    return NULL;
+  }
+#if defined(VK_KHR_video_decode_queue)
+  video_usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
+#endif
+#if defined(VK_KHR_video_encode_queue)
+  video_usage |= VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR;
+#endif
+#if defined(VK_KHR_video_encode_quantization_map)
+  video_usage |= VK_IMAGE_USAGE_VIDEO_ENCODE_QUANTIZATION_DELTA_MAP_BIT_KHR
+      | VK_IMAGE_USAGE_VIDEO_ENCODE_EMPHASIS_MAP_BIT_KHR;
+#endif
+
+  image_info = src->create_info;
+  image_info.pNext = NULL;
+#if defined(VK_KHR_video_maintenance1)
+  image_info.flags &= ~VK_IMAGE_CREATE_VIDEO_PROFILE_INDEPENDENT_BIT_KHR;
+#endif
+  image_info.usage = (src->usage & ~video_usage)
+      | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  image_info.queueFamilyIndexCount = 0;
+  image_info.pQueueFamilyIndices = NULL;
+  image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+  mem_prop_flags = src->vk_mem ? src->vk_mem->properties :
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+  dst = _vk_image_mem_new_alloc_with_image_info (_vulkan_image_memory_allocator,
+      NULL, src->device, &image_info, mem_prop_flags, NULL, NULL);
+  if (!dst)
+    return NULL;
+
+  queue = gst_vulkan_device_select_queue (src->device, VK_QUEUE_GRAPHICS_BIT);
+  if (!queue) {
+    queue = gst_vulkan_device_select_queue (src->device,
+        VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
+  }
+  if (!queue) {
+    g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "No queue supporting transfer operations");
+    goto error;
+  }
+
+  cmd_pool = gst_vulkan_queue_create_command_pool (queue, &error);
+  if (!cmd_pool)
+    goto error;
+  exec = gst_vulkan_operation_new (cmd_pool);
+
+  frame = gst_buffer_new ();
+  gst_buffer_append_memory (frame, gst_memory_ref (GST_MEMORY_CAST (src)));
+  gst_buffer_append_memory (frame, gst_memory_ref (GST_MEMORY_CAST (dst)));
+
+again:
+  if (!gst_vulkan_operation_begin (exec, &error))
+    goto error;
+
+  if (!gst_vulkan_operation_add_dependency_frame (exec, frame,
+          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT)) {
+    gst_vulkan_operation_reset (exec);
+    goto again;
+  }
+
+  barriers = gst_vulkan_operation_get_barriers (exec);
+  if (!_drop_video_access (barriers, src)) {
+    gst_vulkan_operation_reset (exec);
+    goto again;
+  }
+  if (!gst_vulkan_barrier_state_add_image_barrier (barriers, src,
+          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          NULL))
+    goto reset_error;
+  if (!gst_vulkan_barrier_state_add_image_barrier (barriers, dst,
+          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          NULL))
+    goto reset_error;
+  gst_vulkan_barrier_state_pipeline_barrier (barriers, exec->cmd_buf, 0);
+
+  gst_vulkan_command_buffer_lock (exec->cmd_buf);
+  vkCmdCopyImage (exec->cmd_buf->cmd, src->image,
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, n_regions, regions);
+  gst_vulkan_command_buffer_unlock (exec->cmd_buf);
+
+  if (!gst_vulkan_operation_end (exec, &error)) {
+    if (g_error_matches (error, GST_VULKAN_ERROR, VK_ERROR_OUT_OF_DATE_KHR)) {
+      GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: barrier "
+          "state changed during the copy, retrying", src);
+      g_clear_error (&error);
+      goto again;
+    }
+    goto error;
+  }
+
+  if (!gst_vulkan_operation_wait (exec)) {
+    g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Failed to wait for the copy");
+    goto error;
+  }
+
+  gst_buffer_unref (frame);
+  gst_object_unref (exec);
+  gst_object_unref (cmd_pool);
+  gst_object_unref (queue);
+
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "copied image memory %p into "
+      "%p", src, dst);
+
+  return GST_MEMORY_CAST (dst);
+
+reset_error:
+  gst_vulkan_operation_reset (exec);
+
+error:
+  GST_CAT_WARNING (GST_CAT_VULKAN_IMAGE_MEMORY, "Failed to copy image memory "
+      "%p: %s", src, error ? error->message : "unknown error");
+  g_clear_error (&error);
+  gst_clear_buffer (&frame);
+  gst_clear_object (&exec);
+  gst_clear_object (&cmd_pool);
+  gst_clear_object (&queue);
+  gst_memory_unref (GST_MEMORY_CAST (dst));
   return NULL;
 }
 
