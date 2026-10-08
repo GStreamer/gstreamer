@@ -1033,6 +1033,228 @@ extern "C" fn jp2_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// Open Timeline IO - JSON object with "OTIO_SCHEMA": as its first string key.
+extern "C" fn otio_type_find(tf: &mut TypeFind, _private: gpointer) {
+    // Peek 30 bytes - matches the spec window and C baseline.
+    let Some(data) = tf.peek::<30>(0) else { return };
+
+    // Split on '{' - if there is no brace this is not a JSON object.
+    // The content after the first brace must start with "OTIO_SCHEMA":.
+    if let Ok(text) = std::str::from_utf8(data)
+        && let Some(after_brace) = text.split('{').nth(1)
+        && after_brace.trim_start().starts_with(r#""OTIO_SCHEMA":"#)
+    {
+        suggest!(
+            tf,
+            Prob::MAXIMUM,
+            c"application/vnd.pixar.opentimelineio+json"
+        );
+    }
+}
+
+// FLIC / FLC - video/x-fli
+// Magic: byte[4] in {0x11, 0x12, 0x30, 0x44} and byte[5] == 0xAF.
+extern "C" fn flx_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<6>(0) else { return };
+
+    if !matches!(data[4], 0x11 | 0x12 | 0x30 | 0x44) || data[5] != 0xAF {
+        return;
+    }
+
+    let Some(data) = tf.peek::<134>(0) else {
+        suggest!(tf, Prob::LIKELY, c"video/x-fli");
+        return;
+    };
+
+    if (data[132] == 0x00 || data[132] == 0xFA) && data[133] == 0xF1 {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-fli");
+    }
+}
+
+// JPEG 2000 Code Stream (JPC) - image/x-jpc
+// Requires SOC+SIZ @ 0; walk markers requiring SOT + COD + QCD.
+extern "C" fn jpc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<4>(0) else { return };
+    if data != &[0xFF, 0x4F, 0xFF, 0x51] {
+        return;
+    }
+
+    // Marker codes we care about or skip.
+    const SOT: u16 = 0xFF90;
+    const COD: u16 = 0xFF52;
+    const QCD: u16 = 0xFF5C;
+    let skip_markers = [
+        0xFF53, // COC
+        0xFF5E, // RGN
+        0xFF5D, // QCC
+        0xFF5F, // POC
+        0xFF57, // PLM
+        0xFF60, // PPM
+        0xFF55, // TLM
+        0xFF63, // CRG
+        0xFF64, // COM
+        0xFF78, // CBD
+        0xFF75, // MCC
+        0xFF74, // MCT
+        0xFF77, // MCO
+    ];
+    let is_skip = |m: u16| skip_markers.contains(&m);
+
+    let mut offset: i64 = 4;
+    let mut has_cod = false;
+    let mut has_qcd = false;
+    let mut found_sot = false;
+
+    while !found_sot {
+        let Some(seg) = tf.peek::<2>(offset) else {
+            return;
+        };
+        let seg_len = u16::from_be_bytes([seg[0], seg[1]]) as i64;
+        offset += seg_len; // length includes its own 2 bytes
+
+        let Some(marker_data) = tf.peek::<2>(offset) else {
+            return;
+        };
+        let marker = u16::from_be_bytes([marker_data[0], marker_data[1]]);
+        match marker {
+            SOT => found_sot = true,
+            COD => has_cod = true,
+            QCD => has_qcd = true,
+            _ if is_skip(marker) => {}
+            _ => return, // unknown marker
+        }
+        offset += 2;
+    }
+
+    if has_cod && has_qcd && found_sot {
+        suggest!(tf, Prob::MAXIMUM, c"image/x-jpc");
+    }
+}
+
+// Musepack - audio/x-musepack
+// Magic: "MP+" with v7 check; "MPCK" for v8.
+extern "C" fn musepack_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<4>(0) else { return };
+
+    if data[..3] == *b"MP+" {
+        let prop = if (data[3] & 0x7F) == 7 {
+            Prob::MAXIMUM
+        } else {
+            Prob::from(90)
+        };
+        suggest!(tf, prop, c"audio/x-musepack",
+            [(c"streamversion", i32 : 7),]);
+        return;
+    }
+
+    if data[..4] == *b"MPCK" {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-musepack",
+            [(c"streamversion", i32 : 8),]);
+    }
+}
+
+// NUV (MythTVVideo / NuppelVideo) - video/x-nuv
+// Magic: "MythTVVideo" or "NuppelVideo" @ 0.
+extern "C" fn nuv_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<11>(0) else { return };
+
+    if *data == *b"MythTVVideo" || *data == *b"NuppelVideo" {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-nuv");
+    }
+}
+
+// DV - video/x-dv
+// Magic: 0x1F 0x07 0x00 @ 0; PAL/NTSC from byte[3].
+extern "C" fn dv_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<5>(0) else { return };
+
+    if data[0] != 0x1F || data[1] != 0x07 || data[2] != 0x00 {
+        return;
+    }
+
+    let pal = data[3] & 0x80 != 0;
+    suggest!(tf, Prob::MAXIMUM, c"video/x-dv",
+        [(c"systemstream", bool : true),
+         (c"format", str : if pal { c"PAL" } else { c"NTSC" }),]);
+}
+
+// Kate - subtitle/x-kate or application/x-kate
+// Magic: 0x80 "kate" 0x00 0x00 0x00 @ 0; category at @48.
+extern "C" fn kate_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<64>(0) else { return };
+
+    if !data.starts_with(b"\x80kate\x00\x00\x00") {
+        return;
+    }
+
+    // Category occupies 15 bytes at offset 48, NUL-terminated.
+    let raw = &data[48..63];
+    let end = raw.iter().position(|&b| b == 0).unwrap_or(raw.len());
+    let category = &raw[..end];
+    if category == b"subtitles"
+        || category == b"SUB"
+        || category == b"spu-subtitles"
+        || category == b"K-SPU"
+    {
+        suggest!(tf, Prob::MAXIMUM, c"subtitle/x-kate");
+    } else {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-kate");
+    }
+}
+
+// OGM video - application/x-ogm-video
+// Magic: 0x01 "video" 0x00 0x00 0x00 @ 0.
+extern "C" fn ogmvideo_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<9>(0) else { return };
+    if *data == *b"\x01video\x00\x00\x00" {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-ogm-video");
+    }
+}
+
+// OGM audio - application/x-ogm-audio
+// Magic: 0x01 "audio" 0x00 0x00 0x00 @ 0.
+extern "C" fn ogmaudio_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<9>(0) else { return };
+    if *data == *b"\x01audio\x00\x00\x00" {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-ogm-audio");
+    }
+}
+
+// OGM text - application/x-ogm-text
+// Magic: 0x01 "text" 0x00 0x00 0x00 0x00 @ 0.
+extern "C" fn ogmtext_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<9>(0) else { return };
+    if *data == *b"\x01text\x00\x00\x00\x00" {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-ogm-text");
+    }
+}
+
+// FLAC - audio/x-flac
+// Magic: "fLaC" @ 0 or 0x7F "FLAC" 0x01 (FLAC-in-Ogg) @ 0.
+extern "C" fn flac_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<6>(0) else { return };
+
+    if data[..4] == *b"fLaC" {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-flac");
+        return;
+    }
+
+    if *data == *b"\x7FFLAC\x01" {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-flac");
+    }
+}
+
+// SDP - application/sdp
+// Starts with "v=0" followed by LF or CRLF.
+extern "C" fn sdp_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<5>(0)
+        && data.starts_with(b"v=0")
+        && (data[3] == b'\n' || (data[3] == b'\r' && data[4] == b'\n'))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/sdp");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -1215,6 +1437,38 @@ const FEATURES: &[Feature] = &[
     typefinder!("image/x-farbfeld", SECONDARY, farbfeld_type_find, "ff"),
     typefinder!("image/qoi", SECONDARY, qoif_type_find, "qoi"),
     typefinder!("image/vnd.ms-dds", SECONDARY, dds_type_find, "dds"),
+    // OTIO - JSON-based with OTIO_SCHEMA key
+    typefinder!(
+        "application/vnd.pixar.opentimelineio+json",
+        SECONDARY,
+        otio_type_find,
+        "otio"
+    ),
+    // FLIC/FLC - video/x-fli
+    typefinder!("video/x-fli", MARGINAL, flx_type_find, "flc,fli"),
+    // JPEG 2000 Code Stream - image/x-jpc
+    typefinder!("image/x-jpc", PRIMARY, jpc_type_find, "jpc,j2k"),
+    // Musepack - audio/x-musepack
+    typefinder!(
+        "audio/x-musepack",
+        PRIMARY,
+        musepack_type_find,
+        "mpc,mpp,mp+"
+    ),
+    // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
+    typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
+    // DV - video/x-dv
+    typefinder!("video/x-dv", SECONDARY, dv_type_find, "dv,dif"),
+    // Kate - caps (subtitle or application) are selected at runtime;
+    // no file extensions are registered.
+    typefinder!("subtitle/x-kate", MARGINAL, kate_type_find),
+    // OGM video/audio/text - no extensions.
+    typefinder!("application/x-ogm-video", PRIMARY, ogmvideo_type_find),
+    typefinder!("application/x-ogm-audio", PRIMARY, ogmaudio_type_find),
+    typefinder!("application/x-ogm-text", PRIMARY, ogmtext_type_find),
+    typefinder!("audio/x-flac", PRIMARY, flac_type_find, "flac"),
+    // SDP - application/sdp
+    typefinder!("application/sdp", SECONDARY, sdp_type_find, "sdp"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
