@@ -1284,12 +1284,22 @@ gst_vulkan_operation_begin_query (GstVulkanOperation * self,
 
 #if defined(VK_KHR_video_maintenance1)
   if (priv->use_inline_query) {
+    const void *next;
+
     g_return_val_if_fail (base, FALSE);
+
+    /* A retry calls this again with the same base, whose pNext already points
+     * at the inline query: keep the rest of the chain instead of linking the
+     * inline query to itself. */
+    if (base->pNext == (const VkBaseInStructure *) &priv->inline_query)
+      next = priv->inline_query.pNext;
+    else
+      next = base->pNext;
 
     /* *INDENT-OFF* */
     priv->inline_query = (VkVideoInlineQueryInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR,
-      .pNext = base->pNext,
+      .pNext = next,
       .queryPool = priv->query_pool,
       .firstQuery = id,
       .queryCount = 1,

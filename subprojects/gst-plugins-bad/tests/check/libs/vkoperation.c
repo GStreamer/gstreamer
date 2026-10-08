@@ -249,6 +249,76 @@ GST_START_TEST (test_barrier_update_concurrent)
 
 GST_END_TEST;
 
+#if defined(VK_KHR_video_maintenance1)
+GST_START_TEST (test_begin_query_twice)
+{
+  GstVulkanQueue *video_queue;
+  GstVulkanCommandPool *pool;
+  GstVulkanOperation *op;
+  GError *error = NULL;
+  VkVideoDecodeH264ProfileInfoKHR h264_profile = {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR,
+    .stdProfileIdc = STD_VIDEO_H264_PROFILE_IDC_MAIN,
+    .pictureLayout = VK_VIDEO_DECODE_H264_PICTURE_LAYOUT_PROGRESSIVE_KHR,
+  };
+  VkVideoProfileInfoKHR profile = {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
+    .pNext = &h264_profile,
+    .videoCodecOperation = VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR,
+    .chromaSubsampling = VK_VIDEO_CHROMA_SUBSAMPLING_420_BIT_KHR,
+    .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+    .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+  };
+  VkBaseInStructure tail = {.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO };
+  VkBaseInStructure base = {.sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR,
+    .pNext = &tail
+  };
+  const VkBaseInStructure *node;
+  guint i;
+
+  video_queue = gst_vulkan_device_select_queue (device,
+      VK_QUEUE_VIDEO_DECODE_BIT_KHR);
+  if (!video_queue)
+    return;
+
+  pool = gst_vulkan_queue_create_command_pool (video_queue, NULL);
+  fail_unless (GST_IS_VULKAN_COMMAND_POOL (pool));
+  op = gst_vulkan_operation_new (pool);
+
+  if (!gst_vulkan_operation_enable_query (op,
+          VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR, 1, &profile, &error)) {
+    g_clear_error (&error);
+    goto done;
+  }
+
+  fail_unless (gst_vulkan_operation_begin (op, &error));
+  fail_if (error);
+
+  /* a decoder retry begins the query again on the same structure */
+  fail_unless (gst_vulkan_operation_begin_query (op, &base, 0));
+  fail_unless (gst_vulkan_operation_begin_query (op, &base, 0));
+
+  node = &base;
+  for (i = 0; i < 4 && node; i++)
+    node = node->pNext;
+  fail_unless_equals_int (i, 3);
+  fail_unless (node == NULL);
+  fail_unless_equals_int (base.pNext->sType,
+      VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR);
+  fail_unless (base.pNext->pNext == &tail);
+
+  fail_unless (gst_vulkan_operation_end (op, &error));
+  fail_if (error);
+
+done:
+  gst_object_unref (op);
+  gst_object_unref (pool);
+  gst_object_unref (video_queue);
+}
+
+GST_END_TEST;
+#endif
+
 static Suite *
 vkoperation_suite (void)
 {
@@ -267,6 +337,9 @@ vkoperation_suite (void)
     tcase_add_test (tc_basic, test_operation_empty);
     tcase_add_test (tc_basic, test_barrier_update);
     tcase_add_test (tc_basic, test_barrier_update_concurrent);
+#if defined(VK_KHR_video_maintenance1)
+    tcase_add_test (tc_basic, test_begin_query_twice);
+#endif
   }
 
   return s;
