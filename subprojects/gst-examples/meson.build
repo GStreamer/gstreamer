@@ -1,5 +1,5 @@
 project('gst-examples', 'c',
-  version : '1.28.7.1',
+  version : '1.28.8',
   meson_version : '>=1.4',
   default_options : [ 'buildtype=debugoptimized',
                       'c_std=gnu11,c11' ])
