@@ -374,6 +374,57 @@ GST_START_TEST (test_parse_normal)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_reject_forbidden_nal_header)
+{
+  const guint8 bogus_subset_sps[] = {
+    0x00, 0x00, 0x00, 0x01, 0xaf, 0x49, 0x00, 0xf0,
+    0xae, 0x49, 0x00
+  };
+  guint8 au[sizeof (h264_sps) + sizeof (h264_pps) + sizeof (h264_idrframe)];
+  GstHarness *h = gst_harness_new ("h264parse");
+  GstCaps *caps;
+  const GstStructure *s;
+  gint width, height, new_width, new_height;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h264,stream-format=byte-stream,alignment=au",
+      "video/x-h264,stream-format=byte-stream,alignment=au");
+
+  memcpy (au, h264_sps, sizeof (h264_sps));
+  memcpy (au + sizeof (h264_sps), h264_pps, sizeof (h264_pps));
+  memcpy (au + sizeof (h264_sps) + sizeof (h264_pps), h264_idrframe,
+      sizeof (h264_idrframe));
+  fail_unless_equals_int (gst_harness_push (h,
+          gst_buffer_new_memdup (au, sizeof (au))), GST_FLOW_OK);
+
+  caps = gst_pad_get_current_caps (h->sinkpad);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (s, "width", &width));
+  fail_unless (gst_structure_get_int (s, "height", &height));
+  gst_caps_unref (caps);
+
+  fail_unless_equals_int (gst_harness_push (h,
+          gst_buffer_new_memdup (bogus_subset_sps,
+              sizeof (bogus_subset_sps))), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_push (h,
+          gst_buffer_new_memdup (h264_idrframe,
+              sizeof (h264_idrframe))), GST_FLOW_OK);
+
+  caps = gst_pad_get_current_caps (h->sinkpad);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (s, "width", &new_width));
+  fail_unless (gst_structure_get_int (s, "height", &new_height));
+  fail_unless_equals_int (width, new_width);
+  fail_unless_equals_int (height, new_height);
+  gst_caps_unref (caps);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_parse_drain_single)
 {
@@ -700,6 +751,8 @@ h264parse_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_parse_normal);
+  if (ctx_sink_template == &sinktemplate_bs_au)
+    tcase_add_test (tc_chain, test_parse_reject_forbidden_nal_header);
   tcase_add_test (tc_chain, test_parse_drain_single);
   tcase_add_test (tc_chain, test_parse_drain_garbage);
   tcase_add_test (tc_chain, test_parse_split);

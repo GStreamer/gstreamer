@@ -1033,6 +1033,74 @@ GST_START_TEST (test_parse_skip_to_4bytes_sc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_reject_forbidden_nal_header)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  guint8 bad_sps[sizeof (h265_sps)];
+  GstBuffer *buf;
+  GstMapInfo map;
+  guint count = 0;
+  gboolean seen_idr = FALSE;
+
+  memcpy (bad_sps, h265_sps, sizeof (bad_sps));
+  bad_sps[4] |= 0x80;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h265,stream-format=byte-stream,alignment=nal",
+      "video/x-h265,stream-format=byte-stream,alignment=nal");
+  buf = composite_buffer (100, 0, 5, h265_vps, sizeof (h265_vps),
+      h265_sps, sizeof (h265_sps), h265_pps, sizeof (h265_pps),
+      bad_sps, sizeof (bad_sps), h265_idr, sizeof (h265_idr));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while (gst_harness_buffers_in_queue (h)) {
+    buf = gst_harness_pull (h);
+    fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
+    fail_unless (map.size >= 6);
+    fail_unless_equals_int (map.data[4] & 0x80, 0);
+    if (map.data[4] == h265_idr[4] && map.data[5] == h265_idr[5])
+      seen_idr = TRUE;
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    count++;
+  }
+  fail_unless (count >= 3);
+  fail_unless (seen_idr);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_preserve_au_before_forbidden_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  guint8 bad_sps[sizeof (h265_sps)];
+  GstBuffer *buf;
+
+  memcpy (bad_sps, h265_sps, sizeof (bad_sps));
+  bad_sps[4] |= 0x80;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h265,stream-format=byte-stream,alignment=au",
+      "video/x-h265,stream-format=byte-stream,alignment=au");
+  buf = composite_buffer (100, 0, 5, h265_vps, sizeof (h265_vps),
+      h265_sps, sizeof (h265_sps), h265_pps, sizeof (h265_pps),
+      h265_idr, sizeof (h265_idr), bad_sps, sizeof (bad_sps));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  fail_unless (gst_harness_buffers_in_queue (h) >= 1);
+  pull_and_check_composite (h, 100, 0, 5, h265_aud, sizeof (h265_aud),
+      h265_vps, sizeof (h265_vps), h265_sps, sizeof (h265_sps),
+      h265_pps, sizeof (h265_pps), h265_idr, sizeof (h265_idr));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_parse_sc_with_half_header)
 {
   GstHarness *h;
@@ -1603,6 +1671,8 @@ h265parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_sliced_au_au);
 
   tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
+  tcase_add_test (tc_chain, test_parse_reject_forbidden_nal_header);
+  tcase_add_test (tc_chain, test_parse_preserve_au_before_forbidden_nal);
   tcase_add_test (tc_chain, test_parse_sc_with_half_header);
 
   tcase_add_test (tc_chain, test_drain);
