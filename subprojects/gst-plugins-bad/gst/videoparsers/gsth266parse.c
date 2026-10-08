@@ -723,6 +723,11 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
     return TRUE;
   }
 
+  if (G_UNLIKELY (nalu->data[nalu->offset] & 0x80)) {
+    GST_WARNING_OBJECT (h266parse, "NAL has forbidden_zero_bit set");
+    return FALSE;
+  }
+
   /* we have a peek as well */
   nal_type = nalu->type;
 
@@ -1406,6 +1411,12 @@ gst_h266_parse_handle_frame (GstBaseParse * parse,
 
     GST_LOG_OBJECT (h266parse, "%p complete nal found. Off: %u, Size: %u",
         data, nalu.offset, nalu.size);
+
+    if (G_UNLIKELY (nalu.data[nalu.offset] & 0x80)) {
+      GST_WARNING_OBJECT (h266parse, "NAL has forbidden_zero_bit set");
+      /* Keep any complete NALs collected before this malformed one. */
+      goto broken;
+    }
 
     h266parse->have_vcl_in_frame |= gst_h266_parse_nal_is_vcl (&nalu);
 
