@@ -1503,6 +1503,17 @@ extern "C" fn ircam_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// SDS - audio/x-sds
+// Magic: masked match F0 7E 0? 01 (mask FF FF 80 FF) @ 0.
+extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<4>(0) else { return };
+    const MATCH: [u8; 4] = [0xF0, 0x7E, 0x00, 0x01];
+    const MASK: [u8; 4] = [0xFF, 0xFF, 0x80, 0xFF];
+    if (0..4).all(|x| data[x] & MASK[x] == MATCH[x]) {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-sds");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -1746,6 +1757,8 @@ const FEATURES: &[Feature] = &[
     ),
     // IRCAM - audio/x-ircam
     typefinder!("audio/x-ircam", SECONDARY, ircam_type_find, "sf"),
+    // SDS - audio/x-sds
+    typefinder!("audio/x-sds", SECONDARY, sds_type_find, "sds"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
