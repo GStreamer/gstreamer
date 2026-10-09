@@ -32,9 +32,16 @@ if get_option('subparse').disabled()
   subdir_done()
 endif
 
+subparse_c_args = gst_plugins_base_args
+# The subtitle typefinders live in the rust typefind crate when that
+# implementation is built; keep the C ones only for the C implementation.
+if get_option('typefind_rust') and not get_option('typefind').disabled()
+  subparse_c_args += ['-DSUBTITLE_TYPEFIND_IN_RUST']
+endif
+
 gstsubparse = library('gstsubparse',
   subparse_sources,
-  c_args : gst_plugins_base_args,
+  c_args : subparse_c_args,
   include_directories: [configinc, libsinc],
   dependencies : [gst_base_dep],
   install : true,

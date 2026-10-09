@@ -41,6 +41,12 @@ pub struct GstCaps {
     _private: [u8; 0],
 }
 
+/// Opaque error object
+#[repr(C)]
+pub struct GError {
+    _private: [u8; 0],
+}
+
 pub type gpointer = *mut c_void;
 pub type gboolean = c_int;
 /// GDestroyNotify callback, registered as NULL in this crate.
@@ -103,4 +109,20 @@ unsafe extern "C" {
 
     pub fn gst_caps_from_string(string: *const c_char) -> *mut GstCaps;
     pub fn gst_caps_unref(caps: *mut GstCaps);
+
+    pub fn g_convert_with_fallback(
+        src: *const c_char,
+        srclen: isize,
+        to_codeset: *const c_char,
+        from_codeset: *const c_char,
+        replacement: *const c_char,
+        consumed: *mut usize,
+        items: *mut usize,
+        error: *mut *mut GError,
+    ) -> *mut c_char;
+
+    pub fn g_get_charset(charset: *mut *const c_char) -> gboolean;
+
+    pub fn g_free(mem: gpointer);
+    pub fn g_error_free(error: *mut GError);
 }

@@ -10,8 +10,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::bindings::{self, gpointer};
+use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
-use std::os::raw::c_uint;
+use std::os::raw::{c_char, c_uint};
 use std::ptr;
 
 #[repr(transparent)]
@@ -203,13 +204,13 @@ pub(crate) fn type_check<T: ?Sized>(_v: &T) {}
 /// Maps a type name literal to the matching fundamental `GType` id.
 macro_rules! map_type_name {
     (i32) => {
-        bindings::G_TYPE_INT
+        $crate::bindings::G_TYPE_INT
     };
     (str) => {
-        bindings::G_TYPE_STRING
+        $crate::bindings::G_TYPE_STRING
     };
     (bool) => {
-        bindings::G_TYPE_BOOLEAN
+        $crate::bindings::G_TYPE_BOOLEAN
     };
 }
 
@@ -275,7 +276,7 @@ macro_rules! map_value {
 macro_rules! suggest {
     ($tf:expr, $prob:expr, $name:expr $(,)?) => {{
         unsafe {
-            bindings::gst_type_find_suggest_simple(
+            $crate::bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
                 $crate::helpers::TypeFindProbability::from($prob).into(),
                 {
@@ -289,7 +290,7 @@ macro_rules! suggest {
     ($tf:expr, $prob:expr, $name:expr, [ $( ($key:expr, $type:ident : $val:expr) , )*] $(,)?) => {
         let _p = $crate::helpers::TypeFindProbability::from($prob).into();
         unsafe {
-            bindings::gst_type_find_suggest_simple(
+            $crate::bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
                 _p,
                 {
@@ -349,6 +350,60 @@ macro_rules! typefinder {
     ($name:expr, $rank:expr, $func:expr, $exts:expr, $caps:expr) => {
         Feature($name, $rank, opt!($func), opt!($exts), opt!($caps))
     };
+}
+
+/// Converts `data` from `from_codeset` to UTF-8, replacing unconvertible bytes with '*'.
+/// Strips any UTF-8 BOM that the converter passes through. Returns None on converter error.
+pub(crate) fn convert_to_utf8(data: &[u8], from_codeset: &str) -> Option<Vec<u8>> {
+    let from = CString::new(from_codeset).ok()?;
+    let bytes = unsafe {
+        let mut error: *mut bindings::GError = ptr::null_mut();
+
+        let result = bindings::g_convert_with_fallback(
+            data.as_ptr().cast(),
+            data.len() as isize,
+            c"UTF-8".as_ptr(),
+            from.as_ptr(),
+            c"*".as_ptr(),
+            ptr::null_mut(),
+            ptr::null_mut(),
+            &mut error,
+        );
+        if result.is_null() {
+            if !error.is_null() {
+                bindings::g_error_free(error);
+            }
+            return None;
+        }
+
+        let bytes = CStr::from_ptr(result).to_bytes().to_vec();
+        bindings::g_free(result.cast());
+
+        bytes
+    };
+
+    Some(
+        bytes
+            .strip_prefix(b"\xef\xbb\xbf")
+            .unwrap_or(&bytes)
+            .to_vec(),
+    )
+}
+
+/// The charset of the current locale and whether it is UTF-8.
+pub(crate) fn locale_charset() -> Option<(String, bool)> {
+    unsafe {
+        let mut charset: *const c_char = ptr::null();
+        let is_utf8 = bindings::g_get_charset(&mut charset);
+        if charset.is_null() {
+            return None;
+        }
+
+        Some((
+            CStr::from_ptr(charset).to_string_lossy().into_owned(),
+            is_utf8 != 0,
+        ))
+    }
 }
 
 // Alias for callers who want the short name.

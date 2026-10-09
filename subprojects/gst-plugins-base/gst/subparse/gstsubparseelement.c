@@ -269,6 +269,7 @@ gst_sub_parse_detect_encoding (const gchar * str, gsize len)
 /*
  * Typefind support.
  */
+#ifndef SUBTITLE_TYPEFIND_IN_RUST
 
 /* FIXME 0.11: these caps are ugly, use app/x-subtitle + type field or so;
  * also, give different  subtitle formats really different types */
@@ -439,6 +440,7 @@ gst_sub_parse_type_find (GstTypeFind * tf, gpointer private)
 GST_TYPE_FIND_REGISTER_DEFINE (subparse, "subparse_typefind", GST_RANK_MARGINAL,
     gst_sub_parse_type_find, "srt,sub,mpsub,mdvd,smi,txt,dks,vtt", SUB_CAPS,
     NULL, NULL)
+#endif
     gboolean
 sub_parse_element_init (GstPlugin * plugin)
 {
@@ -447,7 +449,9 @@ sub_parse_element_init (GstPlugin * plugin)
   if (g_once_init_enter (&res)) {
     GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
 
+#ifndef SUBTITLE_TYPEFIND_IN_RUST
     ret |= GST_TYPE_FIND_REGISTER (subparse, plugin);
+#endif
 
     g_once_init_leave (&res, TRUE);
   }

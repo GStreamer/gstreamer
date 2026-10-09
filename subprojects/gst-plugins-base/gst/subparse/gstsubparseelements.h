@@ -50,7 +50,9 @@ G_GNUC_INTERNAL gboolean sub_parse_element_init (GstPlugin * plugin);
 GST_ELEMENT_REGISTER_DECLARE (subparse);
 GST_ELEMENT_REGISTER_DECLARE (ssaparse);
 
+#ifndef SUBTITLE_TYPEFIND_IN_RUST
 GST_TYPE_FIND_REGISTER_DECLARE (subparse);
+#endif
 
 GST_DEBUG_CATEGORY_EXTERN (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug

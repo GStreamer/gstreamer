@@ -22,6 +22,7 @@ use crate::bindings::gpointer;
 use crate::helpers::{
     Feature, Prob, Scanner, TypeFind, magic_eq, opt, read_u16_le, read_u32_le, suggest, typefinder,
 };
+use crate::subtitles;
 #[allow(unused_imports)]
 use bindings::{
     GST_RANK_MARGINAL as MARGINAL, GST_RANK_PRIMARY as PRIMARY, GST_RANK_SECONDARY as SECONDARY,
@@ -220,33 +221,6 @@ extern "C" fn cmml_type_find(tf: &mut TypeFind, _private: gpointer) {
         && read_u16_le(&data[8..]).is_some_and(|v| v >= 2)
     {
         suggest!(tf, Prob::MAXIMUM, c"text/x-cmml");
-    }
-}
-
-extern "C" fn webvtt_type_find(tf: &mut TypeFind, _private: gpointer) {
-    if let Some(data) = tf.peek::<10>(0) {
-        // Check for WEBVTT with optional BOM prefix.
-        let (magic_off, magic_end) =
-            if data.len() >= 3 && data[0] == 0xef && data[1] == 0xbb && data[2] == 0xbf {
-                (3, 9) // UTF-8 BOM + WEBVTT + separator
-            } else {
-                (0, 6) // No BOM: WEBVTT + separator
-            };
-
-        if magic_off + 6 > data.len() {
-            return;
-        }
-        if !magic_eq(&data[magic_off..magic_off + 6], b"WEBVTT") {
-            return;
-        }
-
-        // Separator must be space, tab, LF, or CR.
-        let sep = data[magic_end];
-        if matches!(sep, b' ' | b'\t' | b'\n' | b'\r') {
-            suggest!(tf, Prob::MAXIMUM, c"application/x-subtitle-vtt", [
-                (c"parsed", bool : false),
-            ]);
-        }
     }
 }
 
@@ -1578,13 +1552,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
     typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
     typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
-    typefinder!(
-        "application/x-subtitle-vtt",
-        MARGINAL,
-        webvtt_type_find,
-        "vtt",
-        "application/x-subtitle-vtt, parsed=(boolean)false"
-    ),
+    // Note: typefindfunctions_subtitles registered below with no default caps.
     // Complex finders - structure validation and chunk/marker walking
     typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp"),
     typefinder!("image/png", PRIMARY + 14, png_type_find, "png"),
@@ -1814,5 +1782,20 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
             }
         }
     }
+
+    // Subtitles factory - no default caps, suggests format-specific caps at runtime.
+    unsafe {
+        gst_type_find_register(
+            plugin,
+            c"typefindfunctions_subtitles".as_ptr(),
+            MARGINAL,
+            Some(subtitles::subtitle_type_find),
+            c"srt,sub,mpsub,mdvd,smi,txt,dks,vtt".as_ptr(),
+            ptr::null_mut(), // no default caps
+            ptr::null_mut(),
+            None,
+        );
+    }
+
     true as gboolean
 }
