@@ -750,7 +750,7 @@ struct _GstHipConverterPrivate
   GstVideoInfo out_info;
   hipStream_t stream = nullptr;
   GstHipStream *active_stream = nullptr;
-  GstHipEvent *last_event = nullptr;
+  gboolean stream_initialized = FALSE;
   gboolean submitted = FALSE;
 
   GstStructure *config = nullptr;
@@ -848,12 +848,6 @@ gst_hip_converter_dispose (GObject * object)
 {
   auto self = GST_HIP_CONVERTER (object);
   auto priv = self->priv;
-
-  if (priv->last_event) {
-    auto ret = gst_hip_event_synchronize (priv->last_event);
-    gst_hip_result (ret, priv->vendor);
-    gst_clear_hip_event (&priv->last_event);
-  }
 
   if (self->device && gst_hip_device_set_current (self->device)) {
     g_clear_pointer (&priv->unpack_module, gst_hip_kernel_module_unref);
@@ -1963,8 +1957,13 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
  * @converter: a #GstHipConverter
  * @in_buf: input buffer
  * @out_buf: output buffer
+ * @fence_data: (transfer none): a #GstHipFenceData
+ * @stream: (nullable) (transfer none): a #GstHipStream
  *
- * Converts @in_buf into @out_buf.
+ * Converts @in_buf into @out_buf using @stream.
+ * The caller is responsible for buffer dependencies, lifetime management,
+ * and recording the completion event. The converter may add resources
+ * to @fence_data to keep them alive until GPU completion.
  *
  * Returns: %TRUE on success
  *
@@ -1972,7 +1971,8 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
  */
 gboolean
 gst_hip_converter_convert_frame (GstHipConverter * converter,
-    GstBuffer * in_buf, GstBuffer * out_buf)
+    GstBuffer * in_buf, GstBuffer * out_buf,
+    GstHipFenceData * fence_data, GstHipStream * stream)
 {
   const TextureFormat *format;
   hipTextureObject_t texture[GST_VIDEO_MAX_COMPONENTS] = { };
@@ -1982,16 +1982,23 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   gint off_x = 0;
   gint off_y = 0;
   GstVideoFrame in_frame, out_frame;
-  GstHipEvent *event = nullptr;
 
   g_return_val_if_fail (GST_IS_HIP_CONVERTER (converter), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (out_buf), FALSE);
+  g_return_val_if_fail (fence_data, FALSE);
 
   auto priv = converter->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
 
   priv->submitted = FALSE;
+
+  if (stream && (gst_hip_stream_get_vendor (stream) != priv->vendor ||
+          gst_hip_stream_get_device_id (stream) !=
+          gst_hip_device_get_device_id (converter->device))) {
+    GST_ERROR_OBJECT (converter, "Stream belongs to another device");
+    return FALSE;
+  }
 
   if (!priv->fill_border && (priv->dest_width <= 0 || priv->dest_height <= 0))
     return TRUE;
@@ -2000,6 +2007,21 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     GST_ERROR_OBJECT (converter, "Couldn't set device");
     return FALSE;
   }
+
+  if (priv->active_stream != stream) {
+    if (priv->stream_initialized) {
+      auto hip_ret = HipStreamSynchronize (priv->vendor, priv->stream);
+      if (!gst_hip_result (hip_ret, priv->vendor))
+        return FALSE;
+    }
+
+    gst_clear_hip_stream (&priv->active_stream);
+    if (stream)
+      priv->active_stream = gst_hip_stream_ref (stream);
+  }
+
+  priv->stream = gst_hip_stream_get_handle (stream);
+  priv->stream_initialized = TRUE;
 
   if (!gst_video_frame_map (&in_frame, &priv->in_info, in_buf,
           GST_MAP_READ_HIP)) {
@@ -2014,52 +2036,8 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     return FALSE;
   }
 
-  auto in_hmem = (GstHipMemory *) gst_buffer_peek_memory (in_buf, 0);
-  auto out_hmem = (GstHipMemory *) gst_buffer_peek_memory (out_buf, 0);
-
-  auto in_stream = gst_hip_memory_get_stream (in_hmem);
-  auto out_stream = gst_hip_memory_get_stream (out_hmem);
-
-  if (!out_stream)
-    out_stream = gst_hip_device_get_stream (converter->device);
-
-  /* Wait before reusing internal resources such as fallback_buffer and
-   * unpack_buffer on another stream */
-  if (priv->active_stream != out_stream) {
-    if (priv->last_event) {
-      auto ret = gst_hip_event_synchronize (priv->last_event);
-      if (!gst_hip_result (ret, priv->vendor)) {
-        gst_video_frame_unmap (&out_frame);
-        gst_video_frame_unmap (&in_frame);
-        return FALSE;
-      }
-
-      gst_clear_hip_event (&priv->last_event);
-    }
-
-    gst_clear_hip_stream (&priv->active_stream);
-    priv->active_stream = gst_hip_stream_ref (out_stream);
-  }
-
-  priv->stream = gst_hip_stream_get_handle (out_stream);
-
-  /* Synchronize input dependency when using a different stream */
-  if (in_stream != out_stream) {
-    gboolean sync_ret = FALSE;
-
-    if (gst_hip_memory_get_event (in_hmem, &event)) {
-      sync_ret = gst_hip_stream_wait_event (out_stream, event);
-      gst_clear_hip_event (&event);
-    }
-
-    if (!sync_ret) {
-      /* If the input has no configured event or gst_hip_stream_wait_event()
-       * failed, fallback to gst_hip_memory_sync(). HIP memory currently does
-       * nothing in gst_hip_memory_sync() without an associated event, but keep
-       * the call for possible future implementation changes */
-      gst_hip_memory_sync (in_hmem);
-    }
-  }
+  gst_hip_fence_data_push (fence_data, gst_object_ref (converter),
+      (GDestroyNotify) gst_object_unref);
 
   format = priv->texture_fmt;
 
@@ -2130,7 +2108,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
 
   priv->submitted = TRUE;
   if (!gst_hip_kernel_module_launch (priv->main_module, "GstHipConverterMain",
-          out_stream, DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y),
+          stream, DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y),
           1, HIP_BLOCK_X, HIP_BLOCK_Y, 1, args)) {
     GST_ERROR_OBJECT (converter, "Couldn't convert frame");
     goto done;
@@ -2139,19 +2117,6 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   ret = TRUE;
 
 done:
-  if (ret) {
-    if (gst_hip_stream_record_event (out_stream, &event)) {
-      gst_hip_memory_set_event (out_hmem, event);
-      gst_clear_hip_event (&priv->last_event);
-      priv->last_event = gst_hip_event_ref (event);
-      gst_hip_event_set_notify (event, gst_buffer_ref (in_buf),
-          (GDestroyNotify) gst_buffer_unref);
-      gst_hip_event_unref (event);
-    } else {
-      ret = FALSE;
-    }
-  }
-
   if (!ret && priv->submitted) {
     auto hip_ret = HipStreamSynchronize (priv->vendor, priv->stream);
     gst_hip_result (hip_ret, priv->vendor);

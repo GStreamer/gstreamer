@@ -68,9 +68,11 @@ struct _GstHipBaseConvertPrivate
   ~_GstHipBaseConvertPrivate ()
   {
     gst_clear_object (&conv);
+    gst_clear_object (&fence_data_pool);
   }
 
   GstHipConverter *conv = nullptr;
+  GstHipFenceDataPool *fence_data_pool = gst_hip_fence_data_pool_new ();
 
   gint borders_h = 0;
   gint borders_w = 0;
@@ -1482,14 +1484,41 @@ gst_hip_base_convert_transform_meta (GstBaseTransform * trans,
 }
 
 static GstFlowReturn
-gst_hip_base_convert_transform (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstBuffer * outbuf)
+gst_hip_base_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   auto self = GST_HIP_BASE_CONVERT (trans);
   auto priv = self->priv;
+  auto stream = gst_hip_device_get_stream (priv->conv->device);
+  GstHipFenceData *fence_data = nullptr;
+  GstHipEvent *event = nullptr;
 
-  if (!gst_hip_converter_convert_frame (priv->conv, inbuf, outbuf)) {
+  if (!gst_hip_stream_schedule_wait_buffer (stream, inbuf))
+    return GST_FLOW_ERROR;
+
+  if (!gst_hip_fence_data_pool_acquire (priv->fence_data_pool, &fence_data))
+    return GST_FLOW_ERROR;
+
+  auto ret = gst_hip_converter_convert_frame (priv->conv, inbuf, outbuf,
+      fence_data, stream);
+  if (!ret) {
+    gst_hip_fence_data_unref (fence_data);
     GST_ERROR_OBJECT (self, "Failed to convert frame");
+    return GST_FLOW_ERROR;
+  }
+
+  gst_hip_fence_data_push (fence_data, gst_buffer_ref (inbuf),
+      (GDestroyNotify) gst_buffer_unref);
+
+  if (gst_hip_stream_record_event (stream, &event)) {
+    gst_hip_event_set_notify (event,
+        fence_data, (GDestroyNotify) gst_hip_fence_data_unref);
+    gst_hip_buffer_set_event (outbuf, event);
+    gst_hip_event_unref (event);
+  } else {
+    GST_ERROR_OBJECT (self, "Couldn't record event");
+    gst_hip_stream_synchronize (stream);
+    gst_hip_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
   }
 

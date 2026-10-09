@@ -775,6 +775,27 @@ gst_hip_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 }
 
 /**
+ * gst_hip_buffer_set_event:
+ * @buffer: a #GstBuffer
+ * @event: (transfer none) (nullable): a #GstHipEvent
+ *
+ * Sets @event on each HIP memory in @buffer. Non-HIP memories are ignored.
+ *
+ * Since: 1.30
+ */
+void
+gst_hip_buffer_set_event (GstBuffer * buffer, GstHipEvent * event)
+{
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+
+  for (guint i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    auto mem = gst_buffer_peek_memory (buffer, i);
+    if (gst_is_hip_memory (mem))
+      gst_hip_memory_set_event ((GstHipMemory *) mem, event);
+  }
+}
+
+/**
  * gst_hip_stream_schedule_wait_buffer:
  * @stream: a #GstHipStream
  * @buffer: a #GstBuffer

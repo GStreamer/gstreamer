@@ -161,6 +161,13 @@ struct _GstHipCompositorPad
 
 struct GstHipCompositorPrivate
 {
+  ~GstHipCompositorPrivate ()
+  {
+    gst_clear_object (&fence_data_pool);
+  }
+
+  GstHipFenceDataPool *fence_data_pool = gst_hip_fence_data_pool_new ();
+
   std::recursive_mutex lock;
 
   /* properties */
@@ -1557,6 +1564,8 @@ gst_hip_compositor_aggregate_frames (GstVideoAggregator * vagg,
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame frame;
   hipStream_t stream = nullptr;
+  GstHipFenceData *fence_data = nullptr;
+  GstHipEvent *event = nullptr;
   auto gst_stream = gst_hip_device_get_stream (self->device);
   stream = gst_hip_stream_get_handle (gst_stream);
 
@@ -1567,15 +1576,23 @@ gst_hip_compositor_aggregate_frames (GstVideoAggregator * vagg,
     return GST_FLOW_ERROR;
   }
 
+  if (!gst_hip_fence_data_pool_acquire (self->priv->fence_data_pool,
+          &fence_data)) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire fence data");
+    return GST_FLOW_ERROR;
+  }
+
   if (!gst_video_frame_map (&frame, &vagg->info, outbuf, GST_MAP_WRITE_HIP)) {
     GST_ERROR_OBJECT (self, "Couldn't map output frame");
+    gst_hip_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
   }
 
   if (!gst_hip_compositor_draw_background (self, &frame, stream)) {
     GST_ERROR_OBJECT (self, "Couldn't draw background");
     gst_video_frame_unmap (&frame);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
   gst_video_frame_unmap (&frame);
@@ -1596,17 +1613,39 @@ gst_hip_compositor_aggregate_frames (GstVideoAggregator * vagg,
       break;
     }
 
+    if (!gst_hip_stream_schedule_wait_buffer (gst_stream, in_frame->buffer)) {
+      GST_ERROR_OBJECT (self, "Couldn't schedule input wait");
+      ret = GST_FLOW_ERROR;
+      break;
+    }
+
     if (!gst_hip_converter_convert_frame (pad_priv->conv, in_frame->buffer,
-            outbuf)) {
+            outbuf, fence_data, gst_stream)) {
       GST_ERROR_OBJECT (pad, "Couldn't convert frame");
       ret = GST_FLOW_ERROR;
       break;
     }
+
+    gst_hip_fence_data_push (fence_data, gst_buffer_ref (in_frame->buffer),
+        (GDestroyNotify) gst_buffer_unref);
   }
   GST_OBJECT_UNLOCK (self);
 
-  if (ret == GST_FLOW_OK)
-    HipStreamSynchronize (gst_hip_device_get_vendor (self->device), stream);
+done:
+  if (ret == GST_FLOW_OK) {
+    if (gst_hip_stream_record_event (gst_stream, &event)) {
+      gst_hip_event_set_notify (event,
+          fence_data, (GDestroyNotify) gst_hip_fence_data_unref);
+      gst_hip_buffer_set_event (outbuf, event);
+      gst_hip_event_unref (event);
+      return GST_FLOW_OK;
+    }
 
-  return ret;
+    GST_ERROR_OBJECT (self, "Couldn't record event");
+  }
+
+  gst_hip_stream_synchronize (gst_stream);
+  gst_hip_fence_data_unref (fence_data);
+
+  return GST_FLOW_ERROR;
 }

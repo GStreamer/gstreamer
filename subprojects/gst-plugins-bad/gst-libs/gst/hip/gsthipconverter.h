@@ -73,6 +73,8 @@ GstHipConverter *  gst_hip_converter_new (GstHipDevice * device,
 GST_HIP_API
 gboolean           gst_hip_converter_convert_frame (GstHipConverter * converter,
                                                     GstBuffer * in_buf,
-                                                    GstBuffer * out_buf);
+                                                    GstBuffer * out_buf,
+                                                    GstHipFenceData * fence_data,
+                                                    GstHipStream * stream);
 
 G_END_DECLS

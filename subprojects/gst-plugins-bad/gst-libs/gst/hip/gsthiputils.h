@@ -108,5 +108,9 @@ GST_HIP_API
 gboolean     gst_hip_stream_schedule_wait_buffer (GstHipStream * stream,
                                                   GstBuffer * buffer);
 
+GST_HIP_API
+void         gst_hip_buffer_set_event (GstBuffer * buffer,
+                                       GstHipEvent * event);
+
 G_END_DECLS
 
