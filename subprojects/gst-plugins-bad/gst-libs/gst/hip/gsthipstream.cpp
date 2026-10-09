@@ -213,7 +213,8 @@ gst_hip_stream_record_event (GstHipStream * stream, GstHipEvent ** event)
  * @stream: a #GstHipStream
  * @event: a #GstHipEvent
  *
- * Makes @stream wait for @event to complete
+ * Makes @stream wait for @event to complete. If @event was recorded on
+ * @stream, no wait is scheduled.
  *
  * Returns: %TRUE if successful
  *
@@ -233,6 +234,12 @@ gst_hip_stream_wait_event (GstHipStream * stream, GstHipEvent * event)
   if (stream->device_id != gst_hip_event_get_device_id (event)) {
     GST_ERROR ("Stream and event belong to different devices");
     return FALSE;
+  }
+
+  if (stream->handle == gst_hip_event_get_recorded_stream (event)) {
+    GST_LOG_OBJECT (stream,
+        "Stream is already the recorded stream for the event");
+    return TRUE;
   }
 
   auto hip_ret = HipSetDevice (stream->vendor, stream->device_id);

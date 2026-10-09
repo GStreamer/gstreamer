@@ -62,6 +62,7 @@ struct _GstHipEvent : public GstMiniObject
 
   GstHipEventPool *pool = nullptr;
   hipEvent_t handle = nullptr;
+  hipStream_t recorded_stream = nullptr;
   gboolean recorded = FALSE;
   GstHipVendor vendor;
   guint device_id;
@@ -264,6 +265,7 @@ gst_hip_event_pool_release (GstHipEventPool * pool, GstHipEvent * event)
     std::lock_guard < std::mutex > lk (priv->lock);
     event->dispose = nullptr;
     event->pool = nullptr;
+    event->recorded_stream = nullptr;
     event->recorded = FALSE;
     priv->event_pool.push (event);
   }
@@ -411,8 +413,10 @@ gst_hip_event_record (GstHipEvent * event, hipStream_t stream)
     return hip_ret;
 
   hip_ret = HipEventRecord (event->vendor, event->handle, stream);
-  if (hip_ret == hipSuccess)
+  if (hip_ret == hipSuccess) {
+    event->recorded_stream = stream;
     event->recorded = TRUE;
+  }
 
   return hip_ret;
 }
@@ -459,6 +463,14 @@ gst_hip_event_synchronize (GstHipEvent * event)
     return hip_ret;
 
   return HipEventSynchronize (event->vendor, event->handle);
+}
+
+hipStream_t
+gst_hip_event_get_recorded_stream (GstHipEvent * event)
+{
+  g_return_val_if_fail (event, nullptr);
+
+  return event->recorded_stream;
 }
 
 hipEvent_t

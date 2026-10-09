@@ -773,3 +773,41 @@ gst_hip_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
   return gst_hip_result (hip_ret, vendor);
 }
+
+/**
+ * gst_hip_stream_schedule_wait_buffer:
+ * @stream: a #GstHipStream
+ * @buffer: a #GstBuffer
+ *
+ * Schedules GPU-side waits for events attached to HIP memories in @buffer.
+ * Non-HIP memories and memories without an event are ignored.
+ * This function does not wait on the CPU.
+ *
+ * Returns: %TRUE if all required waits were scheduled successfully
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_stream_schedule_wait_buffer (GstHipStream * stream, GstBuffer * buffer)
+{
+  g_return_val_if_fail (stream, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
+  for (guint i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    auto mem = gst_buffer_peek_memory (buffer, i);
+    if (!gst_is_hip_memory (mem))
+      continue;
+
+    GstHipEvent *event = nullptr;
+    if (!gst_hip_memory_get_event ((GstHipMemory *) mem, &event))
+      continue;
+
+    auto ret = gst_hip_stream_wait_event (stream, event);
+    gst_hip_event_unref (event);
+
+    if (!ret)
+      return FALSE;
+  }
+
+  return TRUE;
+}

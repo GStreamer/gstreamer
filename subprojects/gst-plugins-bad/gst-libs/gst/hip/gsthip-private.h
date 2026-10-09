@@ -34,6 +34,9 @@ GST_HIP_API
 hipEvent_t gst_hip_event_get_handle (GstHipEvent * event);
 
 GST_HIP_API
+hipStream_t gst_hip_event_get_recorded_stream (GstHipEvent * event);
+
+GST_HIP_API
 gpointer gst_hip_memory_get_pointer (GstHipMemory * mem);
 
 GST_HIP_API

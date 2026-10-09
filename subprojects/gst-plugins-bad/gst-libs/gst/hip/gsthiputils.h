@@ -104,5 +104,9 @@ gboolean     gst_hip_buffer_copy_into (GstBuffer * dest,
                                        GstBuffer * src,
                                        const GstVideoInfo * info);
 
+GST_HIP_API
+gboolean     gst_hip_stream_schedule_wait_buffer (GstHipStream * stream,
+                                                  GstBuffer * buffer);
+
 G_END_DECLS
 
