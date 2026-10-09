@@ -72,6 +72,12 @@ typedef struct _GstHipEventPool GstHipEventPool;
 typedef struct _GstHipEventPoolClass GstHipEventPoolClass;
 typedef struct _GstHipEventPoolPrivate GstHipEventPoolPrivate;
 
+typedef struct _GstHipFenceData GstHipFenceData;
+
+typedef struct _GstHipFenceDataPool GstHipFenceDataPool;
+typedef struct _GstHipFenceDataPoolClass GstHipFenceDataPoolClass;
+typedef struct _GstHipFenceDataPoolPrivate GstHipFenceDataPoolPrivate;
+
 typedef struct _GstHipKernelModule GstHipKernelModule;
 typedef struct _GstHipKernelArgs GstHipKernelArgs;
 
