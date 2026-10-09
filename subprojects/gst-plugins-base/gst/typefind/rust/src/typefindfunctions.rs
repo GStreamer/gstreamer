@@ -1255,6 +1255,280 @@ extern "C" fn sdp_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// EA - video/x-ea
+// Magic: LE fourcc @ 0 in a known set; size u32 LE @ 4 in 8..=0xFFFFF
+// (byte-swapped when the raw value exceeds 0xFFFFFF).
+extern "C" fn ea_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<8>(0) else { return };
+    const FOURCCS: [[u8; 4]; 10] = [
+        *b"ISNh", *b"SCHl", *b"SEAD", *b"SHEN", *b"kVGT", *b"MADk", *b"MPCh", *b"MVhd", *b"MVIh",
+        *b"AVP6",
+    ];
+    if !FOURCCS.contains(&[data[0], data[1], data[2], data[3]]) {
+        return;
+    }
+    let size = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
+    let size = if size > 0x00FF_FFFF {
+        size.swap_bytes()
+    } else {
+        size
+    };
+    if (8..=0xFFFFF).contains(&size) {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-ea");
+    }
+}
+
+// NSV - video/x-nsv
+// Magic: "NSVf"/"NSVs" @ 0, or a sync frame "NSVs" @ i in the first 4 KiB.
+// Sync frame header is 19 bytes; the bit-packed payload size fields at
+// i+19..i+24 are num_aux (4 bits), vsize (20 bits) and asize (16 bits).
+// The frame spans i..i+24+vsize+asize; a nonsync frame right after starts
+// with the bytes EF BE. Bare marker suggests 1.
+extern "C" fn nsv_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_at_most(4096) else {
+        return;
+    };
+
+    if data.starts_with(b"NSVf") || data.starts_with(b"NSVs") {
+        suggest!(tf, Prob::MAXIMUM, c"video/x-nsv");
+        return;
+    }
+    // First "NSVs" chunk marker (offset 0 already handled above).
+    if let Some(i) = data.windows(4).position(|w| w == *b"NSVs")
+        && data.len() >= i + 24
+    {
+        // Bit-packed sizes at i+19..i+24: low nibble of i+19 is num_aux,
+        // so vsize is the 24-bit LE word shifted right by 4; asize is the
+        // full 16-bit LE word at i+22.
+        let vsize =
+            (u32::from_le_bytes([data[i + 19], data[i + 20], data[i + 21], 0]) >> 4) as usize;
+        let asize = u16::from_le_bytes([data[i + 22], data[i + 23]]) as usize;
+        let offset = i + 24 + vsize + asize;
+        if data.get(offset..offset + 2) == Some(&[0xEF, 0xBE]) {
+            suggest!(tf, Prob::NEARLY_CERTAIN, c"video/x-nsv");
+        } else {
+            suggest!(tf, Prob::MINIMUM, c"video/x-nsv");
+        }
+    }
+}
+
+// NUT - application/x-nut
+// Magic: 8-byte sync word "NM" 7A 56 1F 5F 04 AD anywhere in the first 4 KiB.
+extern "C" fn nut_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_at_most(4096) else {
+        return;
+    };
+    const MARKER: [u8; 8] = [0x4E, 0x4D, 0x7A, 0x56, 0x1F, 0x5F, 0x04, 0xAD];
+    if data.windows(8).any(|w| w == MARKER) {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-nut");
+    }
+}
+
+// Interplay MVE - application/x-ipmovie
+// Magic: "Interplay MVE File\x1A\0\x1A\0" (22 bytes) anywhere in the first
+// 4 KiB.
+extern "C" fn ipmovie_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_at_most(4096) else {
+        return;
+    };
+    const SIG: [u8; 22] = *b"Interplay MVE File\x1A\0\x1A\0";
+    if data.windows(22).any(|w| w == SIG) {
+        suggest!(tf, Prob::LIKELY, c"video/x-ipmovie");
+    }
+}
+
+// SMAF - application/vnd.smaf
+// Magic: "MMMD" @ 0 and "CNTI" @ 8.
+extern "C" fn mmf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<12>(0)
+        && data[..4] == *b"MMMD"
+        && data[8..12] == *b"CNTI"
+    {
+        suggest!(tf, Prob::LIKELY, c"application/vnd.smaf");
+    }
+}
+
+// IFF - application/x-iff
+// Magic: "FORM" @ 0 with a known form type @ 8, or "FRM8" @ 0 with "DSD " @ 12.
+extern "C" fn iff_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const FORM_TYPES: [[u8; 4]; 10] = [
+        *b"8SVX", *b"16SV", *b"MAUD", *b"PBM ", *b"ACBM", *b"DEEP", *b"ILBM", *b"RGB8", *b"ANIM",
+        *b"RGBN",
+    ];
+    let Some(data) = tf.peek::<16>(0) else { return };
+    if (data[..4] == *b"FORM" && FORM_TYPES.contains(&[data[8], data[9], data[10], data[11]]))
+        || (data[..4] == *b"FRM8" && data[12..16] == *b"DSD ")
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-iff");
+    }
+}
+
+// GXF - application/gxf
+// Magic: 00 00 00 00 01 BC @ 0 and 00 00 00 00 E1 E2 @ 10.
+extern "C" fn gxf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<16>(0)
+        && data[..6] == *b"\x00\x00\x00\x00\x01\xBC"
+        && data[10..16] == *b"\x00\x00\x00\x00\xE1\xE2"
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/gxf");
+    }
+}
+
+// MS-DOS/PE executable - application/x-ms-dos-executable
+// Magic: "MZ" @ 0, u16 LE @ 8 == 4, "PE" at the u32 LE offset @ 60.
+extern "C" fn msdos_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<64>(0) else { return };
+    if data[..2] != *b"MZ" || u16::from_le_bytes([data[8], data[9]]) != 4 {
+        return;
+    }
+    let pe_offset = u32::from_le_bytes([data[60], data[61], data[62], data[63]]) as i64;
+    if let Some(pe) = tf.peek::<2>(pe_offset)
+        && pe == b"PE"
+    {
+        suggest!(tf, Prob::NEARLY_CERTAIN, c"application/x-ms-dos-executable");
+    }
+}
+
+// Speex - audio/x-speex
+// Magic: "Speex   " @ 0; header size u32 LE @ 32 >= 80; rate u32 LE @ 36
+// <= 48000; mode u32 LE @ 40 <= 3.
+extern "C" fn speex_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<80>(0) else { return };
+    if data[..8] != *b"Speex   " {
+        return;
+    }
+    let header_size = u32::from_le_bytes([data[32], data[33], data[34], data[35]]);
+    let rate = u32::from_le_bytes([data[36], data[37], data[38], data[39]]);
+    let mode = u32::from_le_bytes([data[40], data[41], data[42], data[43]]);
+    if header_size >= 80 && rate <= 48000 && mode <= 3 {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-speex");
+    }
+}
+
+// Vorbis - audio/x-vorbis
+// Magic: 0x01 "vorbis" + 4 zero bytes @ 0; channels @ 11 != 0; samplerate
+// u32 LE @ 12 != 0; blocksize exponents @ 28 both in 6..=13 with bs0 <= bs1;
+// framing bit @ 29 set.
+extern "C" fn vorbis_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek::<30>(0)
+        && data[..11] == *b"\x01vorbis\x00\x00\x00\x00"
+        && data[11] != 0
+        && u32::from_le_bytes([data[12], data[13], data[14], data[15]]) != 0
+        && (data[29] & 0x01) == 1
+    {
+        let bs0 = data[28] & 0x0F;
+        let bs1 = data[28] >> 4;
+        if (6..=13).contains(&bs0) && (6..=13).contains(&bs1) && bs0 <= bs1 {
+            suggest!(tf, Prob::MAXIMUM, c"audio/x-vorbis");
+        }
+    }
+}
+
+// Ogg/Annodex - application/ogg
+// Walks BOS "OggS" pages in the first 4 KiB (1 segment, segment size >= 8)
+// and classifies the first segment's payload against known codec markers.
+#[derive(Clone, Copy)]
+enum OggAnxKind {
+    Audio,
+    Video,
+    Kate,
+    Other,
+    Ignored,
+}
+
+const OGGANX_MARKERS: [(&[u8], OggAnxKind); 18] = [
+    (b"\x01vorbis", OggAnxKind::Audio),
+    (b"\x80theora", OggAnxKind::Video),
+    (b"fLaC", OggAnxKind::Audio),
+    (b"\x7FFLAC", OggAnxKind::Audio),
+    (b"Speex", OggAnxKind::Audio),
+    (b"CMML\0\0\0\0", OggAnxKind::Other),
+    (b"PCM     ", OggAnxKind::Audio),
+    (b"Annodex", OggAnxKind::Ignored),
+    (b"fishead", OggAnxKind::Ignored),
+    (b"AnxData", OggAnxKind::Ignored),
+    (b"CELT    ", OggAnxKind::Audio),
+    (b"\x80kate\0\0\0", OggAnxKind::Kate),
+    (b"BBCD\0", OggAnxKind::Video),
+    (b"OVP80\x01\x01", OggAnxKind::Video),
+    (b"OpusHead", OggAnxKind::Audio),
+    (b"\x01audio\0\0\0", OggAnxKind::Audio),
+    (b"\x01video\0\0\0", OggAnxKind::Video),
+    (b"\x01text\0\0\0", OggAnxKind::Other),
+];
+
+extern "C" fn ogganx_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let mut scan = Scanner::new(tf, 0);
+    let mut ogg_syncs = 0u32;
+    let mut audio = 0u32;
+    let mut video = 0u32;
+    let mut kate = 0u32;
+    let mut other = 0u32;
+
+    while scan.offset() < 4096 {
+        let Some(page) = scan.peek(64) else {
+            break;
+        };
+        if &page[..5] != b"OggS\0" {
+            break;
+        }
+        ogg_syncs += 1;
+        if page[5] != 0x02 || page[26] != 1 {
+            break;
+        }
+        let size = page[27] as usize;
+        if size < 8 {
+            break;
+        }
+        // 27-byte page header + lacing table.
+        scan.consume(28);
+        let Some(payload) = scan.peek(size) else {
+            break;
+        };
+        let kind = OGGANX_MARKERS
+            .iter()
+            .find(|(marker, _)| payload.starts_with(marker))
+            .map_or(OggAnxKind::Other, |(_, kind)| *kind);
+        match kind {
+            OggAnxKind::Audio => audio += 1,
+            OggAnxKind::Video => video += 1,
+            OggAnxKind::Kate => kate += 1,
+            OggAnxKind::Ignored => {}
+            OggAnxKind::Other => other += 1,
+        }
+        scan.consume(size);
+    }
+
+    if ogg_syncs == 0 {
+        return;
+    }
+
+    let mime = if video > 0 {
+        c"video/ogg"
+    } else if audio > 0 {
+        c"audio/ogg"
+    } else if kate > 0 && other == 0 {
+        c"application/kate"
+    } else {
+        c"application/ogg"
+    };
+    suggest!(tf, Prob::MAXIMUM, mime);
+}
+
+// IRCAM - audio/x-ircam
+// Magic: masked match 64 A3 0? 00 (mask FF FF F8 FF) @ 0, forward or
+// byte-reversed.
+extern "C" fn ircam_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<4>(0) else { return };
+    const MATCH: [u8; 4] = [0x64, 0xA3, 0x00, 0x00];
+    const MASK: [u8; 4] = [0xFF, 0xFF, 0xF8, 0xFF];
+    let forward = (0..4).all(|x| data[x] & MASK[x] == MATCH[x]);
+    let reversed = (0..4).all(|x| data[x] & MASK[3 - x] == MATCH[3 - x]);
+    if forward || reversed {
+        suggest!(tf, Prob::MAXIMUM, c"audio/x-ircam");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -1469,6 +1743,41 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-flac", PRIMARY, flac_type_find, "flac"),
     // SDP - application/sdp
     typefinder!("application/sdp", SECONDARY, sdp_type_find, "sdp"),
+    // EA - video/x-ea
+    typefinder!("video/x-ea", SECONDARY, ea_type_find),
+    // NSV - video/x-nsv
+    typefinder!("video/x-nsv", MARGINAL, nsv_type_find, "nsv"),
+    // NUT - application/x-nut
+    typefinder!("application/x-nut", MARGINAL, nut_type_find, "nut"),
+    // Interplay MVE - video/x-ipmovie
+    typefinder!("video/x-ipmovie", SECONDARY, ipmovie_type_find),
+    // SMAF - application/vnd.smaf
+    typefinder!("application/vnd.smaf", SECONDARY, mmf_type_find, "mmf"),
+    // IFF - application/x-iff
+    typefinder!("application/x-iff", SECONDARY, iff_type_find),
+    // GXF - application/gxf
+    typefinder!("application/gxf", SECONDARY, gxf_type_find),
+    // MS-DOS/PE executable - application/x-ms-dos-executable
+    typefinder!(
+        "application/x-ms-dos-executable",
+        SECONDARY,
+        msdos_type_find,
+        "dll,exe,ocx,sys,scr,msstyles,cpl"
+    ),
+    // Speex - audio/x-speex
+    typefinder!("audio/x-speex", PRIMARY, speex_type_find),
+    // Vorbis - audio/x-vorbis
+    typefinder!("audio/x-vorbis", PRIMARY, vorbis_type_find),
+    // Ogg/Annodex - application/ogg
+    typefinder!(
+        "application/ogg",
+        PRIMARY,
+        ogganx_type_find,
+        "ogg,oga,ogv,ogm,ogx,spx,anx,axa,axv",
+        "application/ogg;video/ogg;audio/ogg;application/kate"
+    ),
+    // IRCAM - audio/x-ircam
+    typefinder!("audio/x-ircam", SECONDARY, ircam_type_find, "sf"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.

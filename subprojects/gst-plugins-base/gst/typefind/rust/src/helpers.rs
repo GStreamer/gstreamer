@@ -10,6 +10,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::bindings::{self, gpointer};
+use std::num::NonZeroU64;
 use std::os::raw::c_uint;
 use std::ptr;
 
@@ -44,8 +45,28 @@ impl TypeFind {
         }
     }
 
-    pub fn length(&mut self) -> u64 {
-        unsafe { bindings::gst_type_find_get_length(&mut self.0) }
+    /// Returns the data stream length in bytes, or None if unknown.
+    ///
+    /// Per the C API: `0` means "not available"; positive values are known lengths.
+    pub fn length(&mut self) -> Option<NonZeroU64> {
+        let raw = unsafe { bindings::gst_type_find_get_length(&mut self.0) };
+        NonZeroU64::new(raw)
+    }
+
+    /// Peek up to `max` bytes from offset 0, clamped by the known stream length.
+    ///
+    /// When the stream length is unknown (C API returns 0), peeks exactly `max`
+    /// bytes. When known and less than `max`, peeks all available data instead of
+    /// wasting a call on more bytes than exist.
+    pub fn peek_at_most(&mut self, max: usize) -> Option<&[u8]> {
+        let len = self
+            .length()
+            .map_or(max as u64, NonZeroU64::get)
+            .min(max as u64);
+        if len == 0 {
+            return None;
+        }
+        self.peek_var(0, len as u32)
     }
 
     /// Peek N bytes from offset 0 and compare with a magic array.
@@ -122,8 +143,12 @@ impl<'a> Scanner<'a> {
             return Some((base, chunk as usize));
         }
         // Short tail: the stream ends before a full window. An unknown
-        // length (0) lands here and asks for `min`.
-        let left = self.tf.length().saturating_sub(offset as u64);
+        // length lands here and asks for at least `min` bytes.
+        let left = self
+            .tf
+            .length()
+            .map_or(0, NonZeroU64::get)
+            .saturating_sub(offset as u64);
         let len = left.clamp(min as u64, chunk as u64) as u32;
         let base = unsafe { bindings::gst_type_find_peek(&mut self.tf.0, offset, len) };
         (!base.is_null()).then_some((base, len as usize))
