@@ -100,6 +100,41 @@ static TestFrame test_planar_rgb_reorder[] = {
           (gchar *) planar_r_data}},
 };
 
+static const gchar a420_y_data[] = {
+  0x55, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC,
+  IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC
+};
+static const gchar a420_u_data[] =
+    { 0x00, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar a420_v_data[] =
+    { 0xaa, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar a420_a_data[] = {
+  0xff, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC,
+  IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC
+};
+
+static const gchar a420_10le_y_data[] = {
+  0x55, 0x01, IGNORE_MAGIC, IGNORE_MAGIC,
+  IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC
+};
+static const gchar a420_10le_u_data[] =
+    { 0x00, 0x00, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar a420_10le_v_data[] =
+    { 0xaa, 0x02, IGNORE_MAGIC, IGNORE_MAGIC };
+static const gchar a420_10le_a_data[] = {
+  0xff, 0x03, IGNORE_MAGIC, IGNORE_MAGIC,
+  IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC, IGNORE_MAGIC
+};
+
+static TestFrame test_planar_yuva_bitdepth[] = {
+  {1, 1, GST_VIDEO_FORMAT_A420,
+        {(gchar *) a420_y_data, (gchar *) a420_u_data,
+          (gchar *) a420_v_data, (gchar *) a420_a_data}},
+  {1, 1, GST_VIDEO_FORMAT_A420_10LE,
+        {(gchar *) a420_10le_y_data, (gchar *) a420_10le_u_data,
+          (gchar *) a420_10le_v_data, (gchar *) a420_10le_a_data}},
+};
+
 #ifndef GST_CAPS_FEATURE_MEMORY_DMABUF
 #define GST_CAPS_FEATURE_MEMORY_DMABUF "memory:DMABuf"
 #endif
@@ -338,6 +373,14 @@ GST_START_TEST (test_planar_rgb_reorder_buffer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_planar_yuva_bitdepth_buffer)
+{
+  check_conversion (test_planar_yuva_bitdepth,
+      G_N_ELEMENTS (test_planar_yuva_bitdepth));
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_passthrough)
 {
   guint formats_size = G_N_ELEMENTS (test_passthrough_formats);
@@ -545,6 +588,7 @@ gst_gl_color_convert_suite (void)
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_reorder_buffer);
   tcase_add_test (tc_chain, test_planar_rgb_reorder_buffer);
+  tcase_add_test (tc_chain, test_planar_yuva_bitdepth_buffer);
   tcase_add_test (tc_chain, test_meta);
   tcase_add_test (tc_chain, test_passthrough);
   /* FIXME add YUV <--> RGB conversion tests */
