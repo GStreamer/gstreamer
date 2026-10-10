@@ -871,7 +871,8 @@ gst_nv_h264_dec_fill_dpb (GstNvH264Dec * self, GstH264Picture * ref,
     case GST_H264_PICTURE_FIELD_TOP_FIELD:
       dpb->FieldOrderCnt[0] = ref->top_field_order_cnt;
       dpb->used_for_reference = 0x1;
-      if (ref->other_field && !ref->other_field->nonexisting) {
+      if (ref->other_field && !ref->other_field->nonexisting &&
+          GST_H264_PICTURE_IS_REF (ref->other_field)) {
         dpb->FieldOrderCnt[1] = ref->other_field->bottom_field_order_cnt;
         dpb->used_for_reference |= 0x2;
       } else {
@@ -881,7 +882,8 @@ gst_nv_h264_dec_fill_dpb (GstNvH264Dec * self, GstH264Picture * ref,
     case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
       dpb->FieldOrderCnt[1] = ref->bottom_field_order_cnt;
       dpb->used_for_reference = 0x2;
-      if (ref->other_field && !ref->other_field->nonexisting) {
+      if (ref->other_field && !ref->other_field->nonexisting &&
+          GST_H264_PICTURE_IS_REF (ref->other_field)) {
         dpb->FieldOrderCnt[0] = ref->other_field->top_field_order_cnt;
         dpb->used_for_reference |= 0x1;
       } else {
@@ -968,17 +970,33 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
   g_array_set_size (ref_list, 0);
 
   memset (&h264_params->dpb, 0, sizeof (h264_params->dpb));
-  gst_h264_dpb_get_pictures_short_term_ref (dpb, FALSE, FALSE, ref_list);
+  gst_h264_dpb_get_pictures_short_term_ref (dpb, FALSE, TRUE, ref_list);
   for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
     GstH264Picture *other = g_array_index (ref_list, GstH264Picture *, i);
+
+    /* Skip gap fields and pairs already represented by their first field */
+    if (other->nonexisting || (other->second_field && other->other_field &&
+            GST_H264_PICTURE_IS_REF (other->other_field) &&
+            !other->other_field->nonexisting)) {
+      continue;
+    }
+
     gst_nv_h264_dec_fill_dpb (self, other, &h264_params->dpb[ref_frame_idx]);
     ref_frame_idx++;
   }
   g_array_set_size (ref_list, 0);
 
-  gst_h264_dpb_get_pictures_long_term_ref (dpb, FALSE, ref_list);
+  gst_h264_dpb_get_pictures_long_term_ref (dpb, TRUE, ref_list);
   for (i = 0; ref_frame_idx < 16 && i < ref_list->len; i++) {
     GstH264Picture *other = g_array_index (ref_list, GstH264Picture *, i);
+
+    /* Skip gap fields and pairs already represented by their first field */
+    if (other->nonexisting || (other->second_field && other->other_field &&
+            GST_H264_PICTURE_IS_REF (other->other_field) &&
+            !other->other_field->nonexisting)) {
+      continue;
+    }
+
     gst_nv_h264_dec_fill_dpb (self, other, &h264_params->dpb[ref_frame_idx]);
     ref_frame_idx++;
   }
