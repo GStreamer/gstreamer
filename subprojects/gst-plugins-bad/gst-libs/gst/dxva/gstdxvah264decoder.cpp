@@ -460,16 +460,15 @@ gst_dxva_h264_decoder_start_picture (GstH264Decoder * decoder,
   for (i = 0, j = 0; i < dpb_array->len && j < 16; i++) {
     GstH264Picture *other = g_array_index (dpb_array, GstH264Picture *, i);
 
-    if (!GST_H264_PICTURE_IS_REF (other))
-      continue;
-
-    /* Ignore nonexisting picture */
-    if (other->nonexisting)
-      continue;
-
-    /* The second field picture will be handled differently */
+    /* Use the first field if it is referenced, otherwise use the second field */
     if (other->second_field)
       continue;
+
+    if (!GST_H264_PICTURE_IS_REF (other) || other->nonexisting) {
+      other = other->other_field;
+      if (!other || !GST_H264_PICTURE_IS_REF (other) || other->nonexisting)
+        continue;
+    }
 
     pic_params->RefFrameList[j].Index7Bits =
         klass->get_picture_id (self, GST_CODEC_PICTURE (other));
@@ -498,7 +497,8 @@ gst_dxva_h264_decoder_start_picture (GstH264Decoder * decoder,
         break;
     }
 
-    if (other->other_field && !other->other_field->nonexisting) {
+    if (other->other_field && !other->other_field->nonexisting &&
+        GST_H264_PICTURE_IS_REF (other->other_field)) {
       GstH264Picture *other_field = other->other_field;
 
       switch (other_field->field) {
