@@ -69,6 +69,21 @@ struct _GstH264Dpb
 };
 
 static void
+gst_h264_dpb_clear_picture (GstH264Picture ** picture)
+{
+  GstH264Picture *other = (*picture)->other_field;
+
+  /* Unlink the field pair created by gst_h264_dpb_add() to avoid
+   * dangling pointers when either field is removed from the DPB */
+  if (other && other->other_field == *picture)
+    other->other_field = NULL;
+
+  (*picture)->other_field = NULL;
+
+  gst_clear_h264_picture (picture);
+}
+
+static void
 gst_h264_dpb_init (GstH264Dpb * dpb)
 {
   dpb->num_output_needed = 0;
@@ -95,7 +110,7 @@ gst_h264_dpb_new (void)
       g_array_sized_new (FALSE, TRUE, sizeof (GstH264Picture *),
       GST_H264_DPB_MAX_SIZE);
   g_array_set_clear_func (dpb->pic_list,
-      (GDestroyNotify) gst_clear_h264_picture);
+      (GDestroyNotify) gst_h264_dpb_clear_picture);
 
   return dpb;
 }
@@ -318,12 +333,18 @@ gst_h264_dpb_delete_unused (GstH264Dpb * dpb)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    /* NOTE: don't use g_array_remove_index_fast here since the last picture
-     * need to be referenced for bumping decision */
+    /* Keep the pair while either field is needed for reference or output */
+    if (picture->other_field &&
+        (picture->other_field->needed_for_output ||
+            GST_H264_PICTURE_IS_REF (picture->other_field))) {
+      continue;
+    }
+
     if (!picture->needed_for_output && !GST_H264_PICTURE_IS_REF (picture)) {
       GST_TRACE
           ("remove picture %p (frame num: %d, poc: %d, field: %d) from dpb",
           picture, picture->frame_num, picture->pic_order_cnt, picture->field);
+      /* Keep the order of the remaining pictures for bumping decisions */
       g_array_remove_index (dpb->pic_list, i);
       i--;
     }
@@ -354,8 +375,11 @@ gst_h264_dpb_num_ref_frames (GstH264Dpb * dpb)
     if (picture->second_field)
       continue;
 
-    if (GST_H264_PICTURE_IS_REF (picture))
+    if (GST_H264_PICTURE_IS_REF (picture) ||
+        (picture->other_field &&
+            GST_H264_PICTURE_IS_REF (picture->other_field))) {
       ret++;
+    }
   }
 
   return ret;
@@ -882,6 +906,8 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
   gint i;
   gint index;
   gboolean output_needed = TRUE;
+  gboolean has_reference;
+  gboolean remove = FALSE;
 
   g_return_val_if_fail (dpb != NULL, NULL);
 
@@ -904,15 +930,21 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
 
   g_assert (dpb->num_output_needed >= 0);
 
-  /* NOTE: don't use g_array_remove_index_fast here since the last picture
-   * need to be referenced for bumping decision */
-  if (!GST_H264_PICTURE_IS_REF (picture) || drain ||
-      /* Or in case of emergency bumping, remove this picture from dpb as well */
-      !output_needed) {
-    g_array_remove_index (dpb->pic_list, index);
-  }
-
   other_picture = picture->other_field;
+
+  has_reference = GST_H264_PICTURE_IS_REF (picture);
+  if (other_picture)
+    has_reference |= GST_H264_PICTURE_IS_REF (other_picture);
+
+  /* Remove both fields if neither is referenced, or when draining
+   * or performing emergency eviction */
+  if (drain || !output_needed || !has_reference)
+    remove = TRUE;
+
+  /* Keep the order of the remaining pictures for bumping decisions */
+  if (remove)
+    g_array_remove_index (dpb->pic_list, index);
+
   if (other_picture) {
     other_picture->needed_for_output = FALSE;
 
@@ -930,11 +962,7 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
       picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
     }
 
-    if (!other_picture->ref ||
-        /* Remove complementary field when draining */
-        drain ||
-        /* Or, if we are emergency bumping with already outputted picture */
-        !output_needed) {
+    if (remove) {
       for (i = 0; i < dpb->pic_list->len; i++) {
         GstH264Picture *tmp =
             g_array_index (dpb->pic_list, GstH264Picture *, i);
