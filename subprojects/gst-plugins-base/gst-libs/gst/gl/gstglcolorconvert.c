@@ -383,7 +383,7 @@ static const gchar templ_PLANAR_YUVA_to_PLANAR_YUVA_BODY[] =
     "yuva.x = swizzle(texture2D(Ytex, texcoord * tex_scale0), input_swizzle).r * in_bitdepth_factor;\n"
     "yuva.y = swizzle(texture2D(Utex, texcoord * tex_scale1 * chroma_sampling), input_swizzle).r * in_bitdepth_factor;\n"
     "yuva.z = swizzle(texture2D(Vtex, texcoord * tex_scale2 * chroma_sampling), input_swizzle).r * in_bitdepth_factor;\n"
-    "yuva.a = swizzle(texture2D(Atex, texcoord * tex_scale3), input_swizzle).r;\n"
+    "yuva.a = swizzle(texture2D(Atex, texcoord * tex_scale3), input_swizzle).r * in_bitdepth_factor;\n"
     "yuva = swizzle(yuva, output_swizzle) * out_bitdepth_factor;\n"
     "write_planar_yuva(yuva);\n";
 
