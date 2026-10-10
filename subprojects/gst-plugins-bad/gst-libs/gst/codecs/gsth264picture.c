@@ -930,7 +930,11 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
       picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
     }
 
-    if (!other_picture->ref) {
+    if (!other_picture->ref ||
+        /* Remove complementary field when draining */
+        drain ||
+        /* Or, if we are emergency bumping with already outputted picture */
+        !output_needed) {
       for (i = 0; i < dpb->pic_list->len; i++) {
         GstH264Picture *tmp =
             g_array_index (dpb->pic_list, GstH264Picture *, i);
@@ -942,6 +946,14 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
       }
     }
     /* Now other field may or may not exist */
+  }
+
+  if (!output_needed) {
+    /* Emergency bumping evicts a picture that has already been output.
+     * Its codec frame may have been released or may still be in the output
+     * queue */
+    gst_h264_picture_unref (picture);
+    return NULL;
   }
 
   dpb->last_output_poc = picture->pic_order_cnt;
