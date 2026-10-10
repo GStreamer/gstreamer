@@ -2969,6 +2969,21 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     return;
   }
 
+  /* Each sample entry needs at least iv_size bytes, plus a 2 byte subsample
+   * count and one 6 byte subsample entry when subsample encryption is used
+   * (a subsample count of 0 is rejected below). */
+  {
+    guint remaining = gst_byte_reader_get_remaining (&br);
+    guint min_bytes = iv_size + (uses_sub_sample_encryption ? 2 + 6 : 0);
+
+    if (sample_count > remaining / MAX (min_bytes, 1)) {
+      GST_ERROR_OBJECT (qtdemux,
+          "sample_count %u exceeds available data (%u bytes, %u per sample)",
+          sample_count, remaining, min_bytes);
+      return;
+    }
+  }
+
   ss_info->crypto_info =
       g_ptr_array_new_full (sample_count,
       (GDestroyNotify) qtdemux_gst_structure_free);
@@ -4101,7 +4116,7 @@ error:
  * or NULL on failure */
 static guint8 *
 qtdemux_parse_saiz (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GstByteReader * br, guint32 * sample_count)
+    GstByteReader * br, guint64 max_samples, guint32 * sample_count)
 {
   guint32 flags = 0;
   guint8 *info_sizes;
@@ -4129,6 +4144,14 @@ qtdemux_parse_saiz (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return NULL;
   GST_DEBUG_OBJECT (qtdemux, "sample_count: %u", *sample_count);
 
+  /* There can't be auxiliary information for more samples than the track
+   * runs of this fragment contain. */
+  if (*sample_count > max_samples) {
+    GST_ERROR_OBJECT (qtdemux, "saiz sample_count %u exceeds the %"
+        G_GUINT64_FORMAT " samples of the fragment", *sample_count,
+        max_samples);
+    return NULL;
+  }
 
   if (default_info_size == 0) {
     if (!gst_byte_reader_dup_data (br, *sample_count, &info_sizes)) {
@@ -4244,6 +4267,22 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   ss_info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
 
+  /* The auxiliary information of all samples has to fit into the data */
+  {
+    guint64 total_size = 0;
+    guint32 n;
+
+    for (n = 0; n < sample_count; n++)
+      total_size += info_sizes[n];
+
+    if (total_size > gst_byte_reader_get_remaining (br)) {
+      GST_ERROR_OBJECT (qtdemux, "cenc auxiliary info of %u samples needs %"
+          G_GUINT64_FORMAT " bytes, only %u available", sample_count,
+          total_size, gst_byte_reader_get_remaining (br));
+      return FALSE;
+    }
+  }
+
   if (ss_info->crypto_info) {
     old_crypto_info = ss_info->crypto_info;
     /* Count number of non-null entries remaining at the tail end */
@@ -4254,9 +4293,9 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 
-  ss_info->crypto_info =
-      g_ptr_array_new_full (sample_count + old_entries,
-      (GDestroyNotify) qtdemux_gst_structure_free);
+  /* Don't pre-allocate from the untrusted sample_count, let the array grow */
+  ss_info->crypto_info = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      qtdemux_gst_structure_free);
 
   /* We preserve old entries because we parse the next moof in advance
    * of consuming all samples from the previous moof, and otherwise
@@ -4526,11 +4565,42 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       guint32 info_type = 0;
       guint64 offset = 0;
       guint32 info_type_parameter = 0;
+      guint64 trun_samples = 0;
+      GstByteReader trun_peek;
+
+      /* Validate saiz against the sample count of the track runs, which
+       * are only parsed further below */
+      trun_node =
+          qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
+          &trun_peek);
+      while (trun_node) {
+        guint32 trun_count;
+
+        if (!gst_byte_reader_skip (&trun_peek, 4) ||
+            !gst_byte_reader_get_uint32_be (&trun_peek, &trun_count)) {
+          GST_ERROR_OBJECT (qtdemux, "failed to read trun sample count");
+          g_free (qtdemux->cenc_aux_info_sizes);
+          qtdemux->cenc_aux_info_sizes = NULL;
+          goto fail;
+        }
+        trun_samples += trun_count;
+        /* qtdemux_parse_trun() rejects fragments above this anyway */
+        if (trun_samples >=
+            QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
+          GST_ERROR_OBJECT (qtdemux, "too many samples in track runs");
+          g_free (qtdemux->cenc_aux_info_sizes);
+          qtdemux->cenc_aux_info_sizes = NULL;
+          goto fail;
+        }
+        trun_node =
+            qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
+            &trun_peek);
+      }
 
       g_free (qtdemux->cenc_aux_info_sizes);
 
       qtdemux->cenc_aux_info_sizes =
-          qtdemux_parse_saiz (qtdemux, stream, &saiz_data,
+          qtdemux_parse_saiz (qtdemux, stream, &saiz_data, trun_samples,
           &qtdemux->cenc_aux_sample_count);
       if (qtdemux->cenc_aux_info_sizes == NULL) {
         GST_ERROR_OBJECT (qtdemux, "failed to parse saiz box");
