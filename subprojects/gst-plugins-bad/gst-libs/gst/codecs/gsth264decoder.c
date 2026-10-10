@@ -960,10 +960,16 @@ _bump_dpb (GstH264Decoder * self, GstH264DpbBumpMode bump_level,
 
   while (gst_h264_dpb_needs_bump (priv->dpb, current_picture, bump_level)) {
     GstH264Picture *to_output;
+    guint prev_size = gst_h264_dpb_get_size (priv->dpb);
 
     to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
 
     if (!to_output) {
+      /* Already outputted picture was removed from the DPB without outputting
+       * it again. Continue bumping if needed */
+      if (gst_h264_dpb_get_size (priv->dpb) < prev_size)
+        continue;
+
       GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
       break;
     }
