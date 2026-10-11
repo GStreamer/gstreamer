@@ -1459,7 +1459,7 @@ gst_d3d12_h264_enc_update_rate_control (GstD3D12H264Enc * self,
           break;
         case D3D12_VIDEO_ENCODER_RATE_CONTROL_MODE_QVBR:
           prev = &prev_config.qvbr;
-          cur = &config->cbr;
+          cur = &config->qvbr;
           break;
         default:
           g_assert_not_reached ();
