@@ -39,11 +39,5 @@ struct _GstD3D12AllocationParams
   guint mip_levels;
 };
 
-GST_D3D12_API
-void  gst_d3d12_memory_set_fence_unchecked (GstD3D12Memory * mem,
-                                            ID3D12Fence * fence,
-                                            guint64 fence_value,
-                                            gboolean wait);
-
 G_END_DECLS
 

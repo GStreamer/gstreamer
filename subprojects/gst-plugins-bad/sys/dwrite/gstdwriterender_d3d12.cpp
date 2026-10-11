@@ -24,7 +24,6 @@
 #include "gstdwriterender_d3d12.h"
 #include "gstdwrite-renderer.h"
 #include <gst/d3d12/gstd3d12-private.h>
-#include <gst/d3d12/gstd3d12memory-private.h>
 #include <d3d11on12.h>
 #include <wrl.h>
 #include <vector>
@@ -500,8 +499,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
     for (guint i = 0; i < gst_buffer_n_memory (output); i++) {
       auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (output, i);
-      gst_d3d12_memory_set_fence_unchecked (dmem,
-          fence, priv->fence_val, FALSE);
+      gst_d3d12_memory_set_fence (dmem, fence, priv->fence_val, FALSE);
       GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
       GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
     }
@@ -703,7 +701,7 @@ is_subsampled_yuv (const GstVideoInfo * info)
 
 static GstD3D12Converter *
 create_converter (GstDWriteD3D12Render * self, const GstVideoInfo * in_info,
-    const GstVideoInfo * out_info, gboolean is_blend)
+    const GstVideoInfo * out_info, gboolean is_blend, gboolean retain_input)
 {
   auto priv = self->priv;
   D3D12_FILTER filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -728,6 +726,11 @@ create_converter (GstDWriteD3D12Render * self, const GstVideoInfo * in_info,
   auto config = gst_structure_new ("convert-config",
       GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER, filter, nullptr);
+
+  if (!retain_input) {
+    gst_structure_set (config, GST_D3D12_CONVERTER_OPT_RETAIN_INPUT_BUFFER,
+        G_TYPE_BOOLEAN, FALSE, nullptr);
+  }
 
   if (is_blend) {
     blend_desc.RenderTarget[0].BlendEnable = TRUE;
@@ -761,7 +764,7 @@ gst_dwrite_d3d12_render_prepare (GstDWriteD3D12Render * self)
 
   if (priv->direct_blend) {
     priv->blend_conv = create_converter (self, &bgra_info, &priv->blend_info,
-        TRUE);
+        TRUE, TRUE);
   } else {
     priv->blend_pool = gst_dwrite_d3d12_render_create_pool (self,
         &priv->blend_info);
@@ -769,17 +772,17 @@ gst_dwrite_d3d12_render_prepare (GstDWriteD3D12Render * self)
       return FALSE;
 
     priv->pre_conv = create_converter (self,
-        &priv->info, &priv->blend_info, FALSE);
+        &priv->info, &priv->blend_info, FALSE, FALSE);
     if (!priv->pre_conv)
       return FALSE;
 
     priv->blend_conv = create_converter (self,
-        &bgra_info, &priv->blend_info, TRUE);
+        &bgra_info, &priv->blend_info, TRUE, TRUE);
     if (!priv->blend_conv)
       return FALSE;
 
     priv->post_conv = create_converter (self,
-        &priv->blend_info, &priv->info, FALSE);
+        &priv->blend_info, &priv->info, FALSE, TRUE);
     if (!priv->post_conv)
       return FALSE;
   }
