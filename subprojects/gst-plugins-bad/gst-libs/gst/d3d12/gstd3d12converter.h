@@ -189,6 +189,21 @@ GType gst_d3d12_converter_mip_gen_get_type (void);
 #define GST_D3D12_CONVERTER_OPT_MIP_GEN "GstD3D12Converter.mip-gen"
 
 /**
+ * GST_D3D12_CONVERTER_OPT_RETAIN_INPUT_BUFFER:
+ *
+ * #G_TYPE_BOOLEAN, whether to automatically retain the input buffer
+ * in #GstD3D12FenceData. Disabling this option allows the caller to
+ * reuse the input buffer as an output in subsequent conversions
+ * (e.g., A -> B -> A) without affecting its writability.
+ * The caller is responsible for managing the input buffer lifetime.
+ *
+ * Default is %TRUE.
+ *
+ * Since: 1.30
+ */
+#define GST_D3D12_CONVERTER_OPT_RETAIN_INPUT_BUFFER "GstD3D12Converter.retain-input-buffer"
+
+/**
  * GstD3D12Converter:
  *
  * Opaque GstD3D12Converter struct

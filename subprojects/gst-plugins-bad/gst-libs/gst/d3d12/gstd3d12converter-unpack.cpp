@@ -437,7 +437,8 @@ gst_d3d12_unpack_create_output (GstD3D12Unpack * self, gint width, gint height)
 
 GstBuffer *
 gst_d3d12_unpack_execute (GstD3D12Unpack * unpack, GstBuffer * buffer,
-    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl)
+    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl,
+    gboolean retain_input)
 {
   g_return_val_if_fail (GST_IS_D3D12_UNPACK (unpack), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -528,7 +529,11 @@ gst_d3d12_unpack_execute (GstD3D12Unpack * unpack, GstBuffer * buffer,
   gst_d3d12_frame_unmap (&out_frame);
   gst_d3d12_frame_unmap (&in_frame);
 
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (upload_buf));
+  if (retain_input || upload_buf != buffer)
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_MINI_OBJECT (upload_buf));
+  else
+    gst_buffer_unref (upload_buf);
 
   return outbuf;
 }

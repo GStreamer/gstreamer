@@ -38,6 +38,7 @@ gboolean         gst_d3d12_unpack_get_video_info (GstD3D12Unpack * unpack,
 GstBuffer *      gst_d3d12_unpack_execute (GstD3D12Unpack * unpack,
                                            GstBuffer * buffer,
                                            GstD3D12FenceData * fence_data,
-                                           ID3D12GraphicsCommandList * cl);
+                                           ID3D12GraphicsCommandList * cl,
+                                           gboolean retain_input);
 
 G_END_DECLS

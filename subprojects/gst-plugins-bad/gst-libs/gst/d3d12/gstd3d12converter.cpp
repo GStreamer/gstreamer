@@ -447,6 +447,7 @@ struct _GstD3D12ConverterPrivate
   gboolean need_color_balance = FALSE;
   PSConstBufferDyn const_data_dyn;
   gboolean mipgen_enabled = FALSE;
+  gboolean retain_input = TRUE;
 
   D3D12_SHADER_RESOURCE_VIEW_DESC mipgen_srv_desc = { };
   D3D12_RESOURCE_DESC mipgen_desc = { };
@@ -2189,6 +2190,8 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
 
   if (config) {
     gint value;
+    gst_structure_get_boolean (config,
+        GST_D3D12_CONVERTER_OPT_RETAIN_INPUT_BUFFER, &priv->retain_input);
     if (gst_structure_get_enum (config, GST_D3D12_CONVERTER_OPT_GAMMA_MODE,
             GST_TYPE_VIDEO_GAMMA_MODE, &value) &&
         (GstVideoGammaMode) value != GST_VIDEO_GAMMA_MODE_NONE) {
@@ -2624,7 +2627,7 @@ static gboolean
 gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     GstD3D12Frame * out_frame, ConvertCtxPtr & ctx, gboolean is_internal,
     const ConvertDrawState & draw, GstD3D12FenceData * fence_data,
-    ID3D12GraphicsCommandList * cl)
+    ID3D12GraphicsCommandList * cl, gboolean retain_input)
 {
   auto priv = self->priv;
   auto & comm = ctx->comm;
@@ -2740,8 +2743,11 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (pso));
   }
 
-  gst_d3d12_fence_data_push (fence_data,
-      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (in_frame->buffer)));
+  if (retain_input) {
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (in_frame->buffer)));
+  }
+
   if (ctx->vertex_upload) {
     gst_d3d12_fence_data_push (fence_data,
         FENCE_NOTIFY_COM (ctx->vertex_upload.Detach ()));
@@ -2923,7 +2929,7 @@ gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
     GstD3D12Frame * in_frame, GstD3D12Frame * out_frame, ConvertCtxPtr & ctx,
     GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * command_list,
     guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport,
-    guint64 * border_color)
+    guint64 * border_color, gboolean retain_input)
 {
   auto priv = converter->priv;
   gboolean ret;
@@ -2937,7 +2943,8 @@ gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
     gst_d3d12_converter_apply_remap_transform (converter, draw);
 
     ret = gst_d3d12_converter_execute (converter,
-        in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list);
+        in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list,
+        retain_input);
   } else {
     auto prev_x = priv->dest_x;
     auto prev_y = priv->dest_y;
@@ -2961,7 +2968,8 @@ gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
       gst_d3d12_converter_apply_remap_transform (converter, draw);
 
       ret = gst_d3d12_converter_execute (converter,
-          in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list);
+          in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list,
+          retain_input);
 
       if (!ret)
         break;
@@ -2980,7 +2988,7 @@ gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
     GstD3D12Frame * in_frame, GstD3D12Frame * out_frame, guint mip_levels,
     GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * command_list,
     guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport,
-    guint64 * border_color, gboolean & ret)
+    guint64 * border_color, gboolean & ret, gboolean retain_input)
 {
   auto priv = converter->priv;
   auto device = gst_d3d12_device_get_device_handle (converter->device);
@@ -3067,7 +3075,8 @@ gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
   draw.clear_background = FALSE;
 
   if (!gst_d3d12_converter_execute (converter, in_frame, &mipgen_frame,
-          priv->mipgen_ctx, TRUE, draw, fence_data, command_list)) {
+          priv->mipgen_ctx, TRUE, draw, fence_data, command_list,
+          retain_input)) {
     GST_ERROR_OBJECT (converter, "Couldn't convert to mipmap format");
     gst_d3d12_frame_unmap (&mipgen_frame);
     return FALSE;
@@ -3114,7 +3123,7 @@ gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
 
   ret = gst_d3d12_converter_execute_final (converter, &mipgen_frame,
       out_frame, priv->post_mipgen_ctx, fence_data, command_list,
-      num_remap, lut, viewport, border_color);
+      num_remap, lut, viewport, border_color, TRUE);
 
   gst_d3d12_frame_unmap (&mipgen_frame);
 
@@ -3139,13 +3148,16 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
     return FALSE;
   }
 
+  auto original_input = in_buf;
   in_buf = gst_d3d12_unpack_execute (priv->unpack, in_buf, fence_data,
-      command_list);
+      command_list, priv->retain_input);
   if (!in_buf) {
     GST_ERROR_OBJECT (converter, "Preprocessing failed");
     gst_buffer_unref (render_target);
     return FALSE;
   }
+
+  auto retain_current_input = priv->retain_input || in_buf != original_input;
 
   /* Don't map output memory, we don't actually update output memory here */
   if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, render_target,
@@ -3178,7 +3190,7 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
   if (priv->mipgen_enabled && mip_levels != 1) {
     if (!gst_d3d12_converter_execute_mipgen (converter, &in_frame, &out_frame,
             mip_levels, fence_data, command_list, num_remap, lut, viewport,
-            border_color, ret)) {
+            border_color, ret, retain_current_input)) {
       gst_d3d12_frame_unmap (&in_frame);
       gst_d3d12_frame_unmap (&out_frame);
       gst_buffer_unref (in_buf);
@@ -3188,7 +3200,7 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
   } else {
     ret = gst_d3d12_converter_execute_final (converter, &in_frame, &out_frame,
         priv->main_ctx, fence_data, command_list, num_remap, lut, viewport,
-        border_color);
+        border_color, retain_current_input);
   }
 
   if (ret) {
