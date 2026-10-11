@@ -2869,6 +2869,54 @@ gst_d3d12_converter_prepare_mipgen (GstD3D12Converter * converter,
 }
 
 static gboolean
+gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
+    GstD3D12Frame * in_frame, GstD3D12Frame * out_frame, ConvertCtxPtr & ctx,
+    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * command_list,
+    guint num_remap, ID3D12Resource ** lut, GstVideoRectangle * viewport,
+    guint64 * border_color)
+{
+  auto priv = converter->priv;
+  gboolean ret;
+
+  if (num_remap == 0) {
+    ret = gst_d3d12_converter_execute (converter,
+        in_frame, out_frame, ctx, FALSE, fence_data, command_list);
+  } else {
+    auto prev_remap = priv->main_ctx->comm->sampler_remap;
+    auto prev_x = priv->dest_x;
+    auto prev_y = priv->dest_y;
+    auto prev_w = priv->dest_width;
+    auto prev_h = priv->dest_height;
+    FLOAT prev_color[4];
+    for (guint i = 0; i < 4; i++)
+      prev_color[i] = priv->main_ctx->comm->const_data_dyn.bgColor[i];
+
+    for (guint i = 0; i < num_remap; i++) {
+      gst_d3d12_converter_set_remap_unlocked (converter, lut[i]);
+      gst_d3d12_converter_update_viewport_unlocked (converter,
+          viewport[i].x, viewport[i].y, viewport[i].w, viewport[i].h);
+      gst_d3d12_converter_calculate_remap_border_color (converter,
+          border_color[i]);
+
+      ret = gst_d3d12_converter_execute (converter,
+          in_frame, out_frame, ctx, FALSE, fence_data, command_list);
+
+      if (!ret)
+        break;
+    }
+
+    /* Restore previous state */
+    gst_d3d12_converter_set_remap_unlocked (converter, prev_remap.Get ());
+    gst_d3d12_converter_update_viewport_unlocked (converter,
+        prev_x, prev_y, prev_w, prev_h);
+    for (guint i = 0; i < 4; i++)
+      priv->main_ctx->comm->const_data_dyn.bgColor[i] = prev_color[i];
+  }
+
+  return ret;
+}
+
+static gboolean
 gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
     GstD3D12Frame * in_frame, GstD3D12Frame * out_frame, guint mip_levels,
     GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * command_list,
@@ -2995,42 +3043,9 @@ gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
     mipgen_frame.srv_desc_handle[0] = cpu_handle;
   }
 
-  if (num_remap == 0) {
-    ret = gst_d3d12_converter_execute (converter,
-        &mipgen_frame, out_frame, priv->post_mipgen_ctx,
-        FALSE, fence_data, command_list);
-  } else {
-    auto prev_remap = priv->main_ctx->comm->sampler_remap;
-    auto prev_x = priv->dest_x;
-    auto prev_y = priv->dest_y;
-    auto prev_w = priv->dest_width;
-    auto prev_h = priv->dest_height;
-    FLOAT prev_color[4];
-    for (guint i = 0; i < 4; i++)
-      prev_color[i] = priv->main_ctx->comm->const_data_dyn.bgColor[i];
-
-    for (guint i = 0; i < num_remap; i++) {
-      gst_d3d12_converter_set_remap_unlocked (converter, lut[i]);
-      gst_d3d12_converter_update_viewport_unlocked (converter,
-          viewport[i].x, viewport[i].y, viewport[i].w, viewport[i].h);
-      gst_d3d12_converter_calculate_remap_border_color (converter,
-          border_color[i]);
-
-      ret = gst_d3d12_converter_execute (converter,
-          &mipgen_frame, out_frame, priv->post_mipgen_ctx,
-          FALSE, fence_data, command_list);
-
-      if (!ret)
-        break;
-    }
-
-    /* Restore previous state */
-    gst_d3d12_converter_set_remap_unlocked (converter, prev_remap.Get ());
-    gst_d3d12_converter_update_viewport_unlocked (converter,
-        prev_x, prev_y, prev_w, prev_h);
-    for (guint i = 0; i < 4; i++)
-      priv->main_ctx->comm->const_data_dyn.bgColor[i] = prev_color[i];
-  }
+  ret = gst_d3d12_converter_execute_final (converter, &mipgen_frame,
+      out_frame, priv->post_mipgen_ctx, fence_data, command_list,
+      num_remap, lut, viewport, border_color);
 
   gst_d3d12_frame_unmap (&mipgen_frame);
 
@@ -3102,40 +3117,9 @@ gst_d3d12_converter_convert_buffer_internal (GstD3D12Converter * converter,
       return FALSE;
     }
   } else {
-    if (num_remap == 0) {
-      ret = gst_d3d12_converter_execute (converter, &in_frame, &out_frame,
-          priv->main_ctx, FALSE, fence_data, command_list);
-    } else {
-      auto prev_remap = priv->main_ctx->comm->sampler_remap;
-      auto prev_x = priv->dest_x;
-      auto prev_y = priv->dest_y;
-      auto prev_w = priv->dest_width;
-      auto prev_h = priv->dest_height;
-      FLOAT prev_color[4];
-      for (guint i = 0; i < 4; i++)
-        prev_color[i] = priv->main_ctx->comm->const_data_dyn.bgColor[i];
-
-      for (guint i = 0; i < num_remap; i++) {
-        gst_d3d12_converter_set_remap_unlocked (converter, lut[i]);
-        gst_d3d12_converter_update_viewport_unlocked (converter,
-            viewport[i].x, viewport[i].y, viewport[i].w, viewport[i].h);
-        gst_d3d12_converter_calculate_remap_border_color (converter,
-            border_color[i]);
-
-        ret = gst_d3d12_converter_execute (converter, &in_frame, &out_frame,
-            priv->main_ctx, FALSE, fence_data, command_list);
-
-        if (!ret)
-          break;
-      }
-
-      /* Restore previous state */
-      gst_d3d12_converter_set_remap_unlocked (converter, prev_remap.Get ());
-      gst_d3d12_converter_update_viewport_unlocked (converter,
-          prev_x, prev_y, prev_w, prev_h);
-      for (guint i = 0; i < 4; i++)
-        priv->main_ctx->comm->const_data_dyn.bgColor[i] = prev_color[i];
-    }
+    ret = gst_d3d12_converter_execute_final (converter, &in_frame, &out_frame,
+        priv->main_ctx, fence_data, command_list, num_remap, lut, viewport,
+        border_color);
   }
 
   if (ret) {
