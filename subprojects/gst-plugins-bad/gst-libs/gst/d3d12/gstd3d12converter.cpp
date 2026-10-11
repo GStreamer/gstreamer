@@ -2910,6 +2910,21 @@ gst_d3d12_converter_prepare_mipgen (GstD3D12Converter * converter,
   return TRUE;
 }
 
+static void
+gst_d3d12_converter_apply_remap_transform (GstD3D12Converter * self,
+    ConvertDrawState & draw)
+{
+  if (!draw.constants.samplerRemap)
+    return;
+
+  if (!XMMatrixIsIdentity (XMLoadFloat4x4A (&draw.transform))) {
+    GST_DEBUG_OBJECT (self,
+        "Ignoring non-identity transform while UV remapping " "is active");
+  }
+
+  draw.transform = g_matrix_identity;
+}
+
 static gboolean
 gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
     GstD3D12Frame * in_frame, GstD3D12Frame * out_frame, ConvertCtxPtr & ctx,
@@ -2925,6 +2940,8 @@ gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
     if (!gst_d3d12_converter_prepare_draw (converter, in_frame, out_frame,
             ctx, FALSE, draw))
       return FALSE;
+
+    gst_d3d12_converter_apply_remap_transform (converter, draw);
 
     ret = gst_d3d12_converter_execute (converter,
         in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list);
@@ -2947,6 +2964,8 @@ gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
       draw.constants.samplerRemap = lut[i] != nullptr;
       gst_d3d12_converter_calculate_remap_border_color (converter,
           border_color[i], draw.constants.bgColor);
+
+      gst_d3d12_converter_apply_remap_transform (converter, draw);
 
       ret = gst_d3d12_converter_execute (converter,
           in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list);
@@ -3050,6 +3069,9 @@ gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
     gst_d3d12_frame_unmap (&mipgen_frame);
     return FALSE;
   }
+
+  draw.transform = g_matrix_identity;
+  draw.clear_background = FALSE;
 
   if (!gst_d3d12_converter_execute (converter, in_frame, &mipgen_frame,
           priv->mipgen_ctx, TRUE, draw, fence_data, command_list)) {
