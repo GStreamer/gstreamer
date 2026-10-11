@@ -1660,6 +1660,7 @@ gst_d3d12_h264_enc_reconfigure (GstD3D12H264Enc * self,
   auto encoder = GST_D3D12_ENCODER (self);
   auto priv = self->priv;
   auto prev_config = *config;
+  auto prev_level = priv->level_h264;
 
   if (!gst_d3d12_h264_enc_update_gop (self, video_device, config, seq_flags))
     return FALSE;
@@ -1768,14 +1769,18 @@ gst_d3d12_h264_enc_reconfigure (GstD3D12H264Enc * self,
 
   config->support_flags = support.SupportFlags;
 
-  if (!seq_flags ||
+  bool gop_updated = !seq_flags ||
       (*seq_flags &
-          D3D12_VIDEO_ENCODER_SEQUENCE_CONTROL_FLAG_GOP_SEQUENCE_CHANGE) != 0) {
+      D3D12_VIDEO_ENCODER_SEQUENCE_CONTROL_FLAG_GOP_SEQUENCE_CHANGE) != 0;
+
+  if (gop_updated || priv->level_h264 != prev_level) {
     priv->gop.ForceKeyUnit ();
     gst_d3d12_h264_enc_build_sps (self, &priv->info, &config->resolution,
         priv->selected_ref_frames);
     gst_d3d12_h264_enc_build_pps (self, priv->selected_ref_frames);
+  }
 
+  if (gop_updated) {
     bool array_of_textures = !CHECK_SUPPORT_FLAG (config->support_flags,
         RECONSTRUCTED_FRAMES_REQUIRE_TEXTURE_ARRAYS);
     auto dpb = std::make_unique < GstD3D12H264EncDpb > (encoder->device,
