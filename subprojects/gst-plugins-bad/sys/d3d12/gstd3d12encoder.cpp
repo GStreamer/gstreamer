@@ -1088,6 +1088,7 @@ gst_d3d12_encoder_resolve_bitstream (GstD3D12Encoder * self,
   map_data += sizeof (D3D12_VIDEO_ENCODER_OUTPUT_METADATA);
   priv->subregions.clear ();
   UINT64 total_subregion_size = 0;
+  UINT64 source_offset = 0;
   for (guint i = 0; i < output_meta.WrittenSubregionsCount; i++) {
     auto subregion =
         *((D3D12_VIDEO_ENCODER_FRAME_SUBREGION_METADATA *) map_data);
@@ -1096,7 +1097,16 @@ gst_d3d12_encoder_resolve_bitstream (GstD3D12Encoder * self,
         "bStartOffset: %" G_GUINT64_FORMAT ", bHeaderSize: %" G_GUINT64_FORMAT,
         i, subregion.bSize, subregion.bStartOffset, subregion.bHeaderSize);
 
-    subregion.bStartOffset += total_subregion_size;
+    if (subregion.bStartOffset > subregion.bSize) {
+      GST_ERROR_OBJECT (self, "Subregion padding exceeds subregion size");
+      resolved_metadata->Unmap (0, &zero_range);
+      return FALSE;
+    }
+
+    auto padded_size = subregion.bSize;
+    subregion.bSize -= subregion.bStartOffset;
+    subregion.bStartOffset += source_offset;
+    source_offset += padded_size;
 
     priv->subregions.push_back (subregion);
     total_subregion_size += subregion.bSize;
