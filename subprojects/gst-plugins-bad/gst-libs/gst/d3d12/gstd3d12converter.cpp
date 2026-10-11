@@ -176,6 +176,16 @@ struct PSConstBufferDyn
   float bgColor[4];
 };
 
+struct ConvertDrawState
+{
+  D3D12_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
+  D3D12_RECT scissor_rect[GST_VIDEO_MAX_PLANES];
+  XMFLOAT4X4A transform;
+  PSConstBufferDyn constants;
+  ID3D12Resource *sampler_remap;
+  gboolean clear_background;
+};
+
 struct VertexData
 {
   struct
@@ -1240,22 +1250,29 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   return ctx;
 }
 
+static gboolean
+gst_d3d12_converter_calculate_clear_background (const GstVideoInfo * out_info,
+    gboolean fill_border, GstVideoOrientationMethod direction,
+    gint x, gint y, gint width, gint height)
+{
+  return fill_border && (x != 0 || y != 0 || width != out_info->width ||
+      height != out_info->height || direction == GST_VIDEO_ORIENTATION_CUSTOM);
+}
+
 static void
 gst_d3d12_converter_update_clear_background (GstD3D12Converter * self)
 {
   auto priv = self->priv;
-  const GstVideoInfo *out_info = &priv->out_info;
 
-  if (priv->fill_border && (priv->dest_x != 0 || priv->dest_y != 0 ||
-          priv->dest_width != out_info->width ||
-          priv->dest_height != out_info->height ||
-          priv->video_direction == GST_VIDEO_ORIENTATION_CUSTOM)) {
+  priv->clear_background =
+      gst_d3d12_converter_calculate_clear_background (&priv->out_info,
+      priv->fill_border, priv->video_direction, priv->dest_x, priv->dest_y,
+      priv->dest_width, priv->dest_height);
+
+  if (priv->clear_background)
     GST_DEBUG_OBJECT (self, "Enable background color");
-    priv->clear_background = TRUE;
-  } else {
+  else
     GST_DEBUG_OBJECT (self, "Disable background color");
-    priv->clear_background = FALSE;
-  }
 }
 
 static gboolean
@@ -1432,64 +1449,53 @@ gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
   return TRUE;
 }
 
-static gboolean
-gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
+static void
+gst_d3d12_converter_calculate_viewport (const GstVideoInfo * out_info,
+    gint x, gint y, gint width, gint height,
+    D3D12_VIEWPORT viewport[GST_VIDEO_MAX_PLANES],
+    D3D12_RECT scissor_rect[GST_VIDEO_MAX_PLANES])
 {
-  auto priv = self->priv;
+  viewport[0].TopLeftX = x;
+  viewport[0].TopLeftY = y;
+  viewport[0].Width = width;
+  viewport[0].Height = height;
 
-  if (!priv->update_dest_rect)
-    return TRUE;
+  scissor_rect[0].left = x;
+  scissor_rect[0].top = y;
+  scissor_rect[0].right = width + x;
+  scissor_rect[0].bottom = height + y;
 
-  auto comm = priv->main_ctx->comm;
-
-  comm->viewport[0].TopLeftX = priv->dest_x;
-  comm->viewport[0].TopLeftY = priv->dest_y;
-  comm->viewport[0].Width = priv->dest_width;
-  comm->viewport[0].Height = priv->dest_height;
-
-  comm->scissor_rect[0].left = priv->dest_x;
-  comm->scissor_rect[0].top = priv->dest_y;
-  comm->scissor_rect[0].right = priv->dest_width + priv->dest_x;
-  comm->scissor_rect[0].bottom = priv->dest_height + priv->dest_y;
-
-  GST_DEBUG_OBJECT (self,
-      "Update viewport, TopLeftX: %f, TopLeftY: %f, Width: %f, Height %f",
-      comm->viewport[0].TopLeftX, comm->viewport[0].TopLeftY,
-      comm->viewport[0].Width, comm->viewport[0].Height);
-
-  gst_d3d12_converter_update_clear_background (self);
-
-  auto format = GST_VIDEO_INFO_FORMAT (&priv->out_info);
+  auto format = GST_VIDEO_INFO_FORMAT (out_info);
   switch (format) {
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
-      comm->viewport[1].TopLeftX = comm->viewport[0].TopLeftX / 4;
-      comm->viewport[1].TopLeftY = comm->viewport[0].TopLeftY / 4;
-      comm->viewport[1].Width = comm->viewport[0].Width / 4;
-      comm->viewport[1].Height = comm->viewport[0].Height / 4;
+      viewport[1].TopLeftX = viewport[0].TopLeftX / 4;
+      viewport[1].TopLeftY = viewport[0].TopLeftY / 4;
+      viewport[1].Width = viewport[0].Width / 4;
+      viewport[1].Height = viewport[0].Height / 4;
 
-      comm->scissor_rect[1].left = comm->scissor_rect[0].left / 4;
-      comm->scissor_rect[1].top = comm->scissor_rect[0].top / 4;
-      comm->scissor_rect[1].right = comm->scissor_rect[0].right / 4;
-      comm->scissor_rect[1].bottom = comm->scissor_rect[0].bottom / 4;
-      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
-        comm->viewport[i] = comm->viewport[1];
-        comm->scissor_rect[i] = comm->scissor_rect[1];
+      scissor_rect[1].left = scissor_rect[0].left / 4;
+      scissor_rect[1].top = scissor_rect[0].top / 4;
+      scissor_rect[1].right = scissor_rect[0].right / 4;
+      scissor_rect[1].bottom = scissor_rect[0].bottom / 4;
+      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (out_info); i++) {
+        viewport[i] = viewport[1];
+        scissor_rect[i] = scissor_rect[1];
       }
       break;
     case GST_VIDEO_FORMAT_Y41B:
-      comm->viewport[1].TopLeftX = comm->viewport[0].TopLeftX / 4;
-      comm->viewport[1].TopLeftY = comm->viewport[0].TopLeftY;
-      comm->viewport[1].Width = comm->viewport[0].Width / 4;
-      comm->viewport[1].Height = comm->viewport[0].Height;
+      viewport[1].TopLeftX = viewport[0].TopLeftX / 4;
+      viewport[1].TopLeftY = viewport[0].TopLeftY;
+      viewport[1].Width = viewport[0].Width / 4;
+      viewport[1].Height = viewport[0].Height;
 
-      comm->scissor_rect[1].left = comm->scissor_rect[0].left / 4;
-      comm->scissor_rect[1].top = comm->scissor_rect[0].top;
-      comm->scissor_rect[1].right = comm->scissor_rect[0].right / 4;
-      comm->scissor_rect[1].bottom = comm->scissor_rect[0].bottom;
-      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
-        comm->viewport[i] = comm->viewport[1];
-        comm->scissor_rect[i] = comm->scissor_rect[1];
+      scissor_rect[1].left = scissor_rect[0].left / 4;
+      scissor_rect[1].top = scissor_rect[0].top;
+      scissor_rect[1].right = scissor_rect[0].right / 4;
+      scissor_rect[1].bottom = scissor_rect[0].bottom;
+      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (out_info); i++) {
+        viewport[i] = viewport[1];
+        scissor_rect[i] = scissor_rect[1];
       }
       break;
     case GST_VIDEO_FORMAT_NV12:
@@ -1506,19 +1512,19 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_A420_12LE:
     case GST_VIDEO_FORMAT_A420_16LE:
     case GST_VIDEO_FORMAT_AV12:
-      comm->viewport[1].TopLeftX = comm->viewport[0].TopLeftX / 2;
-      comm->viewport[1].TopLeftY = comm->viewport[0].TopLeftY / 2;
-      comm->viewport[1].Width = comm->viewport[0].Width / 2;
-      comm->viewport[1].Height = comm->viewport[0].Height / 2;
+      viewport[1].TopLeftX = viewport[0].TopLeftX / 2;
+      viewport[1].TopLeftY = viewport[0].TopLeftY / 2;
+      viewport[1].Width = viewport[0].Width / 2;
+      viewport[1].Height = viewport[0].Height / 2;
 
-      comm->scissor_rect[1].left = comm->scissor_rect[0].left / 2;
-      comm->scissor_rect[1].top = comm->scissor_rect[0].top / 2;
-      comm->scissor_rect[1].right = comm->scissor_rect[0].right / 2;
-      comm->scissor_rect[1].bottom = comm->scissor_rect[0].bottom / 2;
+      scissor_rect[1].left = scissor_rect[0].left / 2;
+      scissor_rect[1].top = scissor_rect[0].top / 2;
+      scissor_rect[1].right = scissor_rect[0].right / 2;
+      scissor_rect[1].bottom = scissor_rect[0].bottom / 2;
 
-      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
-        comm->viewport[i] = comm->viewport[1];
-        comm->scissor_rect[i] = comm->scissor_rect[1];
+      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (out_info); i++) {
+        viewport[i] = viewport[1];
+        scissor_rect[i] = scissor_rect[1];
       }
       break;
     case GST_VIDEO_FORMAT_Y42B:
@@ -1530,19 +1536,19 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_A422_16LE:
     case GST_VIDEO_FORMAT_NV16:
     case GST_VIDEO_FORMAT_NV61:
-      comm->viewport[1].TopLeftX = comm->viewport[0].TopLeftX / 2;
-      comm->viewport[1].TopLeftY = comm->viewport[0].TopLeftY;
-      comm->viewport[1].Width = comm->viewport[0].Width / 2;
-      comm->viewport[1].Height = comm->viewport[0].Height;
+      viewport[1].TopLeftX = viewport[0].TopLeftX / 2;
+      viewport[1].TopLeftY = viewport[0].TopLeftY;
+      viewport[1].Width = viewport[0].Width / 2;
+      viewport[1].Height = viewport[0].Height;
 
-      comm->scissor_rect[1].left = comm->scissor_rect[0].left / 2;
-      comm->scissor_rect[1].top = comm->scissor_rect[0].top;
-      comm->scissor_rect[1].right = comm->scissor_rect[0].right / 2;
-      comm->scissor_rect[1].bottom = comm->scissor_rect[0].bottom;
+      scissor_rect[1].left = scissor_rect[0].left / 2;
+      scissor_rect[1].top = scissor_rect[0].top;
+      scissor_rect[1].right = scissor_rect[0].right / 2;
+      scissor_rect[1].bottom = scissor_rect[0].bottom;
 
-      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
-        comm->viewport[i] = comm->viewport[1];
-        comm->scissor_rect[i] = comm->scissor_rect[1];
+      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (out_info); i++) {
+        viewport[i] = viewport[1];
+        scissor_rect[i] = scissor_rect[1];
       }
       break;
     case GST_VIDEO_FORMAT_Y444:
@@ -1565,14 +1571,36 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_A444_12LE:
     case GST_VIDEO_FORMAT_A444_16LE:
     case GST_VIDEO_FORMAT_NV24:
-      for (guint i = 1; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
-        comm->viewport[i] = comm->viewport[0];
-        comm->scissor_rect[i] = comm->scissor_rect[0];
+      for (guint i = 1; i < GST_VIDEO_INFO_N_PLANES (out_info); i++) {
+        viewport[i] = viewport[0];
+        scissor_rect[i] = scissor_rect[0];
       }
       break;
     default:
       break;
   }
+}
+
+static gboolean
+gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+
+  if (!priv->update_dest_rect)
+    return TRUE;
+
+  auto comm = priv->main_ctx->comm;
+
+  gst_d3d12_converter_calculate_viewport (&priv->out_info,
+      priv->dest_x, priv->dest_y, priv->dest_width, priv->dest_height,
+      comm->viewport, comm->scissor_rect);
+
+  GST_DEBUG_OBJECT (self,
+      "Update viewport, TopLeftX: %f, TopLeftY: %f, Width: %f, Height %f",
+      comm->viewport[0].TopLeftX, comm->viewport[0].TopLeftY,
+      comm->viewport[0].Width, comm->viewport[0].Height);
+
+  gst_d3d12_converter_update_clear_background (self);
 
   if (priv->post_mipgen_ctx) {
     auto other_comm = priv->post_mipgen_ctx->comm;
@@ -1999,13 +2027,12 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
 
 static void
 gst_d3d12_converter_calculate_remap_border_color (GstD3D12Converter * self,
-    guint64 color)
+    guint64 color, FLOAT bg_color[4])
 {
   auto priv = self->priv;
   GstD3D12ColorMatrix *in_m = &priv->in_clear_color_matrix;
   gdouble a;
   gdouble rgb[3];
-  auto comm = priv->main_ctx->comm;
 
   a = ((color & 0xffff000000000000) >> 48) / (gdouble) G_MAXUINT16;
   rgb[0] = ((color & 0x0000ffff00000000) >> 32) / (gdouble) G_MAXUINT16;
@@ -2013,18 +2040,17 @@ gst_d3d12_converter_calculate_remap_border_color (GstD3D12Converter * self,
   rgb[2] = (color & 0x000000000000ffff) / (gdouble) G_MAXUINT16;
 
   for (guint i = 0; i < 3; i++) {
-    comm->const_data_dyn.bgColor[i] = 0;
+    bg_color[i] = 0;
 
     for (guint j = 0; j < 3; j++)
-      comm->const_data_dyn.bgColor[i] += in_m->matrix[i][j] * rgb[j];
+      bg_color[i] += in_m->matrix[i][j] * rgb[j];
 
-    comm->const_data_dyn.bgColor[i] += in_m->offset[i];
+    bg_color[i] += in_m->offset[i];
 
-    comm->const_data_dyn.bgColor[i] = CLAMP (comm->const_data_dyn.bgColor[i],
-        in_m->min[i], in_m->max[i]);
+    bg_color[i] = CLAMP (bg_color[i], in_m->min[i], in_m->max[i]);
   }
 
-  comm->const_data_dyn.bgColor[3] = a;
+  bg_color[3] = a;
 }
 
 static gboolean
@@ -2534,9 +2560,9 @@ reorder_rtv_handles (GstVideoFormat output_format,
 }
 
 static gboolean
-gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
-    GstD3D12Frame * out_frame, ConvertCtxPtr & ctx, gboolean is_internal,
-    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl)
+gst_d3d12_converter_prepare_draw (GstD3D12Converter * self,
+    GstD3D12Frame * in_frame, GstD3D12Frame * out_frame, ConvertCtxPtr & ctx,
+    gboolean is_internal, ConvertDrawState & draw)
 {
   auto priv = self->priv;
   auto & comm = ctx->comm;
@@ -2583,6 +2609,32 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
 
     gst_d3d12_converter_update_sampler (self);
   }
+
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    draw.viewport[i] = comm->viewport[i];
+    draw.scissor_rect[i] = comm->scissor_rect[i];
+  }
+
+  draw.transform = priv->transform;
+  draw.constants = comm->const_data_dyn;
+  draw.sampler_remap = comm->sampler_remap.Get ();
+  draw.clear_background = priv->clear_background;
+
+  /* Do not enable UV remap for intermediate conversion */
+  if (is_internal)
+    draw.constants.samplerRemap = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
+    GstD3D12Frame * out_frame, ConvertCtxPtr & ctx, gboolean is_internal,
+    const ConvertDrawState & draw, GstD3D12FenceData * fence_data,
+    ID3D12GraphicsCommandList * cl)
+{
+  auto priv = self->priv;
+  auto & comm = ctx->comm;
 
   if (ctx->vertex_upload) {
     auto barrier =
@@ -2634,18 +2686,11 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     cpu_handle.Offset (2, priv->srv_inc_size);
   }
 
-  auto prev_sampler_remap = comm->const_data_dyn.samplerRemap;
-
-  /* Do not enable UV remap for intermediate conversion */
-  if (is_internal)
-    comm->const_data_dyn.samplerRemap = 0;
-
-  if (comm->const_data_dyn.samplerRemap) {
-    device->CreateShaderResourceView (comm->sampler_remap.Get (),
-        nullptr, cpu_handle);
+  if (draw.constants.samplerRemap) {
+    device->CreateShaderResourceView (draw.sampler_remap, nullptr, cpu_handle);
   }
 
-  if (priv->clear_background) {
+  if (draw.clear_background) {
     for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&out_frame->info); i++) {
       cl->ClearRenderTargetView (out_frame->rtv_desc_handle[i],
           priv->clear_color[i], 1, &out_frame->plane_rect[i]);
@@ -2667,17 +2712,17 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->SetGraphicsRootDescriptorTable (pipeline_data.crs->GetPsSamplerIdx (),
       GetGPUDescriptorHandleForHeapStart (comm->sampler_heap));
   cl->SetGraphicsRoot32BitConstants (pipeline_data.crs->GetVsRootConstIdx (),
-      16, &priv->transform, 0);
+      16, &draw.transform, 0);
   cl->SetGraphicsRoot32BitConstants (pipeline_data.crs->GetPsRootConstIdx (),
-      sizeof (comm->const_data_dyn) / 4, &comm->const_data_dyn, 0);
+      sizeof (draw.constants) / 4, &draw.constants, 0);
   cl->SetGraphicsRootConstantBufferView (pipeline_data.crs->GetPsCbvIdx (),
       comm->const_buf_addr[pipeline_index]);
 
   cl->IASetIndexBuffer (&comm->ibv);
   cl->IASetVertexBuffers (0, 1, &comm->vbv);
   cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  cl->RSSetViewports (1, comm->viewport);
-  cl->RSSetScissorRects (1, comm->scissor_rect);
+  cl->RSSetViewports (1, draw.viewport);
+  cl->RSSetScissorRects (1, draw.scissor_rect);
   cl->OMSetRenderTargets (pipeline_data.quad_data[0].num_rtv,
       reordered_rtv_handle, FALSE, nullptr);
   if (!is_internal)
@@ -2692,8 +2737,8 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     pso = pipeline_data.quad_data[1].pso.Get ();
 
     cl->SetPipelineState (pso);
-    cl->RSSetViewports (1, &comm->viewport[offset]);
-    cl->RSSetScissorRects (1, &comm->scissor_rect[offset]);
+    cl->RSSetViewports (1, &draw.viewport[offset]);
+    cl->RSSetScissorRects (1, &draw.scissor_rect[offset]);
     cl->OMSetRenderTargets (pipeline_data.quad_data[1].num_rtv,
         reordered_rtv_handle + offset, FALSE, nullptr);
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
@@ -2709,14 +2754,11 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
         FENCE_NOTIFY_COM (ctx->vertex_upload.Detach ()));
   }
 
-  if (ctx->comm->sampler_remap && comm->const_data_dyn.samplerRemap) {
-    ComPtr < ID3D12Resource > remap_clone = ctx->comm->sampler_remap;
+  if (draw.sampler_remap && draw.constants.samplerRemap) {
+    ComPtr < ID3D12Resource > remap_clone = draw.sampler_remap;
     gst_d3d12_fence_data_push (fence_data,
         FENCE_NOTIFY_COM (remap_clone.Detach ()));
   }
-
-  /* Restore remap flag  */
-  comm->const_data_dyn.samplerRemap = prev_sampler_remap;
 
   auto sampler = comm->sampler_heap.Get ();
   sampler->AddRef ();
@@ -2877,40 +2919,45 @@ gst_d3d12_converter_execute_final (GstD3D12Converter * converter,
 {
   auto priv = converter->priv;
   gboolean ret;
+  ConvertDrawState draw;
 
   if (num_remap == 0) {
+    if (!gst_d3d12_converter_prepare_draw (converter, in_frame, out_frame,
+            ctx, FALSE, draw))
+      return FALSE;
+
     ret = gst_d3d12_converter_execute (converter,
-        in_frame, out_frame, ctx, FALSE, fence_data, command_list);
+        in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list);
   } else {
-    auto prev_remap = priv->main_ctx->comm->sampler_remap;
     auto prev_x = priv->dest_x;
     auto prev_y = priv->dest_y;
     auto prev_w = priv->dest_width;
     auto prev_h = priv->dest_height;
-    FLOAT prev_color[4];
-    for (guint i = 0; i < 4; i++)
-      prev_color[i] = priv->main_ctx->comm->const_data_dyn.bgColor[i];
 
     for (guint i = 0; i < num_remap; i++) {
-      gst_d3d12_converter_set_remap_unlocked (converter, lut[i]);
       gst_d3d12_converter_update_viewport_unlocked (converter,
           viewport[i].x, viewport[i].y, viewport[i].w, viewport[i].h);
+
+      ret = gst_d3d12_converter_prepare_draw (converter, in_frame, out_frame,
+          ctx, FALSE, draw);
+      if (!ret)
+        break;
+
+      draw.sampler_remap = lut[i];
+      draw.constants.samplerRemap = lut[i] != nullptr;
       gst_d3d12_converter_calculate_remap_border_color (converter,
-          border_color[i]);
+          border_color[i], draw.constants.bgColor);
 
       ret = gst_d3d12_converter_execute (converter,
-          in_frame, out_frame, ctx, FALSE, fence_data, command_list);
+          in_frame, out_frame, ctx, FALSE, draw, fence_data, command_list);
 
       if (!ret)
         break;
     }
 
     /* Restore previous state */
-    gst_d3d12_converter_set_remap_unlocked (converter, prev_remap.Get ());
     gst_d3d12_converter_update_viewport_unlocked (converter,
         prev_x, prev_y, prev_w, prev_h);
-    for (guint i = 0; i < 4; i++)
-      priv->main_ctx->comm->const_data_dyn.bgColor[i] = prev_color[i];
   }
 
   return ret;
@@ -2996,11 +3043,18 @@ gst_d3d12_converter_execute_mipgen (GstD3D12Converter * converter,
   comm->scissor_rect[0].right = (LONG) mipgen_width;
   comm->scissor_rect[0].bottom = (LONG) mipgen_height;
 
+  ConvertDrawState draw;
+  if (!gst_d3d12_converter_prepare_draw (converter, in_frame, &mipgen_frame,
+          priv->mipgen_ctx, TRUE, draw)) {
+    GST_ERROR_OBJECT (converter, "Couldn't prepare draw for mipmap generation");
+    gst_d3d12_frame_unmap (&mipgen_frame);
+    return FALSE;
+  }
+
   if (!gst_d3d12_converter_execute (converter, in_frame, &mipgen_frame,
-          priv->mipgen_ctx, TRUE, fence_data, command_list)) {
+          priv->mipgen_ctx, TRUE, draw, fence_data, command_list)) {
     GST_ERROR_OBJECT (converter, "Couldn't convert to mipmap format");
     gst_d3d12_frame_unmap (&mipgen_frame);
-
     return FALSE;
   }
 
