@@ -1549,6 +1549,7 @@ gst_d3d12_h264_enc_update_slice (GstD3D12H264Enc * self,
           case D3D12_VIDEO_ENCODER_FRAME_SUBREGION_LAYOUT_MODE_BYTES_PER_SUBREGION:
             priv->selected_slice_mode =
                 priv->slice_mode;
+            priv->layout_slices.MaxBytesPerSlice = priv->slice_partition;
             /* Don't know how many slices would be generated */
             config->max_subregions = limits.MaxSubregionsNumber;
             *support_flags = support.SupportFlags;
