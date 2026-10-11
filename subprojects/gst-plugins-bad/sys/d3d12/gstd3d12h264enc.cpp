@@ -96,6 +96,8 @@ struct GstD3D12H264EncClassData
   GstCaps *src_caps;
   guint rc_support;
   guint slice_mode_support;
+  guint width_multiple;
+  guint height_multiple;
 };
 
 /* *INDENT-OFF* */
@@ -1005,6 +1007,8 @@ gst_d3d12_h264_enc_build_sps (GstD3D12H264Enc * self, const GstVideoInfo * info,
 {
   auto priv = self->priv;
   guint8 sps_buf[4096] = { 0, };
+  guint coded_width = GST_ROUND_UP_16 (resolution->Width);
+  guint coded_height = GST_ROUND_UP_16 (resolution->Height);
   /* *INDENT-OFF* */
   static const std::unordered_map<D3D12_VIDEO_ENCODER_LEVELS_H264, guint8>
       level_map = {
@@ -1085,20 +1089,19 @@ gst_d3d12_h264_enc_build_sps (GstD3D12H264Enc * self, const GstVideoInfo * info,
       priv->gop_struct_h264.log2_max_pic_order_cnt_lsb_minus4;
   sps.num_ref_frames = num_ref;
   sps.gaps_in_frame_num_value_allowed_flag = 0;
-  sps.pic_width_in_mbs_minus1 = (resolution->Width / 16) - 1;
-  sps.pic_height_in_map_units_minus1 = (resolution->Height / 16) - 1;
+  sps.pic_width_in_mbs_minus1 = (coded_width / 16) - 1;
+  sps.pic_height_in_map_units_minus1 = (coded_height / 16) - 1;
   sps.frame_mbs_only_flag = 1;
 
   if (sps.profile_idc != GST_H264_PROFILE_BASELINE)
     sps.direct_8x8_inference_flag = 1;
 
-  if (resolution->Width != (UINT) info->width ||
-      resolution->Height != (UINT) info->height) {
+  if (coded_width != (UINT) info->width || coded_height != (UINT) info->height) {
     sps.frame_cropping_flag = 1;
     sps.frame_crop_left_offset = 0;
-    sps.frame_crop_right_offset = (resolution->Width - info->width) / 2;
+    sps.frame_crop_right_offset = (coded_width - info->width) / 2;
     sps.frame_crop_top_offset = 0;
-    sps.frame_crop_bottom_offset = (resolution->Height - info->height) / 2;
+    sps.frame_crop_bottom_offset = (coded_height - info->height) / 2;
   }
 
   sps.vui_parameters_present_flag = 1;
@@ -1554,8 +1557,10 @@ gst_d3d12_h264_enc_update_slice (GstD3D12H264Enc * self,
           case D3D12_VIDEO_ENCODER_FRAME_SUBREGION_LAYOUT_MODE_SQUARE_UNITS_PER_SUBREGION_ROW_UNALIGNED:
           {
             auto total_mbs =
-                (config->resolution.Width / limits.SubregionBlockPixelsSize) *
-                (config->resolution.Height / limits.SubregionBlockPixelsSize);
+                ((config->resolution.Width + limits.SubregionBlockPixelsSize -
+                    1) / limits.SubregionBlockPixelsSize) *
+                ((config->resolution.Height + limits.SubregionBlockPixelsSize -
+                    1) / limits.SubregionBlockPixelsSize);
             if (priv->slice_partition >= total_mbs) {
               GST_DEBUG_OBJECT (self,
                   "Requested MBs per slice exceeds total MBs per frame");
@@ -1583,7 +1588,8 @@ gst_d3d12_h264_enc_update_slice (GstD3D12H264Enc * self,
           }
           case D3D12_VIDEO_ENCODER_FRAME_SUBREGION_LAYOUT_MODE_UNIFORM_PARTITIONING_ROWS_PER_SUBREGION:
           {
-            auto total_rows = config->resolution.Height /
+            auto total_rows = (config->resolution.Height +
+                limits.SubregionBlockPixelsSize - 1) /
                 limits.SubregionBlockPixelsSize;
             if (priv->slice_partition >= total_rows) {
               GST_DEBUG_OBJECT (self,
@@ -1804,6 +1810,8 @@ gst_d3d12_h264_enc_new_sequence (GstD3D12Encoder * encoder,
     GstD3D12EncoderConfig * config)
 {
   auto self = GST_D3D12_H264_ENC (encoder);
+  auto klass = GST_D3D12_H264_ENC_GET_CLASS (self);
+  auto cdata = klass->cdata;
   auto priv = self->priv;
   auto info = &state->info;
 
@@ -1831,8 +1839,10 @@ gst_d3d12_h264_enc_new_sequence (GstD3D12Encoder * encoder,
       sizeof (D3D12_VIDEO_ENCODER_SEQUENCE_GOP_STRUCTURE_H264);
   config->gop_struct.pH264GroupOfPictures = &priv->gop_struct_h264;
 
-  config->resolution.Width = GST_ROUND_UP_16 (info->width);
-  config->resolution.Height = GST_ROUND_UP_16 (info->height);
+  config->resolution.Width = ((info->width + cdata->width_multiple - 1) /
+      cdata->width_multiple) * cdata->width_multiple;
+  config->resolution.Height = ((info->height + cdata->height_multiple - 1) /
+      cdata->height_multiple) * cdata->height_multiple;
 
   priv->selected_profile = GST_H264_PROFILE_MAIN;
   priv->profile_h264 = D3D12_VIDEO_ENCODER_PROFILE_H264_MAIN;
@@ -2417,6 +2427,16 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   cdata->src_caps = src_caps;
   cdata->rc_support = rc_support;
   cdata->slice_mode_support = slice_mode_support;
+  cdata->width_multiple =
+      MAX (1, feature_resolution.ResolutionWidthMultipleRequirement);
+  cdata->height_multiple =
+      MAX (1, feature_resolution.ResolutionHeightMultipleRequirement);
+
+  /* Ensure even numbers for subsampled formats */
+  if (cdata->width_multiple % 2)
+    cdata->width_multiple *= 2;
+  if (cdata->height_multiple % 2)
+    cdata->height_multiple *= 2;
 
   GType type;
   gchar *type_name;
