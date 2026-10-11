@@ -693,7 +693,6 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
   auto priv = self->priv;
   const auto info = &priv->input_state->info;
   GstBuffer *upload = nullptr;
-  gboolean d3d12_copy = FALSE;
 
   auto mem = gst_buffer_peek_memory (buffer, 0);
   if (gst_is_d3d12_memory (mem)) {
@@ -713,8 +712,6 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
           desc.Height >= priv->config.resolution.Height) {
         return gst_buffer_ref (buffer);
       }
-
-      d3d12_copy = TRUE;
     }
   }
 
@@ -724,112 +721,22 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
     return nullptr;
   }
 
-  if (d3d12_copy) {
-    std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
-    auto dmem = GST_D3D12_MEMORY_CAST (mem);
-    auto src_resource = gst_d3d12_memory_get_resource_handle (dmem);
-    ComPtr < ID3D12Fence > fence_to_wait;
-    guint64 fence_val_to_wait = 0;
-
-    gst_d3d12_memory_get_fence (dmem, &fence_to_wait, &fence_val_to_wait);
-
-    dmem = (GstD3D12Memory *) gst_buffer_peek_memory (upload, 0);
-    auto dst_resource = gst_d3d12_memory_get_resource_handle (dmem);
-    D3D12_BOX src_box[2];
-
-    auto desc = GetDesc (src_resource);
-
-    UINT width = MIN ((UINT) desc.Width, priv->config.resolution.Width);
-    UINT height = MIN ((UINT) desc.Height, priv->config.resolution.Height);
-
-    for (guint i = 0; i < 2; i++) {
-      GstD3D12CopyTextureRegionArgs args;
-      memset (&args, 0, sizeof (args));
-
-      args.src = CD3DX12_TEXTURE_COPY_LOCATION (src_resource, i);
-      args.dst = CD3DX12_TEXTURE_COPY_LOCATION (dst_resource, i);
-
-      src_box[i].left = 0;
-      src_box[i].top = 0;
-      src_box[i].front = 0;
-      src_box[i].back = 1;
-
-      if (i == 0) {
-        src_box[i].right = width;
-        src_box[i].bottom = height;
-      } else {
-        src_box[i].right = width / 2;
-        src_box[i].bottom = height / 2;
-      }
-
-      args.src_box = &src_box[i];
-      copy_args.push_back (args);
-    }
-
-    guint64 fence_val = 0;
-    guint num_fences_to_wait = 0;
-    ID3D12Fence *fences_to_wait[] = { fence_to_wait.Get () };
-    guint64 fence_values_to_wait[] = { fence_val_to_wait };
-    if (fence_to_wait)
-      num_fences_to_wait++;
-
-    gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
-        fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT, &fence_val);
-    gst_d3d12_buffer_set_fence (upload,
-        gst_d3d12_device_get_fence_handle (self->device,
-            D3D12_COMMAND_LIST_TYPE_DIRECT), fence_val, FALSE);
-  } else {
-    GstVideoFrame src_frame, dst_frame;
-    if (!gst_video_frame_map (&src_frame, info, buffer, GST_MAP_READ)) {
-      GST_ERROR_OBJECT (self, "Couldn't map frame");
-      gst_buffer_unref (upload);
-      return nullptr;
-    }
-
-    if (!gst_video_frame_map (&dst_frame, info, upload, GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (self, "Couldn't map frame");
-      gst_video_frame_unmap (&src_frame);
-      gst_buffer_unref (upload);
-      return nullptr;
-    }
-
-    for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&src_frame); i++) {
-      auto src_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&src_frame, i) *
-          GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
-      auto src_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
-      auto src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&src_frame, i);
-
-      auto dst_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&dst_frame, i) *
-          GST_VIDEO_FRAME_COMP_PSTRIDE (&dst_frame, i);
-      auto dst_height = GST_VIDEO_FRAME_COMP_HEIGHT (&dst_frame, i);
-      auto dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&dst_frame, i);
-
-      auto width_in_bytes = MIN (src_width_in_bytes, dst_width_in_bytes);
-      auto height = MIN (src_height, dst_height);
-      auto src_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&src_frame, i);
-      auto dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&dst_frame, i);
-
-      for (gint j = 0; j < height; j++) {
-        memcpy (dst_data, src_data, width_in_bytes);
-        dst_data += dst_stride;
-        src_data += src_stride;
-      }
-    }
-
-    gst_video_frame_unmap (&dst_frame);
-    gst_video_frame_unmap (&src_frame);
-
-    GstMapInfo map_info;
-    mem = gst_buffer_peek_memory (upload, 0);
-    if (!gst_memory_map (mem, &map_info, GST_MAP_READ_D3D12)) {
-      GST_ERROR_OBJECT (self, "Couldn't map memory");
-      gst_buffer_unref (upload);
-      return nullptr;
-    }
-
-    gst_memory_unmap (mem, &map_info);
+  if (!gst_d3d12_buffer_copy_into (upload, buffer, info)) {
+    GST_ERROR_OBJECT (self, "Couldn't copy input buffer");
+    gst_buffer_unref (upload);
+    return nullptr;
   }
+
+  /* Upload data written by the system memory fallback. */
+  GstMapInfo map_info;
+  mem = gst_buffer_peek_memory (upload, 0);
+  if (!gst_memory_map (mem, &map_info, GST_MAP_READ_D3D12)) {
+    GST_ERROR_OBJECT (self, "Couldn't map memory");
+    gst_buffer_unref (upload);
+    return nullptr;
+  }
+
+  gst_memory_unmap (mem, &map_info);
 
   return upload;
 }
