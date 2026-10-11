@@ -399,7 +399,6 @@ struct GstD3D12H264EncPrivate
   GstH264Profile selected_profile;
   GstD3D12H264EncGop gop;
   std::unique_ptr<GstD3D12H264EncDpb> dpb;
-  guint last_pps_id = 0;
   guint64 display_order = 0;
   GArray *cc_sei;
 
@@ -1287,8 +1286,6 @@ gst_d3d12_h264_enc_update_gop (GstD3D12H264Enc * self,
   if (ref_frames == 0)
     gop_size = 1;
 
-  priv->last_pps_id = 0;
-
   auto prev_gop_struct = priv->gop.GetGopStruct ();
   auto prev_ref_frames = priv->selected_ref_frames;
 
@@ -2069,7 +2066,10 @@ gst_d3d12_h264_enc_start_frame (GstD3D12Encoder * encoder,
 
   if (priv->pic_control_h264.FrameType ==
       D3D12_VIDEO_ENCODER_FRAME_TYPE_H264_IDR_FRAME) {
-    auto buf_size = priv->sps.bytes.size () + priv->pps[0].bytes.size ();
+    auto buf_size = priv->sps.bytes.size ();
+    for (size_t i = 0; i < priv->pps.size (); i++)
+      buf_size += priv->pps[i].bytes.size ();
+
     if (priv->aud)
       buf_size += sizeof (aud_data);
 
@@ -2086,34 +2086,12 @@ gst_d3d12_h264_enc_start_frame (GstD3D12Encoder * encoder,
     memcpy (data, priv->sps.bytes.data (), priv->sps.bytes.size ());
     data += priv->sps.bytes.size ();
 
-    memcpy (data, priv->pps[0].bytes.data (), priv->pps[0].bytes.size ());
-    gst_buffer_unmap (output_buf, &map_info);
-    frame->output_buffer = output_buf;
-
-    priv->last_pps_id = 0;
-  } else if (priv->pic_control_h264.pic_parameter_set_id != priv->last_pps_id) {
-    const auto & cur_pps =
-        priv->pps[priv->pic_control_h264.pic_parameter_set_id];
-    auto buf_size = cur_pps.bytes.size ();
-
-    if (priv->aud)
-      buf_size += sizeof (aud_data);
-
-    auto output_buf = gst_buffer_new_and_alloc (buf_size);
-    GstMapInfo map_info;
-    gst_buffer_map (output_buf, &map_info, GST_MAP_WRITE);
-    auto data = (guint8 *) map_info.data;
-
-    if (priv->aud) {
-      memcpy (data, aud_data, sizeof (aud_data));
-      data += sizeof (aud_data);
+    for (size_t i = 0; i < priv->pps.size (); i++) {
+      memcpy (data, priv->pps[i].bytes.data (), priv->pps[i].bytes.size ());
+      data += priv->pps[i].bytes.size ();
     }
-
-    memcpy (data, cur_pps.bytes.data (), cur_pps.bytes.size ());
     gst_buffer_unmap (output_buf, &map_info);
     frame->output_buffer = output_buf;
-
-    priv->last_pps_id = priv->pic_control_h264.pic_parameter_set_id;
   } else if (priv->aud) {
     auto buf_size = sizeof (aud_data);
     auto output_buf = gst_buffer_new_and_alloc (buf_size);
