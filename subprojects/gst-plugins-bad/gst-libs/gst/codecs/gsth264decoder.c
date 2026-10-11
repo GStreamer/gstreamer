@@ -2195,6 +2195,72 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self,
   return TRUE;
 }
 
+/* Broken MMCO instructions can leave old references in the DPB. Recover
+ * before bumping, so pending pictures are not output just to make room
+ * and break the POC output order */
+static void
+gst_h264_decoder_recover_reference_overflow (GstH264Decoder * self,
+    GstH264Picture * picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  /* 8.2.5.1 limits references after marking the current picture */
+  gint max_refs = MAX (1, priv->active_sps->num_ref_frames);
+  gint cur_ref = 0;
+
+  /* The current picture is not in the DPB yet. Count it as a new reference
+   * unless its complementary field is already counted in the DPB */
+  if (GST_H264_PICTURE_IS_REF (picture)) {
+    GstH264Picture *other = picture->other_field;
+
+    if (!other || !GST_H264_PICTURE_IS_REF (other) ||
+        /* The other field may still be held in last_field, in which case
+         * it is not counted by gst_h264_dpb_num_ref_frames() */
+        other == priv->last_field) {
+      cur_ref = 1;
+    }
+  }
+
+  while (gst_h264_dpb_num_ref_frames (priv->dpb) + cur_ref > max_refs) {
+    GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
+    GstH264Picture *short_ref = NULL;
+    GstH264Picture *long_ref = NULL;
+    GstH264Picture *to_unmark;
+    guint i;
+
+    for (i = 0; i < pictures->len; i++) {
+      GstH264Picture *p = g_array_index (pictures, GstH264Picture *, i);
+
+      /* Keep the field that shares the current picture's surface */
+      if (p == picture->other_field)
+        continue;
+
+      if (GST_H264_PICTURE_IS_SHORT_TERM_REF (p)) {
+        if (!short_ref || p->frame_num_wrap < short_ref->frame_num_wrap)
+          short_ref = p;
+      } else if (GST_H264_PICTURE_IS_LONG_TERM_REF (p)) {
+        if (!long_ref || p->long_term_frame_idx < long_ref->long_term_frame_idx)
+          long_ref = p;
+      }
+    }
+
+    /* Prefer an old short-term reference, as in sliding-window marking */
+    to_unmark = short_ref ? short_ref : long_ref;
+    if (!to_unmark) {
+      g_array_unref (pictures);
+      break;
+    }
+
+    GST_WARNING_OBJECT (self,
+        "Reference count exceeds maximum %d after MMCO, unmarking "
+        "picture %p (frame_num %d, poc %d)", max_refs, to_unmark,
+        to_unmark->frame_num, to_unmark->pic_order_cnt);
+
+    /* Free a reference slot for the whole pair, but keep pending output */
+    gst_h264_picture_set_reference (to_unmark, GST_H264_PICTURE_REF_NONE, TRUE);
+    g_array_unref (pictures);
+  }
+}
+
 /* This method ensures that DPB does not overflow, either by removing
  * reference pictures as specified in the stream, or using a sliding window
  * procedure to remove the oldest one.
@@ -2228,6 +2294,8 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
    * from DPB and how to mark/unmark existing reference pictures, do so.
    * Otherwise, fall back to default sliding window process */
   if (picture->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag) {
+    gboolean ret;
+
     if (picture->nonexisting) {
       GST_WARNING_OBJECT (self,
           "Invalid memory management operation for non-existing picture "
@@ -2235,7 +2303,10 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
           picture->pic_order_cnt);
     }
 
-    return gst_h264_decoder_handle_memory_management_opt (self, picture);
+    ret = gst_h264_decoder_handle_memory_management_opt (self, picture);
+    gst_h264_decoder_recover_reference_overflow (self, picture);
+
+    return ret;
   }
 
   return gst_h264_decoder_sliding_window_picture_marking (self, picture);
