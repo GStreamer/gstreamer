@@ -129,6 +129,15 @@ if not have_winml
   endif
 endif
 
+if 'coreml' in onnx_require_eps
+  if host_system != 'darwin'
+    error('Core ML EP is only available on Apple platforms')
+  endif
+  if ort_api_version < 21
+    error('Core ML EP requires ONNX Runtime >= 1.21 headers')
+  endif
+endif
+
 model_cache_dir = meson.build_root() / 'ort-model-cache'
 meson.add_devenv({
   'GST_ORT_MODEL_CACHE_DIR': model_cache_dir,

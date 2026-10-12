@@ -170,3 +170,54 @@ using the onnx-winml option:
 ```
 meson setup <builddir> -Dgst-plugins-bad:onnx-winml=enabled
 ```
+
+9. Core ML (Apple GPU and Neural Engine)
+
+Any onnxruntime release >= 1.21 can be used.
+
+9.1 Build and install onnxruntime with the Core ML EP:
+
+```
+git clone --recursive --branch v1.31.0 https://github.com/microsoft/onnxruntime.git
+cd onnxruntime
+./build.sh \
+    --config Release \
+    --parallel \
+    --build_shared_lib \
+    --use_coreml \
+    --skip_tests \
+    --cmake_extra_defines CMAKE_INSTALL_PREFIX=$HOME/onnxruntime
+cmake --install build/MacOS/Release
+```
+
+Alternatively, you can use the prebuilt `onnxruntime-osx-arm64`
+[release](https://github.com/microsoft/onnxruntime/releases), which
+includes the Core ML EP. However, its pkg-config file [contains wrong paths](https://github.com/microsoft/onnxruntime/pull/32328), so until that's fixed you might need to patch them after extracting:
+
+```
+sed -i.bak 's|^includedir=.*|includedir=${prefix}/include|' lib/pkgconfig/libonnxruntime.pc
+sed -i.bak 's|^prefix=.*|prefix=${pcfiledir}/../..|' lib/pkgconfig/libonnxruntime.pc
+rm lib/pkgconfig/libonnxruntime.pc.bak
+```
+
+9.2 Configure GStreamer pointing to the onnxruntime install:
+
+```
+PKG_CONFIG_PATH=$HOME/onnxruntime/lib/pkgconfig:$PKG_CONFIG_PATH \
+meson setup <builddir> -Dgst-plugins-bad:onnx=enabled -Dgst-plugins-bad:onnx-require-eps=coreml
+```
+
+9.3 Select the Core ML compute units with the `device` property: `CPUOnly`,
+`CPUAndGPU`, `CPUAndNeuralEngine` or `ALL` (default).
+
+```
+onnxinference execution-provider=coreml device=CPUAndGPU
+```
+
+Operators that the Core ML backend doesn't support will run on the CPU instead. To check how
+much of the model runs on Core ML, set `GST_DEBUG=onnxruntime:4`
+and look for "number of nodes supported by CoreML".
+
+Models are currently converted to the `MLProgram` format by default, see [here](https://apple.github.io/coremltools/docs-guides/source/target-conversion-formats.html#default-format) for more details.
+
+9.4 Core ML caches compiled models in `model-cache-dir` by model path, so remember to clear the cache after replacing a model file.

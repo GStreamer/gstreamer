@@ -176,6 +176,7 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_HIP,
   GST_ONNX_EXECUTION_PROVIDER_DIRECTML,
   GST_ONNX_EXECUTION_PROVIDER_VITIS_AI,
+  GST_ONNX_EXECUTION_PROVIDER_COREML,
 } GstOnnxExecutionProvider;
 
 struct _GstOnnxInference
@@ -422,6 +423,20 @@ gst_onnx_execution_provider_get_type (void)
             "AMD Vitis AI execution provider (compiled out, requires ONNX Runtime >= 1.18)",
 #endif
           "vitisai"},
+      /**
+       * GstOnnxExecutionProvider::coreml
+       *
+       * Apple Core ML execution provider
+       *
+       * Since: 1.30
+       */
+      {GST_ONNX_EXECUTION_PROVIDER_COREML,
+#if defined(__APPLE__) && ORT_API_VERSION >= 21
+            "Apple Core ML execution provider",
+#else
+            "Apple Core ML execution provider (compiled out, requires macOS and ONNX Runtime >= 1.21)",
+#endif
+          "coreml"},
       {0, NULL, NULL},
     };
 
@@ -518,6 +533,8 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
    *
    * Device identifier to use for inference, interpreted per execution provider.
    * For CUDA, MIGraphX and HIP this is the integer device index (e.g. "0").
+   * For Core ML this is the set of compute units the model can run on:
+   * "CPUOnly", "CPUAndGPU", "CPUAndNeuralEngine" or "ALL".
    * When NULL (the default) the execution provider default is used.
    *
    * Since: 1.30
@@ -533,7 +550,8 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
    * GstOnnxInference:model-cache-dir
    *
    * Directory used by the execution provider to cache compiled models.
-   * Currently supported by the MIGraphX, Vitis AI and HIP execution providers.
+   * Currently supported by the MIGraphX, Vitis AI, HIP and Core ML execution
+   * providers.
    *
    * Since: 1.30
    */
@@ -1884,7 +1902,8 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   if (self->model_cache_dir && *self->model_cache_dir &&
       self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX &&
       self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_HIP &&
-      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_VITIS_AI) {
+      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_VITIS_AI &&
+      self->execution_provider != GST_ONNX_EXECUTION_PROVIDER_COREML) {
     GST_WARNING_OBJECT (self,
         "model-cache-dir is not supported by the selected execution provider");
   }
@@ -2195,6 +2214,51 @@ gst_onnx_inference_start (GstBaseTransform * trans)
     }
 #else
       GST_ERROR_OBJECT (self, "Compiled without DirectML support");
+      goto error;
+#endif
+      break;
+    case GST_ONNX_EXECUTION_PROVIDER_COREML:
+#if defined(__APPLE__) && ORT_API_VERSION >= 21
+    {
+      if (loaded_api_version < 21) {
+        GST_ERROR_OBJECT (self,
+            "Core ML execution provider requires ONNX Runtime >= 1.21");
+        goto error;
+      }
+
+      const gchar *cache_dir = gst_onnx_inference_get_model_cache_dir (self);
+      const char *keys[3];
+      const char *values[3];
+      size_t num_options = 0;
+
+      /* NeuralNetwork is the default in ONNX,
+       * but MLProgram is what Apple recommends these days. See:
+       * https://apple.github.io/coremltools/docs-guides/source/target-conversion-formats.html#default-format
+       * TODO: Expose some config property for this */
+      keys[num_options] = "ModelFormat";
+      values[num_options++] = "MLProgram";
+
+      if (self->device) {
+        keys[num_options] = "MLComputeUnits";
+        values[num_options++] = self->device;
+      }
+
+      if (cache_dir && *cache_dir) {
+        keys[num_options] = "ModelCacheDirectory";
+        values[num_options++] = cache_dir;
+      }
+
+      status = api->SessionOptionsAppendExecutionProvider (session_options,
+          "CoreML", keys, values, num_options);
+      if (status) {
+        GST_ERROR_OBJECT (self, "Failed to append Core ML provider: %s",
+            api->GetErrorMessage (status));
+        goto error;
+      }
+    }
+#else
+      GST_ERROR_OBJECT (self, "Core ML execution provider is unavailable, "
+          "need macOS and ONNX Runtime >= 1.21");
       goto error;
 #endif
       break;

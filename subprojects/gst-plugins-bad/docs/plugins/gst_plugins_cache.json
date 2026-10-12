@@ -239129,6 +239129,11 @@
                         "desc": "AMD Vitis AI execution provider",
                         "name": "vitisai",
                         "value": "6"
+                    },
+                    {
+                        "desc": "Apple Core ML execution provider (compiled out, requires macOS and ONNX Runtime >= 1.21)",
+                        "name": "coreml",
+                        "value": "7"
                     }
                 ]
             },
