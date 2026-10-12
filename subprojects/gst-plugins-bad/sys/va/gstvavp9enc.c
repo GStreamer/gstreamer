@@ -53,6 +53,7 @@
 
 #include "vacompat.h"
 #include "gstvabaseenc.h"
+#include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
@@ -3216,6 +3217,14 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   g_object_class_install_properties (object_class, n_props, properties);
 }
 
+static gboolean
+_is_supported_format (GstVideoFormat format)
+{
+  /* drivers may report RGB input, but it isn't implemented and it hangs
+   * the GPU with Intel iHD */
+  return !GST_VIDEO_FORMAT_INFO_IS_RGB (gst_video_format_get_info (format));
+}
+
 static GstCaps *
 _complete_src_caps (GstCaps * srccaps)
 {
@@ -3254,11 +3263,15 @@ gst_va_vp9_enc_register (GstPlugin * plugin, GstVaDevice * device,
   g_return_val_if_fail (entrypoint == VAEntrypointEncSlice ||
       entrypoint == VAEntrypointEncSliceLP, FALSE);
 
+  sink_caps = gst_va_caps_filter_formats (sink_caps, _is_supported_format);
+  if (!sink_caps)
+    return FALSE;
+
   cdata = g_new (struct CData, 1);
   cdata->entrypoint = entrypoint;
   cdata->description = NULL;
   cdata->render_device_path = g_strdup (device->render_device_path);
-  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->sink_caps = sink_caps;
   cdata->src_caps = _complete_src_caps (src_caps);
 
   /* class data will be leaked if the element never gets instantiated */
