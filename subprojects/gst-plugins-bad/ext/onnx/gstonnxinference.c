@@ -1876,7 +1876,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   // Create environment
   OrtLoggingLevel ort_logging;
 
-  switch (gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+  switch (gst_debug_category_get_threshold (onnx_runtime_debug)) {
     case GST_LEVEL_NONE:
     case GST_LEVEL_ERROR:
       ort_logging = ORT_LOGGING_LEVEL_ERROR;
