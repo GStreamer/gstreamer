@@ -23,6 +23,7 @@ use crate::helpers::{
     Feature, Prob, Scanner, TypeFind, magic_eq, opt, read_u16_le, read_u32_le, suggest, typefinder,
 };
 use crate::subtitles;
+use crate::xml::{XmlProbe, xml_probe};
 #[allow(unused_imports)]
 use bindings::{
     GST_RANK_MARGINAL as MARGINAL, GST_RANK_PRIMARY as PRIMARY, GST_RANK_SECONDARY as SECONDARY,
@@ -1508,6 +1509,62 @@ extern "C" fn ircam_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+/// Peek window for the XML finders. The root tag normally sits in the first
+/// few hundred bytes; 4 KiB leaves room for long prologs and comments.
+const XML_WINDOW: usize = 4096;
+
+/// Probe the first `XML_WINDOW` bytes of the stream for XML. The element
+/// matchers below compare the returned names ignoring ASCII case.
+fn xml_probe_typefinder(tf: &mut TypeFind) -> Option<XmlProbe<'_>> {
+    tf.peek_at_most(XML_WINDOW).and_then(xml_probe)
+}
+
+// XML - application/xml
+// Any root element, with a declaration.
+extern "C" fn xml_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(xml) = xml_probe_typefinder(tf)
+        && xml.has_prolog
+    {
+        suggest!(tf, Prob::MINIMUM, c"application/xml");
+    }
+}
+
+// HTML - text/html
+// The DOCTYPE name or the root element is "html".
+extern "C" fn html_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && (probe
+            .doctype
+            .is_some_and(|name| name.eq_ignore_ascii_case("html"))
+            || probe
+                .first_element
+                .is_some_and(|name| name.eq_ignore_ascii_case("html")))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"text/html");
+    }
+}
+
+// SVG - image/svg+xml
+// The DOCTYPE name or the root element is "svg" -> 100; else a bare "<svg"
+// anywhere in the first 1 KiB -> 80.
+extern "C" fn svg_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(data) = tf.peek_at_most(1024)
+        && let Some(probe) = xml_probe(data)
+    {
+        if probe
+            .doctype
+            .is_some_and(|name| name.eq_ignore_ascii_case("svg"))
+            || probe
+                .first_element
+                .is_some_and(|name| name.eq_ignore_ascii_case("svg"))
+        {
+            suggest!(tf, Prob::MAXIMUM, c"image/svg+xml");
+        } else if data.windows(4).any(|w| w.starts_with(b"<svg")) {
+            suggest!(tf, Prob::LIKELY, c"image/svg+xml");
+        }
+    }
+}
+
 // SDS - audio/x-sds
 // Magic: masked match F0 7E 0? 01 (mask FF FF 80 FF) @ 0.
 extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
@@ -1762,6 +1819,12 @@ const FEATURES: &[Feature] = &[
     ),
     // IRCAM - audio/x-ircam
     typefinder!("audio/x-ircam", SECONDARY, ircam_type_find, "sf"),
+    // XML - application/xml
+    typefinder!("application/xml", MARGINAL, xml_type_find, "xml"),
+    // HTML - text/html
+    typefinder!("text/html", SECONDARY, html_type_find, "htm,html"),
+    // SVG - image/svg+xml
+    typefinder!("image/svg+xml", SECONDARY, svg_type_find, "svg"),
     // SDS - audio/x-sds
     typefinder!("audio/x-sds", SECONDARY, sds_type_find, "sds"),
 ];

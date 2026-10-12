@@ -16,3 +16,4 @@ mod bindings;
 mod helpers;
 mod subtitles;
 mod typefindfunctions;
+mod xml;
