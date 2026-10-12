@@ -20,4 +20,11 @@
 /* Bridge dml_provider_factory.h's Windows SDK <DirectML.h> include to DirectX-Headers */
 #pragma once
 
+#include <sal.h>
+
+/* Undefined in the old sal.h header used by the Cerbero */
+#ifndef _Maybenull_
+#define _Maybenull_
+#endif
+
 #include <directx/DirectML.h>
