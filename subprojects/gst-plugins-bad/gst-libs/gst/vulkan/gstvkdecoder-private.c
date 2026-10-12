@@ -1176,10 +1176,13 @@ gst_vulkan_decoder_append_slice (GstVulkanDecoder * self,
     if (!new_buf)
       goto error;
 
-    if (self->input_buffer) {
-      if (!gst_buffer_copy_into (new_buf, self->input_buffer,
-              GST_BUFFER_COPY_MEMORY | GST_BUFFER_COPY_DEEP, 0, -1))
+    if (self->input_buffer && cur_size > 0) {
+      GstMapInfo mapinfo;
+
+      if (!gst_buffer_map (new_buf, &mapinfo, GST_MAP_WRITE))
         goto error;
+      gst_buffer_extract (self->input_buffer, 0, mapinfo.data, cur_size);
+      gst_buffer_unmap (new_buf, &mapinfo);
     }
 
     gst_clear_buffer (&self->input_buffer);
