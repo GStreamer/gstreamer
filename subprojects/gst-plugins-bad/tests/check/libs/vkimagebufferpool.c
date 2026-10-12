@@ -297,6 +297,48 @@ GST_START_TEST (test_multiplanar_default_per_plane)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reconfigure_resets_image_flags)
+{
+  GstBufferPool *pool;
+  GstCaps *caps;
+  GstStructure *config;
+  GstBuffer *buffer = NULL;
+  GstVulkanImageMemory *img_mem;
+
+  setup_queue (VK_QUEUE_COMPUTE_BIT);
+
+  pool = create_buffer_pool ("NV12",
+      VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+      VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL, FALSE);
+  gst_buffer_pool_set_active (pool, FALSE);
+
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "NV12",
+      "width", G_TYPE_INT, 1024, "height", G_TYPE_INT, 780, NULL);
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 1024, 1, 0);
+  gst_caps_unref (caps);
+  gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
+      VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_IMAGE_LAYOUT_UNDEFINED, 0);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+
+  fail_unless_equals_int (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL),
+      GST_FLOW_OK);
+  img_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, 0);
+  fail_unless (gst_is_vulkan_image_memory ((GstMemory *) img_mem));
+  fail_unless_equals_int (img_mem->create_info.flags, 0);
+  gst_buffer_unref (buffer);
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 GST_START_TEST (test_vulkan_profiles)
 {
@@ -414,6 +456,7 @@ vkimagebufferpool_suite (void)
     tcase_add_test (tc_basic, test_multiplanar_option_advertised);
     tcase_add_test (tc_basic, test_multiplanar_opt_in_single_image);
     tcase_add_test (tc_basic, test_multiplanar_default_per_plane);
+    tcase_add_test (tc_basic, test_reconfigure_resets_image_flags);
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
     tcase_add_test (tc_basic, test_decoding_image);
     tcase_add_test (tc_basic, test_vulkan_profiles);

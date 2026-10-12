@@ -448,6 +448,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     sampleable = ((requested_usage &
             (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT)) != 0);
 
+    priv->img_flags = 0;
+
     if (sampleable && !_is_video_usage (requested_usage)) {
       vkmap = gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
       const gboolean is_per_plane_alloc = vkmap->vkfrmt != priv->vk_fmts[0];
