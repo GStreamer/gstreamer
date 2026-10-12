@@ -46,9 +46,10 @@ enum
   PROP_ADAPTER_LUID,
   PROP_DEVICE_ID,
   PROP_VENDOR_ID,
+  PROP_ASYNC_DEPTH,
 };
 
-#define ASYNC_DEPTH 4
+#define DEFAULT_ASYNC_DEPTH 2
 
 struct EncoderOutputData
 {
@@ -132,12 +133,16 @@ struct GstD3D12EncoderPrivate
   GstD3D12FenceDataPool *fence_data_pool;
   std::atomic<GstFlowReturn> last_flow = { GST_FLOW_OK };
   std::atomic<bool> flushing = { false };
+  std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
+  guint active_async_depth = DEFAULT_ASYNC_DEPTH;
   bool array_of_textures = false;
   D3D12_FEATURE_DATA_FORMAT_INFO format_info = { };
 };
 /* *INDENT-ON* */
 
 static void gst_d3d12_encoder_finalize (GObject * object);
+static void gst_d3d12_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static void gst_d3d12_encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
@@ -176,6 +181,7 @@ gst_d3d12_encoder_class_init (GstD3D12EncoderClass * klass)
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   object_class->finalize = gst_d3d12_encoder_finalize;
+  object_class->set_property = gst_d3d12_encoder_set_property;
   object_class->get_property = gst_d3d12_encoder_get_property;
 
   g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
@@ -188,6 +194,21 @@ gst_d3d12_encoder_class_init (GstD3D12EncoderClass * klass)
   g_object_class_install_property (object_class, PROP_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
           "DXGI Vendor ID", 0, G_MAXUINT32, 0, read_only_params));
+
+  /**
+   * GstD3D12Encoder:async-depth:
+   *
+   * Number of in-flight GPU commands which can be scheduled without
+   * synchronization (0 = unlimited)
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
+      g_param_spec_uint ("async-depth", "Async Depth",
+          "Number of in-flight GPU commands which can be scheduled without "
+          "synchronization (0 = unlimited)", 0, G_MAXINT, DEFAULT_ASYNC_DEPTH,
+          (GParamFlags) (G_PARAM_READWRITE |
+              GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_encoder_set_context);
@@ -237,11 +258,29 @@ gst_d3d12_encoder_finalize (GObject * object)
 }
 
 static void
+gst_d3d12_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_ENCODER (object);
+  auto priv = self->priv;
+
+  switch (prop_id) {
+    case PROP_ASYNC_DEPTH:
+      priv->async_depth = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_d3d12_encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   auto self = GST_D3D12_ENCODER (object);
   auto klass = GST_D3D12_ENCODER_GET_CLASS (self);
+  auto priv = self->priv;
 
   switch (prop_id) {
     case PROP_ADAPTER_LUID:
@@ -252,6 +291,9 @@ gst_d3d12_encoder_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VENDOR_ID:
       g_value_set_uint (value, klass->vendor_id);
+      break;
+    case PROP_ASYNC_DEPTH:
+      g_value_set_uint (value, priv->async_depth.load ());
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -280,6 +322,8 @@ gst_d3d12_encoder_open (GstVideoEncoder * encoder)
   HRESULT hr;
   ComPtr < ID3D12VideoDevice3 > video_device;
 
+  priv->active_async_depth = priv->async_depth.load ();
+
   if (!gst_d3d12_ensure_element_data_for_adapter_luid (GST_ELEMENT_CAST (self),
           klass->adapter_luid, &self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't get device");
@@ -298,7 +342,7 @@ gst_d3d12_encoder_open (GstVideoEncoder * encoder)
 
   auto cmd = std::make_unique < EncoderCmdData > ();
   cmd->queue = gst_d3d12_cmd_queue_new (device, &queue_desc,
-      D3D12_FENCE_FLAG_NONE, ASYNC_DEPTH);
+      D3D12_FENCE_FLAG_NONE, priv->active_async_depth);
   if (!cmd->queue) {
     GST_ERROR_OBJECT (self, "Couldn't create command queue");
     return FALSE;
@@ -529,7 +573,8 @@ gst_d3d12_encoder_propose_allocation (GstVideoEncoder * encoder,
   }
 
   guint size = GST_VIDEO_INFO_SIZE (&info);
-  gst_buffer_pool_config_set_params (config, caps, size, ASYNC_DEPTH, 0);
+  gst_buffer_pool_config_set_params (config, caps, size,
+      priv->active_async_depth, 0);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Failed to set pool config");
@@ -541,7 +586,8 @@ gst_d3d12_encoder_propose_allocation (GstVideoEncoder * encoder,
   gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
   gst_structure_free (config);
 
-  gst_query_add_allocation_pool (query, pool, size, ASYNC_DEPTH, 0);
+  gst_query_add_allocation_pool (query, pool, size,
+      priv->active_async_depth, 0);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
   gst_object_unref (pool);
 
@@ -608,7 +654,7 @@ gst_d3d12_encoder_create_buffer_pool (GstD3D12Encoder * self,
 
   return gst_d3d12_encoder_buffer_pool_new (self->device,
       resource_req.MaxEncoderOutputMetadataBufferSize,
-      resolved_metadata_size, bitstream_size, ASYNC_DEPTH);
+      resolved_metadata_size, bitstream_size, priv->active_async_depth);
 }
 
 static gboolean
