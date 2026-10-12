@@ -614,7 +614,7 @@ extern "C" fn xi_type_find(tf: &mut TypeFind, _private: gpointer) {
 // =============================================================================
 
 // BMP - image/bmp
-// Magic "BM" @0, DIB header validation at offsets 14–28/32.
+// Magic "BM" @0, DIB header validation at offsets 14-28/32.
 extern "C" fn bmp_type_find(tf: &mut TypeFind, _private: gpointer) {
     const TEN_MIB: u32 = 10 * 1024 * 1024;
     const MAX_DIM: u32 = 0xFFFFF;
@@ -624,11 +624,16 @@ extern "C" fn bmp_type_find(tf: &mut TypeFind, _private: gpointer) {
     if data[0] != b'B' || data[1] != b'M' || data[6..10].iter().any(|&b| b != 0) {
         return;
     }
-    if read_u32_le(&data[10..]).unwrap() > TEN_MIB {
+    let (Some(pixel_offset), Some(header_size)) =
+        (read_u32_le(&data[10..]), read_u32_le(&data[14..]))
+    else {
+        return;
+    };
+    if pixel_offset > TEN_MIB {
         return;
     }
 
-    let (w, h, planes, bpp) = match read_u32_le(&data[14..]).unwrap() {
+    let (w, h, planes, bpp) = match header_size {
         0x0C => {
             // BITMAPCOREHEADER - w,h as u16.
             if let (Some(w), Some(h), Some(planes), Some(bpp)) = (
@@ -643,7 +648,7 @@ extern "C" fn bmp_type_find(tf: &mut TypeFind, _private: gpointer) {
             }
         }
         40 | 64 | 108 | 124 | 0xF0 => {
-            // BITMAPINFOHEADER V3–V4 - w,h as u32.
+            // BITMAPINFOHEADER V3-V4 - w,h as u32.
             if let (Some(w), Some(h), Some(planes), Some(bpp)) = (
                 read_u32_le(&data[18..]),
                 read_u32_le(&data[22..]),
@@ -1009,7 +1014,7 @@ extern "C" fn jp2_type_find(tf: &mut TypeFind, _private: gpointer) {
 
 // Open Timeline IO - JSON object with "OTIO_SCHEMA": as its first string key.
 extern "C" fn otio_type_find(tf: &mut TypeFind, _private: gpointer) {
-    // Peek 30 bytes - matches the spec window and C baseline.
+    // The first string key has to appear within the first 30 bytes.
     let Some(data) = tf.peek::<30>(0) else { return };
 
     // Split on '{' - if there is no brace this is not a JSON object.
@@ -1771,11 +1776,12 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
         let extensions = extensions.map(cs);
         let caps_str = caps_str.map(cs);
 
-        // NULL on a typo'd caps string, as in C.
+        // NULL on a typo'd caps string.
         let caps = caps_str.map_or(ptr::null_mut(), |s| unsafe {
             gst_caps_from_string(s.as_ptr())
         });
-        // Return value ignored, as in C: only a NULL name fails.
+
+        // Return value ignored: only a NULL name fails.
         unsafe {
             gst_type_find_register(
                 plugin,
@@ -1789,7 +1795,7 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
             );
             // Register takes its own ref on the caps (gst_caps_replace refs via
             // gst_mini_object_replace); release our initial ref from
-            // gst_caps_from_string, as C's sw_data_destroy does.
+            // gst_caps_from_string.
             if !caps.is_null() {
                 gst_caps_unref(caps);
             }
