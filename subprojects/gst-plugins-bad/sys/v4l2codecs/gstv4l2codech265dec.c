@@ -1231,6 +1231,7 @@ gst_v4l2_codec_h265_dec_crop_output_buffer (GstV4l2CodecH265Dec * self,
 
   dst_info.fps_n = src_frame->info.fps_n;
   dst_info.fps_d = src_frame->info.fps_d;
+  dst_info.colorimetry = src_frame->info.colorimetry;
 
   if (self->convert) {
     gboolean new_convert = FALSE;
