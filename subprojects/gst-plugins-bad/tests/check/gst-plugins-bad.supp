@@ -233,3 +233,31 @@
    fun:set
    fun:_ZN3srt4sync19SetThreadLocalError*
 }
+
+# libvips caches the small matrix images its sub-operations build (gaussmat,
+# convolution kernels, ...) in its operation cache. They stay referenced by the
+# cached operations until LRU eviction, which valgrind reports as possibly
+# lost at exit.
+{
+   libvips_cached_matrix_images
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:*alloc
+   fun:vips_tracked_malloc
+   fun:vips_image_write_prepare
+}
+
+# glibc never returns the TLS of dead threads; both GStreamer's task pool
+# (gsttaskpool.c) and libvips' worker threads (vips_worker_new) trigger
+# this. The <tls> suppressions in gstreamer.supp never match the modern
+# stack, which starts with two calloc frames (valgrind's replacement plus
+# ld.so's inlined calloc in allocate_dtv).
+{
+   dead_thread_tls
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+}

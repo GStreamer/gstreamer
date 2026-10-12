@@ -16,6 +16,7 @@ libparser_dep = declare_dependency(link_with: libparser,
 
 # FIXME: automagic
 exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
+vips_dep = dependency('vips', required : false)
 
 # Since nalutils API is internal, need to build it again
 nalutils_dep = gstcodecparsers_dep.partial_dependency (compile_args: true, includes: true)
@@ -90,6 +91,7 @@ base_tests = [
   [['elements/switchbin.c'], get_option('switchbin').disabled()],
   [['elements/videoframe-audiolevel.c'], get_option('videoframe_audiolevel').disabled()],
   [['elements/viewfinderbin.c']],
+  [['elements/vipssmartcrop.c'], not vips_dep.found() or get_option('vips').disabled()],
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/vkdownload.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/vkdeviceprovider.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],

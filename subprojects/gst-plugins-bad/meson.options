@@ -188,6 +188,7 @@ option('ttml', type : 'feature', value : 'auto', description : 'TTML subtitle pa
 option('uvch264', type : 'feature', value : 'auto', description : 'UVC compliant H.264 camera source plugin')
 option('va', type : 'feature', value : 'auto', description: 'VA-API new plugin')
 option('vmaf', type : 'feature', value : 'auto', description : 'Netflix VMAF image quality assessment plugin')
+option('vips', type : 'feature', value : 'auto', description : 'libvips based plugin')
 option('voaacenc', type : 'feature', value : 'auto', description : 'AAC audio encoder plugin')
 option('voamrwbenc', type : 'feature', value : 'auto', description : 'AMR-WB audio encoder plugin')
 option('wasapi', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin')
