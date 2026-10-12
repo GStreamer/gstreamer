@@ -1529,6 +1529,78 @@ extern "C" fn xml_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// DASH MPD - application/dash+xml
+// Element matcher on "mpd".
+extern "C" fn dash_mpd_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("mpd"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/dash+xml");
+    }
+}
+
+// GES - application/xges
+// Element matcher on "ges".
+extern "C" fn xges_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("ges"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/xges");
+    }
+}
+
+// FCPXML - application/vnd.apple-fcp+xml
+// Element matcher on "fcpxml".
+extern "C" fn fcpxml_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("fcpxml"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/vnd.apple-fcp+xml");
+    }
+}
+
+// XMEML - application/vnd.apple-xmeml+xml
+// Element matcher on "xmeml".
+extern "C" fn xmeml_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("xmeml"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/vnd.apple-xmeml+xml");
+    }
+}
+
+// SMIL - application/smil
+// Element matcher on "smil".
+extern "C" fn smil_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("smil"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/smil");
+    }
+}
+
+// TTML - application/ttml+xml
+// Element matcher on "tt".
+extern "C" fn ttml_xml_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probe) = xml_probe_typefinder(tf)
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("tt"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/ttml+xml");
+    }
+}
+
 // HTML - text/html
 // The DOCTYPE name or the root element is "html".
 extern "C" fn html_type_find(tf: &mut TypeFind, _private: gpointer) {
@@ -1821,6 +1893,38 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-ircam", SECONDARY, ircam_type_find, "sf"),
     // XML - application/xml
     typefinder!("application/xml", MARGINAL, xml_type_find, "xml"),
+    // DASH MPD - application/dash+xml
+    typefinder!(
+        "application/dash+xml",
+        PRIMARY,
+        dash_mpd_type_find,
+        "mpd,MPD"
+    ),
+    // GES - application/xges
+    typefinder!("application/xges", PRIMARY, xges_type_find, "xges"),
+    // FCPXML - application/vnd.apple-fcp+xml
+    typefinder!(
+        "application/vnd.apple-fcp+xml",
+        SECONDARY,
+        fcpxml_type_find,
+        "fcpxml"
+    ),
+    // XMEML - application/vnd.apple-xmeml+xml
+    typefinder!(
+        "application/vnd.apple-xmeml+xml",
+        SECONDARY,
+        xmeml_type_find,
+        "xmeml"
+    ),
+    // SMIL - application/smil
+    typefinder!("application/smil", SECONDARY, smil_type_find, "smil"),
+    // TTML - application/ttml+xml
+    typefinder!(
+        "application/ttml+xml",
+        SECONDARY,
+        ttml_xml_type_find,
+        "ttml+xml"
+    ),
     // HTML - text/html
     typefinder!("text/html", SECONDARY, html_type_find, "htm,html"),
     // SVG - image/svg+xml
