@@ -30,7 +30,13 @@ if srtp_option.disabled()
   subdir_done()
 endif
 
-srtp_dep = dependency('libsrtp2', version : '>= 2.1.0', required : srtp_option, allow_fallback: true)
+srtp_options = {}
+openssl_dep = dependency('openssl', required: false)
+
+if openssl_dep.found()
+  srtp_options += {'crypto-library': 'openssl'}
+endif
+srtp_dep = dependency('libsrtp2', version: '>= 2.1.0', required: srtp_option, allow_fallback: true, default_options: srtp_options)
 
 if srtp_dep.found()
   gstsrtp_enums = gnome.mkenums_simple('gstsrtp-enumtypes',
