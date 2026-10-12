@@ -264,7 +264,8 @@ out:
 
 static gboolean
 _get_entrypoint_from_config (GstVaDisplay * display, VAConfigID config,
-    VAProfile * profile_out, VAEntrypoint * entrypoint_out)
+    VAProfile * profile_out, VAEntrypoint * entrypoint_out,
+    VAConfigAttrib ** attribs_out, int *num_attribs_out)
 {
   VADisplay dpy;
   VAStatus status;
@@ -278,11 +279,10 @@ _get_entrypoint_from_config (GstVaDisplay * display, VAConfigID config,
   attribs = g_new (VAConfigAttrib, vaMaxNumConfigAttributes (dpy));
   status = vaQueryConfigAttributes (dpy, config, &profile, &entrypoint, attribs,
       &num_attribs);
-  g_free (attribs);
-
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (display, "vaQueryConfigAttributes: %s",
         vaErrorStr (status));
+    g_free (attribs);
     return FALSE;
   }
 
@@ -290,6 +290,12 @@ _get_entrypoint_from_config (GstVaDisplay * display, VAConfigID config,
     *profile_out = profile;
   if (entrypoint_out)
     *entrypoint_out = entrypoint;
+  if (attribs_out)
+    *attribs_out = attribs;
+  else
+    g_free (attribs);
+  if (num_attribs_out)
+    *num_attribs_out = num_attribs;
 
   return TRUE;
 }
@@ -304,16 +310,33 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   VASurfaceAttrib *attribs;
   VAEntrypoint entrypoint;
   VAProfile profile;
-  guint i, attrib_count, mem_type = 0;
+  guint i, attrib_count, mem_type = 0, rt_format = 0;
   gint min_width = 1, max_width = G_MAXINT;
   gint min_height = 1, max_height = G_MAXINT;
+  VAConfigAttrib *config_attribs;
+  int config_attrib_count;
 
-  if (!_get_entrypoint_from_config (display, config, &profile, &entrypoint))
+  if (!_get_entrypoint_from_config (display, config, &profile, &entrypoint,
+          &config_attribs, &config_attrib_count))
     return NULL;
+
+  for (int i = 0; i < config_attrib_count; i++) {
+    if (config_attribs[i].type == VAConfigAttribRTFormat) {
+      rt_format = config_attribs[i].value;
+      break;
+    }
+  }
+  if (rt_format == 0) {
+    g_free (config_attribs);
+    return NULL;
+  }
 
   attribs = gst_va_get_surface_attribs (display, config, &attrib_count);
-  if (!attribs)
+  if (!attribs) {
+    g_free (config_attribs);
     return NULL;
+  }
+
   formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
 
   for (i = 0; i < attrib_count; i++) {
@@ -322,7 +345,8 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
     switch (attribs[i].type) {
       case VASurfaceAttribPixelFormat:
         format = gst_va_video_format_from_va_fourcc (attribs[i].value.value.i);
-        if (format != GST_VIDEO_FORMAT_UNKNOWN)
+        if (format != GST_VIDEO_FORMAT_UNKNOWN
+            && gst_va_chroma_from_video_format (format) & rt_format)
           g_array_append_val (formats, format);
         break;
       case VASurfaceAttribMinWidth:
@@ -391,6 +415,7 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 bail:
   g_array_unref (formats);
   g_free (attribs);
+  g_free (config_attribs);
 
   return caps;
 }
