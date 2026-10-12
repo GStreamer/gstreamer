@@ -107,6 +107,12 @@
 #include "gstonnx-config.h"
 #include "gstonnx-utils.h"
 #include "gstonnxinference.h"
+#if HAVE_DIRECTML
+#include "gstonnximporter-dml.h"
+#else
+#define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
+#endif
+
 #include "gstonnximporter-cpu.h"
 
 #include <gst/gst.h>
@@ -118,12 +124,6 @@
 
 #if HAVE_WINML
 #include "gstonnx-winml.h"
-#endif
-
-#if HAVE_DIRECTML
-#include "gstonnximporter-dml.h"
-#else
-#define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
 #endif
 
 #if HAVE_GST_HIP

@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include "gstonnximporter.h"
 #include <gst/d3d12/gstd3d12.h>
+#include "gstonnximporter.h"
 
 G_BEGIN_DECLS
 

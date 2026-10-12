@@ -24,6 +24,7 @@ if get_option('onnx').disabled()
 endif
 
 extra_args = ['-DGST_USE_UNSTABLE_API']
+extra_cpp_args = []
 extra_deps = []
 extra_incs = []
 have_winml = false
@@ -43,14 +44,14 @@ if host_system == 'windows' and not onnx_winml_opt.disabled()
   if onnxrt_dep.found()
     have_winml = true
     onnx_sources += ['gstonnx-winml.c']
-    if gstd3d12_dep.found() and cc.has_header('d3d12.h') and cc.has_header('directml.h')
+    if gstd3d12_dep.found() and dx_headers_dep.found()
       dml_dep = cc.find_library('directml', required: false)
       if dml_dep.found()
         have_directml = true
         extra_deps += [gstd3d12_dep, gstd3dshader_dep, dml_dep, dx_headers_dep]
-        extra_args += ['-DGST_D3D12_USE_DIRECTX_HEADERS']
+        extra_cpp_args += ['-DGST_D3D12_USE_DIRECTX_HEADERS']
         if cc.get_argument_syntax() != 'msvc' and dx_headers_dep.type_name() != 'internal'
-          extra_args += ['-D__REQUIRED_RPCNDR_H_VERSION__=475']
+          extra_cpp_args += ['-D__REQUIRED_RPCNDR_H_VERSION__=475']
         endif
         onnx_sources += ['gstonnximporter-dml.cpp']
       endif
@@ -163,7 +164,7 @@ endif
 gstonnx = library('gstonnx',
   onnx_sources,
   c_args : gst_plugins_bad_args + extra_args,
-  cpp_args : gst_plugins_bad_args + extra_args,
+  cpp_args : gst_plugins_bad_args + extra_args + extra_cpp_args,
   link_args : noseh_link_args,
   include_directories : [configinc, libsinc, cuda_stubinc] + extra_incs,
   dependencies : [gstbase_dep, gstvideo_dep, gstanalytics_dep, onnxrt_dep,
