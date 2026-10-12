@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+typedef gboolean (*GstVaFormatFilterFunc) (GstVideoFormat format);
+
 gboolean              gst_va_caps_from_profiles           (GstVaDisplay * display,
                                                            GArray * profiles,
                                                            VAEntrypoint entrypoint,
@@ -53,6 +55,9 @@ gboolean              gst_va_video_info_from_caps         (GstVideoInfo * info,
                                                            GstCaps * caps);
 GstCaps *             gst_va_video_info_to_dma_caps       (GstVideoInfo * info,
                                                            guint64 modifier);
+
+GstCaps *             gst_va_caps_filter_formats          (GstCaps * sinkcaps,
+                                                           GstVaFormatFilterFunc is_supported);
 
 gboolean              gst_caps_set_format_array           (GstCaps * caps,
                                                            GArray * formats);
