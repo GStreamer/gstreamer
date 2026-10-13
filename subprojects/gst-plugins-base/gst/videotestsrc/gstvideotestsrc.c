@@ -1275,7 +1275,7 @@ gst_video_test_src_is_seekable (GstBaseSrc * psrc)
 }
 
 static GstFlowReturn
-fill_image (GstPushSrc * psrc, GstBuffer * buffer)
+fill_image (GstPushSrc * psrc, GstBuffer * buffer, GstClockTime pts)
 {
   GstVideoTestSrc *src;
   GstVideoFrame frame;
@@ -1300,7 +1300,7 @@ fill_image (GstPushSrc * psrc, GstBuffer * buffer)
   if (!gst_video_frame_map (&frame, &src->info, buffer, GST_MAP_WRITE))
     goto invalid_frame;
 
-  src->make_image (src, GST_BUFFER_PTS (buffer), &frame);
+  src->make_image (src, pts, &frame);
 
   if ((pal = gst_video_format_get_palette (GST_VIDEO_FRAME_FORMAT (&frame),
               &palsize))) {
@@ -1345,7 +1345,7 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     if (src->cached == NULL) {
       src->cached = gst_buffer_new_allocate (NULL, src->info.size, NULL);
 
-      ret = fill_image (GST_PUSH_SRC (src), src->cached);
+      ret = fill_image (GST_PUSH_SRC (src), src->cached, pts);
       if (G_UNLIKELY (ret != GST_FLOW_OK)) {
         g_mutex_unlock (&src->cache_lock);
         goto fill_failed;
@@ -1370,7 +1370,7 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     gst_video_frame_unmap (&dframe);
     g_mutex_unlock (&src->cache_lock);
   } else {
-    ret = fill_image (GST_PUSH_SRC (src), buffer);
+    ret = fill_image (GST_PUSH_SRC (src), buffer, pts);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto fill_failed;
   }
