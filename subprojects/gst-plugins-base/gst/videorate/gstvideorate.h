@@ -72,6 +72,10 @@ struct _GstVideoRate
 
   guint64 last_ts;              /* Timestamp of last input buffer */
 
+  /* flagged if next_output_ts and last_ts were converted
+   * from the previous segment to the new one */
+  gboolean ts_converted_from_prev_seg;
+
   guint64 average_period;
   GstClockTimeDiff wanted_diff; /* target average diff */
   GstClockTimeDiff average;     /* moving average period */

@@ -760,6 +760,7 @@ gst_video_rate_reset (GstVideoRate * videorate, gboolean on_flush)
   videorate->next_output_ts = GST_CLOCK_TIME_NONE;
   videorate->next_output_end_ts = GST_CLOCK_TIME_NONE;
   videorate->last_ts = GST_CLOCK_TIME_NONE;
+  videorate->ts_converted_from_prev_seg = FALSE;
   videorate->discont = TRUE;
   videorate->average = 0;
   videorate->force_variable_rate = FALSE;
@@ -1151,22 +1152,27 @@ gst_video_rate_rollback_to_prev_caps_if_needed (GstVideoRate * videorate)
   return prev_caps;
 }
 
-/* FIXME: audiorate has a copy, should it be public API? */
+/* position in new_segment with the same running time, -1 if outside it */
 static guint64
-convert_position (GstSegment * old_segment, GstSegment * new_segment,
-    guint64 position)
+convert_position (const GstSegment * old_segment,
+    const GstSegment * new_segment, guint64 position)
 {
+  guint64 running_time, new_position;
+
   g_return_val_if_fail (old_segment->format == new_segment->format, -1);
-  if (position == -1)
+  if (gst_segment_to_running_time_full (old_segment, old_segment->format,
+          position, &running_time) != 1)
     return -1;
-  position += old_segment->base;
-  if (position < new_segment->base)
+
+  if (gst_segment_position_from_running_time_full (new_segment,
+          new_segment->format, running_time, &new_position) != 1)
     return -1;
-  position -= new_segment->base;
-  if (position < new_segment->start || (new_segment->stop != -1
-          && position > new_segment->stop))
+
+  if (new_position < new_segment->start || (new_segment->stop != -1
+          && new_position > new_segment->stop))
     return -1;
-  return position;
+
+  return new_position;
 }
 
 static gboolean
@@ -1245,11 +1251,17 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
 
         if (!GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts)) {
           videorate->last_ts = GST_CLOCK_TIME_NONE;
-        } else {
+        } else if (GST_CLOCK_TIME_IS_VALID (videorate->last_ts)) {
           videorate->last_ts =
               convert_position (&videorate->segment, &segment,
               videorate->last_ts);
+          /* restart from the new segment if the input ended outside of it */
+          if (!GST_CLOCK_TIME_IS_VALID (videorate->last_ts))
+            videorate->next_output_ts = GST_CLOCK_TIME_NONE;
         }
+
+        videorate->ts_converted_from_prev_seg =
+            GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts);
 
         if (GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts)) {
           videorate->base_output_ts = videorate->next_output_ts;
@@ -2051,6 +2063,33 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
   in_ts = GST_BUFFER_PTS (buffer);
   in_dur = GST_BUFFER_DURATION (buffer);
+  if (videorate->ts_converted_from_prev_seg) {
+    GstClockTime in_end = in_ts;
+
+    videorate->ts_converted_from_prev_seg = FALSE;
+
+    if (GST_CLOCK_TIME_IS_VALID (in_ts) && GST_CLOCK_TIME_IS_VALID (in_dur))
+      in_end = in_ts + in_dur;
+
+    if (GST_CLOCK_TIME_IS_VALID (in_ts)
+        && GST_CLOCK_TIME_IS_VALID (videorate->last_ts)
+        && ((videorate->segment.rate > 0.0 && in_ts < videorate->last_ts)
+            || (videorate->segment.rate < 0.0 && in_end > videorate->last_ts))) {
+      GST_DEBUG_OBJECT (videorate, "Running time went backwards on segment "
+          "change, restarting from the new segment");
+      videorate->next_output_ts = GST_CLOCK_TIME_NONE;
+      videorate->last_ts = GST_CLOCK_TIME_NONE;
+      if (videorate->segment.rate < 0.0) {
+        videorate->base_input_ts = videorate->segment.stop * videorate->rate;
+        videorate->base_output_ts = videorate->segment.stop;
+      } else {
+        videorate->base_input_ts = videorate->segment.start * videorate->rate;
+        videorate->base_output_ts = videorate->segment.start;
+      }
+      videorate->out_frame_count = 0;
+    }
+  }
+
   if (videorate->segment.rate >= 0.0)
     gst_video_rate_compute_next_ts (videorate, in_ts, skip);
   gst_video_rate_apply_pending_rate (videorate, buffer);
