@@ -69,6 +69,9 @@ typedef struct
   amf_int64 max_num_ltr_frames;
   amf_int64 default_qp_i;
   amf_int64 default_qp_p;
+  amf_int64 default_qp_b;
+  amf_int64 bframes;
+  amf_int64 max_b_frames;
   amf_int64 min_gop_size;
   amf_int64 max_gop_size;
   amf_int64 default_gop_size;
@@ -264,8 +267,14 @@ enum
   PROP_MAX_QP_I,
   PROP_MIN_QP_P,
   PROP_MAX_QP_P,
+  PROP_MIN_QP_B,
+  PROP_MAX_QP_B,
   PROP_QP_I,
   PROP_QP_P,
+  PROP_QP_B,
+  PROP_MAX_B_FRAMES,
+  PROP_B_FRAMES,
+  PROP_ADAPTIVE_MINI_GOP,
   PROP_REF_FRAMES,
   PROP_SMART_ACCESS,
   PROP_PRE_ENCODE,
@@ -293,6 +302,9 @@ enum
 #define DEFAULT_MAX_BITRATE 0
 #define DEFAULT_MIN_MAX_QP -1
 #define DEFAULT_REF_FRAMES 1
+#define DEFAULT_MAX_B_FRAMES 0
+#define DEFAULT_B_FRAMES 0
+#define DEFAULT_ADAPTIVE_MINI_GOP FALSE
 #define DEFAULT_SMART_ACCESS FALSE
 #define DEFAULT_PRE_ENCODE FALSE
 
@@ -325,8 +337,14 @@ typedef struct _GstAmfAv1Enc
   gint max_qp_i;
   gint min_qp_p;
   gint max_qp_p;
+  gint min_qp_b;
+  gint max_qp_b;
   guint qp_i;
   guint qp_p;
+  guint qp_b;
+  guint max_b_frames;
+  gint b_frames;
+  gboolean adaptive_mini_gop;
   guint ref_frames;
   gboolean smart_access;
   gboolean pre_encode;
@@ -438,6 +456,86 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
   g_object_class_install_property (object_class, PROP_REF_FRAMES,
       g_param_spec_uint ("ref-frames", "Reference Frames",
           "Number of reference frames", 0, 8, DEFAULT_REF_FRAMES, param_flags));
+
+  if (dev_caps->bframes) {
+    GParamFlags b_param_flags = (GParamFlags) (param_flags |
+        GST_PARAM_CONDITIONALLY_AVAILABLE);
+
+    /**
+     * GstAmfAv1Enc:max-b-frames:
+     *
+     * Maximum number of consecutive B pictures
+     *
+     * Since: 1.30
+     */
+    g_object_class_install_property (object_class, PROP_MAX_B_FRAMES,
+        g_param_spec_uint ("max-b-frames", "Maximum number of B-frames",
+            "Maximum number of consecutive B Pictures (requires AMF 1.4.36)",
+            0, (guint) dev_caps->max_b_frames, DEFAULT_MAX_B_FRAMES,
+            b_param_flags));
+
+    /**
+     * GstAmfAv1Enc:b-frames:
+     *
+     * Number of consecutive B pictures in a GOP
+     *
+     * Since: 1.30
+     */
+    g_object_class_install_property (object_class, PROP_B_FRAMES,
+        g_param_spec_int ("b-frames", "B-Frames",
+            "Number of consecutive B-frames in a GOP. "
+            "If b-frames > max-b-frames, then b-frames set to max-b-frames "
+            "(-1: USAGE default)", -1, (gint) dev_caps->max_b_frames,
+            DEFAULT_B_FRAMES, b_param_flags));
+
+    /**
+     * GstAmfAv1Enc:adaptive-mini-gop:
+     *
+     * Enable adaptive mini GOP size for B-frame encoding
+     *
+     * Since: 1.30
+     */
+    g_object_class_install_property (object_class, PROP_ADAPTIVE_MINI_GOP,
+        g_param_spec_boolean ("adaptive-mini-gop", "Adaptive mini GOP",
+            "Enables adaptive mini GOP size for B-frame encoding",
+            DEFAULT_ADAPTIVE_MINI_GOP, b_param_flags));
+
+    /**
+     * GstAmfAv1Enc:min-qp-b:
+     *
+     * Minimum allowed QP value for B frames
+     *
+     * Since: 1.30
+     */
+    g_object_class_install_property (object_class, PROP_MIN_QP_B,
+        g_param_spec_int ("min-qp-b", "Min QP B",
+            "Minimum allowed QP value for B frames (-1: USAGE default)",
+            -1, 255, DEFAULT_MIN_MAX_QP, b_param_flags));
+
+    /**
+     * GstAmfAv1Enc:max-qp-b:
+     *
+     * Maximum allowed QP value for B frames
+     *
+     * Since: 1.30
+     */
+    g_object_class_install_property (object_class, PROP_MAX_QP_B,
+        g_param_spec_int ("max-qp-b", "Max QP B",
+            "Maximum allowed QP value for B frames (-1: USAGE default)",
+            -1, 255, DEFAULT_MIN_MAX_QP, b_param_flags));
+
+    /**
+     * GstAmfAv1Enc:qp-b:
+     *
+     * Constant QP for B frames
+     *
+     * Since: 1.30
+     */
+    g_object_class_install_property (object_class, PROP_QP_B,
+        g_param_spec_uint ("qp-b", "QP B",
+            "Constant QP for B frames", 0, 255,
+            (guint) dev_caps->default_qp_b, b_param_flags));
+  }
 
   if (cdata->dev_caps.pre_encode_supported) {
     /**
@@ -763,8 +861,14 @@ gst_amf_av1_enc_init (GstAmfAv1Enc * self)
   self->max_qp_i = DEFAULT_MIN_MAX_QP;
   self->min_qp_p = DEFAULT_MIN_MAX_QP;
   self->max_qp_p = DEFAULT_MIN_MAX_QP;
+  self->min_qp_b = DEFAULT_MIN_MAX_QP;
+  self->max_qp_b = DEFAULT_MIN_MAX_QP;
   self->qp_i = (guint) dev_caps->default_qp_i;
   self->qp_p = (guint) dev_caps->default_qp_p;
+  self->qp_b = (guint) dev_caps->default_qp_b;
+  self->max_b_frames = DEFAULT_MAX_B_FRAMES;
+  self->b_frames = DEFAULT_B_FRAMES;
+  self->adaptive_mini_gop = DEFAULT_ADAPTIVE_MINI_GOP;
   self->ref_frames = DEFAULT_REF_FRAMES;
   self->smart_access = DEFAULT_SMART_ACCESS;
   self->pre_encode = DEFAULT_PRE_ENCODE;
@@ -884,11 +988,29 @@ gst_amf_av1_enc_set_property (GObject * object, guint prop_id,
     case PROP_MAX_QP_P:
       update_int (self, &self->max_qp_p, value);
       break;
+    case PROP_MIN_QP_B:
+      update_int (self, &self->min_qp_b, value);
+      break;
+    case PROP_MAX_QP_B:
+      update_int (self, &self->max_qp_b, value);
+      break;
     case PROP_QP_I:
       update_uint (self, &self->qp_i, value);
       break;
     case PROP_QP_P:
       update_uint (self, &self->qp_p, value);
+      break;
+    case PROP_QP_B:
+      update_uint (self, &self->qp_b, value);
+      break;
+    case PROP_MAX_B_FRAMES:
+      update_uint (self, &self->max_b_frames, value);
+      break;
+    case PROP_B_FRAMES:
+      update_int (self, &self->b_frames, value);
+      break;
+    case PROP_ADAPTIVE_MINI_GOP:
+      update_bool (self, &self->adaptive_mini_gop, value);
       break;
     case PROP_REF_FRAMES:
       update_uint (self, &self->ref_frames, value);
@@ -992,11 +1114,29 @@ gst_amf_av1_enc_get_property (GObject * object, guint prop_id,
     case PROP_MAX_QP_P:
       g_value_set_int (value, self->max_qp_p);
       break;
+    case PROP_MIN_QP_B:
+      g_value_set_int (value, self->min_qp_b);
+      break;
+    case PROP_MAX_QP_B:
+      g_value_set_int (value, self->max_qp_b);
+      break;
     case PROP_QP_I:
       g_value_set_uint (value, self->qp_i);
       break;
     case PROP_QP_P:
       g_value_set_uint (value, self->qp_p);
+      break;
+    case PROP_QP_B:
+      g_value_set_uint (value, self->qp_b);
+      break;
+    case PROP_MAX_B_FRAMES:
+      g_value_set_uint (value, self->max_b_frames);
+      break;
+    case PROP_B_FRAMES:
+      g_value_set_int (value, self->b_frames);
+      break;
+    case PROP_ADAPTIVE_MINI_GOP:
+      g_value_set_boolean (value, self->adaptive_mini_gop);
       break;
     case PROP_REF_FRAMES:
       g_value_set_uint (value, self->ref_frames);
@@ -1070,6 +1210,7 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
   AMF_RESULT result;
   AMFRate framerate;
   amf_int64 int64_val = 0;
+  gboolean b_frames_enabled = FALSE;
   AMF_VIDEO_ENCODER_AV1_RATE_CONTROL_METHOD_ENUM rc_mode;
   amf_int64 color_depth;
   AMF_SURFACE_FORMAT surface_format;
@@ -1146,6 +1287,45 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     GST_ERROR_OBJECT (self, "Failed to set ref-frames, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
+  }
+
+  if (dev_caps->bframes) {
+    result =
+        comp->SetProperty (AMF_VIDEO_ENCODER_AV1_MAX_CONSECUTIVE_BPICTURES,
+        (amf_int64) self->max_b_frames);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set maximum number of consecutive B Pictures, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+    b_frames_enabled = self->max_b_frames > 0;
+  }
+  if (b_frames_enabled) {
+    gint b_frames = self->b_frames;
+    if (b_frames != -1 && (guint) b_frames > self->max_b_frames) {
+      GST_WARNING_OBJECT (self,
+          "Limited b-frames option to max-b-frames value");
+      b_frames = self->max_b_frames;
+    }
+
+    if (b_frames != -1) {
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_B_PIC_PATTERN,
+          (amf_int64) b_frames);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set B-picture pattern, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+    }
+
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_ADAPTIVE_MINIGOP,
+        (amf_bool) self->adaptive_mini_gop);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set adaptive mini GOP, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
   }
 
   if (dev_caps->smart_access_supported) {
@@ -1338,6 +1518,20 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
   comp->SetProperty (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTER,
       (amf_int64) self->qp_p);
 
+  if (b_frames_enabled) {
+    if (self->min_qp_b >= 0) {
+      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_MIN_Q_INDEX_INTER_B,
+          (amf_int64) self->min_qp_b);
+    }
+    if (self->max_qp_b >= 0) {
+      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_MAX_Q_INDEX_INTER_B,
+          (amf_int64) self->max_qp_b);
+    }
+
+    comp->SetProperty (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTER_B,
+        (amf_int64) self->qp_b);
+  }
+
   switch (rc_mode) {
     case AMF_VIDEO_ENCODER_AV1_RATE_CONTROL_METHOD_CBR:
       if (self->bitrate > 0) {
@@ -1391,6 +1585,21 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     GST_ERROR_OBJECT (self, "Failed to set gop-size, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
+  }
+
+  if (b_frames_enabled) {
+    int64_val = 0;
+    result = comp->GetProperty (AMF_VIDEO_ENCODER_AV1_B_PIC_PATTERN,
+        &int64_val);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Couldn't get b-frame setting, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+
+    if (int64_val > 0) {
+      *num_reorder_frames = (guint) int64_val;
+    }
   }
 
   self->property_updated = FALSE;
@@ -1653,6 +1862,7 @@ gst_amf_av1_enc_create_class_data (GstObject * device, AMFComponent * comp)
       max_num_temporal_layers);
   QUERY_CAPS_PROP (AMF_VIDEO_ENCODER_AV1_CAP_MAX_NUM_LTR_FRAMES,
       max_num_ltr_frames);
+  QUERY_CAPS_PROP (AMF_VIDEO_ENCODER_AV1_CAP_BFRAMES, bframes);
 
 #undef QUERY_CAPS_PROP
 
@@ -1670,7 +1880,42 @@ gst_amf_av1_enc_create_class_data (GstObject * device, AMFComponent * comp)
 
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTRA, default_qp_i, 26);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTER, default_qp_p, 26);
+  QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTER_B, default_qp_b, 26);
 #undef QUERY_DEFAULT_PROP
+
+  if (dev_caps.bframes) {
+    const AMFPropertyInfo *pinfo = nullptr;
+    result =
+        comp->GetPropertyInfo (AMF_VIDEO_ENCODER_AV1_MAX_CONSECUTIVE_BPICTURES,
+        &pinfo);
+    if (result != AMF_OK || !pinfo || pinfo->maxValue.int64Value <= 0) {
+      // Should not happen
+      dev_caps.bframes = 0;
+      GST_FIXME_OBJECT (device,
+          "AMF report b-frames support, but max-b-frame is not provided. Disabling b-frames");
+    } else {
+      dev_caps.max_b_frames = pinfo->maxValue.int64Value;
+      GST_INFO_OBJECT (device, "max_b_frames: %" G_GINT64_FORMAT,
+          dev_caps.max_b_frames);
+    }
+  }
+
+  guint64 ver = gst_amf_get_version ();
+  if (ver < AMF_MAKE_FULL_VERSION (1, 4, 36, 0)) {
+    GST_INFO_OBJECT (device,
+        "B-frames (av1) are supported from AMF 1.4.36 only. Your version is %lld.%lld.%lld. ",
+        AMF_GET_MAJOR_VERSION (ver), AMF_GET_MINOR_VERSION (ver),
+        AMF_GET_SUBMINOR_VERSION (ver));
+    if (dev_caps.bframes) {
+      // Should not happen
+      dev_caps.bframes = 0;
+      GST_FIXME_OBJECT (device,
+          "AMF version doesn't support b-frames, but it reports supported. Disabling b-frames");
+    }
+  } else if (!dev_caps.bframes) {
+    GST_INFO_OBJECT (device,
+        "Hardware doesn't support B-frames (av1). Use GPU with VCN5 support to enable that feature");
+  }
 
   result = comp->GetProperty (AMF_VIDEO_ENCODER_AV1_RATE_CONTROL_PREENCODE,
       &pre_encode_supported);
