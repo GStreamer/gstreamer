@@ -5598,7 +5598,9 @@ with name `application/x-gst-base-sink-stats` with the following fields:
 
 - "average-rate"  G_TYPE_DOUBLE   average frame rate
 - "dropped" G_TYPE_UINT64   Number of dropped frames
-- "rendered" G_TYPE_UINT64   Number of rendered frames</doc>
+- "rendered" G_TYPE_UINT64   Number of rendered frames
+- "total-dropped" G_TYPE_UINT64   Number of dropped frames (no reset). Since: 1.30
+- "total-rendered" G_TYPE_UINT64   Number of rendered frames (no reset). Since: 1.30</doc>
         <type name="Gst.Structure"/>
       </property>
       <property name="sync" writable="1" transfer-ownership="none" setter="set_sync" getter="get_sync" default-value="TRUE">

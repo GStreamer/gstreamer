@@ -207,6 +207,10 @@ struct _GstBaseSinkPrivate
   guint64 rendered;
   guint64 dropped;
 
+  /* and totals, during the lifetime of the element (never reset) */
+  guint64 total_rendered;
+  guint64 total_dropped;
+
   /* latency stuff */
   GstClockTime latency;
 
@@ -604,6 +608,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * - "average-rate"  G_TYPE_DOUBLE   average frame rate
    * - "dropped" G_TYPE_UINT64   Number of dropped frames
    * - "rendered" G_TYPE_UINT64   Number of rendered frames
+   * - "total-dropped" G_TYPE_UINT64   Number of dropped frames (no reset). Since: 1.30
+   * - "total-rendered" G_TYPE_UINT64   Number of rendered frames (no reset). Since: 1.30
    *
    * Since: 1.18
    */
@@ -749,6 +755,9 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->max_bitrate = DEFAULT_MAX_BITRATE;
 
   priv->drop_out_of_segment = DEFAULT_DROP_OUT_OF_SEGMENT;
+
+  priv->total_rendered = 0;
+  priv->total_dropped = 0;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_FLAG_SINK);
 }
@@ -3151,7 +3160,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
   priv->avg_in_diff = GST_CLOCK_TIME_NONE;
   priv->rendered = 0;
   priv->dropped = 0;
-
+  /* total_rendered and total_dropped aren't reset here */
 }
 
 /* Checks if the object was scheduled too late.
@@ -4052,6 +4061,7 @@ again:
     goto flushing;
 
   priv->rendered++;
+  priv->total_rendered++;
 
 done:
   if (step_end) {
@@ -4109,6 +4119,7 @@ sync_failed:
 dropped:
   {
     priv->dropped++;
+    priv->total_dropped++;
     GST_DEBUG_OBJECT (basesink, "buffer late, dropping");
 
     if (g_atomic_int_get (&priv->qos_enabled)) {
@@ -4125,8 +4136,10 @@ dropped:
           GST_TIME_ARGS (priv->current_sstart), GST_TIME_ARGS (timestamp),
           GST_TIME_ARGS (duration));
       GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
-          "qos: rendered %" G_GUINT64_FORMAT ", dropped %" G_GUINT64_FORMAT,
-          priv->rendered, priv->dropped);
+          "qos: rendered %" G_GUINT64_FORMAT ", dropped %" G_GUINT64_FORMAT
+          ", total-rendered: %" G_GUINT64_FORMAT ", total-dropped %"
+          G_GUINT64_FORMAT, priv->rendered, priv->dropped,
+          priv->total_rendered, priv->total_dropped);
 
       qos_msg =
           gst_message_new_qos (GST_OBJECT_CAST (basesink), basesink->sync,
@@ -5914,7 +5927,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         }
       }
       GST_DEBUG_OBJECT (basesink, "rendered: %" G_GUINT64_FORMAT
-          ", dropped: %" G_GUINT64_FORMAT, priv->rendered, priv->dropped);
+          ", dropped: %" G_GUINT64_FORMAT ", total-rendered: %"
+          G_GUINT64_FORMAT ", total-dropped: %" G_GUINT64_FORMAT,
+          priv->rendered, priv->dropped, priv->total_rendered,
+          priv->total_dropped);
 
       gst_base_sink_reset_qos (basesink);
       GST_BASE_SINK_PREROLL_UNLOCK (basesink);
@@ -6017,5 +6033,7 @@ gst_base_sink_get_stats (GstBaseSink * sink)
   return gst_structure_new ("application/x-gst-base-sink-stats",
       "average-rate", G_TYPE_DOUBLE, priv->avg_rate,
       "dropped", G_TYPE_UINT64, priv->dropped,
-      "rendered", G_TYPE_UINT64, priv->rendered, NULL);
+      "rendered", G_TYPE_UINT64, priv->rendered,
+      "total-rendered", G_TYPE_UINT64, priv->total_rendered,
+      "total-dropped", G_TYPE_UINT64, priv->total_dropped, NULL);
 }
