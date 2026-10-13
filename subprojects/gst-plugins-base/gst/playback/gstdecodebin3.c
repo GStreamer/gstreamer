@@ -3378,7 +3378,13 @@ mq_slot_handle_stream_start (MultiQueueSlot * slot, GstEvent * stream_event)
 
   collection =
       find_collection_for_stream (dbin, (gchar *) slot->active_stream_id);
-  g_assert (collection);
+  if (G_UNLIKELY (collection == NULL)) {
+    GST_ELEMENT_ERROR (dbin, STREAM, FAILED,
+        ("Stream %s is not part of any known stream collection",
+            slot->active_stream_id),
+        ("pad %s:%s", GST_DEBUG_PAD_NAME (slot->src_pad)));
+    goto beach;
+  }
 
   /* check if all streams are present for that collection. We do it now since we
    * might just have a single stream in the collection */
