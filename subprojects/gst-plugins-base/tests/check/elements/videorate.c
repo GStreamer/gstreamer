@@ -2443,6 +2443,89 @@ GST_START_TEST (test_backward_pts_with_caps_change)
 
 GST_END_TEST;
 
+/* All framerates apart from 25fps can expose rounding errors, e.g. causing a
+ * frame to be pushed in the wrong slot */
+static const struct
+{
+  guint numerator, denominator, frames;
+} reverse_framerates[] = {
+  {25, 1, 25},
+  {30, 1, 30},
+  {60, 1, 60},
+  {30000, 1001, 30},
+};
+
+/* Equal input and output rates must preserve every frame during reverse
+ * playback, including the last frame at the segment start. */
+GST_START_TEST (test_reverse_frames)
+{
+  const guint fps_n = reverse_framerates[__i__].numerator;
+  const guint fps_d = reverse_framerates[__i__].denominator;
+  const guint frames = reverse_framerates[__i__].frames;
+  const guint64 time_scale = GST_SECOND * fps_d;
+  const GstClockTime stop = gst_util_uint64_scale (frames, time_scale, fps_n);
+
+  for (guint include_stop_frame = 0; include_stop_frame < 2;
+      include_stop_frame++) {
+    for (guint durations = 0; durations < 2; durations++) {
+      GstElement *videorate = setup_videorate ();
+      GstCaps *caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+      GstSegment segment;
+      guint n = 0;
+
+      fail_unless (gst_element_set_state (videorate,
+              GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+          "could not set to playing");
+      gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+          NULL);
+      gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+      gst_caps_unref (caps);
+
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      segment.rate = -1.0;
+      segment.stop = stop;
+      segment.position = stop;
+      fail_unless (gst_pad_push_event (mysrcpad,
+              gst_event_new_segment (&segment)));
+
+      for (gint i = frames - 1 + include_stop_frame; i >= 0; i--) {
+        GstBuffer *buf = gst_buffer_new_and_alloc (4);
+        GstClockTime pts = gst_util_uint64_scale (i, time_scale, fps_n);
+        GstClockTime end = gst_util_uint64_scale (i + 1, time_scale, fps_n);
+
+        gst_buffer_memset (buf, 0, i, 4);
+        GST_BUFFER_PTS (buf) = pts;
+        /* FIXME: a stop frame without a duration replaces the last frame */
+        GST_BUFFER_DURATION (buf) = durations || (guint) i == frames ?
+            end - pts : GST_CLOCK_TIME_NONE;
+        fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+
+        /* every frame after the first one goes out right away */
+        fail_unless_equals_int (g_list_length (buffers),
+            i == frames - 1 && !include_stop_frame ? 0 : frames - i);
+      }
+      fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+      fail_unless_equals_int (g_list_length (buffers), frames);
+
+      /* output slots count back from the segment stop */
+      for (GList * l = buffers; l; l = l->next, n++) {
+        GstBuffer *buf = l->data;
+        GstClockTime offset = gst_util_uint64_scale (n + 1, time_scale, fps_n);
+        GstClockTime previous = gst_util_uint64_scale (n, time_scale, fps_n);
+
+        fail_unless_equals_int (buffer_get_byte (buf, 0), frames - 1 - n);
+        fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), stop - offset);
+        fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
+            offset - previous);
+        fail_if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP));
+      }
+      cleanup_videorate (videorate);
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -2477,6 +2560,8 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_update);
   tcase_add_test (tc_chain, test_drop_only_ref_count);
   tcase_add_test (tc_chain, test_backward_pts_with_caps_change);
+  tcase_add_loop_test (tc_chain, test_reverse_frames, 0,
+      G_N_ELEMENTS (reverse_framerates));
 
   return s;
 }

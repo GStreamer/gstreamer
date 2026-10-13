@@ -1960,7 +1960,8 @@ gst_video_rate_past_buffer (GstVideoRate * videorate)
       next_end_ts = videorate->base_output_ts;
     }
 
-    return next_end_ts >= videorate->prev_ts;
+    return next_end_ts >=
+        videorate->prev_ts + GST_BUFFER_DURATION (videorate->prevbuf);
   } else {
     next_ts = videorate->base_output_ts + ((videorate->next_output_ts -
             videorate->base_output_ts) * videorate->rate);
