@@ -1637,6 +1637,24 @@ extern "C" fn svg_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// HLS - application/x-hls
+// "#EXTM3U" at the start, then within the first 4 KiB a line starting with
+// #EXT-X-TARGETDURATION, #EXT-X-STREAM-INF or #EXT-X-MEDIA.
+extern "C" fn hls_type_find(tf: &mut TypeFind, _private: gpointer) {
+    // Directives are line items; a playlist may end with CR LF or LF.
+    if let Some(data) = tf.peek_at_most(4096)
+        && data.starts_with(b"#EXTM3U")
+        && data.split(|b| *b == b'\n').any(|line| {
+            let line = line.strip_suffix(b"\r").unwrap_or(line);
+            line.starts_with(b"#EXT-X-TARGETDURATION")
+                || line.starts_with(b"#EXT-X-STREAM-INF")
+                || line.starts_with(b"#EXT-X-MEDIA")
+        })
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-hls");
+    }
+}
+
 // SDS - audio/x-sds
 // Magic: masked match F0 7E 0? 01 (mask FF FF 80 FF) @ 0.
 extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
@@ -1929,6 +1947,8 @@ const FEATURES: &[Feature] = &[
     typefinder!("text/html", SECONDARY, html_type_find, "htm,html"),
     // SVG - image/svg+xml
     typefinder!("image/svg+xml", SECONDARY, svg_type_find, "svg"),
+    // HLS - application/x-hls
+    typefinder!("application/x-hls", MARGINAL, hls_type_find, "m3u8"),
     // SDS - audio/x-sds
     typefinder!("audio/x-sds", SECONDARY, sds_type_find, "sds"),
 ];
