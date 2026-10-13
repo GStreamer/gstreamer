@@ -1820,14 +1820,30 @@ gst_video_rate_do_max_duplicate (GstVideoRate * videorate, GstBuffer * buffer,
      * let a discont through */
     videorate->discont = TRUE;
 
-    if (videorate->segment.rate < 0.0) {
-      videorate->base_output_ts -= (prevtime - intime) * videorate->rate;
-      videorate->base_input_ts = prevtime - intime;
-    } else {
-      videorate->base_output_ts += (intime - prevtime) * videorate->rate;
-      videorate->base_input_ts += intime - prevtime;
-    }
     videorate->next_output_ts = intime / videorate->rate;
+    videorate->out_frame_count = 0;
+
+    if (videorate->segment.rate < 0.0) {
+      GstClockTime input_frame_duration =
+          gst_videorate_rate_compute_input_frame_duration (videorate, buffer);
+      GstClockTime output_frame_duration;
+
+      if (videorate->to_rate_numerator) {
+        output_frame_duration = gst_util_uint64_scale (1,
+            videorate->to_rate_denominator * GST_SECOND,
+            videorate->to_rate_numerator);
+      } else {
+        output_frame_duration = input_frame_duration;
+      }
+
+      videorate->base_input_ts = intime + input_frame_duration;
+      videorate->base_output_ts =
+          videorate->next_output_ts + output_frame_duration;
+    } else {
+      videorate->base_input_ts = intime;
+      videorate->base_output_ts = videorate->next_output_ts;
+    }
+
     /* Swap in new buffer and get rid of old buffer so that starting with
      * the next input buffer we output from the new position */
     gst_video_rate_swap_prev (videorate, buffer, intime, NULL);

@@ -415,6 +415,8 @@ GST_START_TEST (test_max_duplication_time)
   GstElement *videorate;
   GstBuffer *first, *second, *third, *fourth, *fifth, *outbuffer;
   GstCaps *caps;
+  GList *l;
+  guint i;
 
   videorate = setup_videorate ();
   g_object_set (videorate, "max-duplication-time", 2 * GST_SECOND, NULL);
@@ -514,30 +516,38 @@ GST_START_TEST (test_max_duplication_time)
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, fifth) == GST_FLOW_OK);
   /* ... and a copy is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (third, "fifth", 1);
-
-  /* submitting a frame with 6 seconds triggers output of 23 more frames */
-  fail_unless_equals_int (g_list_length (buffers), 76);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
-  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
   ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
-  /* five frames submitted; two of them output as is, 76 */
-  assert_videorate_stats (videorate, "fifth", 5, 76, 0, 71);
 
-  /* push EOS to drain */
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
-
-  /* we should now have gotten one output for the last frame */
+  /* submitting a frame with 6 seconds triggers output of 25 more frames
+   * between 5s and 6s */
+  l = g_list_nth (buffers, 52);
+  for (i = 1; i <= 25; i++) {
+    fail_unless (l != NULL);
+    fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
+        5 * GST_SECOND + i * GST_SECOND / 25);
+    l = g_list_next (l);
+  }
+  fail_unless (l == NULL);
   fail_unless_equals_int (g_list_length (buffers), 77);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
   ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
-  /* five frames submitted; two of them output as is, 77 */
-  assert_videorate_stats (videorate, "fifth", 5, 77, 0, 71);
+  assert_videorate_stats (videorate, "fifth", 5, 77, 0, 72);
+
+  /* push EOS to drain */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* we should now have gotten one output for the last frame */
+  fail_unless_equals_int (g_list_length (buffers), 78);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
+  ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
+  /* five frames submitted; two of them output as is, 78 */
+  assert_videorate_stats (videorate, "fifth", 5, 78, 0, 72);
 
   /* cleanup */
   gst_buffer_unref (first);
@@ -545,6 +555,72 @@ GST_START_TEST (test_max_duplication_time)
   gst_buffer_unref (third);
   gst_buffer_unref (fourth);
   gst_buffer_unref (fifth);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* reverse frames at 10.2s, 10s, 200ms and 0, max-duplication-time=2sec */
+GST_START_TEST (test_max_duplication_time_reverse)
+{
+  const GstClockTime frame_duration = 40 * GST_MSECOND;
+  const GstClockTime timestamps[] = {
+    10 * GST_SECOND + 5 * frame_duration, 10 * GST_SECOND,
+    5 * frame_duration, 0,
+  };
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GList *l;
+  guint i;
+
+  videorate = setup_videorate ();
+  g_object_set (videorate, "max-duplication-time", 2 * GST_SECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.start = 0;
+  segment.stop = 10 * GST_SECOND + 6 * frame_duration;
+  segment.position = segment.stop;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  for (i = 0; i < G_N_ELEMENTS (timestamps); i++) {
+    buf = gst_buffer_new_and_alloc (4);
+    gst_buffer_memset (buf, 0, i, 4);
+    GST_BUFFER_PTS (buf) = timestamps[i];
+    GST_BUFFER_DURATION (buf) = frame_duration;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  fail_unless_equals_int (g_list_length (buffers), 12);
+
+  /* 10.2s -> 10s is filled with duplicates */
+  for (l = buffers, i = 0; i < 6; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        10 * GST_SECOND + (5 - i) * frame_duration);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), i / 3);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i % 3 != 0);
+  }
+
+  /* 10s -> 200ms is not filled, 200ms -> 0 is filled with duplicates */
+  fail_unless (GST_BUFFER_FLAG_IS_SET (l->data, GST_BUFFER_FLAG_DISCONT));
+  for (i = 0; i < 6; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        (5 - i) * frame_duration);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), 2 + i / 3);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i % 3 != 0);
+  }
+
   cleanup_videorate (videorate);
 }
 
@@ -2549,6 +2625,7 @@ videorate_suite (void)
   tcase_add_loop_test (tc_chain, test_rate, 0, G_N_ELEMENTS (rate_tests));
   tcase_add_test (tc_chain, test_query_duration);
   tcase_add_test (tc_chain, test_max_duplication_time);
+  tcase_add_test (tc_chain, test_max_duplication_time_reverse);
   tcase_add_loop_test (tc_chain, test_query_position, 0,
       G_N_ELEMENTS (position_tests));
   tcase_add_test (tc_chain, test_nopts_in_middle);
