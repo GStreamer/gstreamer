@@ -1226,10 +1226,13 @@ extern "C" fn flac_type_find(tf: &mut TypeFind, _private: gpointer) {
 
 // SDP - application/sdp
 // Starts with "v=0" followed by LF or CRLF.
+fn is_sdp_header(data: &[u8]) -> bool {
+    data.starts_with(b"v=0") && (data[3] == b'\n' || data[3..5] == *b"\r\n")
+}
+
 extern "C" fn sdp_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<5>(0)
-        && data.starts_with(b"v=0")
-        && (data[3] == b'\n' || (data[3] == b'\r' && data[4] == b'\n'))
+        && is_sdp_header(data)
     {
         suggest!(tf, Prob::MAXIMUM, c"application/sdp");
     }
@@ -1666,6 +1669,166 @@ extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// Text - text/plain, text/utf-16, text/utf-32
+// One factory: the caps are decided by a BOM, or by UTF-8 validity.
+extern "C" fn text_type_find(tf: &mut TypeFind, _private: gpointer) {
+    // Probe window for the BOM tests: powers of two, at most 256 KiB. A known
+    // length gives the largest window that fits, in one peek; an unknown one
+    // doubles until the peek stops working, then peeks the final size.
+    let window = if let Some(len) = tf.length() {
+        let cap = len.get().min(256 * 1024) as usize;
+        if cap < 2 {
+            None
+        } else {
+            let size = if cap.is_power_of_two() {
+                cap
+            } else {
+                cap.next_power_of_two() / 2
+            };
+            tf.peek_var(0, size as u32)
+        }
+    } else if tf.peek_var(0, 2).is_some() {
+        let mut size = 2;
+        while size < 256 * 1024 && tf.peek_var(0, (size * 2) as u32).is_some() {
+            size *= 2;
+        }
+        tf.peek_var(0, size as u32)
+    } else {
+        None
+    };
+
+    // Fewer than 2 bytes: no BOM.
+    let data = window.unwrap_or(&[]);
+    // UTF-32 first: its LE BOM starts with the UTF-16 LE BOM, so a UTF-32 LE
+    // stream would otherwise be reported as UTF-16.
+    let unicode = if data.starts_with(b"\xFF\xFE\x00\x00") && valid_utf32(data, false) {
+        Some((c"text/utf-32", false, 10u32))
+    } else if data.starts_with(b"\x00\x00\xFE\xFF") && valid_utf32(data, true) {
+        Some((c"text/utf-32", true, 20))
+    } else if data.starts_with(b"\xFF\xFE") && valid_utf16(data, false) {
+        Some((c"text/utf-16", false, 10))
+    } else if data.starts_with(b"\xFE\xFF") && valid_utf16(data, true) {
+        Some((c"text/utf-16", true, 20))
+    } else {
+        None
+    };
+    if let Some((caps, big_endian, boost)) = unicode {
+        // 40 for an LE BOM, 50 for a BE one.
+        let prob = Prob::POSSIBLE.get() - 20 + boost;
+        let endianness = if big_endian {
+            bindings::G_BIG_ENDIAN
+        } else {
+            bindings::G_LITTLE_ENDIAN
+        };
+        suggest!(tf, prob, caps, [(c"endianness", i32 : endianness as i32),]);
+        return;
+    }
+
+    // Not BOM-prefixed: text/plain if the data is valid UTF-8. XML and SDP are
+    // left to their own finders.
+    if let Some(xml) = xml_probe_typefinder(tf)
+        && xml.has_prolog
+    {
+        return;
+    }
+    if let Some(data) = tf.peek::<5>(0)
+        && is_sdp_header(data)
+    {
+        return;
+    }
+    let Some(start_prob) = utf8_prob(tf, 0) else {
+        return;
+    };
+    let Some(len) = tf.length() else {
+        // Unknown length: POSSIBLE is the ceiling.
+        suggest!(tf, start_prob.min(Prob::POSSIBLE.get()), c"text/plain");
+        return;
+    };
+    if len.get() < 64 * 1024 {
+        suggest!(tf, start_prob, c"text/plain");
+        return;
+    }
+    let Some(mid_prob) = utf8_prob(tf, (len.get() / 2) as i64) else {
+        return;
+    };
+    suggest!(tf, (start_prob + mid_prob) / 2, c"text/plain");
+}
+
+// UTF-8 plausibility of the data at `offset`: the probe starts at 32 KiB
+// (probability 95) and each failure halves the probe, subtracting 10 from
+// the probability, down to 128 bytes. A cut-off trailing character (the
+// invalid byte within 4 bytes of the probe end) is tolerated.
+fn utf8_prob(tf: &mut TypeFind, offset: i64) -> Option<u32> {
+    let (mut size, mut prob) = match tf.length() {
+        Some(len) => {
+            let avail = (len.get() as i64 - offset).max(0) as u32;
+            if avail < 128 {
+                return None;
+            }
+            let cap = avail.min(32 * 1024);
+            let size = if cap.is_power_of_two() {
+                cap
+            } else {
+                cap.next_power_of_two() / 2
+            };
+            (size, 95 - 10 * (15 - size.trailing_zeros()))
+        }
+        _ => (32 * 1024, 95),
+    };
+    loop {
+        if let Some(data) = tf.peek_var(offset, size) {
+            return match std::str::from_utf8(data) {
+                Ok(_) => Some(prob),
+                Err(e) if e.valid_up_to() + 4 > data.len() => Some(prob),
+                Err(_) => None,
+            };
+        }
+        if size <= 128 || prob <= 10 {
+            return None;
+        }
+        size /= 2;
+        prob -= 10;
+    }
+}
+
+// Valid UTF-16: even length, no lone or truncated surrogate.
+fn valid_utf16(data: &[u8], big_endian: bool) -> bool {
+    utf16_to_string(data, big_endian).is_some()
+}
+
+// Valid UTF-32: length a multiple of 4 and every 32-bit code unit a valid
+// Unicode scalar value (char::from_u32 rejects surrogates and values
+// >= 0x110000).
+fn valid_utf32(data: &[u8], big_endian: bool) -> bool {
+    data.len().is_multiple_of(4)
+        && data.as_chunks::<4>().0.iter().all(|c| {
+            let v = if big_endian {
+                u32::from_be_bytes(*c)
+            } else {
+                u32::from_le_bytes(*c)
+            };
+            char::from_u32(v).is_some()
+        })
+}
+
+// Decode a UTF-16 byte sequence to a String; None for odd length or an
+// invalid code unit. `char::decode_utf16` does the strict validation.
+fn utf16_to_string(data: &[u8], big_endian: bool) -> Option<String> {
+    if !data.len().is_multiple_of(2) {
+        return None;
+    }
+    let units = data.as_chunks::<2>().0.iter().map(|p| {
+        if big_endian {
+            u16::from_be_bytes(*p)
+        } else {
+            u16::from_le_bytes(*p)
+        }
+    });
+    char::decode_utf16(units)
+        .collect::<Result<String, _>>()
+        .ok()
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -1951,6 +2114,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("application/x-hls", MARGINAL, hls_type_find, "m3u8"),
     // SDS - audio/x-sds
     typefinder!("audio/x-sds", SECONDARY, sds_type_find, "sds"),
+    // Note: typefindfunctions_text registered below with no default caps.
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
@@ -1987,6 +2151,20 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
                 gst_caps_unref(caps);
             }
         }
+    }
+
+    // Text factory - no default caps, suggests the encoding's caps at runtime.
+    unsafe {
+        gst_type_find_register(
+            plugin,
+            c"typefindfunctions_text".as_ptr(),
+            MARGINAL,
+            Some(text_type_find),
+            c"txt".as_ptr(),
+            ptr::null_mut(), // no default caps
+            ptr::null_mut(),
+            None,
+        );
     }
 
     // Subtitles factory - no default caps, suggests format-specific caps at runtime.
