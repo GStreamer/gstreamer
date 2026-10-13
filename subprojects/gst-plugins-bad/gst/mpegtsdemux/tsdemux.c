@@ -1260,13 +1260,19 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
     const GstMpegtsDescriptor *ac3_desc =
         mpegts_get_descriptor_from_stream (bstream,
         GST_MTS_DESC_AC3_AUDIO_STREAM);
-    if (ac3_desc && ac3_desc->length >= 8
-        && DESC_AC_AUDIO_STREAM_has_lang1 (ac3_desc->data)) {
-      gchar lang_code[4];
+    /* ac3_desc->data holds length + 2 bytes, and textlen is read from the
+     * descriptor itself, so bound the offsets it selects before using them */
+    if (ac3_desc && ac3_desc->length >= 8) {
+      guint textlen = DESC_AC_AUDIO_STREAM_textlen (ac3_desc->data);
 
-      memcpy (lang_code, DESC_AC_AUDIO_STREAM_lang1_code (ac3_desc->data), 3);
-      lang_code[3] = '\0';
-      add_iso639_language_to_tags (stream, lang_code);
+      if (ac3_desc->length >= 10 + textlen
+          && DESC_AC_AUDIO_STREAM_has_lang1 (ac3_desc->data)) {
+        gchar lang_code[4];
+
+        memcpy (lang_code, DESC_AC_AUDIO_STREAM_lang1_code (ac3_desc->data), 3);
+        lang_code[3] = '\0';
+        add_iso639_language_to_tags (stream, lang_code);
+      }
     }
   }
 
@@ -1369,7 +1375,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         ac3_desc =
             mpegts_get_descriptor_from_stream (bstream,
             GST_MTS_DESC_AC3_AUDIO_STREAM);
-        if (ac3_desc && DESC_AC_AUDIO_STREAM_bsid (ac3_desc->data) != 16) {
+        if (ac3_desc && ac3_desc->length >= 1
+            && DESC_AC_AUDIO_STREAM_bsid (ac3_desc->data) != 16) {
           GST_LOG_OBJECT (demux, "ac3 audio");
           is_audio = TRUE;
           caps = gst_caps_new_empty_simple ("audio/x-ac3");
