@@ -3148,9 +3148,17 @@ gst_parse_chain_is_complete (GstParseChain * chain)
     }
   }
 
-  if (chain->parsed) {
-    complete = TRUE;
-    goto out;
+  if (chain->parsed && chain->endpad) {
+    /* Plugging a parser is not enough to expose: the parser creates its
+     * stream-id lazily, on the first data it pushes, so a pad exposed here
+     * would publish a stream-collection built from an earlier stream-start
+     * and then emit a different one. The ghost mirrors its target's sticky
+     * events, so wait until the pad we are about to publish knows its own
+     * identity; the block probe on the target triggers exposure once it does. */
+    gchar *sid = gst_pad_get_stream_id (GST_PAD (chain->endpad));
+
+    complete = (sid != NULL);
+    g_free (sid);
   }
 
 out:
