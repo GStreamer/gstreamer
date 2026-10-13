@@ -54,6 +54,8 @@ good_tests = [
   [ 'elements/matroskamux', get_option('matroska').disabled(), [gstriff_dep] ],
   [ 'elements/matroskaparse', get_option('matroska').disabled(), [gstriff_dep] ],
   [ 'elements/multifile', get_option('multifile').disabled()],
+  [ 'elements/parsebin',
+    get_option('audioparsers').disabled() or get_option('id3demux').disabled() ],
   [ 'elements/splitmuxsink', get_option('multifile').disabled()],
   [ 'elements/splitmuxsinktimecode', get_option('multifile').disabled()],
   [ 'elements/splitmuxsrc', get_option('multifile').disabled()],
