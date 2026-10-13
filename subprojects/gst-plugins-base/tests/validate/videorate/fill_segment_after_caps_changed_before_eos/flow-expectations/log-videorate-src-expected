@@ -5,6 +5,6 @@ buffer: content-id=0, pts=0:00:00.000000000, dur=0:00:01.000000000, flags=discon
 buffer: content-id=1, pts=0:00:01.000000000, dur=0:00:01.000000000
 event caps: video/x-raw, framerate=(fraction)1/1, height=(int)244, width=(int)322;
 event caps: video/x-raw, format=(string)I420, framerate=(fraction)1/1, height=(int)240, width=(int)320;
-buffer: content-id=1, pts=0:00:02.000000000, dur=0:00:01.000000000
+buffer: content-id=1, pts=0:00:02.000000000, dur=0:00:01.000000000, flags=gap
 event caps: video/x-raw, framerate=(fraction)1/1, height=(int)244, width=(int)322;
 event eos: (no structure)

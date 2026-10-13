@@ -208,6 +208,7 @@ GST_START_TEST (test_more)
   GList *l;
   GstCaps *caps;
   GRand *rand;
+  guint i;
 
   videorate = setup_videorate ();
   fail_unless (gst_element_set_state (videorate,
@@ -306,6 +307,16 @@ GST_START_TEST (test_more)
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 3);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 4);
 
+  /* third frame from 4/25 to 6/25 */
+  for (i = 4; i <= 6; i++) {
+    l = g_list_next (l);
+    fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
+        GST_SECOND * i / 25);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), 3);
+    fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), i);
+    fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), i + 1);
+  }
+
   fail_unless_equals_int (g_list_length (buffers), 7);
   /* one held by us, three held by each output frame taken from the second */
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
@@ -313,15 +324,233 @@ GST_START_TEST (test_more)
   /* now send EOS */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
 
-  /* submitting eos flush out one more frame for the next tick */
-  assert_videorate_stats (videorate, "eos", 3, 8, 0, 4);
-  fail_unless_equals_int (g_list_length (buffers), 8);
+  /* 6/25 was already output, nothing left to push */
+  assert_videorate_stats (videorate, "eos", 3, 7, 0, 4);
+  fail_unless_equals_int (g_list_length (buffers), 7);
 
   /* cleanup */
   g_rand_free (rand);
   gst_buffer_unref (first);
   gst_buffer_unref (second);
   gst_buffer_unref (third);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* EOS without segment stop fills up to the end of the last buffer */
+GST_START_TEST (test_eos_fill_last_buffer_duration)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GList *l;
+  guint i;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* frames at 0, 40 and 80ms, the last one lasting 120ms */
+  for (i = 0; i < 3; i++) {
+    buf = gst_buffer_new_and_alloc (4);
+    gst_buffer_memset (buf, 0, i, 4);
+    GST_BUFFER_PTS (buf) = i * 40 * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = i < 2 ? 40 * GST_MSECOND : 120 * GST_MSECOND;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* the last frame fills 80, 120 and 160ms */
+  fail_unless_equals_int (g_list_length (buffers), 5);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data), i * 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), MIN (i, 2));
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i > 2);
+  }
+  assert_videorate_stats (videorate, "eos", 3, 5, 0, 2);
+
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* single frame that could fill 1s with a 120ms duplication limit */
+GST_START_TEST (test_max_closing_segment_duplication_duration)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GList *l;
+  guint i;
+
+  /* EOS fills 0, 40 and 80ms */
+  videorate = setup_videorate ();
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      120 * GST_MSECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.stop = GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 0;
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data), i * 40 * GST_MSECOND);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i > 0);
+  }
+  assert_videorate_stats (videorate, "eos", 1, 3, 0, 2);
+
+  cleanup_videorate (videorate);
+
+  /* new segment fills 0, 40 and 80ms */
+  videorate = setup_videorate ();
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      120 * GST_MSECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.stop = GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 0;
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+
+  segment.start = 2 * GST_SECOND;
+  segment.stop = 3 * GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data), i * 40 * GST_MSECOND);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i > 0);
+  }
+  assert_videorate_stats (videorate, "segment", 1, 3, 0, 2);
+
+  cleanup_videorate (videorate);
+
+  /* reverse EOS fills 960, 920 and 880ms */
+  videorate = setup_videorate ();
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      120 * GST_MSECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 960 * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        (24 - i) * 40 * GST_MSECOND);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i > 0);
+  }
+  assert_videorate_stats (videorate, "reverse eos", 1, 3, 0, 2);
+
+  cleanup_videorate (videorate);
+
+  /* reverse EOS with 10fps input and 25fps output fills 960, 920 and 880ms */
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      120 * GST_MSECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 10, 1, NULL);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 900 * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = 100 * GST_MSECOND;
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        (24 - i) * 40 * GST_MSECOND);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i > 0);
+  }
+  assert_videorate_stats (videorate, "reverse long eos", 1, 3, 0, 2);
+
+  cleanup_videorate (videorate);
+
+  /* EOS without segment stop fills 0, 40 and 80ms of a 1s frame */
+  videorate = setup_videorate ();
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      120 * GST_MSECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DURATION (buf) = GST_SECOND;
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data), i * 40 * GST_MSECOND);
+    fail_unless_equals_int (GST_BUFFER_FLAG_IS_SET (l->data,
+            GST_BUFFER_FLAG_GAP), i > 0);
+  }
+  assert_videorate_stats (videorate, "open eos", 1, 3, 0, 2);
+
   cleanup_videorate (videorate);
 }
 
@@ -536,18 +765,17 @@ GST_START_TEST (test_max_duplication_time)
   ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
   assert_videorate_stats (videorate, "fifth", 5, 77, 0, 72);
 
-  /* push EOS to drain */
+  /* push EOS */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
 
-  /* we should now have gotten one output for the last frame */
-  fail_unless_equals_int (g_list_length (buffers), 78);
+  /* 6s was already output, nothing left to push */
+  fail_unless_equals_int (g_list_length (buffers), 77);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
   ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
-  /* five frames submitted; two of them output as is, 78 */
-  assert_videorate_stats (videorate, "fifth", 5, 78, 0, 72);
+  assert_videorate_stats (videorate, "fifth", 5, 77, 0, 72);
 
   /* cleanup */
   gst_buffer_unref (first);
@@ -1800,7 +2028,7 @@ GST_START_TEST (test_segment_update_start_advance)
   gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
-  /* Send first closed segment [0, -1] */
+  /* Send first segment [0, -1] */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.start = 0 * GST_SECOND;
   segment.time = 0 * GST_SECOND;
@@ -1850,9 +2078,9 @@ GST_START_TEST (test_segment_update_start_advance)
   ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
   gst_buffer_unref (buf);
   fail_unless_equals_int (g_list_length (buffers), 3);
-  assert_videorate_stats (videorate, "second", 3, 3, 0, 0);
+  assert_videorate_stats (videorate, "third", 3, 3, 0, 0);
 
-  /* should have the first 2 buffers here */
+  /* should have the first 3 buffers here */
   for (l = buffers; l; l = l->next) {
     buf = l->data;
     fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
@@ -1872,6 +2100,8 @@ GST_START_TEST (test_segment_update_start_advance)
   segment.position = 30 * GST_SECOND;
   segment.stop = GST_CLOCK_TIME_NONE;
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  /* third buffer was already output, nothing left to push */
+  fail_unless_equals_int (g_list_length (buffers), 0);
 
   /* fourth buffer */
   buf = gst_buffer_new_and_alloc (4);
@@ -1884,21 +2114,8 @@ GST_START_TEST (test_segment_update_start_advance)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  assert_videorate_stats (videorate, "fourth", 4, 4, 0, 0);
-
-  /* Should have the last buffer of the previous segment here */
-  for (l = buffers; l; l = l->next) {
-    buf = l->data;
-    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
-    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
-    fail_unless_equals_int (buffer_get_byte (buf, 0), 3);
-
-    next_ts += GST_SECOND / 25;
-    n += 1;
-  }
-  gst_check_drop_buffers ();
   fail_unless_equals_int (g_list_length (buffers), 0);
+  assert_videorate_stats (videorate, "fourth", 4, 3, 0, 0);
 
   /* fifth buffer */
   buf = gst_buffer_new_and_alloc (4);
@@ -1912,13 +2129,13 @@ GST_START_TEST (test_segment_update_start_advance)
   ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
   gst_buffer_unref (buf);
   fail_unless_equals_int (g_list_length (buffers), 3);
-  assert_videorate_stats (videorate, "fifth", 5, 7, 0, 1);
+  assert_videorate_stats (videorate, "fifth", 5, 6, 0, 1);
 
-  /* push EOS to drain out all buffers */
+  /* fifth buffer was already output, nothing left to push */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
-  fail_unless_equals_int (g_list_length (buffers), 4);
+  fail_unless_equals_int (g_list_length (buffers), 3);
 
-  assert_videorate_stats (videorate, "fifth", 5, 8, 0, 1);
+  assert_videorate_stats (videorate, "fifth", 5, 6, 0, 1);
 
   /* Should start with the new buffers of the new segment now */
   next_ts = 30 * GST_SECOND;
@@ -1927,7 +2144,7 @@ GST_START_TEST (test_segment_update_start_advance)
     fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
 
-    if (n < 7) {
+    if (n < 6) {
       fail_unless_equals_int (buffer_get_byte (buf, 0), 4);
     } else {
       fail_unless_equals_int (buffer_get_byte (buf, 0), 5);
@@ -1936,7 +2153,7 @@ GST_START_TEST (test_segment_update_start_advance)
     next_ts += GST_SECOND / 25;
     n += 1;
   }
-  fail_unless_equals_int (n, 9);
+  fail_unless_equals_int (n, 7);
   gst_check_drop_buffers ();
   fail_unless_equals_int (g_list_length (buffers), 0);
 
@@ -2092,11 +2309,11 @@ GST_START_TEST (test_segment_update_same)
   gst_buffer_unref (buf);
   fail_unless_equals_int (g_list_length (buffers), 1);
 
-  /* push EOS to drain out all buffers */
+  /* fifth buffer was already output, nothing left to push */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
-  fail_unless_equals_int (g_list_length (buffers), 2);
+  fail_unless_equals_int (g_list_length (buffers), 1);
 
-  assert_videorate_stats (videorate, "fourth", 5, 129, 0, 123);
+  assert_videorate_stats (videorate, "fourth", 5, 128, 0, 123);
 
   for (l = buffers; l; l = l->next) {
     buf = l->data;
@@ -2611,6 +2828,8 @@ videorate_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_one);
   tcase_add_test (tc_chain, test_more);
+  tcase_add_test (tc_chain, test_eos_fill_last_buffer_duration);
+  tcase_add_test (tc_chain, test_max_closing_segment_duplication_duration);
   tcase_add_test (tc_chain, test_wrong_order_from_zero);
   tcase_add_test (tc_chain, test_wrong_order);
   tcase_add_test (tc_chain, test_no_framerate);
