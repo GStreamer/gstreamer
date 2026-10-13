@@ -854,9 +854,9 @@ gboolean GstWPEThreadedView::dispatchPointerEvent (GstEvent * event)
   if (gst_navigation_event_parse_modifier_state (event, &modifier_state)) {
     if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON1_MASK)
       wpe_button = WPE_BUTTON_PRIMARY;
-    else if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON2_MASK)
-      wpe_button = WPE_BUTTON_MIDDLE;
     else if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON3_MASK)
+      wpe_button = WPE_BUTTON_MIDDLE;
+    else if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON2_MASK)
       wpe_button = WPE_BUTTON_SECONDARY;
   }
 
