@@ -1829,6 +1829,31 @@ fn utf16_to_string(data: &[u8], big_endian: bool) -> Option<String> {
         .ok()
 }
 
+// Smooth Streaming Manifest - application/vnd.ms-sstr+xml
+// Element matcher (strict) on "SmoothStreamingMedia"; the probe strips a UTF-8
+// BOM itself.
+extern "C" fn mss_manifest_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_at_most(XML_WINDOW) else {
+        return;
+    };
+    // The probe expects UTF-8: decode a UTF-16 BOM first. A failed decode
+    // falls back to the raw bytes, which the probe then rejects.
+    let decoded = match data.get(..2) {
+        Some(b"\xFF\xFE") => utf16_to_string(&data[2..], false).map(String::into_bytes),
+        Some(b"\xFE\xFF") => utf16_to_string(&data[2..], true).map(String::into_bytes),
+        _ => None,
+    };
+    let text: &[u8] = decoded.as_deref().unwrap_or(data);
+    if let Some(probe) = xml_probe(text)
+        && probe.has_prolog
+        && probe
+            .first_element
+            .is_some_and(|name| name.eq_ignore_ascii_case("SmoothStreamingMedia"))
+    {
+        suggest!(tf, Prob::MAXIMUM, c"application/vnd.ms-sstr+xml");
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -2115,6 +2140,12 @@ const FEATURES: &[Feature] = &[
     // SDS - audio/x-sds
     typefinder!("audio/x-sds", SECONDARY, sds_type_find, "sds"),
     // Note: typefindfunctions_text registered below with no default caps.
+    // Smooth Streaming Manifest - application/vnd.ms-sstr+xml
+    typefinder!(
+        "application/vnd.ms-sstr+xml",
+        PRIMARY,
+        mss_manifest_type_find
+    ),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
