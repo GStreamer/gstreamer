@@ -115,7 +115,6 @@ sitemap = custom_target(command: [
   '--lib-configs', libs_configs],
   input: 'sitemap.txt',
   output: 'sitemap.txt')
-deps += [sitemap]
 
 html_theme = 'https://github.com/hotdoc/hotdoc_lumen_theme/releases/download/0.16/hotdoc_lumen_theme-0.16.tar.xz?sha256=b7d7dde51285d1c90836c44ae298754e4cfa957e9a6d14ee5844b8a2cac04b5a'
 
@@ -136,6 +135,7 @@ gstreamer_doc = hotdoc.generate_doc('GStreamer',
     ],
     html_extra_theme: join_paths(meson.current_source_dir(), 'theme/extra'),
     dependencies: deps,
+    depends: sitemap,
     subprojects: hotdoc_subprojects,
     disable_incremental_build: true,
     gst_list_plugins_page: 'gst-index',
