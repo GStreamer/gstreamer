@@ -56,7 +56,7 @@ if host_system == 'windows' and not onnx_winml_opt.disabled()
         if cc.get_argument_syntax() != 'msvc' and dx_headers_dep.type_name() != 'internal'
           extra_cpp_args += ['-D__REQUIRED_RPCNDR_H_VERSION__=475']
         endif
-        onnx_sources += ['gstonnximporter-dml.cpp']
+        onnx_sources += ['gstonnximporter-dml.cpp', 'gstonnxexporter-dml.cpp']
       endif
     endif
   endif

@@ -109,6 +109,7 @@
 #include "gstonnxinference.h"
 #if HAVE_DIRECTML
 #include "gstonnximporter-dml.h"
+#include "gstonnxexporter-dml.h"
 #else
 #define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
 #endif
@@ -2890,7 +2891,14 @@ gst_onnx_inference_start (GstBaseTransform * trans)
 
   self->group_id = g_steal_pointer (&group_id);
 
-  self->exporter = gst_onnx_exporter_cpu_new (api);
+#if HAVE_DIRECTML
+  if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_DIRECTML) {
+    self->exporter = gst_onnx_exporter_dml_new (api, self->device12,
+        self->session);
+  }
+#endif
+  if (!self->exporter)
+    self->exporter = gst_onnx_exporter_cpu_new (api);
   if (!self->exporter) {
     GST_ERROR_OBJECT (self, "Couldn't create output exporter");
     goto error;
@@ -3121,6 +3129,9 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   OrtStatus *status = NULL;
   OrtValue *input_tensor = NULL;
   OrtValue **output_tensors = NULL;
+  OrtIoBinding *binding = NULL;
+  const OrtMemoryInfo **output_memory_infos = NULL;
+  gboolean needs_binding = FALSE;
   GstTensorMeta *tmeta = NULL;
   OrtTensorTypeAndShapeInfo *output_tensor_info = NULL;
   GstOnnxImporterConfig *config = &self->importer_config;
@@ -3148,28 +3159,98 @@ gst_onnx_inference_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   g_ptr_array_set_size (self->output_tensors, self->output_count);
   output_tensors = (OrtValue **) self->output_tensors->pdata;
 
-  for (guint i = 0; i < self->output_count; i++) {
-    const OrtMemoryInfo *memory_info;
+  output_memory_infos = g_newa (const OrtMemoryInfo *, self->output_count);
 
+  for (guint i = 0; i < self->output_count; i++) {
     ret = gst_onnx_exporter_prepare (self->exporter, i, &output_tensors[i],
-        &memory_info);
+        &output_memory_infos[i]);
     if (ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Couldn't prepare output %u", i);
       goto error;
     }
-    /* Run() allocates CPU memory for NULL outputs, so no binding is needed */
+
+    if (!output_tensors[i] && !GST_IS_ONNX_EXPORTER_CPU (self->exporter)) {
+      needs_binding = TRUE;
+    }
   }
 
-  status =
-      api->Run (self->session, NULL, (const char *const *) &self->input_name,
-      (const OrtValue * const *) &input_tensor, 1,
-      (const char *const *) self->output_names, self->output_count,
-      output_tensors);
+  if (needs_binding) {
+    status = api->CreateIoBinding (self->session, &binding);
+    if (status) {
+      GST_ERROR_OBJECT (self, "Couldn't create I/O binding: %s",
+          api->GetErrorMessage (status));
+      goto error;
+    }
+
+    status = api->BindInput (binding, self->input_name, input_tensor);
+    if (status) {
+      GST_ERROR_OBJECT (self, "Couldn't bind input: %s",
+          api->GetErrorMessage (status));
+      goto error;
+    }
+
+    for (guint i = 0; i < self->output_count; i++) {
+      if (output_tensors[i]) {
+        status = api->BindOutput (binding, self->output_names[i],
+            output_tensors[i]);
+      } else {
+        status = api->BindOutputToDevice (binding, self->output_names[i],
+            output_memory_infos[i]);
+      }
+
+      if (status) {
+        GST_ERROR_OBJECT (self, "Couldn't bind output %u: %s", i,
+            api->GetErrorMessage (status));
+        goto error;
+      }
+    }
+  }
+
+  if (binding) {
+    status = api->RunWithBinding (self->session, NULL, binding);
+  } else {
+    status =
+        api->Run (self->session, NULL, (const char *const *) &self->input_name,
+        (const OrtValue * const *) &input_tensor, 1,
+        (const char *const *) self->output_names, self->output_count,
+        output_tensors);
+  }
 
   if (status) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
         ("Failed to run inference: %s", api->GetErrorMessage (status)));
     goto error;
+  }
+
+  if (binding) {
+    OrtValue **bound_outputs = NULL;
+    size_t num_outputs = 0;
+
+    status = api->GetBoundOutputValues (binding, self->allocator,
+        &bound_outputs, &num_outputs);
+    if (status) {
+      GST_ERROR_OBJECT (self, "Couldn't get bound outputs: %s",
+          api->GetErrorMessage (status));
+      goto error;
+    }
+
+    if (num_outputs != self->output_count) {
+      GST_ERROR_OBJECT (self, "Unexpected output count %zu", num_outputs);
+
+      for (size_t i = 0; i < num_outputs; i++)
+        api->ReleaseValue (bound_outputs[i]);
+
+      self->allocator->Free (self->allocator, bound_outputs);
+      goto error;
+    }
+
+    g_ptr_array_set_size (self->output_tensors, 0);
+    for (size_t i = 0; i < num_outputs; i++)
+      g_ptr_array_add (self->output_tensors, bound_outputs[i]);
+    self->allocator->Free (self->allocator, bound_outputs);
+    output_tensors = (OrtValue **) self->output_tensors->pdata;
+    api->ReleaseIoBinding (binding);
+    binding = NULL;
   }
 
   tmeta = gst_buffer_add_tensor_meta (buf);
@@ -3279,6 +3360,8 @@ error:
 
   if (status)
     api->ReleaseStatus (status);
+  if (binding)
+    api->ReleaseIoBinding (binding);
   if (input_tensor)
     api->ReleaseValue (input_tensor);
   g_ptr_array_set_size (self->output_tensors, 0);
