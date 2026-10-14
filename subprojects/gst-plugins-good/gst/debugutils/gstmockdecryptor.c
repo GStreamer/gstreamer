@@ -19,11 +19,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
+ /**
+ * SECTION:element-mockdecryptor
+ * @title: mockdecryptor
+ *
+ * `mockdecryptor` is used in unit tests that involve media encrypted with
+ * Widevine or ClearKey content protection methods.
+ *
+ * Since: 1.30
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 
-#include "gst-validate-mockdecryptor.h"
+#include "gstdebugutilselements.h"
+#include "gstmockdecryptor.h"
 
 #define CLEARKEY_SYSTEM_ID "78f32170-d883-11e0-9572-0800200c9a66"
 #define WIDEVINE_SYSTEM_ID "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
@@ -182,3 +193,6 @@ gst_mockdecryptor_transform_in_place (GstBaseTransform * base,
   /* We are a mock decryptor, just pass the encrypted buffers through... */
   return GST_FLOW_OK;
 }
+
+GST_ELEMENT_REGISTER_DEFINE (mockdecryptor, GST_MOCKDECRYPTOR_NAME,
+    GST_RANK_NONE, gst_mockdecryptor_get_type ());

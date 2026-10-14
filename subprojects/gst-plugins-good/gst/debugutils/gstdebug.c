@@ -37,6 +37,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (breakmydata, plugin);
   ret |= GST_ELEMENT_REGISTER (capssetter, plugin);
   ret |= GST_ELEMENT_REGISTER (rndbuffersize, plugin);
+  ret |= GST_ELEMENT_REGISTER (mockdecryptor, plugin);
   ret |= GST_ELEMENT_REGISTER (navseek, plugin);
   ret |= GST_ELEMENT_REGISTER (pushfilesrc, plugin);
   ret |= GST_ELEMENT_REGISTER (progressreport, plugin);

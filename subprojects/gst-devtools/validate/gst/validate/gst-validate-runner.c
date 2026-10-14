@@ -37,7 +37,6 @@
 #include "gst-validate-override-registry.h"
 #include "gst-validate-runner.h"
 #include "gst-validate-reporter.h"
-#include "gst-validate-mockdecryptor.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_validate_runner_debug);
 #undef GST_CAT_DEFAULT
@@ -449,6 +448,8 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
 static void
 gst_validate_runner_init (GstValidateRunner * runner)
 {
+  GstPluginFeature *feature;
+
   runner->priv = gst_validate_runner_get_instance_private (runner);
 
   g_mutex_init (&runner->priv->mutex);
@@ -463,8 +464,15 @@ gst_validate_runner_init (GstValidateRunner * runner)
   gst_tracing_register_hook (GST_TRACER (runner), "element-new",
       G_CALLBACK (do_element_new));
 
-  gst_element_register (NULL, GST_MOCKDECRYPTOR_NAME, GST_RANK_MARGINAL,
-      GST_TYPE_MOCKDECRYPTOR);
+  feature = gst_registry_find_feature (gst_registry_get (), "mockdecryptor",
+      GST_TYPE_ELEMENT_FACTORY);
+  if (feature) {
+    gst_plugin_feature_set_rank (feature, GST_RANK_MARGINAL);
+    gst_clear_object (&feature);
+  } else {
+    GST_WARNING_OBJECT (runner, "mockdecryptor element not found; "
+        "validating encrypted media will not be available");
+  }
 }
 
 /**

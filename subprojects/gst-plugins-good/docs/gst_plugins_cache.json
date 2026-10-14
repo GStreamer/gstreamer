@@ -3669,6 +3669,32 @@
                 "properties": {},
                 "rank": "none"
             },
+            "mockdecryptor": {
+                "author": "Charlie Turner <cturner@igalia.com>",
+                "description": "Use in unit tests",
+                "hierarchy": [
+                    "GstMockDecryptor",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Decryptor",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-cenc:\noriginal-media-type: video/x-h264\nprotection-system: edef8ba9-79d6-4ace-a3c8-27dcd51d21ed\napplication/x-cenc:\noriginal-media-type: audio/mpeg\nprotection-system: edef8ba9-79d6-4ace-a3c8-27dcd51d21ed\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/webm:\naudio/webm:\nvideo/mp4:\naudio/mp4:\naudio/mpeg:\nvideo/x-h264:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            },
             "navseek": {
                 "author": "Jan Schmidt <thaytan@mad.scientist.com>",
                 "description": "Seek based on navigation keys left-right",

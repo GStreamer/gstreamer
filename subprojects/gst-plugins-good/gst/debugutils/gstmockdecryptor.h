@@ -22,26 +22,13 @@
 #ifndef __GST_MOCKDECRYPTOR_H__
 #define __GST_MOCKDECRYPTOR_H__
 
-typedef struct _GstMockDecryptor GstMockDecryptor;
-typedef struct _GstMockDecryptorClass GstMockDecryptorClass;
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MOCKDECRYPTOR \
-  (gst_mockdecryptor_get_type ())
-#define GST_MOCKDECRYPTOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MOCKDECRYPTOR,GstMockDecryptor))
-#define GST_MOCKDECRYPTOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MOCKDECRYPTOR,GstMockDecryptorClass))
-#define GST_IS_MOCKDECRYPTOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MOCKDECRYPTOR))
-#define GST_IS_MOCKDECRYPTOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MOCKDECRYPTOR))
-#define GST_MOCKDECRYPTOR_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_MOCKDECRYPTOR,GstMockDecryptorClass))
+G_DECLARE_FINAL_TYPE (GstMockDecryptor, gst_mockdecryptor, GST, MOCKDECRYPTOR,
+    GstBaseTransform);
 
 #define GST_MOCKDECRYPTOR_NAME            "mockdecryptor"
 struct _GstMockDecryptor
@@ -59,8 +46,6 @@ struct _GstMockDecryptorClass
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
-
-G_GNUC_INTERNAL GType gst_mockdecryptor_get_type (void);
 
 G_END_DECLS
 
