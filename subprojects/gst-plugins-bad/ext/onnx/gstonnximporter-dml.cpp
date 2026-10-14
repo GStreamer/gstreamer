@@ -662,8 +662,12 @@ gst_onnx_importer_dml_prepare (GstOnnxImporter * importer, GstBuffer * buffer)
   }
 
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (desc_heap));
-  gst_d3d12_fence_data_push (fence_data,
-      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (buffer)));
+  for (guint i = 0; i < G_N_ELEMENTS (frame->map); i++) {
+    if (frame->map[i].memory) {
+      gst_d3d12_fence_data_push (fence_data,
+          FENCE_NOTIFY_MINI_OBJECT (gst_memory_ref (frame->map[i].memory)));
+    }
+  }
   priv->rs->AddRef ();
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (priv->rs.Get ()));
   priv->texture_pso->AddRef ();
