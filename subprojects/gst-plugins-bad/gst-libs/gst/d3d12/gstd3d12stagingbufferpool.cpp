@@ -30,6 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d12_staging_buffer_pool_debug);
 
 struct _GstD3D12StagingBufferPoolPrivate
 {
+  GstD3D12StagingPoolAllocator *alloc;
   GstVideoInfo info;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
   gint stride[GST_VIDEO_MAX_PLANES];
@@ -42,6 +43,9 @@ struct _GstD3D12StagingBufferPoolPrivate
 G_DEFINE_TYPE_WITH_PRIVATE (GstD3D12StagingBufferPool,
     gst_d3d12_staging_buffer_pool, GST_TYPE_BUFFER_POOL);
 
+static void gst_d3d12_staging_buffer_pool_finalize (GObject * object);
+static gboolean gst_d3d12_staging_buffer_pool_start (GstBufferPool * pool);
+static gboolean gst_d3d12_staging_buffer_pool_stop (GstBufferPool * pool);
 static const gchar **gst_d3d12_staging_buffer_pool_get_options (GstBufferPool *
     pool);
 static gboolean gst_d3d12_staging_buffer_pool_set_config (GstBufferPool * pool,
@@ -53,8 +57,12 @@ static void
 gst_d3d12_staging_buffer_pool_class_init (GstD3D12StagingBufferPoolClass *
     klass)
 {
+  auto object_class = G_OBJECT_CLASS (klass);
   auto pool_class = GST_BUFFER_POOL_CLASS (klass);
 
+  object_class->finalize = gst_d3d12_staging_buffer_pool_finalize;
+  pool_class->start = gst_d3d12_staging_buffer_pool_start;
+  pool_class->stop = gst_d3d12_staging_buffer_pool_stop;
   pool_class->get_options = gst_d3d12_staging_buffer_pool_get_options;
   pool_class->set_config = gst_d3d12_staging_buffer_pool_set_config;
   pool_class->alloc_buffer = gst_d3d12_staging_buffer_pool_alloc_buffer;
@@ -68,6 +76,58 @@ gst_d3d12_staging_buffer_pool_init (GstD3D12StagingBufferPool * self)
 {
   self->priv = (GstD3D12StagingBufferPoolPrivate *)
       gst_d3d12_staging_buffer_pool_get_instance_private (self);
+}
+
+static void
+gst_d3d12_staging_buffer_pool_clear_allocator (GstD3D12StagingBufferPool * self)
+{
+  auto priv = self->priv;
+
+  if (priv->alloc) {
+    gst_d3d12_staging_allocator_set_active (GST_D3D12_STAGING_ALLOCATOR
+        (priv->alloc), FALSE);
+    gst_clear_object (&priv->alloc);
+  }
+}
+
+static void
+gst_d3d12_staging_buffer_pool_finalize (GObject * object)
+{
+  auto self = GST_D3D12_STAGING_BUFFER_POOL (object);
+
+  gst_d3d12_staging_buffer_pool_clear_allocator (self);
+  gst_clear_object (&self->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gboolean
+gst_d3d12_staging_buffer_pool_start (GstBufferPool * pool)
+{
+  auto self = GST_D3D12_STAGING_BUFFER_POOL (pool);
+  auto priv = self->priv;
+  auto alloc = GST_D3D12_STAGING_ALLOCATOR (priv->alloc);
+
+  if (!gst_d3d12_staging_allocator_set_active (alloc, TRUE)) {
+    GST_ERROR_OBJECT (self, "Couldn't activate allocator");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d12_staging_buffer_pool_stop (GstBufferPool * pool)
+{
+  auto self = GST_D3D12_STAGING_BUFFER_POOL (pool);
+  auto priv = self->priv;
+
+  if (priv->alloc) {
+    gst_d3d12_staging_allocator_set_active (GST_D3D12_STAGING_ALLOCATOR
+        (priv->alloc), FALSE);
+  }
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
 static const gchar **
@@ -218,6 +278,14 @@ gst_d3d12_staging_buffer_pool_set_config (GstBufferPool * pool,
   gst_buffer_pool_config_set_params (config,
       caps, priv->total_mem_size, min_buffers, max_buffers);
 
+  gst_d3d12_staging_buffer_pool_clear_allocator (self);
+  priv->alloc = gst_d3d12_staging_pool_allocator_new (self->device,
+      priv->layout_count, priv->layout, priv->total_mem_size);
+  if (!priv->alloc) {
+    GST_ERROR_OBJECT (self, "Couldn't create staging pool allocator");
+    return FALSE;
+  }
+
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 }
 
@@ -229,11 +297,12 @@ gst_d3d12_staging_buffer_pool_alloc_buffer (GstBufferPool * pool,
   auto priv = self->priv;
   auto info = &priv->info;
 
-  auto mem = gst_d3d12_staging_allocator_alloc (nullptr, self->device,
-      priv->layout_count, priv->layout, priv->total_mem_size);
-  if (!mem) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate memory");
-    return GST_FLOW_ERROR;
+  GstMemory *mem = nullptr;
+  auto ret =
+      gst_d3d12_staging_pool_allocator_acquire_memory (priv->alloc, &mem);
+  if (ret != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire staging memory");
+    return ret;
   }
 
   auto buf = gst_buffer_new ();
