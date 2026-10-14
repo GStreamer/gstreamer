@@ -2599,7 +2599,7 @@ gst_onnx_inference_start (GstBaseTransform * trans)
           api->GetErrorMessage (status));
       goto error;
     }
-    GST_DEBUG_OBJECT (self, "Output name %lu:%s", i, self->output_names[i]);
+    GST_DEBUG_OBJECT (self, "Output name %zu:%s", i, self->output_names[i]);
   }
 
   GValue v_tensors_set = G_VALUE_INIT;
