@@ -1451,13 +1451,6 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     }
   }
 
-  result = comp->Init (surface_format, info->width, info->height);
-  if (result != AMF_OK) {
-    GST_ERROR_OBJECT (self, "Failed to init component, result %"
-        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-    goto error;
-  }
-
   if (self->rate_control != AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_UNKNOWN) {
     result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD,
         (amf_int64) self->rate_control);
@@ -1468,6 +1461,22 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     }
   }
 
+  result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_GOP_SIZE,
+      (amf_int64) self->gop_size);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set gop-size, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  result = comp->Init (surface_format, info->width, info->height);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to init component, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  /* dynamic properties */
   result = comp->GetProperty (AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD,
       &int64_val);
   if (result != AMF_OK) {
@@ -1540,14 +1549,6 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
   result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_FRAMERATE, framerate);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to set frame rate, result %"
-        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-    goto error;
-  }
-
-  result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_GOP_SIZE,
-      (amf_int64) self->gop_size);
-  if (result != AMF_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set gop-size, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
   }
