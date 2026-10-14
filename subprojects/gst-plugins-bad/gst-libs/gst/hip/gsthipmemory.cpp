@@ -1061,6 +1061,9 @@ gst_hip_pool_allocator_release_memory (GstHipPoolAllocator * self,
   GST_MINI_OBJECT_CAST (mem)->dispose = nullptr;
   mem->allocator = (GstAllocator *) gst_object_ref (_hip_memory_allocator);
 
+  mem->offset = 0;
+  mem->size = mem->maxsize;
+
   /* keep it around in our queue */
   priv->queue.push (mem);
   priv->outstanding--;

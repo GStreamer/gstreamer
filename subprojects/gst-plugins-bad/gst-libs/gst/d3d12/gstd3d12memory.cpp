@@ -2053,6 +2053,9 @@ gst_d3d12_pool_allocator_release_memory (GstD3D12PoolAllocator * self,
   GST_MINI_OBJECT_CAST (mem)->dispose = nullptr;
   mem->allocator = (GstAllocator *) gst_object_ref (_d3d12_memory_allocator);
 
+  mem->offset = 0;
+  mem->size = mem->maxsize;
+
   /* keep it around in our queue */
   priv->queue.push_back (mem);
   priv->outstanding--;

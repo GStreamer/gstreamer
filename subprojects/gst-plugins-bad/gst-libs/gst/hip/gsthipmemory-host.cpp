@@ -512,6 +512,9 @@ gst_hip_host_pool_allocator_release_memory (GstHipHostPoolAllocator * self,
   GST_MINI_OBJECT_CAST (mem)->dispose = nullptr;
   mem->allocator = (GstAllocator *) gst_object_ref (_hip_host_allocator);
 
+  mem->offset = 0;
+  mem->size = mem->maxsize;
+
   /* keep it around in our queue */
   gst_vec_deque_push_tail (priv->queue, mem);
   priv->outstanding--;
