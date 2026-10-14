@@ -131,6 +131,7 @@
 #if HAVE_GST_HIP
 #include <gst/hip/gsthip.h>
 #include "gstonnximporter-hip.h"
+#include "gstonnxexporter-hip.h"
 #else
 /* define to reduce ifdefs */
 #define GST_CAPS_FEATURE_MEMORY_HIP_MEMORY "memory:HIPMemory"
@@ -2897,6 +2898,15 @@ gst_onnx_inference_start (GstBaseTransform * trans)
         self->session);
   }
 #endif
+
+#if HAVE_GST_HIP
+  if (self->device_hip &&
+      (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX ||
+          self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP)) {
+    self->exporter = gst_onnx_exporter_hip_new (api, self->device_hip);
+  }
+#endif
+
   if (!self->exporter)
     self->exporter = gst_onnx_exporter_cpu_new (api);
   if (!self->exporter) {

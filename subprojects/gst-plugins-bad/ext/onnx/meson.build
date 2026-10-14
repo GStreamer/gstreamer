@@ -104,7 +104,7 @@ if gsthip_dep.found()
   have_gst_hip = true
   extra_deps += [gsthip_dep]
   extra_incs += [hipstub_incdir]
-  onnx_sources += ['gstonnximporter-hip.c']
+  onnx_sources += ['gstonnximporter-hip.c', 'gstonnxexporter-hip.c']
 endif
 
 onnxrt_libdir = onnxrt_dep.get_variable(pkgconfig: 'libdir', default_value: '')
