@@ -2252,6 +2252,9 @@ gst_d3d12_pool_allocator_acquire_memory (GstD3D12PoolAllocator * allocator,
       return GST_FLOW_ERROR;
     }
 
+    GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+    gst_d3d12_memory_sync (GST_D3D12_MEMORY_CAST (mem));
+
     /* Replace default allocator with ours */
     gst_object_unref (mem->allocator);
     mem->allocator = (GstAllocator *) gst_object_ref (allocator);
