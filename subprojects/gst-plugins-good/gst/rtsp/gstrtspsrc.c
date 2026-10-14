@@ -9345,6 +9345,7 @@ create_request_failed:
 send_error:
   {
     gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
 
     if (res == GST_RTSP_EEOF)
       goto close;
