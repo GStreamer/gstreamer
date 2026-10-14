@@ -1754,10 +1754,22 @@ extern "C" fn text_type_find(tf: &mut TypeFind, _private: gpointer) {
     suggest!(tf, (start_prob + mid_prob) / 2, c"text/plain");
 }
 
+/// Whether `data` is text: valid UTF-8 that holds no NUL. A problem in the
+/// last 3 bytes is a character cut off by the window edge and counts as
+/// text, because the window is an arbitrary probe size.
+fn looks_like_text(data: &[u8]) -> bool {
+    let stop = data
+        .iter()
+        .position(|&b| b == 0)
+        .into_iter()
+        .chain(std::str::from_utf8(data).err().map(|e| e.valid_up_to()))
+        .min();
+    stop.is_none_or(|i| i + 4 > data.len())
+}
+
 // UTF-8 plausibility of the data at `offset`: the probe starts at 32 KiB
 // (probability 95) and each failure halves the probe, subtracting 10 from
-// the probability, down to 128 bytes. A cut-off trailing character (the
-// invalid byte within 4 bytes of the probe end) is tolerated.
+// the probability, down to 128 bytes.
 fn utf8_prob(tf: &mut TypeFind, offset: i64) -> Option<u32> {
     let (mut size, mut prob) = match tf.length() {
         Some(len) => {
@@ -1777,11 +1789,7 @@ fn utf8_prob(tf: &mut TypeFind, offset: i64) -> Option<u32> {
     };
     loop {
         if let Some(data) = tf.peek_var(offset, size) {
-            return match std::str::from_utf8(data) {
-                Ok(_) => Some(prob),
-                Err(e) if e.valid_up_to() + 4 > data.len() => Some(prob),
-                Err(_) => None,
-            };
+            return looks_like_text(data).then_some(prob);
         }
         if size <= 128 || prob <= 10 {
             return None;
@@ -2447,4 +2455,34 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
     }
 
     true as gboolean
+}
+
+#[cfg(test)]
+mod tests {
+    use super::looks_like_text;
+
+    #[test]
+    fn text_rule() {
+        // Includes a character the probe window cut in half.
+        let text: [&[u8]; 4] = [
+            b"hello world\n",
+            "naïve café 日本語".as_bytes(),
+            &"café".as_bytes()[..4],
+            b"nul at the edge\0",
+        ];
+        for d in text {
+            assert!(looks_like_text(d), "should be text: {d:?}");
+        }
+        // NUL, and ill-formed UTF-8: stray continuation, overlong, surrogate.
+        let binary: [&[u8]; 5] = [
+            &[0; 64],
+            b"ab\0cd\0ef",
+            b"abcd\x80efgh",
+            b"abcd\xC0\x80efgh",
+            b"abcd\xED\xA0\x80efgh",
+        ];
+        for d in binary {
+            assert!(!looks_like_text(d), "should not be text: {d:?}");
+        }
+    }
 }
