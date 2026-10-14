@@ -35,6 +35,13 @@ G_BEGIN_DECLS
 #define GST_D3D12_STAGING_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D12_STAGING_ALLOCATOR, GstD3D12StagingAllocatorClass))
 #define GST_D3D12_STAGING_ALLOCATOR_CAST(obj)       ((GstD3D12StagingAllocator *)obj)
 
+#define GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR       (gst_d3d12_staging_pool_allocator_get_type ())
+#define GST_D3D12_STAGING_POOL_ALLOCATOR(obj)       (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR, GstD3D12StagingPoolAllocator))
+#define GST_IS_D3D12_STAGING_POOL_ALLOCATOR(obj)    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR))
+#define GST_D3D12_STAGING_POOL_ALLOCATOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR, GstD3D12StagingPoolAllocatorClass))
+#define GST_IS_D3D12_STAGING_POOL_ALLOCATOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR))
+#define GST_D3D12_STAGING_POOL_ALLOCATOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR, GstD3D12StagingPoolAllocatorClass))
+
 /**
  * GST_D3D12_STAGING_MEMORY_NAME:
  *
@@ -112,8 +119,11 @@ struct _GstD3D12StagingAllocatorClass
 {
   GstAllocatorClass allocator_class;
 
+  gboolean (*set_active) (GstD3D12StagingAllocator * allocator,
+                          gboolean active);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 GST_D3D12_API
@@ -125,6 +135,56 @@ GstMemory * gst_d3d12_staging_allocator_alloc (GstD3D12StagingAllocator * alloca
                                                guint num_layouts,
                                                const D3D12_PLACED_SUBRESOURCE_FOOTPRINT * layouts,
                                                gsize total_bytes);
+
+GST_D3D12_API
+gboolean gst_d3d12_staging_allocator_set_active (GstD3D12StagingAllocator * allocator,
+                                                 gboolean active);
+
+/**
+ * GstD3D12StagingPoolAllocator:
+ *
+ * Opaque GstD3D12StagingPoolAllocator struct
+ *
+ * Since: 1.30
+ */
+struct _GstD3D12StagingPoolAllocator
+{
+  GstD3D12StagingAllocator parent;
+
+  GstD3D12Device *device;
+
+  /*< private >*/
+  GstD3D12StagingPoolAllocatorPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
+ * GstD3D12StagingPoolAllocatorClass:
+ *
+ * Opaque GstD3D12StagingPoolAllocatorClass struct
+ *
+ * Since: 1.30
+ */
+struct _GstD3D12StagingPoolAllocatorClass
+{
+  GstD3D12StagingAllocatorClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GST_D3D12_API
+GType gst_d3d12_staging_pool_allocator_get_type (void);
+
+GST_D3D12_API
+GstD3D12StagingPoolAllocator * gst_d3d12_staging_pool_allocator_new (GstD3D12Device * device,
+                                                                     guint num_layouts,
+                                                                     const D3D12_PLACED_SUBRESOURCE_FOOTPRINT * layouts,
+                                                                     gsize total_bytes);
+
+GST_D3D12_API
+GstFlowReturn gst_d3d12_staging_pool_allocator_acquire_memory (GstD3D12StagingPoolAllocator * allocator,
+                                                               GstMemory ** memory);
 
 G_END_DECLS
 

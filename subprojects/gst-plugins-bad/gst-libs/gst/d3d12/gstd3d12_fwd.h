@@ -64,6 +64,10 @@ typedef struct _GstD3D12StagingAllocator GstD3D12StagingAllocator;
 typedef struct _GstD3D12StagingAllocatorClass GstD3D12StagingAllocatorClass;
 typedef struct _GstD3D12StagingAllocatorPrivate GstD3D12StagingAllocatorPrivate;
 
+typedef struct _GstD3D12StagingPoolAllocator GstD3D12StagingPoolAllocator;
+typedef struct _GstD3D12StagingPoolAllocatorClass GstD3D12StagingPoolAllocatorClass;
+typedef struct _GstD3D12StagingPoolAllocatorPrivate GstD3D12StagingPoolAllocatorPrivate;
+
 typedef struct _GstD3D12Format GstD3D12Format;
 
 typedef struct _GstD3D12AllocationParams GstD3D12AllocationParams;

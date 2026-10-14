@@ -25,6 +25,8 @@
 #include "gstd3d12-private.h"
 #include <wrl.h>
 #include <directx/d3dx12.h>
+#include <new>
+#include <queue>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -423,4 +425,228 @@ gst_d3d12_staging_allocator_alloc (GstD3D12StagingAllocator * allocator,
       total_bytes, 0, 0, total_bytes);
 
   return GST_MEMORY_CAST (mem);
+}
+
+/**
+ * gst_d3d12_staging_allocator_set_active:
+ * @allocator: a #GstD3D12StagingAllocator
+ * @active: the new active state
+ *
+ * Activates or deactivates @allocator. An inactive pool allocator returns
+ * %GST_FLOW_FLUSHING from acquire_memory. Outstanding memory remains valid
+ * and is released when returned to the inactive pool.
+ *
+ * Returns: %TRUE if the state was changed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_staging_allocator_set_active (GstD3D12StagingAllocator * allocator,
+    gboolean active)
+{
+  g_return_val_if_fail (GST_IS_D3D12_STAGING_ALLOCATOR (allocator), FALSE);
+
+  auto klass = GST_D3D12_STAGING_ALLOCATOR_GET_CLASS (allocator);
+  if (klass->set_active)
+    return klass->set_active (allocator, active);
+
+  return TRUE;
+}
+
+/* *INDENT-OFF* */
+struct _GstD3D12StagingPoolAllocatorPrivate
+{
+  std::mutex lock;
+  std::queue<GstMemory *> queue;
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layouts[GST_VIDEO_MAX_PLANES] = {};
+  guint num_layouts = 0;
+  gsize size = 0;
+  gboolean active = FALSE;
+};
+/* *INDENT-ON* */
+
+static void gst_d3d12_staging_pool_allocator_finalize (GObject * object);
+static gboolean
+gst_d3d12_staging_pool_allocator_set_active (GstD3D12StagingAllocator *
+    allocator, gboolean active);
+
+#define gst_d3d12_staging_pool_allocator_parent_class pool_alloc_parent_class
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D12StagingPoolAllocator,
+    gst_d3d12_staging_pool_allocator, GST_TYPE_D3D12_STAGING_ALLOCATOR);
+
+static void
+gst_d3d12_staging_pool_allocator_class_init (GstD3D12StagingPoolAllocatorClass *
+    klass)
+{
+  auto object_class = G_OBJECT_CLASS (klass);
+  auto allocator_class = GST_D3D12_STAGING_ALLOCATOR_CLASS (klass);
+
+  object_class->finalize = gst_d3d12_staging_pool_allocator_finalize;
+  allocator_class->set_active = gst_d3d12_staging_pool_allocator_set_active;
+}
+
+static void
+gst_d3d12_staging_pool_allocator_init (GstD3D12StagingPoolAllocator * self)
+{
+  auto storage = gst_d3d12_staging_pool_allocator_get_instance_private (self);
+  self->priv = new (storage) GstD3D12StagingPoolAllocatorPrivate ();
+}
+
+/* Called with the lock held */
+static void
+gst_d3d12_staging_pool_allocator_clear_queue (GstD3D12StagingPoolAllocator *
+    self)
+{
+  auto priv = self->priv;
+  while (!priv->queue.empty ()) {
+    auto mem = priv->queue.front ();
+    priv->queue.pop ();
+    gst_memory_unref (mem);
+  }
+}
+
+static void
+gst_d3d12_staging_pool_allocator_finalize (GObject * object)
+{
+  auto self = GST_D3D12_STAGING_POOL_ALLOCATOR (object);
+
+  gst_d3d12_staging_pool_allocator_clear_queue (self);
+  self->priv->~_GstD3D12StagingPoolAllocatorPrivate ();
+  gst_clear_object (&self->device);
+
+  G_OBJECT_CLASS (pool_alloc_parent_class)->finalize (object);
+}
+
+static gboolean
+gst_d3d12_staging_pool_allocator_set_active (GstD3D12StagingAllocator *
+    allocator, gboolean active)
+{
+  auto self = GST_D3D12_STAGING_POOL_ALLOCATOR (allocator);
+  auto priv = self->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+
+  GST_LOG_OBJECT (self, "active %d", active);
+  priv->active = active;
+  if (!active)
+    gst_d3d12_staging_pool_allocator_clear_queue (self);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d12_staging_memory_release (GstMiniObject * obj)
+{
+  auto mem = GST_MEMORY_CAST (obj);
+  auto self = GST_D3D12_STAGING_POOL_ALLOCATOR (mem->allocator);
+  auto priv = self->priv;
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+
+    GST_LOG_OBJECT (self, "Released memory %p", mem);
+
+    gst_memory_ref (mem);
+    GST_MINI_OBJECT_CAST (mem)->dispose = nullptr;
+    mem->allocator = (GstAllocator *) gst_object_ref (_d3d12_memory_allocator);
+    mem->offset = 0;
+    mem->size = mem->maxsize;
+
+    if (priv->active)
+      priv->queue.push (mem);
+    else
+      gst_memory_unref (mem);
+  }
+
+  gst_object_unref (self);
+  return FALSE;
+}
+
+/**
+ * gst_d3d12_staging_pool_allocator_new:
+ * @device: a #GstD3D12Device
+ * @num_layouts: layout count
+ * @layouts: (array length=num_layouts): resource layouts
+ * @total_bytes: total bytes to allocate
+ *
+ * Creates an inactive staging pool allocator. The layouts are copied and
+ * used for every memory allocation from this pool.
+ *
+ * Returns: (transfer full): a #GstD3D12StagingPoolAllocator
+ *
+ * Since: 1.30
+ */
+GstD3D12StagingPoolAllocator *
+gst_d3d12_staging_pool_allocator_new (GstD3D12Device * device,
+    guint num_layouts, const D3D12_PLACED_SUBRESOURCE_FOOTPRINT * layouts,
+    gsize total_bytes)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (num_layouts > 0, nullptr);
+  g_return_val_if_fail (num_layouts <= GST_VIDEO_MAX_PLANES, nullptr);
+  g_return_val_if_fail (layouts, nullptr);
+  g_return_val_if_fail (total_bytes > 0, nullptr);
+
+  auto self = (GstD3D12StagingPoolAllocator *)
+      g_object_new (GST_TYPE_D3D12_STAGING_POOL_ALLOCATOR, nullptr);
+  gst_object_ref_sink (self);
+
+  self->device = (GstD3D12Device *) gst_object_ref (device);
+  auto priv = self->priv;
+  priv->num_layouts = num_layouts;
+  priv->size = total_bytes;
+  for (guint i = 0; i < num_layouts; i++)
+    priv->layouts[i] = layouts[i];
+
+  return self;
+}
+
+/**
+ * gst_d3d12_staging_pool_allocator_acquire_memory:
+ * @allocator: a #GstD3D12StagingPoolAllocator
+ * @memory: (out) (transfer full) (nullable): a #GstMemory
+ *
+ * Acquires staging memory from @allocator.
+ *
+ * Returns: %GST_FLOW_OK on success, %GST_FLOW_FLUSHING when inactive,
+ * or %GST_FLOW_ERROR if allocation fails
+ *
+ * Since: 1.30
+ */
+GstFlowReturn
+gst_d3d12_staging_pool_allocator_acquire_memory (GstD3D12StagingPoolAllocator *
+    allocator, GstMemory ** memory)
+{
+  g_return_val_if_fail (GST_IS_D3D12_STAGING_POOL_ALLOCATOR (allocator),
+      GST_FLOW_ERROR);
+  g_return_val_if_fail (memory, GST_FLOW_ERROR);
+
+  *memory = nullptr;
+  auto priv = allocator->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->active)
+    return GST_FLOW_FLUSHING;
+
+  GstMemory *mem;
+  if (!priv->queue.empty ()) {
+    mem = priv->queue.front ();
+    priv->queue.pop ();
+  } else {
+    mem = gst_d3d12_staging_allocator_alloc (nullptr, allocator->device,
+        priv->num_layouts, priv->layouts, priv->size);
+    if (!mem) {
+      GST_ERROR_OBJECT (allocator, "Couldn't allocate staging memory");
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  gst_d3d12_staging_memory_sync (GST_D3D12_STAGING_MEMORY_CAST (mem));
+
+  gst_object_unref (mem->allocator);
+  mem->allocator = (GstAllocator *) gst_object_ref (allocator);
+  GST_MINI_OBJECT_CAST (mem)->dispose = gst_d3d12_staging_memory_release;
+  *memory = mem;
+
+  GST_LOG_OBJECT (allocator, "Acquired memory %p", mem);
+
+  return GST_FLOW_OK;
 }
