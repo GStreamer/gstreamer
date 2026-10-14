@@ -1875,6 +1875,203 @@ extern "C" fn uri_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// Legacy game video and audio
+// =============================================================================
+
+// Smacker - application/x-smk
+// A valid signature with implausible frame dimensions still identifies the
+// container, only less surely.
+extern "C" fn smk_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<12>(0) else {
+        return;
+    };
+    if data[..4] != *b"SMK2" && data[..4] != *b"SMK4" {
+        return;
+    }
+    let width = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
+    let height = u32::from_le_bytes([data[8], data[9], data[10], data[11]]);
+    if width > 32768 || height > 32768 {
+        suggest!(tf, Prob::MINIMUM, c"application/x-smk");
+    } else {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-smk");
+    }
+}
+
+// Sierra SOL - application/x-sol
+// The version word is followed by the format name at offset 2.
+extern "C" fn sol_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<8>(0) else {
+        return;
+    };
+    let magic = u16::from_le_bytes([data[0], data[1]]);
+    if !matches!(magic, 0x0B8D | 0x0C0D | 0x0C8D) {
+        return;
+    }
+    if data[2..6] != *b"SOL\0" {
+        return;
+    }
+    suggest!(tf, Prob::MAXIMUM, c"application/x-sol");
+}
+
+// Sierra VMD - application/x-vmd
+// The header is 806 bytes: dimensions up front, sample rate at the very end.
+// Dimensions are only checked when the sample rate does not settle it.
+extern "C" fn vmd_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<806>(0) else {
+        return;
+    };
+    if u16::from_le_bytes([data[0], data[1]]) != 0x032E {
+        return;
+    }
+    let width = u16::from_le_bytes([data[12], data[13]]);
+    let height = u16::from_le_bytes([data[14], data[15]]);
+    let rate = u16::from_le_bytes([data[804], data[805]]);
+    let dims_ok = (1..=2048).contains(&width) && (1..=2048).contains(&height);
+    if !dims_ok && rate != 22050 {
+        return;
+    }
+    suggest!(tf, Prob::POSSIBLE, c"application/x-vmd");
+}
+
+// American Laser Games MM - application/x-mm
+extern "C" fn mm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<30>(0) else {
+        return;
+    };
+    if data[..2] != [0, 0] {
+        return;
+    }
+    // Header length selects where the codec type is read from.
+    let Some(header_len @ (22 | 24)) = read_u32_le(&data[2..]) else {
+        return;
+    };
+    let (Some(fps), Some(width), Some(height)) = (
+        read_u16_le(&data[8..]),
+        read_u16_le(&data[12..]),
+        read_u16_le(&data[14..]),
+    ) else {
+        return;
+    };
+    if !(1..=60).contains(&fps) || !(1..=2048).contains(&width) || !(1..=2048).contains(&height) {
+        return;
+    }
+    if !read_u16_le(&data[header_len as usize..]).is_some_and(|t| (1..=0x31).contains(&t)) {
+        return;
+    }
+    suggest!(tf, Prob::POSSIBLE, c"application/x-mm");
+}
+
+// Wing Commander III movie - application/x-wc3movie
+extern "C" fn wc3movie_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<12>(0) else {
+        return;
+    };
+    if data[..4] == *b"FORM" && data[8..12] == *b"MOVE" {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-wc3movie");
+    }
+}
+
+// Westwood Studios VQA - application/x-wsvqa
+extern "C" fn wsvqa_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<12>(0) else {
+        return;
+    };
+    if data[..4] == *b"FORM" && data[8..12] == *b"WVQA" {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-wsvqa");
+    }
+}
+
+// Westwood Studios audio - application/x-wsaud
+extern "C" fn wsaud_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<20>(0) else {
+        return;
+    };
+    let rate = u16::from_le_bytes([data[0], data[1]]);
+    if !(8000..=48000).contains(&rate) || data[10] & 0xFC != 0 {
+        return;
+    }
+    if data[11] != 99 && data[11] != 1 {
+        return;
+    }
+    if u32::from_le_bytes([data[16], data[17], data[18], data[19]]) != 0x0000_DEAF {
+        return;
+    }
+    suggest!(tf, Prob::POSSIBLE, c"application/x-wsaud");
+}
+
+// Vivo - video/vivo
+// The header length is validated but not used for positioning; the version
+// marker follows the header field and any CRLF pairs after it.
+extern "C" fn vivo_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek::<1024>(0) else {
+        return;
+    };
+    if data[0] != 0 {
+        return;
+    }
+    let mut pos = if data[1] & 0x80 != 0 {
+        if data[2] & 0x80 != 0 {
+            return;
+        }
+        let header_len = ((data[1] as usize & 0x7F) << 7) + data[2] as usize;
+        if header_len > 2048 {
+            return;
+        }
+        3
+    } else {
+        2
+    };
+    while pos < 1008 && data[pos] == b'\r' && data[pos + 1] == b'\n' {
+        pos += 2;
+    }
+    if data[pos..].starts_with(b"Version:Vivo/") {
+        suggest!(tf, Prob::MAXIMUM, c"video/vivo");
+    }
+}
+
+// id Cinematic - video/x-idcin
+// The header is followed by a 64 KiB palette; a 256-colour palette is
+// extended by a 768-byte ramp, which shifts the frame size field.
+extern "C" fn idcin_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const PALETTE: usize = 20 + 64 * 1024;
+    let Some(data) = tf.peek::<{ PALETTE + 4 }>(0) else {
+        return;
+    };
+    let (Some(width), Some(height), Some(rate)) = (
+        read_u32_le(&data[..]),
+        read_u32_le(&data[4..]),
+        read_u32_le(&data[8..]),
+    ) else {
+        return;
+    };
+    if !(1..=1024).contains(&width) || !(1..=1024).contains(&height) {
+        return;
+    }
+    if rate != 0 && !(8000..=48000).contains(&rate) {
+        return;
+    }
+    // The two codec fields are unused when there is no audio track.
+    for offset in [12, 16] {
+        let Some(codec) = read_u32_le(&data[offset..]) else {
+            return;
+        };
+        if codec > 2 || (rate != 0 && codec == 0) {
+            return;
+        }
+    }
+    let mut pos = PALETTE;
+    if read_u32_le(&data[pos..]) == Some(1) {
+        pos += 768;
+    }
+    let Some(data) = tf.peek_var(0, (pos + 12) as u32) else {
+        return;
+    };
+    if read_u32_le(&data[pos + 8..]) == width.checked_mul(height) {
+        suggest!(tf, Prob::POSSIBLE, c"video/x-idcin");
+    }
+}
+
+// =============================================================================
 // Registration table and entry point
 // =============================================================================
 
@@ -2168,6 +2365,21 @@ const FEATURES: &[Feature] = &[
     ),
     // URI list - text/uri-list
     typefinder!("text/uri-list", MARGINAL, uri_type_find, "ram"),
+    // Legacy game video and audio
+    typefinder!("video/vivo", SECONDARY, vivo_type_find, "viv"),
+    typefinder!("video/x-idcin", MARGINAL, idcin_type_find),
+    typefinder!("application/x-mm", MARGINAL, mm_type_find),
+    typefinder!("application/x-smk", MARGINAL, smk_type_find, "smk"),
+    typefinder!("application/x-sol", MARGINAL, sol_type_find, "sol"),
+    typefinder!("application/x-vmd", MARGINAL, vmd_type_find, "vmd"),
+    typefinder!(
+        "application/x-wc3movie",
+        MARGINAL,
+        wc3movie_type_find,
+        "wc3movie"
+    ),
+    typefinder!("application/x-wsaud", MARGINAL, wsaud_type_find, "wsaud"),
+    typefinder!("application/x-wsvqa", MARGINAL, wsvqa_type_find, "wsvqa"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
