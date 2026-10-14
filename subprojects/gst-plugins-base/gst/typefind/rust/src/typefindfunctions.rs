@@ -1854,6 +1854,26 @@ extern "C" fn mss_manifest_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// URI list - text/uri-list
+// The first line that is not a "#" comment has to be a "scheme://" URI, the
+// scheme starting with a letter and holding only alphanumerics. Scanned
+// within the first 4 KiB.
+extern "C" fn uri_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_at_most(4096) else {
+        return;
+    };
+    if let Some(line) = data.split(|b| *b == b'\n').find(|l| !l.starts_with(b"#")) {
+        let mut parts = line.splitn(2, |b| *b == b':');
+        if let (Some(scheme), Some(rest)) = (parts.next(), parts.next())
+            && rest.starts_with(b"//")
+            && scheme.first().is_some_and(u8::is_ascii_alphabetic)
+            && scheme.iter().all(u8::is_ascii_alphanumeric)
+        {
+            suggest!(tf, Prob::LIKELY, c"text/uri-list");
+        }
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -2146,6 +2166,8 @@ const FEATURES: &[Feature] = &[
         PRIMARY,
         mss_manifest_type_find
     ),
+    // URI list - text/uri-list
+    typefinder!("text/uri-list", MARGINAL, uri_type_find, "ram"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
