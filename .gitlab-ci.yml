@@ -712,6 +712,7 @@ build macos:
           -Dgst-plugins-base:pango=enabled
           -Dgst-plugins-good:cairo=enabled
           -Dgst-plugins-good:soup=enabled
+          -Dgst-plugins-bad:vulkan=enabled
 
 abi-check:
   stage: 'build'
