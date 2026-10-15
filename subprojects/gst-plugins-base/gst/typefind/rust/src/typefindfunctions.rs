@@ -21,7 +21,7 @@ use std::ptr;
 
 use crate::bindings::gpointer;
 use crate::helpers::{
-    Feature, Prob, Scanner, TypeFind, magic_eq, opt, read_u16_le, read_u32_le, suggest, typefinder,
+    Feature, Prob, Scanner, TypeFind, magic_eq, opt, suggest, typefinder, u16le, u32le,
 };
 use crate::subtitles;
 use crate::xml::{XmlProbe, xml_probe};
@@ -220,7 +220,7 @@ extern "C" fn asf_type_find(tf: &mut TypeFind, _private: gpointer) {
 extern "C" fn cmml_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<10>(0)
         && data[..8] == *b"CMML\0\0\0\0"
-        && read_u16_le(&data[8..]).is_some_and(|v| v >= 2)
+        && u16le(&data[8..]) >= 2
     {
         suggest!(tf, Prob::MAXIMUM, c"text/x-cmml");
     }
@@ -626,42 +626,27 @@ extern "C" fn bmp_type_find(tf: &mut TypeFind, _private: gpointer) {
     if data[0] != b'B' || data[1] != b'M' || data[6..10].iter().any(|&b| b != 0) {
         return;
     }
-    let (Some(pixel_offset), Some(header_size)) =
-        (read_u32_le(&data[10..]), read_u32_le(&data[14..]))
-    else {
-        return;
-    };
+    let pixel_offset = u32le(&data[10..]);
+    let header_size = u32le(&data[14..]);
     if pixel_offset > TEN_MIB {
         return;
     }
 
     let (w, h, planes, bpp) = match header_size {
-        0x0C => {
-            // BITMAPCOREHEADER - w,h as u16.
-            if let (Some(w), Some(h), Some(planes), Some(bpp)) = (
-                read_u16_le(&data[18..]),
-                read_u16_le(&data[20..]),
-                read_u16_le(&data[22..]),
-                read_u16_le(&data[24..]),
-            ) {
-                (u32::from(w), u32::from(h), planes, bpp)
-            } else {
-                return;
-            }
-        }
-        40 | 64 | 108 | 124 | 0xF0 => {
-            // BITMAPINFOHEADER V3-V4 - w,h as u32.
-            if let (Some(w), Some(h), Some(planes), Some(bpp)) = (
-                read_u32_le(&data[18..]),
-                read_u32_le(&data[22..]),
-                read_u16_le(&data[26..]),
-                read_u16_le(&data[28..]),
-            ) {
-                (w, h, planes, bpp)
-            } else {
-                return;
-            }
-        }
+        // BITMAPCOREHEADER - w,h as u16.
+        0x0C => (
+            u32::from(u16le(&data[18..])),
+            u32::from(u16le(&data[20..])),
+            u16le(&data[22..]),
+            u16le(&data[24..]),
+        ),
+        // BITMAPINFOHEADER V3-V4 - w,h as u32.
+        40 | 64 | 108 | 124 | 0xF0 => (
+            u32le(&data[18..]),
+            u32le(&data[22..]),
+            u16le(&data[26..]),
+            u16le(&data[28..]),
+        ),
         _ => return,
     };
 
@@ -830,7 +815,7 @@ extern "C" fn dirac_type_find(tf: &mut TypeFind, _private: gpointer) {
 extern "C" fn brstm_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<8>(0)
         && data[..4] == *b"RSTM"
-        && matches!(read_u32_le(&data[4..]), Some(0xFFFE | 0xFEFF))
+        && matches!(u32le(&data[4..]), 0xFFFE | 0xFEFF)
     {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-brstm");
     }
@@ -841,7 +826,7 @@ extern "C" fn brstm_type_find(tf: &mut TypeFind, _private: gpointer) {
 extern "C" fn bfstm_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<8>(0)
         && (data[..4] == *b"FSTM" || data[..4] == *b"CSTM")
-        && matches!(read_u32_le(&data[4..]), Some(0xFFFE | 0xFEFF))
+        && matches!(u32le(&data[4..]), 0xFFFE | 0xFEFF)
     {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-bfstm");
     }
@@ -927,8 +912,8 @@ extern "C" fn theora_type_find(tf: &mut TypeFind, _private: gpointer) {
 extern "C" fn oggskel_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<12>(0)
         && data[..8] == *b"fishead\0"
-        && read_u16_le(&data[8..]) == Some(3)
-        && read_u16_le(&data[10..]) == Some(0)
+        && u16le(&data[8..]) == 3
+        && u16le(&data[10..]) == 0
     {
         suggest!(tf, Prob::MAXIMUM, c"application/x-ogg-skeleton", [
             (c"parsed", bool : false),
@@ -991,9 +976,8 @@ fn exr_version_field_ok(flags: u32) -> bool {
 // u32 LE @ 0 == 0x01312f76 (magic), valid version field @ 4.
 extern "C" fn exr_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<8>(0)
-        && read_u32_le(&data[0..4]) == Some(0x01312f76)
-        && let Some(flags) = read_u32_le(&data[4..8])
-        && exr_version_field_ok(flags)
+        && u32le(&data[0..4]) == 0x01312f76
+        && exr_version_field_ok(u32le(&data[4..8]))
     {
         suggest!(tf, Prob::MAXIMUM, c"image/x-exr");
     }
@@ -1951,20 +1935,17 @@ extern "C" fn mm_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     }
     // Header length selects where the codec type is read from.
-    let Some(header_len @ (22 | 24)) = read_u32_le(&data[2..]) else {
+    let header_len = u32le(&data[2..]) as usize;
+    if !matches!(header_len, 22 | 24) {
         return;
-    };
-    let (Some(fps), Some(width), Some(height)) = (
-        read_u16_le(&data[8..]),
-        read_u16_le(&data[12..]),
-        read_u16_le(&data[14..]),
-    ) else {
-        return;
-    };
+    }
+    let fps = u16le(&data[8..]);
+    let width = u16le(&data[12..]);
+    let height = u16le(&data[14..]);
     if !(1..=60).contains(&fps) || !(1..=2048).contains(&width) || !(1..=2048).contains(&height) {
         return;
     }
-    if !read_u16_le(&data[header_len as usize..]).is_some_and(|t| (1..=0x31).contains(&t)) {
+    if !(1..=0x31).contains(&u16le(&data[header_len..])) {
         return;
     }
     suggest!(tf, Prob::POSSIBLE, c"application/x-mm");
@@ -2046,13 +2027,9 @@ extern "C" fn idcin_type_find(tf: &mut TypeFind, _private: gpointer) {
     let Some(data) = tf.peek::<{ PALETTE + 4 }>(0) else {
         return;
     };
-    let (Some(width), Some(height), Some(rate)) = (
-        read_u32_le(&data[..]),
-        read_u32_le(&data[4..]),
-        read_u32_le(&data[8..]),
-    ) else {
-        return;
-    };
+    let width = u32le(&data[..]);
+    let height = u32le(&data[4..]);
+    let rate = u32le(&data[8..]);
     if !(1..=1024).contains(&width) || !(1..=1024).contains(&height) {
         return;
     }
@@ -2061,21 +2038,19 @@ extern "C" fn idcin_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
     // The two codec fields are unused when there is no audio track.
     for offset in [12, 16] {
-        let Some(codec) = read_u32_le(&data[offset..]) else {
-            return;
-        };
+        let codec = u32le(&data[offset..]);
         if codec > 2 || (rate != 0 && codec == 0) {
             return;
         }
     }
     let mut pos = PALETTE;
-    if read_u32_le(&data[pos..]) == Some(1) {
+    if u32le(&data[pos..]) == 1 {
         pos += 768;
     }
     let Some(data) = tf.peek_var(0, (pos + 12) as u32) else {
         return;
     };
-    if read_u32_le(&data[pos + 8..]) == width.checked_mul(height) {
+    if u32le(&data[pos + 8..]) == width * height {
         suggest!(tf, Prob::POSSIBLE, c"video/x-idcin");
     }
 }
@@ -2217,15 +2192,11 @@ extern "C" fn windows_icon_type_find(tf: &mut TypeFind, _private: gpointer) {
     // The entry: width, height, colour count, reserved octet, planes, bit
     // count, size and image offset.
     let entry = &data[6..];
-    let (Some(kind), Some(count), Some(planes), Some(size), Some(offset)) = (
-        read_u16_le(&data[2..]),
-        read_u16_le(&data[4..]),
-        read_u16_le(&entry[4..]),
-        read_u32_le(&entry[8..]),
-        read_u32_le(&entry[12..]),
-    ) else {
-        return;
-    };
+    let kind = u16le(&data[2..]);
+    let count = u16le(&data[4..]);
+    let planes = u16le(&entry[4..]);
+    let size = u32le(&entry[8..]);
+    let offset = u32le(&entry[12..]);
     let length = length.get();
     let (size, offset) = (u64::from(size), u64::from(offset));
     if matches!(kind, ICON | CURSOR)
@@ -2264,7 +2235,7 @@ extern "C" fn degas_type_find(tf: &mut TypeFind, _private: gpointer) {
     const ELITE: u64 = 32066;
     if let Some(length) = tf.length().map(NonZeroU64::get)
         && let Some(data) = tf.peek::<4>(0)
-        && let Some(resolution) = read_u16_le(data).map(u16::from_be)
+        && let resolution = u16::from_be_bytes([data[0], data[1]])
         && match length {
             PI => resolution <= 2,
             ELITE => resolution <= 2 && degas_tail(tf, length),

@@ -186,22 +186,16 @@ pub(crate) fn magic_eq(data: &[u8], pat: &[u8]) -> bool {
     pat.iter().enumerate().all(|(i, &b)| data[i] == b)
 }
 
-/// Read a 16-bit little-endian value from a byte slice. Returns None if the
-/// slice is shorter than 2 bytes.
-pub(crate) fn read_u16_le(d: &[u8]) -> Option<u16> {
-    match d {
-        [a, b, ..] => Some(u16::from_le_bytes([*a, *b])),
-        _ => None,
-    }
+/// 16-bit little-endian value at the start of `d`. The caller's peek
+/// guarantees the length.
+pub(crate) fn u16le(d: &[u8]) -> u16 {
+    u16::from_le_bytes([d[0], d[1]])
 }
 
-/// Read a 32-bit little-endian value from a byte slice. Returns None if the
-/// slice is shorter than 4 bytes.
-pub(crate) fn read_u32_le(d: &[u8]) -> Option<u32> {
-    match d {
-        [a, b, c, d, ..] => Some(u32::from_le_bytes([*a, *b, *c, *d])),
-        _ => None,
-    }
+/// 32-bit little-endian value at the start of `d`. The caller's peek
+/// guarantees the length.
+pub(crate) fn u32le(d: &[u8]) -> u32 {
+    u32::from_le_bytes([d[0], d[1], d[2], d[3]])
 }
 
 /// Allows to enforce a specific type for the argument.
