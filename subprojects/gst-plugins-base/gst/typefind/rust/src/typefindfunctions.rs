@@ -20,9 +20,7 @@ use std::num::NonZeroU64;
 use std::ptr;
 
 use crate::bindings::gpointer;
-use crate::helpers::{
-    Feature, Prob, Scanner, TypeFind, magic_eq, opt, suggest, typefinder, u16le, u32le,
-};
+use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
 use crate::xml::{XmlProbe, xml_probe};
 #[allow(unused_imports)]
@@ -60,7 +58,7 @@ extern "C" fn shn_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"ajkg") {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-shorten");
     } else if let Some(data) = tf.peek_var(-8, 8)
-        && magic_eq(data, b"SHNAMPSK")
+        && data == *b"SHNAMPSK"
     {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-shorten");
     }
@@ -944,7 +942,7 @@ extern "C" fn tar_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     };
     // Old GNU: "ustar  \0" (8 bytes)
-    let old_gnu = magic_eq(data, b"ustar  \0");
+    let old_gnu = data == *b"ustar  \0";
     // New GNU: "ustar\0" + 2 ASCII digits
     let new_gnu =
         data.starts_with(b"ustar\0") && data[6].is_ascii_digit() && data[7].is_ascii_digit();

@@ -177,15 +177,6 @@ pub(crate) struct Feature(
     pub(crate) Option<&'static str>, // caps string
 );
 
-/// Compare `pat` bytes against `data`. Returns true only when `data.len()`
-/// ≥ `pat.len()` and all bytes match in order.
-pub(crate) fn magic_eq(data: &[u8], pat: &[u8]) -> bool {
-    if data.len() < pat.len() {
-        return false;
-    }
-    pat.iter().enumerate().all(|(i, &b)| data[i] == b)
-}
-
 /// 16-bit little-endian value at the start of `d`. The caller's peek
 /// guarantees the length.
 pub(crate) fn u16le(d: &[u8]) -> u16 {
