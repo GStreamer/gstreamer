@@ -16,6 +16,7 @@ use crate::bindings;
 use bindings::{GstPlugin, gboolean, gst_caps_from_string, gst_caps_unref, gst_type_find_register};
 
 use std::ffi::{CStr, CString};
+use std::num::NonZeroU64;
 use std::ptr;
 
 use crate::bindings::gpointer;
@@ -2080,6 +2081,240 @@ extern "C" fn idcin_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// Images
+// =============================================================================
+
+// Netpbm whitespace: what the ANSI C definition of white space covers.
+fn pnm_whitespace(b: u8) -> bool {
+    matches!(b, b' ' | b'\t' | b'\r' | b'\n' | b'\x0b' | b'\x0c')
+}
+
+// The two decimal dimensions of a netpbm header, whitespace and comments
+// skipped. Called with the header past the magic. The dimensions are read as
+// the 32-bit signed integers the caps carry, so an out-of-range header is not
+// a dimension at all.
+fn pnm_size(data: &[u8]) -> Option<(i32, i32)> {
+    let mut dims = [0i32; 2];
+    let mut pos = 0;
+    for dim in &mut dims {
+        loop {
+            match data.get(pos) {
+                Some(b) if pnm_whitespace(*b) => pos += 1,
+                Some(b'#') => {
+                    pos += 1 + data[pos + 1..]
+                        .iter()
+                        .position(|&b| b == b'\n' || b == b'\r')?;
+                }
+                Some(_) => break,
+                None => return None,
+            }
+        }
+        let start = pos;
+        while data.get(pos).is_some_and(u8::is_ascii_digit) {
+            pos += 1;
+        }
+        *dim = std::str::from_utf8(&data[start..pos]).ok()?.parse().ok()?;
+    }
+    (dims[0] > 0 && dims[1] > 0).then_some((dims[0], dims[1]))
+}
+
+// The media type a netpbm magic digit names: P1 and P4 are bitmaps, P2 and P5
+// graymaps, P3 and P6 pixmaps, P7 the arbitrary map.
+fn pnm_caps(digit: u8) -> Option<&'static CStr> {
+    match digit {
+        b'1' | b'4' => Some(c"image/x-portable-bitmap"),
+        b'2' | b'5' => Some(c"image/x-portable-graymap"),
+        b'3' | b'6' => Some(c"image/x-portable-pixmap"),
+        b'7' => Some(c"image/x-portable-anymap"),
+        _ => None,
+    }
+}
+
+// Netpbm - image/x-portable-bitmap, -graymap, -pixmap, -anymap
+// Magic, whitespace, then the fields; "#" comments are allowed wherever the
+// header has whitespace. Width and height are reported when they parse.
+extern "C" fn pnm_type_find(tf: &mut TypeFind, _private: gpointer) {
+    // The header is a few dozen bytes; the slack in the peek is for comments.
+    if let Some(data) = tf.peek_between(3, 256)
+        && data[0] == b'P'
+        && let Some(caps) = pnm_caps(data[1])
+        && pnm_whitespace(data[2])
+    {
+        // A P7 header names its fields instead of giving them positionally,
+        // so there are no dimensions to read from it.
+        let dims = if data[1] == b'7' {
+            None
+        } else {
+            pnm_size(&data[2..])
+        };
+        if let Some((width, height)) = dims {
+            suggest!(tf, Prob::MAXIMUM, caps, [
+                (c"width", i32 : width),
+                (c"height", i32 : height),
+            ]);
+        } else {
+            suggest!(tf, Prob::LIKELY, caps);
+        }
+    }
+}
+
+// WBMP multi-byte integer: seven bits per octet, most significant first, the
+// top bit set on every octet but the last. The encoding has to be minimal.
+fn wbmp_int(data: &[u8]) -> Option<(u32, usize)> {
+    if data.first() == Some(&0x80) {
+        return None;
+    }
+    let mut value: u64 = 0;
+    for (i, &b) in data.iter().take(5).enumerate() {
+        value = (value << 7) | (b & 0x7F) as u64;
+        if b & 0x80 == 0 {
+            return u32::try_from(value).ok().map(|v| (v, i + 1));
+        }
+    }
+    None
+}
+
+// WBMP type 0 - image/vnd.wap.wbmp
+// Type 0, no extension header, multi-byte width and height, then height rows
+// of ceil(width/8) bytes. The length has to come out exact: the format has no
+// magic, so an exact bitmap is what separates a WBMP from a binary file that
+// happens to start with two zero octets.
+extern "C" fn wbmp_type_find(tf: &mut TypeFind, _private: gpointer) {
+    // The type and fix-header octets are both zero, then up to five octets
+    // per dimension.
+    if let Some(length) = tf.length()
+        && let Some(data) = tf.peek_between(2, 12)
+        && data[..2] == [0, 0]
+        && let Some((width, n)) = wbmp_int(&data[2..])
+        && width > 0
+        && let Some((height, m)) = wbmp_int(&data[2 + n..])
+        && height > 0
+    {
+        let bitmap = height as u64 * (width as u64).div_ceil(8);
+        if (2 + n + m) as u64 + bitmap == length.get() {
+            suggest!(tf, Prob::POSSIBLE.get() - 10, c"image/vnd.wap.wbmp");
+        }
+    }
+}
+
+// Windows icon - image/x-icon
+// ICONDIR: reserved, type, image count, then 16-byte directory entries. The
+// first entry has to describe image data that is inside the file.
+extern "C" fn windows_icon_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const ICON: u16 = 1;
+    const CURSOR: u16 = 2;
+
+    let Some(length) = tf.length() else {
+        return;
+    };
+    // Header and first directory entry.
+    let Some(data) = tf.peek::<22>(0) else {
+        return;
+    };
+    if data[..2] != [0, 0] {
+        return;
+    }
+    // The entry: width, height, colour count, reserved octet, planes, bit
+    // count, size and image offset.
+    let entry = &data[6..];
+    let (Some(kind), Some(count), Some(planes), Some(size), Some(offset)) = (
+        read_u16_le(&data[2..]),
+        read_u16_le(&data[4..]),
+        read_u16_le(&entry[4..]),
+        read_u32_le(&entry[8..]),
+        read_u32_le(&entry[12..]),
+    ) else {
+        return;
+    };
+    let length = length.get();
+    let (size, offset) = (u64::from(size), u64::from(offset));
+    if matches!(kind, ICON | CURSOR)
+        && count > 0
+        && entry[3] == 0
+        // Icons are single-plane; a cursor carries its hotspot here instead.
+        && (kind == CURSOR || planes <= 1)
+        // The entry has to point at image data inside the file.
+        && size > 0
+        && size < length
+        && offset < length
+        && size + offset <= length
+    {
+        suggest!(tf, Prob::NEARLY_CERTAIN, c"image/x-icon");
+    }
+}
+
+// The four u16 values 16 bytes from the end of an Elite picture: each one a
+// resolution, so 0 to 2.
+fn degas_tail(tf: &mut TypeFind, length: u64) -> bool {
+    let Some(tail) = tf.peek_var(length as i64 - 16, 8) else {
+        return false;
+    };
+    tail.as_chunks::<2>()
+        .0
+        .iter()
+        .all(|b| u16::from_be_bytes(*b) <= 2)
+}
+
+// Atari DEGAS picture - image/x-degas
+// No magic: the plain pictures are 32034 bytes, the Elite pictures 32066, and
+// compressed Elite pictures are smaller still. The resolution, 0 to 2 for low,
+// medium and high, carries the compressed flag in its top bit.
+extern "C" fn degas_type_find(tf: &mut TypeFind, _private: gpointer) {
+    const PI: u64 = 32034;
+    const ELITE: u64 = 32066;
+    if let Some(length) = tf.length().map(NonZeroU64::get)
+        && let Some(data) = tf.peek::<4>(0)
+        && let Some(resolution) = read_u16_le(data).map(u16::from_be)
+        && match length {
+            PI => resolution <= 2,
+            ELITE => resolution <= 2 && degas_tail(tf, length),
+            66..ELITE => {
+                resolution & 0x8000 != 0 && resolution & 0x7FFF <= 2 && degas_tail(tf, length)
+            }
+            _ => false,
+        }
+    {
+        suggest!(tf, Prob::POSSIBLE.get() + 5, c"image/x-degas");
+    }
+}
+
+// Radiance HDR - image/vnd.radiance
+// The signature line names the flavour; the rest of the header is ASCII.
+extern "C" fn radiance_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if tf.starts_with(b"#?RADIANCE") || tf.starts_with(b"#?RGBE") {
+        suggest!(tf, Prob::NEARLY_CERTAIN, c"image/vnd.radiance");
+    }
+}
+
+// Apple iTunes artwork - application/itc
+// Each stage that holds raises the confidence; a file that stops short of a
+// stage is still reported for the stages it covers.
+extern "C" fn itc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_between(8, 292) else {
+        return;
+    };
+    if data[..8] != *b"\0\0\x01\x1Citch" {
+        return;
+    }
+    let preamble = data.len() >= 20 && data[8..20] == *b"\0\0\0\x02\0\0\0\x02\0\0\0\x02";
+    let artwork = preamble && data.len() >= 28 && data[20..28] == *b"\0\0\0\0artw";
+    let padding = artwork && data.len() >= 284 && data[28..284].iter().all(|&b| b == 0);
+    let item = padding && data.len() >= 292 && data[288..292] == *b"item";
+    let prob = if item {
+        Prob::MAXIMUM
+    } else if padding {
+        Prob::NEARLY_CERTAIN
+    } else if artwork {
+        Prob::LIKELY
+    } else if preamble {
+        Prob::POSSIBLE
+    } else {
+        Prob::MINIMUM
+    };
+    suggest!(tf, prob, c"application/itc");
+}
+
+// =============================================================================
 // Registration table and entry point
 // =============================================================================
 
@@ -2388,6 +2623,19 @@ const FEATURES: &[Feature] = &[
     ),
     typefinder!("application/x-wsaud", MARGINAL, wsaud_type_find, "wsaud"),
     typefinder!("application/x-wsvqa", MARGINAL, wsvqa_type_find, "wsvqa"),
+    // Images
+    typefinder!("application/itc", SECONDARY, itc_type_find, "itc"),
+    typefinder!(
+        "image/x-portable-pixmap",
+        SECONDARY,
+        pnm_type_find,
+        "pnm,ppm,pgm,pbm",
+        "image/x-portable-bitmap; image/x-portable-graymap; image/x-portable-pixmap; image/x-portable-anymap"
+    ),
+    typefinder!("image/vnd.wap.wbmp", MARGINAL, wbmp_type_find, none, none),
+    typefinder!("image/x-icon", MARGINAL, windows_icon_type_find, none, none),
+    typefinder!("image/x-degas", MARGINAL, degas_type_find, none, none),
+    typefinder!("image/vnd.radiance", MARGINAL, radiance_type_find, "hdr"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.

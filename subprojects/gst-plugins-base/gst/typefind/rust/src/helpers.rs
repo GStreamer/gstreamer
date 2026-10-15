@@ -70,6 +70,14 @@ impl TypeFind {
         self.peek_var(0, len as u32)
     }
 
+    /// Peek between `min` and `max` bytes from offset 0, None when fewer than
+    /// `min` are available. States the smallest header a typefinder can judge,
+    /// so the conditions below it need no length checks.
+    pub fn peek_between(&mut self, min: usize, max: usize) -> Option<&[u8]> {
+        let data = self.peek_at_most(max)?;
+        (data.len() >= min).then_some(data)
+    }
+
     /// Peek N bytes from offset 0 and compare with a magic array.
     /// Returns `true` only when enough data is available and matches.
     pub fn starts_with<const N: usize>(&mut self, magic: &[u8; N]) -> bool {
@@ -333,6 +341,8 @@ macro_rules! opt {
 ///   NULL func, NULL caps; extension-only registration
 /// - `typefinder!("image/tiff", PRIMARY, tiff_type_find, "tif,tiff", "image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }")`
 ///   caps differing from the feature name
+/// - `typefinder!("image/x-icon", MARGINAL, windows_icon_type_find, none, none)`
+///   NULL extensions and NULL caps
 ///
 /// Ranks: PRIMARY/SECONDARY/MARGINAL (or offsets like `PRIMARY+103`).
 /// `none` = C NULL argument. 3-arg form defaults to caps = name,
@@ -343,6 +353,12 @@ macro_rules! typefinder {
     };
     ($name:expr, $rank:expr, $func:expr, $exts:expr) => {
         Feature($name, $rank, opt!($func), Some($exts), Some($name))
+    };
+    // Ahead of the arms that capture `$exts` or `$caps`: `none` parses as an
+    // expression there, and a captured expression no longer matches the
+    // literal `none` pattern.
+    ($name:expr, $rank:expr, $func:expr, none, none) => {
+        Feature($name, $rank, opt!($func), None, None)
     };
     ($name:expr, $rank:expr, $func:expr, none, $caps:expr) => {
         Feature($name, $rank, opt!($func), None, opt!($caps))
