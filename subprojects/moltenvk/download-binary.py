@@ -5,6 +5,7 @@ import sys
 import ssl
 import zipfile
 import hashlib
+import tempfile
 import subprocess
 import urllib.request
 import urllib.error
@@ -14,6 +15,10 @@ import urllib.error
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
+
+download_only = '--download-only' in sys.argv
+if download_only:
+    sys.argv.remove('--download-only')
 
 version = sys.argv[1]
 want_sha256 = sys.argv[3]
@@ -38,7 +43,12 @@ BASENAME = f'vulkansdk-{target}-{version}.{ext}'
 UPSTREAM_URL = f'https://sdk.lunarg.com/sdk/download/{version}/{platform}/' + BASENAME
 GSTREAMER_URL = 'https://gstreamer.freedesktop.org/src/mirror/' + BASENAME
 
-source_dir = os.path.join(os.environ['MESON_SOURCE_ROOT'], os.environ['MESON_SUBDIR'])
+if download_only:
+    tmp_dir = tempfile.TemporaryDirectory()
+    source_dir = tmp_dir.name
+else:
+    source_dir = os.path.join(os.environ['MESON_SOURCE_ROOT'],
+                              os.environ['MESON_SUBDIR'])
 dest_path = os.path.join(source_dir, BASENAME)
 
 
@@ -81,6 +91,10 @@ if not verify_download(dest_path):
     if found_sha256 != want_sha256:
         print(f'SHA256 of downloaded file {BASENAME} was {found_sha256} instead of {want_sha256}')
         sys.exit(1)
+
+if download_only:
+    print(f'{BASENAME} downloaded and verified')
+    sys.exit(0)
 
 install_dir = os.path.join(source_dir, f'sdk-{version}')
 if os.path.exists(install_dir):
