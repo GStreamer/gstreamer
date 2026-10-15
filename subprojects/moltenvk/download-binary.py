@@ -7,8 +7,8 @@ import zipfile
 import hashlib
 import tempfile
 import subprocess
+import http.client
 import urllib.request
-import urllib.error
 
 # Disable certificate checking because it always fails on Windows
 # We verify the checksum anyway.
@@ -69,27 +69,63 @@ def verify_download(dest_path):
     return False
 
 
+def print_progress(done, total):
+    mib = 1024 * 1024
+    if not total:
+        print(f'\r{done // mib} MiB', end='', flush=True)
+        return
+    width = 40
+    filled = width * done // total
+    gauge = '#' * filled + '-' * (width - filled)
+    print(f'\r[{gauge}] {100 * done // total:3d}% '
+          f'{done // mib}/{total // mib} MiB', end='', flush=True)
+
+
+def download(req):
+    # meson captures our output, don't flood its log with \r updates
+    show_progress = sys.stdout.isatty()
+    data = bytearray()
+    try:
+        with urllib.request.urlopen(req, context=ctx) as f:
+            total = int(f.headers.get('Content-Length') or 0)
+            while chunk := f.read(1024 * 1024):
+                data += chunk
+                if show_progress:
+                    print_progress(len(data), total)
+    finally:
+        if show_progress and data:
+            print()
+    # Unlike read(), read(amt) returns b'' on a truncated body instead of
+    # raising IncompleteRead.
+    if total and len(data) < total:
+        raise http.client.IncompleteRead(data, total - len(data))
+    return data
+
+
 if not verify_download(dest_path):
     for url in (GSTREAMER_URL, UPSTREAM_URL):
         # sdk.lunarg.com returns 403 if we don't have a user agent
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         print(f'Downloading {url} to {BASENAME}')
         try:
-            with urllib.request.urlopen(req, context=ctx) as f:
-                data = f.read()
-            with open(dest_path, 'wb') as d:
-                d.write(data)
-            break
-        except urllib.error.URLError as ex:
+            data = download(req)
+        # A connection dropped mid-body raises IncompleteRead or
+        # ConnectionResetError, not URLError.
+        except (OSError, http.client.HTTPException) as ex:
             print(ex)
-            print(f'Failed to download from {url}, trying mirror...')
+            print(f'Failed to download from {url}, trying next mirror...')
+            continue
+        found_sha256 = hashlib.sha256(data).hexdigest()
+        if found_sha256 != want_sha256:
+            print(f'SHA256 of {url} was {found_sha256} '
+                  f'instead of {want_sha256}')
+            continue
+        with open(dest_path, 'wb') as d:
+            d.write(data)
+        break
     else:
         curdir = os.path.dirname(sys.argv[0])
         print(f'Couldn\'t download {BASENAME}! Try downloading it manually and placing it into {curdir}')
-        sys.exit(1)
-    found_sha256 = get_sha256(dest_path)
-    if found_sha256 != want_sha256:
-        print(f'SHA256 of downloaded file {BASENAME} was {found_sha256} instead of {want_sha256}')
         sys.exit(1)
 
 if download_only:
