@@ -2021,7 +2021,7 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
     for (i = 1; i < vps->num_hrd_parameters; i++) {
       guint16 hrd_layer_set_idx;
       guint8 cprms_present_flag;
-      GstH265HRDParams hrd_params;
+      GstH265HRDParams hrd_params = { 0 };
 
       READ_UE_MAX (&nr, hrd_layer_set_idx, 1023);
       CHECK_ALLOWED_MAX (hrd_layer_set_idx, vps->num_layer_sets_minus1);
