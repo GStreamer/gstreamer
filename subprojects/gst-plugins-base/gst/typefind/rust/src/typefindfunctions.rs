@@ -195,9 +195,11 @@ extern "C" fn ar_type_find(tf: &mut TypeFind, _private: gpointer) {
         && data[..7] == *b"!<arch>"
         && data[7] == b'\n'
     {
-        // First member header starts at offset 8; file name field (16 bytes) is @8–23.
-        let name_valid = (8..=23).all(|i| data[i].is_ascii_graphic() || data[i] == b' ');
-        if name_valid {
+        // First member header starts at offset 8; file name field (16 bytes) is @8-23.
+        if data[8..24]
+            .iter()
+            .all(|&b| b.is_ascii_graphic() || b == b' ')
+        {
             suggest!(tf, Prob::NEARLY_CERTAIN, c"application/x-ar");
         } else {
             suggest!(tf, Prob::POSSIBLE, c"application/x-ar");
@@ -229,8 +231,7 @@ extern "C" fn cmml_type_find(tf: &mut TypeFind, _private: gpointer) {
 extern "C" fn vcd_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<12>(0)
         && data[0] == 0x00
-        && (1..10).all(|i| data[i] == 0xff)
-        && data[10] == 0xff
+        && (1..11).all(|i| data[i] == 0xff)
         && data[11] == 0x00
     {
         suggest!(tf, Prob::MAXIMUM, c"video/x-vcd");
@@ -1066,9 +1067,8 @@ extern "C" fn jpc_type_find(tf: &mut TypeFind, _private: gpointer) {
     let mut offset: i64 = 4;
     let mut has_cod = false;
     let mut has_qcd = false;
-    let mut found_sot = false;
 
-    while !found_sot {
+    loop {
         let Some(seg) = tf.peek::<2>(offset) else {
             return;
         };
@@ -1080,7 +1080,7 @@ extern "C" fn jpc_type_find(tf: &mut TypeFind, _private: gpointer) {
         };
         let marker = u16::from_be_bytes([marker_data[0], marker_data[1]]);
         match marker {
-            SOT => found_sot = true,
+            SOT => break,
             COD => has_cod = true,
             QCD => has_qcd = true,
             _ if is_skip(marker) => {}
@@ -1089,7 +1089,7 @@ extern "C" fn jpc_type_find(tf: &mut TypeFind, _private: gpointer) {
         offset += 2;
     }
 
-    if has_cod && has_qcd && found_sot {
+    if has_cod && has_qcd {
         suggest!(tf, Prob::MAXIMUM, c"image/x-jpc");
     }
 }
@@ -1210,7 +1210,7 @@ extern "C" fn flac_type_find(tf: &mut TypeFind, _private: gpointer) {
 // SDP - application/sdp
 // Starts with "v=0" followed by LF or CRLF.
 fn is_sdp_header(data: &[u8]) -> bool {
-    data.starts_with(b"v=0") && (data[3] == b'\n' || data[3..5] == *b"\r\n")
+    data.starts_with(b"v=0\n") || data.starts_with(b"v=0\r\n")
 }
 
 extern "C" fn sdp_type_find(tf: &mut TypeFind, _private: gpointer) {
