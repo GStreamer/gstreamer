@@ -997,7 +997,7 @@ _fill_sps (const GstH265SPS * sps, SPS * std_sps)
       .sps_sub_layer_ordering_info_present_flag =
           sps->sub_layer_ordering_info_present_flag,
       .scaling_list_enabled_flag = sps->scaling_list_enabled_flag,
-      .sps_scaling_list_data_present_flag = sps->scaling_list_enabled_flag,
+      .sps_scaling_list_data_present_flag = sps->scaling_list_data_present_flag,
       .amp_enabled_flag = sps->amp_enabled_flag,
       .sample_adaptive_offset_enabled_flag =
           sps->sample_adaptive_offset_enabled_flag,
