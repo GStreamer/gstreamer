@@ -1071,16 +1071,29 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
     if (hls_stream->pending_decrypted_buffer) {
       if (hls_stream->current_key) {
         GstMapInfo info;
-        gssize unpadded_size;
+        guint pad;
 
         /* Handle pkcs7 unpadding here */
         gst_buffer_map (hls_stream->pending_decrypted_buffer, &info,
             GST_MAP_READ);
-        unpadded_size = info.size - info.data[info.size - 1];
-        gst_buffer_unmap (hls_stream->pending_decrypted_buffer, &info);
 
+        /* The padding byte comes from the (attacker-controlled) ciphertext, so
+         * it must be validated before use: a value of 0, or one larger than
+         * the AES block size or the buffer itself, would make the unpadded
+         * size computation below wrap around and corrupt the heap in the
+         * gst_buffer_resize() call. */
+        pad = info.size > 0 ? info.data[info.size - 1] : 0;
+        if (pad == 0 || pad > 16 || pad > info.size) {
+          GST_WARNING_OBJECT (hls_stream,
+              "Invalid PKCS7 padding, rejecting fragment");
+          gst_buffer_unmap (hls_stream->pending_decrypted_buffer, &info);
+          gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
+          return GST_FLOW_ERROR;
+        }
+
+        gst_buffer_unmap (hls_stream->pending_decrypted_buffer, &info);
         gst_buffer_resize (hls_stream->pending_decrypted_buffer, 0,
-            unpadded_size);
+            info.size - pad);
       }
 
       ret =
