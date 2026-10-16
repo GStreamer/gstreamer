@@ -1,5 +1,7 @@
 # App Library
 
+The App library lets an application push data into a pipeline and pull data out of it, with appsrc and appsink.
+
 This library should be linked to by getting cflags and libs from
 `gstreamer-plugins-base-{{ gst_api_version.md }}pc` and adding
 -lgstapp-{{ gst_api_version.md }} to the library flags.

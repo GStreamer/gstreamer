@@ -1,5 +1,7 @@
 # Vulkan Library
 
+Vulkan support for GStreamer elements and applications.
+
 This library should be linked to by getting cflags and libs from
 gstreamer-vulkan-{{ gst_api_version.md }}
 

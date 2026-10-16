@@ -1,5 +1,7 @@
 # MPEG-TS helper library
 
+Helpers to handle MPEG Transport Streams and the standards derived from them.
+
 This library should be linked to by getting cflags and libs from
 gstreamer-plugins-bad-{{ gst_api_version.md }}.pc and adding
 -lgstmpegts-{{ gst_api_version.md }} to the library flags.

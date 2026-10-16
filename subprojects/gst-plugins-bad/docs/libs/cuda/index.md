@@ -1,5 +1,7 @@
 # Cuda library
 
+CUDA support for NVIDIA GPUs.
+
 This library should be linked to by getting cflags and libs from
 gstreamer-cuda-{{ gst_api_version.md }}.pc
 

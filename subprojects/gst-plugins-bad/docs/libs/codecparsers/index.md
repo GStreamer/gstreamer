@@ -1,5 +1,7 @@
 # Bitstream parsing Library
 
+Parsers of the bitstreams of video codecs.
+
 This library should be linked to by getting cflags and libs from
 gstreamer-plugins-bad-{{ gst_api_version.md }}.pc and adding
 -lgstcodeparsers-{{ gst_api_version.md }} to the library flags.
