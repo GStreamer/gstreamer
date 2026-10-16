@@ -10,7 +10,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //! Rust implementations of GStreamer typefind functions.
-#![allow(dead_code)]
 
 mod bindings;
 mod helpers;
