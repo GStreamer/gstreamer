@@ -3034,6 +3034,38 @@ qtdemux_update_default_piff_encryption_settings (GstQTDemux * qtdemux,
 }
 
 static gboolean
+qtdemux_parse_iv (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstByteReader * br, guint iv_size, GstStructure * properties)
+{
+  guint8 *data;
+  gboolean could_read_iv;
+  GstBuffer *buf;
+
+  could_read_iv =
+      iv_size > 0 ? gst_byte_reader_dup_data (br, iv_size, &data) : FALSE;
+  if (could_read_iv) {
+    buf = gst_buffer_new_wrapped (data, iv_size);
+    gst_structure_set (properties, "iv", GST_TYPE_BUFFER, buf, NULL);
+    gst_buffer_unref (buf);
+  } else if (stream->protection_scheme_type == FOURCC_cbcs) {
+    const GValue *constant_iv_size_value =
+        gst_structure_get_value (properties, "constant_iv_size");
+    const GValue *constant_iv_value =
+        gst_structure_get_value (properties, "iv");
+    if (constant_iv_size_value == NULL || constant_iv_value == NULL) {
+      GST_ERROR_OBJECT (qtdemux, "failed to get constant_iv");
+      return FALSE;
+    }
+    gst_structure_set_value (properties, "iv_size", constant_iv_size_value);
+    gst_structure_remove_field (properties, "constant_iv_size");
+  } else if (stream->protection_scheme_type == FOURCC_cenc) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 qtdemux_parse_cenc_subsample (GstQTDemux * qtdemux, GstByteReader * br,
     GstStructure * properties, guint sample_index)
 {
@@ -4461,10 +4493,7 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   for (i = 0; i < sample_count; ++i) {
     GstStructure *properties;
-    guint8 *data;
     guint iv_size;
-    GstBuffer *buf;
-    gboolean could_read_iv;
 
     properties = qtdemux_get_cenc_sample_properties (qtdemux, stream, i);
     if (properties == NULL) {
@@ -4476,25 +4505,8 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
       gst_structure_free (properties);
       return FALSE;
     }
-    could_read_iv =
-        iv_size > 0 ? gst_byte_reader_dup_data (br, iv_size, &data) : FALSE;
-    if (could_read_iv) {
-      buf = gst_buffer_new_wrapped (data, iv_size);
-      gst_structure_set (properties, "iv", GST_TYPE_BUFFER, buf, NULL);
-      gst_buffer_unref (buf);
-    } else if (stream->protection_scheme_type == FOURCC_cbcs) {
-      const GValue *constant_iv_size_value =
-          gst_structure_get_value (properties, "constant_iv_size");
-      const GValue *constant_iv_value =
-          gst_structure_get_value (properties, "iv");
-      if (constant_iv_size_value == NULL || constant_iv_value == NULL) {
-        GST_ERROR_OBJECT (qtdemux, "failed to get constant_iv");
-        gst_structure_free (properties);
-        return FALSE;
-      }
-      gst_structure_set_value (properties, "iv_size", constant_iv_size_value);
-      gst_structure_remove_field (properties, "constant_iv_size");
-    } else if (stream->protection_scheme_type == FOURCC_cenc) {
+
+    if (!qtdemux_parse_iv (qtdemux, stream, br, iv_size, properties)) {
       GST_ERROR_OBJECT (qtdemux, "failed to get IV for sample %u", i);
       gst_structure_free (properties);
       return FALSE;
