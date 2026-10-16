@@ -2983,7 +2983,7 @@ GST_START_TEST (test_drop_only_vs_new_pref)
 GST_END_TEST;
 
 static GstPadProbeReturn
-backward_pts_with_caps_change_probe (GstPad * pad, GstPadProbeInfo * info,
+check_buffer_size_probe (GstPad * pad, GstPadProbeInfo * info,
     gint * expected_buffer_size)
 {
   if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
@@ -3044,7 +3044,7 @@ GST_START_TEST (test_backward_pts_with_caps_change)
 
   /* Add probe to validate caps and buffer sequence */
   gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
-      (GstPadProbeCallback) backward_pts_with_caps_change_probe,
+      (GstPadProbeCallback) check_buffer_size_probe,
       &expected_buffer_size, NULL);
 
   state_ret = gst_element_set_state (bin, GST_STATE_PLAYING);
@@ -3434,6 +3434,67 @@ GST_START_TEST (test_reverse_drop_only_timestamp_order)
 
 GST_END_TEST;
 
+/* with new-pref=1.0 a buffer held for variable output keeps its own caps */
+GST_START_TEST (test_new_pref_1_caps_rollback_variable_framerate)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GList *l;
+  gint expected_buffer_size = 0;
+  gint i;
+
+  videorate =
+      setup_videorate_full (&srctemplate, &force_variable_rate_template);
+  g_object_set (videorate, "new-pref", 1.0, NULL);
+  /* fails if a buffer goes out with caps that don't match its size */
+  gst_pad_add_probe (mysinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+      (GstPadProbeCallback) check_buffer_size_probe,
+      &expected_buffer_size, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_caps_set_simple (caps, "expected-size", G_TYPE_INT, 4, NULL);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  for (i = 0; i < 2; i++) {
+    buf = gst_buffer_new_and_alloc (4);
+    gst_buffer_memset (buf, 0, i, 4);
+    GST_BUFFER_PTS (buf) = i * GST_SECOND / 25;
+    GST_BUFFER_DURATION (buf) = GST_SECOND / 25;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  caps = gst_caps_from_string (VIDEO_CAPS_NEWSIZE_STRING);
+  gst_caps_set_simple (caps, "expected-size", G_TYPE_INT, 8, NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  for (i = 2; i < 4; i++) {
+    buf = gst_buffer_new_and_alloc (8);
+    gst_buffer_memset (buf, 0, i, 8);
+    GST_BUFFER_PTS (buf) = i * GST_SECOND / 25;
+    GST_BUFFER_DURATION (buf) = GST_SECOND / 25;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  /* EOS drains the held last buffer */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (g_list_length (buffers), 4);
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), i);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data), i * GST_SECOND / 25);
+  }
+
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -3481,6 +3542,7 @@ videorate_suite (void)
   tcase_add_loop_test (tc_chain, test_reverse_empty_boundary_eos, 0, 3);
   tcase_add_loop_test (tc_chain, test_reverse_boundary_gap, 0, 2);
   tcase_add_test (tc_chain, test_reverse_drop_only_timestamp_order);
+  tcase_add_test (tc_chain, test_new_pref_1_caps_rollback_variable_framerate);
 
   return s;
 }

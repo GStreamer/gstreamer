@@ -2063,7 +2063,8 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
      it's not sure if it must still be pushed save the current caps
      and set the previous caps again */
   if (videorate->prev_caps != videorate->in_caps &&
-      videorate->new_pref < 1.0 && videorate->prevbuf != NULL) {
+      (videorate->new_pref < 1.0 || !videorate->to_rate_numerator) &&
+      videorate->prevbuf != NULL) {
     GST_LOG_OBJECT (videorate, "Restore previous caps %" GST_PTR_FORMAT,
         videorate->prev_caps);
     restore_caps = gst_video_rate_rollback_to_prev_caps_if_needed (videorate);
