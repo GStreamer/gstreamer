@@ -402,6 +402,8 @@ static gboolean gst_qtdemux_activate_segment (GstQTDemux * qtdemux,
 static gboolean gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux,
     QtDemuxStream * stream, gint seg_idx, GstClockTime offset,
     GstClockTime * _start, GstClockTime * _stop);
+static gboolean gst_qtdemux_stream_shrink_crypto_info (GstQTDemux * qtdemux,
+    QtDemuxStream * stream);
 static void gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
     QtDemuxStream * stream, gint segment_index, GstClockTime pos);
 
@@ -4428,8 +4430,6 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
   QtDemuxCencSampleSetInfo *ss_info = NULL;
   guint8 size;
   gint i;
-  GPtrArray *old_crypto_info = NULL;
-  guint old_entries = 0;
 
   g_return_val_if_fail (qtdemux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -4455,37 +4455,8 @@ qtdemux_parse_cenc_aux_info (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 
-  if (ss_info->crypto_info) {
-    old_crypto_info = ss_info->crypto_info;
-    /* Count number of non-null entries remaining at the tail end */
-    for (i = old_crypto_info->len - 1; i >= 0; i--) {
-      if (g_ptr_array_index (old_crypto_info, i) == NULL)
-        break;
-      old_entries++;
-    }
-  }
-
-  /* Don't pre-allocate from the untrusted sample_count, let the array grow */
-  ss_info->crypto_info = g_ptr_array_new_with_free_func ((GDestroyNotify)
-      qtdemux_gst_structure_free);
-
-  /* We preserve old entries because we parse the next moof in advance
-   * of consuming all samples from the previous moof, and otherwise
-   * we'd discard the corresponding crypto info for the samples
-   * from the previous fragment. */
-  if (old_entries) {
-    GST_DEBUG_OBJECT (qtdemux, "Preserving %d old crypto info entries",
-        old_entries);
-    for (i = old_crypto_info->len - old_entries; i < old_crypto_info->len; i++) {
-      g_ptr_array_add (ss_info->crypto_info, g_ptr_array_index (old_crypto_info,
-              i));
-      g_ptr_array_index (old_crypto_info, i) = NULL;
-    }
-  }
-
-  if (old_crypto_info) {
-    /* Everything now belongs to the new array */
-    g_ptr_array_free (old_crypto_info, TRUE);
+  if (!gst_qtdemux_stream_shrink_crypto_info (qtdemux, stream)) {
+    return FALSE;
   }
 
   for (i = 0; i < sample_count; ++i) {
@@ -20885,4 +20856,53 @@ gst_qtdemux_append_protection_system_id (GstQTDemux * qtdemux,
   GST_DEBUG_OBJECT (qtdemux, "Adding cenc protection system ID %s", system_id);
   g_ptr_array_add (qtdemux->protection_system_ids, g_ascii_strdown (system_id,
           -1));
+}
+
+static gboolean
+gst_qtdemux_stream_shrink_crypto_info (GstQTDemux * qtdemux,
+    QtDemuxStream * stream)
+{
+  QtDemuxCencSampleSetInfo *ss_info = NULL;
+  GPtrArray *old_crypto_info = NULL;
+  guint old_entries = 0;
+  guint i;
+
+  g_return_val_if_fail (qtdemux != NULL, FALSE);
+  g_return_val_if_fail (stream != NULL, FALSE);
+  g_return_val_if_fail (stream->protection_scheme_info != NULL, FALSE);
+
+  ss_info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+
+  if (ss_info->crypto_info) {
+    old_crypto_info = ss_info->crypto_info;
+    /* Count number of non-null entries remaining at the tail end */
+    for (i = old_crypto_info->len; i > 0; i--) {
+      if (g_ptr_array_index (old_crypto_info, i - 1) == NULL)
+        break;
+      old_entries++;
+    }
+  }
+
+  /* Don't pre-allocate from the untrusted sample_count, let the array grow */
+  ss_info->crypto_info = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      qtdemux_gst_structure_free);
+
+  /* We preserve old entries because we parse the next moof in advance
+   * of consuming all samples from the previous moof, and otherwise
+   * we'd discard the corresponding crypto info for the samples
+   * from the previous fragment. */
+  if (old_entries) {
+    GST_DEBUG_OBJECT (qtdemux, "Preserving %u old crypto info entries",
+        old_entries);
+    for (i = old_crypto_info->len - old_entries; i < old_crypto_info->len; i++) {
+      g_ptr_array_add (ss_info->crypto_info, g_ptr_array_index (old_crypto_info,
+              i));
+      g_ptr_array_index (old_crypto_info, i) = NULL;
+    }
+  }
+
+  /* Everything now belongs to the new array */
+  g_clear_pointer (&old_crypto_info, g_ptr_array_unref);
+
+  return TRUE;
 }
