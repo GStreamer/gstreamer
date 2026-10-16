@@ -53,7 +53,7 @@ extern "C" fn ape_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // SHN - audio/x-shorten
-// Magic `ajkg` @ 0 or `SHNAMPSK` at file tail (−8).
+// Magic `ajkg` @ 0 or `SHNAMPSK` at file tail (-8).
 extern "C" fn shn_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"ajkg") {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-shorten");
@@ -303,7 +303,7 @@ extern "C" fn amr_wb_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // MVE - video/x-mve
-// "Interplay MVE File" (18 bytes) + 1a 00 1a 00 00 01 33 11 @18–25.
+// "Interplay MVE File" (18 bytes) + 1a 00 1a 00 00 01 33 11 @18-25.
 const MVE_MAGIC: [u8; 26] = [
     b'I', b'n', b't', b'e', b'r', b'p', b'l', b'a', b'y', b' ', b'M', b'V', b'E', b' ', b'F', b'i',
     b'l', b'e', 0x1a, 0x00, 0x1a, 0x00, 0x00, 0x01, 0x33, 0x11,
@@ -731,7 +731,7 @@ extern "C" fn jpeg_type_find(tf: &mut TypeFind, _private: gpointer) {
             break;
         }
         let marker = seg[1];
-        // TEM, RST0–7, SOI and EOI carry no length.
+        // TEM, RST0-7, SOI and EOI carry no length.
         if marker == 0x01 || (0xd0..=0xd9).contains(&marker) {
             scan.consume(2);
             continue;
@@ -855,7 +855,7 @@ extern "C" fn film_cpk_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // ID3v2 - application/x-id3
-// `ID3` @ 0; bytes 3–4 not 0xFF; top bit clear in size bytes 6–9.
+// `ID3` @ 0; bytes 3-4 not 0xFF; top bit clear in size bytes 6-9.
 extern "C" fn id3v2_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<10>(0)
         && data[..3] == *b"ID3"
@@ -871,7 +871,7 @@ extern "C" fn id3v2_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // ID3v1 - application/x-id3
-// `TAG` at −128 (file end).
+// `TAG` at -128 (file end).
 extern "C" fn id3v1_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek_var(-128, 3)
         && data == *b"TAG"
@@ -881,7 +881,7 @@ extern "C" fn id3v1_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // APE tag - application/x-apetag
-// `APETAGEX` @ 0 or at file tail (−32).
+// `APETAGEX` @ 0 or at file tail (-32).
 extern "C" fn apetag_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"APETAGEX") || tf.peek_var(-32, 8).is_some_and(|d| d == *b"APETAGEX") {
         suggest!(tf, Prob::MAXIMUM, c"application/x-apetag");
@@ -907,7 +907,7 @@ extern "C" fn theora_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // Ogg Skeleton - application/x-ogg-skeleton
-// `fishead\0` @ 0; u16 LE version == 3.0 at offsets 8–12.
+// `fishead\0` @ 0; u16 LE version == 3.0 at offsets 8-12.
 extern "C" fn oggskel_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek::<12>(0)
         && data[..8] == *b"fishead\0"
