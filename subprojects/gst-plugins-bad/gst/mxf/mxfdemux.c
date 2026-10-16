@@ -220,7 +220,7 @@ gst_mxf_demux_reset_linked_metadata (GstMXFDemux * demux)
         g_ptr_array_index (demux->essence_tracks, i);
 
     track->source_package = NULL;
-    track->delta_id = -1;
+    track->delta_id = MXF_INDEX_DELTA_ID_UNKNOWN;
     track->source_track = NULL;
   }
 
@@ -942,7 +942,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       etrack->source_package = NULL;
       etrack->source_track = NULL;
-      etrack->delta_id = -1;
+      etrack->delta_id = MXF_INDEX_DELTA_ID_UNKNOWN;
 
       if (!track->parent.sequence) {
         GST_WARNING_OBJECT (demux, "Source track has no sequence");
@@ -2217,6 +2217,17 @@ have_new_essence_track_index_entry (GstMXFDemux * demux,
   g_array_insert_val (etrack->offsets, position, *entry);
 }
 
+/* @delta_id might come from a segment with more delta entries than @segment */
+static MXFDeltaEntry *
+get_delta_entry (MXFIndexTableSegment * segment, gint32 delta_id)
+{
+  if (G_UNLIKELY (delta_id < 0
+          || delta_id >= (gint32) segment->n_delta_entries))
+    return NULL;
+
+  return &segment->delta_entries[delta_id];
+}
+
 /**
  * find_edit_entry:
  * @demux: The demuxer
@@ -2377,10 +2388,12 @@ search_in_segment:
 
   /* Figure out the stream offset (also called "body offset" in specification) */
   if (segment->edit_unit_byte_count && !segment->n_index_entries) {
+    MXFDeltaEntry *delta_entry;
+
     /* Constant entry table. */
     stream_offset = position * segment->edit_unit_byte_count;
-    if (etrack->delta_id >= 0) {
-      MXFDeltaEntry *delta_entry = &segment->delta_entries[etrack->delta_id];
+    delta_entry = get_delta_entry (segment, etrack->delta_id);
+    if (delta_entry) {
       GST_LOG_OBJECT (demux,
           "Using delta %d pos_table_index:%d slice:%u element_delta:%u",
           etrack->delta_id, delta_entry->pos_table_index, delta_entry->slice,
@@ -2415,8 +2428,7 @@ search_in_segment:
         &segment->index_entries[position - segment->index_start_position];
     stream_offset = segment_index_entry->stream_offset;
 
-    if (segment->n_delta_entries > 0)
-      delta_entry = &segment->delta_entries[etrack->delta_id];
+    delta_entry = get_delta_entry (segment, etrack->delta_id);
 
     if (delta_entry) {
       GST_LOG_OBJECT (demux,
@@ -2435,7 +2447,7 @@ search_in_segment:
     }
 
     /* Apply reverse temporal reordering if present */
-    if (index_table->reordered_delta_entry == etrack->delta_id) {
+    if (delta_entry && index_table->reordered_delta_entry == etrack->delta_id) {
       if (demux->temporal_order_misuse) {
         GST_DEBUG_OBJECT (demux, "Handling temporal order misuse");
         entry->pts = position + segment_index_entry->temporal_offset;
@@ -2451,8 +2463,9 @@ search_in_segment:
             "Applied temporal offset. dts:%" G_GUINT64_FORMAT " pts:%"
             G_GUINT64_FORMAT, position, entry->pts);
       }
-    } else
+    } else {
       entry->pts = position;
+    }
   } else {
     /* Note : This should have been handled in the parser */
     GST_WARNING_OBJECT (demux,
@@ -2711,8 +2724,8 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
           "Couldn't match delta id, ignoring it from now on");
       etrack->delta_id = MXF_INDEX_DELTA_ID_IGNORE;
     }
-  } else if (index_segment->n_delta_entries > 0) {
-    delta_entry = &index_segment->delta_entries[etrack->delta_id];
+  } else {
+    delta_entry = get_delta_entry (index_segment, etrack->delta_id);
   }
 
   if (index_entry && delta_entry && delta_entry->pos_table_index == -1) {
