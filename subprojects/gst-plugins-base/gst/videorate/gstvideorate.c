@@ -968,10 +968,15 @@ gst_video_rate_swap_prev (GstVideoRate * videorate, GstBuffer * buffer,
 
   videorate->prev_ts = time;
 
+  /* drop-only pushes are handled in _transform_ip() */
+  if (videorate->drop_only || !buffer ||
+      (first_buf && videorate->new_pref < 1.0))
+    return;
+
   /* and push out as many copies of the new buffer as possible */
   GST_LOG_OBJECT (videorate,
       "swap_prev: try pushing new buffer %p as often as possible", buffer);
-  while (!first_buf && buffer && gst_video_rate_past_buffer (videorate)) {
+  while (gst_video_rate_past_buffer (videorate)) {
     GST_LOG_OBJECT (videorate,
         "next %" GST_TIME_FORMAT " vs latest %"
         GST_TIME_FORMAT, GST_TIME_ARGS (videorate->next_output_ts),
