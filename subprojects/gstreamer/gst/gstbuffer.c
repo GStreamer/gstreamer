@@ -2596,7 +2596,7 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
  * gst_buffer_extract_dup:
  * @buffer: a #GstBuffer
  * @offset: the offset to extract
- * @size: the size to extract
+ * @size: the size to extract, G_MAXSIZE (-1) for all data after @offset
  * @dest: (array length=dest_size) (element-type guint8) (out): A pointer where
  *  the destination array will be written. Might be %NULL if the size is 0.
  * @dest_size: (out): A location where the size of @dest can be written
@@ -2621,7 +2621,7 @@ gst_buffer_extract_dup (GstBuffer * buffer, gsize offset, gsize size,
     *dest_size = 0;
   } else {
     *dest = g_malloc (alloc_size);
-    *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
+    *dest_size = gst_buffer_extract (buffer, offset, *dest, alloc_size);
   }
 }
 
