@@ -2933,6 +2933,55 @@ GST_START_TEST (test_drop_only_ref_count)
 
 GST_END_TEST;
 
+/* checks drop-only output of 50fps input with the given new-pref */
+static void
+check_drop_only (gdouble new_pref)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GList *l;
+  gint i;
+
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  g_object_set (videorate, "drop-only", TRUE, "new-pref", new_pref, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 50, 1, NULL);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  for (i = 0; i < 8; i++) {
+    buf = gst_buffer_new_and_alloc (4);
+    gst_buffer_memset (buf, 0, i, 4);
+    GST_BUFFER_PTS (buf) = i * GST_SECOND / 50;
+    GST_BUFFER_DURATION (buf) = GST_SECOND / 50;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  /* every second frame of the 50fps input goes out at 25fps */
+  fail_unless_equals_int (g_list_length (buffers), 4);
+  for (l = buffers, i = 0; l; l = l->next, i += 2) {
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), i);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data), i * GST_SECOND / 50);
+  }
+
+  cleanup_videorate (videorate);
+}
+
+/* drop-only gives the same output with any new-pref */
+GST_START_TEST (test_drop_only_vs_new_pref)
+{
+  check_drop_only (0.0);
+  check_drop_only (0.5);
+  check_drop_only (1.0);
+}
+
+GST_END_TEST;
+
 static GstPadProbeReturn
 backward_pts_with_caps_change_probe (GstPad * pad, GstPadProbeInfo * info,
     gint * expected_buffer_size)
@@ -3424,6 +3473,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_update_reverse_backwards_rt);
   tcase_add_test (tc_chain, test_segment_update_direction_continuous_rt);
   tcase_add_test (tc_chain, test_drop_only_ref_count);
+  tcase_add_test (tc_chain, test_drop_only_vs_new_pref);
   tcase_add_test (tc_chain, test_backward_pts_with_caps_change);
   tcase_add_loop_test (tc_chain, test_reverse_frames, 0,
       2 * G_N_ELEMENTS (reverse_framerates));
