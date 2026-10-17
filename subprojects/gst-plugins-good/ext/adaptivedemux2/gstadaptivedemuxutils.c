@@ -311,8 +311,10 @@ gst_adaptive_demux_loop_pause_and_lock (GstAdaptiveDemuxLoop * loop)
     g_rec_mutex_lock (&loop->context_lock);
   }
 
-  if (!loop->context)
+  if (!loop->context) {
+    g_rec_mutex_unlock (&loop->context_lock);
     return FALSE;
+  }
   g_main_context_push_thread_default (loop->context);
 
   return TRUE;

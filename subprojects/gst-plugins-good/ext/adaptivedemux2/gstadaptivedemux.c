@@ -770,7 +770,9 @@ gst_adaptive_demux_change_state (GstElement * element,
         GST_DEBUG_OBJECT (demux, "demuxer has stopped running");
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
+      GST_MANIFEST_UNLOCK (demux);
 
       gst_adaptive_demux_loop_start (demux->priv->scheduler_task);
       if (g_atomic_int_get (&demux->priv->have_manifest))
@@ -792,6 +794,14 @@ gst_adaptive_demux_change_state (GstElement * element,
       downloadhelper_start (demux->download_helper);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* Stop the streams first. This wakes any thread waiting in
+       * gst_adaptive_demux2_stream_wait_prepared() so that it can release the
+       * scheduler and manifest locks before we stop the loop and take them. */
+      TRACKS_LOCK (demux);
+      g_queue_foreach (demux->priv->periods,
+          (GFunc) gst_adaptive_demux_period_stop_tasks, NULL);
+      TRACKS_UNLOCK (demux);
+
       gst_adaptive_demux_loop_stop (demux->priv->scheduler_task, TRUE);
       downloadhelper_stop (demux->download_helper);
 
@@ -803,7 +813,9 @@ gst_adaptive_demux_change_state (GstElement * element,
 
       gst_task_join (demux->priv->output_task);
 
+      GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
+      GST_MANIFEST_UNLOCK (demux);
       break;
     default:
       break;
