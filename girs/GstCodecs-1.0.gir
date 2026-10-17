@@ -849,6 +849,30 @@ the @system_frame_number</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_gap_field_aware" c:identifier="gst_h264_decoder_set_gap_field_aware" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.c">Allows completing an incomplete field picture with a non-existing gap field.
+The subclass must support output without decoding the missing complementary
+field in the backend and handle non-existing fields in reference pictures.
+
+If disabled, an incomplete field picture and its associated frame are
+discarded when the complementary field is missing.
+
+Defaults to %FALSE.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.c">a #GstH264Decoder</doc>
+            <type name="H264Decoder" c:type="GstH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="aware" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.c">whether subclass supports gap fields</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_process_ref_pic_lists" c:identifier="gst_h264_decoder_set_process_ref_pic_lists" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.c">Called to en/disable reference picture modification process.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
