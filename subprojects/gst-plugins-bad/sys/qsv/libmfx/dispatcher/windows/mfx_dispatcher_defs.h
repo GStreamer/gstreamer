@@ -17,7 +17,7 @@
 #define MAX_PLUGIN_PATH 4096
 #define MAX_PLUGIN_NAME 4096
 
-#if _MSC_VER < 1400
+#if defined(_MSC_VER) && _MSC_VER < 1400
     #define wcscpy_s(to, to_size, from) \
         (void)(to_size);                \
         wcscpy(to, from)
