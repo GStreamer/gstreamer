@@ -2243,7 +2243,7 @@ GstH265ParserResult
 gst_h265_parser_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
     GstH265SPS * sps, gboolean parse_vui_params)
 {
-  GstH265SPSEXT sps_ext;
+  GstH265SPSEXT sps_ext = { 0 };
 
   return gst_h265_parser_parse_sps_ext (parser, nalu, sps, &sps_ext,
       parse_vui_params);
@@ -3368,7 +3368,7 @@ GstH265ParserResult
 gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
     GstH265NalUnit * nalu, GstH265SliceHdr * slice)
 {
-  GstH265SPSEXT sps_ext;
+  GstH265SPSEXT sps_ext = { 0 };
 
   return gst_h265_parser_parse_slice_hdr_ext (parser, nalu, slice, &sps_ext);
 }
