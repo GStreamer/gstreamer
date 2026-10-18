@@ -267,6 +267,27 @@ again:
 
   cmd_buf = raw->exec->cmd_buf;
 
+  GstVulkanImageMemory *vkmem =
+      (GstVulkanImageMemory *) gst_buffer_peek_memory (inbuf, 0);
+
+  if (!gst_is_vulkan_image_memory (GST_MEMORY_CAST (vkmem))) {
+    GST_ERROR_OBJECT (raw->download, "Input buffer has no Vulkan image memory");
+    goto unlock_error;
+  }
+
+  if (vkmem->timeline_semaphore) {
+    GstVulkanBarrierImageInfo info = { 0, };
+
+    gst_vulkan_image_memory_lock (vkmem);
+    gst_vulkan_image_memory_peek_barrier_unlocked (vkmem, &info);
+    gst_vulkan_image_memory_unlock (vkmem);
+
+    gst_vulkan_operation_update_frame (raw->exec, inbuf,
+        info.parent.pipeline_stages, 0 /* VK_ACCESS_NONE */ ,
+        info.image_layout, NULL);
+    gst_vulkan_barrier_image_info_clear (&info);
+  }
+
   if (!gst_vulkan_operation_add_frame_barrier (raw->exec, inbuf,
           VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
           VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
