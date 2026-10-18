@@ -314,7 +314,7 @@ gst_object_detection_overlay_class_init (GstObjectDetectionOverlayClass * klass)
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class,
       "Object Detection Overlay",
-      "Analyzer/Visualization/Video",
+      "Analyzer/Video/Overlay",
       "Overlay a visual representation of analytics metadata on the video",
       "Daniel Morin");
 
