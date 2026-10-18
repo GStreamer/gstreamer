@@ -1950,7 +1950,7 @@ gst_h265_parse_vps_extension_params (GstH265VPS * vps, NalReader * nr)
 
   if (vps->max_layers_minus1 > 0 && vps->base_layer_internal_flag) {
     /* TODO: expose this extra PTL if needed */
-    GstH265ProfileTierLevel ptl;
+    GstH265ProfileTierLevel ptl = { 0 };
     if (!gst_h265_parse_profile_tier_level (&ptl,
             nr, FALSE, vps->max_sub_layers_minus1)) {
       goto error;
