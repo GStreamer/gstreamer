@@ -902,7 +902,12 @@ gst_static_pad_compare_func (gconstpointer p1, gconstpointer p2)
   pt1 = (GstStaticPadTemplate *) p1;
   pt2 = (GstStaticPadTemplate *) p2;
 
-  return strcmp (pt1->name_template, pt2->name_template);
+  if (pt1->direction < pt2->direction)
+    return 1;
+  else if (pt1->direction > pt2->direction)
+    return -1;
+  else
+    return strcmp (pt1->name_template, pt2->name_template);
 }
 
 
