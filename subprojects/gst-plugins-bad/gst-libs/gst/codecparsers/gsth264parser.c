@@ -2350,10 +2350,33 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
     } else if (pps->slice_group_map_type == 6) {
       gint bits;
       gint i;
+      guint64 pic_size_in_map_units;
 
-      READ_UE (&nr, pps->pic_size_in_map_units_minus1);
+      /* 7.4.2.2: pic_size_in_map_units_minus1 shall be equal to
+       * PicSizeInMapUnits - 1. Bound it by the SPS picture size so a crafted
+       * PPS can not request a ~4 GiB slice_group_id allocation. Compute in
+       * 64 bits since the SPS fields are unbounded ue(v) values. */
+      pic_size_in_map_units = (guint64) (sps->pic_width_in_mbs_minus1 + 1) *
+          (guint64) (sps->pic_height_in_map_units_minus1 + 1);
+      if (pic_size_in_map_units == 0 || pic_size_in_map_units > G_MAXINT32) {
+        GST_WARNING ("invalid PicSizeInMapUnits %" G_GUINT64_FORMAT,
+            pic_size_in_map_units);
+        goto error;
+      }
+      READ_UE_MAX (&nr, pps->pic_size_in_map_units_minus1,
+          (guint32) (pic_size_in_map_units - 1));
       /* 7.4.2.2 7-23 slice_group_id */
       bits = gst_util_ceil_log2 (pps->num_slice_groups_minus1 + 1);
+
+      /* The SPS is attacker controlled as well, so also make sure the NAL
+       * actually carries enough bits for every slice_group_id entry before
+       * allocating. bits is >= 1 here since num_slice_groups_minus1 > 0. */
+      if ((guint64) (pps->pic_size_in_map_units_minus1 + 1) * bits >
+          nal_reader_get_remaining (&nr)) {
+        GST_WARNING ("not enough data for %u slice_group_id entries",
+            pps->pic_size_in_map_units_minus1 + 1);
+        goto error;
+      }
 
       pps->slice_group_id =
           g_new (guint8, pps->pic_size_in_map_units_minus1 + 1);
