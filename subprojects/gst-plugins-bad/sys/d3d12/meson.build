@@ -162,7 +162,7 @@ if not d3d12_wgc_option.disabled()
     #include<windows.h>
     #include<winstring.h>
     #include<roapi.h>
-    #include<windows.graphics.capture.h>,
+    #include<windows.graphics.capture.h>
     #include<windows.graphics.capture.interop.h>
     #include<windows.graphics.directx.direct3d11.h>
     #include<windows.graphics.directx.direct3d11.interop.h>
@@ -174,6 +174,14 @@ if not d3d12_wgc_option.disabled()
     ComPtr<IGraphicsCaptureSession> session;
     ComPtr<IGraphicsCaptureSession2> session2;
     ComPtr<IGraphicsCaptureSession3> session3;
+    typedef ABI::Windows::Foundation::__FITypedEventHandler_2_Windows__CGraphics__CCapture__CDirect3D11CaptureFramePool_IInspectable_t
+        IFrameArrivedHandler;
+    typedef ABI::Windows::Foundation::__FITypedEventHandler_2_Windows__CGraphics__CCapture__CGraphicsCaptureItem_IInspectable_t
+        IItemClosedHandler;
+    class WgcHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+        FtmBase, IFrameArrivedHandler, IItemClosedHandler>
+    {
+    };
     ''',
     name: 'Windows Graphics Capture support in Windows SDK')
 
