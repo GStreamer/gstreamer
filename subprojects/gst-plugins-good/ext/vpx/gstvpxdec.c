@@ -104,6 +104,7 @@ static gboolean gst_vpx_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_vpx_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean gst_vpx_dec_flush (GstVideoDecoder * decoder);
+static GstFlowReturn gst_vpx_dec_drain (GstVideoDecoder * decoder);
 static GstFlowReturn
 gst_vpx_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
@@ -170,6 +171,7 @@ gst_vpx_dec_class_init (GstVPXDecClass * klass)
   base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vpx_dec_start);
   base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vpx_dec_stop);
   base_video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vpx_dec_flush);
+  base_video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_vpx_dec_drain);
   base_video_decoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_vpx_dec_set_format);
   base_video_decoder_class->handle_frame =
@@ -366,6 +368,15 @@ gst_vpx_dec_flush (GstVideoDecoder * base_video_decoder)
   decoder->decoder_inited = FALSE;
 
   return TRUE;
+}
+
+static GstFlowReturn
+gst_vpx_dec_drain (GstVideoDecoder * decoder)
+{
+  /* Supported libvpx versions return decoded frames synchronously. All
+   * available output is retrieved in handle_frame(), so there are no pending
+   * frames to drain. */
+  return GST_FLOW_OK;
 }
 
 static void
