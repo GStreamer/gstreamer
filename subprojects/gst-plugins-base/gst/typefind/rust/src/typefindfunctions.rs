@@ -2287,18 +2287,8 @@ extern "C" fn itc_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Registration table and entry point
 // =============================================================================
 
-/// Registration table: one entry per typefinder.
-/// The `typefinder!` macro expands to a `Feature` tuple.
-///
-/// Signatures:
-/// - `typefinder!("mime/type", RANK, func_name)` - no extensions
-/// - `typefinder!("mime/type", RANK, func_name, "exts")` - with extensions
-/// - `typefinder!("mime/type", RANK, func_name, "exts", "custom caps")` - custom caps
-///
-/// - `"mime/type"`  – feature name and default caps
-/// - `RANK`         – PRIMARY, SECONDARY, MARGINAL (or offset like PRIMARY+103)
-/// - `func_name`    – the typefind function, or `none` for extension-only registration
-/// - `"exts"`       – comma-separated extensions string (optional)
+/// Registration table: one entry per typefinder. See the `typefinder!` macro
+/// for the signatures and what each argument means.
 const FEATURES: &[Feature] = &[
     // Trivial finders - magic bytes only
     typefinder!(
@@ -2429,7 +2419,6 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/x-kss", SECONDARY, kss_type_find, "kss"),
     typefinder!("application/pdf", SECONDARY, pdf_type_find, "pdf"),
     typefinder!("application/msword", SECONDARY, doc_type_find, "doc"),
-    // RIFF variants
     typefinder!("video/x-4xm", PRIMARY, fourxm_type_find),
     typefinder!(
         "application/postscript",
@@ -2437,6 +2426,7 @@ const FEATURES: &[Feature] = &[
         postscript_type_find,
         "ps"
     ),
+    // RIFF variants
     typefinder!("video/x-msvideo", PRIMARY, avi_type_find, "avi,avf"),
     typefinder!("audio/qcelp", PRIMARY, qcp_type_find, "qcp"),
     typefinder!("video/x-cdxa", PRIMARY, cdxa_type_find, "dat"),
