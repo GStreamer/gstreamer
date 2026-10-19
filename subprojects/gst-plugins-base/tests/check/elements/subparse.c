@@ -43,6 +43,30 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 static GstElement *subparse;
 static GstPad *mysrcpad, *mysinkpad;
+static GList *sink_events;
+
+static gboolean
+store_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  sink_events = g_list_append (sink_events, event);
+  return TRUE;
+}
+
+static gboolean
+reject_time_seek_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
+    GstFormat format;
+
+    gst_event_parse_seek (event, NULL, &format, NULL, NULL, NULL, NULL, NULL);
+    if (format != GST_FORMAT_BYTES) {
+      gst_event_unref (event);
+      return FALSE;
+    }
+  }
+  gst_event_unref (event);
+  return TRUE;
+}
 
 static GstBuffer *
 buffer_from_static_string (const gchar * s)
@@ -236,6 +260,9 @@ teardown_subparse (void)
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
   buffers = NULL;
+
+  g_list_free_full (sink_events, (GDestroyNotify) gst_event_unref);
+  sink_events = NULL;
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
@@ -1220,6 +1247,123 @@ GST_START_TEST (test_lrc)
 
 GST_END_TEST;
 
+static void
+do_test_eos_gap_for_uncovered_seek_segment (const gchar * input)
+{
+  GstEvent *event;
+  GstSegment segment;
+  GstBuffer *buf;
+  GList *l;
+  gboolean found_gap = FALSE;
+  gboolean found_time_segment = FALSE;
+
+  setup_subparse ();
+  gst_pad_set_event_function (mysinkpad, store_sink_event);
+  gst_pad_set_event_function (mysrcpad, reject_time_seek_event);
+
+  buf = buffer_from_static_string (input);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  /* the pipeline seeks into a window driven past the subtitle cue. */
+  event = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_SET, 10 * GST_SECOND, GST_SEEK_TYPE_SET, 20 * GST_SECOND);
+  fail_unless (gst_pad_push_event (mysinkpad, event));
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE)));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* EOS */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  for (l = sink_events; l != NULL; l = l->next) {
+    GstEvent *e = l->data;
+
+    if (GST_EVENT_TYPE (e) == GST_EVENT_SEGMENT) {
+      const GstSegment *s;
+
+      gst_event_parse_segment (e, &s);
+      if (s->format == GST_FORMAT_TIME && s->start == 10 * GST_SECOND)
+        found_time_segment = TRUE;
+    } else if (GST_EVENT_TYPE (e) == GST_EVENT_GAP) {
+      GstClockTime timestamp, duration;
+
+      fail_unless (found_time_segment, "GAP sent before the seek segment");
+
+      gst_event_parse_gap (e, &timestamp, &duration);
+      fail_unless_equals_uint64 (timestamp, 10 * GST_SECOND);
+      fail_unless (duration == GST_CLOCK_TIME_NONE
+          || timestamp + duration >= 20 * GST_SECOND);
+      found_gap = TRUE;
+    }
+  }
+
+  fail_unless (found_gap, "subparse did not send a GAP event for the "
+      "uncovered seek segment before EOS");
+
+  teardown_subparse ();
+}
+
+GST_START_TEST (test_eos_sends_gap_for_uncovered_seek_segment)
+{
+  do_test_eos_gap_for_uncovered_seek_segment
+      ("1\n00:00:01,000 --> 00:00:02,000\nOne\n\n");
+}
+
+GST_END_TEST;
+
+/* formats that don't need their last chunk forced out on EOS */
+GST_START_TEST (test_eos_sends_gap_for_uncovered_seek_segment_lrc)
+{
+  do_test_eos_gap_for_uncovered_seek_segment ("[00:01.00]One\n");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_eos_sends_gap_for_uncovered_seek_segment_sami)
+{
+  do_test_eos_gap_for_uncovered_seek_segment
+      ("<SAMI>\n<BODY>\n<SYNC Start=1000>\n<P>One\n</BODY>\n</SAMI>\n");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_eos_gap_starts_after_last_subtitle)
+{
+  GstBuffer *buf;
+  GList *l;
+  gboolean found_gap = FALSE;
+
+  setup_subparse ();
+  gst_pad_set_event_function (mysinkpad, store_sink_event);
+
+  /* no trailing empty line: the cue is only pushed out on EOS */
+  buf = buffer_from_static_string ("1\n00:00:01,000 --> 00:00:02,000\nOne");
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  for (l = sink_events; l != NULL; l = l->next) {
+    GstEvent *e = l->data;
+
+    if (GST_EVENT_TYPE (e) == GST_EVENT_GAP) {
+      GstClockTime timestamp, duration;
+
+      gst_event_parse_gap (e, &timestamp, &duration);
+      fail_unless_equals_uint64 (timestamp, 2 * GST_SECOND);
+      fail_unless (duration == GST_CLOCK_TIME_NONE);
+      found_gap = TRUE;
+    }
+  }
+
+  fail_unless (found_gap);
+
+  teardown_subparse ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_raw_conversion)
 {
   GstHarness *h;
@@ -1288,6 +1432,10 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_sami_split_tag);
   tcase_add_test (tc_chain, test_lrc);
   tcase_add_test (tc_chain, test_raw_conversion);
+  tcase_add_test (tc_chain, test_eos_sends_gap_for_uncovered_seek_segment);
+  tcase_add_test (tc_chain, test_eos_sends_gap_for_uncovered_seek_segment_lrc);
+  tcase_add_test (tc_chain, test_eos_sends_gap_for_uncovered_seek_segment_sami);
+  tcase_add_test (tc_chain, test_eos_gap_starts_after_last_subtitle);
   return s;
 }
 
