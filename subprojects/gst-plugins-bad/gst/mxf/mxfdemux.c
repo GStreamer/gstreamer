@@ -1052,7 +1052,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
           etrack->min_edit_units =
               gst_util_uint64_scale (25 * GST_MSECOND, track->edit_rate.n,
               track->edit_rate.d * GST_SECOND);
-          GST_DEBUG_OBJECT (demux, "Seting miminum number of edit units to %u",
+          GST_DEBUG_OBJECT (demux, "Setting minimum number of edit units to %u",
               etrack->min_edit_units);
         }
       }
@@ -1066,7 +1066,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       if (package->is_interleaved) {
         GST_DEBUG_OBJECT (demux,
-            "track comes from interleaved source package with %u track(s), setting delta_id to -1",
+            "track comes from interleaved source package with %u track(s), setting delta_id to UNKNOWN",
             package->parent.n_tracks);
         if (etrack->wrapping != MXF_ESSENCE_WRAPPING_FRAME_WRAPPING) {
           GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
