@@ -2460,6 +2460,7 @@ gst_matroska_mux_audio_pad_setcaps (GstMatroskaMux * mux,
     guint16 format = 0;
     gint block_align = 0;
     gint bitrate = 0;
+    guint16 bits_per_sample = 0;
 
     if (samplerate == 0 || channels == 0) {
       GST_WARNING_OBJECT (mux, "Missing channels/samplerate on caps");
@@ -2498,13 +2499,14 @@ gst_matroska_mux_audio_pad_setcaps (GstMatroskaMux * mux,
     } else if (!strcmp (mimetype, "audio/x-alaw")
         || !strcmp (mimetype, "audio/x-mulaw")) {
       audiocontext->bitdepth = 8;
+      bits_per_sample = 8;
       if (!strcmp (mimetype, "audio/x-alaw"))
         format = GST_RIFF_WAVE_FORMAT_ALAW;
       else
         format = GST_RIFF_WAVE_FORMAT_MULAW;
 
       block_align = channels;
-      bitrate = block_align * samplerate;
+      bitrate = block_align * samplerate * 8;
     } else if (!strcmp (mimetype, "audio/x-adpcm")) {
       const char *layout;
 
@@ -2548,7 +2550,7 @@ gst_matroska_mux_audio_pad_setcaps (GstMatroskaMux * mux,
     GST_WRITE_UINT32_LE (codec_priv + 4, samplerate);
     GST_WRITE_UINT32_LE (codec_priv + 8, bitrate / 8);
     GST_WRITE_UINT16_LE (codec_priv + 12, block_align);
-    GST_WRITE_UINT16_LE (codec_priv + 14, 0);
+    GST_WRITE_UINT16_LE (codec_priv + 14, bits_per_sample);
     if (buf)
       GST_WRITE_UINT16_LE (codec_priv + 16, gst_buffer_get_size (buf));
     else
