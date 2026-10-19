@@ -68,8 +68,8 @@ GST_DEBUG_CATEGORY_STATIC (level_debug);
 #define EPSILON 1e-35f
 
 #define ALLOWED_CAPS "audio/x-raw, " \
-        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32) \
-        ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " }," \
+        "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S24) \
+        ", " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " }," \
         "layout = (string) interleaved, " \
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]"
 
@@ -365,6 +365,39 @@ DEFINE_INT_LEVEL_CALCULATOR (gint32, 31);
 DEFINE_INT_LEVEL_CALCULATOR (gint16, 15);
 DEFINE_INT_LEVEL_CALCULATOR (gint8, 7);
 
+/* 24 bit packed samples, 3 bytes per sample */
+static void inline
+gst_level_calculate_gint24 (gpointer data, guint num, guint channels,
+    gdouble * NCS, gdouble * NPS)
+{
+  guint8 *in = (guint8 *) data;
+  guint j;
+  guint32 raw;
+  gint32 sample;
+  gdouble squaresum = 0.0;      /* square sum of the input samples */
+  gdouble square = 0.0;         /* Square */
+  gdouble peaksquare = 0.0;     /* Peak Square Sample */
+  gdouble normalizer;           /* divisor to get a [-1.0, 1.0] range */
+
+  for (j = 0; j < num; j += channels) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    raw = GST_READ_UINT24_LE (in + j * 3);
+#else
+    raw = GST_READ_UINT24_BE (in + j * 3);
+#endif
+    /* sign extend */
+    sample = (gint32) (raw ^ 0x800000) - 0x800000;
+    square = ((gdouble) sample) * sample;
+    if (square > peaksquare)
+      peaksquare = square;
+    squaresum += square;
+  }
+
+  normalizer = (gdouble) (G_GINT64_CONSTANT (1) << (23 * 2));
+  *NCS = squaresum / normalizer;
+  *NPS = peaksquare / normalizer;
+}
+
 /* FIXME: use orc to calculate squaresums? */
 #define DEFINE_FLOAT_LEVEL_CALCULATOR(TYPE)                                   \
 static void inline                                                            \
@@ -443,6 +476,9 @@ gst_level_setup (GstAudioFilter * filter, const GstAudioInfo * info)
       break;
     case GST_AUDIO_FORMAT_S16:
       level->process = gst_level_calculate_gint16;
+      break;
+    case GST_AUDIO_FORMAT_S24:
+      level->process = gst_level_calculate_gint24;
       break;
     case GST_AUDIO_FORMAT_S32:
       level->process = gst_level_calculate_gint32;

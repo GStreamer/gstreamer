@@ -9035,12 +9035,12 @@
                 "long-name": "Level",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { S8, S16LE, S32LE, F32LE, F64LE }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { S8, S16LE, S24LE, S32LE, F32LE, F64LE }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { S8, S16LE, S32LE, F32LE, F64LE }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { S8, S16LE, S24LE, S32LE, F32LE, F64LE }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
