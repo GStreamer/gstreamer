@@ -34,7 +34,8 @@ static GstPad *mysrcpad, *mysinkpad;
 
 #define LEVEL_CAPS_TEMPLATE_STRING \
   "audio/x-raw, " \
-    "format = (string) { "GST_AUDIO_NE(S16)", "GST_AUDIO_NE(F32)" }, " \
+    "format = (string) { "GST_AUDIO_NE(S16)", "GST_AUDIO_NE(S24)", " \
+    GST_AUDIO_NE(F32)" }, " \
     "layout = (string) interleaved, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ]"
@@ -43,6 +44,14 @@ static GstPad *mysrcpad, *mysinkpad;
 #define LEVEL_S16_CAPS_STRING \
   "audio/x-raw, " \
     "format = (string) "GST_AUDIO_NE(S16)", " \
+    "layout = (string) interleaved, " \
+    "rate = (int) 1000, " \
+    "channels = (int) 2, "  \
+    "channel-mask = (bitmask) 3"
+
+#define LEVEL_S24_CAPS_STRING \
+  "audio/x-raw, " \
+    "format = (string) "GST_AUDIO_NE(S24)", " \
     "layout = (string) interleaved, " \
     "rate = (int) 1000, " \
     "channels = (int) 2, "  \
@@ -115,6 +124,31 @@ create_s16_buffer (gint16 val_l, gint16 val_r)
   for (j = 0; j < 100; ++j) {
     *(data++) = val_l;
     *(data++) = val_r;
+  }
+  gst_buffer_unmap (buf, &map);
+  GST_BUFFER_TIMESTAMP (buf) = G_GUINT64_CONSTANT (0);
+  return buf;
+}
+
+static GstBuffer *
+create_s24_buffer (gint32 val_l, gint32 val_r)
+{
+  GstBuffer *buf = gst_buffer_new_and_alloc (2 * 100 * 3);
+  GstMapInfo map;
+  gint j;
+  guint8 *data;
+
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
+  for (j = 0; j < 100; ++j) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_WRITE_UINT24_LE (data, val_l);
+    GST_WRITE_UINT24_LE (data + 3, val_r);
+#else
+    GST_WRITE_UINT24_BE (data, val_l);
+    GST_WRITE_UINT24_BE (data + 3, val_r);
+#endif
+    data += 6;
   }
   gst_buffer_unmap (buf, &map);
   GST_BUFFER_TIMESTAMP (buf) = G_GUINT64_CONSTANT (0);
@@ -370,6 +404,65 @@ GST_START_TEST (test_int16_panned)
   /* clean up */
   /* flush current messages,and future state change messages */
   gst_bus_set_flushing (bus, TRUE);
+  gst_element_set_bus (level, NULL);
+  gst_object_unref (bus);
+  gst_element_set_state (level, GST_STATE_NULL);
+  cleanup_level (level);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_int24)
+{
+  GstElement *level;
+  GstBuffer *inbuffer, *outbuffer;
+  GstBus *bus;
+  GstMessage *message;
+  const GstStructure *structure;
+  gint i, j;
+  const GValue *list, *value;
+  gdouble dB;
+  const gchar *fields[3] = { "rms", "peak", "decay" };
+
+  level = setup_level (LEVEL_S24_CAPS_STRING);
+  g_object_set (level, "post-messages", TRUE,
+      "interval", (guint64) GST_SECOND / 10, NULL);
+  gst_element_set_state (level, GST_STATE_PLAYING);
+  /* create a bus to get the level message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (level, bus);
+
+  /* create a fake 0.1 sec buffer with a half-amplitude block signal, use a
+   * negative value on the right channel to check sign extension */
+  inbuffer = create_s24_buffer (1 << 22, -(1 << 22));
+
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
+  structure = gst_message_get_structure (message);
+
+  /* block wave of half amplitude has -6.02 dB for rms, peak and decay */
+  for (i = 0; i < 2; ++i) {
+    for (j = 0; j < 3; ++j) {
+      GValueArray *arr;
+
+      list = gst_structure_get_value (structure, fields[j]);
+      arr = g_value_get_boxed (list);
+      value = g_value_array_get_nth (arr, i);
+      dB = g_value_get_double (value);
+      GST_DEBUG ("%s[%d] is %lf", fields[j], i, dB);
+      fail_if (dB < -6.1);
+      fail_if (dB > -5.9);
+    }
+  }
+
+  /* clean up */
+  /* flush current messages,and future state change messages */
+  gst_bus_set_flushing (bus, TRUE);
+  gst_message_unref (message);
   gst_element_set_bus (level, NULL);
   gst_object_unref (bus);
   gst_element_set_state (level, GST_STATE_NULL);
@@ -646,6 +739,7 @@ level_suite (void)
   tcase_add_test (tc_chain, test_message_is_valid);
   tcase_add_test (tc_chain, test_int16);
   tcase_add_test (tc_chain, test_int16_panned);
+  tcase_add_test (tc_chain, test_int24);
   tcase_add_test (tc_chain, test_float);
   tcase_add_test (tc_chain, test_message_on_eos);
   tcase_add_test (tc_chain, test_message_count);
