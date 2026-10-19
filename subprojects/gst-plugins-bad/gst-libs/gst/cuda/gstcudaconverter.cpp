@@ -1041,6 +1041,7 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->alpha != alpha) {
         priv->update_const_buf = TRUE;
         priv->const_buf->alpha = (float) alpha;
+        priv->alpha = alpha;
       }
       break;
     }
@@ -1050,6 +1051,7 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->blend != blend) {
         priv->update_const_buf = TRUE;
         priv->const_buf->do_blend = blend;
+        priv->blend = blend;
       }
       break;
     }
