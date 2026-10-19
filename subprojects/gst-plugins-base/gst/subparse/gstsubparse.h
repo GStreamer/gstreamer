@@ -78,7 +78,9 @@ struct _GstSubParse {
   guint32       segment_seqnum;
   GstSegment    segment;
   gboolean      need_segment;
-  
+  /* end time of the last subtitle pushed in the current segment */
+  GstClockTime  last_stop;
+
   gboolean flushing;
   gboolean valid_utf8;
   gchar   *detected_encoding;

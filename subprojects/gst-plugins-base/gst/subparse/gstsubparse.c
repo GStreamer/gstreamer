@@ -184,6 +184,7 @@ gst_sub_parse_init (GstSubParse * subparse)
   gst_segment_init (&subparse->segment, GST_FORMAT_TIME);
   subparse->segment_seqnum = gst_util_seqnum_next ();
   subparse->need_segment = TRUE;
+  subparse->last_stop = GST_CLOCK_TIME_NONE;
   subparse->encoding = g_strdup (DEFAULT_ENCODING);
   subparse->detected_encoding = NULL;
   subparse->adapter = gst_adapter_new ();
@@ -1831,6 +1832,11 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
       }
 
       self->segment.position = self->state.start_time;
+      if (GST_BUFFER_DURATION_IS_VALID (buf))
+        self->last_stop =
+            GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+      else
+        self->last_stop = GST_BUFFER_TIMESTAMP (buf);
 
       GST_DEBUG_OBJECT (self, "Sending text '%s', %" GST_TIME_FORMAT " + %"
           GST_TIME_FORMAT, subtitle, GST_TIME_ARGS (self->state.start_time),
@@ -1873,6 +1879,46 @@ gst_sub_parse_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
   return ret;
 }
 
+/* push a gap from the end of the last pushed subtitle, or the segment position
+ * if none, up to segment stop */
+static void
+gst_sub_parse_push_final_gap (GstSubParse * self)
+{
+  GstClockTime gap_start, gap_duration = GST_CLOCK_TIME_NONE;
+
+  /* format not detected yet, avoid check_initial_events() run
+   * autodetection here */
+  if (self->parser_type == GST_SUB_PARSE_FORMAT_UNKNOWN)
+    return;
+
+  if (check_initial_events (self) != GST_FLOW_OK)
+    return;
+
+  if (self->segment.format != GST_FORMAT_TIME)
+    return;
+
+  gap_start = self->segment.position;
+
+  if (GST_CLOCK_TIME_IS_VALID (self->last_stop) &&
+      (!GST_CLOCK_TIME_IS_VALID (gap_start) || self->last_stop > gap_start))
+    gap_start = self->last_stop;
+
+  if (!GST_CLOCK_TIME_IS_VALID (gap_start))
+    return;
+
+  if (self->segment.stop != -1) {
+    if (gap_start >= self->segment.stop)
+      return;
+    gap_duration = self->segment.stop - gap_start;
+  }
+
+  GST_DEBUG_OBJECT (self, "no more subtitles from %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (gap_start));
+
+  gst_pad_push_event (self->srcpad,
+      gst_event_new_gap (gap_start, gap_duration));
+}
+
 static gboolean
 gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -1903,6 +1949,8 @@ gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_BUFFER_OFFSET (buf) = self->offset;
         gst_sub_parse_chain (pad, parent, buf);
       }
+
+      gst_sub_parse_push_final_gap (self);
       ret = gst_pad_event_default (pad, parent, event);
       break;
     }
@@ -1915,6 +1963,7 @@ gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (self, "newsegment (%s)",
           gst_format_get_name (self->segment.format));
       self->segment_seqnum = gst_event_get_seqnum (event);
+      self->last_stop = GST_CLOCK_TIME_NONE;
 
       /* if not time format, we'll either start with a 0 timestamp anyway or
        * it's following a seek in which case we'll have saved the requested
@@ -1979,6 +2028,7 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       self->strip_pango_markup = FALSE;
       self->valid_utf8 = TRUE;
       self->first_buffer = TRUE;
+      self->last_stop = GST_CLOCK_TIME_NONE;
       g_free (self->detected_encoding);
       self->detected_encoding = NULL;
       g_string_truncate (self->textbuf, 0);
