@@ -47,6 +47,8 @@ typedef struct
 {
   gsize len;
   gfloat confidence;
+  GstClockTime timestamp;
+  GstClockTime duration;
   gchar text[];
 } GstAnalyticsTextMtdData;
 
@@ -140,6 +142,70 @@ gst_analytics_text_mtd_get_confidence (const GstAnalyticsTextMtd * mtd)
 }
 
 /**
+ * gst_analytics_text_mtd_set_timestamp:
+ * @mtd: a #GstAnalyticsTextMtd
+ * @timestamp: timestamp of the text
+ * @duration: duration of the text
+ *
+ * Sets the timestamp and duration of the recognized text.
+ *
+ * @timestamp is typically expressed in the same timeline as the PTS of
+ * the buffer carrying this metadata, but is not limited to that.
+ *
+ * Returns: %TRUE on success, otherwise %FALSE
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_analytics_text_mtd_set_timestamp (GstAnalyticsTextMtd * mtd,
+    GstClockTime timestamp, GstClockTime duration)
+{
+  GstAnalyticsTextMtdData *data;
+
+  g_return_val_if_fail (mtd, FALSE);
+
+  data = gst_analytics_relation_meta_get_mtd_data (mtd->meta, mtd->id);
+  g_return_val_if_fail (data, FALSE);
+
+  data->timestamp = timestamp;
+  data->duration = duration;
+
+  return TRUE;
+}
+
+/**
+ * gst_analytics_text_mtd_get_timestamp:
+ * @mtd: a #GstAnalyticsTextMtd
+ * @timestamp: (out) (optional): return location for the timestamp
+ * @duration: (out) (optional): return location for the duration
+ *
+ * Gets the timestamp and duration of the recognized text.
+ *
+ * Returns: %TRUE on success, otherwise %FALSE
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_analytics_text_mtd_get_timestamp (const GstAnalyticsTextMtd * mtd,
+    GstClockTime * timestamp, GstClockTime * duration)
+{
+  GstAnalyticsTextMtdData *data;
+
+  g_return_val_if_fail (mtd, FALSE);
+
+  data = gst_analytics_relation_meta_get_mtd_data (mtd->meta, mtd->id);
+  g_return_val_if_fail (data, FALSE);
+
+  if (timestamp)
+    *timestamp = data->timestamp;
+
+  if (duration)
+    *duration = data->duration;
+
+  return TRUE;
+}
+
+/**
  * gst_analytics_relation_meta_add_text_mtd:
  * @meta: a #GstAnalyticsRelationMeta
  * @text: UTF-8 text
@@ -175,6 +241,8 @@ gst_analytics_relation_meta_add_text_mtd (GstAnalyticsRelationMeta * meta,
 
   data->confidence = confidence;
   data->len = text_size - 1;
+  data->timestamp = GST_CLOCK_TIME_NONE;
+  data->duration = GST_CLOCK_TIME_NONE;
   memcpy (data->text, text, text_size);
 
   return TRUE;

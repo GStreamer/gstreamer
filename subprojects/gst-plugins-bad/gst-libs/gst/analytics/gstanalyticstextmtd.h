@@ -51,6 +51,16 @@ GST_ANALYTICS_META_API
 gfloat      gst_analytics_text_mtd_get_confidence (const GstAnalyticsTextMtd * mtd);
 
 GST_ANALYTICS_META_API
+gboolean    gst_analytics_text_mtd_set_timestamp (GstAnalyticsTextMtd * mtd,
+                                                  GstClockTime timestamp,
+                                                  GstClockTime duration);
+
+GST_ANALYTICS_META_API
+gboolean    gst_analytics_text_mtd_get_timestamp (const GstAnalyticsTextMtd * mtd,
+                                                  GstClockTime * timestamp,
+                                                  GstClockTime * duration);
+
+GST_ANALYTICS_META_API
 gboolean    gst_analytics_relation_meta_add_text_mtd (GstAnalyticsRelationMeta * meta,
                                                       const gchar * text,
                                                       gfloat confidence,
