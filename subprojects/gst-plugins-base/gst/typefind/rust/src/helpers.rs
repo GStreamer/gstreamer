@@ -85,16 +85,14 @@ impl TypeFind {
     }
 }
 
+/// Cached window size of `Scanner`, in bytes.
+const WINDOW: usize = 4096;
+
 /// Zero-copy windowed cursor over the typefind stream, in the spirit of
 /// `std::io::BufRead`: `peek()` serves bytes from a cached window and only
 /// queries the engine again when the window cannot cover the request;
-/// `consume()` advances.
-///
-/// The scanner owns `&mut TypeFind` for the walk; scope it in a block so it
-/// is dead before `suggest!`. A cached window is only read until the next
-/// query replaces it.
-const WINDOW: usize = 4096;
-
+/// `consume()` advances. The scanner owns `&mut TypeFind` for the walk, and
+/// a cached window is only read until the next query replaces it.
 pub struct Scanner<'a> {
     tf: &'a mut TypeFind,
     base: *const u8, // cached window
@@ -118,6 +116,9 @@ impl<'a> Scanner<'a> {
     /// when the cached window cannot cover them. `None` when fewer than
     /// `min` bytes remain in the stream.
     pub fn peek(&mut self, min: usize) -> Option<&[u8]> {
+        if min == 0 {
+            return Some(&[]);
+        }
         if self.len.saturating_sub(self.pos) < min {
             let offset = self.offset + self.pos as i64;
             let (base, len) = self.refill(offset, min)?;
