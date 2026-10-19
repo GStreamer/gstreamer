@@ -47,11 +47,13 @@
 
 GST_DEBUG_CATEGORY (gst_decklink2_debug);
 
+#ifdef G_OS_WIN32
 static void
 plugin_deinit (gpointer data)
 {
   gst_decklink2_deinit ();
 }
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -70,9 +72,13 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEVICE_PROVIDER_REGISTER (decklink2deviceprovider, plugin);
 
+#ifdef G_OS_WIN32
+  /* This is mainly for clearing Windows COM thread but causes issue
+   * with gstcheck, as gstcheck does this with atexit handler */
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-decklink2-shutdown", (gpointer) "shutdown-data",
       (GDestroyNotify) plugin_deinit);
+#endif
 
   return TRUE;
 }
