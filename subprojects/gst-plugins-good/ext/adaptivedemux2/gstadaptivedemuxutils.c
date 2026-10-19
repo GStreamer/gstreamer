@@ -48,6 +48,12 @@ struct _GstAdaptiveDemuxLoop
 
   GRecMutex context_lock;
 
+  /* Scheduler lock waiters protected by drain_mutex. The loop thread drains
+   * them at exit before dropping the main loop and context. */
+  GMutex drain_lock;
+  GCond drain_cond;
+  guint waiters;
+
   GThread *thread;
   GMainLoop *loop;
   GMainContext *context;
@@ -158,6 +164,9 @@ gst_adaptive_demux_loop_new (void)
   g_mutex_init (&loop->lock);
   g_rec_mutex_init (&loop->context_lock);
   g_cond_init (&loop->cond);
+  g_mutex_init (&loop->drain_lock);
+  g_cond_init (&loop->drain_cond);
+  loop->waiters = 0;
 
   loop->stopped = TRUE;
   loop->paused = FALSE;
@@ -183,6 +192,8 @@ gst_adaptive_demux_loop_unref (GstAdaptiveDemuxLoop * loop)
     g_mutex_clear (&loop->lock);
     g_rec_mutex_clear (&loop->context_lock);
     g_cond_clear (&loop->cond);
+    g_mutex_clear (&loop->drain_lock);
+    g_cond_clear (&loop->drain_cond);
 
     g_free (loop);
   }
@@ -211,15 +222,48 @@ _gst_adaptive_demux_loop_thread (GstAdaptiveDemuxLoop * loop)
       g_cond_wait (&loop->cond, &loop->lock);
   }
 
+  /* The locking below is a bit wild but unfortunately necessary to ensure valid
+   * lock order and to prevent deadlocks. */
+
+  /* Release the loop lock first: threads releasing the scheduler lock need
+   * it, see gst_adaptive_demux_loop_unlock_and_unpause(). */
+  g_mutex_unlock (&loop->lock);
+
+  /* Now wait until all threads that are currently in the middle of dropping
+   * and re-acquiring the scheduler lock are finished, see
+   * gst_adaptive_demux_loop_wait_begin()/end().
+   *
+   * While waiting, release the context and drain mutex to make sure that the
+   * threads we're waiting for can actually finish.
+   *
+   * Only afterwards it is safe to release the main context.
+   */
+  g_rec_mutex_lock (&loop->context_lock);
+  g_mutex_lock (&loop->drain_lock);
+  while (loop->waiters > 0) {
+    g_rec_mutex_unlock (&loop->context_lock);
+    g_cond_wait (&loop->drain_cond, &loop->drain_lock);
+    /* Need to unlock and relock here to keep the lock order
+     * between drain mutex and context lock */
+    g_mutex_unlock (&loop->drain_lock);
+    g_rec_mutex_lock (&loop->context_lock);
+    g_mutex_lock (&loop->drain_lock);
+  }
+  g_mutex_unlock (&loop->drain_lock);
+
+  /* And now finally release the main loop and its corresponding main context
+   * while keeping the loop and context locks to make sure nothing else can
+   * make use of it in the meantime. */
+  g_mutex_lock (&loop->lock);
   g_main_loop_unref (loop->loop);
   loop->loop = NULL;
-
-  g_cond_broadcast (&loop->cond);
-
   g_main_context_unref (loop->context);
   loop->context = NULL;
 
+  g_cond_broadcast (&loop->cond);
+
   g_mutex_unlock (&loop->lock);
+  g_rec_mutex_unlock (&loop->context_lock);
 
   gst_adaptive_demux_loop_unref (loop);
 
@@ -266,11 +310,13 @@ gst_adaptive_demux_loop_stop (GstAdaptiveDemuxLoop * loop, gboolean wait)
         (GDestroyNotify) gst_adaptive_demux_loop_unref);
     g_source_attach (s, loop->context);
     g_source_unref (s);
+  }
 
-    if (wait) {
-      while (loop->loop != NULL)
-        g_cond_wait (&loop->cond, &loop->lock);
-    }
+  /* We must wait and clean up even if the loop was already stopped by a
+   * previous call to ensure that the loop thread is really gone afterwards. */
+  if (wait) {
+    while (loop->loop != NULL)
+      g_cond_wait (&loop->cond, &loop->lock);
 
     if (loop->thread != NULL) {
       g_thread_unref (loop->thread);
@@ -325,8 +371,12 @@ gst_adaptive_demux_loop_unlock_and_unpause (GstAdaptiveDemuxLoop * loop)
 {
   gboolean stopped;
 
-  if (loop->context)
-    g_main_context_pop_thread_default (loop->context);
+  /* Only a thread that holds the scheduler lock is allowed to release it */
+  g_return_val_if_fail (loop->context != NULL, TRUE);
+  g_return_val_if_fail (g_main_context_get_thread_default () == loop->context,
+      TRUE);
+
+  g_main_context_pop_thread_default (loop->context);
   g_rec_mutex_unlock (&loop->context_lock);
 
   g_mutex_lock (&loop->lock);
@@ -342,6 +392,71 @@ gst_adaptive_demux_loop_unlock_and_unpause (GstAdaptiveDemuxLoop * loop)
     return FALSE;
 
   return TRUE;
+}
+
+/* Drops the scheduler lock on the calling thread. This is for temporarily
+ * dropping the lock inside a scheduler lock section, e.g. to wait on a
+ * condition variable.
+ *
+ * gst_adaptive_demux_loop_wait_end() must be called when done on the same
+ * thread, with no scheduler lock operations happening in between.
+ *
+ * This registers the thread as a waiter on the loop, so that the loop thread waits
+ * for it on exit before dropping the main loop and the context. */
+void
+gst_adaptive_demux_loop_wait_begin (GstAdaptiveDemuxLoop * loop)
+{
+  g_mutex_lock (&loop->drain_lock);
+  loop->waiters++;
+  g_mutex_unlock (&loop->drain_lock);
+
+  gst_adaptive_demux_loop_unlock_and_unpause (loop);
+}
+
+/* Re-acquires the scheduler lock dropped by gst_adaptive_demux_loop_wait_begin()
+ * and unregisters the calling thread as a waiter, signalling a loop thread
+ * that is draining the waiters on exit.
+ *
+ * Like gst_adaptive_demux_loop_pause_and_lock(), this pauses the scheduler
+ * loop as a first step.
+ *
+ * Unlike pause_and_lock(), this can never fail. As the thread was registered
+ * as a waiter in wait_begin(), the loop thread can't drop the context before
+ * this waiter re-acquired the lock and unregistered, so the lock and the
+ * context are guaranteed to still be there. This is what allows a thread to
+ * temporarily drop the lock inside a scheduler lock section.
+ */
+void
+gst_adaptive_demux_loop_wait_end (GstAdaptiveDemuxLoop * loop)
+{
+  if (!g_rec_mutex_trylock (&loop->context_lock)) {
+    g_mutex_lock (&loop->lock);
+
+    if (!loop->stopped) {
+      loop->paused = TRUE;
+
+      {
+        GSource *s = g_idle_source_new ();
+        g_source_set_callback (s, (GSourceFunc) do_quit_cb,
+            gst_adaptive_demux_loop_ref (loop),
+            (GDestroyNotify) gst_adaptive_demux_loop_unref);
+        g_source_attach (s, loop->context);
+        g_source_unref (s);
+      }
+    }
+
+    g_mutex_unlock (&loop->lock);
+
+    g_rec_mutex_lock (&loop->context_lock);
+  }
+
+  g_assert (loop->context != NULL);
+  g_main_context_push_thread_default (loop->context);
+
+  g_mutex_lock (&loop->drain_lock);
+  loop->waiters--;
+  g_cond_broadcast (&loop->drain_cond);
+  g_mutex_unlock (&loop->drain_lock);
 }
 
 guint

@@ -54,6 +54,9 @@ void gst_adaptive_demux_loop_cancel_call (GstAdaptiveDemuxLoop *loop, guint cb_i
 gboolean gst_adaptive_demux_loop_pause_and_lock (GstAdaptiveDemuxLoop * loop);
 gboolean gst_adaptive_demux_loop_unlock_and_unpause (GstAdaptiveDemuxLoop * loop);
 
+void gst_adaptive_demux_loop_wait_begin (GstAdaptiveDemuxLoop * loop);
+void gst_adaptive_demux_loop_wait_end (GstAdaptiveDemuxLoop * loop);
+
 GstDateTime *gst_adaptive_demux_util_parse_http_head_date (const gchar *http_date);
 
 typedef struct _GstEventStore GstEventStore;
