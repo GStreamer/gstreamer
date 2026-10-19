@@ -1841,17 +1841,23 @@ gst_adaptive_demux2_stream_mark_prepared (GstAdaptiveDemux2Stream * stream)
 }
 
 /* Called by external threads (manifest input on sinkpad, and seek handling)
- * when it requires the stream to be prepared before they can continue
- * Must be held with the SCHEDULER lock held */
+ * when it requires the stream to be prepared before they can continue.
+ * Must be called with the SCHEDULER lock held. While waiting the SCHEDULER lock
+ * is temporarily dropped and always acquired again before returning.
+ *
+ * Returns FALSE if the stream was stopped already or was stopped while waiting.
+ */
 gboolean
 gst_adaptive_demux2_stream_wait_prepared (GstAdaptiveDemux2Stream * stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
+  GstAdaptiveDemuxLoop *loop = GST_ADAPTIVE_DEMUX_GET_SCHEDULER (demux);
+  gboolean ret;
 
   /* Take a ref on the stream before dropping the scheduler lock, or it might
    * get unreffed beneath us during a state change */
   gst_object_ref (stream);
-  GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+  gst_adaptive_demux_loop_wait_begin (loop);
 
   GST_DEBUG_OBJECT (stream, "Waiting for subclass to finish preparing stream");
 
@@ -1859,13 +1865,14 @@ gst_adaptive_demux2_stream_wait_prepared (GstAdaptiveDemux2Stream * stream)
   while (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE) {
     g_cond_wait (&stream->prepare_cond, &stream->prepare_lock);
   }
+  ret = stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED;
   g_mutex_unlock (&stream->prepare_lock);
 
   GST_DEBUG_OBJECT (stream,
       "Done waiting for subclass to finish preparing stream. State now %d",
       stream->state);
 
-  gboolean ret = GST_ADAPTIVE_SCHEDULER_LOCK (demux);
+  gst_adaptive_demux_loop_wait_end (loop);
   gst_object_unref (stream);
 
   return ret;
