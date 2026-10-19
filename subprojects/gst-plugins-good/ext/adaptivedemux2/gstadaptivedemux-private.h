@@ -62,7 +62,7 @@ G_BEGIN_DECLS
 
 #define GST_ADAPTIVE_DEMUX_GET_SCHEDULER(d) (GST_ADAPTIVE_DEMUX_CAST(d)->priv->scheduler_task)
 
-#define GST_ADAPTIVE_SCHEDULER_LOCK(d) gst_adaptive_demux_scheduler_lock(demux)
+#define GST_ADAPTIVE_SCHEDULER_LOCK(d) gst_adaptive_demux_scheduler_lock(d)
 #define GST_ADAPTIVE_SCHEDULER_UNLOCK(d) G_STMT_START { \
     GST_TRACE("Unlocking scheduler from thread %p", g_thread_self()); \
     gst_adaptive_demux_loop_unlock_and_unpause (GST_ADAPTIVE_DEMUX_GET_SCHEDULER (d)); \
