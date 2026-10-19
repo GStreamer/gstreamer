@@ -1652,6 +1652,89 @@ extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+/// Whether `data` is text: valid UTF-8 that holds no NUL. A problem in the
+/// last 3 bytes is a character cut off by the window edge and counts as
+/// text, because the window is an arbitrary probe size.
+fn looks_like_text(data: &[u8]) -> bool {
+    let stop = data
+        .iter()
+        .position(|&b| b == 0)
+        .into_iter()
+        .chain(std::str::from_utf8(data).err().map(|e| e.valid_up_to()))
+        .min();
+    stop.is_none_or(|i| i + 4 > data.len())
+}
+
+// UTF-8 plausibility of the data at `offset`: the probe starts at 32 KiB
+// (probability 95) and each failure halves the probe, subtracting 10 from
+// the probability, down to 128 bytes.
+fn utf8_prob(tf: &mut TypeFind, offset: i64) -> Option<u32> {
+    let (mut size, mut prob) = match tf.length() {
+        Some(len) => {
+            let avail = (len.get() as i64 - offset).max(0) as u32;
+            if avail < 128 {
+                return None;
+            }
+            let cap = avail.min(32 * 1024);
+            let size = if cap.is_power_of_two() {
+                cap
+            } else {
+                cap.next_power_of_two() / 2
+            };
+            (size, 95 - 10 * (15 - size.trailing_zeros()))
+        }
+        _ => (32 * 1024, 95),
+    };
+    loop {
+        if let Some(data) = tf.peek_var(offset, size) {
+            return looks_like_text(data).then_some(prob);
+        }
+        if size <= 128 || prob <= 10 {
+            return None;
+        }
+        size /= 2;
+        prob -= 10;
+    }
+}
+
+// Valid UTF-16: even length, no lone or truncated surrogate.
+fn valid_utf16(data: &[u8], big_endian: bool) -> bool {
+    utf16_to_string(data, big_endian).is_some()
+}
+
+// Valid UTF-32: length a multiple of 4 and every 32-bit code unit a valid
+// Unicode scalar value (char::from_u32 rejects surrogates and values
+// >= 0x110000).
+fn valid_utf32(data: &[u8], big_endian: bool) -> bool {
+    data.len().is_multiple_of(4)
+        && data.as_chunks::<4>().0.iter().all(|c| {
+            let v = if big_endian {
+                u32::from_be_bytes(*c)
+            } else {
+                u32::from_le_bytes(*c)
+            };
+            char::from_u32(v).is_some()
+        })
+}
+
+// Decode a UTF-16 byte sequence to a String; None for odd length or an
+// invalid code unit. `char::decode_utf16` does the strict validation.
+fn utf16_to_string(data: &[u8], big_endian: bool) -> Option<String> {
+    if !data.len().is_multiple_of(2) {
+        return None;
+    }
+    let units = data.as_chunks::<2>().0.iter().map(|p| {
+        if big_endian {
+            u16::from_be_bytes(*p)
+        } else {
+            u16::from_le_bytes(*p)
+        }
+    });
+    char::decode_utf16(units)
+        .collect::<Result<String, _>>()
+        .ok()
+}
+
 // Text - text/plain, text/utf-16, text/utf-32
 // One factory: the caps are decided by a BOM, or by UTF-8 validity.
 extern "C" fn text_type_find(tf: &mut TypeFind, _private: gpointer) {
@@ -1735,89 +1818,6 @@ extern "C" fn text_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     };
     suggest!(tf, (start_prob + mid_prob) / 2, c"text/plain");
-}
-
-/// Whether `data` is text: valid UTF-8 that holds no NUL. A problem in the
-/// last 3 bytes is a character cut off by the window edge and counts as
-/// text, because the window is an arbitrary probe size.
-fn looks_like_text(data: &[u8]) -> bool {
-    let stop = data
-        .iter()
-        .position(|&b| b == 0)
-        .into_iter()
-        .chain(std::str::from_utf8(data).err().map(|e| e.valid_up_to()))
-        .min();
-    stop.is_none_or(|i| i + 4 > data.len())
-}
-
-// UTF-8 plausibility of the data at `offset`: the probe starts at 32 KiB
-// (probability 95) and each failure halves the probe, subtracting 10 from
-// the probability, down to 128 bytes.
-fn utf8_prob(tf: &mut TypeFind, offset: i64) -> Option<u32> {
-    let (mut size, mut prob) = match tf.length() {
-        Some(len) => {
-            let avail = (len.get() as i64 - offset).max(0) as u32;
-            if avail < 128 {
-                return None;
-            }
-            let cap = avail.min(32 * 1024);
-            let size = if cap.is_power_of_two() {
-                cap
-            } else {
-                cap.next_power_of_two() / 2
-            };
-            (size, 95 - 10 * (15 - size.trailing_zeros()))
-        }
-        _ => (32 * 1024, 95),
-    };
-    loop {
-        if let Some(data) = tf.peek_var(offset, size) {
-            return looks_like_text(data).then_some(prob);
-        }
-        if size <= 128 || prob <= 10 {
-            return None;
-        }
-        size /= 2;
-        prob -= 10;
-    }
-}
-
-// Valid UTF-16: even length, no lone or truncated surrogate.
-fn valid_utf16(data: &[u8], big_endian: bool) -> bool {
-    utf16_to_string(data, big_endian).is_some()
-}
-
-// Valid UTF-32: length a multiple of 4 and every 32-bit code unit a valid
-// Unicode scalar value (char::from_u32 rejects surrogates and values
-// >= 0x110000).
-fn valid_utf32(data: &[u8], big_endian: bool) -> bool {
-    data.len().is_multiple_of(4)
-        && data.as_chunks::<4>().0.iter().all(|c| {
-            let v = if big_endian {
-                u32::from_be_bytes(*c)
-            } else {
-                u32::from_le_bytes(*c)
-            };
-            char::from_u32(v).is_some()
-        })
-}
-
-// Decode a UTF-16 byte sequence to a String; None for odd length or an
-// invalid code unit. `char::decode_utf16` does the strict validation.
-fn utf16_to_string(data: &[u8], big_endian: bool) -> Option<String> {
-    if !data.len().is_multiple_of(2) {
-        return None;
-    }
-    let units = data.as_chunks::<2>().0.iter().map(|p| {
-        if big_endian {
-            u16::from_be_bytes(*p)
-        } else {
-            u16::from_le_bytes(*p)
-        }
-    });
-    char::decode_utf16(units)
-        .collect::<Result<String, _>>()
-        .ok()
 }
 
 // Smooth Streaming Manifest - application/vnd.ms-sstr+xml
