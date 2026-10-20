@@ -215,7 +215,7 @@ nal_reader_get_ue (NalReader * nr, guint32 * val)
   if (G_UNLIKELY (!nal_reader_get_bits_uint32 (nr, &value, i)))
     return FALSE;
 
-  *val = (1 << i) - 1 + value;
+  *val = (1U << i) - 1 + value;
 
   return TRUE;
 }
