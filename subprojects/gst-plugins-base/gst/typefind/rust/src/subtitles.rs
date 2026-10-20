@@ -35,32 +35,23 @@ enum Format {
 }
 
 impl Format {
-    /// Media type of the format.
-    fn media_type(self) -> &'static CStr {
+    /// Media type of the format, and the `format=` value to go with it. That
+    /// field exists only for `application/x-subtitle`, so it is set for the
+    /// formats that use that media type and for no other.
+    fn caps(self) -> (&'static CStr, Option<&'static CStr>) {
         match self {
-            // These formats share the generic type.
             // FIXME 2.0: Change everything to application/x-subtitle,format=(string)XXX
-            Format::MicroDvd | Format::SubRip | Format::MpSub | Format::SubViewer => {
-                c"application/x-subtitle"
-            }
-            Format::Dks => c"application/x-subtitle-dks",
-            Format::Lrc => c"application/x-subtitle-lrc",
-            Format::Mpl2 => c"application/x-subtitle-mpl2",
-            Format::QtText => c"application/x-subtitle-qttext",
-            Format::Sami => c"application/x-subtitle-sami",
-            Format::TmPlayer => c"application/x-subtitle-tmplayer",
-            Format::WebVtt => c"application/x-subtitle-vtt",
-        }
-    }
-
-    /// `format=` value for the formats sharing `application/x-subtitle`.
-    fn caps_format(self) -> Option<&'static CStr> {
-        match self {
-            Format::MicroDvd => Some(c"microdvd"),
-            Format::SubRip => Some(c"subrip"),
-            Format::MpSub => Some(c"mpsub"),
-            Format::SubViewer => Some(c"subviewer"),
-            _ => None,
+            Format::MicroDvd => (c"application/x-subtitle", Some(c"microdvd")),
+            Format::SubRip => (c"application/x-subtitle", Some(c"subrip")),
+            Format::MpSub => (c"application/x-subtitle", Some(c"mpsub")),
+            Format::SubViewer => (c"application/x-subtitle", Some(c"subviewer")),
+            Format::Dks => (c"application/x-subtitle-dks", None),
+            Format::Lrc => (c"application/x-subtitle-lrc", None),
+            Format::Mpl2 => (c"application/x-subtitle-mpl2", None),
+            Format::QtText => (c"application/x-subtitle-qttext", None),
+            Format::Sami => (c"application/x-subtitle-sami", None),
+            Format::TmPlayer => (c"application/x-subtitle-tmplayer", None),
+            Format::WebVtt => (c"application/x-subtitle-vtt", None),
         }
     }
 }
@@ -73,17 +64,18 @@ pub(crate) extern "C" fn subtitle_type_find(tf: &mut TypeFind, _private: gpointe
         return;
     };
 
-    if let Some(f) = format.caps_format() {
-        suggest!(tf, Prob::MAXIMUM, c"application/x-subtitle", [
+    let (media, format_value) = format.caps();
+    if let Some(f) = format_value {
+        suggest!(tf, Prob::MAXIMUM, media, [
             (c"format", str : f),
         ]);
     } else if matches!(format, Format::WebVtt) {
         // The only format with the `parsed` field.
-        suggest!(tf, Prob::MAXIMUM, c"application/x-subtitle-vtt", [
+        suggest!(tf, Prob::MAXIMUM, media, [
             (c"parsed", bool : false),
         ]);
     } else {
-        suggest!(tf, Prob::MAXIMUM, format.media_type());
+        suggest!(tf, Prob::MAXIMUM, media);
     }
 }
 
