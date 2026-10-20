@@ -43,6 +43,8 @@
 #include <components/Component.h>
 #include <components/VideoEncoderAV1.h>
 #include <core/Factory.h>
+#include <gst/codecparsers/gstav1parser.h>
+#include <gst/pbutils/codec-utils.h>
 #include <set>
 #include <string>
 #include <vector>
@@ -319,7 +321,8 @@ enum
 
 #define DOC_SRC_CAPS \
     "video/x-av1, width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ], " \
-    "profile = (string) main, stream-format = (string) obu-stream, alignment= (string) tu"
+    "profile = (string) main, " \
+    "stream-format = (string) obu-stream, alignment= (string) tu"
 
 typedef struct _GstAmfAv1Enc
 {
@@ -1198,6 +1201,37 @@ gst_amf_av1_enc_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* Returns the requested seq_level_idx (0-23), or -1 if downstream didn't
+ * request one. Note 0 ("2.0") is itself a valid level, so -1 (not 0) is
+ * the "not requested" sentinel here. */
+static gint
+gst_amf_av1_enc_get_downstream_level (GstAmfAv1Enc * self)
+{
+  GstCaps *allowed_caps;
+  GstStructure *s;
+  const gchar *level;
+  gint level_idc = -1;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
+
+  if (!allowed_caps || gst_caps_is_empty (allowed_caps) ||
+      gst_caps_is_any (allowed_caps)) {
+    gst_clear_caps (&allowed_caps);
+
+    return -1;
+  }
+
+  allowed_caps = gst_caps_fixate (allowed_caps);
+  s = gst_caps_get_structure (allowed_caps, 0);
+  level = gst_structure_get_string (s, "level");
+  if (level)
+    level_idc = gst_codec_utils_av1_get_seq_level_idx (level);
+
+  gst_caps_unref (allowed_caps);
+
+  return level_idc;
+}
+
 static gboolean
 gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component, guint * num_reorder_frames)
@@ -1250,6 +1284,29 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     GST_ERROR_OBJECT (self, "Failed to set profile, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
+  }
+
+  {
+    gint level_idc = -1;
+
+    if (dev_caps->max_level > -1)
+      level_idc = gst_amf_av1_enc_get_downstream_level (self);
+
+    if (level_idc >= 0 && dev_caps->max_level > -1) {
+      if (level_idc > (gint) dev_caps->max_level) {
+        GST_ERROR_OBJECT (self, "Downstream requested unsupported level %d",
+            level_idc);
+        goto error;
+      }
+
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_LEVEL,
+          (amf_int64) level_idc);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set level, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+    }
   }
 
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_NV12) {
@@ -1613,17 +1670,85 @@ error:
   return FALSE;
 }
 
+/* Returns the seq_level_idx of operating point 0 as parsed from the real
+ * sequence header OBU AMF produced, or -1 if it couldn't be determined. */
+static gint
+gst_amf_av1_enc_get_level_from_seq_header (AMFComponent * comp)
+{
+  AMF_RESULT result;
+  AMFInterfacePtr iface;
+  AMFBufferPtr seq_hdr_buf;
+  guint8 *data;
+  amf_size size;
+  GstAV1Parser *parser;
+  GstAV1OBU obu;
+  GstAV1ParserResult rst;
+  guint32 offset = 0, consumed = 0;
+  gint level_idc = -1;
+
+  result = comp->GetProperty (AMF_VIDEO_ENCODER_AV1_EXTRA_DATA, &iface);
+  if (result != AMF_OK)
+    return -1;
+
+  seq_hdr_buf = AMFBufferPtr (iface);
+  if (!seq_hdr_buf)
+    return -1;
+
+  size = seq_hdr_buf->GetSize ();
+  data = (guint8 *) seq_hdr_buf->GetNative ();
+  if (!data || size == 0)
+    return -1;
+
+  parser = gst_av1_parser_new ();
+  gst_av1_parser_reset (parser, FALSE);
+
+  while (offset < size) {
+    rst = gst_av1_parser_identify_one_obu (parser, data + offset,
+        size - offset, &obu, &consumed);
+    if (rst != GST_AV1_PARSER_OK)
+      break;
+
+    offset += consumed;
+
+    if (obu.obu_type == GST_AV1_OBU_SEQUENCE_HEADER) {
+      GstAV1SequenceHeaderOBU seq_header;
+
+      if (gst_av1_parser_parse_sequence_header_obu (parser, &obu,
+              &seq_header) == GST_AV1_PARSER_OK) {
+        level_idc = seq_header.operating_points[0].seq_level_idx;
+      }
+
+      break;
+    }
+  }
+
+  gst_av1_parser_free (parser);
+
+  return level_idc;
+}
+
 static gboolean
 gst_amf_av1_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component)
 {
   GstAmfAv1Enc *self = GST_AMF_AV1_ENC (encoder);
+  AMFComponent *comp = (AMFComponent *) component;
   GstVideoCodecState *output_state;
   GstCaps *caps;
   GstTagList *tags;
+  gint level_idc;
+  std::string caps_str = "video/x-av1, profile = (string) main, "
+      "stream-format = (string) obu-stream, alignment = (string) tu";
 
-  caps = gst_caps_from_string ("video/x-av1, profile = (string) main, "
-      "stream-format = (string) obu-stream, alignment = (string) tu");
+  level_idc = gst_amf_av1_enc_get_level_from_seq_header (comp);
+  if (level_idc >= 0) {
+    const gchar *level = gst_codec_utils_av1_get_level ((guint8) level_idc);
+
+    if (level)
+      caps_str += ", level = (string) " + std::string (level);
+  }
+
+  caps = gst_caps_from_string (caps_str.c_str ());
   output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       caps, state);
 
@@ -1709,6 +1834,9 @@ gst_amf_av1_enc_create_class_data (GstObject * device, AMFComponent * comp)
 {
   AMF_RESULT result;
   GstAmfAv1EncDeviceCaps dev_caps = { 0, };
+  /* -1 means "unqueried"; AMF_VIDEO_ENCODER_AV1_LEVEL_2_0 is 0, so that
+   * can't double as the "unqueried" default. */
+  dev_caps.max_level = -1;
   std::string sink_caps_str;
   std::string src_caps_str;
   std::vector < std::string > profiles;
