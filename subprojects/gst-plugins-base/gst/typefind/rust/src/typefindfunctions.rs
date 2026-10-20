@@ -1674,11 +1674,6 @@ fn utf8_prob(tf: &mut TypeFind, offset: i64) -> Option<u32> {
     }
 }
 
-// Valid UTF-16: even length, no lone or truncated surrogate.
-fn valid_utf16(data: &[u8], big_endian: bool) -> bool {
-    utf16_to_string(data, big_endian).is_some()
-}
-
 // Valid UTF-32: length a multiple of 4 and every 32-bit code unit a valid
 // Unicode scalar value (char::from_u32 rejects surrogates and values
 // >= 0x110000).
@@ -1695,7 +1690,8 @@ fn valid_utf32(data: &[u8], big_endian: bool) -> bool {
 }
 
 // Decode a UTF-16 byte sequence to a String; None for odd length or an
-// invalid code unit. `char::decode_utf16` does the strict validation.
+// invalid or lone surrogate code unit. `char::decode_utf16` does the strict
+// validation.
 fn utf16_to_string(data: &[u8], big_endian: bool) -> Option<String> {
     if !data.len().is_multiple_of(2) {
         return None;
@@ -1745,23 +1741,24 @@ extern "C" fn text_type_find(tf: &mut TypeFind, _private: gpointer) {
     // UTF-32 first: its LE BOM starts with the UTF-16 LE BOM, so a UTF-32 LE
     // stream would otherwise be reported as UTF-16.
     let unicode = if data.starts_with(b"\xFF\xFE\x00\x00") && valid_utf32(data, false) {
-        Some((c"text/utf-32", false, 10u32))
+        Some((c"text/utf-32", false))
     } else if data.starts_with(b"\x00\x00\xFE\xFF") && valid_utf32(data, true) {
-        Some((c"text/utf-32", true, 20))
-    } else if data.starts_with(b"\xFF\xFE") && valid_utf16(data, false) {
-        Some((c"text/utf-16", false, 10))
-    } else if data.starts_with(b"\xFE\xFF") && valid_utf16(data, true) {
-        Some((c"text/utf-16", true, 20))
+        Some((c"text/utf-32", true))
+    } else if data.starts_with(b"\xFF\xFE") && utf16_to_string(data, false).is_some() {
+        Some((c"text/utf-16", false))
+    } else if data.starts_with(b"\xFE\xFF") && utf16_to_string(data, true).is_some() {
+        Some((c"text/utf-16", true))
     } else {
         None
     };
-    if let Some((caps, big_endian, boost)) = unicode {
-        // 40 for an LE BOM, 50 for a BE one.
-        let prob = Prob::POSSIBLE.get() - 20 + boost;
-        let endianness = if big_endian {
-            bindings::G_BIG_ENDIAN
+    if let Some((caps, big_endian)) = unicode {
+        // A BOM is a strong hint but not proof of an encoding, so the
+        // confidence stays at POSSIBLE (50). The big-endian order is the rarer
+        // one, so its BOM carries the higher value.
+        let (prob, endianness) = if big_endian {
+            (50, bindings::G_BIG_ENDIAN)
         } else {
-            bindings::G_LITTLE_ENDIAN
+            (40, bindings::G_LITTLE_ENDIAN)
         };
         suggest!(tf, prob, caps, [(c"endianness", i32 : endianness as i32),]);
         return;
