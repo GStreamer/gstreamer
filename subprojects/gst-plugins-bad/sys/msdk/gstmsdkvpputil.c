@@ -74,10 +74,16 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
   GstCapsFeatures *features;
   GstCaps *ret;
   const GValue *format;
-  gboolean is_va = FALSE, is_dma = FALSE, is_d3d = FALSE;
+  gboolean is_dma = FALSE;
+#ifndef _WIN32
+  gboolean is_va = FALSE;
+#else
+  gboolean is_d3d = FALSE;
+#endif
   gboolean fixate = FALSE;
 #ifndef _WIN32
   guint64 modifier = DRM_FORMAT_MOD_INVALID;
+  guint64 fallback_modifier = DRM_FORMAT_MOD_INVALID;
   guint32 fourcc;
 #endif
 
@@ -88,22 +94,11 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
   for (i = 0; i < size; i++) {
     s = gst_caps_get_structure (caps, i);
     features = gst_caps_get_features (caps, i);
-    is_va = is_dma = is_d3d = FALSE;
 
-    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF))
       format = gst_structure_get_value (s, "drm-format");
-      is_dma = TRUE;
-    } else {
+    else
       format = gst_structure_get_value (s, "format");
-#ifndef _WIN32
-      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA))
-        is_va = TRUE;
-#else
-      if (gst_caps_features_contains (features,
-              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY))
-        is_d3d = TRUE;
-#endif
-    }
 
     if (format == NULL)
       continue;
@@ -119,10 +114,13 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
         val = gst_value_list_get_value (format, j);
         if (G_VALUE_HOLDS_STRING (val)) {
 #ifndef _WIN32
-          if (is_dma) {
+          if (gst_caps_features_contains (features,
+                  GST_CAPS_FEATURE_MEMORY_DMABUF)) {
             fourcc = gst_video_dma_drm_fourcc_from_string
                 (g_value_get_string (val), &modifier);
             fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+            if (i == 0 && fmt == GST_VIDEO_FORMAT_NV12)
+              fallback_modifier = modifier;
           } else {
             fmt = gst_video_format_from_string (g_value_get_string (val));
           }
@@ -133,17 +131,18 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
             continue;
           if (fmt == GST_VIDEO_INFO_FORMAT (vinfo)) {
             fixate = TRUE;
-            fixated_idx = i;
             break;
           }
         }
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
 #ifndef _WIN32
-      if (is_dma) {
+      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
         fourcc = gst_video_dma_drm_fourcc_from_string
             (g_value_get_string (format), &modifier);
         fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+        if (i == 0 && fmt == GST_VIDEO_FORMAT_NV12)
+          fallback_modifier = modifier;
       } else {
         fmt = gst_video_format_from_string (g_value_get_string (format));
       }
@@ -159,21 +158,36 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
         continue;
 
       fixate = TRUE;
+    }
+    if (fixate) {
+      fixated_idx = i;
       break;
     }
-    if (fixate)
-      break;
   }
 
   if (!fixate)
     fmt = GST_VIDEO_FORMAT_NV12;
 
+  features = gst_caps_get_features (caps, fixated_idx);
+  is_dma =
+      gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF);
+#ifndef _WIN32
+  is_va = gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA);
+#else
+  is_d3d =
+      gst_caps_features_contains (features,
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+#endif
+
   out = gst_structure_copy (gst_caps_get_structure (caps, fixated_idx));
-  features = gst_caps_features_copy (gst_caps_get_features (caps, fixated_idx));
+  features = gst_caps_features_copy (features);
 
 #ifndef _WIN32
   if (is_dma) {
     gchar *drm_fmt_name;
+
+    if (!fixate)
+      modifier = fallback_modifier;
 
     g_assert (modifier != DRM_FORMAT_MOD_INVALID);
 
