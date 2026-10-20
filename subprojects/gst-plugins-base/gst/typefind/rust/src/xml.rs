@@ -23,6 +23,23 @@ pub struct XmlProbe<'a> {
     pub first_element: Option<&'a str>,
 }
 
+impl XmlProbe<'_> {
+    /// Whether the root element is `name`. Element and DOCTYPE names are
+    /// compared ignoring ASCII case.
+    pub fn root_is(&self, name: &str) -> bool {
+        self.first_element
+            .is_some_and(|element| element.eq_ignore_ascii_case(name))
+    }
+
+    /// Whether the DOCTYPE name or the root element is `name`.
+    pub fn named(&self, name: &str) -> bool {
+        self.root_is(name)
+            || self
+                .doctype
+                .is_some_and(|doctype| doctype.eq_ignore_ascii_case(name))
+    }
+}
+
 // Probe the first bytes of a stream for an XML 1.0 document.
 //
 // The input is a prefix that may continue past the end. `xml_probe` returns

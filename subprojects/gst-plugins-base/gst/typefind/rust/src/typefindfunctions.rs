@@ -1519,9 +1519,7 @@ extern "C" fn xml_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Element matcher on "mpd".
 extern "C" fn dash_mpd_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("mpd"))
+        && probe.root_is("mpd")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/dash+xml");
     }
@@ -1531,9 +1529,7 @@ extern "C" fn dash_mpd_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Element matcher on "ges".
 extern "C" fn xges_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("ges"))
+        && probe.root_is("ges")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/xges");
     }
@@ -1543,9 +1539,7 @@ extern "C" fn xges_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Element matcher on "fcpxml".
 extern "C" fn fcpxml_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("fcpxml"))
+        && probe.root_is("fcpxml")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/vnd.apple-fcp+xml");
     }
@@ -1555,9 +1549,7 @@ extern "C" fn fcpxml_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Element matcher on "xmeml".
 extern "C" fn xmeml_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("xmeml"))
+        && probe.root_is("xmeml")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/vnd.apple-xmeml+xml");
     }
@@ -1567,9 +1559,7 @@ extern "C" fn xmeml_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Element matcher on "smil".
 extern "C" fn smil_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("smil"))
+        && probe.root_is("smil")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/smil");
     }
@@ -1579,9 +1569,7 @@ extern "C" fn smil_type_find(tf: &mut TypeFind, _private: gpointer) {
 // Element matcher on "tt".
 extern "C" fn ttml_xml_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("tt"))
+        && probe.root_is("tt")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/ttml+xml");
     }
@@ -1591,12 +1579,7 @@ extern "C" fn ttml_xml_type_find(tf: &mut TypeFind, _private: gpointer) {
 // The DOCTYPE name or the root element is "html".
 extern "C" fn html_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(probe) = xml_probe_typefinder(tf)
-        && (probe
-            .doctype
-            .is_some_and(|name| name.eq_ignore_ascii_case("html"))
-            || probe
-                .first_element
-                .is_some_and(|name| name.eq_ignore_ascii_case("html")))
+        && probe.named("html")
     {
         suggest!(tf, Prob::MAXIMUM, c"text/html");
     }
@@ -1609,13 +1592,7 @@ extern "C" fn svg_type_find(tf: &mut TypeFind, _private: gpointer) {
     if let Some(data) = tf.peek_at_most(1024)
         && let Some(probe) = xml_probe(data)
     {
-        if probe
-            .doctype
-            .is_some_and(|name| name.eq_ignore_ascii_case("svg"))
-            || probe
-                .first_element
-                .is_some_and(|name| name.eq_ignore_ascii_case("svg"))
-        {
+        if probe.named("svg") {
             suggest!(tf, Prob::MAXIMUM, c"image/svg+xml");
         } else if data.windows(4).any(|w| w.starts_with(b"<svg")) {
             suggest!(tf, Prob::LIKELY, c"image/svg+xml");
@@ -1837,9 +1814,7 @@ extern "C" fn mss_manifest_type_find(tf: &mut TypeFind, _private: gpointer) {
     let text: &[u8] = decoded.as_deref().unwrap_or(data);
     if let Some(probe) = xml_probe(text)
         && probe.has_prolog
-        && probe
-            .first_element
-            .is_some_and(|name| name.eq_ignore_ascii_case("SmoothStreamingMedia"))
+        && probe.root_is("SmoothStreamingMedia")
     {
         suggest!(tf, Prob::MAXIMUM, c"application/vnd.ms-sstr+xml");
     }
