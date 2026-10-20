@@ -35,7 +35,6 @@
 
 #include "gsth266seiinserter.h"
 #include <gst/codecparsers/gsth266parser.h>
-#include <gst/codecparsers/gsth274parser.h>
 #include <gst/video/gstvideodscmeta.h>
 #include <gst/video/video-sei.h>
 #include <gst/video/gsth274.h>
