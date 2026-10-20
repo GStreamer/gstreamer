@@ -1296,6 +1296,52 @@ gst_amf_h264_enc_get_downstream_profiles_and_format (GstAmfH264Enc * self,
   gst_caps_unref (allowed_caps);
 }
 
+
+static gint
+gst_amf_h264_enc_get_downstream_level_for_profile (GstAmfH264Enc * self,
+    const gchar * profile)
+{
+  GstCaps *allowed_caps;
+  GstCaps *filter;
+  GstCaps *filtered;
+  GstStructure *s;
+  const gchar *level;
+  gint level_idc = 0;
+
+  if (!profile)
+    return 0;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
+  if (!allowed_caps || gst_caps_is_empty (allowed_caps) ||
+      gst_caps_is_any (allowed_caps)) {
+    gst_clear_caps (&allowed_caps);
+
+    return 0;
+  }
+
+  filter = gst_caps_new_simple ("video/x-h264",
+      "profile", G_TYPE_STRING, profile, nullptr);
+  filtered = gst_caps_intersect (allowed_caps, filter);
+  gst_caps_unref (filter);
+  gst_caps_unref (allowed_caps);
+
+  if (gst_caps_is_empty (filtered)) {
+    gst_caps_unref (filtered);
+
+    return 0;
+  }
+
+  filtered = gst_caps_fixate (filtered);
+  s = gst_caps_get_structure (filtered, 0);
+  level = gst_structure_get_string (s, "level");
+  if (level)
+    level_idc = gst_codec_utils_h264_get_level_idc (level);
+
+  gst_caps_unref (filtered);
+
+  return level_idc;
+}
+
 static GstCaps *
 gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
@@ -1381,6 +1427,8 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
   GstVideoInfo *info = &state->info;
   std::set < std::string > downstream_profiles;
   AMF_VIDEO_ENCODER_PROFILE_ENUM profile = AMF_VIDEO_ENCODER_PROFILE_UNKNOWN;
+  const char *ds_profile;
+  gint level_idc = 0;
   AMF_RESULT result;
   AMFRate framerate;
   AMFRatio aspect_ratio;
@@ -1412,31 +1460,41 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
   }
 
   if (downstream_profiles.find ("main") != downstream_profiles.end ()) {
+    ds_profile = "main";
     profile = AMF_VIDEO_ENCODER_PROFILE_MAIN;
   } else if (downstream_profiles.find ("high") != downstream_profiles.end ()) {
+    ds_profile = "high";
     profile = AMF_VIDEO_ENCODER_PROFILE_HIGH;
   } else if (downstream_profiles.find ("constrained-high") !=
       downstream_profiles.end ()) {
-    if (dev_caps->max_profile >=
-        (gint64) AMF_VIDEO_ENCODER_PROFILE_CONSTRAINED_HIGH) {
-      profile = AMF_VIDEO_ENCODER_PROFILE_CONSTRAINED_HIGH;
-    } else {
+    ds_profile = "constrained-high";
+    profile = AMF_VIDEO_ENCODER_PROFILE_CONSTRAINED_HIGH;
+    if (profile > dev_caps->max_profile) {
       profile = AMF_VIDEO_ENCODER_PROFILE_HIGH;
+      GST_WARNING_OBJECT (self, "%s profile is not supported by the hardware. "
+          "Falling back to high profile", ds_profile);
     }
   } else if (downstream_profiles.find ("constrained-baseline") !=
       downstream_profiles.end ()) {
-    if (dev_caps->max_profile >=
-        (gint64) AMF_VIDEO_ENCODER_PROFILE_CONSTRAINED_BASELINE) {
-      profile = AMF_VIDEO_ENCODER_PROFILE_CONSTRAINED_BASELINE;
-    } else {
+    ds_profile = "constrained-baseline";
+    profile = AMF_VIDEO_ENCODER_PROFILE_CONSTRAINED_BASELINE;
+    if (profile > dev_caps->max_profile) {
       profile = AMF_VIDEO_ENCODER_PROFILE_BASELINE;
+      GST_WARNING_OBJECT (self, "%s profile is not supported by the hardware. "
+          "Falling back to baseline profile", ds_profile);
     }
   } else if (downstream_profiles.find ("baseline") !=
       downstream_profiles.end ()) {
+    ds_profile = "baseline";
     profile = AMF_VIDEO_ENCODER_PROFILE_BASELINE;
   } else {
     GST_ERROR_OBJECT (self, "Failed to determine profile");
     return FALSE;
+  }
+
+  if (dev_caps->max_level != 0) {
+    level_idc = gst_amf_h264_enc_get_downstream_level_for_profile (self,
+        ds_profile);
   }
 
   g_mutex_lock (&self->prop_lock);
@@ -1482,7 +1540,22 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
   }
+  if (level_idc != 0 && dev_caps->max_level != 0) {
+    if (level_idc < (gint) AMF_H264_LEVEL__1 ||
+        level_idc > (gint) dev_caps->max_level) {
+      GST_ERROR_OBJECT (self, "Downstream requested unsupported level %d",
+          level_idc);
+      goto error;
+    }
 
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_PROFILE_LEVEL,
+        (amf_int64) level_idc);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set level, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+  }
   result = comp->SetProperty (AMF_VIDEO_ENCODER_MAX_NUM_REFRAMES,
       (amf_int64) self->ref_frames);
   if (result != AMF_OK) {
@@ -1756,6 +1829,7 @@ gst_amf_h264_enc_set_output_state (GstAmfEncoder * encoder,
   GstVideoCodecState *output_state;
   GstCaps *caps;
   const gchar *profile_from_sps;
+  const gchar *level_from_sps;
   std::set < std::string > downstream_profiles;
   std::string caps_str;
   GstTagList *tags;
@@ -1883,11 +1957,21 @@ gst_amf_h264_enc_set_output_state (GstAmfEncoder * encoder,
       caps_str += ", profile = (string) baseline";
     } else if (downstream_profiles.find ("constrained-baseline") !=
         downstream_profiles.end () &&
-        strcmp (profile_from_sps, "constrained-baseline") == 0) {
+        strcmp (profile_from_sps, "baseline") == 0) {
       caps_str += ", profile = (string) constrained-baseline";
     }
   } else {
     caps_str += ", profile = (string) " + std::string (profile_from_sps);
+  }
+
+  level_from_sps =
+      gst_codec_utils_h264_get_level (sps_nalu.data + sps_nalu.offset +
+      sps_nalu.header_bytes, 3);
+
+  if (!level_from_sps) {
+    GST_WARNING_OBJECT (self, "Failed to parse level from SPS");
+  } else {
+    caps_str += ", level = (string) " + std::string (level_from_sps);
   }
 
   if (self->packetized) {
