@@ -1381,6 +1381,14 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
       break;
   }
 
+  /* A failed payload parse can leave the reader in an inconsistent
+   * state; reading from it any further is undefined. BROKEN_LINK is
+   * returned before the payload is consumed, so the message can still
+   * be skipped over and reported for retry. */
+  if (G_UNLIKELY (res != GST_H264_PARSER_OK
+          && res != GST_H264_PARSER_BROKEN_LINK))
+    goto error;
+
   /* When SEI message doesn't end at byte boundary,
    * check remaining bits fit the specification.
    */
