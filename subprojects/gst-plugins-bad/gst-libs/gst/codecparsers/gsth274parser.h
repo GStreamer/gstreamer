@@ -33,16 +33,15 @@
 
 /**
  * GstH274ParserResult:
- *
- * The result of parsing H274 data.
- *
  * @GST_H274_PARSER_OK: The parsing succeeded.
  * @GST_H274_PARSER_BROKEN_DATA: The data to parse is broken.
  * @GST_H274_PARSER_BROKEN_LINK: The link to structure needed for the parsing
  *  couldn't be found.
- * @GST_H274_PARSER_ERROR: An error accured when parsing.
+ * @GST_H274_PARSER_ERROR: An error occurred when parsing.
  * @GST_H274_PARSER_NO_NAL: No nal found during the parsing.
  * @GST_H274_PARSER_NO_NAL_END: Start of the nal found, but not the end.
+ *
+ * The result of parsing H274 data.
  *
  * Since: 1.30
  */
@@ -68,7 +67,7 @@ typedef enum
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 GstH274ParserResult gst_h274_parser_parse_registered_user_data (GstH274RegisteredUserData * rud, NalReader * nr, guint payload_size);
 
 /**
@@ -83,7 +82,7 @@ GstH274ParserResult gst_h274_parser_parse_registered_user_data (GstH274Registere
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 GstH274ParserResult gst_h274_parser_parse_user_data_unregistered (GstH274UserDataUnregistered * udu, NalReader * nr, guint payload_size);
 
 /**
@@ -98,8 +97,8 @@ GstH274ParserResult gst_h274_parser_parse_user_data_unregistered (GstH274UserDat
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
-GstH274ParserResult gst_h274_parser_parse_dsci (GstH274DigitallySignedContentInitialization * dsc_init, NalReader * nr, guint payload_size); 
+G_GNUC_INTERNAL
+GstH274ParserResult gst_h274_parser_parse_dsci (GstH274DigitallySignedContentInitialization * dsc_init, NalReader * nr, guint payload_size);
 
 /**
  * gst_h274_parser_parse_dscs:
@@ -112,7 +111,7 @@ GstH274ParserResult gst_h274_parser_parse_dsci (GstH274DigitallySignedContentIni
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 GstH274ParserResult gst_h274_parser_parse_dscs (GstH274DigitallySignedContentSelection * dsc_sel, NalReader * nr);
 
 /**
@@ -126,7 +125,7 @@ GstH274ParserResult gst_h274_parser_parse_dscs (GstH274DigitallySignedContentSel
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 GstH274ParserResult gst_h274_parser_parse_dscv (GstH274DigitallySignedContentVerification * dsc_ver, NalReader * nr);
 
 /**
@@ -140,7 +139,7 @@ GstH274ParserResult gst_h274_parser_parse_dscv (GstH274DigitallySignedContentVer
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 guint32 gst_h274_dsci_get_payload_size (GstH274DigitallySignedContentInitialization * dsc_init);
 
 /**
@@ -154,7 +153,7 @@ guint32 gst_h274_dsci_get_payload_size (GstH274DigitallySignedContentInitializat
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 guint32 gst_h274_dscs_get_payload_size (GstH274DigitallySignedContentSelection * dsc_sel);
 
 /**
@@ -169,7 +168,7 @@ guint32 gst_h274_dscs_get_payload_size (GstH274DigitallySignedContentSelection *
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 guint32 gst_h274_dscv_get_payload_size (GstH274DigitallySignedContentVerification * dsc_ver, gboolean * need_align);
 
 /**
@@ -183,10 +182,10 @@ guint32 gst_h274_dscv_get_payload_size (GstH274DigitallySignedContentVerificatio
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 gboolean gst_h274_write_sei_registered_user_data (NalWriter * nw, GstH274RegisteredUserData * rud);
 
-/** 
+/**
  * gst_h274_write_sei_user_data_unregistered:
  * @nw: a NalWriter to write to
  * @udu: #GstH274UserDataUnregistered structure holding unregistered user data to write
@@ -197,10 +196,10 @@ gboolean gst_h274_write_sei_registered_user_data (NalWriter * nw, GstH274Registe
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 gboolean gst_h274_write_sei_user_data_unregistered (NalWriter * nw, GstH274UserDataUnregistered * udu);
 
-/** 
+/**
  * gst_h274_write_sei_dsci:
  * @nw: a NalWriter to write to
  * @dsc_init: #GstH274DigitallySignedContentInitialization structure holding digitally signed content initialization data to write
@@ -211,10 +210,10 @@ gboolean gst_h274_write_sei_user_data_unregistered (NalWriter * nw, GstH274UserD
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 gboolean gst_h274_write_sei_dsci (NalWriter * nw, GstH274DigitallySignedContentInitialization * dsc_init);
 
-/** 
+/**
  * gst_h274_write_sei_dscs:
  * @nw: a NalWriter to write to
  * @dsc_sel: #GstH274DigitallySignedContentSelection structure holding digitally signed content selection data to write
@@ -225,10 +224,10 @@ gboolean gst_h274_write_sei_dsci (NalWriter * nw, GstH274DigitallySignedContentI
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 gboolean gst_h274_write_sei_dscs (NalWriter * nw, GstH274DigitallySignedContentSelection * dsc_sel);
 
-/** 
+/**
  * gst_h274_write_sei_dscv:
  * @nw: a NalWriter to write to
  * @dsc_ver: #GstH274DigitallySignedContentVerification structure holding digitally signed content verification data to write
@@ -239,6 +238,6 @@ gboolean gst_h274_write_sei_dscs (NalWriter * nw, GstH274DigitallySignedContentS
  *
  * Since: 1.30
  */
-GST_CODEC_PARSERS_API
+G_GNUC_INTERNAL
 gboolean gst_h274_write_sei_dscv (NalWriter * nw, GstH274DigitallySignedContentVerification * dsc_ver);
 

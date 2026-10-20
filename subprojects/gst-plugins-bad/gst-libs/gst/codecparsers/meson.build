@@ -45,7 +45,6 @@ codecparser_headers = files([
   'gstav1parser.h',
   'gstlcevcmeta.h',
   'gsth266parser.h',
-  'gsth274parser.h',
 ])
 install_headers(codecparser_headers, subdir : 'gstreamer-1.0/gst/codecparsers')
 
@@ -96,7 +95,7 @@ if build_gir
     'identifier_prefix' : 'Gst',
     'symbol_prefix' : 'gst',
     'export_packages' : pkg_name,
-    'includes' : ['Gst-1.0', 'GstBase-1.0'],
+    'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
     'install' : true,
     'extra_args' : gir_init_section + cp_args +
       ['--c-include=gst/codecs/gstav1decoder.h',
@@ -119,7 +118,7 @@ if build_gir
        '--c-include=gst/codecparsers/gstvp8rangedecoder.h',
        '--c-include=gst/codecparsers/gstvp9parser.h',
       ],
-    'dependencies' : [gstbase_dep]
+    'dependencies' : [gstbase_dep, gstvideo_dep]
   }
   library_def += {'gir': [gir]}
   if not static_build
