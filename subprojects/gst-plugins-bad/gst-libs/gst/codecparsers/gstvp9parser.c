@@ -56,8 +56,32 @@ static gboolean initialized = FALSE;
     initialized = TRUE; \
   }
 
-#define gst_vp9_read_bit(br) gst_bit_reader_get_bits_uint8_unchecked(br, 1)
-#define gst_vp9_read_bits(br, bits) gst_bit_reader_get_bits_uint32_unchecked(br, bits)
+/* The VP9 frame header syntax is data-dependent, so a truncated buffer can
+ * be detected only after the whole header was walked. Reads past the end of
+ * the buffer are therefore not checked at each call site; the wrapper below
+ * records the first failure instead and the parsing entry points bail out
+ * when it is set. */
+typedef struct
+{
+  GstBitReader br;
+  gboolean failed;
+} GstVp9BitReader;
+
+static guint32
+gst_vp9_read_bits_ (GstVp9BitReader * br, guint nbits)
+{
+  guint32 val = 0;
+
+  if (G_UNLIKELY (!gst_bit_reader_get_bits_uint32 (&br->br, &val, nbits))) {
+    br->failed = TRUE;
+    return 0;
+  }
+
+  return val;
+}
+
+#define gst_vp9_read_bit(br) gst_vp9_read_bits_ (br, 1)
+#define gst_vp9_read_bits(br, bits) gst_vp9_read_bits_ (br, bits)
 
 #define GST_VP9_PARSER_GET_PRIVATE(parser)  ((GstVp9ParserPrivate *)(parser))
 
@@ -85,14 +109,14 @@ typedef struct
 } GstVp9ParserPrivate;
 
 static gint32
-gst_vp9_read_signed_bits (GstBitReader * br, int bits)
+gst_vp9_read_signed_bits (GstVp9BitReader * br, int bits)
 {
   const gint32 value = gst_vp9_read_bits (br, bits);
   return gst_vp9_read_bit (br) ? -value : value;
 }
 
 static gboolean
-verify_frame_marker (GstBitReader * br)
+verify_frame_marker (GstVp9BitReader * br)
 {
   guint8 frame_marker = gst_vp9_read_bits (br, 2);
   if (frame_marker != GST_VP9_FRAME_MARKER) {
@@ -103,20 +127,20 @@ verify_frame_marker (GstBitReader * br)
 }
 
 static gboolean
-verify_sync_code (GstBitReader * const br)
+verify_sync_code (GstVp9BitReader * const br)
 {
   return (gst_vp9_read_bits (br, 24) == GST_VP9_SYNC_CODE);
 }
 
 static gboolean
-verify_superframe_marker (GstBitReader * br)
+verify_superframe_marker (GstVp9BitReader * br)
 {
   return gst_vp9_read_bits (br, 3) == GST_VP9_SUPERFRAME_MARKER;
 }
 
 static gboolean
 parse_bitdepth_colorspace_sampling (GstVp9Parser * parser,
-    GstBitReader * const br, GstVp9FrameHdr * frame_hdr)
+    GstVp9BitReader * const br, GstVp9FrameHdr * frame_hdr)
 {
   if (frame_hdr->profile > GST_VP9_PROFILE_1)
     parser->bit_depth =
@@ -169,7 +193,7 @@ error:
 }
 
 static guint
-parse_profile (GstBitReader * br)
+parse_profile (GstVp9BitReader * br)
 {
   guint8 profile = gst_vp9_read_bit (br);
   profile |= gst_vp9_read_bit (br) << 1;
@@ -179,7 +203,7 @@ parse_profile (GstBitReader * br)
 }
 
 static void
-parse_frame_size (GstBitReader * br, guint32 * width, guint32 * height)
+parse_frame_size (GstVp9BitReader * br, guint32 * width, guint32 * height)
 {
   const guint32 w = gst_vp9_read_bits (br, 16) + 1;
   const guint32 h = gst_vp9_read_bits (br, 16) + 1;
@@ -188,7 +212,7 @@ parse_frame_size (GstBitReader * br, guint32 * width, guint32 * height)
 }
 
 static void
-parse_display_frame_size (GstBitReader * br, GstVp9FrameHdr * frame_hdr)
+parse_display_frame_size (GstVp9BitReader * br, GstVp9FrameHdr * frame_hdr)
 {
   frame_hdr->display_size_enabled = gst_vp9_read_bit (br);
   if (frame_hdr->display_size_enabled)
@@ -198,7 +222,7 @@ parse_display_frame_size (GstBitReader * br, GstVp9FrameHdr * frame_hdr)
 
 static void
 parse_frame_size_from_refs (const GstVp9Parser * parser,
-    GstVp9FrameHdr * frame_hdr, GstBitReader * br)
+    GstVp9FrameHdr * frame_hdr, GstVp9BitReader * br)
 {
   gboolean found = FALSE;
   int i;
@@ -219,7 +243,7 @@ parse_frame_size_from_refs (const GstVp9Parser * parser,
 }
 
 static GstVp9InterpolationFilter
-parse_interp_filter (GstBitReader * br)
+parse_interp_filter (GstVp9BitReader * br)
 {
   static const GstVp9InterpolationFilter filter_map[] = {
     GST_VP9_INTERPOLATION_FILTER_EIGHTTAP_SMOOTH,
@@ -233,7 +257,7 @@ parse_interp_filter (GstBitReader * br)
 }
 
 static void
-parse_loopfilter (GstVp9LoopFilter * lf, GstBitReader * br)
+parse_loopfilter (GstVp9LoopFilter * lf, GstVp9BitReader * br)
 {
   lf->filter_level = gst_vp9_read_bits (br, 6);
   lf->sharpness_level = gst_vp9_read_bits (br, 3);
@@ -261,13 +285,13 @@ parse_loopfilter (GstVp9LoopFilter * lf, GstBitReader * br)
 }
 
 static gint8
-parse_delta_q (GstBitReader * br)
+parse_delta_q (GstVp9BitReader * br)
 {
   return gst_vp9_read_bit (br) ? gst_vp9_read_signed_bits (br, 4) : 0;
 }
 
 static void
-parse_quantization (GstVp9QuantIndices * quant_indices, GstBitReader * br)
+parse_quantization (GstVp9QuantIndices * quant_indices, GstVp9BitReader * br)
 {
   quant_indices->y_ac_qi = gst_vp9_read_bits (br, QINDEX_BITS);
   quant_indices->y_dc_delta = parse_delta_q (br);
@@ -276,7 +300,7 @@ parse_quantization (GstVp9QuantIndices * quant_indices, GstBitReader * br)
 }
 
 static void
-parse_segmentation (GstVp9SegmentationInfo * seg, GstBitReader * br)
+parse_segmentation (GstVp9SegmentationInfo * seg, GstVp9BitReader * br)
 {
   int i;
 
@@ -366,7 +390,7 @@ get_min_lb_tile_cols (guint32 sb_cols)
 }
 
 static gboolean
-parse_tile_info (GstVp9FrameHdr * frame_hdr, GstBitReader * br)
+parse_tile_info (GstVp9FrameHdr * frame_hdr, GstVp9BitReader * br)
 {
   guint32 max_ones;
   const guint32 sb_cols = ALIGN_SB64 (frame_hdr->width);
@@ -686,10 +710,11 @@ GstVp9ParserResult
 gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
     GstVp9FrameHdr * frame_hdr, const guint8 * data, gsize size)
 {
-  GstBitReader bit_reader;
-  GstBitReader *br = &bit_reader;
+  GstVp9BitReader bit_reader;
+  GstVp9BitReader *br = &bit_reader;
 
-  gst_bit_reader_init (br, data, size);
+  gst_bit_reader_init (&br->br, data, size);
+  br->failed = FALSE;
   memset (frame_hdr, 0, sizeof (*frame_hdr));
 
   /* Parsing Uncompressed Data Chunk */
@@ -706,6 +731,8 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
   frame_hdr->show_existing_frame = gst_vp9_read_bit (br);
   if (frame_hdr->show_existing_frame) {
     frame_hdr->frame_to_show = gst_vp9_read_bits (br, GST_VP9_REF_FRAMES_LOG2);
+    if (G_UNLIKELY (br->failed))
+      goto error;
     return GST_VP9_PARSER_OK;
   }
 
@@ -811,8 +838,13 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
     goto error;
   }
 
+  if (G_UNLIKELY (br->failed)) {
+    GST_ERROR ("Frame header extends past the end of the frame data !");
+    goto error;
+  }
+
   frame_hdr->frame_header_length_in_bytes =
-      (gst_bit_reader_get_pos (br) + 7) / 8;
+      (gst_bit_reader_get_pos (&br->br) + 7) / 8;
   return gst_vp9_parser_update (parser, frame_hdr);
 
 error:
@@ -841,8 +873,8 @@ GstVp9ParserResult
 gst_vp9_parser_parse_superframe_info (GstVp9Parser * parser,
     GstVp9SuperframeInfo * superframe_info, const guint8 * data, gsize size)
 {
-  GstBitReader header_bit_reader, index_bit_reader;
-  GstBitReader *hbr = &header_bit_reader, *ibr = &index_bit_reader;
+  GstVp9BitReader header_bit_reader, index_bit_reader;
+  GstVp9BitReader *hbr = &header_bit_reader, *ibr = &index_bit_reader;
   guint i, j;
 
   g_return_val_if_fail (parser != NULL, GST_VP9_PARSER_ERROR);
@@ -850,7 +882,9 @@ gst_vp9_parser_parse_superframe_info (GstVp9Parser * parser,
   g_return_val_if_fail (data != NULL, GST_VP9_PARSER_ERROR);
   g_return_val_if_fail (size > 0, GST_VP9_PARSER_ERROR);
 
-  gst_bit_reader_init (hbr, data + size - 1, 1);
+  gst_bit_reader_init (&hbr->br, data + size - 1, 1);
+  hbr->failed = FALSE;
+  ibr->failed = FALSE;
   memset (superframe_info, 0, sizeof (GstVp9SuperframeInfo));
 
   /* Parsing Superframe Data Chunk */
@@ -877,7 +911,7 @@ gst_vp9_parser_parse_superframe_info (GstVp9Parser * parser,
   if (size < superframe_info->superframe_index_size)
     goto error;
 
-  gst_bit_reader_init (ibr,
+  gst_bit_reader_init (&ibr->br,
       data + size - superframe_info->superframe_index_size,
       superframe_info->superframe_index_size);
 
@@ -889,6 +923,9 @@ gst_vp9_parser_parse_superframe_info (GstVp9Parser * parser,
     for (j = 0; j < superframe_info->bytes_per_framesize; j++)
       superframe_info->frame_sizes[i] |= gst_vp9_read_bits (ibr, 8) << (j * 8);
   }
+
+  if (G_UNLIKELY (hbr->failed || ibr->failed))
+    goto error;
 
   return GST_VP9_PARSER_OK;
 
