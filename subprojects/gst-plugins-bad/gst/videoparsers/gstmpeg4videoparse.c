@@ -885,8 +885,14 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
         mp4vparse->vol_offset = packet.offset;
 
       else if (packet.type == GST_MPEG4_VISUAL_OBJ) {
+        /* packet.size is G_MAXUINT when no terminating start code was
+         * found, meaning the packet data runs to the end of the buffer.
+         * Clamp to what is actually readable: packet.offset is always
+         * <= size - 1, so avail cannot wrap. */
+        gsize avail = size - packet.offset;
+        gsize len = packet.size == G_MAXUINT ? avail : MIN (avail, packet.size);
         gst_mpeg4_parse_visual_object (&mp4vparse->vo, NULL,
-            data + packet.offset, MIN (packet.size, size));
+            data + packet.offset, len);
         mp4vparse->vo_found = TRUE;
       }
 
