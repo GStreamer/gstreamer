@@ -179,6 +179,36 @@ GST_START_TEST (test_vp9_parse_superframe)
 
 GST_END_TEST;
 
+GST_START_TEST (test_vp9_parse_truncated_frame_header)
+{
+  /* 1-byte frames whose header parse runs past the buffer
+   * (OSS-Fuzz testcase 4903539546324992): 0x96 reaches the key-frame sync
+   * code, 0xB4 takes the show_existing_frame path after a profile 3
+   * prefix. */
+  const guint8 tc_sync_code[] = { 0x96 };
+  const guint8 tc_show_existing[] = { 0xB4 };
+  GstVp9Parser *parser;
+  GstVp9FrameHdr frame_hdr;
+
+  parser = gst_vp9_parser_new ();
+
+  assert_equals_int (gst_vp9_parser_parse_frame_header (parser, &frame_hdr,
+          tc_sync_code, sizeof (tc_sync_code)), GST_VP9_PARSER_ERROR);
+  assert_equals_int (gst_vp9_parser_parse_frame_header (parser, &frame_hdr,
+          tc_show_existing, sizeof (tc_show_existing)), GST_VP9_PARSER_ERROR);
+
+  /* Truncations of vp9_frame_data shorter than its complete frame header
+   * (15 bytes) must be rejected instead of reading past the end. */
+  for (gsize size = 1; size < 15; size++) {
+    assert_equals_int (gst_vp9_parser_parse_frame_header (parser, &frame_hdr,
+            vp9_frame_data, size), GST_VP9_PARSER_ERROR);
+  }
+
+  gst_vp9_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 vp9parsers_suite (void)
 {
@@ -188,6 +218,7 @@ vp9parsers_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_vp9_parse_superframe);
+  tcase_add_test (tc_chain, test_vp9_parse_truncated_frame_header);
 
   return s;
 }
