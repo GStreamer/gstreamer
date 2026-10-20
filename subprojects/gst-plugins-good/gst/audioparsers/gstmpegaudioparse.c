@@ -1049,6 +1049,13 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
         "no meaningful audio data, and can be safely dropped");
     mp3parse->outgoing_frame_is_xing_header = TRUE;
 
+    /* Check if we have enough data to read the Xing header flags */
+    if (avail < bytes_needed) {
+      GST_DEBUG_OBJECT (mp3parse,
+          "Not enough data to read Xing header (need %d)", bytes_needed);
+      goto cleanup;
+    }
+
     /* Move data after Xing header */
     data += offset_xing + 4;
 
