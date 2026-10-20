@@ -42,6 +42,8 @@
 #include <components/Component.h>
 #include <components/VideoEncoderHEVC.h>
 #include <core/Factory.h>
+#include <gst/codecparsers/gsth265parser.h>
+#include <gst/pbutils/codec-utils.h>
 #include <set>
 #include <string>
 #include <vector>
@@ -324,8 +326,8 @@ enum
 
 #define DOC_SRC_CAPS \
     "video/x-h265, width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ], " \
-    "profile = (string) {main, main-10}, stream-format = (string) byte-stream, " \
-    "alignment = (string) au"
+    "profile = (string) {main, main-10}, tier = (string) { main, high }, " \
+    "stream-format = (string) byte-stream, alignment = (string) au"
 
 typedef struct _GstAmfH265Enc
 {
@@ -1142,6 +1144,59 @@ gst_amf_h265_enc_get_downstream_profiles (GstAmfH265Enc * self,
   gst_clear_caps (&allowed_caps);
 }
 
+static void
+gst_amf_h265_enc_get_downstream_level_for_profile (GstAmfH265Enc * self,
+    const gchar * profile, gint & level_idc, gint & tier)
+{
+  GstCaps *allowed_caps;
+  GstCaps *filter;
+  GstCaps *filtered;
+  GstStructure *s;
+
+  level_idc = 0;
+  tier = -1;
+
+  if (!profile)
+    return;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
+  if (!allowed_caps || gst_caps_is_empty (allowed_caps) ||
+      gst_caps_is_any (allowed_caps)) {
+    gst_clear_caps (&allowed_caps);
+
+    return;
+  }
+
+  filter = gst_caps_new_simple ("video/x-h265",
+      "profile", G_TYPE_STRING, profile, nullptr);
+  filtered = gst_caps_intersect (allowed_caps, filter);
+  gst_caps_unref (filter);
+  gst_caps_unref (allowed_caps);
+
+  if (gst_caps_is_empty (filtered)) {
+    gst_caps_unref (filtered);
+
+    return;
+  }
+
+  filtered = gst_caps_fixate (filtered);
+  s = gst_caps_get_structure (filtered, 0);
+
+  {
+    const gchar *level = gst_structure_get_string (s, "level");
+    if (level)
+      level_idc = gst_codec_utils_h265_get_level_idc (level);
+  }
+
+  {
+    const gchar *tier_str = gst_structure_get_string (s, "tier");
+    if (g_strcmp0 (tier_str, "high") == 0)
+      tier = (gint) AMF_VIDEO_ENCODER_HEVC_TIER_HIGH;
+  }
+
+  gst_caps_unref (filtered);
+}
+
 static GstCaps *
 gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
@@ -1303,6 +1358,48 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     GST_ERROR_OBJECT (self, "Failed to set profile, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
+  }
+
+  {
+    gint level_idc = 0;
+    gint tier = -1;
+    if (dev_caps->max_level != 0 || dev_caps->max_tier > -1) {
+      gst_amf_h265_enc_get_downstream_level_for_profile (self,
+          surface_format == AMF_SURFACE_P010 ? "main-10" : "main", level_idc,
+          tier);
+    }
+
+    if (tier > -1 && dev_caps->max_tier > -1) {
+      if (tier > dev_caps->max_tier) {
+        GST_ERROR_OBJECT (self, "Downstream requested unsupported high tier");
+        goto error;
+      }
+
+      result =
+          comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_TIER, (amf_int64) tier);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set tier, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+    }
+
+    if (level_idc != 0 && dev_caps->max_level != 0) {
+      if (level_idc < (gint) AMF_LEVEL_1 ||
+          level_idc > (gint) dev_caps->max_level) {
+        GST_ERROR_OBJECT (self, "Downstream requested unsupported level %d",
+            level_idc);
+        goto error;
+      }
+
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_PROFILE_LEVEL,
+          (amf_int64) level_idc);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set level, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+    }
   }
 
   result =
@@ -1593,11 +1690,74 @@ error:
   return FALSE;
 }
 
+static void
+gst_amf_h265_enc_get_level_and_tier_from_sps (AMFComponent * comp,
+    std::string & caps_str)
+{
+  AMF_RESULT result;
+  AMFInterfacePtr iface;
+  AMFBufferPtr spspps_buf;
+  guint8 *spspps;
+  amf_size spspps_size;
+  GstH265Parser *parser;
+  GstH265NalUnit nalu;
+  GstH265ParserResult rst;
+
+  result = comp->GetProperty (AMF_VIDEO_ENCODER_HEVC_EXTRADATA, &iface);
+  if (result != AMF_OK)
+    return;
+
+  spspps_buf = AMFBufferPtr (iface);
+  if (!spspps_buf)
+    return;
+
+  spspps_size = spspps_buf->GetSize ();
+  spspps = (guint8 *) spspps_buf->GetNative ();
+  if (!spspps || spspps_size < 4)
+    return;
+
+  parser = gst_h265_parser_new ();
+
+  rst = gst_h265_parser_identify_nalu (parser, spspps, 0, spspps_size, &nalu);
+  if (rst == GST_H265_PARSER_NO_NAL_END)
+    rst = GST_H265_PARSER_OK;
+
+  while (rst == GST_H265_PARSER_OK) {
+    if (nalu.type == GST_H265_NAL_SPS) {
+      GstH265SPS sps;
+
+      if (gst_h265_parser_parse_sps (parser, &nalu, &sps,
+              FALSE) == GST_H265_PARSER_OK) {
+        const guint8 level_idc = sps.profile_tier_level.level_idc;
+        /* Only general_level_idc (byte 11) is needed here */
+        const guint8 ptl[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, level_idc };
+        const gchar *level = gst_codec_utils_h265_get_level (ptl, 12);
+
+        if (level)
+          caps_str += ", level = (string) " + std::string (level);
+
+        caps_str += ", tier = (string) ";
+        caps_str += sps.profile_tier_level.tier_flag ? "high" : "main";
+      }
+
+      break;
+    }
+
+    rst = gst_h265_parser_identify_nalu (parser, spspps,
+        nalu.offset + nalu.size, spspps_size, &nalu);
+    if (rst == GST_H265_PARSER_NO_NAL_END)
+      rst = GST_H265_PARSER_OK;
+  }
+
+  gst_h265_parser_free (parser);
+}
+
 static gboolean
 gst_amf_h265_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component)
 {
   GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
+  AMFComponent *comp = (AMFComponent *) component;
   GstVideoInfo *info = &state->info;
   GstVideoCodecState *output_state;
   GstCaps *caps;
@@ -1610,6 +1770,9 @@ gst_amf_h265_enc_set_output_state (GstAmfEncoder * encoder,
   } else {
     caps_str += "main";
   }
+
+  gst_amf_h265_enc_get_level_and_tier_from_sps (comp, caps_str);
+
   caps = gst_caps_from_string (caps_str.c_str ());
   output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       caps, state);
@@ -1706,10 +1869,14 @@ gst_amf_h265_enc_create_class_data (GstObject * device, AMFComponent * comp)
 {
   AMF_RESULT result;
   GstAmfH265EncDeviceCaps dev_caps = { 0, };
+  /* -1 means "unqueried"; AMF_VIDEO_ENCODER_HEVC_TIER_MAIN is 0, so that
+   * can't double as the "unqueried" default. */
+  dev_caps.max_tier = -1;
   std::string sink_caps_str;
   std::string src_caps_str;
   std::set < std::string > profiles;
   std::string profile_str;
+  std::string tier_str;
   std::string resolution_str;
   GstAmfH265EncClassData *cdata;
   AMFCapsPtr amf_caps;
@@ -1959,6 +2126,10 @@ gst_amf_h265_enc_create_class_data (GstObject * device, AMFComponent * comp)
 
 #undef APPEND_STRING
 
+  tier_str = "tier = (string) main";
+  if (dev_caps.max_tier >= (amf_int64) AMF_VIDEO_ENCODER_HEVC_TIER_HIGH)
+    tier_str = "tier = (string) { main, high }";
+
   min_width = MAX (in_min_width, 1);
   max_width = in_max_width;
   if (max_width == 0) {
@@ -1982,8 +2153,7 @@ gst_amf_h265_enc_create_class_data (GstObject * device, AMFComponent * comp)
       "video/x-raw, " + format_str + ", " + resolution_str +
       ", interlace-mode = (string) progressive";
   src_caps_str =
-      "video/x-h265, " + resolution_str +
-      ", " + profile_str +
+      "video/x-h265, " + resolution_str + ", " + profile_str + ", " + tier_str +
       ", stream-format = (string) byte-stream, alignment = (string) au";
 
 #ifdef G_OS_WIN32
