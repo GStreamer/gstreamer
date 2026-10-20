@@ -4364,6 +4364,11 @@ qtdemux_parse_saiz (GstQTDemux * qtdemux, QtDemuxStream * stream,
       return NULL;
     }
   } else {
+    if (*sample_count >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
+      GST_WARNING_OBJECT (qtdemux, "not allocating info_sizes for %u samples, "
+          "such number is suspiciously large (broken file?)", *sample_count);
+      return NULL;
+    }
     info_sizes = g_new (guint8, *sample_count);
     memset (info_sizes, default_info_size, *sample_count);
   }
