@@ -362,16 +362,25 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
     case GST_MPEG4_VISUAL_OBJ_SEQ_START:
       GST_LOG_OBJECT (mp4vparse, "Visual Sequence Start");
       mp4vparse->config_found = TRUE;
-      if (packet->size > 1) {
-        mp4vparse->profile =
-            gst_codec_utils_mpeg4video_get_profile (packet->data +
-            packet->offset + 1, packet->size - 1);
-        mp4vparse->level =
-            gst_codec_utils_mpeg4video_get_level (packet->data +
-            packet->offset + 1, packet->size - 1);
-      } else {
-        GST_WARNING_OBJECT (mp4vparse,
-            "VOS packet too short to extract profile/level");
+      {
+        /* packet->size is G_MAXUINT when no terminating start code was
+         * found, meaning the packet data runs to the end of the buffer.
+         * Clamp to what is actually readable: packet->offset is always
+         * <= size - 1, so avail cannot wrap. */
+        gsize avail = size - packet->offset - 1;
+        gsize len =
+            packet->size == G_MAXUINT ? avail : MIN (avail, packet->size - 1);
+        if (len > 0) {
+          mp4vparse->profile =
+              gst_codec_utils_mpeg4video_get_profile (packet->data +
+              packet->offset + 1, len);
+          mp4vparse->level =
+              gst_codec_utils_mpeg4video_get_level (packet->data +
+              packet->offset + 1, len);
+        } else {
+          GST_WARNING_OBJECT (mp4vparse,
+              "VOS packet too short to extract profile/level");
+        }
       }
       break;
     case GST_MPEG4_VISUAL_OBJ:
