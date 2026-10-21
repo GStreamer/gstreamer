@@ -103,7 +103,7 @@ test_plugs_best (GstElement * sink, GType expected)
   child = GST_BIN_CHILDREN (sink);
   fail_unless (child != NULL, "no elements plugged");
   ck_assert_int_eq (g_list_length (child), 1);
-  fail_unless (G_OBJECT_TYPE (child), expected);
+  fail_unless (G_OBJECT_TYPE (child->data) == expected);
 
   /* clean up */
   gst_element_set_state (sink, GST_STATE_NULL);

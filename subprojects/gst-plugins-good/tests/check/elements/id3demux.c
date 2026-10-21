@@ -143,7 +143,7 @@ check_date_1977_06_23 (const GstTagList * tags, const gchar * file)
 
   gst_tag_list_get_date_time (tags, GST_TAG_DATE_TIME, &date);
   fail_unless (date != NULL,
-      "Tags from %s should contain a GST_TAG_DATE_TIME tag");
+      "Tags from %s should contain a GST_TAG_DATE_TIME tag", file);
   fail_unless_equals_int (gst_date_time_get_year (date), 1977);
   fail_unless_equals_int (gst_date_time_get_month (date), 6);
   fail_unless_equals_int (gst_date_time_get_day (date), 23);

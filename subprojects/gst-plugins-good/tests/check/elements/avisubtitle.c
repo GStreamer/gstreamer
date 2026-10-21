@@ -151,7 +151,7 @@ check_correct_buffer (guint8 * src_data, guint src_size, guint8 * dst_data,
   buffers = g_list_remove (buffers, newBuffer);
   fail_unless (g_list_length (buffers) == 1, "Buffers list needs to be empty");
   fail_unless (gst_buffer_get_size (newBuffer) == dst_size,
-      "size of the new buffer is wrong ( %d != %d)",
+      "size of the new buffer is wrong ( %" G_GSIZE_FORMAT " != %u)",
       gst_buffer_get_size (newBuffer), dst_size);
   fail_unless (gst_buffer_memcmp (newBuffer, 0, dst_data, dst_size) == 0,
       "data of the buffer is not correct");

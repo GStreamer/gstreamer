@@ -208,8 +208,8 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
     fail_unless (gst_pad_push (src1, inbuf) == GST_FLOW_OK);
 
     if (buffers)
-      fail_unless (GST_BUFFER_PTS (buffers->data) == i * 1000, "%lld",
-          GST_BUFFER_PTS (buffers->data));
+      fail_unless (GST_BUFFER_PTS (buffers->data) == i * 1000,
+          "%" G_GUINT64_FORMAT, GST_BUFFER_PTS (buffers->data));
 
     cb (src2, i);
 

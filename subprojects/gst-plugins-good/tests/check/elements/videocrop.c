@@ -140,7 +140,8 @@ GST_START_TEST (test_unit_sizes)
 
       fail_unless (vc_size == csp_size,
           "videocrop and videoconvert return different unit sizes for "
-          "caps %s: vc_size=%d, csp_size=%d", caps_str, vc_size, csp_size);
+          "caps %s: vc_size=%" G_GSIZE_FORMAT ", csp_size=%" G_GSIZE_FORMAT,
+          caps_str, vc_size, csp_size);
 
       g_free (caps_str);
     }

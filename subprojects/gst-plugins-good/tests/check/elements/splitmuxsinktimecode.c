@@ -492,8 +492,8 @@ count_frames (const gchar * file_name, guint expected_count)
   gst_message_unref (msg);
 
   fail_unless (frame_count == expected_count,
-      "Frame count %u is not equal to expected %u frame count %u",
-      expected_count, frame_count);
+      "Frame count %u is not equal to expected frame count %u",
+      frame_count, expected_count);
 
   gst_object_unref (pipeline);
 }
