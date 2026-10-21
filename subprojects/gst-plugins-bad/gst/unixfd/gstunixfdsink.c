@@ -484,11 +484,19 @@ out:
 }
 
 static gboolean
+quit_main_loop_cb (gpointer user_data)
+{
+  GMainLoop *loop = user_data;
+  g_main_loop_quit (loop);
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
 gst_unix_fd_sink_stop (GstBaseSink * bsink)
 {
   GstUnixFdSink *self = (GstUnixFdSink *) bsink;
 
-  g_main_loop_quit (self->loop);
+  g_main_context_invoke (self->context, quit_main_loop_cb, self->loop);
   g_thread_join (self->thread);
 
   g_source_destroy (self->source);
