@@ -860,6 +860,12 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
   GST_DEBUG ("w:%d h:%d", w, h);
   GST_DEBUG ("encoding: %d", encoding);
 
+  if (G_UNLIKELY (w > (gint) decoder->width || h > (gint) decoder->height)) {
+    GST_WARNING ("Rectangle %dx%d bigger than the framebuffer %dx%d",
+        w, h, decoder->width, decoder->height);
+    return FALSE;
+  }
+
   switch (encoding) {
     case ENCODING_TYPE_RAW:
       ret = rfb_decoder_raw_encoding (decoder, x, y, w, h);
