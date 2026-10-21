@@ -503,7 +503,6 @@ gst_rfb_src_negotiate (GstBaseSrc * bsrc)
 
   /* calculate some many used values */
   decoder->bytespp = decoder->bpp / 8;
-  decoder->line_size = decoder->rect_width * decoder->bytespp;
 
   GST_DEBUG_OBJECT (src, "setting caps width to %d and height to %d",
       decoder->rect_width, decoder->rect_height);
@@ -521,8 +520,10 @@ gst_rfb_src_negotiate (GstBaseSrc * bsrc)
   gst_video_info_set_format (&vinfo, vformat, decoder->rect_width,
       decoder->rect_height);
 
-  /* Zero the frames: rows are written packed and may not cover the padded
-   * stride of the output format, and prev_frame is read before first fill */
+  decoder->line_size = vinfo.stride[0];
+
+  /* Zero the frames: stride padding is never written to, and prev_frame is
+   * read before first fill */
   decoder->frame = g_malloc0 (vinfo.size);
   if (decoder->use_copyrect)
     decoder->prev_frame = g_malloc0 (vinfo.size);
