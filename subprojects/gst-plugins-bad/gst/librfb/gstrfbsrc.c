@@ -521,9 +521,11 @@ gst_rfb_src_negotiate (GstBaseSrc * bsrc)
   gst_video_info_set_format (&vinfo, vformat, decoder->rect_width,
       decoder->rect_height);
 
-  decoder->frame = g_malloc (vinfo.size);
+  /* Zero the frames: rows are written packed and may not cover the padded
+   * stride of the output format, and prev_frame is read before first fill */
+  decoder->frame = g_malloc0 (vinfo.size);
   if (decoder->use_copyrect)
-    decoder->prev_frame = g_malloc (vinfo.size);
+    decoder->prev_frame = g_malloc0 (vinfo.size);
 
   caps = gst_video_info_to_caps (&vinfo);
 
