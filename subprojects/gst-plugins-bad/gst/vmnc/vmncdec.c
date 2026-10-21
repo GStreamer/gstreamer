@@ -45,6 +45,10 @@ static gboolean gst_vmnc_dec_sink_event (GstVideoDecoder * bdec,
     GstEvent * event);
 
 #define GST_CAT_DEFAULT vmnc_debug
+
+/* Maximum screen size we allow for the screen dimensions to avoid allocating
+ * too much memory with malicious streams. */
+#define VMNC_MAX_DIMENSION 8192
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define RFB_GET_UINT32(ptr) GST_READ_UINT32_BE(ptr)
@@ -840,8 +844,9 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
             GST_WARNING_OBJECT (dec, "Rectangle out of range, type %d", r.type);
             return ERROR_INVALID;
           }
-        } else if (r.width > 16384 || r.height > 16384) {
-          GST_WARNING_OBJECT (dec, "Width or height too high: %ux%u", r.width,
+        } else if (r.width == 0 || r.height == 0 ||
+            r.width > VMNC_MAX_DIMENSION || r.height > VMNC_MAX_DIMENSION) {
+          GST_WARNING_OBJECT (dec, "Invalid WMVi dimensions: %ux%u", r.width,
               r.height);
           return ERROR_INVALID;
         }
