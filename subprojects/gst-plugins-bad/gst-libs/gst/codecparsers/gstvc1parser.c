@@ -699,7 +699,15 @@ get_unary (GstBitReader * br, gint stop, gint len)
   guint8 current = 0xff;
 
   for (i = 0; i < len; i++) {
-    current = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+    /* Use the checked reader: callers do not verify the remaining size
+     * before calling this helper. Reading past the end with the unchecked
+     * variant would read out of bounds and also make
+     * gst_bit_reader_get_remaining() wrap around, which defeats every
+     * later bounds check on this reader. On short data stop early; the
+     * next checked read in the caller then fails cleanly. The returned
+     * value stays within [0, len] so table lookups remain in range. */
+    if (!gst_bit_reader_get_bits_uint8 (br, &current, 1))
+      return i;
     if (current == stop)
       return i;
   }
