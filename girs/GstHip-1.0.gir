@@ -734,7 +734,7 @@ otherwise %NULL</doc>
       <method name="get_stream" c:identifier="gst_hip_device_get_stream" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">Gets per #GstHipDevice default #GstHipStream owned by @device</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.h"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipdevice.cpp">a #GstHipStream</doc>
           <type name="HipStream" c:type="GstHipStream*"/>
         </return-value>
@@ -1170,7 +1170,7 @@ before getting mapped device memory</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a #GstHipGraphicsResource</doc>
             <type name="HipGraphicsResource" c:type="GstHipGraphicsResource*"/>
           </instance-parameter>
-          <parameter name="dev_ptr" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <parameter name="dev_ptr" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthip-interop.cpp">a pointer to mapped device memory</doc>
             <type name="gpointer" c:type="void**"/>
           </parameter>
@@ -1800,7 +1800,7 @@ The caller must keep the module alive until all submitted work has completed.</d
 must provide a valid module image and keep it alive for the duration of this
 call. The module does not retain @blob after this call returns.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipkernel.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipkernel.cpp">a new module, or %NULL on failure</doc>
           <type name="HipKernelModule" c:type="GstHipKernelModule*"/>
         </return-value>
@@ -1819,7 +1819,7 @@ call. The module does not retain @blob after this call returns.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipkernel.cpp">Compiles @source and loads a module for @device. Entry points should use C
 linkage. Source and options must be supported by the device's runtime compiler.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipkernel.h"/>
-        <return-value transfer-ownership="full" nullable="1">
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthipkernel.cpp">a new module, or %NULL on failure</doc>
           <type name="HipKernelModule" c:type="GstHipKernelModule*"/>
         </return-value>

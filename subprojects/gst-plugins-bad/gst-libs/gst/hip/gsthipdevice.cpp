@@ -513,7 +513,7 @@ gst_hip_device_get_device_id (GstHipDevice * device)
  *
  * Gets per #GstHipDevice default #GstHipStream owned by @device
  *
- * Returns: a #GstHipStream
+ * Returns: (transfer none): a #GstHipStream
  *
  * Since: 1.28
  */

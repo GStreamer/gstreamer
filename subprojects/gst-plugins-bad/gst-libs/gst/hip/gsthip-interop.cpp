@@ -188,7 +188,7 @@ gst_hip_graphics_resource_unmap (GstHipGraphicsResource * resource,
 /**
  * gst_hip_graphics_resource_get_mapped_pointer:
  * @resource: a #GstHipGraphicsResource
- * @dev_ptr: (out) (optional): a pointer to mapped device memory
+ * @dev_ptr: (out) (optional) (transfer none): a pointer to mapped device memory
  * @size: (out) (optional): the size of mapped device memory
  *
  * Get mapped device pointer from @resource.

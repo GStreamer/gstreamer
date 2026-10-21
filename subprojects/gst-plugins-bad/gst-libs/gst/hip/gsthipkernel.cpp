@@ -122,7 +122,7 @@ G_DEFINE_BOXED_TYPE (GstHipKernelArgs, gst_hip_kernel_args,
  * Compiles @source and loads a module for @device. Entry points should use C
  * linkage. Source and options must be supported by the device's runtime compiler.
  *
- * Returns: (transfer full) (nullable): a new module, or %NULL on failure
+ * Returns: (transfer full): a new module, or %NULL on failure
  *
  * Since: 1.30
  */
@@ -158,7 +158,7 @@ gst_hip_kernel_module_new_from_source (GstHipDevice * device,
  * must provide a valid module image and keep it alive for the duration of this
  * call. The module does not retain @blob after this call returns.
  *
- * Returns: (transfer full) (nullable): a new module, or %NULL on failure
+ * Returns: (transfer full): a new module, or %NULL on failure
  *
  * Since: 1.30
  */
