@@ -330,7 +330,7 @@ GST_START_TEST (isoff_moov_parse)
 
   trak = &g_array_index (moov->trak, GstTrakBox, 0);
   fail_unless_equals_int (trak->tkhd.track_id, 2);
-  fail_unless (trak->mdia.hdlr.handler_type, GST_ISOFF_FOURCC_SOUN);
+  fail_unless_equals_int (trak->mdia.hdlr.handler_type, GST_ISOFF_FOURCC_SOUN);
   fail_unless_equals_int (trak->mdia.mdhd.timescale, seg_timescale);
 
   gst_isoff_moov_box_free (moov);

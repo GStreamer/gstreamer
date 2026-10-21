@@ -159,7 +159,7 @@ GST_START_TEST (test_insertbin_simple)
 
   insertbin = gst_insert_bin_new (NULL);
   fail_unless (insertbin != NULL);
-  ASSERT_OBJECT_REFCOUNT (insertbin, insertbin, 1);
+  ASSERT_OBJECT_REFCOUNT (insertbin, "insertbin", 1);
   srcpad = gst_check_setup_src_pad (insertbin, &srcpad_template);
   sinkpad = gst_check_setup_sink_pad (insertbin, &sinkpad_template);
 
