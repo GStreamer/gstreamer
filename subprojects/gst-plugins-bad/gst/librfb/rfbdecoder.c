@@ -1010,6 +1010,11 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
         case 2:
           *(guint16 *) offset = (guint16) color;
           break;
+        case 3:
+          offset[0] = (guint8) (color >> 16);
+          offset[1] = (guint8) (color >> 8);
+          offset[2] = (guint8) color;
+          break;
         case 4:
           *(guint32 *) offset = color;
           break;
@@ -1030,6 +1035,8 @@ rfb_decoder_get_pixel (RfbDecoder * decoder, const guint8 * data)
       return RFB_GET_UINT8 (data);
     case 2:
       return GUINT16_SWAP_LE_BE (RFB_GET_UINT16 (data));
+    case 3:
+      return ((guint32) data[0] << 16) | ((guint32) data[1] << 8) | data[2];
     case 4:
       return GUINT32_SWAP_LE_BE (RFB_GET_UINT32 (data));
     default:
