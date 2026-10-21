@@ -398,21 +398,31 @@ static gboolean
 rfb_decoder_state_reason (RfbDecoder * decoder)
 {
   gint reason_length;
+  gchar *reason;
 
   if (!rfb_decoder_read (decoder, 4))
     return FALSE;
 
   reason_length = RFB_GET_UINT32 (decoder->data);
+  if (reason_length < 0) {
+    GST_WARNING ("Invalid reason length %d", reason_length);
+    return FALSE;
+  }
 
-  if (!rfb_decoder_read (decoder, reason_length))
+  if (reason_length > 0 && !rfb_decoder_read (decoder, reason_length))
     return FALSE;
 
-  GST_WARNING ("Reason by server: %s", decoder->data);
+  /* The reason string is not NUL-terminated on the wire */
+  reason = reason_length > 0 ? g_strndup ((const gchar *) decoder->data,
+      reason_length) : g_strdup ("");
+
+  GST_WARNING ("Reason by server: %s", reason);
 
   if (decoder->error == NULL) {
     decoder->error = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-        "VNC server error: %s", decoder->data);
+        "VNC server error: %s", reason);
   }
+  g_free (reason);
 
   return FALSE;
 }
@@ -1245,12 +1255,22 @@ rfb_decoder_state_server_cut_text (RfbDecoder * decoder)
     return FALSE;
 
   cut_text_length = RFB_GET_UINT32 (decoder->data + 3);
-
-  if (!rfb_decoder_read (decoder, cut_text_length))
+  if (cut_text_length < 0) {
+    GST_WARNING ("Invalid cut text length %d", cut_text_length);
     return FALSE;
+  }
 
-  GST_DEBUG ("rfb_decoder_state_server_cut_text: throw away '%s'",
-      decoder->data);
+  if (cut_text_length > 0) {
+    gchar *text;
+
+    if (!rfb_decoder_read (decoder, cut_text_length))
+      return FALSE;
+
+    /* The text is not NUL-terminated on the wire */
+    text = g_strndup ((const gchar *) decoder->data, cut_text_length);
+    GST_DEBUG ("rfb_decoder_state_server_cut_text: throw away '%s'", text);
+    g_free (text);
+  }
 
   decoder->state = rfb_decoder_state_normal;
 
