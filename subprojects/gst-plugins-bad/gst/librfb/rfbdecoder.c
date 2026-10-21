@@ -1148,6 +1148,9 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
         continue;
       }
 
+      if (nr_subrect == 0)
+        continue;
+
       if (subencoding & SUBENCODING_SUBRECTSCOLORED) {
         guint offset = 0;
 
