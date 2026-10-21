@@ -213,6 +213,7 @@ void ges_test_check_object_props (const gchar * file, gint line,
   fail_unless (tmp_layer == GES_LAYER (layer), "clip %s belongs to " \
       "layer %u (timeline %" GST_PTR_FORMAT ") rather than layer %u " \
       "(timeline %" GST_PTR_FORMAT ")", \
+      GES_TIMELINE_ELEMENT_NAME (clip), \
       tmp_layer ? ges_layer_get_priority (tmp_layer) : 0, \
       tmp_layer ? tmp_layer->timeline : NULL, \
       layer ? ges_layer_get_priority (GES_LAYER (layer)) : 0, \
@@ -223,6 +224,7 @@ void ges_test_check_object_props (const gchar * file, gint line,
     GList *layer_clips = ges_layer_get_clips (GES_LAYER (layer)); \
     fail_unless (g_list_find (layer_clips, clip), "clip %s not found " \
         "in layer %u (timeline %" GST_PTR_FORMAT ")", \
+        GES_TIMELINE_ELEMENT_NAME (clip), \
         ges_layer_get_priority (GES_LAYER (layer)), layer->timeline); \
     g_list_free_full (layer_clips, gst_object_unref); \
   } \

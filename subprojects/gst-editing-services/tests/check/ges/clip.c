@@ -1223,8 +1223,8 @@ GST_START_TEST (test_clip_can_group)
   assert_num_in_track (track2, 2);
   assert_num_in_track (track3, 1);
 
-  fail_unless (ges_clip_get_supported_formats (grouped),
-      GES_TRACK_TYPE_VIDEO | GES_TRACK_TYPE_AUDIO);
+  fail_unless (ges_clip_get_supported_formats (grouped) ==
+      (GES_TRACK_TYPE_VIDEO | GES_TRACK_TYPE_AUDIO));
   fail_unless (ges_extractable_get_asset (GES_EXTRACTABLE (grouped))
       == asset2);
   CHECK_OBJECT_PROPS (grouped, 0, 0, 10);
@@ -1232,7 +1232,7 @@ GST_START_TEST (test_clip_can_group)
   g_list_free (clips);
 
   clips = ges_layer_get_clips (layer1);
-  fail_unless (g_list_length (clips), 1);
+  fail_unless_equals_int (g_list_length (clips), 1);
   fail_unless (GES_CLIP (clips->data) == grouped);
   g_list_free_full (clips, gst_object_unref);
 
@@ -3701,8 +3701,8 @@ GST_END_TEST;
   else if (G_VALUE_TYPE (&val) == G_TYPE_FLOAT) \
     found = g_value_get_float (&val); \
   \
-  fail_unless (found == rate, "found %s: %g != expected: %g", found, \
-      prop_name, rate); \
+  fail_unless (found == rate, "found %s: %g != expected: %g", prop_name, \
+      found, rate); \
   g_value_reset (&val); \
 }
 
@@ -4606,8 +4606,9 @@ _new_timed_value (GstClockTime time, gdouble val)
     gdouble diff = (val1->value > val2->value) ? \
         val1->value - val2->value : val2->value - val1->value; \
     fail_unless (val1->timestamp == val2->timestamp && diff < 0.0001, \
-        "The %ith timed value (%lu: %g) does not match the found timed " \
-        "value (%lu: %g)", i, val1->timestamp, val1->value, \
+        "The %" G_GSIZE_FORMAT "th timed value (%" G_GUINT64_FORMAT ": %g) " \
+        "does not match the found timed value (%" G_GUINT64_FORMAT ": %g)", \
+        i, val1->timestamp, val1->value, \
         val2->timestamp, val2->value); \
   } \
   fail_unless (tmp1 == NULL, "Found too few timed values"); \

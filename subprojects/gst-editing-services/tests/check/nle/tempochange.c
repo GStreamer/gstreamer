@@ -159,7 +159,7 @@ static void
 _pad_event_data_check_received (PadEventData * data)
 {
   fail_unless (data->num_eos == data->expect_num_eos, "%s received %u "
-      "EOS, rather than %u", data->num_eos, data->expect_num_eos);
+      "EOS, rather than %u", data->name, data->num_eos, data->expect_num_eos);
   fail_unless (data->num_segments == data->expect_num_segments,
       "%s received %u segments, rather than %u", data->name,
       data->num_segments, data->expect_num_segments);
@@ -240,7 +240,8 @@ _get_source (GstElement * nle_source)
   GList *tmp;
   GstElement *bin, *src = NULL;
 
-  fail_unless (g_list_length (GST_BIN_CHILDREN (nle_source)), 1);
+  /* The source contains its internal identity and the test bin. */
+  fail_unless_equals_int (g_list_length (GST_BIN_CHILDREN (nle_source)), 2);
   bin = GST_BIN_CHILDREN (nle_source)->data;
   fail_unless (GST_IS_BIN (bin));
 

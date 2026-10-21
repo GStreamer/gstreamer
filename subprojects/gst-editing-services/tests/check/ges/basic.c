@@ -261,7 +261,7 @@ GST_END_TEST;
   GESTrackElement *el; \
   GList *tmp = ges_clip_find_track_elements (clip, NULL, \
       GES_TRACK_TYPE_UNKNOWN, child_type); \
-  fail_unless (g_list_length (tmp), 1); \
+  fail_unless_equals_int (g_list_length (tmp), 1); \
   el = tmp->data; \
   g_list_free_full (tmp, gst_object_unref); \
   fail_unless (ges_track_element_get_track (el) == track); \
