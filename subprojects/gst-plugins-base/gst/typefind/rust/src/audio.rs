@@ -391,6 +391,128 @@ pub fn dts_probe(tf: &mut TypeFind) -> Option<DtsFrame> {
 /// Frame size in bytes, by `frmsizecod` then by `fscod`, which runs 48, 44.1
 /// and 32 kHz in that order. A/52 table 5-15 gives the sizes in 16-bit words;
 /// these are the byte counts.
+const AC3_FRAME_SIZE: [[usize; 3]; 38] = [
+    [64, 69, 96],
+    [64, 70, 96],
+    [80, 87, 120],
+    [80, 88, 120],
+    [96, 104, 144],
+    [96, 105, 144],
+    [112, 121, 168],
+    [112, 122, 168],
+    [128, 139, 192],
+    [128, 140, 192],
+    [160, 174, 240],
+    [160, 175, 240],
+    [192, 208, 288],
+    [192, 209, 288],
+    [224, 243, 336],
+    [224, 244, 336],
+    [256, 278, 384],
+    [256, 279, 384],
+    [320, 348, 480],
+    [320, 349, 480],
+    [384, 417, 576],
+    [384, 418, 576],
+    [448, 487, 672],
+    [448, 488, 672],
+    [512, 557, 768],
+    [512, 558, 768],
+    [640, 696, 960],
+    [640, 697, 960],
+    [768, 835, 1152],
+    [768, 836, 1152],
+    [896, 975, 1344],
+    [896, 976, 1344],
+    [1024, 1114, 1536],
+    [1024, 1115, 1536],
+    [1152, 1253, 1728],
+    [1152, 1254, 1728],
+    [1280, 1393, 1920],
+    [1280, 1394, 1920],
+];
+
+/// How far into a file the first frame may hide.
+const AC3_WINDOW: i64 = 1024;
+
+/// Which framing a sync belongs to. The media type is the only difference, and
+/// `bsid` says which because A/52 leaves the values in between unassigned.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Ac3Stream {
+    Ac3,
+    EAc3,
+}
+
+/// The frame header of A/52 5.4.2: the sync, then `bsid` to tell the two
+/// framings apart, then however that framing spells its frame length. `None`
+/// when the header is not one, including the `bsid` values A/52 leaves
+/// unassigned and a geometry outside the tables.
+fn ac3_header(d: &[u8]) -> Option<(Ac3Stream, usize)> {
+    if d[0] != 0x0B || d[1] != 0x77 {
+        return None;
+    }
+    match d[5] >> 3 {
+        0..=8 => {
+            let size = AC3_FRAME_SIZE
+                .get((d[4] & 0x3F) as usize)?
+                .get((d[4] >> 6) as usize)?;
+            Some((Ac3Stream::Ac3, *size))
+        }
+        11..=16 => Some((
+            Ac3Stream::EAc3,
+            (((d[2] & 0x07) as usize) << 8) + d[3] as usize + 1,
+        )),
+        _ => None,
+    }
+}
+
+pub fn ac3_probe(tf: &mut TypeFind) -> Option<(u32, Ac3Stream)> {
+    let mut scan = Scanner::new(tf, 0);
+    while scan.offset() < AC3_WINDOW {
+        let start = scan.offset();
+        // A sync that leads nowhere must not drag the scan with it, so all of the
+        // speculative reading happens on a copy of the cursor.
+        let mut probe = scan;
+        let Some(head) = probe.peek(6) else { break };
+        let Some((stream, size)) = ac3_header(head) else {
+            scan.consume(1);
+            continue;
+        };
+        // Frame sizes are counted in 16-bit words, so twice the size is where
+        // the next frame starts. A second sync there is what rules out a 0x0b77
+        // sitting in other data by chance.
+        probe.consume(2 * size);
+        let again = match stream {
+            // An AC-3 header spells out its own geometry, so the frame at the
+            // far end has to agree that it is one too. E-AC-3 says no geometry
+            // here, so the sync is all there is to compare. Both need a whole
+            // header to be there, not just the two sync bytes.
+            Ac3Stream::Ac3 => probe
+                .peek(5)
+                .is_some_and(|n| n[0] == 0x0B && n[1] == 0x77 && n[4] >> 6 < 3 && n[4] & 0x3F < 38),
+            Ac3Stream::EAc3 => probe.peek(5).is_some_and(|n| n[0] == 0x0B && n[1] == 0x77),
+        };
+        if again {
+            return Some((
+                if start == 0 {
+                    Prob::MAXIMUM.get()
+                } else {
+                    Prob::NEARLY_CERTAIN.get()
+                },
+                stream,
+            ));
+        }
+        scan.consume(1);
+    }
+    None
+}
+
+// ---------------------------------------------------------------------------
+// MP3
+// ---------------------------------------------------------------------------
+
+/// How far from where the probe starts to look for a first frame. Files with
+/// junk in front exist, and so do files that are nothing but junk.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -429,6 +551,35 @@ mod tests {
     /// that the code drifting from the tables fails here rather than in the
     /// field. Layer I counts four octets to a slot, and layer III at the lower
     /// rates has half the samples per frame.
+    #[test]
+    fn ac3_frame_sizes_follow_the_table() {
+        let ac3 = |fscod: u8, frmsizecod: u8, bsid: u8| {
+            ac3_header(&[0x0B, 0x77, 0, 0, (fscod << 6) | frmsizecod, bsid << 3])
+        };
+        for (fscod, frmsizecod, want) in [
+            (0, 0, 64),
+            (1, 0, 69),
+            (2, 0, 96),
+            (0, 11, 160),
+            (1, 21, 418),
+            (1, 27, 697),
+            (2, 37, 1920),
+        ] {
+            assert_eq!(ac3(fscod, frmsizecod, 8), Some((Ac3Stream::Ac3, want)));
+        }
+        assert_eq!(ac3(0, 0, 9), None); // bsid 9 is neither
+        assert_eq!(ac3(0, 0, 17), None); // past E-AC-3
+        assert_eq!(ac3(3, 0, 0), None); // reserved sample rate
+        assert_eq!(ac3(0, 38, 0), None); // past the table
+        assert_eq!(ac3(0, 0, 16), Some((Ac3Stream::EAc3, 1)));
+        // frmsiz spans the low three bits of d[2] and all of d[3].
+        assert_eq!(
+            ac3_header(&[0x0B, 0x77, 0x01, 0x2F, 0, 16 << 3]),
+            Some((Ac3Stream::EAc3, 0x12F + 1))
+        );
+        assert_eq!(ac3_header(&[0x0A, 0x77, 0, 0, 0, 0]), None); // no sync
+    }
+
     #[test]
     fn a_zero_payload_is_not_a_frame() {
         assert_eq!(loas_ep_frame_len(&[0x4D, 0xE1, 0, 0, 0]), None);

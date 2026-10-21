@@ -19,7 +19,7 @@ use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
 
-use crate::audio::{AacFraming, aac_probe, dts_probe};
+use crate::audio::{AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe};
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
@@ -2151,6 +2151,18 @@ extern "C" fn dts_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// AC-3 and E-AC-3
+// =============================================================================
+
+extern "C" fn ac3_type_find(tf: &mut TypeFind, _private: gpointer) {
+    match ac3_probe(tf) {
+        Some((probability, Ac3Stream::Ac3)) => suggest!(tf, probability, c"audio/x-ac3"),
+        Some((probability, Ac3Stream::EAc3)) => suggest!(tf, probability, c"audio/x-eac3"),
+        None => {}
+    }
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2579,6 +2591,14 @@ const FEATURES: &[Feature] = &[
         dts_type_find,
         "dts",
         "audio/x-dts"
+    ),
+    // AC-3 - audio/x-ac3, which also suggests audio/x-eac3
+    typefinder!(
+        "audio/x-ac3",
+        PRIMARY,
+        ac3_type_find,
+        "ac3,eac3",
+        "audio/x-ac3"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
