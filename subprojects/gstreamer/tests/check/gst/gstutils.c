@@ -393,8 +393,9 @@ GST_START_TEST (test_gdouble_to_guint64)
     result = gst_util_gdouble_to_guint64 (from[i]);
     delta = ABS (to[i] - result);
     fail_unless (delta <= tolerance[i],
-        "Could not convert %f: %" G_GUINT64_FORMAT
-        " -> %d, got %d instead, delta of %e with tolerance of %e",
+        "Could not convert %d: %f -> %" G_GUINT64_FORMAT
+        ", got %f instead, delta of %" G_GUINT64_FORMAT
+        " with tolerance of %" G_GUINT64_FORMAT,
         i, from[i], to[i], result, delta, tolerance[i]);
   }
 }

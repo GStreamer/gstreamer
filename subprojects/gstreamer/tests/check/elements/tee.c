@@ -813,13 +813,13 @@ GST_START_TEST (test_allocation_query_aggregation)
   fail_unless (min == 2 + 1);
   fail_unless (max == 0);
 
-  fail_unless (gst_query_get_n_allocation_params (query), 1);
+  fail_unless_equals_int (gst_query_get_n_allocation_params (query), 1);
   gst_query_parse_nth_allocation_param (query, 0, NULL, &param);
   fail_unless (param.align == 15);
   fail_unless (param.prefix == 2);
   fail_unless (param.padding == 2);
 
-  fail_unless (gst_query_get_n_allocation_metas (query), 1);
+  fail_unless_equals_int (gst_query_get_n_allocation_metas (query), 1);
   fail_unless (gst_query_parse_nth_allocation_meta (query, 0, NULL) ==
       GST_PARENT_BUFFER_META_API_TYPE);
 

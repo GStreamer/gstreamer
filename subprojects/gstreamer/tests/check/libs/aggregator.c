@@ -1318,9 +1318,12 @@ GST_START_TEST (test_change_state_intensive)
 
   while (state_i < G_N_ELEMENTS (wanted_states) && carry_on) {
     if (state_return == GST_STATE_CHANGE_SUCCESS && ready) {
+      GstStateChangeReturn ret;
+
       wanted_state = wanted_states[state_i++];
-      fail_unless (gst_element_set_state (pipeline, wanted_state),
-          GST_STATE_CHANGE_SUCCESS);
+      ret = gst_element_set_state (pipeline, wanted_state);
+      fail_unless (ret == GST_STATE_CHANGE_SUCCESS ||
+          ret == GST_STATE_CHANGE_ASYNC);
       GST_INFO ("Wanted state: %s", gst_state_get_name (wanted_state));
     }
 

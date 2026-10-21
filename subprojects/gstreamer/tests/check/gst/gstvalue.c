@@ -239,11 +239,12 @@ GST_START_TEST (test_deserialize_gstfraction)
     fail_unless (gst_value_deserialize (&value, strings[i]),
         "could not deserialize %s (%d)", strings[i], i);
     fail_unless (gst_value_get_fraction_numerator (&value) == result_numers[i],
-        "resulting numerator value is %d, not %d"
+        "resulting numerator value is %d, not %" G_GINT64_FORMAT
         ", for string %s (%d)", gst_value_get_fraction_numerator (&value),
         result_numers[i], strings[i], i);
     fail_unless (gst_value_get_fraction_denominator (&value) ==
-        result_denoms[i], "resulting denominator value is %d, not %d"
+        result_denoms[i],
+        "resulting denominator value is %d, not %" G_GINT64_FORMAT
         ", for string %s (%d)", gst_value_get_fraction_denominator (&value),
         result_denoms[i], strings[i], i);
   }

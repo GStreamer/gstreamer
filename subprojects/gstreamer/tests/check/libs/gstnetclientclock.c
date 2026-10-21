@@ -103,7 +103,7 @@ GST_START_TEST (test_functioning)
    * system load and a lot of things. however within half a second they should
    * at least be within 1/10 of a second of each other... */
   if (diff > 100 * GST_MSECOND)
-    fail ("clocks not in sync (%" GST_TIME_FORMAT ")", diff);
+    fail ("clocks not in sync (%" GST_TIME_FORMAT ")", GST_TIME_ARGS (diff));
 
   /*
      g_print ("diff: %" GST_TIME_FORMAT,
