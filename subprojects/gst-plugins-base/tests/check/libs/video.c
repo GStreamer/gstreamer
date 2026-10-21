@@ -1912,8 +1912,8 @@ GST_START_TEST (test_overlay_composition)
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
   stride = 4 * w;
   fail_unless (gst_buffer_get_size (pix1) > ((h - 1) * stride + (w * 4) - 1),
-      "size %u vs. last pixel offset %u", gst_buffer_get_size (pix1),
-      ((h - 1) * stride + (w * 4) - 1));
+      "size %" G_GSIZE_FORMAT " vs. last pixel offset %u",
+      gst_buffer_get_size (pix1), ((h - 1) * stride + (w * 4) - 1));
   gst_buffer_extract (pix1, ((h - 1) * stride + (w * 4) - 1), &val, 1);
   fail_unless_equals_int (val, 0);
 
@@ -1928,8 +1928,8 @@ GST_START_TEST (test_overlay_composition)
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
   stride = 4 * w;
   fail_unless (gst_buffer_get_size (pix2) > ((h - 1) * stride + (w * 4) - 1),
-      "size %u vs. last pixel offset %u", gst_buffer_get_size (pix1),
-      ((h - 1) * stride + (w * 4) - 1));
+      "size %" G_GSIZE_FORMAT " vs. last pixel offset %u",
+      gst_buffer_get_size (pix2), ((h - 1) * stride + (w * 4) - 1));
   gst_buffer_extract (pix2, ((h - 1) * stride + (w * 4) - 1), &val, 1);
   fail_unless_equals_int (val, 0);
 
@@ -1986,8 +1986,8 @@ GST_START_TEST (test_overlay_composition)
 
   /* touch last byte */
   fail_unless (gst_buffer_get_size (pix1) > ((h - 1) * stride + (w * 4) - 1),
-      "size %u vs. last pixel offset %u", gst_buffer_get_size (pix1),
-      ((h - 1) * stride + (w * 4) - 1));
+      "size %" G_GSIZE_FORMAT " vs. last pixel offset %u",
+      gst_buffer_get_size (pix1), ((h - 1) * stride + (w * 4) - 1));
   gst_buffer_extract (pix1, ((h - 1) * stride + (w * 4) - 1), &val, 1);
   fail_unless_equals_int (val, 0);
 

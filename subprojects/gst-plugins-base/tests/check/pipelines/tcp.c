@@ -361,7 +361,7 @@ GST_START_TEST (test_that_multisocketsink_and_socketsrc_preserve_meta)
   fail_unless (new_fds_len == 1);
 
   fstat (new_fds[0], &new_stat);
-  fail_unless (orig_stat.st_ino, new_stat.st_ino);
+  fail_unless (orig_stat.st_ino == new_stat.st_ino);
 
   close (new_fds[0]);
   g_free (new_fds);

@@ -100,7 +100,7 @@ validate_ogg_page (ogg_page * page)
       granule);
 
   if (ogg_page_bos (page)) {
-    fail_unless (state == NULL, "Extraneous BOS flag on chain %u", serialno);
+    fail_unless (state == NULL, "Extraneous BOS flag on chain %lu", serialno);
 
     state = g_new0 (ChainState, 1);
     g_hash_table_insert (eos_chain_states, GINT_TO_POINTER (serialno), state);
@@ -123,16 +123,16 @@ validate_ogg_page (ogg_page * page)
         break;
     }
   } else if (ogg_page_eos (page)) {
-    fail_unless (state != NULL, "Missing BOS flag on chain %u", serialno);
+    fail_unless (state != NULL, "Missing BOS flag on chain %lu", serialno);
     state->eos = TRUE;
   } else {
-    fail_unless (state != NULL, "Missing BOS flag on chain %u", serialno);
-    fail_unless (!state->eos, "Data after EOS flag on chain %u", serialno);
+    fail_unless (state != NULL, "Missing BOS flag on chain %lu", serialno);
+    fail_unless (!state->eos, "Data after EOS flag on chain %lu", serialno);
   }
 
   if (granule != -1) {
     fail_unless (granule >= state->last_granule,
-        "Granulepos out-of-order for chain %u: old=%" G_GINT64_FORMAT ", new="
+        "Granulepos out-of-order for chain %lu: old=%" G_GINT64_FORMAT ", new=%"
         G_GINT64_FORMAT, serialno, state->last_granule, granule);
     state->last_granule = granule;
   }
@@ -150,7 +150,7 @@ is_video (gpointer key, ChainState * state, gpointer data)
 static gboolean
 check_chain_final_state (gpointer key, ChainState * state, gpointer data)
 {
-  fail_unless (state->eos, "missing EOS flag on chain %u", state->serialno);
+  fail_unless (state->eos, "missing EOS flag on chain %lu", state->serialno);
 
   /* return TRUE to empty the chain table */
   return TRUE;
