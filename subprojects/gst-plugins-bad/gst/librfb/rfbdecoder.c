@@ -690,6 +690,16 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   decoder->green_shift = RFB_GET_UINT8 (decoder->data + 15);
   decoder->blue_shift = RFB_GET_UINT8 (decoder->data + 16);
 
+  if (decoder->red_shift >= 32 || decoder->green_shift >= 32 ||
+      decoder->blue_shift >= 32) {
+    GST_WARNING ("Invalid colour shifts from server");
+    if (decoder->error == NULL) {
+      decoder->error = g_error_new (GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ, "VNC server error: invalid colour shifts");
+    }
+    return FALSE;
+  }
+
   GST_DEBUG ("Server Initialization");
   GST_DEBUG ("width      = %d", decoder->width);
   GST_DEBUG ("height     = %d", decoder->height);
