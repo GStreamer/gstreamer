@@ -22,6 +22,10 @@ GST_DEBUG_CATEGORY_EXTERN (rfbdecoder_debug);
 
 /* Upper bounds for server declared string lengths, so that a malicious
  * server cannot make us allocate huge buffers */
+
+/* Upper bound for the framebuffer dimensions, so that a malicious server
+ * cannot make us allocate huge buffers */
+#define RFB_MAX_FRAMEBUFFER_DIMENSION 8192
 #define RFB_MAX_NAME_LENGTH         (4 * 1024)
 #define RFB_MAX_REASON_LENGTH       (1024 * 1024)
 #define RFB_MAX_CUT_TEXT_LENGTH     (1024 * 1024)
@@ -695,6 +699,19 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   decoder->red_shift = RFB_GET_UINT8 (decoder->data + 14);
   decoder->green_shift = RFB_GET_UINT8 (decoder->data + 15);
   decoder->blue_shift = RFB_GET_UINT8 (decoder->data + 16);
+
+  if (decoder->width == 0 || decoder->height == 0 ||
+      decoder->width > RFB_MAX_FRAMEBUFFER_DIMENSION ||
+      decoder->height > RFB_MAX_FRAMEBUFFER_DIMENSION) {
+    GST_WARNING ("Invalid framebuffer dimensions %ux%u", decoder->width,
+        decoder->height);
+    if (decoder->error == NULL) {
+      decoder->error = g_error_new (GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ,
+          "VNC server error: invalid framebuffer dimensions");
+    }
+    return FALSE;
+  }
 
   if (decoder->red_shift >= 32 || decoder->green_shift >= 32 ||
       decoder->blue_shift >= 32) {
