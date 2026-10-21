@@ -801,6 +801,12 @@ rfb_decoder_state_framebuffer_update (RfbDecoder * decoder)
   decoder->n_rects = RFB_GET_UINT16 (decoder->data + 1);
   GST_DEBUG ("Number of rectangles : %d", decoder->n_rects);
 
+  if (G_UNLIKELY (decoder->n_rects == 0)) {
+    /* The frame is already complete */
+    decoder->state = NULL;
+    return TRUE;
+  }
+
   decoder->state = rfb_decoder_state_framebuffer_update_rectangle;
 
   return TRUE;
