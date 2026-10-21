@@ -293,9 +293,11 @@ render_colour_cursor (GstVMncDec * dec, guint8 * data, int x, int y,
   guint8 *dstraw = data + dec->format.stride * y +
       dec->format.bytes_per_pixel * x;
   guint8 *srcraw = dec->cursor.cursordata +
-      dec->cursor.width * dec->format.bytes_per_pixel * off_y;
+      dec->cursor.width * dec->format.bytes_per_pixel * off_y +
+      dec->format.bytes_per_pixel * off_x;
   guint8 *maskraw = dec->cursor.cursormask +
-      dec->cursor.width * dec->format.bytes_per_pixel * off_y;
+      dec->cursor.width * dec->format.bytes_per_pixel * off_y +
+      dec->format.bytes_per_pixel * off_x;
 
   /* Boundchecking done by caller; this is just the renderer inner loop */
   if (dec->format.bytes_per_pixel == 1) {
