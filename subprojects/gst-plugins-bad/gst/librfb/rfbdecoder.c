@@ -20,6 +20,12 @@
 GST_DEBUG_CATEGORY_EXTERN (rfbdecoder_debug);
 #define GST_CAT_DEFAULT rfbdecoder_debug
 
+/* Upper bounds for server declared string lengths, so that a malicious
+ * server cannot make us allocate huge buffers */
+#define RFB_MAX_NAME_LENGTH         (4 * 1024)
+#define RFB_MAX_REASON_LENGTH       (1024 * 1024)
+#define RFB_MAX_CUT_TEXT_LENGTH     (1024 * 1024)
+
 
 static gboolean rfb_decoder_state_wait_for_protocol_version (RfbDecoder *
     decoder);
@@ -397,15 +403,15 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 static gboolean
 rfb_decoder_state_reason (RfbDecoder * decoder)
 {
-  gint reason_length;
+  guint32 reason_length;
   gchar *reason;
 
   if (!rfb_decoder_read (decoder, 4))
     return FALSE;
 
   reason_length = RFB_GET_UINT32 (decoder->data);
-  if (reason_length < 0) {
-    GST_WARNING ("Invalid reason length %d", reason_length);
+  if (reason_length > RFB_MAX_REASON_LENGTH) {
+    GST_WARNING ("Invalid reason length %u", reason_length);
     return FALSE;
   }
 
@@ -716,10 +722,18 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
 
   name_length = RFB_GET_UINT32 (decoder->data + 20);
 
-  if (!rfb_decoder_read (decoder, name_length))
+  if (name_length > RFB_MAX_NAME_LENGTH) {
+    GST_WARNING ("Invalid name length %u", name_length);
     return FALSE;
+  }
 
-  decoder->name = g_strndup ((gchar *) (decoder->data), name_length);
+  if (name_length > 0) {
+    if (!rfb_decoder_read (decoder, name_length))
+      return FALSE;
+    decoder->name = g_strndup ((gchar *) (decoder->data), name_length);
+  } else {
+    decoder->name = g_strdup ("");
+  }
   GST_DEBUG ("name       = %s", decoder->name);
 
   /* check if we need cropping */
@@ -1263,15 +1277,15 @@ rfb_decoder_state_set_colour_map_entries (RfbDecoder * decoder)
 static gboolean
 rfb_decoder_state_server_cut_text (RfbDecoder * decoder)
 {
-  gint cut_text_length;
+  guint32 cut_text_length;
 
   /* 3 bytes padding, 4 bytes cut_text_length */
   if (!rfb_decoder_read (decoder, 7))
     return FALSE;
 
   cut_text_length = RFB_GET_UINT32 (decoder->data + 3);
-  if (cut_text_length < 0) {
-    GST_WARNING ("Invalid cut text length %d", cut_text_length);
+  if (cut_text_length > RFB_MAX_CUT_TEXT_LENGTH) {
+    GST_WARNING ("Invalid cut text length %u", cut_text_length);
     return FALSE;
   }
 
