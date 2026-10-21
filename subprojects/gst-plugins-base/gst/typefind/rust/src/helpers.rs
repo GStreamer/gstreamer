@@ -11,6 +11,7 @@
 
 use crate::bindings::{self, gpointer};
 use std::ffi::{CStr, CString};
+use std::marker::PhantomData;
 use std::num::NonZeroU64;
 use std::os::raw::{c_char, c_uint};
 use std::ptr;
@@ -91,10 +92,20 @@ const WINDOW: usize = 4096;
 /// Zero-copy windowed cursor over the typefind stream, in the spirit of
 /// `std::io::BufRead`: `peek()` serves bytes from a cached window and only
 /// queries the engine again when the window cannot cover the request;
-/// `consume()` advances. The scanner owns `&mut TypeFind` for the walk, and
-/// a cached window is only read until the next query replaces it.
+/// `consume()` advances.
+///
+/// A scanner is `Copy`, and a copy is an independent cursor over the same
+/// stream. That is what keeps a speculative walk from dragging the scan along
+/// with it: hand a copy to the part that runs off looking at frames, and the
+/// original stays where it was. Peeking only ever reads, and a window is valid
+/// until the typefinding function returns, so any number of cursors may share
+/// one stream.
+#[derive(Clone, Copy)]
 pub struct Scanner<'a> {
-    tf: &'a mut TypeFind,
+    tf: *mut bindings::GstTypeFind,
+    // The stream a scanner reads only lives while the typefinding call that
+    // handed it out is running.
+    stream: PhantomData<&'a TypeFind>,
     base: *const u8, // cached window
     offset: i64,     // stream offset of `base`
     len: usize,      // window length
@@ -104,7 +115,8 @@ pub struct Scanner<'a> {
 impl<'a> Scanner<'a> {
     pub fn new(tf: &'a mut TypeFind, offset: i64) -> Self {
         Self {
-            tf,
+            tf: &raw mut tf.0,
+            stream: PhantomData,
             base: ptr::null(),
             offset,
             len: 0,
@@ -127,9 +139,11 @@ impl<'a> Scanner<'a> {
             self.len = len;
             self.pos = 0;
         }
-        // Sound: the slice lives no longer than the exclusive borrow of the
-        // scanner, and the window it points into is only read until the next
-        // query replaces it.
+        // Sound: a window is documented to stay valid until the typefinding
+        // function returns, and the engine only ever appends to its buffer
+        // cache, so a window outlives any number of later peeks from any
+        // number of scanners. `refill` yields at least `min` bytes or nothing,
+        // never a short window, so the bytes are there to hand out.
         Some(unsafe { std::slice::from_raw_parts(self.base.add(self.pos), min) })
     }
 
@@ -148,19 +162,17 @@ impl<'a> Scanner<'a> {
     /// to whatever the stream has left (at least `min`) for short tails.
     fn refill(&mut self, offset: i64, min: usize) -> Option<(*const u8, usize)> {
         let chunk = WINDOW.max(min) as u32;
-        let base = unsafe { bindings::gst_type_find_peek(&mut self.tf.0, offset, chunk) };
+        let base = unsafe { bindings::gst_type_find_peek(self.tf, offset, chunk) };
         if !base.is_null() {
             return Some((base, chunk as usize));
         }
         // Short tail: the stream ends before a full window. An unknown
         // length lands here and asks for at least `min` bytes.
-        let left = self
-            .tf
-            .length()
+        let left = NonZeroU64::new(unsafe { bindings::gst_type_find_get_length(self.tf) })
             .map_or(0, NonZeroU64::get)
             .saturating_sub(offset as u64);
         let len = left.clamp(min as u64, chunk as u64) as u32;
-        let base = unsafe { bindings::gst_type_find_peek(&mut self.tf.0, offset, len) };
+        let base = unsafe { bindings::gst_type_find_peek(self.tf, offset, len) };
         (!base.is_null()).then_some((base, len as usize))
     }
 }
@@ -182,6 +194,12 @@ pub(crate) struct Feature(
 /// guarantees the length.
 pub(crate) fn u16le(d: &[u8]) -> u16 {
     u16::from_le_bytes([d[0], d[1]])
+}
+
+/// 16-bit big-endian value at the start of `d`. The caller's peek guarantees
+/// the length.
+pub(crate) fn u16be(d: &[u8]) -> u16 {
+    u16::from_be_bytes([d[0], d[1]])
 }
 
 /// 32-bit little-endian value at the start of `d`. The caller's peek
@@ -406,6 +424,46 @@ pub(crate) fn locale_charset() -> Option<(String, bool)> {
             is_utf8 != 0,
         ))
     }
+}
+
+// ---------------------------------------------------------------------------
+// Safe wrappers over the pbutils AudioSpecificConfig readers. Each needs at
+// least two octets of config; a shorter one reads as no name, no channels and
+// no rate.
+// ---------------------------------------------------------------------------
+
+/// A name pbutils settled on, or nothing when it could not decide. The borrow is
+/// unbounded because both callers hand back a string literal or an entry of a
+/// function-local static table, never a pointer into the config passed in.
+fn named(ptr: *const c_char) -> Option<&'static CStr> {
+    (!ptr.is_null()).then(|| unsafe { CStr::from_ptr(ptr) })
+}
+
+/// Profile, as pbutils names it.
+pub(crate) fn aac_profile(asc: &[u8]) -> Option<&'static CStr> {
+    named(unsafe { bindings::gst_codec_utils_aac_get_profile(asc.as_ptr(), asc.len() as c_uint) })
+}
+
+/// Level, as pbutils computes it from the speaker count, the rate and the
+/// complexity.
+///
+/// shortcut: inherits the codec-utils level defects - it can return AAC Profile
+/// levels 6 and 7, which Table 1.10 of 14496-3 does not define, and it drops
+/// the LFE element for channel configuration 6. Upstream report pending;
+/// parity with every other AAC caps producer comes first.
+pub(crate) fn aac_level(asc: &[u8]) -> Option<&'static CStr> {
+    named(unsafe { bindings::gst_codec_utils_aac_get_level(asc.as_ptr(), asc.len() as c_uint) })
+}
+
+/// Speaker count, or 0 when the layout is left to a program_config_element.
+/// Configuration 7 is eight speakers.
+pub(crate) fn aac_channels(asc: &[u8]) -> u32 {
+    unsafe { bindings::gst_codec_utils_aac_get_channels(asc.as_ptr(), asc.len() as c_uint) }
+}
+
+/// Sampling frequency in Hz, or 0 when the config does not carry one.
+pub(crate) fn aac_sample_rate(asc: &[u8]) -> u32 {
+    unsafe { bindings::gst_codec_utils_aac_get_sample_rate(asc.as_ptr(), asc.len() as c_uint) }
 }
 
 // Alias for callers who want the short name.

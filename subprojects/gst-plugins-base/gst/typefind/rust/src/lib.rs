@@ -11,6 +11,7 @@
 
 //! Rust implementations of GStreamer typefind functions.
 
+mod audio;
 mod bindings;
 mod helpers;
 mod subtitles;

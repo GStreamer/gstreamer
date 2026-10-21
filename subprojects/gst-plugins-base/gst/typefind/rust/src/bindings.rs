@@ -110,6 +110,13 @@ unsafe extern "C" {
     pub fn gst_caps_from_string(string: *const c_char) -> *mut GstCaps;
     pub fn gst_caps_unref(caps: *mut GstCaps);
 
+    // AudioSpecificConfig readers. Callers go through the safe wrappers in
+    // helpers.rs, which own the contract of each.
+    pub fn gst_codec_utils_aac_get_level(audio_config: *const u8, len: c_uint) -> *const c_char;
+    pub fn gst_codec_utils_aac_get_profile(audio_config: *const u8, len: c_uint) -> *const c_char;
+    pub fn gst_codec_utils_aac_get_channels(audio_config: *const u8, len: c_uint) -> c_uint;
+    pub fn gst_codec_utils_aac_get_sample_rate(audio_config: *const u8, len: c_uint) -> c_uint;
+
     pub fn g_convert_with_fallback(
         src: *const c_char,
         srclen: isize,

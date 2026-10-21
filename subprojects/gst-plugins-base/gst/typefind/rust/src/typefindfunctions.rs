@@ -19,6 +19,7 @@ use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
 
+use crate::audio::{AacFraming, aac_probe};
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
@@ -2024,6 +2025,106 @@ extern "C" fn idcin_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// AAC interchange formats
+// =============================================================================
+
+extern "C" fn aac_type_find(tf: &mut TypeFind, _private: gpointer) {
+    match aac_probe(tf) {
+        Some(AacFraming::Adif) => {
+            suggest!(tf, 80, c"audio/mpeg", [
+                (c"framed", bool: false),
+                (c"mpegversion", i32: 4),
+                (c"stream-format", str: c"adif"),
+            ]);
+        }
+        Some(AacFraming::Loas { probability }) => {
+            suggest!(tf, probability, c"audio/mpeg", [
+                (c"framed", bool: false),
+                (c"mpegversion", i32: 4),
+                (c"stream-format", str: c"loas"),
+            ]);
+        }
+        Some(AacFraming::Adts {
+            probability,
+            mpegversion,
+            layout,
+            level,
+            profile,
+        }) => {
+            // A level that matches nothing is left out rather than guessed,
+            // and base-profile is an MPEG-4 field.
+            let mpeg4 = mpegversion == 4;
+            match (layout, level) {
+                (Some((channels, rate)), Some(level)) if mpeg4 => {
+                    suggest!(tf, probability, c"audio/mpeg", [
+                        (c"framed", bool: false),
+                        (c"mpegversion", i32: mpegversion),
+                        (c"stream-format", str: c"adts"),
+                        (c"level", str: level),
+                        (c"base-profile", str: profile),
+                        (c"profile", str: profile),
+                        (c"channels", i32: channels),
+                        (c"rate", i32: rate),
+                    ]);
+                }
+                (Some((channels, rate)), Some(level)) => {
+                    suggest!(tf, probability, c"audio/mpeg", [
+                        (c"framed", bool: false),
+                        (c"mpegversion", i32: mpegversion),
+                        (c"stream-format", str: c"adts"),
+                        (c"level", str: level),
+                        (c"profile", str: profile),
+                        (c"channels", i32: channels),
+                        (c"rate", i32: rate),
+                    ]);
+                }
+                (Some((channels, rate)), None) if mpeg4 => {
+                    suggest!(tf, probability, c"audio/mpeg", [
+                        (c"framed", bool: false),
+                        (c"mpegversion", i32: mpegversion),
+                        (c"stream-format", str: c"adts"),
+                        (c"base-profile", str: profile),
+                        (c"profile", str: profile),
+                        (c"channels", i32: channels),
+                        (c"rate", i32: rate),
+                    ]);
+                }
+                (Some((channels, rate)), None) => {
+                    suggest!(tf, probability, c"audio/mpeg", [
+                        (c"framed", bool: false),
+                        (c"mpegversion", i32: mpegversion),
+                        (c"stream-format", str: c"adts"),
+                        (c"profile", str: profile),
+                        (c"channels", i32: channels),
+                        (c"rate", i32: rate),
+                    ]);
+                }
+                // A layout is what a level is computed from, so there is
+                // nothing to name without one.
+                (None, _) if mpeg4 => {
+                    suggest!(tf, probability, c"audio/mpeg", [
+                        (c"framed", bool: false),
+                        (c"mpegversion", i32: mpegversion),
+                        (c"stream-format", str: c"adts"),
+                        (c"base-profile", str: profile),
+                        (c"profile", str: profile),
+                    ]);
+                }
+                (None, _) => {
+                    suggest!(tf, probability, c"audio/mpeg", [
+                        (c"framed", bool: false),
+                        (c"mpegversion", i32: mpegversion),
+                        (c"stream-format", str: c"adts"),
+                        (c"profile", str: profile),
+                    ]);
+                }
+            }
+        }
+        None => {}
+    }
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2436,6 +2537,14 @@ const FEATURES: &[Feature] = &[
         PRIMARY,
         musepack_type_find,
         "mpc,mpp,mp+"
+    ),
+    // AAC - audio/aac, in its ADTS, LOAS and ADIF framings
+    typefinder!(
+        "audio/aac",
+        SECONDARY,
+        aac_type_find,
+        "aac,adts,adif,loas",
+        "audio/mpeg, mpegversion = (int) { 2, 4 }, framed = (bool) false"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
