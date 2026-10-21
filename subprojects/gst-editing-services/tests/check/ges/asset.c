@@ -63,6 +63,29 @@ GST_START_TEST (test_basic)
 
 GST_END_TEST;
 
+GST_START_TEST (test_request_async_needs_reload)
+{
+  GESAsset *asset;
+
+  ges_init ();
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  fail_unless (asset != NULL);
+  fail_unless (ges_asset_needs_reload (GES_TYPE_TEST_CLIP,
+          ges_asset_get_id (asset)));
+
+  mainloop = g_main_loop_new (NULL, FALSE);
+  ges_asset_request_async (GES_TYPE_TEST_CLIP, ges_asset_get_id (asset), NULL,
+      source_asset_created, GINT_TO_POINTER (TRUE));
+  g_main_loop_run (mainloop);
+  g_main_loop_unref (mainloop);
+  gst_object_unref (asset);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 typedef struct _CustomContextData
 {
   GMutex lock;
@@ -743,6 +766,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_basic);
+  tcase_add_test (tc_chain, test_request_async_needs_reload);
   tcase_add_test (tc_chain, test_custom_context);
   tcase_add_test (tc_chain, test_transition_change_asset);
   tcase_add_test (tc_chain, test_uri_clip_change_asset);

@@ -313,19 +313,13 @@ initable_init (GInitable * initable, GCancellable * cancellable,
   return start_loading (GES_ASSET (initable));
 }
 
+/* Calls ->start_loading and resolves the tasks pending in the cache entry
+ * of @asset unless the subclass finishes loading asynchronously */
 static void
-async_initable_init_async (GAsyncInitable * initable, gint io_priority,
-    GCancellable * cancellable, GAsyncReadyCallback callback,
-    gpointer user_data)
+start_loading_async (GESAsset * asset)
 {
-  GTask *task;
-
   GError *error = NULL;
-  GESAsset *asset = GES_ASSET (initable);
 
-  task = g_task_new (asset, cancellable, callback, user_data);
-
-  ges_asset_cache_put (gst_object_ref (asset), task);
   switch (GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error)) {
     case GES_ASSET_LOADING_ERROR:
     {
@@ -353,6 +347,20 @@ async_initable_init_async (GAsyncInitable * initable, gint io_priority,
        */
       break;
   }
+}
+
+static void
+async_initable_init_async (GAsyncInitable * initable, gint io_priority,
+    GCancellable * cancellable, GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+  GTask *task;
+  GESAsset *asset = GES_ASSET (initable);
+
+  task = g_task_new (asset, cancellable, callback, user_data);
+
+  ges_asset_cache_put (gst_object_ref (asset), task);
+  start_loading_async (asset);
 }
 
 static void
@@ -1676,9 +1684,10 @@ ges_asset_request_async_full (GType extractable_type,
         }
         case ASSET_NEEDS_RELOAD:
           GST_DEBUG_OBJECT (asset, "Asset in cache and needs reload");
-          ges_asset_cache_append_task (extractable_type, real_id, task);
+          ges_asset_cache_append_task (asset->priv->extractable_type,
+              asset->priv->id, task);
           task = NULL;
-          GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error);
+          start_loading_async (asset);
 
           goto done;
         case ASSET_INITIALIZED_WITH_ERROR:
