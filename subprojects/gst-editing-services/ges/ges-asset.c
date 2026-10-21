@@ -1613,6 +1613,7 @@ ges_asset_request_async_full (GType extractable_type,
 {
   gchar *real_id;
   GESAsset *asset;
+  GESAssetCacheEntry *entry;
   GError *error = NULL;
   GTask *task = NULL;
 
@@ -1644,8 +1645,7 @@ ges_asset_request_async_full (GType extractable_type,
   /* Check if we already have an asset for this ID */
   LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
-  GESAssetCacheEntry *entry = _lookup_entry (extractable_type, id);
-  if (entry)
+  if (id && (entry = _lookup_entry (extractable_type, id)))
     asset = entry->asset;
   if (asset) {
     task = g_task_new (asset, NULL, callback, user_data);
