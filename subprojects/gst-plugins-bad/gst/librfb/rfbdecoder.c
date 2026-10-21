@@ -300,7 +300,7 @@ rfb_decoder_send_update_request (RfbDecoder * decoder,
   /* create a backup of the prev frame for copyrect encoding */
   if (decoder->use_copyrect) {
     memcpy (decoder->prev_frame, decoder->frame,
-        decoder->rect_width * decoder->rect_height * decoder->bpp / 8);
+        decoder->rect_height * decoder->line_size);
   }
 
   decoder->state = rfb_decoder_state_normal;
@@ -908,9 +908,8 @@ rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
           &skip_x, &skip_y))
     return TRUE;
 
-  frame =
-      decoder->frame + (((copy_y * decoder->rect_width) +
-          copy_x) * decoder->bytespp);
+  frame = decoder->frame + (copy_y * decoder->line_size) +
+      (copy_x * decoder->bytespp);
   p = decoder->data + (skip_y * raw_line_size) + (skip_x * decoder->bytespp);
   copy_line_size = copy_w * decoder->bytespp;
 
@@ -950,12 +949,10 @@ rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
   copyrect_width = copy_w * decoder->bytespp;
   line_width = decoder->line_size;
-  src =
-      decoder->prev_frame + ((src_y * decoder->rect_width) +
-      src_x) * decoder->bytespp;
-  dst =
-      decoder->frame + ((copy_y * decoder->rect_width) +
-      copy_x) * decoder->bytespp;
+  src = decoder->prev_frame + (src_y * decoder->line_size) +
+      (src_x * decoder->bytespp);
+  dst = decoder->frame + (copy_y * decoder->line_size) +
+      (copy_x * decoder->bytespp);
 
   while (copy_h--) {
     memcpy (dst, src, copyrect_width);
@@ -978,9 +975,8 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
     return;
 
   for (i = 0; i < h; i++) {
-    guint8 *offset =
-        decoder->frame + ((x + (y +
-                i) * decoder->rect_width)) * decoder->bytespp;
+    guint8 *offset = decoder->frame + ((y + i) * decoder->line_size) +
+        (x * decoder->bytespp);
 
     for (j = 0; j < w; j++) {
       switch (decoder->bytespp) {
