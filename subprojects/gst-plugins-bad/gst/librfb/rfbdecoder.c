@@ -1031,7 +1031,7 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
           *(guint8 *) offset = (guint8) color;
           break;
         case 2:
-          *(guint16 *) offset = (guint16) color;
+          GST_WRITE_UINT16_LE (offset, (guint16) color);
           break;
         case 3:
           offset[0] = (guint8) (color >> 16);
@@ -1039,7 +1039,7 @@ rfb_decoder_fill_rectangle (RfbDecoder * decoder, gint x, gint y, gint w,
           offset[2] = (guint8) color;
           break;
         case 4:
-          *(guint32 *) offset = color;
+          GST_WRITE_UINT32_LE (offset, color);
           break;
         default:
           /* reject unsupported format */
