@@ -265,7 +265,7 @@ asset request, or %NULL to ignore</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="request_async_full" c:identifier="ges_asset_request_async_full" version="1.30" glib:finish-func="ges_asset_request_finish">
+      <function name="request_async_full" c:identifier="ges_asset_request_async_full" version="1.30" glib:finish-func="request_finish">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-asset.c">Same as ges_asset_request_async(), with @flags, see
 ges_asset_request_full(). Get the result with ges_asset_request_finish().</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>

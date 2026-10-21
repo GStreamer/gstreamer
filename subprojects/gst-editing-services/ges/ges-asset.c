@@ -1585,7 +1585,7 @@ ges_asset_request_async (GType extractable_type,
 }
 
 /**
- * ges_asset_request_async_full: (finish-func ges_asset_request_finish)
+ * ges_asset_request_async_full: (finish-func request_finish)
  * @extractable_type: The #GESExtractable type to retrieve an asset for
  * @id: (allow-none): The Identifier of the asset we want to retrieve
  * @flags: options for this request
