@@ -2465,7 +2465,7 @@ search_in_segment:
           delta_entry->element_delta);
 
       /* Apply offset from slice/delta if needed */
-      if (delta_entry->slice) {
+      if (delta_entry->slice > 0 && delta_entry->slice <= segment->slice_count) {
         stream_offset +=
             segment_index_entry->slice_offset[delta_entry->slice - 1];
       }
@@ -2732,11 +2732,11 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
     } else {
       for (delta = 0; delta < index_segment->n_delta_entries; delta++) {
         guint64 delta_offs = 0;
+        guint8 slice = index_segment->delta_entries[delta].slice;
         /* If we are not in the first slice, take that offset into account */
-        if (index_segment->delta_entries[delta].slice)
-          delta_offs =
-              index_entry->slice_offset[index_segment->
-              delta_entries[delta].slice - 1];
+        if (slice > 0 && slice <= index_segment->slice_count) {
+          delta_offs = index_entry->slice_offset[slice - 1];
+        }
         /* Add the offset for this delta */
         delta_offs += index_segment->delta_entries[delta].element_delta;
         if (cp_offset == delta_offs) {
