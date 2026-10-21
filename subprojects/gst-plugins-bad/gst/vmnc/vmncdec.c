@@ -594,7 +594,12 @@ render_subrect (GstVMncDec * dec, int x, int y, int width,
     dst = dec->imagedata + dec->format.stride * (y + i) +
         dec->format.bytes_per_pixel * x;
     for (j = 0; j < width; j++) {
-      memcpy (dst, &colour, dec->format.bytes_per_pixel);
+      if (dec->format.bytes_per_pixel == 1)
+        dst[0] = colour;
+      else if (dec->format.bytes_per_pixel == 2)
+        GST_WRITE_UINT16_LE (dst, (guint16) colour);
+      else
+        GST_WRITE_UINT32_LE (dst, colour);
       dst += dec->format.bytes_per_pixel;
     }
   }
@@ -669,7 +674,6 @@ vmnc_handle_copy_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   return 4;
 }
 
-/* FIXME: data+off might not be properly aligned */
 #define READ_PIXEL(pixel, data, off, len)         \
   if (dec->format.bytes_per_pixel == 1) {         \
      if (off >= len)                              \
@@ -678,12 +682,12 @@ vmnc_handle_copy_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   } else if (dec->format.bytes_per_pixel == 2) {  \
      if (off+2 > len)                             \
        return ERROR_INSUFFICIENT_DATA;            \
-     pixel = (*(guint16 *)(data + off));          \
+     pixel = GST_READ_UINT16_LE (data + off);     \
      off += 2;                                    \
   } else {                                        \
      if (off+4 > len)                             \
        return ERROR_INSUFFICIENT_DATA;            \
-     pixel = (*(guint32 *)(data + off));          \
+     pixel = GST_READ_UINT32_LE (data + off);     \
      off += 4;                                    \
   }
 
