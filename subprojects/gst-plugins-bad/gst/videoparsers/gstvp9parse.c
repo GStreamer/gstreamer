@@ -543,6 +543,12 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     guint32 frame_size;
 
     frame_size = superframe_info.frame_sizes[i];
+    if (G_UNLIKELY (frame_size > map.size - offset)) {
+      GST_WARNING_OBJECT (self,
+          "Superframe index claims a frame past the end of the buffer");
+      parse_res = GST_VP9_PARSER_ERROR;
+      break;
+    }
     parse_res = gst_vp9_parser_parse_frame_header (self->parser,
         &frame_hdr, map.data + offset, frame_size);
 
