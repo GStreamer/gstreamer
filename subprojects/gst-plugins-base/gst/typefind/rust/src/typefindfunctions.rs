@@ -1633,12 +1633,10 @@ extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
 /// last 3 bytes is a character cut off by the window edge and counts as
 /// text, because the window is an arbitrary probe size.
 fn looks_like_text(data: &[u8]) -> bool {
-    let stop = data
-        .iter()
-        .position(|&b| b == 0)
-        .into_iter()
-        .chain(std::str::from_utf8(data).err().map(|e| e.valid_up_to()))
-        .min();
+    let nul = data.iter().position(|&b| b == 0);
+    let utf8_err = std::str::from_utf8(data).err().map(|e| e.valid_up_to());
+    // The earliest of the two problems decides.
+    let stop = nul.into_iter().chain(utf8_err).min();
     stop.is_none_or(|i| i + 4 > data.len())
 }
 
