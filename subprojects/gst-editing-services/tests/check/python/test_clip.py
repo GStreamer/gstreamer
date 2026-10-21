@@ -103,12 +103,13 @@ class TestTransitionClip(unittest.TestCase):
             vtransition, = clip.children
             self.assertEqual(vtransition.props.invert, True)
 
+
 class TestTitleClip(unittest.TestCase):
 
     def testSetColor(self):
         timeline = GES.Timeline.new_audio_video()
         clip = GES.TitleClip.new()
-        timeline.append_layer().add_clip(clip )
+        timeline.append_layer().add_clip(clip)
         self.assertTrue(clip.set_child_property('color', 1))
         self.assertTrue(clip.set_child_property('color', 4294967295))
 
@@ -325,7 +326,7 @@ class TestTrackElements(common.GESSimpleTimelineTest):
         self.assertEqual(clip, clip1)
         clip1_child, = clip1.get_children(True)
         clip2_child, = clip2.get_children(True)
-        self.assertCountEqual (children, [clip1_child, clip2_child])
+        self.assertCountEqual(children, [clip1_child, clip2_child])
 
         # can freely move children between the ungrouped clips
         self.assertTrue(clip1.remove(clip1_child))

@@ -28,7 +28,9 @@ from gi.repository import GObject
 
 if sys.version_info >= (3, 0):
     _basestring = str
-    _callable = lambda c: hasattr(c, '__call__')
+
+    def _callable(c):
+        return hasattr(c, '__call__')
 else:
     _basestring = basestring
     _callable = callable
@@ -47,6 +49,7 @@ python module to use with GES 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
 
+
 def __timeline_element__repr__(self):
     return "%s [%s (%s) %s]" % (
         self.props.name,
@@ -55,7 +58,10 @@ def __timeline_element__repr__(self):
         Gst.TIME_ARGS(self.props.duration),
     )
 
+
 __prev_set_child_property = GES.TimelineElement.set_child_property
+
+
 def __timeline_element_set_child_property(self, prop_name, prop_value):
     res, _, pspec = GES.TimelineElement.lookup_child(self, prop_name)
     if not res:
@@ -74,10 +80,14 @@ GES.TrackElement.set_child_property = GES.TimelineElement.set_child_property
 GES.Container.edit = GES.TimelineElement.edit
 
 __prev_asset_repr = GES.Asset.__repr__
+
+
 def __asset__repr__(self):
     return "%s(%s)" % (__prev_asset_repr(self), self.props.id)
 
+
 GES.Asset.__repr__ = __asset__repr__
+
 
 def __timeline_iter_clips(self):
     """Iterate all clips in a timeline"""
@@ -85,10 +95,11 @@ def __timeline_iter_clips(self):
         for clip in layer.get_clips():
             yield clip
 
+
 GES.Timeline.iter_clips = __timeline_iter_clips
 
 try:
     from gi.repository import Gst
     Gst
-except:
+except ImportError:
     raise RuntimeError("GSt couldn't be imported, make sure you have gst-python installed")
