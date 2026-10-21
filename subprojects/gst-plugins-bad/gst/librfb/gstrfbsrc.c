@@ -553,6 +553,9 @@ gst_rfb_src_stop (GstBaseSrc * bsrc)
     src->decoder->prev_frame = NULL;
   }
 
+  /* Force a full reconnect and handshake on the next start() */
+  src->decoder->inited = FALSE;
+
   return TRUE;
 }
 
