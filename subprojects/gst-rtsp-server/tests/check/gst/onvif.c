@@ -846,7 +846,8 @@ test_play_response_200_and_check_data (GstRTSPClient * client,
             check->n_b_frames += 1;
             break;
           default:
-            fail ("Invalid payload size %u", gst_buffer_get_size (outbuf));
+            fail ("Invalid payload size %" G_GSIZE_FORMAT,
+                gst_buffer_get_size (outbuf));
         }
 
         gst_buffer_unref (outbuf);
