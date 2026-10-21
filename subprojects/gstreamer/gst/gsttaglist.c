@@ -896,7 +896,10 @@ gst_tag_list_new_from_string (const gchar * str)
   GstStructure *s;
 
   g_return_val_if_fail (str != NULL, NULL);
-  g_return_val_if_fail (g_str_has_prefix (str, "taglist"), NULL);
+  if (G_UNLIKELY (!g_str_has_prefix (str, "taglist"))) {
+    GST_WARNING ("invalid taglist string: '%s'", str);
+    return NULL;
+  }
 
   s = gst_structure_from_string (str, NULL);
   if (s == NULL)
