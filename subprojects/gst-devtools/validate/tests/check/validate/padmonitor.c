@@ -279,7 +279,7 @@ fake_demuxer_prepare_pads (GstBin * pipeline, GstElement * demux,
   gint i = 0;
   GList *tmp;
 
-  fail_unless (g_list_length (demux->srcpads), 3);
+  fail_unless_equals_int (g_list_length (demux->srcpads), 3);
 
   for (tmp = demux->srcpads; tmp; tmp = tmp->next) {
     GstPad *new_peer;
