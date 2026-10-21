@@ -19,7 +19,7 @@ use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
 
-use crate::audio::{AacFraming, aac_probe};
+use crate::audio::{AacFraming, aac_probe, dts_probe};
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
@@ -2125,6 +2125,32 @@ extern "C" fn aac_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// DTS
+// =============================================================================
+
+extern "C" fn dts_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(frame) = dts_probe(tf) else { return };
+    // A channel index the format leaves unassigned says nothing about the
+    // layout, so the field is left out rather than guessed.
+    if frame.channels > 0 {
+        suggest!(tf, frame.probability, c"audio/x-dts", [
+            (c"rate", i32: frame.rate),
+            (c"channels", i32: frame.channels),
+            (c"depth", i32: frame.depth),
+            (c"endianness", i32: frame.endianness),
+            (c"framed", bool: false),
+        ]);
+    } else {
+        suggest!(tf, frame.probability, c"audio/x-dts", [
+            (c"rate", i32: frame.rate),
+            (c"depth", i32: frame.depth),
+            (c"endianness", i32: frame.endianness),
+            (c"framed", bool: false),
+        ]);
+    }
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2545,6 +2571,14 @@ const FEATURES: &[Feature] = &[
         aac_type_find,
         "aac,adts,adif,loas",
         "audio/mpeg, mpegversion = (int) { 2, 4 }, framed = (bool) false"
+    ),
+    // DTS - audio/x-dts
+    typefinder!(
+        "audio/x-dts",
+        SECONDARY,
+        dts_type_find,
+        "dts",
+        "audio/x-dts"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),

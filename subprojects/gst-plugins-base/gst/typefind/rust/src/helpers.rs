@@ -208,6 +208,12 @@ pub(crate) fn u32le(d: &[u8]) -> u32 {
     u32::from_le_bytes([d[0], d[1], d[2], d[3]])
 }
 
+/// 32-bit big-endian value at the start of `d`. The caller's peek guarantees
+/// the length.
+pub(crate) fn u32be(d: &[u8]) -> u32 {
+    u32::from_be_bytes([d[0], d[1], d[2], d[3]])
+}
+
 /// Allows to enforce a specific type for the argument.
 ///
 /// Helper function for the macros below.

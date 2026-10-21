@@ -13,7 +13,8 @@
 //! decision.
 
 use crate::helpers::{
-    Prob, Scanner, TypeFind, aac_channels, aac_level, aac_profile, aac_sample_rate, u16be,
+    Prob, Scanner, TypeFind, aac_channels, aac_level, aac_profile, aac_sample_rate, u16be, u16le,
+    u32be,
 };
 use std::ffi::CStr;
 
@@ -229,6 +230,167 @@ pub fn aac_probe(tf: &mut TypeFind) -> Option<AacFraming> {
 
 /// A frame is never shorter than the shortest one the format allows, so a
 /// header with less than that behind it is a fragment rather than a frame.
+const DTS_MIN_FRAME: usize = 96;
+
+/// How far into a file the first frame may hide: the largest frame the format
+/// can describe, so that a first frame anywhere within reach of that is found.
+const DTS_WINDOW: i64 = 18725;
+
+/// Speaker counts by channel index, 102-114 Table 5-1.
+const DTS_CHANNELS: [i32; 16] = [1, 2, 2, 2, 2, 3, 3, 4, 4, 5, 6, 6, 6, 7, 8, 8];
+
+/// Sampling frequencies by sampling frequency index, 102-114 Table 5-1. Zero
+/// marks the indices the format leaves unassigned.
+const DTS_RATES: [i32; 16] = [
+    0, 8000, 16000, 32000, 0, 0, 11025, 22050, 44100, 0, 0, 12000, 24000, 48000, 96000, 192000,
+];
+
+/// What the DTS probe decided.
+pub struct DtsFrame {
+    pub probability: u32,
+    pub rate: i32,
+    /// Zero when the channel index is one the format leaves unassigned and the
+    /// layout cannot be told.
+    pub channels: i32,
+    pub depth: i32,
+    pub endianness: i32,
+}
+
+/// The four sync markers of 102-114 Figure 5-1 carry the word depth and the
+/// byte order as well as the sync, so the marker alone says how the rest of the
+/// header has to be read.
+#[derive(Clone, Copy)]
+enum DtsMarker {
+    Be16,
+    Be14,
+    Le16,
+    Le14,
+}
+
+impl DtsMarker {
+    fn new(marker: u32) -> Option<Self> {
+        match marker {
+            0x7FFE_8001 => Some(Self::Be16),
+            0x1FFF_E800 => Some(Self::Be14),
+            0xFE7F_0180 => Some(Self::Le16),
+            0xFF1F_00E8 => Some(Self::Le14),
+            _ => None,
+        }
+    }
+
+    /// The header as eight words in the byte order the marker states. The
+    /// 14-bit forms carry the same fields in words six bits shorter, so each
+    /// word pulls its missing low bits off the top of the next one; only the
+    /// words the fields live in need pulling. `None` when a 14-bit marker is
+    /// not followed by the word the format reserves there.
+    fn words(self, d: &[u8]) -> Option<[u16; 8]> {
+        let read = if matches!(self, Self::Be16 | Self::Be14) {
+            u16be
+        } else {
+            u16le
+        };
+        let mut w: [u16; 8] = std::array::from_fn(|i| read(&d[2 * i..]));
+        if self.packed() {
+            if w[2] & 0xFFF0 != 0x07F0 {
+                return None;
+            }
+            // Each word pulls the low bits it is short from the top of the next
+            // word's fourteen data bits, the two void bits above them
+            // discarded.
+            for i in 2..6 {
+                let s = 2 * (i + 1);
+                w[i] = (w[i] << s) | ((w[i + 1] >> (14 - s)) & ((1 << s) - 1));
+            }
+        }
+        Some(w)
+    }
+
+    fn packed(self) -> bool {
+        matches!(self, Self::Be14 | Self::Le14)
+    }
+
+    fn depth(self) -> i32 {
+        match self {
+            Self::Be14 | Self::Le14 => 14,
+            Self::Be16 | Self::Le16 => 16,
+        }
+    }
+
+    fn endianness(self) -> i32 {
+        match self {
+            Self::Be14 | Self::Be16 => 4321,
+            Self::Le14 | Self::Le16 => 1234,
+        }
+    }
+}
+
+/// Where the frame at the cursor reaches, and what it says about the audio
+/// behind it. `None` when the header describes no frame the format allows.
+fn dts_header(kind: DtsMarker, d: &[u8]) -> Option<(usize, i32, i32)> {
+    let w = kind.words(d)?;
+    let blocks = (w[2] >> 2) & 0x7F;
+    let size = ((((w[2] & 3) as usize) << 12) | (w[3] >> 4) as usize) + 1;
+    let rate = DTS_RATES[((w[4] >> 10) & 0x0F) as usize];
+    if blocks < 5 || size < DTS_MIN_FRAME || rate == 0 {
+        return None;
+    }
+    // The length field counts bytes of the unpacked frame. The packed form
+    // carries 14 bits in every 16, so the frame on disk is longer by that.
+    let size = if kind.packed() { size * 16 / 14 } else { size };
+    let index = (((w[3] & 0x0F) << 2) | (w[4] >> 14)) as usize;
+    // Only zero means no subwoofer, so the two reserved values count as one.
+    let lfe = i32::from((w[5] >> 9) & 0x03 != 0);
+    let channels = DTS_CHANNELS.get(index).map_or(0, |n| n + lfe);
+    Some((size, rate, channels))
+}
+
+pub fn dts_probe(tf: &mut TypeFind) -> Option<DtsFrame> {
+    let mut scan = Scanner::new(tf, 0);
+    while scan.offset() <= DTS_WINDOW {
+        let start = scan.offset();
+        // A header that leads nowhere must not drag the scan with it, so all of
+        // the speculative reading happens on a copy of the cursor.
+        let mut probe = scan;
+        let Some(head) = probe.peek(DTS_MIN_FRAME) else {
+            break;
+        };
+        let marker = u32be(head);
+        let Some(kind) = DtsMarker::new(marker) else {
+            scan.consume(1);
+            continue;
+        };
+        let Some((size, rate, channels)) = dts_header(kind, head) else {
+            scan.consume(1);
+            continue;
+        };
+        // A second frame starting where this one ends is what turns a header
+        // that merely parses into a stream.
+        probe.consume(size);
+        let again = probe.peek(4).is_some_and(|next| u32be(next) == marker);
+        return Some(DtsFrame {
+            probability: if again {
+                Prob::MAXIMUM.get()
+            } else if start == 0 {
+                Prob::LIKELY.get()
+            } else {
+                Prob::POSSIBLE.get()
+            },
+            rate,
+            channels,
+            depth: kind.depth(),
+            endianness: kind.endianness(),
+        });
+    }
+    None
+}
+
+// ---------------------------------------------------------------------------
+// AC-3 and E-AC-3
+// ---------------------------------------------------------------------------
+
+/// Frame size in bytes, by `frmsizecod` then by `fscod`, which runs 48, 44.1
+/// and 32 kHz in that order. A/52 table 5-15 gives the sizes in 16-bit words;
+/// these are the byte counts.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -251,6 +413,22 @@ mod tests {
     /// A 14-bit header repacked the way 102-114 means it. The two void bits of
     /// each word are discarded, so a word pulls its missing low bits from the
     /// fourteen data bits of the next and not from all sixteen.
+    #[test]
+    fn fourteen_bit_words_repack_to_the_sixteen_bit_ones() {
+        let head = [
+            0x1F, 0xFF, 0xE8, 0x00, 0x07, 0xF0, 0x3C, 0x7D, 0x2C, 0x7D, 0x30, 0x00, 0x24, 0xEE,
+            0x00, 0x07,
+        ];
+        let w = DtsMarker::Be14.words(&head);
+        assert_eq!(&w.unwrap()[2..6], &[0xFC3C, 0x7DB1, 0xF700, 0x093B]);
+    }
+
+    /// A zero audioMuxLengthBytes means the mux element carries no audio, so it
+    /// is not a frame in either framing.
+    /// Frame lengths recomputed by hand from 11172-3 and 13818-3 2.4.2.3, so
+    /// that the code drifting from the tables fails here rather than in the
+    /// field. Layer I counts four octets to a slot, and layer III at the lower
+    /// rates has half the samples per frame.
     #[test]
     fn a_zero_payload_is_not_a_frame() {
         assert_eq!(loas_ep_frame_len(&[0x4D, 0xE1, 0, 0, 0]), None);
