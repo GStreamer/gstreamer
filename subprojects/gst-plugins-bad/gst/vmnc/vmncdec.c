@@ -215,6 +215,12 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     return ERROR_INVALID;
   }
 
+  if (data[10] >= 32 || data[11] >= 32 || data[12] >= 32) {
+    GST_WARNING_OBJECT (dec, "Bad color shift values: %d/%d/%d",
+        data[10], data[11], data[12]);
+    return ERROR_INVALID;
+  }
+
   dec->format.bytes_per_pixel = bpp / 8;
   dec->format.width = rect->width;
   dec->format.height = rect->height;
