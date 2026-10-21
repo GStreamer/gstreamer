@@ -21,6 +21,7 @@ from . import overrides_hack
 
 import os
 import tempfile
+import warnings
 
 import gi
 gi.require_version("Gst", "1.0")
@@ -194,6 +195,21 @@ class TestTrackElements(common.GESSimpleTimelineTest):
         self.assertEqual(audio_source.props.track, audio_track)
         self.assertEqual(video_source.props.track, video_track)
         self.assertEqual(effect.props.track, video_track)
+
+    def test_children_properties_not_deprecated(self):
+        clip = GES.TestClip()
+        self.assertTrue(self.layer.add_clip(clip))
+        source = clip.find_track_element(None, GES.AudioSource)
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", DeprecationWarning)
+            res, _, pspec = source.lookup_child("volume")
+            props = source.list_children_properties()
+
+        self.assertEqual([str(w.message) for w in caught], [])
+        self.assertTrue(res)
+        self.assertEqual(pspec.name, "volume")
+        self.assertIn("volume", [p.name for p in props])
 
     def test_effects_priority(self):
         timeline = GES.Timeline.new_audio_video()
