@@ -825,6 +825,10 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
       ret = rfb_decoder_raw_encoding (decoder, x, y, w, h);
       break;
     case ENCODING_TYPE_COPYRECT:
+      if (G_UNLIKELY (!decoder->use_copyrect || decoder->prev_frame == NULL)) {
+        GST_WARNING ("Server sent CopyRect although it was not negotiated");
+        break;
+      }
       ret = rfb_decoder_copyrect_encoding (decoder, x, y, w, h);
       break;
     case ENCODING_TYPE_RRE:
