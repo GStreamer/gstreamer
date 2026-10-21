@@ -270,6 +270,21 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     return ERROR_INVALID;
   }
 
+  if (decode) {
+    if (dec->have_format) {
+      /* The cursor buffers are allocated with the bytes_per_pixel that were in
+       * use when they were allocated, but render_colour_cursor() indexes them
+       * with the current bytes_per_pixel. We have to drop the cursors until a
+       * new WMVd arrives. */
+      GST_DEBUG_OBJECT (dec, "Format changed, dropping cursor");
+      g_free (dec->cursor.cursordata);
+      g_free (dec->cursor.cursormask);
+      dec->cursor.cursordata = NULL;
+      dec->cursor.cursormask = NULL;
+    }
+    dec->cursor.visible = FALSE;
+  }
+
   dec->have_format = TRUE;
   if (!decode) {
     GST_LOG_OBJECT (dec, "Parsing, not setting caps");
@@ -489,7 +504,7 @@ vmnc_handle_wmve_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     return 2;
 
   flags = RFB_GET_UINT16 (data);
-  dec->cursor.visible = flags & 0x01;
+  dec->cursor.visible = (flags & 0x01) && dec->cursor.cursordata != NULL;
 
   return 2;
 }
