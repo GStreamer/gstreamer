@@ -266,7 +266,7 @@ G_STMT_START {                                                          \
   int first = a;                                                        \
   int second = b;                                                       \
   fail_unless(first == second,                                          \
-    "'" #a "' (%d) is not equal to '" #b"' (%d)", first, second);       \
+    "'%s' (%d) is not equal to '%s' (%d)", #a, first, #b, second);       \
 } G_STMT_END;
 /**
  * assert_equals_int:
@@ -295,7 +295,7 @@ G_STMT_START {								\
   int first = a;							\
   int second = b;							\
   fail_unless(first == second,						\
-    "'" #a "' (0x%08x) is not equal to '" #b"' (0x%08x)", first, second);\
+    "'%s' (0x%08x) is not equal to '%s' (0x%08x)", #a, first, #b, second);\
 } G_STMT_END;
 
 /**
@@ -325,8 +325,8 @@ G_STMT_START {                                                          \
   gint64 first = a;                                                     \
   gint64 second = b;                                                    \
   fail_unless(first == second,                                          \
-    "'" #a "' (%" G_GINT64_FORMAT") is not equal to '" #b"' (%"         \
-    G_GINT64_FORMAT")", first, second);                                 \
+    "'%s' (%" G_GINT64_FORMAT") is not equal to '%s' (%"         \
+    G_GINT64_FORMAT")", #a, first, #b, second);                                 \
 } G_STMT_END;
 /**
  * assert_equals_int64:
@@ -355,7 +355,8 @@ G_STMT_START {								\
   gint64 first = a;							\
   gint64 second = b;							\
   fail_unless(first == second,						\
-    "'" #a "' (0x%016x) is not equal to '" #b"' (0x%016x)", first, second);\
+    "'%s' (0x%016" G_GINT64_MODIFIER "x) is not equal to '%s' " \
+    "(0x%016" G_GINT64_MODIFIER "x)", #a, (guint64) first, #b, (guint64) second);\
 } G_STMT_END;
 /**
  * assert_equals_int64_hex:
@@ -384,8 +385,8 @@ G_STMT_START {                                                          \
   guint64 first = a;                                                    \
   guint64 second = b;                                                   \
   fail_unless(first == second,                                          \
-    "'" #a "' (%" G_GUINT64_FORMAT ") is not equal to '" #b"' (%"       \
-    G_GUINT64_FORMAT ")", first, second);                               \
+    "'%s' (%" G_GUINT64_FORMAT ") is not equal to '%s' (%"       \
+    G_GUINT64_FORMAT ")", #a, first, #b, second);                               \
 } G_STMT_END;
 /**
  * assert_equals_uint64:
@@ -414,7 +415,8 @@ G_STMT_START {								\
   guint64 first = a;							\
   guint64 second = b;							\
   fail_unless(first == second,						\
-    "'" #a "' (0x%016x) is not equal to '" #b"' (0x%016x)", first, second);\
+    "'%s' (0x%016" G_GINT64_MODIFIER "x) is not equal to '%s' " \
+    "(0x%016" G_GINT64_MODIFIER "x)", #a, (guint64) first, #b, (guint64) second);\
 } G_STMT_END;
 /**
  * assert_equals_uint64_hex:
@@ -443,7 +445,8 @@ G_STMT_START {                                                      \
   const gchar * first = a;                                          \
   const gchar * second = b;                                         \
   fail_unless(g_strcmp0 (first, second) == 0,                          \
-    "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);   \
+    "'%s' (%s) is not equal to '%s' (%s)",                           \
+    #a, GST_STR_NULL (first), #b, GST_STR_NULL (second));             \
 } G_STMT_END;
 /**
  * assert_equals_string:
@@ -472,7 +475,7 @@ G_STMT_START {                                                      \
   const gchar * first = a;                                          \
   const gchar * second = b;                                         \
   fail_unless(g_regex_match_simple (second, first, 0, 0),           \
-    "'" #a "' (%s) does not match pattern '" #b"' (%s)", first, second); \
+    "'%s' (%s) does not match pattern '%s' (%s)", #a, first, #b, second); \
 } G_STMT_END;
 /**
  * assert_matches_string:
@@ -503,7 +506,7 @@ G_STMT_START {                                                    \
   /* This will only work for 'normal' values and values around 0, \
    * which should be good enough for our purposes here */         \
   fail_unless(fabs (first - second) < 0.0000001,                  \
-    "'" #a "' (%g) is not equal to '" #b "' (%g)", first, second);\
+    "'%s' (%g) is not equal to '%s' (%g)", #a, first, #b, second);\
 } G_STMT_END;
 
 /**
@@ -533,7 +536,7 @@ G_STMT_START {                                                    \
   gpointer first = a;                                             \
   gpointer second = b;                                            \
   fail_unless(first == second,                                    \
-    "'" #a "' (%p) is not equal to '" #b "' (%p)", first, second);\
+    "'%s' (%p) is not equal to '%s' (%p)", #a, first, #b, second);\
 } G_STMT_END;
 
 /**
@@ -563,8 +566,8 @@ G_STMT_START {                                                          \
   GstClockTime first = a;                                                        \
   GstClockTime second = b;                                                       \
   fail_unless(first == second,                                          \
-    "'" #a "' (%" GST_TIME_FORMAT") is not equal to '" #b"' (%" GST_TIME_FORMAT")", \
-      GST_TIME_ARGS (first), GST_TIME_ARGS (second));       \
+    "'%s' (%" GST_TIME_FORMAT") is not equal to '%s' (%" GST_TIME_FORMAT")", \
+      #a, GST_TIME_ARGS (first), #b, GST_TIME_ARGS (second));       \
 } G_STMT_END;
 
 /***
