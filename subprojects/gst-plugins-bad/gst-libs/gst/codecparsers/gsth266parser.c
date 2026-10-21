@@ -3770,8 +3770,9 @@ gst_h266_parser_parse_picture_partition (GstH266SPS * sps,
         tile_y = tile_idx / pps->num_tile_columns;
 
         if (tile_x != pps->num_tile_columns - 1) {
+          /* VVC requires each slice rectangle to fit inside the tile grid */
           READ_UE_MAX (nr, pps->slice_width_in_tiles_minus1[i],
-              pps->num_tile_columns - 1);
+              pps->num_tile_columns - 1 - tile_x);
         } else {
           pps->slice_width_in_tiles_minus1[i] = 0;
         }
@@ -3779,7 +3780,7 @@ gst_h266_parser_parse_picture_partition (GstH266SPS * sps,
         if (tile_y != pps->num_tile_rows - 1 &&
             (pps->tile_idx_delta_present_flag || tile_x == 0)) {
           READ_UE_MAX (nr, pps->slice_height_in_tiles_minus1[i],
-              pps->num_tile_rows - 1);
+              pps->num_tile_rows - 1 - tile_y);
         } else {
           if (tile_y == pps->num_tile_rows - 1) {
             pps->slice_height_in_tiles_minus1[i] = 0;
