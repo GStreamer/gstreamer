@@ -1,0 +1,45 @@
+[package]
+name = "gst-typefind-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# Its own workspace, so the fuzzing dependencies never land in the lock file of
+# the crate the plugin builds.
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.gst-typefind-rs]
+path = ".."
+
+# Not published, never built by meson.
+[lib]
+
+[[bin]]
+name = "all"
+path = "fuzz_targets/all.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "audio"
+path = "fuzz_targets/audio.rs"
+test = false
+doc = false
+bench = false
+
+# Overflow checks on, because the meson build turns them off and an arithmetic
+# bug that wraps silently is the main thing to look for. cargo-fuzz builds with
+# the release profile, so that is the one that has to carry the setting.
+[profile.release]
+overflow-checks = true
+
+[profile.fuzz]
+inherits = "release"
+overflow-checks = true

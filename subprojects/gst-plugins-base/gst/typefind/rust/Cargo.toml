@@ -6,9 +6,13 @@ rust-version = "1.88"
 description = "Rust type finders for gst-plugins-base (internal, not published)"
 
 [lib]
-# C-linkable static library, linked into the gsttypefind plugin.
-crate-type = ["staticlib"]
+# C-linkable static library, linked into the gsttypefind plugin. The rlib is
+# here for `fuzz/` only; meson invokes rustc directly and ignores this file.
+crate-type = ["staticlib", "rlib"]
 
 # Intentionally no dependencies (and no build script): the FFI surface is
 # hand-written in src/bindings.rs, so the crate builds offline and this
 # file doubles as the rust-analyzer project root.
+
+# `fuzz/` drives the finders through their own registration pass; it is its own
+# workspace so its dependencies never reach this lock file. See fuzz/README.md.
