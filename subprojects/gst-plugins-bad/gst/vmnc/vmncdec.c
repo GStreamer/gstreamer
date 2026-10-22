@@ -310,12 +310,11 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
       rect->width, rect->height, dec->input_state);
   gst_video_codec_state_unref (state);
 
+  dec->format.stride =
+      GST_ROUND_UP_4 (dec->format.width * dec->format.bytes_per_pixel);
   g_free (dec->imagedata);
-  dec->imagedata = g_malloc0 (dec->format.width * dec->format.height *
-      dec->format.bytes_per_pixel);
+  dec->imagedata = g_malloc0 (dec->format.stride * dec->format.height);
   GST_DEBUG_OBJECT (dec, "Allocated image data at %p", dec->imagedata);
-
-  dec->format.stride = dec->format.width * dec->format.bytes_per_pixel;
 
   return 16;
 }
@@ -344,7 +343,7 @@ render_colour_cursor (GstVMncDec * dec, guint8 * data, int x, int y,
       for (j = 0; j < width; j++) {
         dst[j] = (dst[j] & src[j]) ^ mask[j];
       }
-      dst += dec->format.width;
+      dst += dec->format.stride;
       src += dec->cursor.width;
       mask += dec->cursor.width;
     }
@@ -357,7 +356,7 @@ render_colour_cursor (GstVMncDec * dec, guint8 * data, int x, int y,
       for (j = 0; j < width; j++) {
         dst[j] = (dst[j] & src[j]) ^ mask[j];
       }
-      dst += dec->format.width;
+      dst += dec->format.stride / 2;
       src += dec->cursor.width;
       mask += dec->cursor.width;
     }
@@ -370,7 +369,7 @@ render_colour_cursor (GstVMncDec * dec, guint8 * data, int x, int y,
       for (j = 0; j < width; j++) {
         dst[j] = (dst[j] & src[j]) ^ mask[j];
       }
-      dst += dec->format.width;
+      dst += dec->format.stride / 4;
       src += dec->cursor.width;
       mask += dec->cursor.width;
     }
