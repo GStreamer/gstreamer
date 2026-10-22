@@ -19,7 +19,7 @@ use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
 
-use crate::audio::{AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe};
+use crate::audio::{AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe, mp3_probe};
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
@@ -2163,6 +2163,19 @@ extern "C" fn ac3_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// MPEG-1 audio layers
+// =============================================================================
+
+extern "C" fn mp3_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(stream) = mp3_probe(tf) else { return };
+    suggest!(tf, stream.probability, c"audio/mpeg", [
+        (c"mpegversion", i32: 1),
+        (c"layer", i32: stream.layer),
+        (c"parsed", bool: false),
+    ]);
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2599,6 +2612,14 @@ const FEATURES: &[Feature] = &[
         ac3_type_find,
         "ac3,eac3",
         "audio/x-ac3"
+    ),
+    // MP3 - audio/mpeg
+    typefinder!(
+        "audio/mpeg",
+        PRIMARY,
+        mp3_type_find,
+        "mp3,mp2,mp1,mpga",
+        "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),

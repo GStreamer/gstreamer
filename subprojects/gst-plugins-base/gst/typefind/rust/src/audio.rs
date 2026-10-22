@@ -513,6 +513,369 @@ pub fn ac3_probe(tf: &mut TypeFind) -> Option<(u32, Ac3Stream)> {
 
 /// How far from where the probe starts to look for a first frame. Files with
 /// junk in front exist, and so do files that are nothing but junk.
+const MP3_WINDOW: i64 = 10_000;
+
+/// Frames that claim the format, and the count past which looking further
+/// cannot change the answer. Five agreeing headers have to fall inside
+/// `MP3_WINDOW`, so a free format frame longer than a quarter of it cannot be
+/// counted up, whatever its implied bitrate.
+const MP3_MIN_HEADERS: usize = 2;
+const MP3_TRY_HEADERS: usize = 5;
+
+/// Frames one run may read, counted or not. A run that has read this many
+/// without agreeing with itself is not a stream, and without the bound a run of
+/// frames that disagree with each other reads to the end of the file for every
+/// position the scan tries.
+const MP3_MAX_FRAMES: usize = 16;
+
+/// Confidence taken off a stream whose first frame was not the first thing the
+/// probe came to.
+const MP3_WRONG_HEADER: u32 = 10;
+
+/// Confidence given back to a stream whose first frame is the first thing in
+/// the file, which says plain MPEG audio rather than a stream that happens to
+/// contain some.
+const MP3_AT_ZERO: u32 = 10;
+
+/// How far a free format frame may reach. The bitrate bound usually ends the
+/// search well short of this, but not at the low sample rates, where the
+/// implied bitrate only passes 1000 kbit/s past this point. There the read caps
+/// the search and the upper half of the free format range goes unsearched.
+const MP3_FREE_WINDOW: usize = 4608;
+
+/// Bitrates in kbit/s by bitrate index: 11172-3 2.4.2.3 for MPEG-1 and
+/// 13818-3 2.4.2.3 for MPEG-2, whose row MPEG-2.5 shares. Index 0 is free
+/// format and index 15 is forbidden, so neither is ever read.
+const MP3_BITRATES: [[[u32; 15]; 3]; 2] = [
+    [
+        [
+            0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,
+        ],
+        [
+            0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,
+        ],
+        [
+            0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,
+        ],
+    ],
+    [
+        [
+            0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256,
+        ],
+        [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160],
+        [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160],
+    ],
+];
+
+/// Sampling frequencies by index, 11172-3 2.4.2.3. The row is the version bits
+/// less one, except that MPEG-2.5 takes the first: it is a de-facto extension
+/// that neither part 3 describes.
+const MP3_RATES: [[u32; 3]; 3] = [
+    [11025, 12000, 8000],
+    [22050, 24000, 16000],
+    [44100, 48000, 32000],
+];
+
+/// MPEG audio layer, numbered 1 to 3 as the spec and the caps field number it.
+/// The header carries it inverted: code 3 is layer 1, code 0 is no layer.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum MpegAudioLayer {
+    One = 1,
+    Two = 2,
+    Three = 3,
+}
+
+impl MpegAudioLayer {
+    fn from_code(code: u32) -> Option<MpegAudioLayer> {
+        match code {
+            3 => Some(MpegAudioLayer::One),
+            2 => Some(MpegAudioLayer::Two),
+            1 => Some(MpegAudioLayer::Three),
+            _ => None,
+        }
+    }
+}
+
+/// What a frame header says about the frame it opens.
+struct Mp3Frame {
+    layer: MpegAudioLayer,
+    /// Samples in a frame, which the format fixes per layer and version.
+    samples: u32,
+    /// Sample rate in hertz.
+    sample_rate: u32,
+    channels: u32,
+    padding: u32,
+    /// None when the bitrate index announces free format, in which case only
+    /// the distance to the next header says how long the frame is.
+    length: Option<usize>,
+}
+
+/// The frame header of 11172-3 2.4.1.3, one big-endian word. The version bits
+/// pick the tables, and the value between MPEG-2 and MPEG-2.5 is no version at
+/// all.
+fn mp3_frame(word: u32) -> Option<Mp3Frame> {
+    if word & 0xFFE0_0000 != 0xFFE0_0000 {
+        return None;
+    }
+    let version = (word >> 19) & 3;
+    let code = (word >> 17) & 3;
+    let index = ((word >> 12) & 0xF) as usize;
+    let rate_index = ((word >> 10) & 3) as usize;
+    // A zero bitrate index is free format, whose length is in none of this.
+    if version == 1 || index == 15 || rate_index == 3 {
+        return None;
+    }
+    let layer = MpegAudioLayer::from_code(code)?;
+    let mpeg1 = version == 3;
+    // The row is the version less one, except that MPEG-2.5 takes the first.
+    let row = if version == 0 {
+        0
+    } else {
+        version as usize - 1
+    };
+    let sample_rate = MP3_RATES[row][rate_index];
+    let padding = (word >> 9) & 1;
+    // Layer I has 384 samples to a frame counted in slots of four octets.
+    // Everything else has 1152, except that MPEG-2 layer III halves it, which
+    // is what 13818-3 changes, 2.4.2.3.
+    let samples = match (layer, mpeg1) {
+        (MpegAudioLayer::One, _) => 384,
+        (MpegAudioLayer::Three, false) => 576,
+        _ => 1152,
+    };
+    // A frame of `samples` samples carrying k kbit/s reaches `samples * 125`
+    // octets per kilohertz of sample rate. Layer I counts its padding in slots
+    // rather than octets, so it keeps the form the spec gives it.
+    let length = (index > 0).then(|| {
+        let k = MP3_BITRATES[usize::from(!mpeg1)][layer as usize - 1][index];
+        (if layer == MpegAudioLayer::One {
+            ((12_000 * k / sample_rate) + padding) * 4
+        } else {
+            padding + samples * 125 * k / sample_rate
+        }) as usize
+    });
+    Some(Mp3Frame {
+        layer,
+        samples,
+        sample_rate,
+        channels: 2 - u32::from((word >> 6) & 3 == 3),
+        padding,
+        length,
+    })
+}
+
+/// Free format carries no bitrate, so the frame reaches to the next header that
+/// agrees with this one on everything an encoder may not change. The implied
+/// bitrate has to land inside what the format allows, which both rejects runs
+/// of periodic data that merely look like frames and bounds the search without
+/// a window. The bounds are the ones the parser that reads such a stream uses.
+fn mp3_free_len(scan: &mut Scanner, word: u32, frame: &Mp3Frame) -> Option<usize> {
+    // Bitrate, padding, mode and the trailing bits are all a later frame may
+    // change. Everything else has to agree.
+    const AGREEMENT: u32 = !((0xF << 12) | (1 << 9) | (0xF << 4) | 0xF);
+    let want = word & AGREEMENT;
+    let window = scan.peek(MP3_FREE_WINDOW)?;
+    for len in 4..window.len().saturating_sub(3) {
+        // The bitrate a frame this long would have to be carrying, in kbit/s.
+        // Layer I counts four octets to a slot, so its padding is worth four.
+        let slot = if frame.layer == MpegAudioLayer::One {
+            4
+        } else {
+            1
+        };
+        let slots = len as u32 + slot - slot * frame.padding;
+        let bitrate = frame.sample_rate * slots / (frame.samples * 125);
+        if bitrate > 1_000 {
+            return None;
+        }
+        let next = u32be(&window[len..]);
+        if next & AGREEMENT != want || (next >> 12) & 0xF == 0xF {
+            continue;
+        }
+        return (bitrate >= 8 && !(frame.layer == MpegAudioLayer::Three && bitrate > 640))
+            .then_some(len);
+    }
+    None
+}
+
+/// Frames counted from the cursor on. A frame that disagrees with the one
+/// before it about layer, rate or channel count is read and not counted,
+/// because a run of real frames keeps to one of each. `short` says the run
+/// ended because the stream did, which is what a fragment of a stream looks
+/// like.
+struct Mp3Run {
+    found: usize,
+    layer: Option<MpegAudioLayer>,
+    changed: bool,
+    short: bool,
+    /// How far past the first header the run's evidence really starts. See
+    /// `mp3_run`.
+    lead: usize,
+}
+
+/// `None` when the octets at the cursor are no frame header at all, which is
+/// what tells a missed sync from a stream that merely stops.
+fn mp3_run(scan: &mut Scanner) -> Option<Mp3Run> {
+    let mut run = Mp3Run {
+        found: 0,
+        layer: None,
+        changed: false,
+        short: false,
+        lead: 0,
+    };
+    let mut prev: Option<Mp3Frame> = None;
+    let mut seen = 0;
+    while run.found < MP3_TRY_HEADERS && seen < MP3_MAX_FRAMES {
+        let Some(head) = scan.peek(4) else {
+            run.short = true;
+            break;
+        };
+        let word = u32be(head);
+        let Some(frame) = mp3_frame(word) else {
+            // A run with no first frame at all is a missed sync, not a stream
+            // that stopped.
+            if prev.is_some() {
+                break;
+            }
+            return None;
+        };
+        let Some(len) = frame.length.or_else(|| mp3_free_len(scan, word, &frame)) else {
+            break;
+        };
+        // A frame the stream does not have in full is not a frame, and nothing
+        // past it can be one either.
+        if scan.peek(len).is_none() {
+            run.short = true;
+            break;
+        }
+        if prev.is_none() && frame.length.is_none() {
+            // Nothing before this header said how long its frame is, so the
+            // stream is only evidenced from the header that settles the length,
+            // one frame on. Confidence is reckoned from there.
+            run.lead = len;
+        }
+        if prev.as_ref().is_some_and(|p| {
+            p.layer != frame.layer
+                || p.sample_rate != frame.sample_rate
+                || p.channels != frame.channels
+        }) {
+            run.changed = true;
+        } else {
+            run.found += 1;
+        }
+        // The layer reported is the last header the run read, whether or not
+        // that header was one of the agreeing ones.
+        run.layer = Some(frame.layer);
+        seen += 1;
+        scan.consume(len);
+        prev = Some(frame);
+    }
+    Some(run)
+}
+
+/// The frames at `start` and what to make of them. Five frames settle it. Two
+/// that the stream cuts short settle it too, which is what a file holding only
+/// the tail of a stream looks like.
+fn mp3_scan(tf: &mut TypeFind, start: i64) -> (u32, Option<MpegAudioLayer>) {
+    let mut scan = Scanner::new(tf, start);
+    let mut missed = false;
+    while scan.offset() < start + MP3_WINDOW {
+        let at = scan.offset();
+        let Some(head) = scan.peek(4) else { break };
+        if head[0] != 0xFF {
+            scan.consume(1);
+            continue;
+        }
+        // The run reads ahead as far as the frames reach, which says nothing
+        // about where the next candidate starts. A copy of the cursor reads
+        // ahead; the scan stays on the byte it is trying.
+        let mut probe = scan;
+        let Some(run) = mp3_run(&mut probe) else {
+            missed = true;
+            scan.consume(1);
+            continue;
+        };
+        let accepted = run.found == MP3_TRY_HEADERS || (run.found >= MP3_MIN_HEADERS && run.short);
+        if !accepted {
+            scan.consume(1);
+            continue;
+        }
+        let skipped = (at - start) as u32 + run.lead as u32;
+        // `lead` is a frame length, so `skipped` can pass the window and
+        // underflow it. Past the window there is nothing left to count.
+        let inside = (MP3_WINDOW as u32).saturating_sub(skipped);
+        let mut probability = run.found as u32 * Prob::MAXIMUM.get() * inside
+            / MP3_TRY_HEADERS as u32
+            / MP3_WINDOW as u32;
+        if missed && probability > Prob::MINIMUM.get() + MP3_WRONG_HEADER {
+            probability -= MP3_WRONG_HEADER;
+        }
+        probability = probability.max(Prob::MINIMUM.get());
+        if start > 0 {
+            probability /= 2;
+        }
+        if !run.changed {
+            probability = (probability + Prob::MAXIMUM.get()) / 2;
+        }
+        return (probability, run.layer);
+    }
+    (0, None)
+}
+
+/// What the MP3 probe decided.
+pub struct Mp3Stream {
+    pub probability: u32,
+    pub layer: i32,
+}
+
+/// Free format, bitrate index zero, is read by the same rule the parser that
+/// consumes such a stream uses, so the typefinder finds what that parser can
+/// then parse.
+pub fn mp3_probe(tf: &mut TypeFind) -> Option<Mp3Stream> {
+    let found = 'merge: {
+        let (mut probability, layer) = mp3_scan(tf, 0);
+        let stream = |probability: u32, layer: Option<MpegAudioLayer>| {
+            (probability > 0).then_some(Mp3Stream {
+                probability,
+                layer: layer.map_or(0, |layer| layer as i32),
+            })
+        };
+        // Nothing at the start says nothing: a stream can begin anywhere, so
+        // look halfway in and see whether the middle agrees with the start.
+        let Some(length) = tf.length() else {
+            break 'merge stream(probability, layer);
+        };
+        if probability >= Prob::LIKELY.get() {
+            break 'merge stream(probability, layer);
+        }
+        let (mid, mid_layer) = mp3_scan(tf, length.get() as i64 / 2);
+        if mid > 0 {
+            if probability == 0 {
+                break 'merge stream(mid, mid_layer);
+            }
+            // Two runs that disagree about the layer are two different things.
+            if layer != mid_layer {
+                break 'merge None;
+            }
+            probability = (probability + mid) / 2;
+            break 'merge stream(probability, layer);
+        }
+        // A header right at the start says plain MPEG audio rather than a
+        // stream that merely happens to contain some.
+        if probability > 0
+            && let Some(head) = tf.peek::<4>(0)
+            && mp3_frame(u32be(head)).is_some_and(|f| f.length.is_some())
+        {
+            probability = (probability + MP3_AT_ZERO).min(Prob::MAXIMUM.get());
+        }
+        stream(probability, layer)
+    };
+    // An ID3v1 tag describes the audio rather than being it, so a file that
+    // ends with one is left to whatever reads the tag. Only asked once there is
+    // something to overrule, since the answer costs a read near the end.
+    found.filter(|_| tf.peek_var(-128, 3).is_none_or(|tag| tag != b"TAG"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -551,6 +914,36 @@ mod tests {
     /// that the code drifting from the tables fails here rather than in the
     /// field. Layer I counts four octets to a slot, and layer III at the lower
     /// rates has half the samples per frame.
+    #[test]
+    fn frame_lengths_follow_the_bitrate_tables() {
+        for (word, want) in [
+            // MPEG-1 L3 128k 44.1
+            (0xFFFB9000, Some(417)),
+            // MPEG-1 L1 448k 48
+            (0xFFFFE400, Some(448)),
+            // MPEG-1 L2 384k 48, padded
+            (0xFFFDE600, Some(1153)),
+            // MPEG-2 L3 8k 24
+            (0xFFF31400, Some(24)),
+            // MPEG-2 L2 48k 22.05
+            (0xFFF53000, Some(156)),
+            // MPEG-2.5 L3 8k 12
+            (0xFFE31400, Some(48)),
+            // MPEG-1 L3 320k 32, padded
+            (0xFFFBEA00, Some(1441)),
+        ] {
+            assert_eq!(mp3_frame(word).map(|f| f.length), want.map(Some));
+        }
+        // Free format carries no length, and the three forbidden header values
+        // are no frame at all.
+        assert_eq!(mp3_frame(0xFFFB0000).unwrap().length, None);
+        assert!(mp3_frame(0xFFFBF000).is_none()); // bitrate index 15
+        assert!(mp3_frame(0xFFFB0C00).is_none()); // sampling index 3
+        assert!(mp3_frame(0xFFEB9000).is_none()); // version 1
+    }
+
+    /// Frame sizes straight out of A/52 table 5.18, which counts 16-bit words,
+    /// and the E-AC-3 rule that `frmsiz` is the word count less one.
     #[test]
     fn ac3_frame_sizes_follow_the_table() {
         let ac3 = |fscod: u8, frmsizecod: u8, bsid: u8| {
