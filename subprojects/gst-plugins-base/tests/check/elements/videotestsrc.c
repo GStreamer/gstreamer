@@ -595,6 +595,65 @@ GST_START_TEST (test_patterns_are_deterministic)
 GST_END_TEST;
 
 
+/* Emulates a downstream element whose CAPS query handler ignores the
+ * filter and offers caps outside of videotestsrc's template first. */
+static GstPadProbeReturn
+unfiltered_caps_query_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+  GstCaps *caps;
+
+  if (GST_QUERY_TYPE (query) != GST_QUERY_CAPS)
+    return GST_PAD_PROBE_OK;
+
+  caps = gst_caps_from_string ("video/x-raw(memory:DMABuf), "
+      "format=DMA_DRM, drm-format=YUYV, width=320, height=240, "
+      "framerate=30/1; video/x-raw, format=YUY2, width=320, height=240, "
+      "framerate=30/1");
+  gst_query_set_caps_result (query, caps);
+  gst_caps_unref (caps);
+
+  return GST_PAD_PROBE_HANDLED;
+}
+
+GST_START_TEST (test_reject_caps_outside_template)
+{
+  GstElement *pipeline, *sink;
+  GstPad *pad;
+  GstBus *bus;
+  GstMessage *msg;
+
+  pipeline = gst_parse_launch ("videotestsrc num-buffers=1 ! "
+      "fakesink name=sink", NULL);
+  fail_unless (pipeline != NULL);
+
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  pad = gst_element_get_static_pad (sink, "sink");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
+      unfiltered_caps_query_probe, NULL, NULL);
+  gst_object_unref (pad);
+  gst_object_unref (sink);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* Must fail negotiation cleanly instead of crashing while trying to
+   * render into a DMA_DRM frame */
+  bus = gst_element_get_bus (pipeline);
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+
 
 /* FIXME: add tests for YUV formats */
 
@@ -618,6 +677,7 @@ videotestsrc_suite (void)
   tcase_add_test (tc_chain, test_backward_playback);
   tcase_add_test (tc_chain, test_duration_query);
   tcase_add_test (tc_chain, test_patterns_are_deterministic);
+  tcase_add_test (tc_chain, test_reject_caps_outside_template);
 
   return s;
 }
