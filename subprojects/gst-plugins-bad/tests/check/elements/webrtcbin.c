@@ -1387,6 +1387,47 @@ GST_START_TEST (test_ice_port_restriction)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ice_agent_not_floating)
+{
+  GstElement *webrtc = gst_element_factory_make ("webrtcbin", NULL);
+  GObject *ice;
+
+  g_object_get (webrtc, "ice-agent", &ice, NULL);
+  fail_unless (ice != NULL);
+  /* a floating ref lets bindings sink webrtcbin's own reference */
+  fail_if (g_object_is_floating (ice));
+  /* ours plus webrtcbin's */
+  ASSERT_OBJECT_REFCOUNT (ice, "ice-agent", 2);
+
+  g_object_unref (ice);
+  gst_object_unref (webrtc);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ice_agent_construct_takes_ref)
+{
+  GstElement *webrtc;
+  GObject *default_ice, *ice;
+
+  webrtc = gst_element_factory_make ("webrtcbin", NULL);
+  g_object_get (webrtc, "ice-agent", &default_ice, NULL);
+  ice = g_object_new (G_OBJECT_TYPE (default_ice), "name", "custom-ice", NULL);
+  gst_object_ref_sink (ice);
+  g_object_unref (default_ice);
+  gst_object_unref (webrtc);
+
+  webrtc = gst_element_factory_make_full ("webrtcbin", "ice-agent", ice, NULL);
+  ASSERT_OBJECT_REFCOUNT (ice, "ice-agent", 2);
+  gst_object_unref (webrtc);
+  /* webrtcbin dropped only the reference it took */
+  ASSERT_OBJECT_REFCOUNT (ice, "ice-agent", 1);
+
+  gst_object_unref (ice);
+}
+
+GST_END_TEST;
+
 static struct test_webrtc *
 create_audio_video_test (void)
 {
@@ -7456,6 +7497,8 @@ webrtcbin_suite (void)
 
   tcase_add_test (tc, test_no_nice_elements_request_pad);
   tcase_add_test (tc, test_no_nice_elements_state_change);
+  tcase_add_test (tc, test_ice_agent_not_floating);
+  tcase_add_test (tc, test_ice_agent_construct_takes_ref);
   if (nicesrc && nicesink && dtlssrtpenc && dtlssrtpdec) {
     tcase_add_test (tc, test_sdp_no_media);
     tcase_add_test (tc, test_session_stats);

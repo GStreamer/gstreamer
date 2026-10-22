@@ -8976,6 +8976,8 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ICE_AGENT:
       webrtc->priv->ice = g_value_get_object (value);
+      if (webrtc->priv->ice)
+        gst_object_ref_sink (webrtc->priv->ice);
       break;
     case PROP_HTTP_PROXY:
       gst_webrtc_ice_set_http_proxy (webrtc->priv->ice,
@@ -9083,7 +9085,8 @@ gst_webrtc_bin_constructed (GObject * object)
 
   if (!webrtc->priv->ice) {
     name = g_strdup_printf ("%s:ice", GST_OBJECT_NAME (webrtc));
-    webrtc->priv->ice = GST_WEBRTC_ICE (gst_webrtc_nice_new (name));
+    webrtc->priv->ice =
+        GST_WEBRTC_ICE (gst_object_ref_sink (gst_webrtc_nice_new (name)));
     g_free (name);
   }
   gst_webrtc_ice_set_on_ice_candidate (webrtc->priv->ice,
