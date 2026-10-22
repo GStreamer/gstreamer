@@ -57,18 +57,28 @@ nal_reader_init (NalReader * nr, const guint8 * data, guint size)
 gboolean
 nal_reader_read (NalReader * nr, guint nbits)
 {
+  NalReader saved;
+
   if (G_UNLIKELY (nr->byte * 8 + (nbits - nr->bits_in_cache) > nr->size * 8)) {
     GST_DEBUG ("Can not read %u bits, bits in cache %u, Byte * 8 %u, size in "
         "bits %u", nbits, nr->bits_in_cache, nr->byte * 8, nr->size * 8);
     return FALSE;
   }
 
+  /* A failed refill must leave the reader exactly as it was: callers rely
+   * on bits_in_cache holding at most 7 bits between calls, and skipping
+   * emulation prevention bytes can make the refill run out of data after
+   * it has already cached whole bytes. */
+  saved = *nr;
+
   while (nr->bits_in_cache < nbits) {
     guint8 byte;
 
   next_byte:
-    if (G_UNLIKELY (nr->byte >= nr->size))
+    if (G_UNLIKELY (nr->byte >= nr->size)) {
+      *nr = saved;
       return FALSE;
+    }
 
     byte = nr->data[nr->byte++];
     nr->epb_cache = (nr->epb_cache << 8) | byte;
@@ -108,11 +118,14 @@ nal_reader_skip_long (NalReader * nr, guint nbits)
   /* Leave out enough bits in the cache once we are finished */
   const guint skip_size = 4 * sizeof (nr->cache);
   guint remaining = nbits;
+  NalReader saved = *nr;
 
   nbits %= skip_size;
   while (remaining > 0) {
-    if (!nal_reader_skip (nr, nbits))
+    if (!nal_reader_skip (nr, nbits)) {
+      *nr = saved;
       return FALSE;
+    }
     remaining -= nbits;
     nbits = skip_size;
   }
