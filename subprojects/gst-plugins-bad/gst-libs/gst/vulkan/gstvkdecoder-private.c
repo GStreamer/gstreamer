@@ -576,6 +576,8 @@ gst_vulkan_decoder_create_dpb_pool (GstVulkanDecoder * self, GstCaps * caps)
   }
 
   if (self->layered_dpb) {
+    gst_clear_buffer (&self->layered_buffer);
+
     ret = gst_buffer_pool_acquire_buffer (priv->dpb_pool, &self->layered_buffer,
         NULL);
     if (ret != GST_FLOW_OK) {
