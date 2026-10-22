@@ -416,11 +416,28 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
     {
+      GstCaps *filter, *result;
+
       if (gst_caps_is_empty (self->cur_caps))
         return gst_pad_query_default (pad, parent, query);
 
-      GST_DEBUG_OBJECT (self, "caps %" GST_PTR_FORMAT, self->cur_caps);
-      gst_query_set_caps_result (query, self->cur_caps);
+      /* Callers (e.g. basesrc) rely on the result being a subset of the
+       * filter. Before the host committed a format, cur_caps holds all the
+       * probed caps of the device, including memory:DMABuf/DMA_DRM ones that
+       * many upstream elements can't produce. */
+      gst_query_parse_caps (query, &filter);
+      if (filter) {
+        result = gst_caps_intersect_full (filter, self->cur_caps,
+            GST_CAPS_INTERSECT_FIRST);
+      } else {
+        result = gst_caps_ref (self->cur_caps);
+      }
+
+      GST_DEBUG_OBJECT (self, "caps %" GST_PTR_FORMAT ", filter %"
+          GST_PTR_FORMAT ", result %" GST_PTR_FORMAT, self->cur_caps, filter,
+          result);
+      gst_query_set_caps_result (query, result);
+      gst_caps_unref (result);
 
       if (!self->caps_changed)
         gst_uvc_sink_update_streaming (self);
