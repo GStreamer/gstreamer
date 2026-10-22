@@ -991,10 +991,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
      * we need to send something, otherwise the decoder will refuse to
      * initialize.
      */
-    if (codec_data) {
-      gst_buffer_ref (codec_data);
-    } else {
-      codec_data = gst_buffer_ref (frame->input_buffer);
+    if (!codec_data) {
+      codec_data = frame->input_buffer;
       processed = TRUE;
     }
 
@@ -1029,6 +1027,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     g_signal_connect_swapped (self->v4l2output->pool, "output-error-dequeued",
         G_CALLBACK (gst_v4l2_video_dec_drop_frame), decoder);
 
+    codec_data = gst_buffer_ref (codec_data);
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     GST_LOG_OBJECT (decoder, "Passing buffer with system frame number %u",
         processed ? frame->system_frame_number : 0);
