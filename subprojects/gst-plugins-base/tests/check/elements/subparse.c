@@ -1065,6 +1065,28 @@ GST_START_TEST (test_sami_self_contained_tags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sami_split_tag)
+{
+  SubParseInputChunk sami_input[] = {
+    {"<SAMI>\n"
+          "<BODY>\n"
+          "    <SYNC Start=1000>\n"
+          "        <P Class=CC>\n" "            This line splits a tag<b\n",
+          1000 * GST_MSECOND, 2000 * GST_MSECOND,
+        "This line splits a tag\nin the middle."},
+    {"r> in the middle.\n"
+          "    <SYNC Start=2000>\n"
+          "        <P Class=CC>\n"
+          "            Second line.\n" "</BODY>\n" "</SAMI>\n",
+          2000 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "Second line."}
+  };
+
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "pango-markup");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_lrc)
 {
   SubParseInputChunk lrc_input[] = {
@@ -1146,6 +1168,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_sami_bad_entities);
   tcase_add_test (tc_chain, test_sami_comment);
   tcase_add_test (tc_chain, test_sami_self_contained_tags);
+  tcase_add_test (tc_chain, test_sami_split_tag);
   tcase_add_test (tc_chain, test_lrc);
   tcase_add_test (tc_chain, test_raw_conversion);
   return s;
