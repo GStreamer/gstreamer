@@ -517,8 +517,15 @@ gst_rfb_src_negotiate (GstBaseSrc * bsrc)
 
   gst_video_info_init (&vinfo);
 
-  gst_video_info_set_format (&vinfo, vformat, decoder->rect_width,
-      decoder->rect_height);
+  if (vformat == GST_VIDEO_FORMAT_UNKNOWN ||
+      !gst_video_info_set_format (&vinfo, vformat, decoder->rect_width,
+          decoder->rect_height)) {
+    GST_ELEMENT_ERROR (src, STREAM, WRONG_TYPE,
+        ("Unsupported VNC pixel format (depth %u, %u bits per pixel, "
+            "masks %08x %08x %08x)", decoder->depth, decoder->bpp, red_mask,
+            green_mask, blue_mask), (NULL));
+    return FALSE;
+  }
 
   decoder->line_size = vinfo.stride[0];
 

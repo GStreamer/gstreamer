@@ -713,6 +713,36 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
     return FALSE;
   }
 
+  if (decoder->bpp != 8 && decoder->bpp != 16 && decoder->bpp != 24 &&
+      decoder->bpp != 32) {
+    GST_WARNING ("Invalid bits per pixel %u from server", decoder->bpp);
+    if (decoder->error == NULL) {
+      decoder->error = g_error_new (GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ, "VNC server error: invalid bits per pixel");
+    }
+    return FALSE;
+  }
+
+  if (decoder->depth == 0 || decoder->depth > decoder->bpp) {
+    GST_WARNING ("Invalid colour depth %u for %u bits per pixel",
+        decoder->depth, decoder->bpp);
+    if (decoder->error == NULL) {
+      decoder->error = g_error_new (GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ, "VNC server error: invalid colour depth");
+    }
+    return FALSE;
+  }
+
+  if (!decoder->true_colour) {
+    GST_WARNING ("Pseudo-colour (colour map) framebuffers are not supported");
+    if (decoder->error == NULL) {
+      decoder->error = g_error_new (GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ,
+          "VNC server error: colour map not supported");
+    }
+    return FALSE;
+  }
+
   if (decoder->red_shift >= 32 || decoder->green_shift >= 32 ||
       decoder->blue_shift >= 32) {
     GST_WARNING ("Invalid colour shifts from server");
