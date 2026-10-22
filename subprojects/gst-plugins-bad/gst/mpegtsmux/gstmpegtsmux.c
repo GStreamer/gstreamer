@@ -124,6 +124,8 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "emphasis = (boolean) { FALSE, TRUE }, "
         "mute = (boolean) { FALSE, TRUE }; "
         "audio/x-ac3, framed = (boolean) TRUE;"
+        "audio/x-ac4, "
+        "stream-format = (string) syncframe;"
         "audio/x-dts, framed = (boolean) TRUE;"
         "audio/x-opus, "
         "channels = (int) [1, 255];"

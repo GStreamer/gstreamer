@@ -261,6 +261,12 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
+    case TSMUX_ST_PS_AUDIO_AC4:
+      stream->id = 0xBD;
+      stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      break;
     case TSMUX_ST_PS_S302M:
       /* FIXME: assign sequential extended IDs? */
       stream->id = 0xBD;
@@ -1037,6 +1043,20 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
             gst_mpegts_descriptor_from_custom_with_extension
             (GST_MTS_DESC_DVB_EXTENSION, 0x80,
             stream->opus_channel_config, stream->opus_channel_config_len);
+
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      }
+      if (stream->internal_stream_type == TSMUX_ST_PS_AUDIO_AC4) {
+        /* As specified under "Codec-specific descriptor" in Dolby's 
+         * "Overview of Dolby AC-4 in Transport Streams", 
+         * ac4_config_flag and ac4_toc_flag are both 0 */
+        guint8 add_info[1] = { 0x00 };
+        descriptor = gst_mpegts_descriptor_from_registration ("AC-4", NULL, 0);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+
+        descriptor =
+            gst_mpegts_descriptor_from_custom_with_extension
+            (GST_MTS_DESC_DVB_EXTENSION, GST_MTS_DESC_EXT_DVB_AC4, add_info, 1);
 
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }

@@ -589,6 +589,8 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     st = TSMUX_ST_VIDEO_DIRAC;
   } else if (strcmp (mt, "audio/x-ac3") == 0) {
     st = TSMUX_ST_PS_AUDIO_AC3;
+  } else if (strcmp (mt, "audio/x-ac4") == 0) {
+    st = TSMUX_ST_PS_AUDIO_AC4;
   } else if (strcmp (mt, "audio/x-dts") == 0) {
     st = TSMUX_ST_PS_AUDIO_DTS;
   } else if (strcmp (mt, "audio/x-lpcm") == 0) {
