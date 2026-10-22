@@ -393,7 +393,6 @@ gst_vulkan_vp9_decoder_decide_allocation (GstVideoDecoder * decoder,
   gst_vulkan_image_buffer_pool_config_set_decode_caps (config, profile_caps);
 
   gst_caps_unref (profile_caps);
-  gst_caps_unref (new_caps);
 
   if (!gst_buffer_pool_set_config (pool, config))
     goto bail;
@@ -421,6 +420,7 @@ gst_vulkan_vp9_decoder_decide_allocation (GstVideoDecoder * decoder,
   if (!gst_vulkan_decoder_create_dpb_pool (self->decoder, dpb_caps))
     goto bail;
   gst_caps_unref (dpb_caps);
+  gst_caps_unref (new_caps);
 
   return TRUE;
 
