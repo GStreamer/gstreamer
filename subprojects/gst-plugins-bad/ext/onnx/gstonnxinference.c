@@ -443,6 +443,7 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
   GstPadTemplate *pad_templ;
   GstCaps *templ_caps;
   GstCaps *doc_caps;
+  GParamSpec *pspec;
 
   GST_DEBUG_CATEGORY_INIT (onnx_inference_debug, "onnxinference",
       0, "ONNX Runtime Inference");
@@ -467,13 +468,18 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
    *
    * Since: 1.24
    */
+  pspec = g_param_spec_string ("model-file",
+      "ONNX model file",
+      "Path to the ONNX model file. A companion modelinfo file is "
+      "required, looked up as <model-file>.modelinfo then "
+      "<model-file without extension>.modelinfo", NULL, (GParamFlags)
+      (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_LOCATION,
+          GST_PROP_KIND_FIELD_SUBTYPE, G_TYPE_STRING,
+          GST_PROP_KIND_SUBTYPE_PATH, GST_PROP_KIND_FIELD_EXTENSIONS,
+          G_TYPE_STRING, "onnx", NULL));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MODEL_FILE,
-      g_param_spec_string ("model-file",
-          "ONNX model file",
-          "Path to the ONNX model file. A companion modelinfo file is "
-          "required, looked up as <model-file>.modelinfo then "
-          "<model-file without extension>.modelinfo", NULL, (GParamFlags)
-          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      pspec);
 
    /**
     * GstOnnxInference:optimization-level

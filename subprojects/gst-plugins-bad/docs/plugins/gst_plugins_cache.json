@@ -239038,6 +239038,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "NULL",
+                        "kind": "location, subtype=(string)path, extensions=(string)onnx;",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
