@@ -15843,6 +15843,7 @@
                         "construct-only": false,
                         "controllable": true,
                         "default": "-16777216",
+                        "kind": "color, subtype=(string)argb;",
                         "max": "-1",
                         "min": "0",
                         "mutable": "null",

@@ -259,6 +259,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
+  GParamSpec *pspec;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -371,11 +372,14 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
    * Color to use for background color of some patterns.  Default is
    * black (0xff000000).
    */
-  g_object_class_install_property (gobject_class, PROP_BACKGROUND_COLOR,
-      g_param_spec_uint ("background-color", "Background Color",
-          "Background color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_BACKGROUND_COLOR,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("background-color", "Background Color",
+      "Background color to use (big-endian ARGB)", 0, G_MAXUINT32,
+      DEFAULT_BACKGROUND_COLOR,
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_COLOR,
+          GST_PROP_KIND_FIELD_SUBTYPE, G_TYPE_STRING,
+          GST_PROP_KIND_SUBTYPE_ARGB, NULL));
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND_COLOR, pspec);
 
   g_object_class_install_property (gobject_class, PROP_HORIZONTAL_SPEED,
       g_param_spec_int ("horizontal-speed", "Horizontal Speed",
