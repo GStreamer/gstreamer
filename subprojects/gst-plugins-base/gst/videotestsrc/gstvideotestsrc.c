@@ -1030,8 +1030,20 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   guint i;
   guint n_lines;
   gint offset;
+  GstCaps *tmpl_caps;
+  gboolean is_subset;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
+
+  /* basesrc only validates the caps it picks against what the peer returned
+   * for the CAPS query. If a downstream element ignores the query filter,
+   * we may end up with caps outside of our template (e.g. DMA_DRM, which has
+   * no pack function), so make sure we really can produce them. */
+  tmpl_caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
+  is_subset = gst_caps_is_subset (caps, tmpl_caps);
+  gst_caps_unref (tmpl_caps);
+  if (!is_subset)
+    goto unsupported_caps_unlocked;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -1114,6 +1126,12 @@ unsupported_caps:
   {
     GST_OBJECT_UNLOCK (videotestsrc);
     GST_DEBUG_OBJECT (bsrc, "unsupported caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+unsupported_caps_unlocked:
+  {
+    GST_WARNING_OBJECT (bsrc, "caps not compatible with template: %"
+        GST_PTR_FORMAT, caps);
     return FALSE;
   }
 }
