@@ -21,6 +21,7 @@
 #define __GSTMPEGHUIMANAGER_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 #include <mpeghdec/mpeghUIManager.h>
 
@@ -39,23 +40,38 @@ typedef struct _GstMpeghUiManager GstMpeghUiManager;
 typedef struct _GstMpeghUiManagerClass GstMpeghUiManagerClass;
 
 struct _GstMpeghUiManager {
-  GstElement element;
+  GstBaseTransform element;
 
-  GstPad* sink_pad;
-  GstPad* src_pad;
-
+  /* set under the object lock, so "persistence" is not replaced while the
+   * UI manager uses persistence_memory */
   HANDLE_MPEGH_UI_MANAGER mpegh_ui_manager;
 
-  GString* latest_config;
+  /* protected by the object lock */
+  /* XML of the latest scene, as in the last "mpegh-ui-config" message */
+  gchar* latest_config;
+  /* XML messages of "mpegh-ui-event" events not applied yet */
+  GQueue ui_event_queue;
+  /* persistence data set by the application, used in place by the UI manager
+   * and updated in stop(); NULL disables persistence */
+  guint8* persistence_memory;
+  guint16 persistence_memory_size;
 
-  GString* persistence_filename;
-  gchar* persistence_memory;
+  /* number of frames in a row that could not be processed and were passed
+   * through unchanged */
+  guint consecutive_errors;
+  /* the latest scene reported by the UI manager is a valid one; while it is
+   * not, UI events it rejects are kept and retried */
+  gboolean scene_valid;
+  /* the UI manager is inactive and leaves frames unchanged, see
+   * MPEGH_UI_NOT_ALLOWED */
+  gboolean inactive;
 
-  GQueue* ui_event_queue;
+  /* scratch buffer for the XML scene state */
+  gchar* scene_state_buffer;
 };
 
 struct _GstMpeghUiManagerClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 GType gst_mpeghuimanager_get_type(void);
