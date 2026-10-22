@@ -102,6 +102,68 @@ GST_START_TEST (test_nal_writer_emulation_preventation)
 
 GST_END_TEST;
 
+GST_START_TEST (test_nal_reader_read_epb)
+{
+  /* 00 00 03 is an emulation prevention sequence: the 03 carries no
+   * data, so a 32-bit read over these 5 raw bytes only finds 3 data
+   * bytes and must fail. */
+  const guint8 data[] = { 0xaa, 0x00, 0x00, 0x03, 0xbb };
+  NalReader nr;
+  guint8 val;
+
+  nal_reader_init (&nr, data, sizeof (data));
+  fail_unless (nal_reader_get_bits_uint8 (&nr, &val, 8));
+  assert_equals_int (val, 0xaa);
+
+  fail_if (nal_reader_get_bits_uint8 (&nr, &val, 32));
+
+  /* the failed read must not have consumed or corrupted anything */
+  fail_unless (nal_reader_is_byte_aligned (&nr));
+  assert_equals_int (nal_reader_get_remaining (&nr), 32);
+  fail_unless (nal_reader_get_bits_uint8 (&nr, &val, 8));
+  assert_equals_int (val, 0x00);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_nal_reader_read_epb_success)
+{
+  /* the emulation prevention byte must be skipped transparently */
+  const guint8 data[] = { 0x11, 0x22, 0x00, 0x00, 0x03, 0x33, 0x44 };
+  NalReader nr;
+  guint32 val32;
+  guint8 val8;
+
+  nal_reader_init (&nr, data, sizeof (data));
+  fail_unless (nal_reader_get_bits_uint32 (&nr, &val32, 32));
+  assert_equals_int (val32, 0x11220000);
+  fail_unless (nal_reader_get_bits_uint8 (&nr, &val8, 8));
+  assert_equals_int (val8, 0x33);
+  fail_unless (nal_reader_get_bits_uint8 (&nr, &val8, 8));
+  assert_equals_int (val8, 0x44);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_nal_reader_skip_long_epb)
+{
+  /* 4 data bytes (01 02 00 00) plus one emulation prevention byte:
+   * skipping 40 bits runs out of data and must leave the reader
+   * untouched. */
+  const guint8 data[] = { 0x01, 0x02, 0x00, 0x00, 0x03 };
+  NalReader nr;
+  guint8 val;
+
+  nal_reader_init (&nr, data, sizeof (data));
+  fail_if (nal_reader_skip_long (&nr, 40));
+
+  assert_equals_int (nal_reader_get_pos (&nr), 0);
+  fail_unless (nal_reader_get_bits_uint8 (&nr, &val, 8));
+  assert_equals_int (val, 0x01);
+}
+
+GST_END_TEST;
+
 static Suite *
 nalutils_suite (void)
 {
@@ -112,6 +174,9 @@ nalutils_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_nal_writer_init);
   tcase_add_test (tc_chain, test_nal_writer_emulation_preventation);
+  tcase_add_test (tc_chain, test_nal_reader_read_epb);
+  tcase_add_test (tc_chain, test_nal_reader_read_epb_success);
+  tcase_add_test (tc_chain, test_nal_reader_skip_long_epb);
 
   return s;
 }
