@@ -2497,15 +2497,27 @@ done:
   if (sps->conformance_window_flag) {
     const guint crop_unit_x = subwc[sps->chroma_format_idc];
     const guint crop_unit_y = subhc[sps->chroma_format_idc];
+    guint64 crop_w, crop_h;
 
-    sps->crop_rect_width = sps->width -
-        (sps->conf_win_left_offset + sps->conf_win_right_offset) * crop_unit_x;
-    sps->crop_rect_height = sps->height -
-        (sps->conf_win_top_offset + sps->conf_win_bottom_offset) * crop_unit_y;
+    /* The conf_win offsets are unbounded ue() values; sum them in 64
+     * bit so the products cannot wrap, and require the crop to leave
+     * a non-empty picture. */
+    crop_w = ((guint64) sps->conf_win_left_offset +
+        sps->conf_win_right_offset) * crop_unit_x;
+    crop_h = ((guint64) sps->conf_win_top_offset +
+        sps->conf_win_bottom_offset) * crop_unit_y;
+
+    if (crop_w >= (guint64) sps->width || crop_h >= (guint64) sps->height) {
+      GST_WARNING ("conformance window crops the whole picture in SPS");
+      goto error;
+    }
+
+    sps->crop_rect_width = (gint) ((guint64) sps->width - crop_w);
+    sps->crop_rect_height = (gint) ((guint64) sps->height - crop_h);
     sps->crop_rect_x = sps->conf_win_left_offset * crop_unit_x;
     sps->crop_rect_y = sps->conf_win_top_offset * crop_unit_y;
 
-    GST_LOG ("crop_rectangle x=%u y=%u width=%u, height=%u", sps->crop_rect_x,
+    GST_LOG ("crop_rectangle x=%u y=%u width=%d, height=%d", sps->crop_rect_x,
         sps->crop_rect_y, sps->crop_rect_width, sps->crop_rect_height);
   }
 

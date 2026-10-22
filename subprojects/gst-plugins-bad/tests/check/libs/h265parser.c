@@ -1933,6 +1933,39 @@ GST_START_TEST (test_h265_parse_partial_nal)
 
 GST_END_TEST;
 
+/* SPS with a conformance window cropping more than the whole picture.
+ * The conf_win offsets are unbounded ue() values; the resulting
+ * cropped width used to wrap around and be accepted as a negative
+ * gint. */
+static guint8 h265_sps_oversized_conformance_window[] = {
+  0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x01, 0x80, 0x00, 0x00, 0x03,
+  0x00, 0x80, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x1e, 0xa0, 0x20,
+  0x81, 0x06, 0x06, 0x5f, 0xff, 0xf0, 0x82
+};
+
+GST_START_TEST (test_h265_parse_sps_oversized_conformance_window)
+{
+  GstH265Parser *parser;
+  GstH265NalUnit nalu;
+  GstH265SPS sps;
+  GstH265ParserResult res;
+
+  parser = gst_h265_parser_new ();
+
+  res = gst_h265_parser_identify_nalu (parser,
+      h265_sps_oversized_conformance_window, 0,
+      sizeof (h265_sps_oversized_conformance_window), &nalu);
+  assert_equals_int (res, GST_H265_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H265_NAL_SPS);
+
+  res = gst_h265_parser_parse_sps (parser, &nalu, &sps, TRUE);
+  assert_equals_int (res, GST_H265_PARSER_ERROR);
+
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -1964,6 +1997,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_split_hevc);
   tcase_add_test (tc_chain, test_h265_decoder_config_record);
   tcase_add_test (tc_chain, test_h265_parse_partial_nal);
+  tcase_add_test (tc_chain, test_h265_parse_sps_oversized_conformance_window);
 
   return s;
 }
