@@ -631,3 +631,28 @@ ges_marker_flags_get_type (void)
   g_once (&once, (GThreadFunc) register_ges_marker_flags, &id);
   return id;
 }
+
+static void
+register_ges_asset_request_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_ENUM (GES_ASSET_REQUEST_FLAG_NONE), "GES_ASSET_REQUEST_FLAG_NONE",
+        "none"},
+    {C_ENUM (GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION),
+          "GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION",
+        "no-untrusted-bin-description"},
+    {0, NULL, NULL}
+  };
+
+  *id = g_flags_register_static ("GESAssetRequestFlags", values);
+}
+
+GType
+ges_asset_request_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_ges_asset_request_flags, &id);
+  return id;
+}

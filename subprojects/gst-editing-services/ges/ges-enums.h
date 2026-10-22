@@ -591,6 +591,11 @@ typedef enum {
   GES_MARKER_FLAG_SNAPPABLE = 1 << 0,
 } GESMarkerFlags;
 
+#define GES_TYPE_ASSET_REQUEST_FLAGS (ges_asset_request_flags_get_type ())
+
+GES_API
+GType ges_asset_request_flags_get_type (void);
+
 
 GES_API
 const gchar * ges_track_type_name (GESTrackType type);

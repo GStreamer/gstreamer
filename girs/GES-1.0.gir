@@ -842,12 +842,11 @@ error</doc>
     <record name="AssetPrivate" c:type="GESAssetPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-asset.h"/>
     </record>
-    <bitfield name="AssetRequestFlags" version="1.30" c:type="GESAssetRequestFlags">
-      <source-position filename="../subprojects/gst-editing-services/ges/ges-types.h"/>
-      <member name="none" value="0" c:identifier="GES_ASSET_REQUEST_FLAG_NONE">
+    <bitfield name="AssetRequestFlags" version="1.30" glib:type-name="GESAssetRequestFlags" glib:get-type="ges_asset_request_flags_get_type" c:type="GESAssetRequestFlags">
+      <member name="none" value="0" c:identifier="GES_ASSET_REQUEST_FLAG_NONE" glib:nick="none" glib:name="GES_ASSET_REQUEST_FLAG_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-types.h">no flag</doc>
       </member>
-      <member name="no_untrusted_bin_description" value="1" c:identifier="GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION">
+      <member name="no_untrusted_bin_description" value="1" c:identifier="GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION" glib:nick="no-untrusted-bin-description" glib:name="GES_ASSET_REQUEST_FLAG_NO_UNTRUSTED_BIN_DESCRIPTION">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-types.h">the id is a bin
 description that the application does not control, typically read from a
 project file. It may only use elements marked untrusted-aware and may not
