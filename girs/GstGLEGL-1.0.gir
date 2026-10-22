@@ -386,13 +386,18 @@ EGL_PLATFORM_SURFACELESS_MESA extension.</doc>
           <type name="GLDisplayEGL" c:type="GstGLDisplayEGL*"/>
         </return-value>
       </constructor>
-      <constructor name="new_with_egl_display" c:identifier="gst_gl_display_egl_new_with_egl_display">
+      <constructor name="new_with_egl_display" c:identifier="gst_gl_display_egl_new_with_egl_display" version="1.12">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">Creates a new display connection from a EGLDisplay. The display will be
+marked as foreign and freeing some EGL resources must be completed by the
+application.  See gst_gl_display_egl_set_foreign() for more details.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">a new #GstGLDisplayEGL</doc>
           <type name="GLDisplayEGL" c:type="GstGLDisplayEGL*"/>
         </return-value>
         <parameters>
           <parameter name="display" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">an existing and connected EGLDisplay</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>

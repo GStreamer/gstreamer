@@ -319,7 +319,7 @@ gst_gl_display_egl_new_surfaceless (void)
 }
 
 /**
- * gst_gl_display_egl_new_with_display:
+ * gst_gl_display_egl_new_with_egl_display:
  * @display: an existing and connected EGLDisplay
  *
  * Creates a new display connection from a EGLDisplay. The display will be
