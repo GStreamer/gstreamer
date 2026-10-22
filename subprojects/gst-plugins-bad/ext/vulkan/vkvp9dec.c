@@ -396,7 +396,7 @@ gst_vulkan_vp9_decoder_decide_allocation (GstVideoDecoder * decoder,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  gst_object_unref (pool);
+  gst_clear_object (&pool);
 
   /*
    * When the pool is destroyed during resolution changes, previously decoded
