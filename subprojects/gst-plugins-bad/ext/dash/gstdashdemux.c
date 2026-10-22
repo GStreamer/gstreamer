@@ -541,6 +541,7 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAdaptiveDemuxClass *gstadaptivedemux_class;
+  GParamSpec *pspec;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -567,11 +568,14 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 #endif
 
-  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
-      g_param_spec_uint ("max-bitrate", "Max bitrate",
-          "Max of bitrate supported by target video decoder (0 = no maximum)",
-          0, G_MAXUINT, DEFAULT_MAX_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("max-bitrate", "Max bitrate",
+      "Max of bitrate supported by target video decoder (0 = no maximum)",
+      0, G_MAXUINT, DEFAULT_MAX_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE, pspec);
 
   g_object_class_install_property (gobject_class, PROP_MAX_VIDEO_WIDTH,
       g_param_spec_uint ("max-video-width", "Max video width",

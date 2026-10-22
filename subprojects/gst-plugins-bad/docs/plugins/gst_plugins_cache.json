@@ -18020,6 +18020,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "0",
+                        "kind": "bitrate, unit=(string)bits-per-sec;",
                         "max": "-1",
                         "min": "0",
                         "mutable": "null",
