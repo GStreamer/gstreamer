@@ -861,7 +861,12 @@ rfb_decoder_state_normal (RfbDecoder * decoder)
       decoder->state = rfb_decoder_state_server_cut_text;
       break;
     default:
-      g_critical ("unknown message type %d", message_type);
+      GST_WARNING ("Unknown message type %d from server", message_type);
+      if (decoder->error == NULL) {
+        decoder->error = g_error_new (GST_RESOURCE_ERROR,
+            GST_RESOURCE_ERROR_READ, "VNC server error: unknown message type");
+      }
+      return FALSE;
   }
 
   return TRUE;
