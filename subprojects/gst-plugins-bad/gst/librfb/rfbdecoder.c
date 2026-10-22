@@ -312,8 +312,9 @@ rfb_decoder_send_update_request (RfbDecoder * decoder,
 
   rfb_decoder_send (decoder, data, 10);
 
-  /* create a backup of the prev frame for copyrect encoding */
-  if (decoder->use_copyrect) {
+  /* create a backup of the prev frame for copyrect encoding, but the buffer
+   * is only allocated if copyrect was enabled before negotiation */
+  if (decoder->use_copyrect && decoder->prev_frame) {
     memcpy (decoder->prev_frame, decoder->frame,
         decoder->rect_height * decoder->line_size);
   }
