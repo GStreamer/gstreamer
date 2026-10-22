@@ -6876,6 +6876,7 @@
                         "construct-only": false,
                         "controllable": true,
                         "default": "NULL",
+                        "kind": "location, subtype=(string)path, extensions=(string){ png, jpg, jpeg }, mimetypes=(string){ image/png, image/jpeg };",
                         "mutable": "playing",
                         "readable": true,
                         "type": "gchararray",

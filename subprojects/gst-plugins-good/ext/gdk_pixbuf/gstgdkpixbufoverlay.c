@@ -146,6 +146,7 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
   GstBaseTransformClass *basetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GParamSpec *pspec;
 
   gobject_class->set_property = gst_gdk_pixbuf_overlay_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_overlay_get_property;
@@ -162,11 +163,19 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
   videofilter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_transform_frame_ip);
 
-  g_object_class_install_property (gobject_class, PROP_LOCATION,
-      g_param_spec_string ("location", "location",
-          "Location of image file to overlay", NULL, GST_PARAM_CONTROLLABLE
-          | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
-          | G_PARAM_STATIC_STRINGS | GST_PARAM_UNTRUSTED_SENSITIVE));
+  pspec = g_param_spec_string ("location", "location",
+      "Location of image file to overlay", NULL, GST_PARAM_CONTROLLABLE
+      | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+      | G_PARAM_STATIC_STRINGS | GST_PARAM_UNTRUSTED_SENSITIVE);
+
+  /* only the loaders gdk-pixbuf always builds; others depend on the system */
+  gst_param_spec_set_kind (pspec,
+      gst_structure_new_from_string (GST_PROP_KIND_LOCATION ", "
+          GST_PROP_KIND_FIELD_SUBTYPE "=(string)" GST_PROP_KIND_SUBTYPE_PATH
+          ", " GST_PROP_KIND_FIELD_EXTENSIONS "=(string){png,jpg,jpeg}, "
+          GST_PROP_KIND_FIELD_MIMETYPES "=(string){image/png,image/jpeg}"));
+
+  g_object_class_install_property (gobject_class, PROP_LOCATION, pspec);
   g_object_class_install_property (gobject_class, PROP_OFFSET_X,
       g_param_spec_int ("offset-x", "X Offset",
           "For positive value, horizontal offset of overlay image in pixels from"
