@@ -10213,6 +10213,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "NULL",
+                        "kind": "location, subtype=(string)path, mimetypes=(string)application/vnd.iccprofile, extensions=(string){ icc, icm };",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",

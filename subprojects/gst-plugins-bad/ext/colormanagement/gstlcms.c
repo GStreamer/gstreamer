@@ -167,6 +167,7 @@ gst_lcms_class_init (GstLcmsClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
+  GParamSpec *pspec;
 
   GST_DEBUG_CATEGORY_INIT (lcms_debug, "lcms", 0, "lcms");
 
@@ -180,10 +181,17 @@ gst_lcms_class_init (GstLcmsClass * klass)
           GST_TYPE_LCMS_INTENT, DEFAULT_INTENT,
           (G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  pspec = g_param_spec_string ("input-profile", "Input ICC profile file",
+      "Specify the input ICC profile file to apply", NULL,
+      (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gst_param_spec_set_kind (pspec,
+      gst_structure_new_from_string (GST_PROP_KIND_LOCATION ", "
+          GST_PROP_KIND_FIELD_SUBTYPE "=(string)" GST_PROP_KIND_SUBTYPE_PATH
+          ", " GST_PROP_KIND_FIELD_MIMETYPES
+          "=(string)application/vnd.iccprofile, "
+          GST_PROP_KIND_FIELD_EXTENSIONS "=(string){icc,icm}"));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SRC_FILE,
-      g_param_spec_string ("input-profile", "Input ICC profile file",
-          "Specify the input ICC profile file to apply", NULL,
-          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      pspec);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DST_FILE,
       g_param_spec_string ("dest-profile", "Destination ICC profile file",
