@@ -160,6 +160,11 @@ rfb_decoder_disconnect (RfbDecoder * decoder)
   g_clear_object (&decoder->connection);
   g_clear_error (&decoder->error);
   g_clear_pointer (&decoder->data, g_free);
+  g_clear_pointer (&decoder->name, g_free);
+  decoder->data_len = 0;
+
+  /* Start over from the protocol handshake on the next connection */
+  decoder->state = NULL;
 
   g_mutex_unlock (&decoder->write_lock);
 }
