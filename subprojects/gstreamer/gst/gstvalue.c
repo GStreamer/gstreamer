@@ -2706,6 +2706,7 @@ static gboolean
 _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
     GType type)
 {
+  const char *orig = s;
   GValue value1 = { 0 };
   GValue value2 = { 0 };
   GValue value3 = { 0 };
@@ -2762,17 +2763,30 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
   s++;
 
   if (G_VALUE_TYPE (&value1) != G_VALUE_TYPE (&value2))
-    return FALSE;
+    goto err;
   if (have_step && G_VALUE_TYPE (&value1) != G_VALUE_TYPE (&value3))
-    return FALSE;
+    goto err;
 
   if (G_VALUE_TYPE (&value1) == G_TYPE_DOUBLE) {
+    if (gst_g_value_get_double_unchecked (&value1) >=
+        gst_g_value_get_double_unchecked (&value2))
+      goto err;
     range_type = GST_TYPE_DOUBLE_RANGE;
     g_value_init (value, range_type);
     gst_value_set_double_range (value,
         gst_g_value_get_double_unchecked (&value1),
         gst_g_value_get_double_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT) {
+    if (gst_g_value_get_int_unchecked (&value1) >=
+        gst_g_value_get_int_unchecked (&value2))
+      goto err;
+    if (have_step) {
+      gint step = gst_g_value_get_int_unchecked (&value3);
+      if (step <= 0 ||
+          gst_g_value_get_int_unchecked (&value1) % step != 0 ||
+          gst_g_value_get_int_unchecked (&value2) % step != 0)
+        goto err;
+    }
     range_type = GST_TYPE_INT_RANGE;
     g_value_init (value, range_type);
     if (have_step)
@@ -2784,6 +2798,16 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
       gst_value_set_int_range (value, gst_g_value_get_int_unchecked (&value1),
           gst_g_value_get_int_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT64) {
+    if (gst_g_value_get_int64_unchecked (&value1) >=
+        gst_g_value_get_int64_unchecked (&value2))
+      goto err;
+    if (have_step) {
+      gint64 step = gst_g_value_get_int64_unchecked (&value3);
+      if (step <= 0 ||
+          gst_g_value_get_int64_unchecked (&value1) % step != 0 ||
+          gst_g_value_get_int64_unchecked (&value2) % step != 0)
+        goto err;
+    }
     range_type = GST_TYPE_INT64_RANGE;
     g_value_init (value, range_type);
     if (have_step)
@@ -2796,6 +2820,9 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
           gst_g_value_get_int64_unchecked (&value1),
           gst_g_value_get_int64_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == GST_TYPE_FRACTION) {
+    if (gst_util_fraction_compare (value1.data[0].v_int, value1.data[1].v_int,
+            value2.data[0].v_int, value2.data[1].v_int) >= 0)
+      goto err;
     range_type = GST_TYPE_FRACTION_RANGE;
     g_value_init (value, range_type);
     gst_value_set_fraction_range (value, &value1, &value2);
@@ -2807,6 +2834,7 @@ _priv_gst_value_parse_range (gchar * s, gchar ** after, GValue * value,
   return TRUE;
 
 err:
+  GST_WARNING ("failed to parse range %s", orig);
   g_value_unset (value);
   g_value_unset (&value1);
   g_value_unset (&value2);
