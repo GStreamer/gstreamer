@@ -599,9 +599,7 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
       gchar *element = NULL;
       /* find <blahblah> */
       if (!strchr (next, '>')) {
-        /* no tag end point. drop what was already parsed, the pending tag
-         * stays buffered until the next text completes it */
-        g_string_erase (ctxt->buf, 0, next - ctxt->buf->str);
+        /* no tag end point. buffer will be process in next time */
         return TRUE;
       }
 
