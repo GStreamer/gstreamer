@@ -605,6 +605,7 @@ gst_dash_demux2_class_init (GstDashDemux2Class * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstAdaptiveDemuxClass *gstadaptivedemux_class;
+  GParamSpec *pspec;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -644,11 +645,14 @@ gst_dash_demux2_class_init (GstDashDemux2Class * klass)
    *
    * Since: 1.24
    */
-  g_object_class_install_property (gobject_class, PROP_START_BITRATE,
-      g_param_spec_uint ("start-bitrate", "Starting Bitrate",
-          "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
-          0, G_MAXUINT, DEFAULT_START_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("start-bitrate", "Starting Bitrate",
+      "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
+      0, G_MAXUINT, DEFAULT_START_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
+  g_object_class_install_property (gobject_class, PROP_START_BITRATE, pspec);
 
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 

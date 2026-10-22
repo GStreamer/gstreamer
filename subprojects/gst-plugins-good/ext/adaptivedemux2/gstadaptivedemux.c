@@ -418,6 +418,7 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBinClass *gstbin_class;
+  GParamSpec *pspec;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
@@ -435,11 +436,14 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   gobject_class->get_property = gst_adaptive_demux_get_property;
   gobject_class->finalize = gst_adaptive_demux_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
-          "Network connection speed to use in kbps (0 = calculate from downloaded"
-          " fragments)", 0, G_MAXUINT / 1000, DEFAULT_CONNECTION_BITRATE / 1000,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("connection-speed", "Connection Speed",
+      "Network connection speed to use in kbps (0 = calculate from downloaded"
+      " fragments)", 0, G_MAXUINT / 1000, DEFAULT_CONNECTION_BITRATE / 1000,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_KILOBITS_PER_SEC, NULL));
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED, pspec);
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH_TARGET_RATIO,
       g_param_spec_float ("bandwidth-target-ratio",
@@ -448,29 +452,43 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
           0, 1, DEFAULT_BANDWIDTH_TARGET_RATIO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  pspec = g_param_spec_uint ("connection-bitrate", "Connection Speed (bits/s)",
+      "Network connection speed to use (0 = automatic) (bits/s)",
+      0, G_MAXUINT, DEFAULT_CONNECTION_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
   g_object_class_install_property (gobject_class, PROP_CONNECTION_BITRATE,
-      g_param_spec_uint ("connection-bitrate", "Connection Speed (bits/s)",
-          "Network connection speed to use (0 = automatic) (bits/s)",
-          0, G_MAXUINT, DEFAULT_CONNECTION_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      pspec);
 
-  g_object_class_install_property (gobject_class, PROP_MIN_BITRATE,
-      g_param_spec_uint ("min-bitrate", "Minimum Bitrate",
-          "Minimum bitrate to use when switching to alternates (bits/s)",
-          0, G_MAXUINT, DEFAULT_MIN_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("min-bitrate", "Minimum Bitrate",
+      "Minimum bitrate to use when switching to alternates (bits/s)",
+      0, G_MAXUINT, DEFAULT_MIN_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
+  g_object_class_install_property (gobject_class, PROP_MIN_BITRATE, pspec);
 
-  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
-      g_param_spec_uint ("max-bitrate", "Maximum Bitrate",
-          "Maximum bitrate to use when switching to alternates (bits/s)",
-          0, G_MAXUINT, DEFAULT_MAX_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("max-bitrate", "Maximum Bitrate",
+      "Maximum bitrate to use when switching to alternates (bits/s)",
+      0, G_MAXUINT, DEFAULT_MAX_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE, pspec);
 
+  pspec = g_param_spec_uint ("current-bandwidth",
+      "Current download bandwidth (bits/s)",
+      "Report of current download bandwidth (based on arriving data) (bits/s)",
+      0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
   g_object_class_install_property (gobject_class, PROP_CURRENT_BANDWIDTH,
-      g_param_spec_uint ("current-bandwidth",
-          "Current download bandwidth (bits/s)",
-          "Report of current download bandwidth (based on arriving data) (bits/s)",
-          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      pspec);
 
   g_object_class_install_property (gobject_class, PROP_MAX_BUFFERING_TIME,
       g_param_spec_uint64 ("max-buffering-time",

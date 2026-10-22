@@ -178,6 +178,7 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstAdaptiveDemuxClass *adaptivedemux_class;
+  GParamSpec *pspec;
 
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
@@ -187,11 +188,14 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   gobject_class->get_property = gst_hls_demux_get_property;
   gobject_class->finalize = gst_hls_demux_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_START_BITRATE,
-      g_param_spec_uint ("start-bitrate", "Starting Bitrate",
-          "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
-          0, G_MAXUINT, DEFAULT_START_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec = g_param_spec_uint ("start-bitrate", "Starting Bitrate",
+      "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
+      0, G_MAXUINT, DEFAULT_START_BITRATE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_param_spec_set_kind (pspec, gst_structure_new (GST_PROP_KIND_BITRATE,
+          GST_PROP_KIND_FIELD_UNIT, G_TYPE_STRING,
+          GST_PROP_KIND_UNIT_BITS_PER_SEC, NULL));
+  g_object_class_install_property (gobject_class, PROP_START_BITRATE, pspec);
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
