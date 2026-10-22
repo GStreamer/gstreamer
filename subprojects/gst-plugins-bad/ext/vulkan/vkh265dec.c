@@ -425,9 +425,10 @@ gst_vulkan_h265_decoder_decide_allocation (GstVideoDecoder * decoder,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  gst_object_unref (pool);
+  gst_clear_object (&pool);
 
-  gst_vulkan_decoder_create_dpb_pool (self->decoder, new_caps);
+  if (!gst_vulkan_decoder_create_dpb_pool (self->decoder, new_caps))
+    goto bail;
   gst_caps_unref (new_caps);
 
   return TRUE;
