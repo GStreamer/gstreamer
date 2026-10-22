@@ -19,7 +19,7 @@ use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
 
-use crate::audio::{AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe, mp3_probe};
+use crate::audio::{AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe, mp3_probe, sbc_probe};
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
@@ -2176,6 +2176,21 @@ extern "C" fn mp3_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// SBC
+// =============================================================================
+
+extern "C" fn sbc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(frame) = sbc_probe(tf) else { return };
+    // The framing is all a bare SBC stream has to offer, so the confidence
+    // stops at possible. The marginal rank says the same thing.
+    suggest!(tf, Prob::POSSIBLE, c"audio/x-sbc", [
+        (c"rate", i32: frame.rate as i32),
+        (c"channels", i32: frame.channels as i32),
+        (c"parsed", bool: false),
+    ]);
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2621,6 +2636,8 @@ const FEATURES: &[Feature] = &[
         "mp3,mp2,mp1,mpga",
         "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]"
     ),
+    // SBC - audio/x-sbc
+    typefinder!("audio/x-sbc", MARGINAL, sbc_type_find, "sbc", "audio/x-sbc"),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
     // DV - video/x-dv

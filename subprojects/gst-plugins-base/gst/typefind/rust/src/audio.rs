@@ -876,6 +876,93 @@ pub fn mp3_probe(tf: &mut TypeFind) -> Option<Mp3Stream> {
     found.filter(|_| tf.peek_var(-128, 3).is_none_or(|tag| tag != b"TAG"))
 }
 
+// ---------------------------------------------------------------------------
+// SBC
+// ---------------------------------------------------------------------------
+
+/// SBC frames sit in no container and carry no tag. The check is therefore a
+/// chain of frames: every header states its own length, so the next sync octet
+/// has to sit exactly where the previous header points. A2DP Appendix B,
+/// Tables 12.12 and 12.16 to 12.20.
+const SBC_SYNC: u8 = 0x9C;
+/// Sampling frequency by the two-bit code, 12.5.1 Table 12.16.
+const SBC_RATES: [u32; 4] = [16000, 32000, 44100, 48000];
+/// Frames that settle it.
+const SBC_FRAMES: usize = 4;
+
+/// What a frame header says about the stream it opens.
+#[derive(Clone, Copy)]
+pub struct SbcFrame {
+    len: usize,
+    pub rate: u32,
+    pub channels: usize,
+}
+
+/// The frame the octets at the cursor open, or `None` when they are no header.
+///
+/// The bitpool bound comes from 12.5.1: sixteen octets per subband for mono and
+/// dual channel, thirty two for the two stereo modes.
+///
+/// The length follows 12.9 and rounds the bitstream up to a whole octet. The
+/// join field is present in full whenever the mode is joint stereo and absent
+/// otherwise, so it adds its bits to every joint frame and to no other,
+/// whatever marks it carries.
+///
+/// The header CRC is not checked. It covers the scale factors as well as the
+/// header, so checking it means reading the frame body. A chain of frames that
+/// agree on their spacing is not something that payload reaches by chance.
+fn sbc_frame(head: &[u8]) -> Option<SbcFrame> {
+    let [sync, config, bitpool, _crc]: [u8; 4] = head.get(..4)?.try_into().ok()?;
+    if sync != SBC_SYNC {
+        return None;
+    }
+    let bitpool = usize::from(bitpool);
+    let mode = (config >> 2) & 3;
+    let stereo = mode >= 2;
+    let subbands = 4usize << (config & 1);
+    let channels = if mode == 0 { 1 } else { 2 };
+    let blocks = 4 * (((config >> 4) & 3) as usize + 1);
+    let limit = if stereo { 32 * subbands } else { 16 * subbands };
+    if bitpool < 2 || bitpool > limit {
+        return None;
+    }
+    let join = usize::from(mode == 3) * subbands;
+    let scale = 4 * subbands * channels / 8;
+    let bits = if stereo {
+        join + blocks * bitpool
+    } else {
+        blocks * channels * bitpool
+    };
+    Some(SbcFrame {
+        len: 4 + scale + bits.div_ceil(8),
+        rate: SBC_RATES[(config >> 6) as usize],
+        channels,
+    })
+}
+
+/// Whether a chain of frames starts at the cursor, and what the first header
+/// says about the stream. Each frame has to be present in full, because a frame
+/// the stream does not have is not a frame.
+fn sbc_chain(scan: &mut Scanner) -> Option<SbcFrame> {
+    let first = sbc_frame(scan.peek(4)?)?;
+    scan.peek(first.len)?;
+    scan.consume(first.len);
+    for _ in 1..SBC_FRAMES {
+        let frame = sbc_frame(scan.peek(4)?)?;
+        scan.peek(frame.len)?;
+        scan.consume(frame.len);
+    }
+    Some(first)
+}
+
+/// Whether the stream is SBC, and what the first frame says about it. The
+/// first frame starts at the first octet: a bare SBC stream carries nothing
+/// ahead of the audio. The caps give the sample rate and the channel count,
+/// and a decoder reads the rest from the frames.
+pub fn sbc_probe(tf: &mut TypeFind) -> Option<SbcFrame> {
+    sbc_chain(&mut Scanner::new(tf, 0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -977,5 +1064,49 @@ mod tests {
     fn a_zero_payload_is_not_a_frame() {
         assert_eq!(loas_ep_frame_len(&[0x4D, 0xE1, 0, 0, 0]), None);
         assert_eq!(loas_frame_len(&[0x56, 0xE0, 0]), None);
+    }
+
+    /// The frame length is what the chain check trusts, so the expectation
+    /// comes from A2DP Table 4.7, which lists frame lengths for known
+    /// settings, and not from this code. Every case is 16 blocks, loudness
+    /// allocation and 8 subbands; the config octet packs the sampling frequency
+    /// and the mode on top of that.
+    #[test]
+    fn sbc_frame_length_matches_the_reference_table() {
+        let cases = [
+            (0xB1, 19, 46),  // 44.1 kHz mono, bitpool 19
+            (0xF1, 18, 44),  // 48 kHz mono, bitpool 18
+            (0xB1, 31, 70),  // 44.1 kHz mono, bitpool 31
+            (0xF1, 29, 66),  // 48 kHz mono, bitpool 29
+            (0xBD, 35, 83),  // 44.1 kHz joint stereo, bitpool 35
+            (0xFD, 33, 79),  // 48 kHz joint stereo, bitpool 33
+            (0xBD, 53, 119), // 44.1 kHz joint stereo, bitpool 53
+            (0xFD, 51, 115), // 48 kHz joint stereo, bitpool 51
+        ];
+        for (config, bitpool, want) in cases {
+            let head = [SBC_SYNC, config, bitpool, 0x00];
+            assert_eq!(sbc_frame(&head).map(|f| f.len), Some(want));
+        }
+    }
+
+    /// The join field is sized by the mode, not by the marks inside it, so the
+    /// marks cannot move the frame boundary. Counting the marks instead reads
+    /// 12.9 wrongly and puts every sync octet of a joint stream out of reach.
+    #[test]
+    fn the_join_field_does_not_depend_on_its_marks() {
+        let len = |marks| sbc_frame(&[SBC_SYNC, 0xFD, 33, 0x00, marks]).map(|f| f.len);
+        assert_eq!(len(0x00), Some(79));
+        assert_eq!(len(0x00), len(0xFE));
+    }
+
+    /// A header that does not open with the sync octet is not a header, and the
+    /// chain check depends on that for every frame in it, not just the first.
+    #[test]
+    fn octets_without_the_sync_do_not_open_a_frame() {
+        assert_eq!(sbc_frame(&[0x00, 0xF1, 18, 0x00]).map(|f| f.len), None);
+        assert_eq!(
+            sbc_frame(&[SBC_SYNC, 0xF1, 18, 0x00]).map(|f| f.len),
+            Some(44)
+        );
     }
 }
