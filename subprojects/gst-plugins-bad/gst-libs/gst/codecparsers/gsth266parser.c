@@ -1463,7 +1463,7 @@ static GstH266ParserResult
 gst_h266_parser_parse_pic_timing (GstH266PicTiming * pt,
     NalReader * nr, const GstH266BufferingPeriod * bp, guint8 TemporalId)
 {
-  guint i, j;
+  guint i, j, k;
 
   GST_LOG ("parsing \"Picture timing\"");
 
@@ -1568,8 +1568,8 @@ gst_h266_parser_parse_pic_timing (GstH266PicTiming * pt,
                   [bp->max_sublayers_minus1];
             }
 
-            for (j = 0; j < TemporalId; j++)
-              pt->du_cpb_removal_delay_increment_minus1[i][j] =
+            for (k = 0; k < TemporalId; k++)
+              pt->du_cpb_removal_delay_increment_minus1[i][k] =
                   pt->du_cpb_removal_delay_increment_minus1[i]
                   [bp->max_sublayers_minus1];
           }
