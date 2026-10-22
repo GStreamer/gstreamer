@@ -1168,6 +1168,8 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
     /* either way, have a look at it */
     gst_h265_parse_process_nal (h265parse, &nalu);
 
+    h265parse->have_vcl_in_frame |= gst_h265_parse_nal_is_vcl (&nalu);
+
     /* dispatch per NALU if needed */
     if (h265parse->split_packetized) {
       GstBaseParseFrame tmp_frame;
@@ -1246,8 +1248,6 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
       }
     }
   }
-
-  h265parse->have_vcl_in_frame |= gst_h265_parse_nal_is_vcl (&nalu);
 
   if (G_UNLIKELY (left)) {
     /* should not be happening for nice HEVC */
