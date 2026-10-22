@@ -3069,17 +3069,52 @@ _priv_gst_value_parse_struct_or_caps (gchar * str, gchar ** after, GType type,
   return ret;
 }
 
+/* Whether a '[...]' value could parse as #GstCaps even though it did not
+ * parse as a #GstStructure. A caps list starts with the same name and fields
+ * as a plain structure, so the only way the caps parser accepts something the
+ * structure parser rejects at the first structure is a '(features)' clause
+ * directly after the name. Without one, both parsers run the identical name
+ * and fields parse and fail at the same place.
+ *
+ * The end of the name is located by scanning, not by parsing: the value
+ * parsers unescape quoted names in place (_priv_gst_value_parse_string ())
+ * and this check must not modify the string. */
+static gboolean
+_priv_gst_value_bracket_may_be_caps (const gchar * str)
+{
+  const gchar *s;
+
+  if (*str != '[')
+    return TRUE;
+
+  s = str + 1;
+  while (g_ascii_isspace (*s))
+    s++;
+
+  if (*s == '"') {
+    s++;
+    while (*s != '"') {
+      if (*s == '\\')
+        s++;
+      if (*s == '\0')
+        return TRUE;
+      s++;
+    }
+    s++;
+  } else {
+    while (*s && !g_ascii_isspace (*s) && !strchr ("\"(),;=", *s))
+      s++;
+  }
+
+  return *s == '(';
+}
+
 static gboolean
 _priv_gst_value_parse_range_struct_caps (gchar * s, gchar ** after,
     GValue * value, GType type)
 {
-  gint i;
   gchar *tmp = s;
   gboolean ret = FALSE;
-  GType try_types[] = {
-    GST_TYPE_STRUCTURE,
-    GST_TYPE_CAPS,
-  };
 
   if (type == GST_TYPE_CAPS || type == GST_TYPE_STRUCTURE)
     ret = _priv_gst_value_parse_struct_or_caps (tmp, &tmp, type, value);
@@ -3095,14 +3130,25 @@ _priv_gst_value_parse_range_struct_caps (gchar * s, gchar ** after,
   if (type != G_TYPE_INVALID)
     return ret;
 
-  for (i = 0; i < G_N_ELEMENTS (try_types); i++) {
-    tmp = s;
-    ret = _priv_gst_value_parse_struct_or_caps (tmp, &tmp, try_types[i], value);
-    if (ret)
-      goto ok;
-  }
+  tmp = s;
+  ret = _priv_gst_value_parse_struct_or_caps (tmp, &tmp, GST_TYPE_STRUCTURE,
+      value);
+  if (ret)
+    goto ok;
 
-  return ret;
+  /* Caps differs from a plain structure only where a '(features)' clause can
+   * follow the first name; without one the caps attempt repeats the failed
+   * structure attempt. Trying both at every nesting level makes parsing of
+   * nested untyped values exponential in the nesting depth. */
+  if (!_priv_gst_value_bracket_may_be_caps (s))
+    return FALSE;
+
+  tmp = s;
+  ret = _priv_gst_value_parse_struct_or_caps (tmp, &tmp, GST_TYPE_CAPS, value);
+  if (ret)
+    goto ok;
+
+  return FALSE;
 
 ok:
   *after = tmp;
