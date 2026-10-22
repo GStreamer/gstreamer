@@ -1219,8 +1219,11 @@ gst_h264_parser_parse_frame_packing (GstH264NalParser * nalparser,
      after the value 1 for frame_packing_arrangement_extension_flag shall
      be ignored (D.2.25) */
   if (frame_packing_extension_flag) {
-    nal_reader_skip_long (nr,
-        payload_size - (nal_reader_get_pos (nr) - start_pos));
+    guint consumed = nal_reader_get_pos (nr) - start_pos;
+
+    if (consumed > payload_size ||
+        !nal_reader_skip_long (nr, payload_size - consumed))
+      goto error;
   }
 
   return GST_H264_PARSER_OK;
