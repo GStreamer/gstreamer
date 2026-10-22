@@ -1897,7 +1897,7 @@ gst_h264_parser_parse_sps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 static gboolean
 gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps)
 {
-  gint width, height;
+  guint64 width, height;
   guint subwc[] = { 1, 2, 2, 1 };
   guint subhc[] = { 1, 2, 1, 1 };
 
@@ -2000,36 +2000,50 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps)
   if (!sps->separate_colour_plane_flag)
     sps->chroma_array_type = sps->chroma_format_idc;
 
-  /* Calculate  width and height */
-  width = (sps->pic_width_in_mbs_minus1 + 1);
-  width *= 16;
-  height = (sps->pic_height_in_map_units_minus1 + 1);
-  height *= 16 * (2 - sps->frame_mbs_only_flag);
-  GST_LOG ("initial width=%d, height=%d", width, height);
-  if (width < 0 || height < 0) {
+  /* Calculate  width and height. The ue() values are unbounded, so
+   * compute in unsigned 64 bit arithmetic, which cannot overflow, and
+   * convert to gint only after the range checks. */
+  width = (guint64) (sps->pic_width_in_mbs_minus1 + 1) * 16;
+  height = (guint64) (sps->pic_height_in_map_units_minus1 + 1) * 16 *
+      (2 - sps->frame_mbs_only_flag);
+  GST_LOG ("initial width=%" G_GUINT64_FORMAT ", height=%" G_GUINT64_FORMAT,
+      width, height);
+  /* Reject sizes whose product does not fit a gint as well: callers
+   * multiply the two dimensions as gint values. The product cannot
+   * overflow here, as the first two comparisons short-circuit for
+   * values larger than G_MAXINT. */
+  if (width > G_MAXINT || height > G_MAXINT || width * height > G_MAXINT) {
     GST_WARNING ("invalid width/height in SPS");
     goto error;
   }
 
-  sps->width = width;
-  sps->height = height;
+  sps->width = (gint) width;
+  sps->height = (gint) height;
 
   if (sps->frame_cropping_flag) {
     const guint crop_unit_x = subwc[sps->chroma_format_idc];
     const guint crop_unit_y =
         subhc[sps->chroma_format_idc] * (2 - sps->frame_mbs_only_flag);
 
-    width -= (sps->frame_crop_left_offset + sps->frame_crop_right_offset)
-        * crop_unit_x;
-    height -= (sps->frame_crop_top_offset + sps->frame_crop_bottom_offset)
-        * crop_unit_y;
+    /* A crop larger than the frame wraps around and is rejected by
+     * the same range check. */
+    width -= ((guint64) sps->frame_crop_left_offset +
+        sps->frame_crop_right_offset) * crop_unit_x;
+    height -= ((guint64) sps->frame_crop_top_offset +
+        sps->frame_crop_bottom_offset) * crop_unit_y;
 
-    sps->crop_rect_width = width;
-    sps->crop_rect_height = height;
+    if (width == 0 || width > G_MAXINT || height == 0 || height > G_MAXINT) {
+      GST_WARNING ("invalid cropped width/height in SPS");
+      goto error;
+    }
+
+    sps->crop_rect_width = (gint) width;
+    sps->crop_rect_height = (gint) height;
     sps->crop_rect_x = sps->frame_crop_left_offset * crop_unit_x;
     sps->crop_rect_y = sps->frame_crop_top_offset * crop_unit_y;
 
-    GST_LOG ("crop_rectangle x=%u y=%u width=%u, height=%u", sps->crop_rect_x,
+    GST_LOG ("crop_rectangle x=%u y=%u width=%" G_GUINT64_FORMAT
+        ", height=%" G_GUINT64_FORMAT, sps->crop_rect_x,
         sps->crop_rect_y, width, height);
   }
 

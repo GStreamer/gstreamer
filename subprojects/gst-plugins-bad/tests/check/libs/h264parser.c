@@ -1205,6 +1205,78 @@ GST_START_TEST (test_h264_parse_sei_frame_packing_overrun)
 
 GST_END_TEST;
 
+/* SPS with a huge pic_width_in_mbs_minus1 (ue value 2^28-1): the
+ * width computation must not overflow the gint fields. */
+static const guint8 nalu_sps_huge_width[] = {
+  0x00, 0x00, 0x01,             /* start code       */
+  0x67,                         /* NAL header       */
+  0x42,                         /* profile_idc 66   */
+  0x00,                         /* constraints      */
+  0x1E,                         /* level_idc        */
+  /* id, log2_max_frame_num_minus4, pic_order_cnt_type,
+   * log2_max_pic_order_cnt_lsb_minus4, num_ref_frames: ue 0 each;
+   * gaps: 0; pic_width_in_mbs_minus1: ue 2^28-1 (28 zero bits,
+   * a 1 bit, 28 zero bits); pic_height_in_map_units_minus1: ue 0;
+   * frame_mbs_only: 1, direct_8x8: 1, cropping: 0, vui: 0 */
+  0xF8, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x01, 0xC0
+};
+
+GST_START_TEST (test_h264_parse_sps_huge_width)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+
+  res = gst_h264_parser_identify_nalu_unchecked (parser,
+      nalu_sps_huge_width, 0, sizeof (nalu_sps_huge_width), &nalu);
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SPS);
+
+  res = gst_h264_parser_parse_nal (parser, &nalu);
+  assert_equals_int (res, GST_H264_PARSER_ERROR);
+
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
+/* SPS with huge width and height (65536x65536): each dimension fits
+ * a gint, but their product (2^32) does not. Callers multiply the
+ * dimensions as gint values, so such an SPS must be rejected. */
+static const guint8 nalu_sps_huge_width_height[] = {
+  0x00, 0x00, 0x01,             /* start code       */
+  0x67,                         /* NAL header       */
+  0x42,                         /* profile_idc 66   */
+  0x00,                         /* constraints      */
+  0x1E,                         /* level_idc        */
+  /* id, log2_max_frame_num_minus4, pic_order_cnt_type,
+   * log2_max_pic_order_cnt_lsb_minus4, num_ref_frames: ue 0 each;
+   * gaps: 0; pic_width_in_mbs_minus1: ue 4095 (12 zero bits, a 1
+   * bit, 12 zero bits); pic_height_in_map_units_minus1: ue 4095;
+   * frame_mbs_only: 1, direct_8x8: 1, cropping: 0, vui: 0 */
+  0xF8, 0x00, 0x20, 0x00, 0x00, 0x10, 0x00, 0xC8
+};
+
+GST_START_TEST (test_h264_parse_sps_huge_width_height)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+
+  res = gst_h264_parser_identify_nalu_unchecked (parser,
+      nalu_sps_huge_width_height, 0, sizeof (nalu_sps_huge_width_height),
+      &nalu);
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SPS);
+
+  res = gst_h264_parser_parse_nal (parser, &nalu);
+  assert_equals_int (res, GST_H264_PARSER_ERROR);
+
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parser_suite (void)
 {
@@ -1225,6 +1297,8 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_parse_overflow_framerate);
   tcase_add_test (tc_chain, test_h264_parse_sei_frame_packing_epb);
   tcase_add_test (tc_chain, test_h264_parse_sei_frame_packing_overrun);
+  tcase_add_test (tc_chain, test_h264_parse_sps_huge_width);
+  tcase_add_test (tc_chain, test_h264_parse_sps_huge_width_height);
 
   return s;
 }
