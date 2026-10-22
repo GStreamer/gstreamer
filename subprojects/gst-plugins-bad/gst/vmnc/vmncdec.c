@@ -189,14 +189,24 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     return ERROR_INSUFFICIENT_DATA;
   }
 
+  /* This function is called twice per rectangle: first while parsing the
+   * stream to determine the packet boundaries and then again with the
+   * same bytes to actually decode them. Most of the format state below
+   * is updated in both passes on purpose, because rectangles later in
+   * the same packet are validated against it. */
+
   /* We only compare 13 bytes; ignoring the 3 padding bytes at the end */
   if (dec->have_format && memcmp (data, dec->format.descriptor, 13) == 0) {
     /* Nothing changed, so just exit */
     return 16;
   }
 
-  /* Store the whole block for simple comparison later */
-  memcpy (dec->format.descriptor, data, 16);
+  /* Store the whole block for simple comparison later. Only the decode
+   * pass actually commits it: committing while parsing would make the later
+   * decode pass skip the initialisation below and leave the image data
+   * unallocated. */
+  if (decode)
+    memcpy (dec->format.descriptor, data, 16);
 
   if (rect->x != 0 || rect->y != 0) {
     GST_WARNING_OBJECT (dec, "Bad WMVi rect: wrong coordinates");
