@@ -275,8 +275,7 @@ gst_vulkan_av1_decoder_stop (GstVideoDecoder * decoder)
   if (self->decoder)
     gst_vulkan_decoder_stop (self->decoder);
 
-  if (self->output_state)
-    gst_video_codec_state_unref (self->output_state);
+  g_clear_pointer (&self->output_state, gst_video_codec_state_unref);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
 }
