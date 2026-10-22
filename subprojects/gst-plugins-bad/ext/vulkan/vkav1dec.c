@@ -1452,6 +1452,8 @@ gst_vulkan_av1_decoder_class_init (gpointer klass, gpointer class_data)
 
   g_free (long_name);
   g_free (cdata->description);
+  gst_clear_caps (&cdata->codec);
+  gst_clear_caps (&cdata->raw);
   g_free (cdata);
 }
 
