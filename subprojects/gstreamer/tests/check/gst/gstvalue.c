@@ -4990,6 +4990,28 @@ GST_START_TEST (test_deserialize_serialize_nested_structures)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_deeply_nested_brackets)
+{
+  /* Trying both a structure and a caps parse for every nested untyped
+   * bracketed value made parsing time exponential in the nesting depth. */
+  GValue value = G_VALUE_INIT;
+  GString *str = g_string_new (NULL);
+  guint i;
+
+  for (i = 0; i < 32; i++)
+    g_string_append (str, "{[s, f= ");
+  g_string_append (str, "9");
+  for (i = 0; i < 32; i++)
+    g_string_append (str, "]}");
+
+  g_value_init (&value, GST_TYPE_LIST);
+  fail_unless (gst_value_deserialize (&value, str->str));
+  g_value_unset (&value);
+  g_string_free (str, TRUE);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_serialize_deserialize_sample)
 {
   GstSample *samp, *samp2;
@@ -5656,6 +5678,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_transform_list_to_string);
   tcase_add_test (tc_chain, test_deserialize_with_pspec);
   tcase_add_test (tc_chain, test_deserialize_serialize_nested_structures);
+  tcase_add_test (tc_chain, test_deserialize_deeply_nested_brackets);
   tcase_add_test (tc_chain, test_serialize_deserialize_segment);
   tcase_add_test (tc_chain, test_serialize_deserialize_caps_features);
   tcase_add_test (tc_chain, test_serialize_deserialize_tag_list);
