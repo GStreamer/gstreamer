@@ -420,7 +420,7 @@ gst_vulkan_av1_decoder_decide_allocation (GstVideoDecoder * decoder,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  gst_object_unref (pool);
+  gst_clear_object (&pool);
 
   dpb_caps = gst_caps_copy (caps);
   gst_caps_set_simple (dpb_caps, "width", G_TYPE_INT,
