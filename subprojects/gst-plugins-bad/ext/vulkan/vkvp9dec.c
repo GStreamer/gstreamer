@@ -1146,6 +1146,8 @@ gst_vulkan_vp9_decoder_class_init (gpointer g_klass, gpointer class_data)
 
   g_free (long_name);
   g_free (cdata->description);
+  gst_clear_caps (&cdata->codec);
+  gst_clear_caps (&cdata->raw);
   g_free (cdata);
 }
 
