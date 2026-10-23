@@ -4434,7 +4434,8 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
       goto error;
   }
 
-  if (tile_group->tg_end < tile_group->tg_start) {
+  if (tile_group->tg_end < tile_group->tg_start ||
+      tile_group->tg_end >= tile_group->num_tiles) {
     retval = GST_AV1_PARSER_NO_MORE_DATA;
     goto error;
   }
