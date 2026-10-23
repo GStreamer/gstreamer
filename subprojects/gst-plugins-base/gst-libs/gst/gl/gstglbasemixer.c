@@ -477,6 +477,9 @@ gst_gl_base_mixer_set_context (GstElement * element, GstContext * context)
 
   if (old_display && new_display) {
     if (old_display != new_display) {
+      if (mix->priv->gl_started)
+        gst_gl_context_thread_add (mix->context, gst_gl_base_mixer_gl_stop,
+            mix);
       gst_clear_object (&mix->context);
       _get_gl_context_unlocked (mix);
       gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (mix));
