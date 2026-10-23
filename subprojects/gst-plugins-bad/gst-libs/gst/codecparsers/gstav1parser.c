@@ -1954,6 +1954,16 @@ gst_av1_parse_frame_size_with_refs (GstAV1Parser * parser,
 
     if (found_ref == 1) {
       gint ref_idx = frame_header->ref_frame_idx[i];
+
+      /* The reference slot may never have been filled by a parsed
+       * frame, in which case it carries a zero size; a zero frame size
+       * would propagate into the tile grid and divide by zero there. */
+      if (G_UNLIKELY (ref_info->entry[ref_idx].ref_frame_width == 0 ||
+              ref_info->entry[ref_idx].ref_frame_height == 0)) {
+        GST_WARNING ("Frame size reference %d has no known size", ref_idx);
+        return GST_AV1_PARSER_MISSING_OBU_REFERENCE;
+      }
+
       parser->state.upscaled_width =
           ref_info->entry[ref_idx].ref_upscaled_width;
       parser->state.frame_width = parser->state.upscaled_width;
