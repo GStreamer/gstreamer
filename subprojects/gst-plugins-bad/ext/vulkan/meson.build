@@ -13,6 +13,7 @@ vulkan_headers = [
   'vkcolorconvert.h',
   'vkdeviceprovider.h',
   'vkdownload.h',
+  'vkav1dec.h',
   'vkh264dec.h',
   'vkh265dec.h',
   'vkvp9dec.h',
