@@ -161,6 +161,11 @@ foreach t : base_tests
     )
 
     env = environment()
+    if test_name in ['elements_glimagesink', 'elements_glfilter',
+                    'elements_glstereo', 'elements_glmixer']
+      env.set('GST_GL_XINITTHREADS', '1')
+      env.set('GST_XINITTHREADS', '1')
+    endif
     env.set('GST_PLUGIN_PATH_1_0', meson.global_build_root(), pluginsdirs)
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')

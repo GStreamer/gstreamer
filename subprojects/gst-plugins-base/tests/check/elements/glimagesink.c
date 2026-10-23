@@ -50,67 +50,6 @@ PAD_FUNC (peer_query, GstQuery, query, TRUE)
 PAD_FUNC (push, GstBuffer, buf, GST_FLOW_OK)
 /* *INDENT-ON* */
 
-/* On OSX it's required to have a main loop running in the
- * main thread while using the display connection.
- * So the call that use this display connection needs to be
- * done in another thread.
- * On other platforms a direct call can be done. */
-#ifdef __APPLE__
-static GMainLoop *loop;
-static GThread *thread;
-static GMutex lock;
-static GCond cond;
-
-static gboolean
-_unlock_mutex (gpointer * unused)
-{
-  g_cond_broadcast (&cond);
-  g_mutex_unlock (&lock);
-
-  return G_SOURCE_REMOVE;
-}
-
-static gpointer
-_thread_main (gpointer * unused)
-{
-  g_mutex_lock (&lock);
-  g_idle_add ((GSourceFunc) _unlock_mutex, NULL);
-
-  g_main_loop_run (loop);
-
-  g_main_loop_unref (loop);
-  loop = NULL;
-
-  return NULL;
-}
-
-static void
-_start_thread (void)
-{
-  loop = g_main_loop_new (NULL, FALSE);
-  g_mutex_init (&lock);
-  g_cond_init (&cond);
-
-  thread = g_thread_new ("GLOSXTestThread", (GThreadFunc) _thread_main, NULL);
-
-  g_mutex_lock (&lock);
-  while (!loop) {
-    g_cond_wait (&cond, &lock);
-  }
-  g_mutex_unlock (&lock);
-}
-
-static void
-_stop_thread (void)
-{
-  g_main_loop_quit (loop);
-  g_thread_join (thread);
-
-  g_mutex_clear (&lock);
-  g_cond_clear (&cond);
-}
-#endif
-
 static void
 setup_glimagesink (void)
 {
@@ -152,10 +91,6 @@ GST_START_TEST (test_query_drain)
   guint max = 0;
   guint size = 0;
   const gint maxbuffers = 4;
-
-#ifdef __APPLE__
-  _start_thread ();
-#endif
 
   /* GstBaseSink handles the drain query as well. */
   g_object_set (sinkelement, "enable-last-sample", TRUE, NULL);
@@ -253,10 +188,6 @@ GST_START_TEST (test_query_drain)
    * reference on the gl context. */
   fail_unless (gst_buffer_pool_set_active (pool, FALSE));
   gst_object_unref (pool);
-
-#ifdef __APPLE__
-  _stop_thread ();
-#endif
 }
 
 GST_END_TEST;
@@ -276,13 +207,4 @@ glimagesink_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  Suite *s;
-  g_setenv ("GST_GL_XINITTHREADS", "1", TRUE);
-  g_setenv ("GST_XINITTHREADS", "1", TRUE);
-  gst_check_init (&argc, &argv);
-  s = glimagesink_suite ();
-  return gst_check_run_suite (s, "glimagesink", __FILE__);
-}
+GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP (glimagesink);

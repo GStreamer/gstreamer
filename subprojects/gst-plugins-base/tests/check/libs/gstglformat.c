@@ -243,4 +243,4 @@ gst_gl_format_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (gst_gl_format);
+GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP (gst_gl_format);

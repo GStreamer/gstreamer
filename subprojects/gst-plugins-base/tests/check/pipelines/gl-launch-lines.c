@@ -23,13 +23,6 @@
 #include <gst/check/gstcheck.h>
 #include <gst/gl/gstglconfig.h>
 
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#if TARGET_OS_OSX
-#include <gst/gstmacos.h>
-#endif
-#endif
-
 #ifndef GST_DISABLE_PARSE
 
 static GstElement *
@@ -383,21 +376,4 @@ gl_launch_lines_suite (void)
 }
 
 
-#if defined(__APPLE__) && TARGET_OS_OSX
-static int
-run_tests (void)
-{
-  Suite *s = gl_launch_lines_suite ();
-
-  return gst_check_run_suite_nofork (s, "gl_launch_lines", __FILE__);
-}
-
-int
-main (int argc, char **argv)
-{
-  gst_check_init (&argc, &argv);
-  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
-}
-#else
-GST_CHECK_MAIN (gl_launch_lines);
-#endif
+GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP (gl_launch_lines);

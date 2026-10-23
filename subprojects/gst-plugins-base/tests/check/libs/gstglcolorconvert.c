@@ -27,14 +27,6 @@
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#endif
-
-#if defined(__APPLE__) && TARGET_OS_OSX
-#include <gst/gstmacos.h>
-#endif
-
 #include <stdio.h>
 
 static GstGLDisplay *display;
@@ -596,21 +588,4 @@ gst_gl_color_convert_suite (void)
   return s;
 }
 
-#if defined(__APPLE__) && TARGET_OS_OSX
-static int
-run_tests (void)
-{
-  Suite *s = gst_gl_color_convert_suite ();
-
-  return gst_check_run_suite_nofork (s, "gst_gl_color_convert", __FILE__);
-}
-
-int
-main (int argc, char **argv)
-{
-  gst_check_init (&argc, &argv);
-  return gst_macos_main_simple ((GstMainFuncSimple) run_tests, NULL);
-}
-#else
-GST_CHECK_MAIN (gst_gl_color_convert);
-#endif
+GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP (gst_gl_color_convert);

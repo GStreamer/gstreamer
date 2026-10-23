@@ -126,8 +126,7 @@ teardown (void)
       NULL);
   gst_object_unref (context);
   gst_object_unref (display);
-  if (shader)
-    gst_object_unref (shader);
+  gst_clear_object (&shader);
 }
 
 static void
@@ -525,4 +524,4 @@ gst_gl_upload_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (gst_gl_upload);
+GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP (gst_gl_upload);
