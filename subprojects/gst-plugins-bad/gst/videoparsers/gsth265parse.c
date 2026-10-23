@@ -2300,7 +2300,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
         fps_num = sps->vui_params.time_scale;
         fps_den = sps->vui_params.num_units_in_tick;
 
-        if (gst_h265_parse_is_field_interlaced (h265parse)) {
+        if (fps_num > 0 && fps_den > 0 &&
+            gst_h265_parse_is_field_interlaced (h265parse)) {
           gint new_fps_num, new_fps_den;
 
           if (!gst_util_fraction_multiply (fps_num, fps_den, 1, 2, &new_fps_num,
@@ -2314,6 +2315,19 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             fps_den = new_fps_den;
           }
         }
+      }
+
+      /* time_scale and num_units_in_tick are 32-bit unsigned in the
+       * bitstream, so they can exceed the range of the gint used for the
+       * framerate. Such values are not a valid framerate and the fraction
+       * maths has undefined behaviour for them; treat them as unknown. */
+      if (fps_num <= 0 || fps_den <= 0) {
+        if (fps_num != 0 || fps_den != 1) {
+          GST_INFO_OBJECT (h265parse, "Invalid framerate %d/%d from timing "
+              "information; using 0/1", fps_num, fps_den);
+        }
+        fps_num = 0;
+        fps_den = 1;
       }
 
       if (G_UNLIKELY (h265parse->fps_num != fps_num
