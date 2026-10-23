@@ -20,7 +20,8 @@ use std::num::NonZeroU64;
 use std::ptr;
 
 use crate::audio::{
-    AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe, mp3_probe, sbc_probe, wavpack_probe,
+    AacFraming, Ac3Stream, aac_probe, ac3_probe, ac4_probe, dts_probe, mp3_probe, sbc_probe,
+    wavpack_probe,
 };
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
@@ -2214,6 +2215,19 @@ extern "C" fn wavpack_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// AC-4
+// =============================================================================
+
+extern "C" fn ac4_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(probability) = ac4_probe(tf) else {
+        return;
+    };
+    suggest!(tf, probability, c"audio/x-ac4", [
+        (c"stream-format", str: c"syncframe"),
+    ]);
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2677,6 +2691,14 @@ const FEATURES: &[Feature] = &[
         wavpack_type_find,
         "wvc",
         "audio/x-wavpack-correction, framed = (boolean) false"
+    ),
+    // AC-4 - audio/x-ac4
+    typefinder!(
+        "audio/x-ac4",
+        PRIMARY,
+        ac4_type_find,
+        "ac4",
+        "audio/x-ac4, stream-format = (string) syncframe"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),

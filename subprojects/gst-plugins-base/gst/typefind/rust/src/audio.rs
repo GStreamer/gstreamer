@@ -1088,6 +1088,82 @@ pub fn wavpack_probe(tf: &mut TypeFind) -> Option<WavpackStream> {
     })
 }
 
+// ---------------------------------------------------------------------------
+// AC-4
+// ---------------------------------------------------------------------------
+
+/// How far to look for the first frame.
+const AC4_SCAN_LIMIT: i64 = 1024;
+
+/// Whether the two octets open a frame, and if so how many crc octets that sync
+/// word announces. The sync word marks the start of a frame, and the second of
+/// the two also says that a `crc_word` follows the payload. G.4.1.
+fn ac4_sync(head: &[u8]) -> Option<usize> {
+    match u16be(head) {
+        0xAC40 => Some(0),
+        0xAC41 => Some(2),
+        _ => None,
+    }
+}
+
+/// Total length of the frame whose first seven octets are `head`: the sync word,
+/// a size, the payload that size states, and the crc the sync word announced.
+/// The size is 16 bits, or 24 when those 16 read as all ones, and it counts the
+/// payload alone. G.3.1, G.3.2 and G.4.3.
+fn ac4_frame_len(head: &[u8; 7]) -> Option<usize> {
+    let crc = ac4_sync(head)?;
+    let marker = u16be(&head[2..4]);
+    let (payload, size_octets) = if marker == 0xFFFF {
+        (u32be(&[0, head[4], head[5], head[6]]) as usize, 5)
+    } else {
+        (marker as usize, 2)
+    };
+    // The payload opens with the frame's table of contents, so a frame that
+    // states no payload is not one. G.3.3 and G.4.3.
+    (payload > 0).then_some(2 + size_octets + payload + crc)
+}
+
+/// Nothing about a single frame of this format is distinctive, so a stream is
+/// confirmed by stepping over one frame and finding the next waiting exactly
+/// where the first said it would be. Data that only looks like a frame does not
+/// keep that up.
+///
+/// The search for the first frame covers the first kilobyte, because a stream may
+/// open part way through a frame.
+pub fn ac4_probe(tf: &mut TypeFind) -> Option<Prob> {
+    let mut scan = Scanner::new(tf, 0);
+    while scan.offset() < AC4_SCAN_LIMIT {
+        let Some(head) = scan.peek(7) else {
+            // A frame is at least five octets and its follower needs two more,
+            // and what is available only shrinks as the scan moves.
+            break;
+        };
+        let head = [
+            head[0], head[1], head[2], head[3], head[4], head[5], head[6],
+        ];
+        if let Some(len) = ac4_frame_len(&head) {
+            // A copy, because a candidate that leads nowhere must not drag the
+            // scan along to wherever its stated size pointed.
+            let mut next = scan;
+            next.consume(len);
+            if next
+                .peek(2)
+                .is_some_and(|follow| ac4_sync(follow).is_some())
+            {
+                // A frame at the very start says the file is nothing but frames.
+                // One reached only after scanning says AC-4 is in here somewhere.
+                return Some(if scan.offset() == 0 {
+                    Prob::MAXIMUM
+                } else {
+                    Prob::POSSIBLE
+                });
+            }
+        }
+        scan.consume(1);
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1260,5 +1336,49 @@ mod tests {
     fn the_odd_size_flag_leaves_the_next_subblock_on_an_even_boundary() {
         assert_eq!(wavpack_subblock_len(&[0xca, 3, 0, 0]), 10);
         assert_eq!(wavpack_subblock_len(&[0x4a, 3, 0, 0]), 8);
+    }
+
+    /// The frame is the sync word, a size, the payload that size states, and the
+    /// crc only when the sync word announced one. G.3.1, G.4.1 and G.4.3.
+    #[test]
+    fn ac4_frame_length_counts_the_payload_and_the_announced_crc() {
+        // size 100, no crc: 2 + 2 + 100
+        assert_eq!(ac4_frame_len(&[0xAC, 0x40, 0x00, 0x64, 0, 0, 0]), Some(104));
+        // 0xAC41 announces a crc_word, so two octets more
+        assert_eq!(ac4_frame_len(&[0xAC, 0x41, 0x00, 0x64, 0, 0, 0]), Some(106));
+        // a frame stating no payload states no table of contents either, so it
+        // is not a frame. G.3.3 and G.4.3.
+        assert_eq!(ac4_frame_len(&[0xAC, 0x40, 0x00, 0x00, 0, 0, 0]), None);
+    }
+
+    /// A 16-bit size of all ones is a marker, not a size. The real one follows in
+    /// 24 bits and the marker octets stay counted. G.3.2.
+    #[test]
+    fn an_all_ones_ac4_size_reads_the_wide_form_that_follows() {
+        assert_eq!(
+            ac4_frame_len(&[0xAC, 0x40, 0xFF, 0xFF, 0x01, 0x00, 0x00]),
+            Some(65543)
+        );
+        // the one case where all four terms are live at once
+        assert_eq!(
+            ac4_frame_len(&[0xAC, 0x41, 0xFF, 0xFF, 0x00, 0x00, 0x01]),
+            Some(10)
+        );
+        // the largest size the syntax can state, which is what bounds the scan
+        assert_eq!(
+            ac4_frame_len(&[0xAC, 0x40, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]),
+            Some(16_777_222)
+        );
+    }
+
+    /// Only 0xAC40 and 0xAC41 open a frame, and which of the two it is decides
+    /// whether a crc follows. G.4.1.
+    #[test]
+    fn only_the_two_assigned_ac4_sync_words_open_a_frame() {
+        assert_eq!(ac4_sync(&[0xAC, 0x40]), Some(0));
+        assert_eq!(ac4_sync(&[0xAC, 0x41]), Some(2));
+        assert_eq!(ac4_sync(&[0xAC, 0x42]), None);
+        assert_eq!(ac4_sync(&[0xAB, 0x40]), None);
+        assert_eq!(ac4_frame_len(&[0xAC, 0x42, 0x00, 0x64, 0, 0, 0]), None);
     }
 }
