@@ -613,6 +613,32 @@ GST_START_TEST (test_uvlc_invalid)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sequence_header_truncated)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  /* Sequence header OBU declaring frame_width_bits_minus_1 = 15 and
+   * frame_height_bits_minus_1 = 13 while the OBU data ends before both
+   * frame sizes are encoded. This used to read past the end of the OBU
+   * data. */
+  const guint8 stream[] = {
+    0x0a, 0x07, 0x00, 0x07, 0x00, 0xfd, 0xfd, 0xff, 0x02
+  };
+
+  h = gst_harness_new_parse ("av1parse");
+  gst_harness_set_src_caps_str (h, "video/x-av1");
+
+  buf = gst_buffer_new_and_alloc (sizeof (stream));
+  gst_buffer_fill (buf, 0, stream, sizeof (stream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 av1parse_suite (void)
 {
@@ -635,6 +661,7 @@ av1parse_suite (void)
   tcase_add_test (tc_chain, test_timing_info_invalid_framerate);
   tcase_add_test (tc_chain, test_timing_info_framerate);
   tcase_add_test (tc_chain, test_uvlc_invalid);
+  tcase_add_test (tc_chain, test_sequence_header_truncated);
 
   return s;
 }
