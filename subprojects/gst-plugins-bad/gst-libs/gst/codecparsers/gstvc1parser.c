@@ -1733,7 +1733,7 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
  * gst_vc1_parse_sequence_layer:
  * @data: The data to parse
  * @size: the size of @data
- * @seqlayer: The #GstVC1SeqLayer to set.
+ * @seqlayer: (out): The #GstVC1SeqLayer to set.
  *
  * Parses @data, and fills @seqlayer fields.
  *
@@ -1836,7 +1836,7 @@ failed:
  * gst_vc1_parse_sequence_header_struct_a:
  * @data: The data to parse
  * @size: the size of @data
- * @structa: The #GstVC1SeqStructA to set.
+ * @structa: (out): The #GstVC1SeqStructA to set.
  *
  * Parses @data, and fills @structa fields.
  *
@@ -1859,7 +1859,7 @@ gst_vc1_parse_sequence_header_struct_a (const guint8 * data,
  * gst_vc1_parse_sequence_header_struct_b:
  * @data: The data to parse
  * @size: the size of @data
- * @structb: The #GstVC1SeqStructB to set.
+ * @structb: (out): The #GstVC1SeqStructB to set.
  *
  * Parses @data, and fills @structb fields.
  *
@@ -1882,7 +1882,7 @@ gst_vc1_parse_sequence_header_struct_b (const guint8 * data,
  * gst_vc1_parse_sequence_header_struct_c:
  * @data: The data to parse
  * @size: the size of @data
- * @structc: The #GstVC1SeqStructC to set.
+ * @structc: (out): The #GstVC1SeqStructC to set.
  *
  * Parses @data, and fills @structc fields.
  *
@@ -1905,7 +1905,7 @@ gst_vc1_parse_sequence_header_struct_c (const guint8 * data, gsize size,
 * gst_vc1_parse_sequence_header:
 * @data: The data to parse
 * @size: the size of @data
-* @seqhdr: The #GstVC1SeqHdr to set.
+* @seqhdr: (out): The #GstVC1SeqHdr to set.
  *
  * Parses @data, and fills @seqhdr fields.
  *
@@ -1964,11 +1964,14 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
 {
   GstBitReader br;
   guint8 i;
-  GstVC1AdvancedSeqHdr *advanced = &seqhdr->advanced;
+  GstVC1AdvancedSeqHdr *advanced;
 
   g_return_val_if_fail (entrypoint != NULL, GST_VC1_PARSER_ERROR);
+  g_return_val_if_fail (seqhdr != NULL, GST_VC1_PARSER_ERROR);
 
   memset (entrypoint, 0, sizeof (GstVC1EntryPointHdr));
+
+  advanced = &seqhdr->advanced;
 
   gst_bit_reader_init (&br, data, size);
 
@@ -2035,7 +2038,7 @@ failed:
  * gst_vc1_parse_frame_layer:
  * @data: The data to parse
  * @size: the size of @data
- * @framelayer: The #GstVC1FrameLayer to fill.
+ * @framelayer: (out): The #GstVC1FrameLayer to fill.
  *
  * Parses @data, and fills @framelayer fields.
  *
@@ -2048,6 +2051,8 @@ gst_vc1_parse_frame_layer (const guint8 * data, gsize size,
     GstVC1FrameLayer * framelayer)
 {
   GstBitReader br = GST_BIT_READER_INIT (data, size);
+
+  g_return_val_if_fail (framelayer != NULL, GST_VC1_PARSER_ERROR);
 
   memset (framelayer, 0, sizeof (*framelayer));
 
@@ -2077,7 +2082,7 @@ gst_vc1_parse_frame_layer (const guint8 * data, gsize size,
  * gst_vc1_parse_frame_header:
  * @data: The data to parse
  * @size: the size of @data
- * @framehdr: The #GstVC1FrameHdr to fill.
+ * @framehdr: (out): The #GstVC1FrameHdr to fill.
  * @seqhdr: The #GstVC1SeqHdr currently being parsed
  * @bitplanes: The #GstVC1BitPlanes to store bitplanes in or %NULL
  *
@@ -2095,6 +2100,9 @@ gst_vc1_parse_frame_header (const guint8 * data, gsize size,
   GstBitReader br;
   GstVC1ParserResult result;
 
+  g_return_val_if_fail (framehdr != NULL, GST_VC1_PARSER_ERROR);
+  g_return_val_if_fail (seqhdr != NULL, GST_VC1_PARSER_ERROR);
+
   gst_bit_reader_init (&br, data, size);
 
   if (seqhdr->profile == GST_VC1_PROFILE_ADVANCED)
@@ -2111,7 +2119,7 @@ gst_vc1_parse_frame_header (const guint8 * data, gsize size,
  * gst_vc1_parse_field_header:
  * @data: The data to parse
  * @size: the size of @data
- * @fieldhdr: The #GstVC1FrameHdr to fill.
+ * @fieldhdr: (out): The #GstVC1FrameHdr to fill.
  * @seqhdr: The #GstVC1SeqHdr currently being parsed
  * @bitplanes: The #GstVC1BitPlanes to store bitplanes in or %NULL
  *
@@ -2129,6 +2137,9 @@ gst_vc1_parse_field_header (const guint8 * data, gsize size,
   GstBitReader br;
   GstVC1ParserResult result;
 
+  g_return_val_if_fail (fieldhdr != NULL, GST_VC1_PARSER_ERROR);
+  g_return_val_if_fail (seqhdr != NULL, GST_VC1_PARSER_ERROR);
+
   gst_bit_reader_init (&br, data, size);
 
   result = parse_frame_header_advanced (&br, fieldhdr, seqhdr, bitplanes, TRUE);
@@ -2140,7 +2151,7 @@ gst_vc1_parse_field_header (const guint8 * data, gsize size,
  * gst_vc1_parse_slice_header:
  * @data: The data to parse
  * @size: The size of @data
- * @slicehdr: The #GstVC1SliceHdr to fill
+ * @slicehdr: (out): The #GstVC1SliceHdr to fill
  * @seqhdr: The #GstVC1SeqHdr that was previously parsed
  *
  * Parses @data, and fills @slicehdr fields.
@@ -2161,6 +2172,9 @@ gst_vc1_parse_slice_header (const guint8 * data, gsize size,
   guint8 pic_header_flag;
 
   GST_DEBUG ("Parsing slice header");
+
+  g_return_val_if_fail (slicehdr != NULL, GST_VC1_PARSER_ERROR);
+  g_return_val_if_fail (seqhdr != NULL, GST_VC1_PARSER_ERROR);
 
   memset (slicehdr, 0, sizeof (*slicehdr));
 
