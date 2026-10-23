@@ -1654,7 +1654,8 @@ gst_h266_parser_parse_scalable_nesting (GstH266ScalableNesting * sn,
   } else {
     READ_UINT8 (nr, sn->all_layers_flag, 1);
     if (!sn->all_layers_flag) {
-      READ_UE_MAX (nr, sn->num_layers_minus1, GST_H266_MAX_LAYERS);
+      /* layer_id[] is indexed from 1 up to num_layers_minus1 */
+      READ_UE_MAX (nr, sn->num_layers_minus1, GST_H266_MAX_LAYERS - 1);
       for (i = 1; i <= sn->num_layers_minus1; i++)
         READ_UINT8 (nr, sn->layer_id[i], 6);
     }
