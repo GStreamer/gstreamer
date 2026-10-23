@@ -289,6 +289,8 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
   gst_buffer_replace (&vc1parse->seq_layer_buffer, NULL);
   gst_buffer_replace (&vc1parse->seq_hdr_buffer, NULL);
   gst_buffer_replace (&vc1parse->entrypoint_buffer, NULL);
+  memset (&vc1parse->seq_layer, 0, sizeof (vc1parse->seq_layer));
+  memset (&vc1parse->seq_hdr, 0, sizeof (vc1parse->seq_hdr));
 
   vc1parse->seq_layer_sent = FALSE;
   vc1parse->frame_layer_first_frame_sent = FALSE;
@@ -1468,8 +1470,6 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       goto done;
     }
 
-    memset (&flayer, 0, sizeof (flayer));
-
     pres = gst_vc1_parse_frame_layer (data, size, &flayer);
 
     if (pres != GST_VC1_PARSER_OK) {
@@ -2075,7 +2075,6 @@ gst_vc1_parse_handle_seq_hdr (GstVC1Parse * vc1parse,
 
   g_assert (gst_buffer_get_size (buf) >= offset + size);
   gst_buffer_replace (&vc1parse->seq_hdr_buffer, NULL);
-  memset (&vc1parse->seq_hdr, 0, sizeof (vc1parse->seq_hdr));
 
   gst_buffer_map (buf, &minfo, GST_MAP_READ);
   pres =
@@ -2207,7 +2206,6 @@ gst_vc1_parse_handle_seq_layer (GstVC1Parse * vc1parse,
   g_assert (gst_buffer_get_size (buf) >= offset + size);
 
   gst_buffer_replace (&vc1parse->seq_layer_buffer, NULL);
-  memset (&vc1parse->seq_layer, 0, sizeof (vc1parse->seq_layer));
 
   gst_buffer_map (buf, &minfo, GST_MAP_READ);
   pres =
