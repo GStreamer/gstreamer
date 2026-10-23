@@ -8075,6 +8075,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
   GstRTSPLowerTrans protocols;
   GstRTSPStatusCode code;
   gboolean unsupported_real = FALSE;
+  gboolean use_non_compliant_urls = FALSE;
   gint rtpport, rtcpport;
   GstRTSPUrl *url;
   gchar *hval;
@@ -8194,7 +8195,9 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     if (!protocol_masks[mask])
       goto no_protocols;
 
-    if (src->force_non_compliant_url) {
+    if (src->force_non_compliant_url || (use_non_compliant_urls
+            && stream->control_url
+            && !g_str_has_prefix (stream->control_url, "rtsp://"))) {
       try_non_compliant_url (src, stream);
 
       tried_non_compliant_url = TRUE;
@@ -8285,6 +8288,11 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
 
     switch (code) {
       case GST_RTSP_STS_OK:
+        /* Use the successful URL form for subsequent relative controls. Another
+         * rejected SETUP can close the connection after TCP is configured, when
+         * reconnecting is no longer possible. */
+        if (tried_non_compliant_url)
+          use_non_compliant_urls = TRUE;
         break;
       case GST_RTSP_STS_UNSUPPORTED_TRANSPORT:
         gst_rtsp_message_unset (&request);
