@@ -751,7 +751,7 @@ gst_h266_ref_pic_lists (GstH266RefPicLists * rpls, NalReader * nr,
     const GstH266SPS * sps, const GstH266PPS * pps)
 {
   const GstH266RefPicListStruct *ref_list;
-  gint i, j, num_ltrp_entries GST_UNUSED_ASSERT;
+  gint i, j, num_ltrp_entries;
 
   GST_LOG ("parsing \"ref_pic_lists\"");
 
@@ -767,7 +767,11 @@ gst_h266_ref_pic_lists (GstH266RefPicLists * rpls, NalReader * nr,
     }
 
     if (rpls->rpl_sps_flag[i]) {
-      g_assert (sps->num_ref_pic_lists[i] > 0);
+      if (G_UNLIKELY (sps->num_ref_pic_lists[i] == 0)) {
+        GST_WARNING ("rpl_sps_flag set for list %d but SPS has no "
+            "ref_pic_lists", i);
+        goto error;
+      }
 
       if (sps->num_ref_pic_lists[i] == 1) {
         rpls->rpl_idx[i] = 0;
@@ -808,7 +812,12 @@ gst_h266_ref_pic_lists (GstH266RefPicLists * rpls, NalReader * nr,
       num_ltrp_entries++;
     }
 
-    g_assert (num_ltrp_entries == ref_list->num_long_term_pic);
+    if (num_ltrp_entries != ref_list->num_long_term_pic) {
+      GST_WARNING ("num_long_term_pic (%u) does not match the number of "
+          "long term reference pictures counted (%d)",
+          ref_list->num_long_term_pic, num_ltrp_entries);
+      goto error;
+    }
   }
 
   return TRUE;
