@@ -14,9 +14,9 @@
 
 use crate::helpers::{
     Prob, Scanner, TypeFind, aac_channels, aac_level, aac_profile, aac_sample_rate, u16be, u16le,
-    u32be,
+    u32be, u32le,
 };
-use std::ffi::CStr;
+use std::ffi::{CStr, c_uint};
 
 // One registration covers three framings of the same codec. The frame layouts
 // are 13818-7 Tables 8 and 9, which 14496-3 Tables 1.A.6 and 1.A.7 repeat
@@ -963,6 +963,131 @@ pub fn sbc_probe(tf: &mut TypeFind) -> Option<SbcFrame> {
     sbc_chain(&mut Scanner::new(tf, 0))
 }
 
+// ---------------------------------------------------------------------------
+// WavPack
+// ---------------------------------------------------------------------------
+
+/// Every block opens with this and states its own size, so a stream is a bare run
+/// of blocks with nothing in front of them. 2.0.
+const WAVPACK_MAGIC: &[u8; 4] = b"wvpk";
+
+/// Where the metadata sub-blocks start, in bytes from the start of a block. 2.0.
+const WAVPACK_SUBBLOCKS_AT: i64 = 32;
+
+/// How much of a block its stated size leaves out, namely the magic and the size
+/// itself. 2.0.
+const WAVPACK_SIZE_EXCLUDES: i64 = 8;
+
+/// Sub-block ids that carry audio. A correction stream holds only the second
+/// kind and a main stream one of the others, and that is the whole difference
+/// between the two: the block headers are identical apart from size and crc.
+/// The first two are 3.0, which reserves the ids it does not list; 0x2c is
+/// assigned by a later revision than the one cited.
+const WAVPACK_MAIN_IDS: [u8; 3] = [0x0a, 0x0c, 0x2c];
+const WAVPACK_CORRECTION_ID: u8 = 0x0b;
+
+/// How many bitstream sub-blocks to count before settling. This caps the number
+/// that feeds the probability. The walk itself ends at the block bound or where
+/// the stream runs out.
+const WAVPACK_COUNT_LIMIT: usize = 5;
+
+/// Confidence added per bitstream sub-block counted.
+const WAVPACK_PROBABILITY_STEP: c_uint = 5;
+
+/// Which stream the first block opens, and what that is worth.
+pub struct WavpackStream {
+    pub correction: bool,
+    pub probability: u32,
+}
+
+/// Total length of a metadata sub-block from the four octets at its start. The
+/// length counts words of payload, held in one octet or, with the large flag set
+/// in the top bit of the id, in three little-endian ones, and the id and length
+/// octets come on top of it. The total is therefore always even. Section 3.0.
+///
+/// Split out so both length forms can be checked against the table directly;
+/// a stream only ever offers one sub-block at a time.
+fn wavpack_subblock_len(head: &[u8; 4]) -> i64 {
+    if head[0] & 0x80 != 0 {
+        i64::from(u32le(&[head[1], head[2], head[3], 0])) * 2 + 4
+    } else {
+        i64::from(head[1]) * 2 + 2
+    }
+}
+
+/// Which of the two streams a file holds cannot be read off a block header, so
+/// the first block is walked and its metadata sub-blocks counted by the id each
+/// one opens with.
+///
+/// A sub-block states its own size in words, in one octet or, with the large flag
+/// set, in three, and its total length is always even, so the walk needs no id
+/// but the audio ones. 3.0.
+///
+/// Confidence grows with the number counted, and again when a second block header
+/// follows the first.
+///
+/// Only the first block is read. A file that opens with blocks carrying no
+/// bitstream, which the spec allows, is not recognised.
+pub fn wavpack_probe(tf: &mut TypeFind) -> Option<WavpackStream> {
+    if !tf.starts_with(WAVPACK_MAGIC) {
+        return None;
+    }
+    let block = tf.peek::<32>(0)?;
+    let end = WAVPACK_SIZE_EXCLUDES + i64::from(u32le(&block[4..8]));
+
+    let mut main = 0;
+    let mut correction = 0;
+    let mut scan = Scanner::new(tf, WAVPACK_SUBBLOCKS_AT);
+    // A stream that stops inside the block ends the walk where it is rather than
+    // giving up: the ids already counted still stand.
+    while scan.offset() < end {
+        let Some(sub) = scan.peek(4) else { break };
+        // A peek hands out a slice and the length helper wants an array.
+        let sub = [sub[0], sub[1], sub[2], sub[3]];
+        let size = wavpack_subblock_len(&sub);
+        if scan.offset() + size > end {
+            break;
+        }
+        let id = sub[0] & 0x3f;
+        if id == WAVPACK_CORRECTION_ID {
+            correction += 1;
+        } else if WAVPACK_MAIN_IDS.contains(&id) {
+            main += 1;
+        }
+        if main >= WAVPACK_COUNT_LIMIT || correction >= WAVPACK_COUNT_LIMIT {
+            break;
+        }
+        scan.consume(size as usize);
+    }
+
+    // A correction stream has to outcount the main ids to count as one, which
+    // also rules out the case where neither was seen.
+    let (count, correction) = if correction > main {
+        (correction, true)
+    } else if main > 0 {
+        (main, false)
+    } else {
+        return None;
+    };
+
+    // A second block header right after the first shows the stream goes on,
+    // which a lone block cannot show on its own.
+    let base = if tf
+        .peek::<4>(end)
+        .is_some_and(|next| next.starts_with(WAVPACK_MAGIC))
+    {
+        Prob::LIKELY
+    } else {
+        Prob::POSSIBLE
+    };
+    let probability =
+        (base.get() + WAVPACK_PROBABILITY_STEP * count as u32).min(Prob::NEARLY_CERTAIN.get());
+    Some(WavpackStream {
+        correction,
+        probability,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1108,5 +1233,32 @@ mod tests {
             sbc_frame(&[SBC_SYNC, 0xF1, 18, 0x00]).map(|f| f.len),
             Some(44)
         );
+    }
+
+    /// A small sub-block carries its word count in one octet and its own id and
+    /// length octets ahead of the payload, so three words come to 3*2 + 2.
+    /// Empty ones exist and still take two octets.
+    #[test]
+    fn a_small_subblock_adds_two_octets_to_its_words() {
+        assert_eq!(wavpack_subblock_len(&[0x0a, 3, 0, 0]), 8);
+        assert_eq!(wavpack_subblock_len(&[0x0a, 0, 0, 0]), 2);
+        assert_eq!(wavpack_subblock_len(&[0x0b, 255, 0, 0]), 512);
+    }
+
+    /// A large one carries the count in three little-endian octets and takes four
+    /// of its own, so 0x010203 words come to 66051*2 + 4.
+    #[test]
+    fn a_large_subblock_adds_four_octets_to_its_words() {
+        assert_eq!(wavpack_subblock_len(&[0x8a, 3, 0, 0]), 10);
+        assert_eq!(wavpack_subblock_len(&[0x8a, 0x03, 0x02, 0x01]), 132106);
+    }
+
+    /// The odd-size flag says the payload is one byte short of the count, not
+    /// that the next sub-block starts off an even boundary, so it must not move
+    /// the length. Only the top bit of the id picks the length form.
+    #[test]
+    fn the_odd_size_flag_leaves_the_next_subblock_on_an_even_boundary() {
+        assert_eq!(wavpack_subblock_len(&[0xca, 3, 0, 0]), 10);
+        assert_eq!(wavpack_subblock_len(&[0x4a, 3, 0, 0]), 8);
     }
 }

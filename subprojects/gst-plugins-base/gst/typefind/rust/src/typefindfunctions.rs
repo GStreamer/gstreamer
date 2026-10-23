@@ -19,7 +19,9 @@ use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
 
-use crate::audio::{AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe, mp3_probe, sbc_probe};
+use crate::audio::{
+    AacFraming, Ac3Stream, aac_probe, ac3_probe, dts_probe, mp3_probe, sbc_probe, wavpack_probe,
+};
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
@@ -2191,6 +2193,27 @@ extern "C" fn sbc_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// WavPack
+// =============================================================================
+
+extern "C" fn wavpack_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(stream) = wavpack_probe(tf) else {
+        return;
+    };
+    // `framed` belongs to the parser, which sets it once it has split the stream
+    // into blocks. A stream as found is a bare run of them.
+    if stream.correction {
+        suggest!(tf, stream.probability, c"audio/x-wavpack-correction", [
+            (c"framed", bool: false),
+        ]);
+    } else {
+        suggest!(tf, stream.probability, c"audio/x-wavpack", [
+            (c"framed", bool: false),
+        ]);
+    }
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2638,6 +2661,23 @@ const FEATURES: &[Feature] = &[
     ),
     // SBC - audio/x-sbc
     typefinder!("audio/x-sbc", MARGINAL, sbc_type_find, "sbc", "audio/x-sbc"),
+    // WavPack - audio/x-wavpack. One finder answers for both streams, since
+    // telling them apart is what the probe does.
+    typefinder!(
+        "audio/x-wavpack",
+        SECONDARY,
+        wavpack_type_find,
+        "wv,wvp",
+        "audio/x-wavpack, framed = (boolean) false"
+    ),
+    // WavPack correction - audio/x-wavpack-correction
+    typefinder!(
+        "audio/x-wavpack-correction",
+        SECONDARY,
+        wavpack_type_find,
+        "wvc",
+        "audio/x-wavpack-correction, framed = (boolean) false"
+    ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
     // DV - video/x-dv
