@@ -764,6 +764,36 @@ int main (int argc, char **argv)                                \
   return gst_check_run_suite_nofork (s, # name, __FILE__);      \
 }
 
+/**
+ * GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP:
+ * @name: the test suite name
+ *
+ * Runs a test suite with the platform main loop required by native UI APIs.
+ *
+ * On macOS, this starts a Cocoa main loop on the main thread and runs the
+ * suite on a secondary thread without forking, so the Cocoa main loop
+ * remains available throughout test execution.
+ *
+ * Other platforms currently use GST_CHECK_MAIN().
+ *
+ * Since: 1.30
+ */
+#if defined(__APPLE__) && TARGET_OS_OSX
+#define GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP(name)            \
+static int name ## _check_main (gpointer user_data G_GNUC_UNUSED)\
+{                                                               \
+  Suite *s = name ## _suite ();                                 \
+  return gst_check_run_suite_nofork (s, # name, __FILE__);      \
+}                                                               \
+int main (int argc, char **argv)                                \
+{                                                               \
+  gst_check_init (&argc, &argv);                                \
+  return gst_macos_main_simple (name ## _check_main, NULL);     \
+}
+#else
+#define GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP(name) GST_CHECK_MAIN(name)
+#endif
+
 /* Hack to allow run-time selection of unit tests to run via the
  * GST_CHECKS environment variable (test function names globs, comma
  * separated), or GST_CHECKS_IGNORE with the same semantics */
