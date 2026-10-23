@@ -5475,8 +5475,10 @@ gst_h266_parser_parse_slice_address (GstH266Parser * parser, NalReader * nr,
         1);
 
     if (pps->num_tiles_in_pic - sh->slice_address > 1) {
+      /* Spec: num_tiles_in_slice_minus1 shall be in the range
+       * 0 to NumTilesInPic - SliceAddress - 1. */
       READ_UE_MAX (nr, sh->num_tiles_in_slice_minus1,
-          pps->num_tiles_in_pic - 1);
+          pps->num_tiles_in_pic - sh->slice_address - 1);
     } else {
       sh->num_tiles_in_slice_minus1 = 0;
     }
