@@ -776,6 +776,51 @@ GST_START_TEST (test_frame_size_ref_unavailable)
 
 GST_END_TEST;
 
+/* Frame header with global motion parameters whose decoded
+ * sub-exponential value is negative; the parser shifted that value as
+ * int to scale it to the warp model precision, which is undefined
+ * behaviour. The stream is pushed chunked the way the fuzzer harness
+ * splits it. */
+GST_START_TEST (test_global_motion_negative_shift)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  const guint8 bytestream[] = {
+    0x0a, 0x0b, 0x00, 0x00, 0x00, 0x3c, 0x5c, 0xff, 0xff, 0xc0, 0x1a, 0x00,
+    0x80, 0x32, 0x97, 0x00, 0x00, 0x04, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32,
+    0x32, 0x32, 0xf5, 0x1a, 0x0d, 0xff, 0xc0, 0x1a, 0x00, 0x80, 0x32, 0x97,
+    0x00, 0x00, 0x04, 0x32, 0x32, 0x32, 0xf5, 0x00, 0x00, 0x01, 0x00, 0x3d,
+    0x09, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xa0, 0x01, 0x68, 0x79, 0x00,
+    0x0d, 0x02, 0x00, 0x00, 0x1a, 0x0d, 0xff, 0xc0, 0x1a, 0x00, 0x09, 0x03,
+    0x00, 0x3f, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x74, 0x61, 0x72,
+    0x93, 0xa2, 0xba, 0x56, 0xa2, 0x00, 0x01,
+  };
+  const guint chunk_count = bytestream[0] % 4 + 1;
+  gsize remaining = sizeof (bytestream);
+  gsize offset = 0;
+  guint i;
+
+  h = gst_harness_new_parse ("av1parse");
+  gst_harness_set_src_caps_str (h, "video/x-av1");
+
+  for (i = 0; i < chunk_count; i++) {
+    gsize chunk_size =
+        (i == chunk_count - 1) ? remaining : remaining / (chunk_count - i);
+
+    buf = gst_buffer_new_and_alloc (chunk_size);
+    gst_buffer_fill (buf, 0, bytestream + offset, chunk_size);
+    fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+    offset += chunk_size;
+    remaining -= chunk_size;
+  }
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 av1parse_suite (void)
 {
@@ -802,6 +847,7 @@ av1parse_suite (void)
   tcase_add_test (tc_chain, test_tile_group_extent);
   tcase_add_test (tc_chain, test_tile_group_tg_size_large);
   tcase_add_test (tc_chain, test_frame_size_ref_unavailable);
+  tcase_add_test (tc_chain, test_global_motion_negative_shift);
 
   return s;
 }
