@@ -285,6 +285,8 @@ gst_classifier_tensor_decoder_finalize (GObject * object)
   GstClassifierTensorDecoder *self = GST_CLASSIFIER_TENSOR_DECODER (object);
 
   g_free (self->labels_file);
+  g_clear_pointer (&self->class_quark, g_array_unref);
+  g_clear_pointer (&self->postproc_result, g_array_unref);
   G_OBJECT_CLASS (gst_classifier_tensor_decoder_parent_class)->finalize
       (object);
 }
@@ -301,6 +303,7 @@ gst_classifier_tensor_decoder_set_property (GObject * object, guint prop_id,
       self->threshold = g_value_get_float (value);
       break;
     case PROP_LABEL_FILE:
+      g_free (self->labels_file);
       self->labels_file = g_strdup (g_value_get_string (value));
 
       if (self->labels_file) {
@@ -367,25 +370,25 @@ gst_classifier_tensor_decoder_load_labels (GstClassifierTensorDecoder * self)
   tokens = g_strsplit (content, "\n", 0);
   g_free (content);
 
-  if (tokens[0] != NULL) {
-    class_quark =
-        g_array_sized_new (FALSE, FALSE, sizeof (GQuark), self->class_count);
-  }
-
-  self->class_quark = g_array_new (FALSE, FALSE, sizeof (GQuark));
+  class_quark = g_array_new (FALSE, FALSE, sizeof (GQuark));
 
   for (int i = 0; tokens[i] != NULL && tokens[i][0] != '\0'; i++) {
     val = g_quark_from_string (tokens[i]);
     g_array_append_val (class_quark, val);
   }
 
-  if (class_quark == NULL)
-    GST_WARNING_OBJECT (self, "Label %s file does not contain any labels",
-        self->labels_file);
+  g_strfreev (tokens);
 
+  if (class_quark->len == 0) {
+    GST_ERROR_OBJECT (self, "Labels file %s does not contain any labels",
+        self->labels_file);
+    g_array_unref (class_quark);
+    return 0;
+  }
+
+  g_clear_pointer (&self->class_quark, g_array_unref);
   self->class_quark = class_quark;
 
-  g_strfreev (tokens);
   return self->class_quark->len;
 }
 
@@ -411,10 +414,8 @@ gst_classifier_tensor_decoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (self->class_quark)
-        g_array_free (self->class_quark, FALSE);
-      if (self->postproc_result)
-        g_array_free (self->postproc_result, TRUE);
+      g_clear_pointer (&self->class_quark, g_array_unref);
+      g_clear_pointer (&self->postproc_result, g_array_unref);
       break;
     default:
       break;
@@ -672,14 +673,22 @@ gst_classifier_tensor_decoder_set_caps (GstBaseTransform * trans,
     self->class_count = g_value_get_int (dim_v);
 
     /* Allocate postproc_result buffer for softmax or uint8->float conversion */
+    g_clear_pointer (&self->postproc_result, g_array_unref);
     self->postproc_result =
         g_array_sized_new (FALSE, TRUE, sizeof (gfloat), self->class_count);
+
+    /* Labels generated for previous caps, regenerate them if the class count
+     * changed */
+    if (self->labels_file == NULL && self->class_quark != NULL &&
+        self->class_count != self->class_quark->len)
+      g_clear_pointer (&self->class_quark, g_array_unref);
 
     if (self->class_quark != NULL &&
         self->class_count != self->class_quark->len) {
       GST_ELEMENT_ERROR (GST_BASE_TRANSFORM (self), STREAM, FAILED,
           ("Label-file/Tensor mismatch"),
           ("Class count from tensor mismatch class count from label file"));
+      g_clear_pointer (&self->postproc_result, g_array_unref);
       return FALSE;
     }
 
@@ -689,8 +698,8 @@ gst_classifier_tensor_decoder_set_caps (GstBaseTransform * trans,
           self->class_count);
       for (gsize i = 0; i < self->class_count; i++) {
         if (g_snprintf (buffer, sizeof (buffer), "%zu", i) >= sizeof (buffer)) {
-          g_array_free (self->postproc_result, FALSE);
-          self->postproc_result = NULL;
+          g_clear_pointer (&self->class_quark, g_array_unref);
+          g_clear_pointer (&self->postproc_result, g_array_unref);
           return FALSE;
         }
         val = g_quark_from_string (buffer);
