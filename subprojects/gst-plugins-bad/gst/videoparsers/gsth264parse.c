@@ -2330,6 +2330,19 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       fps_num = vui->time_scale;
       /* We need a framerate, this is a field rate */
       fps_den = vui->num_units_in_tick * 2;
+
+      /* time_scale and num_units_in_tick are 32-bit unsigned in the
+       * bitstream, so they can exceed the range of the gint used for the
+       * framerate, and num_units_in_tick * 2 can wrap. Such values are
+       * not a valid framerate; treat them as unknown. */
+      if (fps_num <= 0 || fps_den <= 0) {
+        if (fps_num != 0 || fps_den != 1) {
+          GST_INFO_OBJECT (h264parse, "Invalid framerate %d/%d from timing "
+              "information; using 0/1", fps_num, fps_den);
+        }
+        fps_num = 0;
+        fps_den = 1;
+      }
     }
 
     /* Checks whether given framerate makes sense or not
@@ -2339,7 +2352,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     if (fps_num > 0 && fps_den > 0 && sps->width > 0 && sps->height > 0 &&
         sps->vui_parameters_present_flag &&
         sps->vui_parameters.timing_info_present_flag) {
-      guint luma_samples = sps->width * sps->height;
+      guint64 luma_samples = (guint64) sps->width * sps->height;
       guint max_samples = get_max_samples_per_second (sps);
       gdouble max_fps, cur_fps;
 

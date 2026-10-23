@@ -822,6 +822,34 @@ GST_START_TEST (test_parse_compatible_caps)
 
 GST_END_TEST;
 
+/* VUI timing whose time_scale does not fit the gint used for the
+ * framerate. The resulting fraction (G_MININT/...) is rejected by
+ * gst_value_collect_fraction() with a critical, which h264parse must
+ * not feed it: such timing info must be treated as unknown. */
+GST_START_TEST (test_parse_vui_invalid_framerate)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x01, 0x27, 0x01, 0x0c, 0x01, 0xff, 0xff, 0x09, 0x03, 0x40,
+    0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x0d,
+  };
+
+  h = gst_harness_new_parse ("h264parse");
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264, stream-format=byte-stream, alignment=nal");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parse_suite (void)
 {
@@ -2429,6 +2457,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_non_vcl_nal_duration);
     tcase_add_test (tc_chain, test_parse_bytestream_junk_after_au);
     tcase_add_test (tc_chain, test_parse_full_range_no_colour_description);
+    tcase_add_test (tc_chain, test_parse_vui_invalid_framerate);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
