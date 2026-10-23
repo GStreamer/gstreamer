@@ -1636,6 +1636,33 @@ GST_START_TEST (test_sps_hrd_framerate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_chroma_qp_table_bitdepth)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  /* SPS with bitdepth_minus8 = 8. Generating the chroma QP table used
+   * to write one entry past the end of the 111-entry table. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0x0d, 0x02, 0x00, 0x80, 0x00,
+    0x40, 0x20, 0x40, 0x40, 0xd9, 0x3f, 0x09, 0x1b, 0xa4, 0xba, 0x21, 0x1a,
+    0x21, 0x49, 0x91, 0xb8, 0x4d, 0x4d, 0x8a, 0x31, 0x03, 0x50, 0xc1, 0xbe,
+    0x15, 0x71, 0xfc, 0x1f, 0x8c, 0x40, 0x80
+  };
+
+  h = gst_harness_new_parse ("h266parse");
+  gst_harness_set_src_caps_str (h, "video/x-h266");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h266parse_harnessed_suite (void)
 {
@@ -1683,6 +1710,7 @@ h266parse_harnessed_suite (void)
 
   tcase_add_test (tc_chain, test_sps_invalid_framerate);
   tcase_add_test (tc_chain, test_sps_hrd_framerate);
+  tcase_add_test (tc_chain, test_chroma_qp_table_bitdepth);
 
   return s;
 }
