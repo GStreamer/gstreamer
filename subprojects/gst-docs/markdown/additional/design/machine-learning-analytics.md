@@ -283,6 +283,114 @@ as meta.
 
 In this mode, the tensor is attached to the buffer (the media) on which the analysis was performed. The advantage of this mode is that the original media is kept in a direct association with the analytics results. Further refinement analysis or consumption (like overlay) of the analytics result are easier when the media on which the analysis was performed is available and easily identifiable. Another advantage is the ability to keep a relation description between tensors in a refinement context. On the other hand, this mode of transporting analytics results makes negotiation of tensor-decoder, in particular, difficult.
 
+#### Tensor Lists and Provenance
+
+`GstTensorListMeta` serves two purposes not supported by `GstTensorMeta`:
+
+- Carrying multiple tensor sets (e.g., one set for each ROI).
+- Carrying provenance information that links tensors to their origins (e.g., the
+  coordinate transform for a cropped region).
+
+These features can be used independently or together. `GstTensorListMeta` can
+also carry a single tensor set without provenance, as `GstTensorMeta` does.
+
+A carrier buffer is expected to carry at most one `GstTensorListMeta`.
+
+To carry the provenance information described above, `GstAnalyticsTensorProvenanceMtd`
+stores the following information:
+
+- Tensor group ID and tensor ID: identify the tensor group and tensor encoding
+  associated with this metadata.
+- Correlation ID: identifies this `GstAnalyticsTensorProvenanceMtd` when referenced
+  by a tensor item's provenance entry.
+- Spatial transform (optional): maps tensor coordinates to video coordinates.
+- Timestamp and duration (optional): describe the source media interval.
+
+It can also be related to other analytics metadata through `GstAnalyticsRelationMeta`.
+
+A text recognition pipeline illustrates how multiple tensor sets and provenance
+work together: each detected region produces a separate tensor set, and provenance
+links the recognized text back to that region.
+
+```
+Text detection
+    |
+    | 1. Detected text regions
+    v
+ROI preprocessing
+    |
+    | 2. Tensor sets and provenance
+    v
+Inference
+    |
+    | 3. Output tensor sets with preserved provenance
+    v
+Text recognition decoding
+    |
+    | 4. Recognized text linked to the detected regions
+    v
+```
+
+1. **Text detection:** Creates text-region `GstAnalyticsODMtd` instances on the
+   video frame.
+2. **ROI preprocessing:** Selects valid text regions and creates input tensors.
+   For each region, it creates a `GstAnalyticsTensorProvenanceMtd`, relates it to
+   the source `ODMtd` using `RELATE_TO`, and records the spatial transform from
+   tensor coordinates to video coordinates. The input tensor sets and their
+   correlation IDs are attached as `GstTensorListMeta` items.
+3. **Inference:** Processes the items and produces output tensor sets with the
+   provenance copied from their corresponding input items.
+4. **Text recognition decoding:** Uses the provenance key and correlation IDs
+   to find the source provenance metadata and follow its relation to the text
+   region. It creates a `GstAnalyticsTextMtd` for that region, with `CONTAIN`
+   from the `ODMtd` to the `TextMtd` and `IS_PART_OF` in the reverse direction.
+
+For one detected region, the following diagram shows how the recognition output
+finds its original `ODMtd` through provenance. Here, "image" is the input tensor
+ID and "logits" is the inference output tensor ID. In this example, the provenance
+entry uses the input tensor ID as its key and correlation IDs to identify the
+corresponding provenance metadata.
+
+```
+TensorList item:
+  tensor "logits"
+  provenance "image" -> [10] -> TensorProvenanceMtd (correlation-id=10)
+                                  |
+                              RELATE_TO
+                                  v
+                                ODMtd --CONTAIN--> TextMtd
+                                      <--IS_PART_OF--
+```
+
+The provenance key remains "image" even though the current tensor is "logits",
+and the decoder finds the original region using provenance rather than relying
+on the order of the output items.
+
+The same association can be used for multiple recognition results, whether they
+are carried in separate items or in one batched tensor:
+
+```
+Multiple items:
+  item 0: tensor "logits" [1, T, V] + provenance "image" -> [10]
+  item 1: tensor "logits" [1, T, V] + provenance "image" -> [11]
+  item 2: tensor "logits" [1, T, V] + provenance "image" -> [12]
+
+Batched:
+  item 0: tensor "logits" [3, T, V]
+          provenance "image" -> [10, 11, 12]
+```
+
+The first case carries each recognition result in a separate item. The second
+case carries three samples in one batched tensor, where T is the sequence length
+and V is the vocabulary size.
+
+In the batched example, the producer stores the correlation IDs in the same
+order as the samples in the tensor, and the decoder uses that order to find
+each sample's original region. This mapping is agreed between the producer
+and consumer. `GstTensorListMeta` stores the tensors and provenance entries,
+but does not define which tensor dimension represents a batch or how its
+samples map to correlation IDs.
+
 ### Pre/Post Processing Negotiation
 
 Allowing the negotiation of required analysis pre/post-processing and automatically injecting the required elements to enable their processing would be very valuable and minimize the effort of porting an analytics pipeline between different platforms and making use of available acceleration. Tensor-decoders bin, auto-plugging of pre-processing (considering available acceleration), auto-plugging of inference element (optimized for the platform), post-processing, tensor-decoder bin selecting required tensor-decoders potentially from multiple functionally equivalent, but more adapted to the platform, are all aspects to consider when designing negotiation involved in an analytics pipeline.
