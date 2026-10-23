@@ -1171,7 +1171,10 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
     seq_header->initial_display_delay_present_flag = 0;
     seq_header->operating_points_cnt_minus_1 = 0;
     seq_header->operating_points[0].idc = 0;
-    seq_header->operating_points[0].seq_level_idx = AV1_READ_BITS (br, 5);
+    seq_header->operating_points[0].seq_level_idx =
+        AV1_READ_BITS_CHECKED (br, 5, &retval);
+    if (retval != GST_AV1_PARSER_OK)
+      goto error;
     if (!av1_seq_level_idx_is_valid
         (seq_header->operating_points[0].seq_level_idx)) {
       GST_INFO ("The seq_level_idx is unsupported");
@@ -1234,13 +1237,18 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
         goto error;
       }
       if (seq_header->operating_points[i].seq_level_idx > GST_AV1_SEQ_LEVEL_3_3) {
-        seq_header->operating_points[i].seq_tier = AV1_READ_BIT (br);
+        seq_header->operating_points[i].seq_tier =
+            AV1_READ_BIT_CHECKED (br, &retval);
+        if (retval != GST_AV1_PARSER_OK)
+          goto error;
       } else {
         seq_header->operating_points[i].seq_tier = 0;
       }
       if (seq_header->decoder_model_info_present_flag) {
         seq_header->operating_points[i].decoder_model_present_for_this_op =
-            AV1_READ_BIT (br);
+            AV1_READ_BIT_CHECKED (br, &retval);
+        if (retval != GST_AV1_PARSER_OK)
+          goto error;
         if (seq_header->operating_points[i].decoder_model_present_for_this_op)
           retval =
               gst_av1_parse_operating_parameters_info (parser, br, seq_header,
@@ -1287,15 +1295,23 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
      operatingPoint = choose_operating_point( )
      operating_point_idc = operating_point_idc[ operatingPoint ] */
 
-  if (AV1_REMAINING_BITS (br) < 4 + 4 +
-      (seq_header->frame_width_bits_minus_1 + 1) +
-      (seq_header->frame_height_bits_minus_1 + 1)) {
+  if (AV1_REMAINING_BITS (br) < 4 + 4) {
     retval = GST_AV1_PARSER_NO_MORE_DATA;
     goto error;
   }
 
   seq_header->frame_width_bits_minus_1 = AV1_READ_BITS (br, 4);
   seq_header->frame_height_bits_minus_1 = AV1_READ_BITS (br, 4);
+
+  /* The frame sizes are encoded relative to the bit widths just read,
+   * so the remaining bits can only be checked after those fields have
+   * been parsed. */
+  if (AV1_REMAINING_BITS (br) < (seq_header->frame_width_bits_minus_1 + 1) +
+      (seq_header->frame_height_bits_minus_1 + 1)) {
+    retval = GST_AV1_PARSER_NO_MORE_DATA;
+    goto error;
+  }
+
   seq_header->max_frame_width_minus_1 =
       AV1_READ_BITS (br, seq_header->frame_width_bits_minus_1 + 1);
   seq_header->max_frame_height_minus_1 =
