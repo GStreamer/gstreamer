@@ -298,9 +298,9 @@ struct _GstVC1SeqStructC
   guint framerate; /* Around in fps, 0 if unknown*/
   guint bitrate;   /* Around in kpbs, 0 if unknown*/
 
-  /* This should be filled by user if previously known */
+  /* Only filled for WMVP streams */
   guint16 coded_width;
-  /* This should be filled by user if previously known */
+  /* Only filled for WMVP streams */
   guint16 coded_height;
 
   /* Wmvp specific */
