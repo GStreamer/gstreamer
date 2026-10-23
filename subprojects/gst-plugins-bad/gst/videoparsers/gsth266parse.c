@@ -2398,7 +2398,18 @@ gst_h266_parse_update_src_caps (GstH266Parse * h266parse, GstCaps * caps)
         fps_den = sps->fps_den;
       }
 
-      if (interlaced_mode == GST_H266_PARSE_INTERLACED_ONLY) {
+      /* The timing information values are 32-bit unsigned in the bitstream,
+       * so they can exceed the range of the gint used for the framerate.
+       * Such values are not a valid framerate and the fraction maths has
+       * undefined behaviour for them; treat them as unknown. */
+      if (fps_num <= 0 || fps_den <= 0) {
+        if (fps_num != 0 || fps_den != 1) {
+          GST_INFO_OBJECT (h266parse, "Invalid framerate %d/%d from timing "
+              "information; using 0/1", fps_num, fps_den);
+        }
+        fps_num = 0;
+        fps_den = 1;
+      } else if (interlaced_mode == GST_H266_PARSE_INTERLACED_ONLY) {
         gint new_fps_num, new_fps_den;
 
         if (!gst_util_fraction_multiply (fps_num, fps_den, 1, 2, &new_fps_num,

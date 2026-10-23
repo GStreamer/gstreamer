@@ -1530,6 +1530,112 @@ GST_START_TEST (test_non_vcl_nal_duration)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sps_invalid_framerate)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstEvent *event;
+  gboolean seen = FALSE;
+  /* SPS with general timing HRD parameters time_scale = 0x80000000 and
+   * num_units_in_tick = 0xFFFFFFFF and field_seq_flag = 1. The timing
+   * values do not fit the gint framerate and used to trigger undefined
+   * behaviour (G_MININT % -1 inside gst_util_greatest_common_divisor)
+   * in the field-rate calculation. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0x09, 0x02, 0x40, 0x00, 0x00, 0x00,
+    0x40, 0x80, 0x81, 0x18, 0x00, 0x55, 0x6c, 0x3e, 0x03, 0x01, 0x04, 0x30,
+    0x1f, 0xff, 0xff, 0xff, 0xf8, 0x00, 0x00, 0x00, 0x0a, 0x00, 0xfa, 0x40,
+  };
+
+  h = gst_harness_new_parse ("h266parse");
+  gst_harness_set_src_caps_str (h, "video/x-h266");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while ((event = gst_harness_pull_event (h)) != NULL) {
+    GstCaps *caps;
+    const GstStructure *s;
+    gint n = 0, d = 1;
+
+    if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+      gst_event_unref (event);
+      continue;
+    }
+
+    seen = TRUE;
+    gst_event_parse_caps (event, &caps);
+    s = gst_caps_get_structure (caps, 0);
+    if (gst_structure_get_fraction (s, "framerate", &n, &d))
+      fail_unless (n >= 0 && d > 0);
+
+    gst_event_unref (event);
+    break;
+  }
+  fail_unless (seen);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sps_hrd_framerate)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstEvent *event;
+  /* Same SPS as test_sps_invalid_framerate but with time_scale = 30000
+   * and num_units_in_tick = 1000, i.e. a 30 Hz field rate halved to a
+   * 15 Hz frame rate. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0x09, 0x02, 0x40, 0x00, 0x00, 0x03,
+    0x00, 0x40, 0x80, 0x81, 0x18, 0x00, 0x55, 0x6c, 0x3e, 0x03, 0x01, 0x04,
+    0x30, 0x10, 0x00, 0x00, 0x3e, 0x80, 0x00, 0x07, 0x53, 0x0a, 0x00, 0xfa,
+    0x40
+  };
+  gboolean seen = FALSE;
+
+  h = gst_harness_new_parse ("h266parse");
+  gst_harness_set_src_caps_str (h, "video/x-h266");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while ((event = gst_harness_pull_event (h)) != NULL) {
+    GstCaps *caps;
+    const GstStructure *s;
+    gint n = 0, d = 1;
+
+    if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+      gst_event_unref (event);
+      continue;
+    }
+
+    gst_event_parse_caps (event, &caps);
+    s = gst_caps_get_structure (caps, 0);
+    if (gst_structure_get_fraction (s, "framerate", &n, &d)) {
+      fail_unless_equals_int (n, 15);
+      fail_unless_equals_int (d, 1);
+      seen = TRUE;
+    }
+
+    gst_event_unref (event);
+    break;
+  }
+
+  fail_unless (seen);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h266parse_harnessed_suite (void)
 {
@@ -1574,6 +1680,9 @@ h266parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_packetized_vvc1_drop_corrupt);
 
   tcase_add_test (tc_chain, test_non_vcl_nal_duration);
+
+  tcase_add_test (tc_chain, test_sps_invalid_framerate);
+  tcase_add_test (tc_chain, test_sps_hrd_framerate);
 
   return s;
 }
