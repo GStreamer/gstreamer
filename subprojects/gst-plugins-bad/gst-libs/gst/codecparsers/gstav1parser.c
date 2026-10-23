@@ -352,7 +352,7 @@ av1_bitstreamfn_uvlc (GstBitReader * br, GstAV1ParserResult * retval)
     return 0;
   }
 
-  value = readv + (1 << leadingZero) - 1;
+  value = readv + (1U << leadingZero) - 1;
 
   return value;
 }
