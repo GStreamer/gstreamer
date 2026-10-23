@@ -3432,6 +3432,12 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (h265parse->time_code.units_field_based_flag[i])
         scale_n *= 2;
 
+      if (G_UNLIKELY (scale_d == 0)) {
+        GST_WARNING_OBJECT (h265parse,
+            "VUI time_scale is 0, cannot scale timecode; skipping meta");
+        continue;
+      }
+
       n_frames = gst_util_uint64_scale (h265parse->time_code.n_frames[i],
           scale_n, scale_d);
 
