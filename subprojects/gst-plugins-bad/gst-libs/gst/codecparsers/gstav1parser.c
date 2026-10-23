@@ -414,7 +414,7 @@ av1_bitstreamfn_le (GstBitReader * br, guint8 n, GstAV1ParserResult * retval)
     if (*retval != GST_AV1_PARSER_OK)
       return 0;
 
-    t += (byte << (i * 8));
+    t += ((guint) byte << (i * 8));
   }
   return t;
 }
