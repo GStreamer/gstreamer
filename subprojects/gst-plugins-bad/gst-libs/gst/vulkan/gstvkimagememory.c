@@ -122,7 +122,7 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
 static GstVulkanImageMemory *
 _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
     GstMemory * parent, GstVulkanDevice * device,
-    VkImageCreateInfo * image_info, VkMemoryPropertyFlags mem_prop_flags,
+    const VkImageCreateInfo * image_info, VkMemoryPropertyFlags mem_prop_flags,
     gpointer user_data, GDestroyNotify notify)
 {
   GstVulkanImageMemory *mem = NULL;
@@ -136,16 +136,23 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
 
   gpu = gst_vulkan_device_get_physical_device (device);
 
-  if (!image_info->pQueueFamilyIndices) {
-    /* XXX: overwrite the queue indices part of the structure */
+  // Local copy to avoid altering image_info itself
+  VkImageCreateInfo info = *image_info;
+  if (!info.pQueueFamilyIndices) {
+    /* Default to sharing across the device's created queue families */
     qfi = gst_vulkan_device_queue_family_indices (device);
-    image_info->pQueueFamilyIndices = (uint32_t *) qfi->data;
-    image_info->queueFamilyIndexCount = qfi->len;
-    image_info->sharingMode = qfi->len > 1 ? VK_SHARING_MODE_CONCURRENT :
-        VK_SHARING_MODE_EXCLUSIVE;
+    info.pQueueFamilyIndices = (uint32_t *) qfi->data;
+    info.queueFamilyIndexCount = qfi->len;
+
+    if (info.sharingMode == VK_SHARING_MODE_EXCLUSIVE && qfi->len > 1)
+      GST_CAT_WARNING (GST_CAT_VULKAN_IMAGE_MEMORY,
+          "%d queue families, overriding to VK_SHARING_MODE_CONCURRENT",
+          qfi->len);
+    info.sharingMode =
+        qfi->len > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
   }
 
-  err = vkCreateImage (device->device, image_info, NULL, &image);
+  err = vkCreateImage (device->device, &info, NULL, &image);
 
   if (qfi)
     g_array_unref (qfi);
@@ -158,15 +165,18 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
   gst_vulkan_image_memory_init (mem, allocator, parent, device,
-      image_info->format, image_info->usage, image_info->initialLayout, &params,
+      info.format, info.usage, info.initialLayout, &params,
       mem->requirements.size, user_data, notify);
-  mem->create_info = *image_info;
-  /* XXX: to avoid handling pNext lifetime  */
+  mem->create_info = info;
+
+  /* avoid handling pNext lifetime */
   mem->create_info.pNext = NULL;
   mem->image = image;
+  mem->create_info.queueFamilyIndexCount = 0;
+  mem->create_info.pQueueFamilyIndices = NULL;
 
-  err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
-      VK_IMAGE_TYPE_2D, image_info->tiling, image_info->usage, 0,
+  err = vkGetPhysicalDeviceImageFormatProperties (gpu, info.format,
+      info.imageType, info.tiling, info.usage, info.flags,
       &mem->format_properties);
   if (gst_vulkan_error_to_g_error (err, &error,
           "vkGetPhysicalDeviceImageFormatProperties") < 0)
