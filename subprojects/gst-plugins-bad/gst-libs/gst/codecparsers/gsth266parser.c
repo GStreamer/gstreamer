@@ -1268,7 +1268,10 @@ gst_h266_parse_chroma_qp_table (GstH266SPS * sps, NalReader * nr)
       GST_WARNING ("Invalid qp index %d", k);
       goto error;
     }
-    for (; k <= 63 + qp_bd_offset; k++) {
+    /* The spec would require 64 + qp_bd_offset table entries (up to 112)
+     * for the last QP value, but the table is sized 111 to match the
+     * VA-API ChromaQpTable layout, so stop at the end of the table. */
+    for (; k <= 63 + qp_bd_offset && k < GST_H266_MAX_POINTS_IN_QP_TABLE; k++) {
       sps->chroma_qp_table[i][k] =
           MAX (sps->chroma_qp_table[i][k - 1] + 1, -qp_bd_offset);
       sps->chroma_qp_table[i][k] = MIN (sps->chroma_qp_table[i][k], 63);
