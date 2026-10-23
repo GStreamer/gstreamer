@@ -1100,6 +1100,12 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
       ret = FALSE;
       goto unlock_out;
     }
+
+    /* Only a local manifest may reference local files. A remote manifest
+     * must not be able to make us read file:// URIs (BaseURL, xlink:href,
+     * segment or key URLs). */
+    downloadhelper_set_allow_file_uris (demux->download_helper,
+        g_str_has_prefix (demux->manifest_uri, "file://"));
   } else {
     GST_WARNING_OBJECT (demux, "Upstream URI query failed.");
   }

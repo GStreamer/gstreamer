@@ -51,6 +51,7 @@ void downloadhelper_stop (DownloadHelper * dh);
 
 void downloadhelper_free (DownloadHelper * dh);
 
+void downloadhelper_set_allow_file_uris (DownloadHelper * dh, gboolean allow);
 void downloadhelper_set_referer (DownloadHelper * dh, const gchar *referer);
 void downloadhelper_set_user_agent (DownloadHelper * dh, const gchar *user_agent);
 void downloadhelper_add_cookie (DownloadHelper * dh, const gchar *uri,
