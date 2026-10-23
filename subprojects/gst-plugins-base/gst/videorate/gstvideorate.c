@@ -1186,6 +1186,7 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       GstSegment input_segment, segment;
+      GstClockTime next_slot_ts;
       gint seqnum;
       GstCaps *rolled_back_caps;
 
@@ -1245,9 +1246,31 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         }
 
         /* Convert next_ts and last_ts to new segment. */
-        videorate->next_output_ts =
-            convert_position (&videorate->segment, &segment,
-            videorate->next_output_ts);
+        if (videorate->segment.rate < 0)
+          next_slot_ts = videorate->next_output_end_ts;
+        else
+          next_slot_ts = videorate->next_output_ts;
+        next_slot_ts =
+            convert_position (&videorate->segment, &segment, next_slot_ts);
+
+        videorate->next_output_ts = GST_CLOCK_TIME_NONE;
+        videorate->next_output_end_ts = GST_CLOCK_TIME_NONE;
+
+        if (segment.rate < 0) {
+          if (GST_CLOCK_TIME_IS_VALID (next_slot_ts)
+              && videorate->to_rate_numerator) {
+            GstClockTime frame_duration = gst_util_uint64_scale (1,
+                videorate->to_rate_denominator * GST_SECOND,
+                videorate->to_rate_numerator);
+
+            if (next_slot_ts >= segment.start + frame_duration) {
+              videorate->next_output_end_ts = next_slot_ts;
+              videorate->next_output_ts = next_slot_ts - frame_duration;
+            }
+          }
+        } else {
+          videorate->next_output_ts = next_slot_ts;
+        }
 
         if (!GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts)) {
           videorate->last_ts = GST_CLOCK_TIME_NONE;
@@ -1255,18 +1278,23 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
           videorate->last_ts =
               convert_position (&videorate->segment, &segment,
               videorate->last_ts);
-          /* restart from the new segment if the input ended outside of it */
-          if (!GST_CLOCK_TIME_IS_VALID (videorate->last_ts))
+          /* if PTS conversion between segments fails, let's just reset */
+          if (!GST_CLOCK_TIME_IS_VALID (videorate->last_ts)) {
             videorate->next_output_ts = GST_CLOCK_TIME_NONE;
+            videorate->next_output_end_ts = GST_CLOCK_TIME_NONE;
+          }
         }
 
         videorate->ts_converted_from_prev_seg =
             GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts);
 
         if (GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts)) {
-          videorate->base_output_ts = videorate->next_output_ts;
+          if (segment.rate < 0)
+            videorate->base_output_ts = videorate->next_output_end_ts;
+          else
+            videorate->base_output_ts = videorate->next_output_ts;
           videorate->base_input_ts =
-              videorate->next_output_ts * videorate->rate;
+              videorate->base_output_ts * videorate->rate;
         } else if (segment.rate < 0) {
           videorate->base_input_ts = input_segment.stop;
           videorate->base_output_ts = segment.stop;
@@ -2078,6 +2106,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       GST_DEBUG_OBJECT (videorate, "Running time went backwards on segment "
           "change, restarting from the new segment");
       videorate->next_output_ts = GST_CLOCK_TIME_NONE;
+      videorate->next_output_end_ts = GST_CLOCK_TIME_NONE;
       videorate->last_ts = GST_CLOCK_TIME_NONE;
       if (videorate->segment.rate < 0.0) {
         videorate->base_input_ts = videorate->segment.stop * videorate->rate;

@@ -2764,6 +2764,121 @@ GST_START_TEST (test_segment_update_reverse_backwards_rt)
 
 GST_END_TEST;
 
+/* segment updates switching playback direction with continuous running time */
+GST_START_TEST (test_segment_update_direction_continuous_rt)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GList *l;
+  guint n;
+
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  /* closing the old segment doesn't fill it down to its start */
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      (guint64) 0, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* buffers 1 and 2 */
+  for (n = 1; n <= 2; n++) {
+    buf = gst_buffer_new_and_alloc (4);
+    GST_BUFFER_PTS (buf) = GST_SECOND - n * 40 * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+    gst_buffer_memset (buf, 0, n, 4);
+    fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  }
+  gst_check_drop_buffers ();
+
+  /* Send a forward segment [0, -1] with base 80ms, running time continues */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.base = 80 * GST_MSECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* buffers 3 to 5 */
+  for (n = 3; n <= 5; n++) {
+    buf = gst_buffer_new_and_alloc (4);
+    GST_BUFFER_PTS (buf) = (n - 3) * 40 * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+    gst_buffer_memset (buf, 0, n, 4);
+    fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  }
+
+  /* Output continues at segment start with one frame per buffer */
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, n = 3; l; l = l->next, n++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        (n - 3) * 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), n);
+  }
+  gst_check_drop_buffers ();
+
+  /* Send a reverse segment [0, 2] with base 200ms, running time continues */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = 2 * GST_SECOND;
+  segment.base = 200 * GST_MSECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* buffers 6 to 8 */
+  for (n = 6; n <= 8; n++) {
+    buf = gst_buffer_new_and_alloc (4);
+    GST_BUFFER_PTS (buf) = 2 * GST_SECOND - (n - 5) * 40 * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+    gst_buffer_memset (buf, 0, n, 4);
+    fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  }
+
+  /* Output continues at segment stop with one frame per buffer */
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, n = 6; l; l = l->next, n++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        2 * GST_SECOND - (n - 5) * 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), n);
+  }
+  gst_check_drop_buffers ();
+
+  /* Send a reverse segment [0, 3] with base 320ms, running time continues */
+  segment.stop = 3 * GST_SECOND;
+  segment.base = 320 * GST_MSECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* buffers 9 to 11 */
+  for (n = 9; n <= 11; n++) {
+    buf = gst_buffer_new_and_alloc (4);
+    GST_BUFFER_PTS (buf) = 3 * GST_SECOND - (n - 8) * 40 * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+    gst_buffer_memset (buf, 0, n, 4);
+    fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  }
+
+  /* Output continues at segment stop with one frame per buffer */
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  for (l = buffers, n = 9; l; l = l->next, n++) {
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (l->data),
+        3 * GST_SECOND - (n - 8) * 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (l->data, 0), n);
+  }
+
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 static GstFlowReturn
 gst_check_drop_only_ref_chain_func (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -3068,6 +3183,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_update);
   tcase_add_test (tc_chain, test_segment_update_backwards_rt_past_stop);
   tcase_add_test (tc_chain, test_segment_update_reverse_backwards_rt);
+  tcase_add_test (tc_chain, test_segment_update_direction_continuous_rt);
   tcase_add_test (tc_chain, test_drop_only_ref_count);
   tcase_add_test (tc_chain, test_backward_pts_with_caps_change);
   tcase_add_loop_test (tc_chain, test_reverse_frames, 0,
