@@ -803,6 +803,9 @@ GST_START_TEST (test_vc1_identify_bdu)
   GstVC1SeqHdr hdr;
   GstVC1EntryPointHdr entrypt;
 
+  memset (&hdr, 0xAA, sizeof (hdr));
+  memset (&entrypt, 0xAA, sizeof (entrypt));
+
   res = gst_vc1_identify_next_bdu (sequence_fullframe,
       sizeof (sequence_fullframe), &bdu);
 
@@ -812,6 +815,13 @@ GST_START_TEST (test_vc1_identify_bdu)
   res = gst_vc1_parse_sequence_header (bdu.data + bdu.offset, bdu.size, &hdr);
   assert_equals_int (res, GST_VC1_PARSER_OK);
   assert_equals_int (hdr.profile, GST_VC1_PROFILE_ADVANCED);
+
+  assert_equals_int (hdr.struct_c.profile, GST_VC1_PROFILE_ADVANCED);
+  assert_equals_int (hdr.struct_c.rangered, 0);
+  assert_equals_int (hdr.struct_c.maxbframes, 0);
+  assert_equals_int (hdr.struct_c.coded_width, 0);
+  assert_equals_int (hdr.struct_c.coded_height, 0);
+  assert_equals_int (hdr.mb_width, (hdr.advanced.max_coded_width + 15) >> 4);
 
   assert_equals_int (hdr.advanced.level, GST_VC1_LEVEL_L1);
   assert_equals_int (hdr.advanced.colordiff_format, 1);
@@ -836,9 +846,6 @@ GST_START_TEST (test_vc1_parse_p_frame_header_main)
 
   GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
-
-  structc->coded_height = 240;
-  structc->coded_width = 320;
 
   assert_equals_int (gst_vc1_parse_sequence_header (pframe_header_main,
           sizeof (pframe_header_main), &seqhdr), GST_VC1_PARSER_OK);
@@ -882,15 +889,16 @@ GST_START_TEST (test_vc1_parse_b_frame_header_main)
   GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
 
-  structc->coded_height = 240;
-  structc->coded_width = 320;
-
   assert_equals_int (gst_vc1_parse_sequence_header (bframe_header_main,
           sizeof (bframe_header_main), &seqhdr), GST_VC1_PARSER_OK);
 
   assert_equals_int (seqhdr.profile, GST_VC1_PROFILE_MAIN);
-  assert_equals_int (seqhdr.mb_height, 15);
-  assert_equals_int (seqhdr.mb_width, 20);
+  assert_equals_int (structc->wmvp, 0);
+  structc->coded_width = 320;
+  structc->coded_height = 240;
+  seqhdr.mb_width = 20;
+  seqhdr.mb_height = 15;
+  seqhdr.mb_stride = 21;
 
   gst_vc1_bitplanes_ensure_size (&b, &seqhdr);
 
@@ -937,9 +945,6 @@ GST_START_TEST (test_vc1_parse_bi_frame_header_main)
   GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
 
-  structc->coded_height = 240;
-  structc->coded_width = 320;
-
   assert_equals_int (gst_vc1_parse_sequence_header (i_bi_frame_header,
           sizeof (i_bi_frame_header), &seqhdr), GST_VC1_PARSER_OK);
 
@@ -979,9 +984,6 @@ GST_START_TEST (test_vc1_parse_i_frame_header_main)
 
   GstVC1SeqStructC *structc = &seqhdr.struct_c;
   GstVC1PicSimpleMain *pic = &framehdr.pic.simple;
-
-  structc->coded_height = 240;
-  structc->coded_width = 320;
 
   assert_equals_int (gst_vc1_parse_sequence_header (i_bi_frame_header,
           sizeof (i_bi_frame_header), &seqhdr), GST_VC1_PARSER_OK);
@@ -1234,6 +1236,9 @@ GST_START_TEST (test_vc1_parse_sequence_layer)
   assert_equals_int (seq_layer.struct_b.hrd_rate, 0);
 
   assert_equals_int (seq_layer.struct_c.profile, GST_VC1_PROFILE_MAIN);
+  assert_equals_int (seq_layer.struct_c.wmvp, 0);
+  assert_equals_int (seq_layer.struct_c.coded_width, 0);
+  assert_equals_int (seq_layer.struct_c.coded_height, 0);
   assert_equals_int (seq_layer.struct_c.frmrtq_postproc, 0);
   assert_equals_int (seq_layer.struct_c.bitrtq_postproc, 31);
   assert_equals_int (seq_layer.struct_c.loop_filter, 1);
