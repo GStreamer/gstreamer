@@ -1680,6 +1680,59 @@ GST_START_TEST (test_parse_fallback_profile)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_vui_invalid_framerate)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstEvent *event;
+  gboolean seen = FALSE;
+  /* SPS with VUI timing time_scale = 0x80000000 and
+   * num_units_in_tick = 0xFFFFFFFF plus a picture timing SEI marking field
+   * pictures. The timing values do not fit the gint framerate and used to
+   * trigger undefined behaviour (G_MININT % -1 inside
+   * gst_util_greatest_common_divisor) in the field-rate calculation. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x01, 0x80, 0x00, 0x03, 0x74, 0x61,
+    0x72, 0x67, 0x65, 0x74, 0x2f, 0x1e, 0xa0, 0x81, 0x05, 0xff, 0xf0, 0x88,
+    0x17, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00,
+    0x01, 0x4e, 0x01, 0x01, 0x01, 0x10,
+  };
+
+  h = gst_harness_new_parse ("h265parse");
+  gst_harness_set_src_caps_str (h, "video/x-h265");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while ((event = gst_harness_pull_event (h)) != NULL) {
+    GstCaps *caps;
+    const GstStructure *s;
+    gint n = 0, d = 1;
+
+    if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+      gst_event_unref (event);
+      continue;
+    }
+
+    seen = TRUE;
+    gst_event_parse_caps (event, &caps);
+    s = gst_caps_get_structure (caps, 0);
+    if (gst_structure_get_fraction (s, "framerate", &n, &d))
+      fail_unless (n >= 0 && d > 0);
+
+    gst_event_unref (event);
+    break;
+  }
+  fail_unless (seen);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_packetized_hvcc_drop_corrupt)
 {
   GstBuffer *cdata;
@@ -1898,6 +1951,7 @@ h265parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_invalid_sei_in_hvcc);
 
   tcase_add_test (tc_chain, test_parse_fallback_profile);
+  tcase_add_test (tc_chain, test_parse_vui_invalid_framerate);
   tcase_add_test (tc_chain, test_packetized_hvcc_drop_corrupt);
   tcase_add_test (tc_chain, test_non_vcl_nal_duration);
   return s;
