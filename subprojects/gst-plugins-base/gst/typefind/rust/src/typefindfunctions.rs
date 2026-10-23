@@ -20,8 +20,8 @@ use std::num::NonZeroU64;
 use std::ptr;
 
 use crate::audio::{
-    AacFraming, Ac3Stream, aac_probe, ac3_probe, ac4_probe, dts_probe, mp3_probe, sbc_probe,
-    wavpack_probe,
+    AacFraming, Ac3Stream, aa_probe, aac_probe, ac3_probe, ac4_probe, dts_probe, mp3_probe,
+    sbc_probe, wavpack_probe,
 };
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
@@ -2228,6 +2228,17 @@ extern "C" fn ac4_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// Audible AA
+// =============================================================================
+
+extern "C" fn aa_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(probability) = aa_probe(tf) else {
+        return;
+    };
+    suggest!(tf, probability, c"audio/x-audible");
+}
+
+// =============================================================================
 // Images
 // =============================================================================
 
@@ -2699,6 +2710,16 @@ const FEATURES: &[Feature] = &[
         ac4_type_find,
         "ac4",
         "audio/x-ac4, stream-format = (string) syncframe"
+    ),
+    // Audible AA - audio/audible. The registered name and the suggested caps
+    // differ: the caps are what a match suggests, the name is the registry
+    // feature name, which is also what gst-inspect prints for the factory.
+    typefinder!(
+        "audio/audible",
+        MARGINAL,
+        aa_type_find,
+        "aa,aax",
+        "audio/x-audible"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),

@@ -17,6 +17,7 @@ use crate::helpers::{
     u32be, u32le,
 };
 use std::ffi::{CStr, c_uint};
+use std::num::NonZeroU64;
 
 // One registration covers three framings of the same codec. The frame layouts
 // are 13818-7 Tables 8 and 9, which 14496-3 Tables 1.A.6 and 1.A.7 repeat
@@ -1164,6 +1165,34 @@ pub fn ac4_probe(tf: &mut TypeFind) -> Option<Prob> {
     None
 }
 
+/*** Audible AA ***/
+
+/// Identifier of an Audible AA stream, at offset 4. The four octets before it
+/// hold the total size of the file, which is what turns a magic match into
+/// something close to a confirmation.
+const AA_MAGIC: u32 = 0x5790_7536;
+
+pub fn aa_probe(tf: &mut TypeFind) -> Option<Prob> {
+    let length = tf.length().map(NonZeroU64::get);
+    let head = tf.peek::<12>(0)?;
+    aa_probability(head, length)
+}
+
+/// `head` is the first twelve octets of a stream and `length` its size, absent
+/// when the stream cannot say. The size field is 32 bits, so a stream at or
+/// beyond 4 GiB can never match it however it was written, and one of unknown
+/// size has nothing to match against. Both rest on the magic alone.
+fn aa_probability(head: &[u8; 12], length: Option<u64>) -> Option<Prob> {
+    if u32be(&head[4..8]) != AA_MAGIC {
+        return None;
+    }
+    let stated = u64::from(u32be(&head[..4]));
+    Some(match length {
+        Some(len) if len == stated => Prob::NEARLY_CERTAIN,
+        _ => Prob::POSSIBLE,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1380,5 +1409,56 @@ mod tests {
         assert_eq!(ac4_sync(&[0xAC, 0x42]), None);
         assert_eq!(ac4_sync(&[0xAB, 0x40]), None);
         assert_eq!(ac4_frame_len(&[0xAC, 0x42, 0x00, 0x64, 0, 0, 0]), None);
+    }
+
+    /// The first eight octets of the real sample in the corpus, whose stated size
+    /// of 0x57EEB9 is exactly its length of 5762745 octets.
+    const AA_HEAD: [u8; 12] = [0x00, 0x57, 0xEE, 0xB9, 0x57, 0x90, 0x75, 0x36, 0, 0, 0, 0];
+
+    fn prob(head: &[u8; 12], length: Option<u64>) -> Option<u32> {
+        aa_probability(head, length).map(|p| p.get())
+    }
+
+    #[test]
+    fn an_audible_size_that_matches_the_stream_is_near_certain() {
+        assert_eq!(
+            prob(&AA_HEAD, Some(5_762_745)),
+            Some(Prob::NEARLY_CERTAIN.get())
+        );
+        // Anything else falls back to the magic alone: a size that disagrees, a
+        // size of none, and a stream that cannot say how long it is.
+        assert_eq!(prob(&AA_HEAD, Some(5_762_744)), Some(Prob::POSSIBLE.get()));
+        assert_eq!(prob(&AA_HEAD, None), Some(Prob::POSSIBLE.get()));
+        let unstated = [0, 0, 0, 0, 0x57, 0x90, 0x75, 0x36, 0, 0, 0, 0];
+        assert_eq!(prob(&unstated, Some(5_762_745)), Some(Prob::POSSIBLE.get()));
+    }
+
+    /// The size field is 32 bits, so a stream at or beyond 4 GiB cannot match it
+    /// however it was written. A comparison that truncated the length to 32 bits
+    /// would agree in both of these and announce near certainty for a stream that
+    /// only looks like one.
+    #[test]
+    fn an_audible_size_field_is_thirty_two_bits_only() {
+        let unstated = [0, 0, 0, 0, 0x57, 0x90, 0x75, 0x36, 0, 0, 0, 0];
+        assert_eq!(
+            prob(&unstated, Some(1u64 << 32)),
+            Some(Prob::POSSIBLE.get())
+        );
+        // The same low bits with a high one added, so a truncation matches on a
+        // stated size that is not merely zero.
+        assert_eq!(
+            prob(&AA_HEAD, Some(0x1_0057_EEB9)),
+            Some(Prob::POSSIBLE.get())
+        );
+    }
+
+    #[test]
+    fn an_audible_magic_is_big_endian_and_at_four() {
+        // The same magic written the other way round is not a match.
+        let reversed = [0, 0, 0, 0, 0x36, 0x75, 0x90, 0x57, 0, 0, 0, 0];
+        assert_eq!(prob(&reversed, None), None);
+        // Nor is the right magic sitting at offset 0 instead of offset 4.
+        let shifted = [0x57, 0x90, 0x75, 0x36, 0, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(prob(&shifted, None), None);
     }
 }
