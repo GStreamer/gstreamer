@@ -2912,7 +2912,7 @@ gst_av1_parse_global_param (GstAV1Parser * parser,
     gint32 prev_gm_params[GST_AV1_NUM_REF_FRAMES][6], gint ref, gint idx)
 {
   GstAV1ParserResult retval;
-  gint prec_diff /* precDiff */ , wm_round, mx, r;
+  gint prec_diff /* precDiff */ , wm_round, mx, r, val;
   gint abs_bits /* absBits */  = GST_AV1_GM_ABS_ALPHA_BITS;
   gint prec_bits /* precBits */  = GST_AV1_GM_ALPHA_PREC_BITS;
   gint sub;
@@ -2936,11 +2936,13 @@ gst_av1_parse_global_param (GstAV1Parser * parser,
   sub = (idx % 3) == 2 ? (1 << prec_bits) : 0;
   mx = (1 << abs_bits);
   r = (prev_gm_params[ref][idx] >> prec_diff) - sub;
-  gm_params->gm_params[ref][idx] =
-      (gst_av1_decode_signed_subexp_with_ref (br, -mx, mx + 1, r,
-          &retval) << prec_diff) + wm_round;
+  val = gst_av1_decode_signed_subexp_with_ref (br, -mx, mx + 1, r, &retval);
   if (retval != GST_AV1_PARSER_OK)
     return retval;
+  /* The decoded value is signed; scale it by multiplication, as
+   * left-shifting a negative value is undefined. The product fits a
+   * gint: |val| <= 2^12 + 1 and prec_diff <= 14. */
+  gm_params->gm_params[ref][idx] = val * (1 << prec_diff) + wm_round;
   return GST_AV1_PARSER_OK;
 }
 
