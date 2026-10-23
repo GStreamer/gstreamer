@@ -1362,16 +1362,28 @@ gst_av1_parse_calculate_framerate (GstAV1TimingInfo * ti,
    *       num_units_in_display_tick     num_ticks_per_picture_minus_1 + 1
    */
   if (ti->equal_picture_interval) {
-    gint gcd;
+    gint64 n64, d64, gcd;
 
-    *fps_n = ti->time_scale;
-    *fps_d = ti->num_units_in_display_tick *
-        (ti->num_ticks_per_picture_minus_1 + 1);
+    /* The timing information values are 32-bit unsigned in the bitstream
+     * and their product can overflow, so compute in 64 bits. Reduce the
+     * fraction first, then reject anything that does not fit a positive
+     * gint fraction. */
+    n64 = ti->time_scale;
+    d64 = (gint64) ti->num_units_in_display_tick *
+        ((gint64) ti->num_ticks_per_picture_minus_1 + 1);
 
-    gcd = gst_util_greatest_common_divisor (*fps_n, *fps_d);
-    if (gcd) {
-      *fps_n /= gcd;
-      *fps_d /= gcd;
+    if (n64 <= 0 || d64 <= 0) {
+      gcd = 0;
+    } else {
+      gcd = gst_util_greatest_common_divisor_int64 (n64, d64);
+    }
+
+    if (gcd == 0 || (n64 / gcd) > G_MAXINT || (d64 / gcd) > G_MAXINT) {
+      *fps_n = 0;
+      *fps_d = 1;
+    } else {
+      *fps_n = (gint) (n64 / gcd);
+      *fps_d = (gint) (d64 / gcd);
     }
   } else {
     *fps_n = 0;

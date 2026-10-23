@@ -355,6 +355,122 @@ GST_START_TEST (test_byte_to_obu)
 
 GST_END_TEST;
 
+GST_START_TEST (test_timing_info_invalid_framerate)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstEvent *event;
+  gboolean seen = FALSE;
+  /* Sequence header OBU with timing_info time_scale = 0x80000000 and
+   * num_units_in_display_tick = 0xFFFFFFFF. The values do not fit the
+   * gint framerate and used to trigger undefined behaviour
+   * (G_MININT % -1 inside gst_util_greatest_common_divisor) when
+   * reducing the fraction. */
+  const guint8 stream[] = {
+    0x0a, 0x11, 0x07, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x00, 0x00, 0x03, 0x00,
+    0x00, 0x05, 0x33, 0xff, 0x00, 0x68, 0x02
+  };
+
+  h = gst_harness_new_parse ("av1parse");
+  gst_harness_set_src_caps_str (h, "video/x-av1");
+
+  buf = gst_buffer_new_and_alloc (sizeof (stream));
+  gst_buffer_fill (buf, 0, stream, sizeof (stream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while ((event = gst_harness_pull_event (h)) != NULL) {
+    GstCaps *caps;
+    const GstStructure *s;
+    gint n = 0, d = 1;
+
+    if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+      gst_event_unref (event);
+      continue;
+    }
+
+    seen = TRUE;
+    gst_event_parse_caps (event, &caps);
+    s = gst_caps_get_structure (caps, 0);
+    if (gst_structure_get_fraction (s, "framerate", &n, &d))
+      fail_unless (n >= 0 && d > 0);
+
+    gst_event_unref (event);
+    break;
+  }
+  fail_unless (seen);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_timing_info_framerate)
+{
+  /* Two sequence headers, both yielding a 30/1 framerate: the first
+   * with time_scale = 30000 and num_units_in_display_tick = 1000, the
+   * second with time_scale = 4294967280 and num_units_in_display_tick =
+   * 143165576, whose unreduced numerator does not fit a gint but whose
+   * fraction reduces to 30/1. */
+  static const guint8 stream[] = {
+    0x0a, 0x11, 0x04, 0x00, 0x00, 0x0f, 0xa0, 0x00, 0x01, 0xd4, 0xc3, 0x00,
+    0x00, 0x05, 0x33, 0xff, 0x00, 0x68, 0x02
+  };
+  static const guint8 big_stream[] = {
+    0x0a, 0x11, 0x04, 0x22, 0x22, 0x22, 0x23, 0xff, 0xff, 0xff, 0xc3, 0x00,
+    0x00, 0x05, 0x33, 0xff, 0x00, 0x68, 0x02
+  };
+  const guint8 *streams[] = { stream, big_stream };
+  gsize stream_sizes[] = { sizeof (stream), sizeof (big_stream) };
+  GstHarness *h;
+  GstBuffer *buf;
+  GstEvent *event;
+  gboolean seen;
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (streams); i++) {
+    seen = FALSE;
+
+    h = gst_harness_new_parse ("av1parse");
+    gst_harness_set_src_caps_str (h, "video/x-av1");
+
+    buf = gst_buffer_new_and_alloc (stream_sizes[i]);
+    gst_buffer_fill (buf, 0, streams[i], stream_sizes[i]);
+    fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+    gst_harness_push_event (h, gst_event_new_eos ());
+
+    while ((event = gst_harness_pull_event (h)) != NULL) {
+      GstCaps *caps;
+      const GstStructure *s;
+      gint n = 0, d = 1;
+
+      if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+        gst_event_unref (event);
+        continue;
+      }
+
+      gst_event_parse_caps (event, &caps);
+      s = gst_caps_get_structure (caps, 0);
+      if (gst_structure_get_fraction (s, "framerate", &n, &d)) {
+        fail_unless_equals_int (n, 30);
+        fail_unless_equals_int (d, 1);
+        seen = TRUE;
+      }
+
+      gst_event_unref (event);
+      break;
+    }
+
+    fail_unless (seen);
+
+    gst_harness_teardown (h);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 av1parse_suite (void)
 {
@@ -371,6 +487,9 @@ av1parse_suite (void)
   tcase_add_test (tc_chain, test_annexb_to_frame);
   tcase_add_test (tc_chain, test_annexb_to_obu);
   tcase_add_test (tc_chain, test_byte_to_obu);
+
+  tcase_add_test (tc_chain, test_timing_info_invalid_framerate);
+  tcase_add_test (tc_chain, test_timing_info_framerate);
 
   return s;
 }
