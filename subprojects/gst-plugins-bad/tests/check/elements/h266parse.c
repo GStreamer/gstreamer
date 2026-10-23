@@ -418,6 +418,37 @@ GST_START_TEST (test_ref_pic_lists_ltrp_count)
 
 GST_END_TEST;
 
+GST_START_TEST (test_slice_without_vps)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  /* Slice header referencing an SPS that was parsed without a VPS.
+   * gst_h266_parser_set_active_sps_pps() asserted that the SPS has a
+   * VPS instead of failing the slice header parse. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0x11, 0x02, 0x40, 0x00, 0x00, 0x03,
+    0x01, 0x08, 0x00, 0x37, 0x01, 0x18, 0x00, 0x55, 0x6c, 0x3e, 0x03, 0x01,
+    0x04, 0x30, 0x10, 0x00, 0x00, 0x01, 0x00, 0x81, 0x00, 0x00, 0x84, 0x00,
+    0x1b, 0x80, 0x80, 0xaf, 0x18, 0x44, 0x88, 0x00, 0x00, 0x01, 0x10, 0x79,
+    0x02, 0x09, 0x02, 0x40, 0x00, 0x00, 0x00, 0x40, 0x80, 0x81, 0x18, 0x00,
+    0x55, 0x6c, 0x3e, 0x80, 0x6c, 0x18, 0x55, 0x00, 0x81, 0x00, 0x00, 0x01,
+    0x00, 0x01, 0x80,
+  };
+
+  h = gst_harness_new_parse ("h266parse");
+  gst_harness_set_src_caps_str (h, "video/x-h266");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h266parse_suite (void)
 {
@@ -1800,6 +1831,7 @@ h266parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_sh_num_tiles_in_slice);
   tcase_add_test (tc_chain, test_sps_hrd_truncated);
   tcase_add_test (tc_chain, test_ref_pic_lists_ltrp_count);
+  tcase_add_test (tc_chain, test_slice_without_vps);
 
   tcase_add_test (tc_chain, test_sps_invalid_framerate);
   tcase_add_test (tc_chain, test_sps_hrd_framerate);

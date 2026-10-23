@@ -4179,9 +4179,11 @@ gst_h266_parser_set_active_sps_pps (GstH266Parser * parser,
 {
   gboolean need_update = FALSE;
 
-  g_assert (sps->vps);
-  g_assert (sps->valid);
-  g_assert (pps->valid);
+  if (G_UNLIKELY (sps->vps == NULL || !sps->valid || !pps->valid)) {
+    GST_WARNING ("Unusable SPS/PPS state: vps %p, sps valid %d, pps valid %d",
+        sps->vps, sps->valid, pps->valid);
+    return FALSE;
+  }
 
   if (sps->vps != parser->active_vps) {
     parser->active_vps = (GstH266VPS *) sps->vps;
