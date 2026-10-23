@@ -525,6 +525,51 @@ GST_START_TEST (test_h266_parse_decoder_config_record_gci)
 GST_END_TEST;
 
 
+GST_START_TEST (test_h266_sei_scalable_nesting_layers)
+{
+  GstH266Parser *parser = gst_h266_parser_new ();
+  GstH266NalUnit nalu;
+  GstH266ParserResult res;
+  GArray *messages = NULL;
+  /* An SPS followed by a suffix SEI carrying a scalable nesting message
+   * with num_layers_minus1 = 64. The layer_id loop used to run one
+   * iteration past the layer_id[64] array; the value is out of range
+   * (the spec maximum is 63) and must be rejected. */
+  const guint8 sps_nal[] = {
+    0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0x09, 0x02, 0x40, 0x00, 0x00, 0x03,
+    0x00, 0x40, 0x80, 0x81, 0x18, 0x00, 0x55, 0x6c, 0x3e, 0x03, 0x01, 0x04,
+    0x30, 0x10, 0x00, 0x00, 0x3e, 0x80, 0x00, 0x07, 0x53, 0x0a, 0x00, 0xfa,
+    0x40,
+  };
+  const guint8 sei_nal[] = {
+    0x00, 0x00, 0x01, 0x00, 0xc1, 0x85, 0x33, 0x00, 0x41, 0x04, 0x20, 0xc4,
+    0x14, 0x61, 0xc8, 0x24, 0xa2, 0xcc, 0x34, 0xe3, 0xd0, 0x45, 0x24, 0xd4,
+    0x55, 0x65, 0xd8, 0x65, 0xa6, 0xdc, 0x75, 0xe7, 0xe0, 0x86, 0x28, 0xe4,
+    0x96, 0x69, 0xe8, 0xa6, 0xaa, 0xec, 0xb6, 0xeb, 0xf0, 0xc7, 0x2c, 0xf4,
+    0xd7, 0x6d, 0xf8, 0xe7, 0xae, 0xfc, 0xf7, 0xef, 0xc0, 0xc0, 0x80,
+  };
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser, sps_nal, 0,
+      sizeof (sps_nal), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  res = gst_h266_parser_parse_nal (parser, &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+
+  res = gst_h266_parser_identify_nalu_unchecked (parser, sei_nal, 0,
+      sizeof (sei_nal), &nalu);
+  assert_equals_int (res, GST_H266_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H266_NAL_SUFFIX_SEI);
+
+  res = gst_h266_parser_parse_sei (parser, &nalu, &messages);
+  fail_if (res == GST_H266_PARSER_OK);
+
+  if (messages)
+    g_array_unref (messages);
+  gst_h266_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h266parser_suite (void)
 {
@@ -540,6 +585,8 @@ h266parser_suite (void)
   tcase_add_test (tc_chain, test_h266_parse_slice_hdr);
   tcase_add_test (tc_chain, test_h266_parse_decoder_config_record);
   tcase_add_test (tc_chain, test_h266_parse_decoder_config_record_gci);
+
+  tcase_add_test (tc_chain, test_h266_sei_scalable_nesting_layers);
 
   return s;
 }
