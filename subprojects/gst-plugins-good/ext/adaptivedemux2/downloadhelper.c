@@ -50,6 +50,10 @@ struct DownloadHelper
   gchar *referer;
   gchar *user_agent;
   SoupCookieJar *cookie_jar;
+
+  /* Only allow file:// downloads when the manifest itself is local.
+   * Protected by transfer_lock */
+  gboolean allow_file_uris;
 };
 
 struct DownloadHelperTransfer
@@ -860,6 +864,44 @@ downloadhelper_free (DownloadHelper * dh)
 }
 
 void
+downloadhelper_set_allow_file_uris (DownloadHelper * dh, gboolean allow)
+{
+  g_mutex_lock (&dh->transfer_lock);
+  dh->allow_file_uris = allow;
+  g_mutex_unlock (&dh->transfer_lock);
+}
+
+/* Returns TRUE if the URI scheme may be downloaded. URIs used here are
+ * derived from untrusted manifest content (BaseURL, xlink:href, segment
+ * URLs, keys), so restrict them to network schemes. file:// is only
+ * accepted when the manifest itself was loaded from a local file. */
+static gboolean
+downloadhelper_uri_scheme_allowed (DownloadHelper * dh, const gchar * uri,
+    gboolean * is_file)
+{
+  gchar *scheme = g_uri_parse_scheme (uri);
+  gboolean allowed = FALSE;
+
+  *is_file = FALSE;
+  if (scheme == NULL)
+    return FALSE;
+
+  if (g_ascii_strcasecmp (scheme, "http") == 0 ||
+      g_ascii_strcasecmp (scheme, "https") == 0 ||
+      g_ascii_strcasecmp (scheme, "data") == 0) {
+    allowed = TRUE;
+  } else if (g_ascii_strcasecmp (scheme, "file") == 0) {
+    *is_file = TRUE;
+    g_mutex_lock (&dh->transfer_lock);
+    allowed = dh->allow_file_uris;
+    g_mutex_unlock (&dh->transfer_lock);
+  }
+
+  g_free (scheme);
+  return allowed;
+}
+
+void
 downloadhelper_set_referer (DownloadHelper * dh, const gchar * referer)
 {
   g_mutex_lock (&dh->transfer_lock);
@@ -1138,6 +1180,19 @@ downloadhelper_submit_request (DownloadHelper * dh,
 {
   GTask *transfer_task = NULL;
   gboolean blocking = (flags & DOWNLOAD_FLAG_BLOCKING) != 0;
+  gboolean is_file_uri = FALSE;
+
+  if (request->uri == NULL ||
+      !downloadhelper_uri_scheme_allowed (dh, request->uri, &is_file_uri)) {
+    GST_ERROR ("Refusing to download URI with disallowed scheme: %s",
+        GST_STR_NULL (request->uri));
+    g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_UNSUPPORTED_PROTOCOL,
+        "Download URI scheme not allowed: %s", GST_STR_NULL (request->uri));
+    download_request_lock (request);
+    request->state = DOWNLOAD_REQUEST_STATE_ERROR;
+    download_request_unlock (request);
+    return FALSE;
+  }
 
   download_request_lock (request);
   if (request->in_use) {
@@ -1150,7 +1205,7 @@ downloadhelper_submit_request (DownloadHelper * dh,
   /* Clear the state back to unsent */
   request->state = DOWNLOAD_REQUEST_STATE_UNSENT;
 
-  if (g_str_has_prefix (request->uri, "file://")) {
+  if (is_file_uri) {
     if (flags & DOWNLOAD_FLAG_HEADERS_ONLY) {
       /* FIXME: Implement fake header only requests for file URIs? */
       GST_ERROR ("file:// URIs do not support header-only requests");
