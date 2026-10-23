@@ -58,6 +58,16 @@ static std::mutex g_dxgi_debug_lock;
 /* *INDENT-ON* */
 #endif
 
+/* Use explicit interface IDs for MinGW compatibility */
+DEFINE_GUID (IID_GST_D3D12_SDK_CONFIGURATION1, 0x8aaf9303, 0xad25, 0x48b9,
+    0x9a, 0x57, 0xd9, 0xc3, 0x7e, 0x00, 0x9d, 0x9f);
+DEFINE_GUID (IID_GST_D3D12_DEVICE_FACTORY, 0x61f307d3, 0xd34e, 0x4e7c,
+    0x83, 0x74, 0x3b, 0xa4, 0xde, 0x23, 0xcc, 0xcb);
+DEFINE_GUID (IID_GST_D3D12_DEBUG, 0x344488b7, 0x6846, 0x474b,
+    0xb9, 0x89, 0xf0, 0x27, 0x44, 0x82, 0x45, 0xe0);
+DEFINE_GUID (IID_GST_D3D12_DRED_SETTINGS1, 0xdbd5ae51, 0x3317, 0x4f0a,
+    0xad, 0xf9, 0x1d, 0x7c, 0xed, 0xca, 0xae, 0x0b);
+
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_dred_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_dxgi_debug);
@@ -78,6 +88,7 @@ ensure_debug_category (void)
 
 static PFN_D3D11ON12_CREATE_DEVICE GstD3D11On12CreateDevice = nullptr;
 static gboolean gst_d3d12_device_enable_dred (void);
+static ID3D12DeviceFactory *gst_d3d12_device_get_factory (void);
 
 static gboolean
 load_d3d11on12_symbol (void)
@@ -650,7 +661,13 @@ gst_d3d12_device_enable_debug (void)
 
     HRESULT hr;
     ComPtr < ID3D12Debug > d3d12_debug;
-    hr = D3D12GetDebugInterface (IID_PPV_ARGS (&d3d12_debug));
+    auto factory = gst_d3d12_device_get_factory ();
+    if (factory) {
+      hr = factory->GetConfigurationInterface (CLSID_D3D12Debug,
+          IID_GST_D3D12_DEBUG, (void **) d3d12_debug.GetAddressOf ());
+    } else {
+      hr = D3D12GetDebugInterface (IID_PPV_ARGS (&d3d12_debug));
+    }
     if (FAILED (hr))
       return;
 
@@ -698,7 +715,14 @@ gst_d3d12_device_enable_dred (void)
         GST_LEVEL_ERROR) {
       HRESULT hr;
       ComPtr < ID3D12DeviceRemovedExtendedDataSettings1 > settings;
-      hr = D3D12GetDebugInterface (IID_PPV_ARGS (&settings));
+      auto factory = gst_d3d12_device_get_factory ();
+      if (factory) {
+        hr = factory->GetConfigurationInterface
+            (CLSID_D3D12DeviceRemovedExtendedData, IID_GST_D3D12_DRED_SETTINGS1,
+            (void **) settings.GetAddressOf ());
+      } else {
+        hr = D3D12GetDebugInterface (IID_PPV_ARGS (&settings));
+      }
       if (FAILED (hr)) {
         GST_CAT_WARNING (gst_d3d12_dred_debug,
             "ID3D12DeviceRemovedExtendedDataSettings1 interface unavailable");
@@ -752,6 +776,81 @@ gst_d3d12_device_enable_dxgi_debug (void)
 #endif
 
   return enabled;
+}
+
+static ID3D12DeviceFactory *
+gst_d3d12_device_get_factory (void)
+{
+  static ID3D12DeviceFactory *factory = nullptr;
+  static ID3D12SDKConfiguration1 *sdk_configuration = nullptr;
+  static HMODULE d3d12_module = nullptr;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    d3d12_module = LoadLibraryExW (L"d3d12.dll", nullptr,
+        LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (!d3d12_module)
+      return;
+
+    auto get_interface = (PFN_D3D12_GET_INTERFACE)
+        GetProcAddress (d3d12_module, "D3D12GetInterface");
+    if (!get_interface) {
+      GST_DEBUG ("D3D12GetInterface is unavailable");
+      return;
+    }
+
+    auto hr = get_interface (CLSID_D3D12SDKConfiguration,
+        IID_GST_D3D12_SDK_CONFIGURATION1,
+        (void **) &sdk_configuration);
+    if (FAILED (hr)) {
+      GST_DEBUG ("ID3D12SDKConfiguration1 is unavailable, hr: 0x%x",
+          (guint) hr);
+      return;
+    }
+
+    auto path = g_getenv ("GST_D3D12_AGILITY_SDK_PATH");
+    if (!path || !path[0])
+      return;
+
+    auto version = g_getenv ("GST_D3D12_AGILITY_SDK_VERSION");
+    guint64 sdk_version;
+    if (!version || !g_ascii_string_to_unsigned (version, 10, 1, G_MAXUINT,
+            &sdk_version, nullptr)) {
+      GST_WARNING ("Invalid GST_D3D12_AGILITY_SDK_VERSION, "
+          "using the default D3D12 runtime");
+      return;
+    }
+
+    std::string sdk_path = path;
+    if (sdk_path.back () != '/' && sdk_path.back () != '\\')
+      sdk_path += '\\';
+
+    hr = sdk_configuration->CreateDeviceFactory ((UINT) sdk_version,
+        sdk_path.c_str (), IID_GST_D3D12_DEVICE_FACTORY, (void **) &factory);
+    if (FAILED (hr)) {
+      GST_WARNING ("Could not create Agility SDK device factory, hr: 0x%x, "
+          "using the default D3D12 runtime", (guint) hr);
+      return;
+    }
+
+    GST_INFO ("Using Agility SDK version %u from %s", (guint) sdk_version,
+        sdk_path.c_str ());
+  }
+  GST_D3D12_CALL_ONCE_END;
+
+  return factory;
+}
+
+static HRESULT
+gst_d3d12_device_create_native (IUnknown * adapter,
+    D3D_FEATURE_LEVEL feature_level, REFIID riid, void **device)
+{
+  auto factory = gst_d3d12_device_get_factory ();
+  if (factory) {
+    GST_INFO ("Creating device using Agility SDK factory");
+    return factory->CreateDevice (adapter, feature_level, riid, device);
+  }
+
+  return D3D12CreateDevice (adapter, feature_level, riid, device);
 }
 
 #define gst_d3d12_device_parent_class parent_class
@@ -1459,7 +1558,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     return nullptr;
   }
 
-  hr = D3D12CreateDevice (adapter.Get (), D3D_FEATURE_LEVEL_11_0,
+  hr = gst_d3d12_device_create_native (adapter.Get (), D3D_FEATURE_LEVEL_11_0,
       IID_PPV_ARGS (&device));
   if (FAILED (hr)) {
     GST_WARNING ("Could not create device, hr: 0x%x", (guint) hr);

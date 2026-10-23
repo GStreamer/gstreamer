@@ -160,6 +160,11 @@ if cc.get_argument_syntax() != 'msvc' and dx_headers_dep.type_name() != 'interna
   extra_args += ['-D__REQUIRED_RPCNDR_H_VERSION__=475']
 endif
 
+# Trigger the subproject to download the Agility SDK runtime for development.
+agility_sdk_dep = dependency('microsoft.direct3d.d3d12',
+    allow_fallback: true,
+    required: false)
+
 pkg_name = 'gstreamer-d3d12-' + api_version
 gstd3d12 = library('gstd3d12-' + api_version,
   d3d12_sources,
