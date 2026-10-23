@@ -2288,6 +2288,16 @@ gst_h265_parse_sps_ext (GstH265Parser * parser, GstH265NalUnit * nalu,
           sps_scc_extension_params.sps_palette_predictor_initializers_present_flag)
       {
         guint comp;
+
+        /* The spec range for sps_num_palette_predictor_initializer_minus1
+         * is 0 to palette_max_size + delta_palette_max_predictor_size - 1.
+         * When that sum is 0 the range is empty, and the -1 would turn the
+         * bound negative, i.e. huge in the unsigned comparison, accepting
+         * any value and overflowing the initializer arrays. */
+        if (sps->sps_scc_extension_params.palette_max_size +
+            sps->sps_scc_extension_params.delta_palette_max_predictor_size == 0)
+          goto error;
+
         READ_UE_MAX (&nr,
             sps->
             sps_scc_extension_params.sps_num_palette_predictor_initializer_minus1,
