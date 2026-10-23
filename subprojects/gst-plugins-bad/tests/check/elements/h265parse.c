@@ -1523,6 +1523,55 @@ GST_START_TEST (test_parse_scc_palette_empty_range)
 
 GST_END_TEST;
 
+/* Picture with a timecode SEI while the VUI timing signals
+ * time_scale = 0. Scaling the timecode frame count divides by
+ * fps_d * time_scale, which trips a critical inside
+ * gst_util_uint64_scale(). The timecode is only processed when the
+ * stream arrives in several buffers, so push the stream chunked the
+ * same way the fuzzer harness splits it. */
+GST_START_TEST (test_timecode_zero_time_scale)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  const guint8 bytestream[] = {
+    0x65, 0x72, 0x61, 0x6d, 0x68, 0x18, 0x00, 0x00, 0x00, 0x72, 0x00, 0xfe,
+    0xff, 0xff, 0xff, 0x28, 0xfe, 0x07, 0xd0, 0x00, 0x00, 0x01, 0x4e, 0x85,
+    0x88, 0x04, 0xff, 0xff, 0xff, 0x00, 0x67, 0x61, 0x01, 0x00, 0x00, 0x00,
+    0x67, 0x65, 0x74, 0x00, 0x00, 0x7f, 0xb1, 0xee, 0x00, 0x00, 0x01, 0x42,
+    0x01, 0x01, 0x80, 0x00, 0x03, 0x00, 0x80, 0x00, 0x8d, 0x00, 0x00, 0x74,
+    0x01, 0x5c, 0x72, 0x81, 0x05, 0xff, 0xf0, 0x88, 0x2f, 0x74, 0x61, 0x72,
+    0x67, 0x65, 0x74, 0x2f, 0x00, 0x40, 0x00, 0x00, 0x01, 0x00, 0x72, 0x2f,
+    0x00, 0x00, 0x01, 0x5c, 0x72,
+  };
+
+  h = gst_harness_new_parse ("h265parse");
+  gst_harness_set_src_caps_str (h, "video/x-h265");
+
+  {
+    const guint chunk_count = bytestream[0] % 4 + 1;
+    gsize remaining = sizeof (bytestream);
+    gsize offset = 0;
+    guint i;
+
+    for (i = 0; i < chunk_count; i++) {
+      gsize chunk_size =
+          (i == chunk_count - 1) ? remaining : remaining / (chunk_count - i);
+
+      buf = gst_buffer_new_and_alloc (chunk_size);
+      gst_buffer_fill (buf, 0, bytestream + offset, chunk_size);
+      fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+      offset += chunk_size;
+      remaining -= chunk_size;
+    }
+  }
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parse_harnessed_suite (void)
 {
@@ -1566,6 +1615,8 @@ h265parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_packetized_hvcc_drop_corrupt);
 
   tcase_add_test (tc_chain, test_parse_scc_palette_empty_range);
+
+  tcase_add_test (tc_chain, test_timecode_zero_time_scale);
   return s;
 }
 
