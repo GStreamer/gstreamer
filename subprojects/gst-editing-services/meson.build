@@ -106,11 +106,9 @@ gstaudio_dep = dependency('gstreamer-audio-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'audio_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])
-if host_system != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-    required : get_option('tests'),
-    fallback : ['gstreamer', 'gst_check_dep'])
-endif
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  required : get_option('tests'),
+  fallback : ['gstreamer', 'gst_check_dep'])
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
 gstvalidate_dep = dependency('gstreamer-validate-1.0', version : gst_req, required : get_option('validate'),

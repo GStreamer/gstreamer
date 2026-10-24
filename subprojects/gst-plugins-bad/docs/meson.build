@@ -18,12 +18,22 @@ if static_build
     subdir_done()
 endif
 
+if not gstcheck_dep.found()
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when gstcheck is disabled')
+    endif
+
+    message('gstcheck is disabled, can\'t build the documentation')
+    subdir_done()
+endif
+
 if not build_gir
     if get_option('doc').enabled()
         error('Documentation enabled but introspection not built.')
     endif
 
     message('Introspection not built, won\'t build documentation requiring it')
+    subdir_done()
 endif
 
 if gst_dep.type_name() == 'internal'

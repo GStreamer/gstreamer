@@ -157,11 +157,9 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'video_dep'])
 gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
-if host_machine.system() != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-    required : get_option('tests'),
-    fallback : ['gstreamer', 'gst_check_dep'])
-endif
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  required : get_option('tests'),
+  fallback : ['gstreamer', 'gst_check_dep'])
 
 # Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'

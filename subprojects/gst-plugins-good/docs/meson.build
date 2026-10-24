@@ -18,6 +18,15 @@ if meson.is_cross_build()
     subdir_done()
 endif
 
+if not gstcheck_dep.found()
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when gstcheck is disabled')
+    endif
+
+    message('gstcheck is disabled, can\'t build the documentation')
+    subdir_done()
+endif
+
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
     plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')

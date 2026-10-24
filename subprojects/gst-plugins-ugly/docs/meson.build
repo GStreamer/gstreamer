@@ -18,6 +18,15 @@ if static_build
     subdir_done()
 endif
 
+if not gstcheck_dep.found()
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when gstcheck is disabled')
+    endif
+
+    message('gstcheck is disabled, can\'t build the documentation')
+    subdir_done()
+endif
+
 plugins_cache = join_paths(meson.current_source_dir(), 'gst_plugins_cache.json')
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
