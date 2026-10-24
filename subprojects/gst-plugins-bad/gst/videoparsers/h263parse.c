@@ -319,6 +319,10 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
         if (!gst_bit_reader_get_bits_uint8 (&br, &temp8, 8))
           goto more;
         GST_DEBUG ("  Custom PCF is present (%d)", (int) temp8);
+        if ((temp8 & 0x7f) == 0) {
+          GST_WARNING ("Invalid custom PCF code 0");
+          goto beach;
+        }
         params->pcfnum = gst_util_uint64_scale_int (1800000, 1, temp8 & 0x7f);
         params->pcfdenom = (temp8 & 0x80) ? 1001 : 1000;
         /* 5.1.8 ETR : Extended Temp8oral Reference (2bits) */

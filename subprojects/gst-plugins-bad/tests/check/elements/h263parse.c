@@ -24,6 +24,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h263, variant=(string)itu, parsed=(boolean)false"
@@ -127,6 +128,33 @@ GST_START_TEST (test_parse_detect_stream)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_custom_pcf_zero)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  /* PSC with a custom picture clock frequency code of 0. The code is
+   * 7 bits with a valid range of 1..127; the parser used it directly as
+   * a framerate denominator, so a zero code tripped the
+   * _gst_util_uint64_scale_int() assertion instead of failing the
+   * parse. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x82, 0x82, 0xbc, 0xfb, 0x01, 0x03, 0x10, 0x00,
+  };
+
+  h = gst_harness_new_parse ("h263parse");
+  gst_harness_set_src_caps_str (h, "video/x-h263");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 h263parse_suite (void)
@@ -146,6 +174,7 @@ h263parse_suite (void)
   tcase_add_test (tc_chain, test_parse_drain_single);
   tcase_add_test (tc_chain, test_parse_split);
   tcase_add_test (tc_chain, test_parse_detect_stream);
+  tcase_add_test (tc_chain, test_parse_custom_pcf_zero);
 
   return s;
 }
