@@ -175,7 +175,7 @@ GST_START_TEST (test_output_uint8_rejected)
   GstElement *e = gst_element_factory_make ("onnxinference", NULL);
 
   g_object_set (e, "model-file", model, NULL);
-  fail_if (gst_element_set_state (e, GST_STATE_PAUSED)
+  fail_unless (gst_element_set_state (e, GST_STATE_PAUSED)
       == GST_STATE_CHANGE_FAILURE);
 
   gst_element_set_state (e, GST_STATE_NULL);
