@@ -319,6 +319,9 @@ static inline void
 gst_byte_writer_put_data_unchecked (GstByteWriter * writer, const guint8 * data,
     guint size)
 {
+  if (G_UNLIKELY (size == 0))
+    return;
+
   memcpy ((guint8 *) & writer->parent.data[writer->parent.byte], data, size);
   writer->parent.byte += size;
   writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
@@ -341,6 +344,9 @@ _gst_byte_writer_put_data_inline (GstByteWriter * writer, const guint8 * data,
 static inline void
 gst_byte_writer_fill_unchecked (GstByteWriter * writer, guint8 value, guint size)
 {
+  if (G_UNLIKELY (size == 0))
+    return;
+
   memset ((guint8 *) & writer->parent.data[writer->parent.byte], value, size);
   writer->parent.byte += size;
   writer->parent.size = MAX (writer->parent.size, writer->parent.byte);

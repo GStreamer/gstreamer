@@ -238,6 +238,9 @@ static inline void
 gst_bit_writer_put_bytes_unchecked (GstBitWriter * bitwriter,
     const guint8 * data, guint nbytes)
 {
+  if (G_UNLIKELY (nbytes == 0))
+    return;
+
   if ((bitwriter->bit_size & 0x07) == 0) {
     memcpy (&bitwriter->data[bitwriter->bit_size >> 3], data, nbytes);
     bitwriter->bit_size += (nbytes << 3);
