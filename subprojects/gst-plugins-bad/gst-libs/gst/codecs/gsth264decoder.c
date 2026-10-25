@@ -2687,6 +2687,12 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   width_mb = sps->width / 16;
   height_mb = sps->height / 16;
 
+  if (width_mb <= 0 || height_mb <= 0) {
+    GST_WARNING_OBJECT (self, "Invalid SPS dimensions %dx%d", sps->width,
+        sps->height);
+    return GST_FLOW_ERROR;
+  }
+
   max_dpb_frames = MIN (max_dpb_mbs / (width_mb * height_mb),
       GST_H264_DPB_MAX_SIZE);
 
