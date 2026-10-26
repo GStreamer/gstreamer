@@ -798,26 +798,26 @@ gst_mpdparser_parse_segment_template_node (GstMPDSegmentTemplateNode ** pointer,
   GST_LOG ("attributes of SegmentTemplate node:");
   if (gst_xml_helper_get_prop_string (a_node, "media", &strval)) {
     new_segment_template->media = strval;
-  } else if (parent) {
+  } else if (parent && parent->media) {
     new_segment_template->media = xmlMemStrdup (parent->media);
   }
 
   if (gst_xml_helper_get_prop_string (a_node, "index", &strval)) {
     new_segment_template->index = strval;
-  } else if (parent) {
+  } else if (parent && parent->index) {
     new_segment_template->index = xmlMemStrdup (parent->index);
   }
 
   if (gst_xml_helper_get_prop_string (a_node, "initialization", &strval)) {
     new_segment_template->initialization = strval;
-  } else if (parent) {
+  } else if (parent && parent->initialization) {
     new_segment_template->initialization =
         xmlMemStrdup (parent->initialization);
   }
 
   if (gst_xml_helper_get_prop_string (a_node, "bitstreamSwitching", &strval)) {
     new_segment_template->bitstreamSwitching = strval;
-  } else if (parent) {
+  } else if (parent && parent->bitstreamSwitching) {
     new_segment_template->bitstreamSwitching =
         xmlMemStrdup (parent->bitstreamSwitching);
   }

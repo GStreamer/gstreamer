@@ -2384,6 +2384,10 @@ GST_START_TEST (dash_mpdparser_adapt_repr_segmentTemplate_inherit)
       (segmentTemplate)->startNumber, 1);
   assert_equals_string (segmentTemplate->media, "track1_$Number$.m4s");
   assert_equals_string (segmentTemplate->initialization, "set1_init.mp4");
+  fail_unless (segmentTemplate->index == NULL);
+  fail_unless (segmentTemplate->bitstreamSwitching == NULL);
+  fail_if (segmentTemplate->initialization ==
+      adaptationSet->SegmentTemplate->initialization);
 
   gst_mpd_client_free (mpdclient);
 }
