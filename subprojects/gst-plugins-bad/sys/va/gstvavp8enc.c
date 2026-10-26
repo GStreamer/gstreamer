@@ -896,6 +896,11 @@ gst_va_vp8_enc_encode_frame (GstVaBaseEnc * base,
   va_frame->base.picture = gst_va_encode_picture_new (base->encoder,
       gst_frame->input_buffer);
 
+  if (!va_frame->base.picture) {
+    GST_ERROR_OBJECT (self, "Failed to create the encode picture");
+    return GST_FLOW_ERROR;
+  }
+
   if (va_frame->frame_num == 0) {
     _vp8_fill_sequence_param (self, &seq_param);
     if (!_vp8_add_sequence_param (self, va_frame->base.picture, &seq_param))

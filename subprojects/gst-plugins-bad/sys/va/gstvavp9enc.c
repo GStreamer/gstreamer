@@ -2508,6 +2508,11 @@ gst_va_vp9_enc_encode_frame (GstVaBaseEnc * base,
     va_frame->base.picture = gst_va_encode_picture_new (base->encoder,
         gst_frame->input_buffer);
 
+    if (!va_frame->base.picture) {
+      GST_ERROR_OBJECT (self, "Failed to create the encode picture");
+      return GST_FLOW_ERROR;
+    }
+
     _vp9_find_ref_to_update (base, gst_frame);
 
     /* Repeat the sequence for each key. */
