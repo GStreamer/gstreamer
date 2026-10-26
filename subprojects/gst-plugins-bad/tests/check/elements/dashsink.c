@@ -384,4 +384,4 @@ dashsink_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (dashsink);
+GST_CHECK_MAIN_WITH_PLATFORM_MAIN_LOOP (dashsink);
