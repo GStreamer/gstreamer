@@ -1216,28 +1216,6 @@ video_converter_matrix8_table (MatrixData * data, gpointer pixels)
   }
 }
 
-static void
-video_converter_matrix8_AYUV_ARGB (MatrixData * data, gpointer pixels)
-{
-  gpointer d = pixels;
-
-  video_orc_convert_AYUV_ARGB (d, 0, pixels, 0,
-      data->im[0][0], data->im[0][2],
-      data->im[2][1], data->im[1][1], data->im[1][2], data->width, 1);
-}
-
-static gboolean
-is_ayuv_to_rgb_matrix (MatrixData * data)
-{
-  if (data->im[0][0] != data->im[1][0] || data->im[1][0] != data->im[2][0])
-    return FALSE;
-
-  if (data->im[0][1] != 0 || data->im[2][2] != 0)
-    return FALSE;
-
-  return TRUE;
-}
-
 static gboolean
 is_identity_matrix (MatrixData * data)
 {
@@ -1410,11 +1388,7 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
   color_matrix_convert (data);
 
   if (convert->current_bits == 8) {
-    if (!convert->unpack_rgb && convert->pack_rgb
-        && is_ayuv_to_rgb_matrix (data)) {
-      GST_LOG ("use fast AYUV -> RGB matrix");
-      data->matrix_func = video_converter_matrix8_AYUV_ARGB;
-    } else if (is_no_clip_matrix (data)) {
+    if (is_no_clip_matrix (data)) {
       GST_LOG ("use 8bit table");
       data->matrix_func = video_converter_matrix8_table;
       videoconvert_convert_init_tables (data);
