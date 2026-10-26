@@ -347,8 +347,9 @@ macro_rules! opt {
 ///
 /// - `typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp")`
 ///   extensions "bmp", caps = feature name (default)
-/// - `typefinder!("subtitle/x-kate", MARGINAL, none, "gsm")`
-///   NULL func, NULL caps; extension-only registration
+/// - `typefinder!("audio/x-gsm", PRIMARY, none, "gsm", "audio/x-gsm, rate=8000, channels=1")`
+///   NULL func, so nothing is recognised from content and only the extension
+///   answers; caps given explicitly because they differ from the name
 /// - `typefinder!("image/tiff", PRIMARY, tiff_type_find, "tif,tiff", "image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }")`
 ///   caps differing from the feature name
 /// - `typefinder!("image/x-icon", MARGINAL, windows_icon_type_find, none, none)`
@@ -360,6 +361,14 @@ macro_rules! opt {
 macro_rules! typefinder {
     ($name:expr, $rank:expr, $func:expr) => {
         Feature($name, $rank, opt!($func), None, Some($name))
+    };
+    // `none` in the function position has to be matched as a literal, exactly as
+    // in the extensions and caps positions below: captured as an expression it no
+    // longer matches the literal, and `opt!` would build `Some(none)`. Only the
+    // form with an extension is here, because a factory with neither a function
+    // nor an extension can never answer for anything.
+    ($name:expr, $rank:expr, none, $exts:expr, $caps:expr) => {
+        Feature($name, $rank, None, opt!($exts), opt!($caps))
     };
     ($name:expr, $rank:expr, $func:expr, $exts:expr) => {
         Feature($name, $rank, opt!($func), Some($exts), Some($name))

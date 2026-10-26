@@ -2721,6 +2721,16 @@ const FEATURES: &[Feature] = &[
         "aa,aax",
         "audio/x-audible"
     ),
+    // GSM - audio/x-gsm. A bare GSM stream is a run of frames with no header and
+    // no magic, so there is nothing to recognise from content and only the file
+    // extension can answer.
+    typefinder!(
+        "audio/x-gsm",
+        PRIMARY,
+        none,
+        "gsm",
+        "audio/x-gsm, rate=8000, channels=1"
+    ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
     // DV - video/x-dv
