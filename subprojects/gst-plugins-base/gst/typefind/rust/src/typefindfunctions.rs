@@ -20,8 +20,8 @@ use std::num::NonZeroU64;
 use std::ptr;
 
 use crate::audio::{
-    AacFraming, Ac3Stream, aa_probe, aac_probe, ac3_probe, ac4_probe, dts_probe, mp3_probe,
-    sbc_probe, wavpack_probe,
+    AacFraming, Ac3Stream, aa_probe, aac_probe, ac3_probe, ac4_probe, dts_probe, mod_probe,
+    mp3_probe, sbc_probe, wavpack_probe,
 };
 use crate::bindings::gpointer;
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
@@ -2238,6 +2238,15 @@ extern "C" fn aa_type_find(tf: &mut TypeFind, _private: gpointer) {
     suggest!(tf, probability, c"audio/x-audible");
 }
 
+extern "C" fn mod_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some((probability, family)) = mod_probe(tf) else {
+        return;
+    };
+    suggest!(tf, probability, c"audio/x-mod", [
+        (c"type", str : family),
+    ]);
+}
+
 // =============================================================================
 // Images
 // =============================================================================
@@ -2730,6 +2739,14 @@ const FEATURES: &[Feature] = &[
         none,
         "gsm",
         "audio/x-gsm, rate=8000, channels=1"
+    ),
+    // Tracker modules - audio/x-mod. One media type for twenty eight tracker
+    // families, which the `type` property on the suggestion tells apart.
+    typefinder!(
+        "audio/x-mod",
+        SECONDARY,
+        mod_type_find,
+        "669,amf,ams,dbm,digi,dmf,dsm,gdm,far,imf,it,j2b,mdl,med,mod,mt2,mtm,okt,psm,ptm,sam,s3m,stm,stx,ult,umx,xm"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),

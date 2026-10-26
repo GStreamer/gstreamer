@@ -8,8 +8,9 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-//! Probes for the audio formats that are a run of self-describing frames.
-//! Each probe decides what the stream is; the typefinders only render the
+//! Probes for audio formats that identify themselves from their own bytes: a
+//! run of self-describing frames, or a tracker module whose header carries a
+//! tag. Each probe decides what the stream is; the typefinders only render the
 //! decision.
 
 use crate::helpers::{
@@ -1191,6 +1192,181 @@ fn aa_probability(head: &[u8; 12], length: Option<u64>) -> Option<Prob> {
         Some(len) if len == stated => Prob::NEARLY_CERTAIN,
         _ => Prob::POSSIBLE,
     })
+}
+
+// =============================================================================
+// Module music
+// =============================================================================
+
+/// A signature that is nothing but a tag: the octets that open the file, the
+/// family they name, and how sure that makes us. Matched as a prefix of the
+/// first four octets, so an entry longer than that can never match.
+type Tag = (&'static [u8], &'static CStr, Prob);
+
+/// The plain ids Protracker and its variants write just past the pattern order
+/// table. In a 31 instrument module that lands on octet 1080: title 20, sample
+/// records 31 by 30, song length and spare 2, order table 128. The six that
+/// want a digit beside the id are checked next to this list.
+const PROTRACKER_IDS: &[&[u8; 4]] = &[
+    b"M.K.", b"M!K!", b"M&K!", b"N.T.", b"OKTA", b"OCTA", b"CD81",
+];
+
+/// Formats that name themselves with a tag at the start of the file and need
+/// nothing further checked. Every tag here, and every tag the checks after it
+/// look for, is a distinct prefix of the first four octets, so no file can match
+/// two of them and the order cannot change the answer.
+const OPENING_TAGS: &[Tag] = &[
+    (b"if", c"669", Prob::LIKELY),
+    (b"JN", c"669", Prob::LIKELY),
+    (b"IMPM", c"it", Prob::MAXIMUM),
+    (b"DBM0", c"dbm", Prob::MAXIMUM),
+    (b"DMDL", c"mdl", Prob::MAXIMUM),
+    (b"MT20", c"mt2", Prob::MAXIMUM),
+    (b"DDMF", c"dmf", Prob::MAXIMUM),
+    (b"MMD0", c"med", Prob::MAXIMUM),
+    (b"MMD1", c"med", Prob::MAXIMUM),
+    (b"MTM", c"mtm", Prob::MAXIMUM),
+    (b"FAR\xFE", c"far", Prob::MAXIMUM),
+    (b"\xC1\x83\x2A\x9E", c"umx", Prob::POSSIBLE),
+];
+
+/// The first entry in `table` whose tag opens `head`.
+fn tagged(head: &[u8], table: &[Tag]) -> Option<(Prob, &'static CStr)> {
+    table
+        .iter()
+        .find(|(bytes, _, _)| head.starts_with(bytes))
+        .map(|(_, family, probability)| (*probability, *family))
+}
+
+/// Recognise a tracker module and name the family that wrote it.
+///
+/// Twenty eight tracker families share one media type and are told apart by a
+/// `type` property, so a probe here answers with a family name as well as a
+/// confidence. The order below is load bearing: a file can carry more than one
+/// tag, and the first signature that matches names the family. A Protracker
+/// file that also carries an S3M tag at octet 44 is a Protracker file.
+pub fn mod_probe(tf: &mut TypeFind) -> Option<(Prob, &'static CStr)> {
+    // Protracker and its variants. The id follows the pattern order table at
+    // octet 1080, so it is well into the file rather than at its start.
+    if let Some(id) = tf.peek::<4>(1080) {
+        let digit = |i: usize| id[i].is_ascii_digit();
+        if PROTRACKER_IDS.contains(&id)
+            || (id.starts_with(b"FLT") || id.starts_with(b"EXO") || id.starts_with(b"TDZ"))
+                && digit(3)
+            || id[1..].starts_with(b"CHN") && digit(0)
+            || (id[2..].starts_with(b"CH") || id[2..].starts_with(b"CN")) && digit(0) && digit(1)
+        {
+            return Some((Prob::MAXIMUM, c"mod"));
+        }
+    }
+
+    // Jazz Jackrabbit 2: the MUSE tag, with one of two marker pairs at octets
+    // 6 and 7.
+    if tf.peek::<8>(0).is_some_and(|h| {
+        h.starts_with(b"MUSE") && (h[6..] == *b"\xBE\xEF" || h[6..] == *b"\xBA\xBE")
+    }) {
+        return Some((Prob::MAXIMUM, c"j2b"));
+    }
+
+    // The two incompatible AMS flavours, named after the tracker that wrote
+    // them. Extreme Tracker's tag occupies the first seven octets and octet 8
+    // has to read 1.
+    if tf.starts_with(b"AMShdr\x1A") {
+        return Some((Prob::MAXIMUM, c"velvet-ams"));
+    }
+    if tf
+        .peek::<9>(0)
+        .is_some_and(|h| h.starts_with(b"Extreme") && h[8] == 1)
+    {
+        return Some((Prob::LIKELY, c"extreme-ams"));
+    }
+    if tf.starts_with(b"MAS_UTrack_V00") {
+        return Some((Prob::MAXIMUM, c"ult"));
+    }
+    if tf.starts_with(b"DIGI Booster module\0") {
+        return Some((Prob::MAXIMUM, c"digi"));
+    }
+    // PolyTracker puts its tag at 0x2C rather than at the start of the file.
+    if tf.peek::<4>(0x2C).is_some_and(|tag| tag == b"PTMF") {
+        return Some((Prob::LIKELY, c"ptm"));
+    }
+    // The XM tag is followed by the song name, and the 0x1A at octet 37 is
+    // where that name ends.
+    if tf
+        .peek::<38>(0)
+        .is_some_and(|h| h.starts_with(b"Extended Module: ") && h[37] == 0x1A)
+    {
+        return Some((Prob::MAXIMUM, c"xm"));
+    }
+    if tf.starts_with(b"OKTASONG") {
+        return Some((Prob::MAXIMUM, c"okt"));
+    }
+
+    // A run of formats that name themselves with a tag at the start of the file.
+    // The tag is copied out because three of the formats below look further in
+    // as well.
+    if let Some(head) = tf.peek::<4>(0).copied() {
+        if let Some(hit) = tagged(&head, OPENING_TAGS) {
+            return Some(hit);
+        }
+        // What is left needs more than the opening tag: a fourth octet from a
+        // set, a fourth octet in a range, or a second tag further in.
+        if head.starts_with(b"PSM") && (head[3] == b' ' || head[3] == 254) {
+            return Some((Prob::MAXIMUM, c"psm"));
+        }
+        if head.starts_with(b"AMF") && (11..=13).contains(&head[3]) {
+            return Some((Prob::MAXIMUM, c"dsmi-amf"));
+        }
+        if head == *b"RIFF" && tf.peek::<4>(8).is_some_and(|tag| tag == b"DSMF") {
+            return Some((Prob::MAXIMUM, c"dsm"));
+        }
+        // FAM and GDM each confirm their opening tag with a second one further
+        // in: three octets of `compare` at 44, and `GMFS` at 71. A stream too
+        // short to carry the second one is still claimed, at lower confidence; a
+        // second tag that disagrees leaves the file to the signatures below,
+        // which get their usual turn.
+        if head == *b"FAM\xFE" {
+            match tf.peek::<3>(44) {
+                Some(b"com") => return Some((Prob::MAXIMUM, c"fam")),
+                None => return Some((Prob::LIKELY, c"fam")),
+                Some(_) => {}
+            }
+        }
+        if head == *b"GDM\xFE" {
+            match tf.peek::<4>(71) {
+                Some(b"GMFS") => return Some((Prob::MAXIMUM, c"gdm")),
+                None => return Some((Prob::LIKELY, c"gdm")),
+                Some(_) => {}
+            }
+        }
+    }
+
+    // Farandole again, for the files that do not open with their tag.
+    if tf.peek::<3>(44).is_some_and(|tag| tag == b"\x0D\x0A\x1A") {
+        return Some((Prob::POSSIBLE, c"far"));
+    }
+    if tf.peek::<4>(60).is_some_and(|tag| tag == b"IM10") {
+        return Some((Prob::MAXIMUM, c"imf"));
+    }
+    if tf.peek::<4>(44).is_some_and(|tag| tag == b"SCRM") {
+        return Some((Prob::MAXIMUM, c"s3m"));
+    }
+    // The Scream Tracker tag is matched without regard to case, and a version
+    // pair at octet 28 separates STM from the variants sharing the tag. A stream
+    // too short to carry that pair is not claimed by anything after this point.
+    if tf
+        .peek::<8>(20)
+        .is_some_and(|t| t.eq_ignore_ascii_case(b"!Scream!") || t.eq_ignore_ascii_case(b"BMOD2STM"))
+    {
+        let version = tf.peek::<2>(28).copied()?;
+        if version[0] == 0x1A && version[1] == 2 {
+            return Some((Prob::MAXIMUM, c"stm"));
+        }
+    }
+    if tf.starts_with(b"ASYLUM Music Format") {
+        return Some((Prob::MAXIMUM, c"asylum-amf"));
+    }
+    None
 }
 
 #[cfg(test)]

@@ -22,7 +22,7 @@ if [ "$#" -gt 0 ]; then
     files=("$@")
 else
     for dir in "$fixtures"/img "$fixtures"/text "$fixtures"/aac "$fixtures"/dts \
-               "$fixtures"/mp3 "$fixtures"/sbc "$fixtures"/wavpack; do
+               "$fixtures"/mp3 "$fixtures"/sbc "$fixtures"/wavpack "$fixtures"/mod; do
         [ -d "$dir" ] && files+=("$dir"/*)
     done
     for list in /tmp/imgtext.list /tmp/audio.list /tmp/corpus.list; do
