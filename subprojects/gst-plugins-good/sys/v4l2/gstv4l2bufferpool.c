@@ -1007,13 +1007,13 @@ streamon_failed:
   {
     GST_ERROR_OBJECT (pool, "streamon failed");
     pclass->stop (bpool);
-    return FALSE;
+    goto cleanup;
   }
 wrong_config:
   {
     GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
     gst_structure_free (config);
-    return FALSE;
+    goto cleanup;
   }
 no_buffers:
   {
@@ -1021,27 +1021,36 @@ no_buffers:
         "we received %d buffer from device '%s', we want at least %d",
         min_buffers, obj->videodev, GST_V4L2_MIN_BUFFERS (obj));
     gst_structure_free (config);
-    return FALSE;
+    goto cleanup;
   }
 start_failed:
   {
     GST_ERROR_OBJECT (pool, "allocate failed");
-    return FALSE;
+    goto cleanup;
   }
 other_pool_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to activate the other pool %"
         GST_PTR_FORMAT, pool->other_pool);
-    return FALSE;
+    goto cleanup;
   }
 queue_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to queue buffers into the capture queue");
-    return FALSE;
+    goto cleanup;
   }
 cannot_import:
   {
     GST_ERROR_OBJECT (pool, "cannot import buffers from downstream pool");
+    goto cleanup;
+  }
+cleanup:
+  {
+    if (pool->other_pool &&
+        !gst_buffer_pool_set_active (pool->other_pool, FALSE))
+      GST_WARNING_OBJECT (pool, "failed to deactivate the other pool %"
+          GST_PTR_FORMAT, pool->other_pool);
+
     return FALSE;
   }
 }
