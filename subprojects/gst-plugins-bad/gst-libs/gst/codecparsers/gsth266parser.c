@@ -2670,6 +2670,8 @@ gst_h266_parse_vps (GstH266NalUnit * nalu, GstH266VPS * vps)
   }
 
   if (!vps->each_layer_is_an_ols_flag) {
+    if (vps->num_multi_layer_olss == 0)
+      goto error;
     READ_UE_MAX (&nr, vps->num_dpb_params_minus1,
         vps->num_multi_layer_olss - 1);
 
@@ -2746,6 +2748,8 @@ gst_h266_parse_vps (GstH266NalUnit * nalu, GstH266VPS * vps)
     } else
       vps->sublayer_cpb_params_present_flag = 0;
 
+    if (vps->num_multi_layer_olss == 0)
+      goto error;
     READ_UE_MAX (&nr, vps->num_ols_timing_hrd_params_minus1,
         vps->num_multi_layer_olss - 1);
     for (i = 0; i <= vps->num_ols_timing_hrd_params_minus1; i++) {
