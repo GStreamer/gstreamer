@@ -691,7 +691,7 @@ build macos:
     # gst-libav/ffmpeg throws Wundef errors
     GST_WERROR: "false"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
-    MESON_TEST_ARGS: "gst-plugins-bad:*avf* gst-plugins-bad:*vtdec* gst-plugins-bad:*_vk*"
+    MESON_TEST_ARGS: "gst-plugins-bad:*avf* gst-plugins-bad:*vtdec* gst-plugins-bad:*_vk* gst-plugins-bad:elements_mxf*"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
   rules:
     # Don't run macOS jobs for gstreamer-security repo
