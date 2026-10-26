@@ -1343,6 +1343,9 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         /* fallthrough */
       case 24:
       {
+        if (payload_len < header_len)
+          goto short_payload;
+
         /* strip headers */
         payload += header_len;
         payload_len -= header_len;
@@ -1399,7 +1402,11 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       case 26:
       case 27:
       {
-        const gsize aggregation_unit_size = nal_unit_type == 26 ? 5 : 6;
+        const gint aggregation_unit_size = nal_unit_type == 26 ? 5 : 6;
+
+        /* payload header and decoding order number base must be present */
+        if (payload_len < header_len + 2)
+          goto short_payload;
 
         /* strip headers */
         payload += header_len;
