@@ -846,7 +846,7 @@ gst_dash_sink_generate_mpd_content (GstDashSink * sink,
       gdouble diff_seconds = ((gdouble) time_diff) / GST_SECOND;
       guint bitrate =
           (guint) (((gdouble) stream->bytes_count * 8.0) / diff_seconds);
-      GST_DEBUG_OBJECT (stream,
+      GST_DEBUG_OBJECT (sink,
           "Stream(%p) bitrate calculation: segment duration=%.3fs stream bytes received=%"
           G_GUINT64_FORMAT " resulting bitrate in bps=%u",
           (void *) stream, diff_seconds, stream->bytes_count, bitrate);
