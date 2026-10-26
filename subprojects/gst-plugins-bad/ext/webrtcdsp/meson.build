@@ -23,7 +23,9 @@ plugin_sources += {
   'webrtcdsp': pathsep.join(doc_sources)
 }
 
-default_cppstd = 'cpp_std=c++17'
+# MSVC needs C++20 for designated initializers, and so does a system abseil
+# built as C++20 (e.g. GNOME 51)
+default_cppstd = 'cpp_std=c++20,c++17'
 
 webrtc_dep = dependency('webrtc-audio-processing-2', version : ['>= 2.0'],
                         required : false)
@@ -37,12 +39,6 @@ endif
 
 if not webrtc_dep.found()
   # Try again, and this time use fallback if requested and possible
-  cc = meson.get_compiler('cpp')
-  if cc.get_id() == 'msvc'
-    # MSVC doesn't like designated initalizers without c++20
-    default_cppstd = 'cpp_std=c++20'
-  endif
-
   webrtc_dep = dependency('webrtc-audio-processing-2', version : ['>= 2.0'],
                           allow_fallback : true,
                           default_options : [default_cppstd],
