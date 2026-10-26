@@ -490,7 +490,7 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
   GST_DEBUG ("Metadata type 0x%04x is handled by type %s", type,
       g_type_name (t));
 
-  ret = (MXFMetadata *) g_type_create_instance (t);
+  ret = (MXFMetadata *) g_object_new (t, NULL);
   if (!mxf_metadata_base_parse (MXF_METADATA_BASE (ret), primer, data, size)) {
     GST_ERROR ("Parsing metadata failed");
     g_object_unref (ret);
@@ -6519,7 +6519,7 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
   GST_DEBUG ("DM scheme 0x%02x type 0x%06x is handled by type %s", scheme, type,
       g_type_name (t));
 
-  ret = (MXFDescriptiveMetadata *) g_type_create_instance (t);
+  ret = (MXFDescriptiveMetadata *) g_object_new (t, NULL);
   if (!mxf_metadata_base_parse (MXF_METADATA_BASE (ret), primer, data, size)) {
     GST_ERROR ("Parsing metadata failed");
     g_object_unref (ret);
