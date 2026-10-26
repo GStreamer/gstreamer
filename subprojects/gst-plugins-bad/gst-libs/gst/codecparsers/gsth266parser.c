@@ -3493,16 +3493,19 @@ gst_h266_parse_sps (GstH266Parser * parser, GstH266NalUnit * nalu,
     if (sps->timing_hrd_params_present_flag) {
       guint8 firstSubLayer;
 
-      gst_h266_parse_general_timing_hrd_parameters (&sps->general_hrd_params,
-          &nr);
+      if (!gst_h266_parse_general_timing_hrd_parameters
+          (&sps->general_hrd_params, &nr))
+        goto error;
 
       if (sps->max_sublayers_minus1 > 0)
         READ_UINT8 (&nr, sps->sublayer_cpb_params_present_flag, 1);
 
       firstSubLayer =
           sps->sublayer_cpb_params_present_flag ? 0 : sps->max_sublayers_minus1;
-      gst_h266_parse_ols_timing_hrd_parameters (&sps->ols_hrd_params, &nr,
-          &sps->general_hrd_params, firstSubLayer, sps->max_sublayers_minus1);
+      if (!gst_h266_parse_ols_timing_hrd_parameters (&sps->ols_hrd_params, &nr,
+              &sps->general_hrd_params, firstSubLayer,
+              sps->max_sublayers_minus1))
+        goto error;
     }
   }
 

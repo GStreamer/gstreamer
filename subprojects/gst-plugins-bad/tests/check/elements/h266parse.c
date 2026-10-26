@@ -1500,6 +1500,36 @@ GST_START_TEST (test_sh_num_tiles_in_slice)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_sps_hrd_truncated)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  /* SPS with timing/HRD parameters where emulation prevention bytes
+   * consume the remaining data while a 32-bit field is being filled.
+   * The failed read used to leave the bit reader with a partially
+   * filled cache, and the next read shifted by a negative amount. */
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0x8d, 0x02, 0x43, 0x80, 0x00, 0x00,
+    0xc0, 0x07, 0x81, 0x00, 0x21, 0xc8, 0xd4, 0x00, 0xc5, 0xff, 0xff, 0x1f,
+    0x7c, 0xdd, 0x59, 0xe9, 0x7b, 0xff, 0xfb, 0xfe, 0x00, 0x00, 0x03, 0x00,
+    0x04, 0x20,
+  };
+
+  h = gst_harness_new_parse ("h266parse");
+  gst_harness_set_src_caps_str (h, "video/x-h266");
+
+  buf = gst_buffer_new_and_alloc (sizeof (bytestream));
+  gst_buffer_fill (buf, 0, bytestream, sizeof (bytestream));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 h266parse_harnessed_suite (void)
 {
@@ -1545,6 +1575,8 @@ h266parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_chroma_qp_table_bitdepth);
 
   tcase_add_test (tc_chain, test_sh_num_tiles_in_slice);
+
+  tcase_add_test (tc_chain, test_sps_hrd_truncated);
 
   return s;
 }
