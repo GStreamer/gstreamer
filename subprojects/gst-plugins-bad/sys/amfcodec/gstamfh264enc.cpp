@@ -75,6 +75,10 @@ typedef struct
   amf_int64 default_qp_i;
   amf_int64 default_qp_p;
   amf_int64 default_qp_b;
+  amf_int64 default_qvbr_quality;
+  amf_int64 max_usage;
+  amf_int64 max_rate_control;
+  amf_int64 max_preset;
   gboolean interlace_supported;
   guint valign;
   gboolean pre_encode_supported;
@@ -125,6 +129,26 @@ gst_amf_h264_enc_usage_get_type (void)
      * Webcam usage
      */
     {AMF_VIDEO_ENCODER_USAGE_WEBCAM, "Webcam", "webcam"},
+
+    /**
+     * GstAmfH264EncUsage::high-quality:
+     *
+     * High Quality usage
+     *
+     * Since: 1.30
+     */
+    {AMF_VIDEO_ENCODER_USAGE_HIGH_QUALITY,
+        "High Quality", "high-quality"},
+
+    /**
+     * GstAmfH264EncUsage::low-latency-hq:
+     *
+     * Low Latency High Quality
+     *
+     * Since: 1.30
+     */
+    {AMF_VIDEO_ENCODER_USAGE_LOW_LATENCY_HIGH_QUALITY,
+        "Low Latency High Quality", "low-latency-hq"},
     {0, nullptr, nullptr}
   };
 
@@ -186,6 +210,36 @@ gst_amf_h264_enc_rate_control_get_type (void)
      */
     {AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_LATENCY_CONSTRAINED_VBR,
         "Latency Constrained VBR", "lcvbr"},
+
+    /**
+     * GstAmfH264EncRateControl::qvbr:
+     *
+     * Quality VBR
+     *
+     * Since: 1.30
+     */
+    {AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_QUALITY_VBR,
+        "Quality VBR", "qvbr"},
+
+    /**
+     * GstAmfH264EncRateControl::hqvbr:
+     *
+     * High quality VBR
+     *
+     * Since: 1.30
+     */
+    {AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_HIGH_QUALITY_VBR,
+        "High quality VBR", "hqvbr"},
+
+    /**
+     * GstAmfH264EncRateControl::hqcbr:
+     *
+     * High quality CBR
+     *
+     * Since: 1.30
+     */
+    {AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_HIGH_QUALITY_CBR,
+        "High quality CBR", "hqcbr"},
     {0, nullptr, nullptr}
   };
 
@@ -213,7 +267,7 @@ gst_amf_h264_enc_preset_get_type (void)
   static GType preset_type = 0;
   static const GEnumValue presets[] = {
     /**
-     * GstAmfH264EncRateControl::default:
+     * GstAmfH264EncPreset::default:
      *
      * Default preset depends on usage
      */
@@ -221,30 +275,32 @@ gst_amf_h264_enc_preset_get_type (void)
         "default"},
 
     /**
-     * GstAmfH264EncRateControl::balanced:
+     * GstAmfH264EncPreset::balanced:
      *
      * Balanced preset
      */
     {AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED, "Balanced", "balanced"},
 
     /**
-     * GstAmfH264EncRateControl::speed:
+     * GstAmfH264EncPreset::speed:
      *
      * Speed oriented preset
      */
     {AMF_VIDEO_ENCODER_QUALITY_PRESET_SPEED, "Speed", "speed"},
 
     /**
-     * GstAmfH264EncRateControl::quality:
+     * GstAmfH264EncPreset::quality:
      *
      * Quality oriented preset
      */
     {AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY, "Quality", "quality"},
 
     /**
-     * GstAmfH264EncRateControl::high-quality:
+     * GstAmfH264EncPreset::high-quality:
      *
      * High quality oriented preset
+     *
+     * Since: 1.30
      */
     {AMF_VIDEO_ENCODER_QUALITY_PRESET_HIGH_QUALITY, "High quality",
         "high-quality"},
@@ -309,6 +365,7 @@ enum
   PROP_PA_PAQ_MODE,
   PROP_PA_TAQ_MODE,
   PROP_PA_HQMB_MODE,
+  PROP_QVBR_QUALITY,
 };
 
 #define DEFAULT_USAGE AMF_VIDEO_ENCODER_USAGE_TRANSCODING
@@ -367,6 +424,7 @@ typedef struct _GstAmfH264Enc
   gint max_qp;
   guint qp_i;
   guint qp_p;
+  guint qvbr_quality;
   guint ref_frames;
 
   gboolean aud;
@@ -480,6 +538,10 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
       g_param_spec_uint ("qp-p", "QP P",
           "Constant QP for P frames", 0, 51,
           (guint) dev_caps->default_qp_p, param_flags));
+  g_object_class_install_property (object_class, PROP_QVBR_QUALITY,
+      g_param_spec_uint ("qvbr-quality", "QVBR Quality",
+          "Quality level for \"qvbr\" rate-control mode", 1, 51,
+          (guint) dev_caps->default_qvbr_quality, param_flags));
   g_object_class_install_property (object_class, PROP_REF_FRAMES,
       g_param_spec_uint ("ref-frames", "Reference Frames",
           "Number of reference frames", (guint) dev_caps->min_ref_frames,
@@ -899,6 +961,7 @@ gst_amf_h264_enc_init (GstAmfH264Enc * self)
   self->max_qp = DEFAULT_MIN_MAX_QP;
   self->qp_i = (guint) dev_caps->default_qp_i;
   self->qp_p = (guint) dev_caps->default_qp_p;
+  self->qvbr_quality = (guint) dev_caps->default_qvbr_quality;
   self->ref_frames = (guint) dev_caps->min_ref_frames;
   self->aud = DEFAULT_AUD;
   self->cabac = DEFAULT_CABAC;
@@ -1107,6 +1170,9 @@ gst_amf_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_PA_HQMB_MODE:
       update_enum (self, &self->pa.hmqb_mode, value);
       break;
+    case PROP_QVBR_QUALITY:
+      update_uint (self, &self->qvbr_quality, value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1232,6 +1298,9 @@ gst_amf_h264_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PA_HQMB_MODE:
       g_value_set_enum (value, self->pa.hmqb_mode);
+      break;
+    case PROP_QVBR_QUALITY:
+      g_value_set_uint (value, self->qvbr_quality);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1507,26 +1576,36 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
-  result = comp->SetProperty (AMF_VIDEO_ENCODER_USAGE, (amf_int64) self->usage);
-  if (result != AMF_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set usage, result %"
-        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-    goto error;
+  {
+    gint usage = self->usage;
+
+    if (usage > dev_caps->max_usage) {
+      GST_WARNING_OBJECT (self, "Usage %d is not supported by AMF runtime "
+          "(max %" G_GINT64_FORMAT "), using default", usage,
+          dev_caps->max_usage);
+      usage = DEFAULT_USAGE;
+    }
+
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_USAGE, (amf_int64) usage);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set usage, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
   }
 
   if (self->preset > AMF_VIDEO_ENCODER_QUALITY_PRESET_UNKNOWN) {
-    guint64 ver = gst_amf_get_version ();
-    if (self->preset == AMF_VIDEO_ENCODER_QUALITY_PRESET_HIGH_QUALITY &&
-        ver < AMF_MAKE_FULL_VERSION (1, 4, 36, 0)) {
-      self->preset = AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY;
-      GST_WARNING_OBJECT (self, "'High quality' preset (h264/h265) is "
-          "available from AMF 1.4.36 only. Your version is "
-          "%lld.%lld.%lld. Falling back to 'Quality' preset",
-          AMF_GET_MAJOR_VERSION (ver), AMF_GET_MINOR_VERSION (ver),
-          AMF_GET_SUBMINOR_VERSION (ver));
+    gint preset = self->preset;
+
+    if (preset > dev_caps->max_preset) {
+      GST_WARNING_OBJECT (self, "Preset %d is not supported by AMF runtime "
+          "(max %" G_GINT64_FORMAT "), using 'quality' preset", preset,
+          dev_caps->max_preset);
+      preset = AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY;
     }
+
     result = comp->SetProperty (AMF_VIDEO_ENCODER_QUALITY_PRESET,
-        (amf_int64) self->preset);
+        (amf_int64) preset);
     if (result != AMF_OK) {
       GST_ERROR_OBJECT (self, "Failed to set quality preset, result %"
           GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
@@ -1585,10 +1664,39 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
   }
 
   if (self->rate_control != AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_UNKNOWN) {
-    result = comp->SetProperty (AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD,
-        (amf_int64) self->rate_control);
+    if (self->rate_control > dev_caps->max_rate_control) {
+      GST_WARNING_OBJECT (self, "Rate control %d is not supported by AMF "
+          "runtime (max %" G_GINT64_FORMAT "), using default",
+          self->rate_control, dev_caps->max_rate_control);
+    } else {
+      if (self->rate_control >=
+          AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_QUALITY_VBR) {
+        if (!dev_caps->pre_analysis) {
+          GST_ERROR_OBJECT (self, "qvbr, hqvbr, and hqcbr require "
+              "Pre-Analysis which is not supported by this device");
+          goto error;
+        }
+        if (!self->pa.pre_analysis) {
+          GST_ERROR_OBJECT (self, "qvbr, hqvbr, and hqcbr require "
+              "Pre-Analysis to be enabled (pre-analysis=true)");
+          goto error;
+        }
+      }
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD,
+          (amf_int64) self->rate_control);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set rate-control, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+    }
+  }
+
+  if (comp->HasProperty (AMF_VIDEO_ENCODER_QVBR_QUALITY_LEVEL)) {
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_QVBR_QUALITY_LEVEL,
+        (amf_int64) self->qvbr_quality);
     if (result != AMF_OK) {
-      GST_ERROR_OBJECT (self, "Failed to set rate-control, result %"
+      GST_ERROR_OBJECT (self, "Failed to set qvbr quality, result %"
           GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
       goto error;
     }
@@ -1708,6 +1816,7 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
         goto error;
     }
   }
+
   result = comp->Init (AMF_SURFACE_NV12, info->width, info->height);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to init component, result %"
@@ -1735,6 +1844,7 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
 
   switch (rc_mode) {
     case AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CBR:
+    case AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_HIGH_QUALITY_CBR:
       if (self->bitrate > 0) {
         comp->SetProperty (AMF_VIDEO_ENCODER_TARGET_BITRATE,
             (amf_int64) self->bitrate * 1000);
@@ -1744,6 +1854,7 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
       break;
     case AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_PEAK_CONSTRAINED_VBR:
     case AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_LATENCY_CONSTRAINED_VBR:
+    case AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_HIGH_QUALITY_VBR:
       if (self->bitrate > 0) {
         comp->SetProperty (AMF_VIDEO_ENCODER_TARGET_BITRATE,
             (amf_int64) self->bitrate * 1000);
@@ -2275,7 +2386,34 @@ gst_amf_h264_enc_create_class_data (GstObject * device, AMFComponent * comp)
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_i, 22);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_p, 22);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_b, 22);
+  QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QVBR_QUALITY_LEVEL,
+      default_qvbr_quality, 23);
 #undef QUERY_DEFAULT_PROP
+
+#define QUERY_ENUM_MAX_PROP(prop,val,default_val) G_STMT_START { \
+  const AMFPropertyInfo *pinfo = nullptr; \
+  result = comp->GetPropertyInfo (prop, &pinfo); \
+  if (result == AMF_OK && pinfo && pinfo->pEnumDescription && \
+      pinfo->pEnumDescription->name) { \
+    const AMFEnumDescriptionEntry *entry = pinfo->pEnumDescription; \
+    dev_caps.val = entry->value; \
+    for (; entry->name; entry++) \
+      dev_caps.val = MAX (dev_caps.val, (amf_int64) entry->value); \
+    GST_INFO_OBJECT (device, G_STRINGIFY (val) ": %" G_GINT64_FORMAT, \
+        dev_caps.val); \
+  } else { \
+    dev_caps.val = default_val; \
+  } \
+} G_STMT_END
+
+  QUERY_ENUM_MAX_PROP (AMF_VIDEO_ENCODER_USAGE,
+      max_usage, AMF_VIDEO_ENCODER_USAGE_WEBCAM);
+  QUERY_ENUM_MAX_PROP (AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD,
+      max_rate_control,
+      AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_LATENCY_CONSTRAINED_VBR);
+  QUERY_ENUM_MAX_PROP (AMF_VIDEO_ENCODER_QUALITY_PRESET,
+      max_preset, AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY);
+#undef QUERY_ENUM_MAX_PROP
 
   result = comp->GetProperty (AMF_VIDEO_ENCODER_PREENCODE_ENABLE,
       &pre_encode_supported);
