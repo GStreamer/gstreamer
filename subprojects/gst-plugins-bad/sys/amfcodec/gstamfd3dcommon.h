@@ -21,6 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <components/Component.h>
 #include <core/Context.h>
 #include "gstamfutils.h"
 
@@ -114,5 +115,8 @@ gboolean gst_amf_d3d12_get_input_buffer (GstElement * element,
     const GstVideoInfo * info, GstBufferPool * dst_pool, GstBuffer * inbuf,
     GstBuffer ** out_buf);
 #endif /* HAVE_GST_D3D12 */
+
+GstCaps * gst_amf_d3d_get_memory_caps (GstCaps * caps,
+    amf::AMFComponent * comp);
 
 #endif /* G_OS_WIN32 */

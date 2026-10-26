@@ -834,4 +834,36 @@ gst_amf_d3d12_get_input_buffer (GstElement * element, GstAmfD3DPrivate * d3d,
 
 #endif /* HAVE_GST_D3D12 */
 
+/* The D3D11 (+D3D12, if @comp's context has one) memory-feature variant of
+ * every structure in @caps. Doesn't touch @caps itself, so callers can
+ * still append it last (e.g. as the system-memory fallback) or insert
+ * further variants (e.g. Vulkan) first. */
+GstCaps *
+gst_amf_d3d_get_memory_caps (GstCaps * caps, AMFComponent * comp)
+{
+  GstCaps *d3d11_caps = gst_caps_copy (caps);
+
+  for (guint i = 0; i < gst_caps_get_size (d3d11_caps); i++) {
+    gst_caps_set_features (d3d11_caps, i,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
+  }
+#ifdef HAVE_GST_D3D12
+  {
+    AMFContext2Ptr ctx (comp->GetContext ());
+
+    if (ctx && ctx->GetDX12Device ()) {
+      GstCaps *d3d12_caps = gst_caps_copy (caps);
+
+      for (guint i = 0; i < gst_caps_get_size (d3d12_caps); i++) {
+        gst_caps_set_features (d3d12_caps, i,
+            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, NULL));
+      }
+      gst_caps_append (d3d11_caps, d3d12_caps);
+    }
+  }
+#endif /* HAVE_GST_D3D12 */
+
+  return d3d11_caps;
+}
+
 #endif /* G_OS_WIN32 */

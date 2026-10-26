@@ -39,6 +39,7 @@
 
 #include "gstamfvqenhancer.h"
 #include "gstamfbasefilter.h"
+#include "gstamfd3dcommon.h"
 #include "gstamfutils.h"
 
 #include <components/VQEnhancer.h>
@@ -269,7 +270,6 @@ gst_amf_vq_enhancer_configure_component (GstAmfBaseFilter * filter,
 static GstCaps *
 gst_amf_vq_enhancer_build_template_caps (AMFComponent * comp, gboolean is_input)
 {
-  GstCaps *caps;
   AMFCapsPtr amf_caps;
   AMFIOCapsPtr io_caps;
   AMF_RESULT result;
@@ -329,38 +329,14 @@ gst_amf_vq_enhancer_build_template_caps (AMFComponent * comp, gboolean is_input)
   }
 
   {
+    GstCaps *caps;
     gchar *caps_str = g_strdup_printf ("video/x-raw, format = %s, "
         "width = (int) [ %d, %d ], height = (int) [ %d, %d ]",
         formats.c_str (), min_w, max_w, min_h, max_h);
-    caps = gst_caps_from_string (caps_str);
+    caps = gst_amf_get_supported_memory_caps (caps_str, comp);
     g_free (caps_str);
+    return caps;
   }
-  if (!caps)
-    return nullptr;
-
-#ifdef G_OS_WIN32
-  {
-    GstCaps *d3d11_caps = gst_caps_copy (caps);
-    for (guint j = 0; j < gst_caps_get_size (d3d11_caps); j++) {
-      gst_caps_set_features (d3d11_caps, j,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
-    }
-#ifdef HAVE_GST_D3D12
-    if (AMFContext2Ptr (comp->GetContext ())->GetDX12Device ()) {
-      GstCaps *d3d12_caps = gst_caps_copy (caps);
-      for (guint j = 0; j < gst_caps_get_size (d3d12_caps); j++) {
-        gst_caps_set_features (d3d12_caps, j,
-            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, NULL));
-      }
-      gst_caps_append (d3d11_caps, d3d12_caps);
-    }
-#endif
-    gst_caps_append (d3d11_caps, caps);
-    return d3d11_caps;
-  }
-#else
-  return caps;
-#endif
 }
 
 void

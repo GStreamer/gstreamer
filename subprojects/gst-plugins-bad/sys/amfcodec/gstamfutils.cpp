@@ -28,13 +28,8 @@
 #include <cstring>
 #include <mutex>
 
-/* Only for the GST_CAPS_FEATURE_MEMORY_D3D11/D3D12_MEMORY strings below;
- * this file has no other D3D dependency and builds on every platform. */
 #ifdef G_OS_WIN32
-#include <gst/d3d11/gstd3d11.h>
-#ifdef HAVE_GST_D3D12
-#include <gst/d3d12/gstd3d12.h>
-#endif
+#include "gstamfd3dcommon.h"
 #endif
 
 using namespace amf;
@@ -466,6 +461,33 @@ gst_amf_check_caps_api_mismatch (GstElement * element, GstAmfApiState * state,
         "feature.", mismatched_entry ? mismatched_entry->feature : "?",
         active_entry ? active_entry->nick : "?", in_caps, out_caps);
   }
+}
+
+/* The caps an AMF encoder (sink pad) or filter (either pad) should
+ * advertise for @caps_str (plain "video/x-raw, ..."): the zero-copy
+ * memory features @comp (an amf::AMFComponent) can back, ahead of a
+ * system-memory fallback. */
+GstCaps *
+gst_amf_get_supported_memory_caps (const gchar * caps_str, gpointer comp)
+{
+  GstCaps *caps;
+  GstCaps *result;
+
+  caps = gst_caps_from_string (caps_str);
+
+  g_return_val_if_fail (caps, NULL);
+
+  result = gst_caps_new_empty ();
+#ifdef G_OS_WIN32
+  {
+    GstCaps *d3d_caps = gst_amf_d3d_get_memory_caps (caps,
+        (AMFComponent *) comp);
+    if (d3d_caps)
+      gst_caps_append (result, d3d_caps);
+  }
+#endif
+  gst_caps_append (result, caps);
+  return result;
 }
 
 /* Drops caps structures carrying a different known backend's memory

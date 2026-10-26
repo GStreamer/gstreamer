@@ -84,6 +84,9 @@ void gst_amf_check_caps_api_mismatch (GstElement * element,
 
 GstCaps *     gst_amf_filter_caps_by_api (GstCaps * caps, GstAmfApi api);
 
+GstCaps *     gst_amf_get_supported_memory_caps (const gchar * caps_str,
+    gpointer comp);
+
 gboolean      gst_amf_init_once (void);
 
 gpointer      gst_amf_get_factory (void);
