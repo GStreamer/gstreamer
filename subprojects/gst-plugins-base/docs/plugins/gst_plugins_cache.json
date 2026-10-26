@@ -15163,6 +15163,18 @@
                         "type": "gdouble",
                         "writable": true
                     },
+                    "use-fastpaths": {
+                        "blurb": "Whether to use fast paths, which can lead to slightly less accurate conversions",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "valignment": {
                         "blurb": "Vertical alignment of the video content when adding borders",
                         "conditionally-available": false,
@@ -15452,6 +15464,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gdouble",
+                        "writable": true
+                    },
+                    "use-fastpaths": {
+                        "blurb": "Whether to use fast paths, which can lead to slightly less accurate conversions",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "valignment": {

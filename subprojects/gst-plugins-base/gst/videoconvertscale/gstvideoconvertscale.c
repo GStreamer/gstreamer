@@ -104,6 +104,7 @@ typedef struct
   gdouble alpha_value;
   GstVideoConvertScaleVAlign v_align;
   GstVideoConvertScaleHAlign h_align;
+  gboolean use_fastpaths;
 
   GstVideoConverter *convert;
 
@@ -155,6 +156,7 @@ GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 #define DEFAULT_PROP_N_THREADS 1
 #define DEFAULT_PROP_VALIGN GST_VIDEO_CONVERT_SCALE_VALIGN_CENTER
 #define DEFAULT_PROP_HALIGN GST_VIDEO_CONVERT_SCALE_HALIGN_CENTER
+#define DEFAULT_PROP_USE_FASTPATHS  TRUE
 
 enum
 {
@@ -178,6 +180,7 @@ enum
   PROP_CONVERTER_CONFIG,
   PROP_VALIGN,
   PROP_HALIGN,
+  PROP_USE_FASTPATHS,
 };
 
 #undef GST_VIDEO_SIZE_RANGE
@@ -469,6 +472,21 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
           GST_TYPE_VIDEO_CONVERT_SCALE_HALIGN, DEFAULT_PROP_HALIGN,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVideoConvertScale:use-fastpaths:
+   *
+   * Whether to use fast paths. Fast paths can lead to slightly less accurate
+   * conversions.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_USE_FASTPATHS,
+      g_param_spec_boolean ("use-fastpaths",
+          "Use fast paths",
+          "Whether to use fast paths, which can lead to slightly less accurate conversions",
+          DEFAULT_PROP_USE_FASTPATHS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter and scaler",
       "Filter/Converter/Video/Scaler/Colorspace",
@@ -539,6 +557,7 @@ gst_video_convert_scale_init (GstVideoConvertScale * self)
   priv->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
   priv->v_align = DEFAULT_PROP_VALIGN;
   priv->h_align = DEFAULT_PROP_HALIGN;
+  priv->use_fastpaths = DEFAULT_PROP_USE_FASTPATHS;
 
   gst_video_info_init (&priv->last_frame_vinfo);
 
@@ -643,6 +662,9 @@ gst_video_convert_scale_set_property (GObject * object, guint prop_id,
     case PROP_HALIGN:
       priv->h_align = g_value_get_enum (value);
       break;
+    case PROP_USE_FASTPATHS:
+      priv->use_fastpaths = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -714,6 +736,9 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HALIGN:
       g_value_set_enum (value, priv->h_align);
+      break;
+    case PROP_USE_FASTPATHS:
+      g_value_set_boolean (value, priv->use_fastpaths);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1119,7 +1144,8 @@ gst_video_convert_scale_get_default_config (GstVideoConvertScale * self,
       GST_TYPE_VIDEO_GAMMA_MODE, priv->gamma_mode,
       GST_VIDEO_CONVERTER_OPT_PRIMARIES_MODE, GST_TYPE_VIDEO_PRIMARIES_MODE,
       priv->primaries_mode, GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT,
-      priv->n_threads, NULL);
+      priv->n_threads, GST_VIDEO_CONVERTER_OPT_USE_FASTPATHS,
+      G_TYPE_BOOLEAN, priv->use_fastpaths, NULL);
 
   return options;
 }

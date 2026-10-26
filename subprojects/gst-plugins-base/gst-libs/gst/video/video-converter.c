@@ -799,6 +799,7 @@ get_opt_enum (GstVideoConverter * convert, const gchar * opt, GType type,
 #define DEFAULT_OPT_DITHER_METHOD GST_VIDEO_DITHER_BAYER
 #define DEFAULT_OPT_DITHER_QUANTIZATION 1
 #define DEFAULT_OPT_ASYNC_TASKS FALSE
+#define DEFAULT_OPT_USE_FASTPATHS TRUE
 
 #define GET_OPT_FILL_BORDER(c) get_opt_bool(c, \
     GST_VIDEO_CONVERTER_OPT_FILL_BORDER, DEFAULT_OPT_FILL_BORDER)
@@ -831,6 +832,8 @@ get_opt_enum (GstVideoConverter * convert, const gchar * opt, GType type,
     GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION, DEFAULT_OPT_DITHER_QUANTIZATION)
 #define GET_OPT_ASYNC_TASKS(c) get_opt_bool(c, \
     GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS, DEFAULT_OPT_ASYNC_TASKS)
+#define GET_OPT_USE_FASTPATHS(c) get_opt_bool(c, \
+    GST_VIDEO_CONVERTER_OPT_USE_FASTPATHS, DEFAULT_OPT_USE_FASTPATHS)
 
 #define CHECK_ALPHA_COPY(c) (GET_OPT_ALPHA_MODE(c) == GST_VIDEO_ALPHA_MODE_COPY)
 #define CHECK_ALPHA_SET(c) (GET_OPT_ALPHA_MODE(c) == GST_VIDEO_ALPHA_MODE_SET)
@@ -10466,6 +10469,9 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   gboolean need_copy, need_set, need_mult;
   gint width, height;
   guint in_bpp, out_bpp;
+
+  if (!GET_OPT_USE_FASTPATHS (convert))
+    return FALSE;
 
   width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
   height = GST_VIDEO_INFO_FIELD_HEIGHT (&convert->in_info);

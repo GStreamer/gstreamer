@@ -285,6 +285,16 @@ typedef enum {
  */
 #define GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS   "GstVideoConverter.async-tasks"
 
+/**
+ * GST_VIDEO_CONVERTER_OPT_USE_FASTPATHS:
+ *
+ * #G_TYPE_BOOLEAN, whether to use fast paths. Fast paths can lead to slightly
+ * less accurate conversions. Default %TRUE
+ *
+ * Since: 1.30
+ */
+#define GST_VIDEO_CONVERTER_OPT_USE_FASTPATHS   "GstVideoConverter.use-fastpaths"
+
 typedef struct _GstVideoConverter GstVideoConverter;
 
 GST_VIDEO_API
