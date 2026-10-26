@@ -295,19 +295,65 @@ typedef struct _GstLineCache GstLineCache;
 
 typedef struct _MatrixData MatrixData;
 
+// A conversion matrix to be applied to translate from the input components
+// to the output components.
+//
+// For example, this is what the double matrix may look like when going from AYUV
+// to ARGB (full range):
+//
+//    Y        U         V         offset
+// R [1.000000 0.000000 1.400000 -179.200011]
+// G [1.000000 -0.331864 -0.711864 133.597296]
+// B [1.000000 1.780000 0.000000 -227.840013]
+//
+// This row is unused in practice:
+// A [0.000000 0.000000  0.000000  1.000000]
+//
+// Walkthrough of the conversion of a bright red AYUV pixel:
+// pixel value: (0xff, 0x4c, 0x55, 0xff) == (255, 76, 85, 255)
+//
+// Red component:
+// (1.000000 * 76) + (0.000000 * 85) + (1.400000 * 255) + (-179.200011) = 253.79 (~= 254)
+// Green component:
+// (1.000000 * 76) + (-0.331864 * 85) + (-0.711864 * 255) + (133.597296) = -0.13 (clamped to 0)
+// Blue component:
+// (1.000000 * 76) + (1.780000 * 85) + (0.000000 * 255) + (-227.840013) = -0.54 (clamped to 0)
+//
+// This results in a RGB pixel value of (0xfe, 0x00, 0x00)
+//
+// The contents of the matrix are computed by accumulating operations, for instance application
+// of input colorimetry range, then (optionally) conversion to RGB, then (optionally) conversion
+// to YUV and finally application of output colorimetry range. This means the matrix can be applied
+// only once, instead of going through all these steps one at a time.
+//
+// The double matrix (dm) is not applied as is, as performing integer arithmetics is faster, the
+// matrix that is used is the integer matrix (im), computed by shifting dm to a wider domain. This
+// introduces some rounding accuracy error.
+//
+// When going through the fast paths, the translation column isn't actually used, instead the
+// conversion routines center on 128 before applying the conversion, then add the offset back
+// at the end. This is significantly faster, but results in some inaccuracy as well, which is
+// only within an acceptable range because the currently supported ranges are mostly centered
+// on 128 too (0_255 and 0_235).
 struct _MatrixData
 {
+  // The double matrix, accumulates conversion operations
   gdouble dm[4][4];
+  // The integer matrix, a scaled version of the double matrix
   gint im[4][4];
   gint width;
+  // When going through video_orc_matrix8, the columns of the matrix are stored in
+  // these fields and passed as parameters
   guint64 orc_p1;
   guint64 orc_p2;
   guint64 orc_p3;
   guint64 orc_p4;
+  // When the matrix does not clip, look up tables are stored in these fields
   gint64 *t_r;
   gint64 *t_g;
   gint64 *t_b;
   gint64 t_c;
+  // The function called to apply the matrix
   void (*matrix_func) (MatrixData * data, gpointer pixels);
 };
 

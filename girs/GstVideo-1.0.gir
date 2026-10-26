@@ -3094,6 +3094,12 @@ of cores.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="VIDEO_CONVERTER_OPT_USE_FASTPATHS" value="GstVideoConverter.use-fastpaths" c:type="GST_VIDEO_CONVERTER_OPT_USE_FASTPATHS" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h">#G_TYPE_BOOLEAN, whether to use fast paths. Fast paths can lead to slightly
+less accurate conversions. Default %TRUE</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="VIDEO_DECODER" c:identifier="GST_VIDEO_DECODER" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodecoder.h"/>
       <parameters>
