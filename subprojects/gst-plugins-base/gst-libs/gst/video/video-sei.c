@@ -172,13 +172,18 @@ gst_buffer_add_video_sei_user_data_unregistered_meta (GstBuffer * buffer,
 {
   GstVideoSEIUserDataUnregisteredMeta *meta;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (uuid != NULL, NULL);
+  g_return_val_if_fail (data != NULL || size == 0, NULL);
 
   meta = (GstVideoSEIUserDataUnregisteredMeta *) gst_buffer_add_meta (buffer,
       GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_INFO, NULL);
   g_assert (meta != NULL);
   memcpy (meta->uuid, uuid, 16);
-  meta->data = g_malloc (size);
-  memcpy (meta->data, data, size);
+  meta->data = NULL;
+  if (size > 0) {
+    meta->data = g_malloc (size);
+    memcpy (meta->data, data, size);
+  }
   meta->size = size;
 
   return meta;
