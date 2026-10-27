@@ -128,7 +128,9 @@ gst_h274_write_sei_user_data_unregistered (NalWriter * nw,
     GstH274UserDataUnregistered * udu)
 {
   WRITE_BYTES (nw, udu->uuid, uuid_iso_iec_11578_size);
-  WRITE_BYTES (nw, udu->data, udu->size);
+  if (udu->size > 0) {
+    WRITE_BYTES (nw, udu->data, udu->size);
+  }
 
   return TRUE;
 

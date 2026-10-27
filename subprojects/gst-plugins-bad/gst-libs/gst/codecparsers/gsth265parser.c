@@ -4504,7 +4504,9 @@ gst_h265_write_sei_user_data_unregistered (NalWriter * nw,
     GstH265UserDataUnregistered * udu)
 {
   WRITE_BYTES (nw, udu->uuid, 16);
-  WRITE_BYTES (nw, udu->data, udu->size);
+  if (udu->size > 0) {
+    WRITE_BYTES (nw, udu->data, udu->size);
+  }
 
   return TRUE;
 
