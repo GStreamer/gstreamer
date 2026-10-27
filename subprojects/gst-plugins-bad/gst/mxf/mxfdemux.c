@@ -5512,6 +5512,72 @@ no_new_offset:
   }
 }
 
+static gboolean
+delta_entries_equal (const MXFDeltaEntry * a, const MXFDeltaEntry * b)
+{
+  return a->slice == b->slice && a->pos_table_index == b->pos_table_index
+      && a->element_delta == b->element_delta;
+}
+
+static void
+drop_delta_entries (MXFIndexTableSegment * segment)
+{
+  g_free (segment->delta_entries);
+  segment->delta_entries = NULL;
+  segment->n_delta_entries = 0;
+}
+
+/* The delta lookup table belongs to a single index segment, but a track uses
+ * one delta id in all segments of the index search domain, so all of them have
+ * to agree on it. Drop the delta entries of the whole domain if they don't.
+ */
+static void
+ensure_common_delta_entries (GstMXFDemux * demux, GstMXFDemuxIndexTable * t,
+    MXFIndexTableSegment * segment)
+{
+  MXFIndexTableSegment *ref = NULL;
+  guint i, j;
+
+  if (t->delta_entries_inconsistent) {
+    drop_delta_entries (segment);
+    return;
+  }
+
+  /* No table to compare against */
+  if (segment->n_delta_entries == 0)
+    return;
+
+  for (i = 0; i < t->segments->len; i++) {
+    MXFIndexTableSegment *s =
+        &g_array_index (t->segments, MXFIndexTableSegment, i);
+    if (s->n_delta_entries == 0)
+      continue;
+    ref = s;
+    break;
+  }
+
+  if (ref) {
+    gboolean equal = ref->n_delta_entries == segment->n_delta_entries;
+    for (j = 0; equal && j < segment->n_delta_entries; j++)
+      equal = delta_entries_equal (&ref->delta_entries[j],
+          &segment->delta_entries[j]);
+    if (equal)
+      return;
+  }
+
+  GST_WARNING_OBJECT (demux,
+      "bodySID:%u indexSID:%u index search domain uses different delta tables, "
+      "ignoring delta entries", segment->body_sid, segment->index_sid);
+
+  t->delta_entries_inconsistent = TRUE;
+  t->reordered_delta_entry = -1;
+  for (i = 0; i < t->segments->len; i++) {
+    drop_delta_entries (&g_array_index (t->segments, MXFIndexTableSegment, i));
+  }
+
+  drop_delta_entries (segment);
+}
+
 static void
 collect_index_table_segments (GstMXFDemux * demux)
 {
@@ -5582,6 +5648,8 @@ collect_index_table_segments (GstMXFDemux * demux)
       t->reordered_delta_entry = -1;
       t->reverse_temporal_offsets = g_array_new (FALSE, TRUE, 1);
       demux->index_tables = g_list_prepend (demux->index_tables, t);
+    } else {
+      ensure_common_delta_entries (demux, t, segment);
     }
 
     /* Store index segment */

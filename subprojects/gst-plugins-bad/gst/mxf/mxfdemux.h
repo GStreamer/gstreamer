@@ -183,6 +183,9 @@ typedef struct
   /* Delta entry to which reordering should be applied (-1 == no reordering) */
   gint reordered_delta_entry;
 
+  /* Delta entries were dropped because the segments use different tables */
+  gboolean delta_entries_inconsistent;
+
   /* Array of gint8 reverse temporal offsets.
    * Contains the shift to apply to an entry DTS to get the PTS
    *
