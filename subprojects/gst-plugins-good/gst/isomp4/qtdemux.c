@@ -4590,6 +4590,39 @@ qtdemux_parse_pssh (GstQTDemux * qtdemux, GNode * node)
 }
 
 static gboolean
+qtdemux_count_trun_samples (GstQTDemux * qtdemux, GNode * traf_node,
+    guint64 * trun_samples)
+{
+  GNode *trun_node;
+  GstByteReader trun_peek;
+
+  *trun_samples = 0;
+
+  trun_node =
+      qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun, &trun_peek);
+  while (trun_node) {
+    guint32 trun_count;
+
+    if (!gst_byte_reader_skip (&trun_peek, 4) ||
+        !gst_byte_reader_get_uint32_be (&trun_peek, &trun_count)) {
+      GST_ERROR_OBJECT (qtdemux, "failed to read trun sample count");
+      return FALSE;
+    }
+    *trun_samples += trun_count;
+    /* qtdemux_parse_trun() rejects fragments above this anyway */
+    if (*trun_samples >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
+      GST_ERROR_OBJECT (qtdemux, "too many samples in track runs");
+      return FALSE;
+    }
+    trun_node =
+        qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
+        &trun_peek);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     guint64 moof_offset, QtDemuxStream * stream)
 {
@@ -4700,39 +4733,15 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       guint32 info_type = 0;
       guint64 offset = 0;
       guint32 info_type_parameter = 0;
-      guint64 trun_samples = 0;
-      GstByteReader trun_peek;
+      guint64 trun_samples;
+
+      g_clear_pointer (&qtdemux->cenc_aux_info_sizes, g_free);
 
       /* Validate saiz against the sample count of the track runs, which
        * are only parsed further below */
-      trun_node =
-          qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
-          &trun_peek);
-      while (trun_node) {
-        guint32 trun_count;
-
-        if (!gst_byte_reader_skip (&trun_peek, 4) ||
-            !gst_byte_reader_get_uint32_be (&trun_peek, &trun_count)) {
-          GST_ERROR_OBJECT (qtdemux, "failed to read trun sample count");
-          g_free (qtdemux->cenc_aux_info_sizes);
-          qtdemux->cenc_aux_info_sizes = NULL;
-          goto fail;
-        }
-        trun_samples += trun_count;
-        /* qtdemux_parse_trun() rejects fragments above this anyway */
-        if (trun_samples >=
-            QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
-          GST_ERROR_OBJECT (qtdemux, "too many samples in track runs");
-          g_free (qtdemux->cenc_aux_info_sizes);
-          qtdemux->cenc_aux_info_sizes = NULL;
-          goto fail;
-        }
-        trun_node =
-            qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
-            &trun_peek);
+      if (!qtdemux_count_trun_samples (qtdemux, traf_node, &trun_samples)) {
+        goto fail;
       }
-
-      g_free (qtdemux->cenc_aux_info_sizes);
 
       qtdemux->cenc_aux_info_sizes =
           qtdemux_parse_saiz (qtdemux, stream, &saiz_data, trun_samples,
