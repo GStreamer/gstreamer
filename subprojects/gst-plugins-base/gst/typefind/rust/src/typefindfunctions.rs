@@ -2478,6 +2478,38 @@ extern "C" fn itc_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// MacCaption captions
+// =============================================================================
+
+/// The major version digit of a MacCaption caption file, which is what the caps
+/// carry. The header is a fixed tag followed by `V<major>.<minor>`.
+fn mcc_probe(tf: &mut TypeFind) -> Option<i32> {
+    let head = tf.peek::<31>(0)?;
+    let Some((tag, [major, b'.', minor])) = head.split_last_chunk::<3>() else {
+        return None;
+    };
+    if !tag.starts_with(b"File Format=MacCaption_MCC V")
+        || !major.is_ascii_digit()
+        || !minor.is_ascii_digit()
+    {
+        return None;
+    }
+    Some(i32::from(*major - b'0'))
+}
+
+extern "C" fn mcc_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(version) = mcc_probe(tf) else {
+        return;
+    };
+    suggest!(
+        tf,
+        Prob::MAXIMUM,
+        c"application/x-mcc",
+        [(c"version", i32: version),]
+    );
+}
+
+// =============================================================================
 // Registration table and entry point
 // =============================================================================
 
@@ -2876,6 +2908,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("image/x-icon", MARGINAL, windows_icon_type_find, none, none),
     typefinder!("image/x-degas", MARGINAL, degas_type_find, none, none),
     typefinder!("image/vnd.radiance", MARGINAL, radiance_type_find, "hdr"),
+    typefinder!("application/x-mcc", PRIMARY, mcc_type_find, "mcc"),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
