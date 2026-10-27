@@ -346,9 +346,11 @@ gst_h264_base_sei_inserter_insert_sei (GstCodecSEIInserter * inserter,
     memcpy (udu->uuid, sei_meta->uuid, 16);
     udu->size = sei_meta->size;
 
-    data = g_malloc (sei_meta->size);
-    memcpy (data, sei_meta->data, sei_meta->size);
-    udu->data = data;
+    if (sei_meta->size > 0) {
+      data = g_malloc (sei_meta->size);
+      memcpy (data, sei_meta->data, sei_meta->size);
+      udu->data = data;
+    }
 
     g_array_append_val (self->sei_array, sei);
   }
