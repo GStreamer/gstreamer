@@ -211,13 +211,43 @@ extern "C" fn ar_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+/// The GUID of the ASF Header Object, as ASF specification section 10.1 lists it.
+const ASF_HEADER_GUID: [u8; 16] = [
+    0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c,
+];
+
+/// The Header Object exists to give an ASF file a well-known opening sequence, so
+/// that GUID alone is enough to recognise the container.
 extern "C" fn asf_type_find(tf: &mut TypeFind, _private: gpointer) {
-    const MAGIC: [u8; 16] = [
-        0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce,
-        0x6c,
-    ];
-    if tf.starts_with(&MAGIC) {
+    if tf.starts_with(&ASF_HEADER_GUID) {
         suggest!(tf, Prob::MAXIMUM, c"video/x-ms-asf");
+    }
+}
+
+/// MS-WMSP describes an `mms://` stream over HTTP as opening with a packet whose
+/// payload is the ASF header. Its first octet is a frame marker of `0x24` under a
+/// flag meaning the next packet follows at once, the next octet names it as a
+/// header packet, and the little-endian length after them counts what follows,
+/// covering the eight octet payload header and the payload. That payload is the
+/// ASF Header Object then the fixed 50 octet head of the Data Object, so the GUID
+/// sits at offset 12 and any conforming stream is well past the length bound.
+fn mmsh_probe(tf: &mut TypeFind) -> bool {
+    // Four octets of framing header, then an eight octet payload header, then the
+    // ASF header itself. A packet declaring no more than that is not carrying one.
+    const GUID_AT: usize = 4 + 8;
+    const MIN_PACKET_LEN: usize = GUID_AT + ASF_HEADER_GUID.len();
+
+    let Some(head) = tf.peek::<MIN_PACKET_LEN>(0) else {
+        return false;
+    };
+    head.starts_with(&[0x24, b'H'])
+        && u16le(&head[2..4]) > MIN_PACKET_LEN as u16
+        && head[GUID_AT..] == ASF_HEADER_GUID
+}
+
+extern "C" fn mmsh_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if mmsh_probe(tf) {
+        suggest!(tf, Prob::LIKELY, c"application/x-mmsh");
     }
 }
 
@@ -2591,6 +2621,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("audio/mobile-xmf", PRIMARY, mxmf_type_find, "mxmf"),
     typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
     typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
+    typefinder!("application/x-mmsh", SECONDARY, mmsh_type_find),
     typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
     // Note: typefindfunctions_subtitles registered below with no default caps.
     // Complex finders - structure validation and chunk/marker walking
