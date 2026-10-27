@@ -2478,7 +2478,7 @@ extern "C" fn itc_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
-// MacCaption captions
+// MacCaption captions, MIME multipart
 // =============================================================================
 
 /// The major version digit of a MacCaption caption file, which is what the caps
@@ -2497,6 +2497,44 @@ fn mcc_probe(tf: &mut TypeFind) -> Option<i32> {
     Some(i32::from(*major - b'0'))
 }
 
+/// The delimiter is looked for in the first few bytes and the header area in the
+/// first 256. RFC 2046 5.1.1 gives every body part a header area, and in
+/// practice the first part names its content there. A preamble ahead of the
+/// delimiter is legal, so the narrow window is a heuristic rather than a rule.
+const MULTIPART_DELIMITER_MAX: usize = 16;
+const MULTIPART_HEADER_MAX: usize = 256;
+const MULTIPART_CONTENT_TYPE: &[u8; 13] = b"content-type:";
+
+fn multipart_probe(tf: &mut TypeFind) -> bool {
+    let Some(delimiter) = tf.peek::<MULTIPART_DELIMITER_MAX>(0) else {
+        return false;
+    };
+    // Linear whitespace, because a stream handed over by an HTTP client can
+    // arrive with the line break still in front.
+    let lead = delimiter[..MULTIPART_DELIMITER_MAX - 2]
+        .iter()
+        .position(|b| !b.is_ascii_whitespace())
+        .unwrap_or(MULTIPART_DELIMITER_MAX - 2);
+    if delimiter[lead..lead + 2] != *b"--" {
+        return false;
+    }
+
+    let Some(head) = tf.peek::<MULTIPART_HEADER_MAX>(0) else {
+        return false;
+    };
+    // ASCII only: a high-bit byte ahead of the header line means this is not a
+    // text part, so the search stops rather than runs on into a binary body.
+    for window in head[..MULTIPART_HEADER_MAX - 1].windows(MULTIPART_CONTENT_TYPE.len() + 1) {
+        if !window[0].is_ascii() {
+            return false;
+        }
+        if window[0] == b'\n' && window[1..].eq_ignore_ascii_case(MULTIPART_CONTENT_TYPE) {
+            return true;
+        }
+    }
+    false
+}
+
 extern "C" fn mcc_type_find(tf: &mut TypeFind, _private: gpointer) {
     let Some(version) = mcc_probe(tf) else {
         return;
@@ -2507,6 +2545,12 @@ extern "C" fn mcc_type_find(tf: &mut TypeFind, _private: gpointer) {
         c"application/x-mcc",
         [(c"version", i32: version),]
     );
+}
+
+extern "C" fn multipart_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if multipart_probe(tf) {
+        suggest!(tf, Prob::MAXIMUM, c"multipart/x-mixed-replace");
+    }
 }
 
 // =============================================================================
@@ -2909,6 +2953,7 @@ const FEATURES: &[Feature] = &[
     typefinder!("image/x-degas", MARGINAL, degas_type_find, none, none),
     typefinder!("image/vnd.radiance", MARGINAL, radiance_type_find, "hdr"),
     typefinder!("application/x-mcc", PRIMARY, mcc_type_find, "mcc"),
+    typefinder!("multipart/x-mixed-replace", SECONDARY, multipart_type_find),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
