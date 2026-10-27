@@ -4904,6 +4904,10 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
 
+  /* Sticky event handling and probes can release the pad lock. */
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+
   /* do block probes */
   PROBE_HANDLE (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped,
       probe_handled);
@@ -4912,12 +4916,18 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
 
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+
   /* do post-blocking probes */
   PROBE_HANDLE (pad, type, data, probe_stopped, probe_handled);
 
   /* recheck sticky events because the probe might have cause a relink */
   if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
+
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;

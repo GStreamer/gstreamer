@@ -1031,6 +1031,120 @@ GST_START_TEST (test_push_linked_flushing)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  gboolean entered;
+  gboolean release;
+  GstPad *pad;
+  GstBuffer *buffer;
+  gboolean buffer_list;
+} PushFlushingData;
+
+static GstPadProbeReturn
+push_flushing_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  PushFlushingData *data = user_data;
+
+  g_mutex_lock (&data->lock);
+  data->entered = TRUE;
+  g_cond_broadcast (&data->cond);
+  while (!data->release)
+    g_cond_wait (&data->cond, &data->lock);
+  g_mutex_unlock (&data->lock);
+
+  /* Removing a probe must not bypass the flushing check. */
+  gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));
+  return GST_PAD_PROBE_OK;
+}
+
+static gpointer
+push_flushing_thread (gpointer user_data)
+{
+  PushFlushingData *data = user_data;
+  GstFlowReturn ret;
+
+  if (data->buffer_list) {
+    GstBufferList *list = gst_buffer_list_new ();
+
+    gst_buffer_list_add (list, gst_buffer_ref (data->buffer));
+    ret = gst_pad_push_list (data->pad, list);
+  } else {
+    ret = gst_pad_push (data->pad, gst_buffer_ref (data->buffer));
+  }
+  return GINT_TO_POINTER (ret);
+}
+
+static void
+test_push_flushing_in_probe (gboolean blocking, gboolean buffer_list)
+{
+  GstPad *src = gst_pad_new ("src", GST_PAD_SRC);
+  GstPad *sink = gst_pad_new ("sink", GST_PAD_SINK);
+  GstBuffer *buffer = gst_buffer_new ();
+  GstPadProbeType type = buffer_list ? GST_PAD_PROBE_TYPE_BUFFER_LIST :
+      GST_PAD_PROBE_TYPE_BUFFER;
+  PushFlushingData data = {.pad = src,.buffer = buffer,
+    .buffer_list = buffer_list
+  };
+  GThread *thread;
+  GstFlowReturn ret;
+
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  fail_unless (gst_pad_set_active (src, TRUE));
+  fail_unless (gst_pad_set_active (sink, TRUE));
+  fail_unless_equals_int (gst_pad_link (src, sink), GST_PAD_LINK_OK);
+  fail_unless (gst_pad_push_event (src, gst_event_new_stream_start ("test")));
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)));
+  gst_pad_add_probe (src, type | (blocking ? GST_PAD_PROBE_TYPE_BLOCK : 0),
+      push_flushing_probe, &data, NULL);
+  thread = g_thread_new ("push-flushing", push_flushing_thread, &data);
+
+  g_mutex_lock (&data.lock);
+  while (!data.entered)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  /* Deactivate while the callback has released the pad's object lock. */
+  fail_unless (gst_pad_set_active (src, FALSE));
+  g_mutex_lock (&data.lock);
+  data.release = TRUE;
+  g_cond_broadcast (&data.cond);
+  g_mutex_unlock (&data.lock);
+  ret = GPOINTER_TO_INT (g_thread_join (thread));
+
+  fail_unless_equals_int (ret, GST_FLOW_FLUSHING);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+
+  gst_pad_unlink (src, sink);
+  gst_pad_set_active (sink, FALSE);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  gst_buffer_unref (buffer);
+  g_mutex_clear (&data.lock);
+  g_cond_clear (&data.cond);
+}
+
+GST_START_TEST (test_push_flushing_in_block_probe)
+{
+  test_push_flushing_in_probe (TRUE, FALSE);
+  test_push_flushing_in_probe (TRUE, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_push_flushing_in_buffer_probe)
+{
+  test_push_flushing_in_probe (FALSE, FALSE);
+  test_push_flushing_in_probe (FALSE, TRUE);
+}
+
+GST_END_TEST;
+
 static GstBuffer *
 buffer_from_string (const gchar * str)
 {
@@ -3743,6 +3857,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_push_unlinked);
   tcase_add_test (tc_chain, test_push_linked);
   tcase_add_test (tc_chain, test_push_linked_flushing);
+  tcase_add_test (tc_chain, test_push_flushing_in_block_probe);
+  tcase_add_test (tc_chain, test_push_flushing_in_buffer_probe);
   tcase_add_test (tc_chain, test_push_buffer_list_compat);
   tcase_add_test (tc_chain, test_flowreturn);
   tcase_add_test (tc_chain, test_push_negotiation);
