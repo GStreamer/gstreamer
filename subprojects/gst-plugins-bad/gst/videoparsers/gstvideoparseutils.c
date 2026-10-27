@@ -505,9 +505,14 @@ gst_video_parse_user_data_unregistered (GstElement * elt,
 
   memcpy (&msg.uuid, uuid, 16);
 
-  msg.size = gst_byte_reader_get_size (br);
-  if (!gst_byte_reader_dup_data (br, msg.size, &msg.data)) {
-    g_return_if_reached ();
+  msg.size = gst_byte_reader_get_remaining (br);
+  msg.data = NULL;
+  /* An empty payload must still be recorded (with NULL data); calling
+   * dup_data() on it would memcpy from a NULL pointer. */
+  if (msg.size > 0 && !gst_byte_reader_dup_data (br, msg.size, &msg.data)) {
+    GST_ERROR_OBJECT (elt,
+        "Failed to duplicate user data of size %" G_GSIZE_FORMAT, msg.size);
+    return;
   }
 
   if (user_data->messages == NULL) {
