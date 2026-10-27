@@ -1087,6 +1087,125 @@ GST_START_TEST (test_caps_before_flush_race_condition)
 
 GST_END_TEST;
 
+static GstEvent *
+pull_event (GstAppSink * app_sink)
+{
+  GstMiniObject *obj = gst_app_sink_try_pull_object (app_sink, 0);
+
+  fail_unless (obj != NULL);
+  fail_unless (GST_IS_EVENT (obj), "expected an event, got %" GST_PTR_FORMAT,
+      obj);
+
+  return GST_EVENT_CAST (obj);
+}
+
+GST_START_TEST (test_sticky_events_kept_on_flush)
+{
+  GstElement *sink;
+  GstAppSink *app_sink;
+  GstTagList *tags;
+  GstEvent *event;
+  GstMiniObject *obj;
+  GstSegment segment;
+  gchar *title = NULL;
+  gint expected_buffer_number = 3;
+
+  sink = setup_appsink ();
+  app_sink = GST_APP_SINK (sink);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  /* Queue stream-start, caps, segment, two stream tags for the same slot, a
+   * global tag, two custom sticky events with different names, a custom
+   * non-sticky event, and a buffer, then flush. */
+  push_buffer_with_number (1);
+  tags = gst_tag_list_new (GST_TAG_TITLE, "first", NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+  tags = gst_tag_list_new (GST_TAG_TITLE, "second", NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+  tags = gst_tag_list_new (GST_TAG_TITLE, "global", NULL);
+  gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+              gst_structure_new_empty ("sticky"))));
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+              gst_structure_new_empty ("other-sticky"))));
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new_empty ("not-sticky"))));
+  push_buffer_with_number (2);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_start ()));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE)));
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  /* Upstream won't send them again: after the FLUSH_STOP, the sticky events
+   * are still there, the latest one per slot, but not the old segment and
+   * buffers, nor the non-sticky event. Pull them before anything else is
+   * queued, so they must be accounted for to be pulled. */
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event), GST_EVENT_FLUSH_STOP);
+  gst_event_unref (event);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event), GST_EVENT_STREAM_START);
+  gst_event_unref (event);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event), GST_EVENT_CAPS);
+  gst_event_unref (event);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event), GST_EVENT_TAG);
+  gst_event_parse_tag (event, &tags);
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &title));
+  assert_equals_string (title, "second");
+  g_free (title);
+  gst_event_unref (event);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event), GST_EVENT_TAG);
+  gst_event_parse_tag (event, &tags);
+  assert_equals_int (gst_tag_list_get_scope (tags), GST_TAG_SCOPE_GLOBAL);
+  gst_event_unref (event);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event),
+      GST_EVENT_CUSTOM_DOWNSTREAM_STICKY);
+  fail_unless (gst_event_has_name (event, "sticky"));
+  gst_event_unref (event);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event),
+      GST_EVENT_CUSTOM_DOWNSTREAM_STICKY);
+  fail_unless (gst_event_has_name (event, "other-sticky"));
+  gst_event_unref (event);
+
+  fail_unless (gst_app_sink_try_pull_object (app_sink, 0) == NULL);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  push_buffer_with_number (3);
+
+  event = pull_event (app_sink);
+  assert_equals_int (GST_EVENT_TYPE (event), GST_EVENT_SEGMENT);
+  gst_event_unref (event);
+
+  obj = gst_app_sink_try_pull_object (app_sink, 0);
+  fail_unless (GST_IS_SAMPLE (obj));
+  gst_check_buffer_data (gst_sample_get_buffer (GST_SAMPLE_CAST (obj)),
+      &expected_buffer_number, sizeof (gint));
+  gst_mini_object_unref (obj);
+
+  fail_unless (gst_app_sink_try_pull_object (app_sink, 0) == NULL);
+
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static gboolean
 propose_allocation_cb (GstAppSink * appsink, GstQuery * query,
     gpointer callback_data)
@@ -1299,6 +1418,7 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_event_paused);
   tcase_add_test (tc_chain, test_reverse_stepping);
   tcase_add_test (tc_chain, test_caps_before_flush_race_condition);
+  tcase_add_test (tc_chain, test_sticky_events_kept_on_flush);
   tcase_add_test (tc_chain, test_query_allocation_callback);
   tcase_add_test (tc_chain, test_query_allocation_signals);
   tcase_add_test (tc_chain, test_eos_reset);
