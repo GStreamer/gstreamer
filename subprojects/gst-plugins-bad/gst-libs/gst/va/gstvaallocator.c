@@ -469,13 +469,14 @@ static gboolean
 _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
     guint usage_hint, guint64 * modifiers, guint num_modifiers,
     GstVideoInfo * info, VASurfaceID * ret_surface,
-    VADRMPRIMESurfaceDescriptor * ret_desc)
+    VADRMPRIMESurfaceDescriptor * ret_desc, gboolean probing)
 {
   VADRMPRIMESurfaceDescriptor desc = { 0, };
   guint32 i, fourcc, rt_format, export_flags;
   GstVideoFormat format;
   VASurfaceID surface;
   guint64 prev_modifier = DRM_FORMAT_MOD_INVALID;
+  GstDebugLevel log_level = probing ? GST_LEVEL_INFO : GST_LEVEL_ERROR;
 
   _init_debug_category ();
 
@@ -520,7 +521,8 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
   }
 
   if (desc.num_objects == 0) {
-    GST_ERROR ("Failed to export surface to dmabuf");
+    GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, log_level, NULL,
+        "Failed to export surface to dmabuf");
     goto failed;
   }
 
@@ -528,14 +530,16 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
     guint64 modifier = desc.objects[i].drm_format_modifier;
 
     if (!_modifier_found (modifier, modifiers, num_modifiers)) {
-      GST_ERROR ("driver set a modifier different from allowed list: "
+      GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, log_level, NULL,
+          "driver set a modifier different from allowed list: "
           "0x%016" G_GINT64_MODIFIER "x", modifier);
       goto failed;
     }
     /* XXX: all dmabufs in buffer have to have the same modifier, otherwise the
      * drm-format field in caps is ill-designed */
     if (i > 0 && modifier != prev_modifier) {
-      GST_ERROR ("Different objects have different modifier");
+      GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, log_level, NULL,
+          "Different objects have different modifier");
       goto failed;
     }
 
@@ -581,7 +585,7 @@ gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * display,
   gst_video_info_set_format (&info, format, 64, 64);
 
   if (!_va_create_surface_and_export_to_dmabuf (display, usage_hint,
-          NULL, 0, &info, &surface, &desc))
+          NULL, 0, &info, &surface, &desc, FALSE))
     return DRM_FORMAT_MOD_INVALID;
 
   /* Close the fds we won't be using */
@@ -617,7 +621,7 @@ gst_va_dmabuf_try_modifier_for_format (GstVaDisplay * display,
   gst_video_info_set_format (&info, format, 64, 64);
 
   if (!_va_create_surface_and_export_to_dmabuf (display, usage_hint,
-          &modifier, 1, &info, &surface, &desc))
+          &modifier, 1, &info, &surface, &desc, TRUE))
     return FALSE;
 
   /* Close the fds we won't be using */
@@ -647,7 +651,8 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
 
   if (!_va_create_surface_and_export_to_dmabuf (self->display, self->usage_hint,
-          &self->info.drm_modifier, 1, &self->info.vinfo, &surface, &desc))
+          &self->info.drm_modifier, 1, &self->info.vinfo, &surface, &desc,
+          FALSE))
     return FALSE;
 
   buf = gst_va_buffer_surface_new (self->display, surface);
