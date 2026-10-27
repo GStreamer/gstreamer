@@ -44,4 +44,6 @@ void gst_queue_status_info_pop (GstQueueStatusInfo * info, GstMiniObject * item,
     GstSegment * current_segment, GstSegment * last_segment,
     GstObject * log_context);
 
+gboolean gst_app_keep_on_flush (GstMiniObject * obj);
+
 #endif

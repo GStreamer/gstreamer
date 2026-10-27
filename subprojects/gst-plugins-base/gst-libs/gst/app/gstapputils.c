@@ -248,3 +248,14 @@ gst_queue_status_info_pop (GstQueueStatusInfo * info, GstMiniObject * item,
       " buffers, %" GST_TIME_FORMAT, info->queued_bytes,
       info->queued_buffers, GST_TIME_ARGS (info->queued_time));
 }
+
+/* Whether @obj is a sticky event that a flush doesn't invalidate, as on a
+ * pad: nothing sends it again after the flush. */
+gboolean
+gst_app_keep_on_flush (GstMiniObject * obj)
+{
+  return GST_IS_EVENT (obj) && GST_EVENT_IS_STICKY (obj)
+      && GST_EVENT_TYPE (obj) != GST_EVENT_SEGMENT
+      && GST_EVENT_TYPE (obj) != GST_EVENT_EOS
+      && GST_EVENT_TYPE (obj) != GST_EVENT_STREAM_GROUP_DONE;
+}

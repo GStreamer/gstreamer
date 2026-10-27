@@ -58,6 +58,11 @@
  * is stopped or in the EOS state. You can check for the EOS state with the
  * "eos" property or with the gst_app_sink_is_eos() method.
  *
+ * Serialized events can be pulled along with the samples with
+ * gst_app_sink_pull_object(). Upstream doesn't send sticky events again after
+ * a flush, so the ones that were queued but not pulled yet are kept, as long
+ * as the pad still has them.
+ *
  * The eos signal can also be used to be informed when the EOS state is reached
  * to avoid polling.
  */
@@ -1006,8 +1011,31 @@ gst_app_sink_clear_sample_contents (GstAppSink * appsink)
   gst_sample_set_segment (priv->sample, NULL);
 }
 
+typedef struct
+{
+  GQueue *sticky_events;
+  GQueue *requeue;
+} KeepStickyData;
+
+static gboolean
+gst_app_sink_keep_sticky_event (GstPad * pad, GstEvent ** event,
+    gpointer user_data)
+{
+  KeepStickyData *data = user_data;
+  GList *l = g_queue_find (data->sticky_events, *event);
+
+  if (l) {
+    g_queue_unlink (data->sticky_events, l);
+    g_queue_push_tail_link (data->requeue, l);
+  }
+
+  return TRUE;
+}
+
+/* With @sticky_events, the queued sticky events are moved there instead of
+ * being dropped, for the caller to keep the ones the pad still has. */
 static void
-gst_app_sink_flush_unlocked (GstAppSink * appsink)
+gst_app_sink_flush_unlocked (GstAppSink * appsink, GQueue * sticky_events)
 {
   GstMiniObject *obj;
   GstAppSinkPrivate *priv = appsink->priv;
@@ -1015,8 +1043,14 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
   GST_DEBUG_OBJECT (appsink, "flush stop appsink");
   priv->is_eos = FALSE;
   gst_buffer_replace (&priv->preroll_buffer, NULL);
-  while ((obj = gst_vec_deque_pop_head (priv->queue)))
+  while ((obj = gst_vec_deque_pop_head (priv->queue))) {
+    if (sticky_events && gst_app_keep_on_flush (obj)) {
+      g_queue_push_tail (sticky_events, obj);
+      continue;
+    }
+
     gst_mini_object_unref (obj);
+  }
 
   gst_queue_status_info_reset (&priv->queue_status_info);
 
@@ -1057,7 +1091,7 @@ gst_app_sink_stop (GstBaseSink * psink)
   priv->flushing = TRUE;
   priv->started = FALSE;
   priv->wait_status = NOONE_WAITING;
-  gst_app_sink_flush_unlocked (appsink);
+  gst_app_sink_flush_unlocked (appsink, NULL);
   gst_buffer_replace (&priv->preroll_buffer, NULL);
   gst_caps_replace (&priv->preroll_caps, NULL);
   gst_caps_replace (&priv->last_caps, NULL);
@@ -1095,6 +1129,9 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
 {
   GstAppSink *appsink = GST_APP_SINK_CAST (sink);
   GstAppSinkPrivate *priv = appsink->priv;
+  GQueue sticky_events = G_QUEUE_INIT;
+  GQueue requeue = G_QUEUE_INIT;
+  KeepStickyData keep = { &sticky_events, &requeue };
 
   GST_DEBUG_OBJECT (appsink, "%" GST_PTR_FORMAT, event);
 
@@ -1179,8 +1216,16 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&priv->mutex);
       GST_DEBUG_OBJECT (appsink, "received FLUSH_STOP");
-      gst_app_sink_flush_unlocked (appsink);
+      gst_app_sink_flush_unlocked (appsink, &sticky_events);
       g_mutex_unlock (&priv->mutex);
+
+      /* Upstream won't send the queued sticky events again. Keep the ones
+       * the pad still has, in its order: it already dropped the replaced
+       * ones and the ones the flush invalidates. */
+      gst_pad_sticky_events_foreach (GST_BASE_SINK_PAD (sink),
+          gst_app_sink_keep_sticky_event, &keep);
+      g_queue_clear_full (&sticky_events,
+          (GDestroyNotify) gst_mini_object_unref);
 
       if (!priv->silent) {
         g_object_notify (G_OBJECT (appsink), "dropped");
@@ -1195,6 +1240,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     gboolean emit;
     Callbacks *callbacks = NULL;
     GstAppSinkSimpleCallbacks *simple_callbacks = NULL;
+    GstMiniObject *obj;
     gboolean ret;
 
     g_mutex_lock (&priv->mutex);
@@ -1208,6 +1254,13 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
 
     gst_vec_deque_push_tail (priv->queue, gst_event_ref (event));
     gst_queue_status_info_push_event (&priv->queue_status_info);
+
+    /* Sticky events kept by a FLUSH_STOP go right after it */
+    while ((obj = g_queue_pop_head (&requeue))) {
+      GST_DEBUG_OBJECT (appsink, "keeping %" GST_PTR_FORMAT, obj);
+      gst_vec_deque_push_tail (priv->queue, obj);
+      gst_queue_status_info_push_event (&priv->queue_status_info);
+    }
 
     if ((priv->wait_status & APP_WAITING))
       g_cond_signal (&priv->cond);
