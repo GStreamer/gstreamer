@@ -262,6 +262,12 @@ _parse_eit (GstMpegtsSection * section)
     descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
     data += 2;
 
+    if (end - 4 - data < descriptors_loop_length) {
+      GST_WARNING ("PID %d invalid EIT entry descriptors loop length %d",
+          section->pid, descriptors_loop_length);
+      goto error;
+    }
+
     event->descriptors =
         gst_mpegts_parse_descriptors (data, descriptors_loop_length);
     if (event->descriptors == NULL)
@@ -1215,10 +1221,13 @@ static gpointer
 _parse_tot (GstMpegtsSection * section)
 {
   guint8 *data;
+  const guint8 *end;
   GstMpegtsTOT *tot;
   guint16 desc_len;
 
   GST_DEBUG ("TOT");
+
+  end = section->data + section->section_length;
 
   tot = g_new0 (GstMpegtsTOT, 1);
 
@@ -1229,6 +1238,14 @@ _parse_tot (GstMpegtsSection * section)
 
   desc_len = GST_READ_UINT16_BE (data) & 0xFFF;
   data += 2;
+
+  if (end - 4 - data < desc_len) {
+    GST_WARNING ("PID %d invalid TOT descriptors loop length %d",
+        section->pid, desc_len);
+    _gst_mpegts_tot_free (tot);
+    return NULL;
+  }
+
   tot->descriptors = gst_mpegts_parse_descriptors (data, desc_len);
 
   return (gpointer) tot;
@@ -1328,6 +1345,13 @@ _parse_sit (GstMpegtsSection * section)
 
   descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0fff;
   data += 2;
+
+  if (end - 4 - data < descriptors_loop_length) {
+    GST_WARNING ("PID %d invalid SIT descriptors loop length %d",
+        section->pid, descriptors_loop_length);
+    goto error;
+  }
+
   sit->descriptors =
       gst_mpegts_parse_descriptors (data, descriptors_loop_length);
   if (sit->descriptors == NULL)
