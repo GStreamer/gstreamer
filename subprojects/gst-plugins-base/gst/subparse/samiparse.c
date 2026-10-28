@@ -23,6 +23,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* Maximum size kept for an unterminated HTML tag. A dangling '<' swallows
+ * input until the next '>' or '<'; this bounds how much is buffered and
+ * rescanned before the pending tag is dropped. */
+#define MAX_PENDING_TAG_SIZE 4096
+
 #define ITALIC_TAG 'i'
 #define SPAN_TAG   's'
 #define RUBY_TAG   'r'
@@ -600,8 +605,24 @@ html_context_parse (HtmlContext * ctxt, const gchar * text, gsize text_len)
       /* find <blahblah> */
       if (!strchr (next, '>')) {
         /* no tag end point. drop what was already parsed, the pending tag
-         * stays buffered until the next text completes it */
+         * stays buffered until the next text completes it. Truncate the
+         * buffer to a maximum size so that we don't do O(n^2) work
+         * rescanning an ever-growing buffer on subsequent calls. */
         g_string_erase (ctxt->buf, 0, next - ctxt->buf->str);
+        if (ctxt->buf->len > MAX_PENDING_TAG_SIZE) {
+          /* Restart the pending tag at the next '<' inside the kept window:
+           * the buffer must keep starting with '<', otherwise the text left
+           * in front of it is emitted as caption content, and cutting a
+           * multibyte sequence in half would emit invalid UTF-8. Without a
+           * '<' in the window the pending tag is dropped, which ends the
+           * swallow window after at most MAX_PENDING_TAG_SIZE bytes. */
+          const gchar *p = memchr (ctxt->buf->str + ctxt->buf->len -
+              MAX_PENDING_TAG_SIZE, '<', MAX_PENDING_TAG_SIZE);
+          if (p)
+            g_string_erase (ctxt->buf, 0, p - ctxt->buf->str);
+          else
+            g_string_truncate (ctxt->buf, 0);
+        }
         return TRUE;
       }
 
