@@ -9476,7 +9476,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case GST_MAKE_FOURCC ('O', 'g', 'g', 'V'):
       case GST_MAKE_FOURCC ('d', 'v', 'c', 'a'):
       case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
-      case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
+      case FOURCC_ac_4:
       case FOURCC_enca:
       case FOURCC_mha1:
       case FOURCC_mhm1:
@@ -13965,6 +13965,133 @@ error:
   }
 }
 
+/* TS 103 190-2 table 56 */
+static const guint8 ac4_ch_mode_channels[] = {
+  1, 2, 3, 5, 6, 7, 8, 7, 8, 7, 8, 11, 12, 13, 14, 24
+};
+
+static void
+qtdemux_parse_ac4_dsi (GstQTDemux * qtdemux, const guint8 * data, guint size,
+    QtDemuxStreamStsdEntry * entry)
+{
+  GstBitReader br = GST_BIT_READER_INIT (data, size);
+  guint8 ac4_dsi_version, bitstream_version, fs_index, flag;
+  guint8 presentation_version, presentation_config_v1, ch_mode;
+  guint8 b_4_back_channels_present, top_channel_pairs;
+  guint16 n_presentations;
+  guint n_channels;
+
+  if (!gst_bit_reader_get_bits_uint8 (&br, &ac4_dsi_version, 3) ||
+      !gst_bit_reader_get_bits_uint8 (&br, &bitstream_version, 7) ||
+      !gst_bit_reader_get_bits_uint8 (&br, &fs_index, 1) ||
+      !gst_bit_reader_skip (&br, 4) ||
+      !gst_bit_reader_get_bits_uint16 (&br, &n_presentations, 9))
+    goto truncated;
+
+  GST_DEBUG_OBJECT (qtdemux, "ac4_dsi_version %u, bitstream_version %u, "
+      "fs_index %u, n_presentations %u", ac4_dsi_version, bitstream_version,
+      fs_index, n_presentations);
+
+  if (ac4_dsi_version != 1) {
+    GST_WARNING_OBJECT (qtdemux, "unhandled ac4_dsi_version %u",
+        ac4_dsi_version);
+    return;
+  }
+
+  entry->rate = fs_index ? 48000 : 44100;
+
+  if (bitstream_version > 1) {
+    if (!gst_bit_reader_get_bits_uint8 (&br, &flag, 1))
+      goto truncated;
+    if (flag) {
+      if (!gst_bit_reader_skip (&br, 16) ||
+          !gst_bit_reader_get_bits_uint8 (&br, &flag, 1))
+        goto truncated;
+      if (flag && !gst_bit_reader_skip (&br, 16 * 8))
+        goto truncated;
+    }
+  }
+
+  /* skip ac4_bitrate_dsi() */
+  if (!gst_bit_reader_skip (&br, 2 + 32 + 32))
+    goto truncated;
+  gst_bit_reader_skip_to_byte (&br);
+
+  if (n_presentations == 0) {
+    GST_WARNING_OBJECT (qtdemux, "no presentations, cannot determine "
+        "channel configuration");
+    return;
+  }
+
+  {
+    guint8 pres_bytes;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br, &presentation_version, 8) ||
+        !gst_bit_reader_get_bits_uint8 (&br, &pres_bytes, 8))
+      goto truncated;
+
+    if (pres_bytes == 255 && !gst_bit_reader_skip (&br, 16))
+      goto truncated;
+  }
+
+  if (presentation_version != 1 && presentation_version != 2) {
+    GST_WARNING_OBJECT (qtdemux, "unhandled presentation_version %u",
+        presentation_version);
+    return;
+  }
+
+  if (!gst_bit_reader_get_bits_uint8 (&br, &presentation_config_v1, 5))
+    goto truncated;
+  if (presentation_config_v1 == 0x06) {
+    GST_WARNING_OBJECT (qtdemux, "unhandled dsi_presentation_config_v1 %u",
+        presentation_config_v1);
+    return;
+  }
+
+  if (!gst_bit_reader_skip (&br, 3) ||
+      !gst_bit_reader_get_bits_uint8 (&br, &flag, 1))
+    goto truncated;
+  if (flag && !gst_bit_reader_skip (&br, 5))
+    goto truncated;
+  if (!gst_bit_reader_skip (&br, 2 + 2 + 5 + 10) ||
+      !gst_bit_reader_get_bits_uint8 (&br, &flag, 1))
+    goto truncated;
+  if (!flag) {
+    GST_DEBUG_OBJECT (qtdemux, "first presentation is not channel coded");
+    return;
+  }
+
+  if (!gst_bit_reader_get_bits_uint8 (&br, &ch_mode, 5))
+    goto truncated;
+  if (ch_mode >= G_N_ELEMENTS (ac4_ch_mode_channels)) {
+    GST_WARNING_OBJECT (qtdemux, "invalid dsi_presentation_ch_mode %u",
+        ch_mode);
+    return;
+  }
+
+  n_channels = ac4_ch_mode_channels[ch_mode];
+
+  if (ch_mode >= 11 && ch_mode <= 14) {
+    if (!gst_bit_reader_get_bits_uint8 (&br, &b_4_back_channels_present, 1) ||
+        !gst_bit_reader_get_bits_uint8 (&br, &top_channel_pairs, 2))
+      goto truncated;
+    if (!b_4_back_channels_present)
+      n_channels -= 2;
+    if (top_channel_pairs == 0)
+      n_channels -= 4;
+    else if (top_channel_pairs == 1)
+      n_channels -= 2;
+  }
+
+  GST_DEBUG_OBJECT (qtdemux, "dsi_presentation_ch_mode %u, %u channels",
+      ch_mode, n_channels);
+  entry->n_channels = n_channels;
+  return;
+
+truncated:
+  GST_WARNING_OBJECT (qtdemux, "truncated ac4_dsi_v1");
+}
+
 // See CoreAudioTypes.h and ffmpeg's mov_chan.h
 typedef enum
 {
@@ -16853,6 +16980,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
         case GST_MAKE_FOURCC ('e', 'c', '-', '3'):
         case GST_MAKE_FOURCC ('s', 'a', 'c', '3'):     // Nero Recode
         case FOURCC_ac_3:
+        case FOURCC_ac_4:
           entry->n_channels = 0;
           break;
 
@@ -17736,6 +17864,33 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
                 GST_ERROR_OBJECT (qtdemux, "mha1 sample entry does not contain"
                     " mhaC configuration box");
                 goto corrupt_file;
+              }
+            }
+            break;
+          }
+          case FOURCC_ac_4:
+          {
+            /* pass the ac4_dsi from dac4 as codec_data */
+            GNode *dac4 =
+                qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_dac4);
+
+            if (dac4) {
+              const guint8 *data = dac4->data;
+              guint32 len = QT_UINT32 (data);
+
+              /* header + 3 bytes of ac4_dsi */
+              if (len < 8 + 3) {
+                GST_WARNING_OBJECT (qtdemux,
+                    "discarding dac4 atom with unexpected len %u", len);
+              } else {
+                GstBuffer *buf;
+
+                qtdemux_parse_ac4_dsi (qtdemux, data + 8, len - 8, entry);
+
+                buf = gst_buffer_new_memdup (data + 8, len - 8);
+                gst_caps_set_simple (entry->caps,
+                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                gst_buffer_unref (buf);
               }
             }
             break;
@@ -20508,11 +20663,12 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "interleaved", NULL);
       break;
     }
-    case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
+    case FOURCC_ac_4:
     {
       _codec ("AC4");
       caps = gst_caps_new_simple ("audio/x-ac4",
           "stream-format", G_TYPE_STRING, "raw", NULL);
+      entry->sampled = TRUE;
       break;
     }
     case FOURCC_mha1:
