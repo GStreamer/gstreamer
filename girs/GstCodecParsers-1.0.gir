@@ -21307,10 +21307,12 @@ gst_vc1_bitplanes_free() after use.</doc>
       </parameters>
     </function>
     <function name="vc1_parse_entry_point_header" c:identifier="gst_vc1_parse_entry_point_header">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and sets @entrypoint fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and sets @entrypoint fields.
+
+The @entrypoint struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1EntryPointHdr</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
         <type name="VC1ParserResult" c:type="GstVC1ParserResult"/>
       </return-value>
       <parameters>
@@ -21333,7 +21335,9 @@ gst_vc1_bitplanes_free() after use.</doc>
       </parameters>
     </function>
     <function name="vc1_parse_field_header" c:identifier="gst_vc1_parse_field_header">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @fieldhdr fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @fieldhdr fields.
+
+The @fieldhdr struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21348,7 +21352,7 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="fieldhdr" transfer-ownership="none">
+        <parameter name="fieldhdr" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1FrameHdr to fill.</doc>
           <type name="VC1FrameHdr" c:type="GstVC1FrameHdr*"/>
         </parameter>
@@ -21363,7 +21367,9 @@ gst_vc1_bitplanes_free() after use.</doc>
       </parameters>
     </function>
     <function name="vc1_parse_frame_header" c:identifier="gst_vc1_parse_frame_header">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @entrypoint fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @framehdr fields.
+
+The @framehdr struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21378,7 +21384,7 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="framehdr" transfer-ownership="none">
+        <parameter name="framehdr" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1FrameHdr to fill.</doc>
           <type name="VC1FrameHdr" c:type="GstVC1FrameHdr*"/>
         </parameter>
@@ -21393,7 +21399,9 @@ gst_vc1_bitplanes_free() after use.</doc>
       </parameters>
     </function>
     <function name="vc1_parse_frame_layer" c:identifier="gst_vc1_parse_frame_layer">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @framelayer fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @framelayer fields.
+
+The @framelayer struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21408,14 +21416,16 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="framelayer" transfer-ownership="none">
+        <parameter name="framelayer" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1FrameLayer to fill.</doc>
           <type name="VC1FrameLayer" c:type="GstVC1FrameLayer*"/>
         </parameter>
       </parameters>
     </function>
     <function name="vc1_parse_sequence_header" c:identifier="gst_vc1_parse_sequence_header">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @seqhdr fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @seqhdr fields.
+
+The @seqhdr struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21430,14 +21440,16 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="seqhdr" transfer-ownership="none">
+        <parameter name="seqhdr" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1SeqHdr to set.</doc>
           <type name="VC1SeqHdr" c:type="GstVC1SeqHdr*"/>
         </parameter>
       </parameters>
     </function>
     <function name="vc1_parse_sequence_header_struct_a" c:identifier="gst_vc1_parse_sequence_header_struct_a">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @structa fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @structa fields.
+
+The @structa struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21452,14 +21464,16 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="structa" transfer-ownership="none">
+        <parameter name="structa" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1SeqStructA to set.</doc>
           <type name="VC1SeqStructA" c:type="GstVC1SeqStructA*"/>
         </parameter>
       </parameters>
     </function>
     <function name="vc1_parse_sequence_header_struct_b" c:identifier="gst_vc1_parse_sequence_header_struct_b">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @structb fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @structb fields.
+
+The @structb struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21474,14 +21488,16 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="structb" transfer-ownership="none">
+        <parameter name="structb" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1SeqStructB to set.</doc>
           <type name="VC1SeqStructB" c:type="GstVC1SeqStructB*"/>
         </parameter>
       </parameters>
     </function>
     <function name="vc1_parse_sequence_header_struct_c" c:identifier="gst_vc1_parse_sequence_header_struct_c">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @structc fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @structc fields.
+
+The @structc struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21496,14 +21512,16 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="structc" transfer-ownership="none">
+        <parameter name="structc" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1SeqStructC to set.</doc>
           <type name="VC1SeqStructC" c:type="GstVC1SeqStructC*"/>
         </parameter>
       </parameters>
     </function>
     <function name="vc1_parse_sequence_layer" c:identifier="gst_vc1_parse_sequence_layer">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @seqlayer fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @seqlayer fields.
+
+The @seqlayer struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21518,14 +21536,16 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">the size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="seqlayer" transfer-ownership="none">
+        <parameter name="seqlayer" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1SeqLayer to set.</doc>
           <type name="VC1SeqLayer" c:type="GstVC1SeqLayer*"/>
         </parameter>
       </parameters>
     </function>
     <function name="vc1_parse_slice_header" c:identifier="gst_vc1_parse_slice_header" version="1.2">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @slicehdr fields.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">Parses @data, and fills @slicehdr fields.
+
+The @slicehdr struct does not need to be initialized by the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">a #GstVC1ParserResult</doc>
@@ -21540,7 +21560,7 @@ gst_vc1_bitplanes_free() after use.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The size of @data</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
-        <parameter name="slicehdr" transfer-ownership="none">
+        <parameter name="slicehdr" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gstvc1parser.c">The #GstVC1SliceHdr to fill</doc>
           <type name="VC1SliceHdr" c:type="GstVC1SliceHdr*"/>
         </parameter>
