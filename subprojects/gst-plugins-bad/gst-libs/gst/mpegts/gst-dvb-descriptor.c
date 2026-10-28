@@ -482,23 +482,48 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegtsDescriptor *
     gchar ** provider_name)
 {
   guint8 *data;
+  const guint8 *end;
+  guint8 provider_length, service_length;
 
   g_return_val_if_fail (descriptor != NULL, FALSE);
   /* Need at least 3 bytes (type and 2 bytes for the string length) */
   __common_desc_checks (descriptor, GST_MTS_DESC_DVB_SERVICE, 3, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
+
+  if (service_name)
+    *service_name = NULL;
+  if (provider_name)
+    *provider_name = NULL;
 
   if (service_type)
     *service_type = *data;
   data += 1;
+
+  provider_length = *data++;
+  if (provider_length > (guint) (end - data))
+    return FALSE;
   if (provider_name)
-    *provider_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
-  data += *data + 1;
+    *provider_name =
+        get_encoding_and_convert ((const gchar *) data, provider_length);
+  data += provider_length;
+
+  if (end - data < 1)
+    return TRUE;
+  service_length = *data++;
+  if (service_length > (guint) (end - data))
+    goto fail;
   if (service_name)
-    *service_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
+    *service_name =
+        get_encoding_and_convert ((const gchar *) data, service_length);
 
   return TRUE;
+
+fail:
+  if (provider_name)
+    g_clear_pointer (provider_name, g_free);
+  return FALSE;
 }
 
 /**
@@ -765,12 +790,17 @@ gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegtsDescriptor * descriptor,
     }
     case GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT:{
       GPtrArray *ext_events;
+      guint8 event_loop_length;
       ext_events = g_ptr_array_new_with_free_func ((GDestroyNotify)
           _gst_mpegts_dvb_linkage_extended_event_free);
 
       res->linkage_data = (gpointer) ext_events;
 
-      for (i = 0; i < *data++;) {
+      if (end - data < 1)
+        goto fail;
+      event_loop_length = *data++;
+
+      for (i = 0; i < event_loop_length;) {
         GstMpegtsDVBLinkageExtendedEvent *ext_event;
 
         if (end - data < 3)
@@ -916,23 +946,51 @@ gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegtsDescriptor *
     descriptor, gchar ** language_code, gchar ** event_name, gchar ** text)
 {
   guint8 *data;
+  const guint8 *end;
+  guint8 event_name_length, text_length;
 
   g_return_val_if_fail (descriptor != NULL, FALSE);
   /* Need at least 5 bytes (3 for language code, 2 for each string length) */
   __common_desc_checks (descriptor, GST_MTS_DESC_DVB_SHORT_EVENT, 5, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
+
+  if (language_code)
+    *language_code = NULL;
+  if (event_name)
+    *event_name = NULL;
+  if (text)
+    *text = NULL;
 
   if (language_code)
     *language_code = convert_lang_code (data);
 
   data += 3;
+
+  event_name_length = *data++;
+  if (event_name_length > (guint) (end - data))
+    goto fail;
   if (event_name)
-    *event_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
-  data += *data + 1;
+    *event_name =
+        get_encoding_and_convert ((const gchar *) data, event_name_length);
+  data += event_name_length;
+
+  if (end - data < 1)
+    return TRUE;
+  text_length = *data++;
+  if (text_length > (guint) (end - data))
+    goto fail;
   if (text)
-    *text = get_encoding_and_convert ((const gchar *) data + 1, *data);
+    *text = get_encoding_and_convert ((const gchar *) data, text_length);
   return TRUE;
+
+fail:
+  if (language_code)
+    g_clear_pointer (language_code, g_free);
+  if (event_name)
+    g_clear_pointer (event_name, g_free);
+  return FALSE;
 }
 
 /* GST_MTS_DESC_DVB_TELETEXT (0x56) */
@@ -1181,7 +1239,8 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegtsDescriptor
     * descriptor, GstMpegtsExtendedEventDescriptor ** desc)
 {
   guint8 *data, *pdata;
-  guint8 tmp, len_item;
+  const guint8 *end;
+  guint8 tmp, len_item, text_length;
   GstMpegtsExtendedEventItem *item;
   GstMpegtsExtendedEventDescriptor *res;
 
@@ -1192,6 +1251,7 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegtsDescriptor
   res = g_new0 (GstMpegtsExtendedEventDescriptor, 1);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   tmp = *data;
   res->descriptor_number = tmp >> 4;
@@ -1215,27 +1275,44 @@ gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegtsDescriptor
 
   pdata = data + len_item;
   while (data < pdata) {
+    guint8 description_length, item_length;
+
     item = g_new0 (GstMpegtsExtendedEventItem, 1);
-    item->item_description =
-        get_encoding_and_convert ((const gchar *) data + 1, *data);
-
-    data += *data + 1;
-
-    item->item = get_encoding_and_convert ((const gchar *) data + 1, *data);
-
-    data += *data + 1;
-
     g_ptr_array_add (res->items, item);
+
+    description_length = *data++;
+    if (description_length > (guint) (pdata - data))
+      goto fail;
+
+    item->item_description =
+        get_encoding_and_convert ((const gchar *) data, description_length);
+    data += description_length;
+
+    if (pdata - data < 1)
+      goto fail;
+    item_length = *data++;
+    if (item_length > (guint) (pdata - data))
+      goto fail;
+    item->item = get_encoding_and_convert ((const gchar *) data, item_length);
+    data += item_length;
   }
-  if (pdata != data) {
-    gst_mpegts_extended_event_descriptor_free (res);
-    return FALSE;
-  }
-  res->text = get_encoding_and_convert ((const gchar *) data + 1, *data);
+  if (pdata != data)
+    goto fail;
+
+  if (end - data < 1)
+    goto fail;
+  text_length = *data++;
+  if (text_length > (guint) (end - data))
+    goto fail;
+  res->text = get_encoding_and_convert ((const gchar *) data, text_length);
 
   *desc = res;
 
   return TRUE;
+
+fail:
+  gst_mpegts_extended_event_descriptor_free (res);
+  return FALSE;
 }
 
 /* GST_MTS_DESC_DVB_COMPONENT (0x50) */
@@ -1411,7 +1488,7 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegtsDescriptor
 
   *content = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_content_free);
-  for (i = 0; i < len;) {
+  for (i = 0; i + 1 < len; i += 2) {
     GstMpegtsContent *cont = g_new0 (GstMpegtsContent, 1);
     tmp = *data;
     cont->content_nibble_1 = (tmp & 0xf0) >> 4;
@@ -1419,7 +1496,6 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegtsDescriptor
     data += 1;
     cont->user_byte = *data;
     data += 1;
-    i += 2;
     g_ptr_array_add (*content, cont);
   }
 
@@ -1477,7 +1553,7 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegtsDescriptor
   *rating = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_dvb_parental_rating_item_free);
 
-  for (i = 0; i < descriptor->length - 3; i += 4) {
+  for (i = 0; i + 4 <= (guint) descriptor->length; i += 4) {
     GstMpegtsDVBParentalRatingItem *item =
         g_new0 (GstMpegtsDVBParentalRatingItem, 1);
     g_ptr_array_add (*rating, item);
@@ -1751,7 +1827,8 @@ gboolean
 gst_mpegts_descriptor_parse_dvb_multilingual_network_name (const
     GstMpegtsDescriptor * descriptor, GPtrArray ** network_name_items)
 {
-  guint8 *data, i, len;
+  guint8 *data, len;
+  const guint8 *end;
   GstMpegtsDvbMultilingualNetworkNameItem *item;
 
   g_return_val_if_fail (descriptor != NULL && network_name_items != NULL,
@@ -1760,22 +1837,26 @@ gst_mpegts_descriptor_parse_dvb_multilingual_network_name (const
       5, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   *network_name_items = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_dvb_multilingual_network_name_item_free);
 
-  for (i = 0; i < descriptor->length - 3;) {
+  while (end - data >= 4) {
     item = g_new0 (GstMpegtsDvbMultilingualNetworkNameItem, 1);
-    g_ptr_array_add (*network_name_items, item);
     item->language_code = convert_lang_code (data);
     data += 3;
-    i += 3;
 
-    len = *data;
-    item->network_name =
-        get_encoding_and_convert ((const gchar *) data + 1, len);
-    data += len + 1;
-    i += len + 1;
+    len = *data++;
+    if (len > (guint) (end - data)) {
+      _gst_mpegts_dvb_multilingual_network_name_item_free (item);
+      g_clear_pointer (network_name_items, g_ptr_array_unref);
+      return FALSE;
+    }
+    item->network_name = get_encoding_and_convert ((const gchar *) data, len);
+    data += len;
+
+    g_ptr_array_add (*network_name_items, item);
   }
 
   return TRUE;
@@ -1823,7 +1904,8 @@ gboolean
 gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (const
     GstMpegtsDescriptor * descriptor, GPtrArray ** bouquet_name_items)
 {
-  guint8 *data, i, len;
+  guint8 *data, len;
+  const guint8 *end;
   GstMpegtsDvbMultilingualBouquetNameItem *item;
 
   g_return_val_if_fail (descriptor != NULL && bouquet_name_items != NULL,
@@ -1832,22 +1914,26 @@ gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (const
       5, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   *bouquet_name_items = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_dvb_multilingual_bouquet_name_item_free);
 
-  for (i = 0; i < descriptor->length - 3;) {
+  while (end - data >= 4) {
     item = g_new0 (GstMpegtsDvbMultilingualBouquetNameItem, 1);
-    g_ptr_array_add (*bouquet_name_items, item);
     item->language_code = convert_lang_code (data);
     data += 3;
-    i += 3;
 
-    len = *data;
-    item->bouquet_name =
-        get_encoding_and_convert ((const gchar *) data + 1, len);
-    data += len + 1;
-    i += len + 1;
+    len = *data++;
+    if (len > (guint) (end - data)) {
+      _gst_mpegts_dvb_multilingual_bouquet_name_item_free (item);
+      g_clear_pointer (bouquet_name_items, g_ptr_array_unref);
+      return FALSE;
+    }
+    item->bouquet_name = get_encoding_and_convert ((const gchar *) data, len);
+    data += len;
+
+    g_ptr_array_add (*bouquet_name_items, item);
   }
 
   return TRUE;
@@ -1897,7 +1983,8 @@ gboolean
 gst_mpegts_descriptor_parse_dvb_multilingual_service_name (const
     GstMpegtsDescriptor * descriptor, GPtrArray ** service_name_items)
 {
-  guint8 *data, i, len;
+  guint8 *data, len;
+  const guint8 *end;
   GstMpegtsDvbMultilingualServiceNameItem *item;
 
   g_return_val_if_fail (descriptor != NULL && service_name_items != NULL,
@@ -1906,28 +1993,35 @@ gst_mpegts_descriptor_parse_dvb_multilingual_service_name (const
       7, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   *service_name_items = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_dvb_multilingual_service_name_item_free);
 
-  for (i = 0; i < descriptor->length - 3;) {
+  while (end - data >= 5) {
     item = g_new0 (GstMpegtsDvbMultilingualServiceNameItem, 1);
-    g_ptr_array_add (*service_name_items, item);
     item->language_code = convert_lang_code (data);
     data += 3;
-    i += 3;
 
-    len = *data;
-    item->provider_name =
-        get_encoding_and_convert ((const gchar *) data + 1, len);
-    data += len + 1;
-    i += len + 1;
+    len = *data++;
+    if (len > (guint) (end - data) || end - data - len < 1) {
+      _gst_mpegts_dvb_multilingual_service_name_item_free (item);
+      g_clear_pointer (service_name_items, g_ptr_array_unref);
+      return FALSE;
+    }
+    item->provider_name = get_encoding_and_convert ((const gchar *) data, len);
+    data += len;
 
-    len = *data;
-    item->service_name =
-        get_encoding_and_convert ((const gchar *) data + 1, len);
-    data += len + 1;
-    i += len + 1;
+    len = *data++;
+    if (len > (guint) (end - data)) {
+      _gst_mpegts_dvb_multilingual_service_name_item_free (item);
+      g_clear_pointer (service_name_items, g_ptr_array_unref);
+      return FALSE;
+    }
+    item->service_name = get_encoding_and_convert ((const gchar *) data, len);
+    data += len;
+
+    g_ptr_array_add (*service_name_items, item);
   }
 
   return TRUE;
@@ -1977,7 +2071,8 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
     GstMpegtsDescriptor * descriptor, guint8 * component_tag,
     GPtrArray ** component_description_items)
 {
-  guint8 *data, i, len;
+  guint8 *data, len;
+  const guint8 *end;
   GstMpegtsDvbMultilingualComponentItem *item;
 
   g_return_val_if_fail (descriptor != NULL
@@ -1986,6 +2081,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
       FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   *component_tag = *data;
   data += 1;
@@ -1994,18 +2090,21 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
       g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_dvb_multilingual_component_item_free);
 
-  for (i = 0; i < descriptor->length - 3;) {
+  while (end - data >= 4) {
     item = g_new0 (GstMpegtsDvbMultilingualComponentItem, 1);
-    g_ptr_array_add (*component_description_items, item);
     item->language_code = convert_lang_code (data);
     data += 3;
-    i += 3;
 
-    len = *data;
-    item->description =
-        get_encoding_and_convert ((const gchar *) data + 1, len);
-    data += len + 1;
-    i += len + 1;
+    len = *data++;
+    if (len > (guint) (end - data)) {
+      _gst_mpegts_dvb_multilingual_component_item_free (item);
+      g_clear_pointer (component_description_items, g_ptr_array_unref);
+      return FALSE;
+    }
+    item->description = get_encoding_and_convert ((const gchar *) data, len);
+    data += len;
+
+    g_ptr_array_add (*component_description_items, item);
   }
 
   return TRUE;
@@ -2157,12 +2256,14 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegtsDescriptor
     * descriptor, GstMpegtsDataBroadcastDescriptor ** desc)
 {
   guint8 *data;
+  const guint8 *end;
   GstMpegtsDataBroadcastDescriptor *res;
 
   g_return_val_if_fail (descriptor != NULL && desc != NULL, FALSE);
   __common_desc_checks (descriptor, GST_MTS_DESC_DVB_DATA_BROADCAST, 8, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   res = g_new0 (GstMpegtsDataBroadcastDescriptor, 1);
 
@@ -2175,17 +2276,30 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegtsDescriptor
   res->length = *data;
   data += 1;
 
+  if (res->length > (guint) (end - data))
+    goto fail;
+
   res->selector_bytes = g_memdup2 (data, res->length);
   data += res->length;
 
+  if (end - data < 4)
+    goto fail;
+
   res->language_code = convert_lang_code (data);
   data += 3;
+
+  if (*data > (guint) (end - data - 1))
+    goto fail;
 
   res->text = get_encoding_and_convert ((const gchar *) data + 1, *data);
 
   *desc = res;
 
   return TRUE;
+
+fail:
+  gst_mpegts_dvb_data_broadcast_descriptor_free (res);
+  return FALSE;
 }
 
 /* GST_MTS_DESC_DVB_SCRAMBLING (0x65) */
@@ -2329,9 +2443,9 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
     * descriptor, GstMpegtsT2DeliverySystemDescriptor ** desc)
 {
   guint8 *data;
-  guint8 len, freq_len, sub_cell_len;
+  const guint8 *end;
+  guint8 freq_len, sub_cell_len;
   guint32 tmp_freq;
-  guint8 i;
   GstMpegtsT2DeliverySystemDescriptor *res;
 
   g_return_val_if_fail (descriptor != NULL && desc != NULL, FALSE);
@@ -2339,8 +2453,11 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
       4, FALSE);
 
   data = (guint8 *) descriptor->data + 3;
+  end = data + descriptor->length - 1;
 
   res = g_new0 (GstMpegtsT2DeliverySystemDescriptor, 1);
+  res->cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_t2_delivery_system_cell_free);
 
   res->plp_id = *data;
   data += 1;
@@ -2348,7 +2465,7 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
   res->t2_system_id = GST_READ_UINT16_BE (data);
   data += 2;
 
-  if (descriptor->length > 4) {
+  if (descriptor->length >= 6) {
     // FIXME: siso / miso
     res->siso_miso = (*data >> 6) & 0x03;
     switch ((*data >> 2) & 0x0f) {
@@ -2428,12 +2545,7 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
     res->tfs = (*data) & 0x01;
     data += 1;
 
-    len = descriptor->length - 6;
-
-    res->cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
-        _gst_mpegts_t2_delivery_system_cell_free);
-
-    for (i = 0; i < len;) {
+    while (end - data >= 2) {
       GstMpegtsT2DeliverySystemCell *cell;
       guint8 j, k;
 
@@ -2442,37 +2554,42 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
 
       cell->cell_id = GST_READ_UINT16_BE (data);
       data += 2;
-      i += 2;
 
       cell->centre_frequencies = g_array_new (FALSE, FALSE, sizeof (guint32));
 
       if (res->tfs == TRUE) {
-        freq_len = *data;
-        data += 1;
-        i += 1;
+        if (end - data < 1)
+          goto fail;
+        freq_len = *data++;
 
         for (j = 0; j < freq_len;) {
+          if (end - data < 4)
+            goto fail;
           tmp_freq = GST_READ_UINT32_BE (data) * 10;
           g_array_append_val (cell->centre_frequencies, tmp_freq);
           data += 4;
           j += 4;
-          i += 4;
         }
       } else {
+        if (end - data < 4)
+          goto fail;
         tmp_freq = GST_READ_UINT32_BE (data) * 10;
         g_array_append_val (cell->centre_frequencies, tmp_freq);
         data += 4;
-        i += 4;
       }
-      sub_cell_len = (*data);
-      data += 1;
-      i += 1;
+      if (end - data < 1)
+        goto fail;
+      sub_cell_len = *data++;
 
       cell->sub_cells = g_ptr_array_new_with_free_func ((GDestroyNotify)
           _gst_mpegts_t2_delivery_system_cell_extension_free);
 
       for (k = 0; k < sub_cell_len;) {
         GstMpegtsT2DeliverySystemCellExtension *cell_ext;
+
+        if (end - data < 5)
+          goto fail;
+
         cell_ext = g_new0 (GstMpegtsT2DeliverySystemCellExtension, 1);
 
         g_ptr_array_add (cell->sub_cells, cell_ext);
@@ -2481,7 +2598,6 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
 
         cell_ext->transposer_frequency = GST_READ_UINT32_BE (data) * 10;
         data += 4;
-        i += 5;
         k += 5;
       }
     }
@@ -2489,6 +2605,10 @@ gst_mpegts_descriptor_parse_dvb_t2_delivery_system (const GstMpegtsDescriptor
 
   *desc = res;
   return TRUE;
+
+fail:
+  gst_mpegts_t2_delivery_system_descriptor_free (res);
+  return FALSE;
 }
 
 /**
@@ -2509,22 +2629,28 @@ gst_mpegts_descriptor_parse_audio_preselection_list (const GstMpegtsDescriptor
 {
   guint8 *data;
   guint8 i, num_preselections, num_aux_components, future_extension_length;
+  const guint8 *end;
   GstMpegtsAudioPreselectionDescriptor *item;
 
   g_return_val_if_fail (descriptor != NULL && list != NULL, FALSE);
-  __common_desc_ext_check_base (descriptor,
-      GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION, FALSE);
+  __common_desc_ext_checks (descriptor, GST_MTS_DESC_EXT_DVB_AUDIO_PRESELECTION,
+      2, FALSE);
 
   *list = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_mpegts_descriptor_parse_audio_preselection_free);
 
   data = (guint8 *) descriptor->data + 3;
+  end = data + descriptor->length - 1;
+
   num_preselections = (guint8) ((*data & 0xF8) >> 3);
   data += 1;
 
   for (i = 0; i < num_preselections; i++) {
     item = g_new0 (GstMpegtsAudioPreselectionDescriptor, 1);
     g_ptr_array_add (*list, item);
+
+    if (end - data < 2)
+      goto fail;
 
     item->preselection_id = (*data & 0xF8) >> 3;
     item->audio_rendering_indication = *data & 0x7;
@@ -2541,33 +2667,45 @@ gst_mpegts_descriptor_parse_audio_preselection_list (const GstMpegtsDescriptor
     data += 1;
 
     if (item->language_code_present == 1) {
+      if (end - data < 3)
+        goto fail;
       item->language_code = convert_lang_code (data);
       data += 3;
     }
 
     if (item->text_label_present == 1) {
+      if (end - data < 1)
+        goto fail;
       item->message_id = *data;
       data += 1;
     }
 
     if (item->multi_stream_info_present == 1) {
+      if (end - data < 1)
+        goto fail;
       num_aux_components = (*data & 0xE0) >> 5;
       data += 1;
-      for (i = 0; i < num_aux_components; i++) {
-        data += 1;
-      }
+      if (num_aux_components > (guint) (end - data))
+        goto fail;
+      data += num_aux_components;
     }
 
     if (item->future_extension == 1) {
+      if (end - data < 1)
+        goto fail;
       future_extension_length = *data & 0x1F;
       data += 1;
-      for (i = 0; i < future_extension_length; i++) {
-        data += 1;
-      }
+      if (future_extension_length > (guint) (end - data))
+        goto fail;
+      data += future_extension_length;
     }
   }
 
   return TRUE;
+
+fail:
+  g_clear_pointer (list, g_ptr_array_unref);
+  return FALSE;
 }
 
 void gst_mpegts_descriptor_parse_audio_preselection_free
