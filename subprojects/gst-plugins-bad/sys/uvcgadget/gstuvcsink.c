@@ -444,6 +444,12 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       return TRUE;
     }
+    case GST_QUERY_ACCEPT_CAPS:
+      /* As long as the host is not streaming, the ghost pad targets the
+       * fakesink, which accepts any caps. Ask the v4l2sink instead: caps that
+       * it would only refuse once the host starts streaming (e.g. image/jpeg
+       * without parsed=true) then already fail negotiation at startup. */
+      return gst_pad_query (self->v4l2sinkpad, query);
     case GST_QUERY_ALLOCATION:
       return TRUE;
     default:
