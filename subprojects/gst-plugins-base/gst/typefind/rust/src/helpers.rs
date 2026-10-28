@@ -486,3 +486,74 @@ pub(crate) use TypeFindProbability as Prob;
 
 // Re-export macros and items needed by typefindfunctions.rs.
 pub(crate) use {map_type_name, map_value, opt, suggest, typefinder};
+
+/// A byte slice playing the engine, for tests that drive a probe.
+///
+/// The finders reach the engine through `gst_type_find_peek` and
+/// `gst_type_find_get_length` alone. These definitions shadow libgstreamer's
+/// at link time — the same interposition the fuzz harness runs on — so a
+/// probe reads the bytes its test handed it through the very peek the
+/// production path takes. The context handed to the probe is a placeholder:
+/// neither entry point looks at it, and suggesting is out of a probe's way.
+#[cfg(test)]
+pub(crate) mod probe_engine {
+    use super::{TypeFind, bindings};
+    use std::cell::RefCell;
+    use std::os::raw::c_uint;
+
+    thread_local! {
+        static STREAM: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+    }
+
+    /// The whole request or nothing, and a negative offset measured back from
+    /// the end: the real helper's contract, pinned in the fuzz harness.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn gst_type_find_peek(
+        _find: *mut bindings::GstTypeFind,
+        offset: i64,
+        size: c_uint,
+    ) -> *const u8 {
+        STREAM
+            .with(|cell| {
+                let data = cell.borrow();
+                let size = usize::try_from(size).ok()?;
+                if size == 0 {
+                    return Some(std::ptr::null());
+                }
+                let len = i64::try_from(data.len()).ok()?;
+                let at = if offset < 0 {
+                    let back = offset.checked_neg()?;
+                    if back > len {
+                        return Some(std::ptr::null());
+                    }
+                    len - back
+                } else {
+                    offset
+                };
+                let at = usize::try_from(at).ok()?;
+                let end = at.checked_add(size)?;
+                if end > data.len() {
+                    return Some(std::ptr::null());
+                }
+                Some(unsafe { data.as_ptr().add(at) })
+            })
+            .unwrap_or(std::ptr::null())
+    }
+
+    /// Every stream these cases build is a complete file, so its length is
+    /// known. A stream that leaves it unknown is the pushed case, which no
+    /// probe-level test can tell the engine through this door.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn gst_type_find_get_length(_find: *mut bindings::GstTypeFind) -> u64 {
+        STREAM.with(|cell| cell.borrow().len() as u64)
+    }
+
+    /// Run `read` with the engine answering from `data`.
+    pub(crate) fn probe<T>(data: &[u8], read: impl FnOnce(&mut TypeFind) -> T) -> T {
+        STREAM.with(|cell| *cell.borrow_mut() = data.to_vec());
+        let mut tf = TypeFind(bindings::GstTypeFind { _private: [] });
+        let answer = read(&mut tf);
+        STREAM.with(|cell| cell.borrow_mut().clear());
+        answer
+    }
+}

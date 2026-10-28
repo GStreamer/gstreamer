@@ -26,7 +26,7 @@ use crate::helpers::TypeFindFunc;
 /// Opaque typefind context
 #[repr(C)]
 pub struct GstTypeFind {
-    _private: [u8; 0],
+    pub(crate) _private: [u8; 0],
 }
 
 /// Opaque plugin object
