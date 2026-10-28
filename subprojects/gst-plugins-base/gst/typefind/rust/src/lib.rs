@@ -13,6 +13,7 @@
 
 mod audio;
 mod bindings;
+mod containers;
 mod helpers;
 mod subtitles;
 mod typefindfunctions;

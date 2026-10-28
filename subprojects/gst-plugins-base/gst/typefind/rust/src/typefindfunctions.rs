@@ -24,6 +24,7 @@ use crate::audio::{
     mp3_probe, sbc_probe, wavpack_probe,
 };
 use crate::bindings::gpointer;
+use crate::containers::{q3gp_probe, qt_probe, qtif_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
 use crate::xml::{XmlProbe, xml_probe};
@@ -2584,6 +2585,37 @@ extern "C" fn multipart_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// Containers
+// =============================================================================
+
+extern "C" fn qt_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some((probability, variant)) = qt_probe(tf) else {
+        return;
+    };
+    if let Some(variant) = variant {
+        suggest!(tf, probability, c"video/quicktime", [
+            (c"variant", str : variant),
+        ]);
+    } else {
+        suggest!(tf, probability, c"video/quicktime");
+    }
+}
+
+extern "C" fn qtif_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = qtif_probe(tf) {
+        suggest!(tf, probability, c"image/x-quicktime");
+    }
+}
+
+extern "C" fn q3gp_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(profile) = q3gp_probe(tf) {
+        suggest!(tf, Prob::MAXIMUM, c"application/x-3gp", [
+            (c"profile", str : profile),
+        ]);
+    }
+}
+
+// =============================================================================
 // Registration table and entry point
 // =============================================================================
 
@@ -2985,6 +3017,14 @@ const FEATURES: &[Feature] = &[
     typefinder!("image/vnd.radiance", MARGINAL, radiance_type_find, "hdr"),
     typefinder!("application/x-mcc", PRIMARY, mcc_type_find, "mcc"),
     typefinder!("multipart/x-mixed-replace", SECONDARY, multipart_type_find),
+    typefinder!("application/x-3gp", PRIMARY, q3gp_type_find, "3gp"),
+    typefinder!("video/quicktime", PRIMARY, qt_type_find, "mov,mp4"),
+    typefinder!(
+        "image/x-quicktime",
+        SECONDARY,
+        qtif_type_find,
+        "qif,qtif,qti"
+    ),
 ];
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
