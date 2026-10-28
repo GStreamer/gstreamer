@@ -211,18 +211,22 @@ _enc_frame (GstVideoCodecFrame * frame)
   return enc_frame;
 }
 
+/* gop.last_ref is a borrowed pointer, like gop.ref_list[] in vp9enc and
+ * av1enc: the reference is owned by base->ref_list, which the base class
+ * flushes on stop, flush and drain. */
 static void
-_update_ref_frame (GstVaVp8Enc * self, GstVideoCodecFrame ** ref_frame,
-    GstVideoCodecFrame * frame)
+_update_ref_frame (GstVaVp8Enc * self, GstVideoCodecFrame * frame)
 {
-  if (*ref_frame)
-    gst_video_codec_frame_unref (*ref_frame);
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+  GstVideoCodecFrame *del_f = self->gop.last_ref;
 
-  if (frame) {
-    *ref_frame = gst_video_codec_frame_ref (frame);
-  } else {
-    *ref_frame = NULL;
-  }
+  if (frame)
+    g_queue_push_tail (&base->ref_list, gst_video_codec_frame_ref (frame));
+  self->gop.last_ref = frame;
+
+  /* The base class may have already cleared its list. */
+  if (del_f && g_queue_remove (&base->ref_list, del_f))
+    gst_video_codec_frame_unref (del_f);
 }
 
 static gboolean
@@ -234,7 +238,7 @@ gst_va_vp8_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
 
   if (bump_all) {
     g_return_val_if_fail (frame == NULL, FALSE);
-    _update_ref_frame (self, &self->gop.last_ref, NULL);
+    _update_ref_frame (self, NULL);
     self->gop.frame_num = FRAME_NUM_INVALID;
     goto out;
   }
@@ -255,7 +259,7 @@ gst_va_vp8_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
 
   if (self->gop.frame_num == 0) {
     va_frame->type = GST_VP8_KEY_FRAME;
-    _update_ref_frame (self, &self->gop.last_ref, NULL);
+    _update_ref_frame (self, NULL);
   } else {
     va_frame->type = GST_VP8_INTER_FRAME;
   }
@@ -292,6 +296,7 @@ gst_va_vp8_enc_reset_state (GstVaBaseEnc * base)
 
   self->gop.keyframe_interval = self->prop.keyframe_interval;
   self->gop.frame_num = FRAME_NUM_INVALID;
+  self->gop.last_ref = NULL;
   GST_OBJECT_UNLOCK (self);
 
   self->rc.max_bitrate = 0;
@@ -707,7 +712,7 @@ gst_va_vp8_enc_flush (GstVideoEncoder * venc)
 {
   GstVaVp8Enc *self = GST_VA_VP8_ENC (venc);
 
-  _update_ref_frame (self, &self->gop.last_ref, NULL);
+  _update_ref_frame (self, NULL);
   self->gop.frame_num = FRAME_NUM_INVALID;
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->flush (venc);
@@ -932,7 +937,7 @@ gst_va_vp8_enc_encode_frame (GstVaBaseEnc * base,
   }
 
   /* The last frame will always change to this. */
-  _update_ref_frame (self, &self->gop.last_ref, gst_frame);
+  _update_ref_frame (self, gst_frame);
 
   g_queue_push_tail (&base->output_list, gst_video_codec_frame_ref (gst_frame));
   return GST_FLOW_OK;
