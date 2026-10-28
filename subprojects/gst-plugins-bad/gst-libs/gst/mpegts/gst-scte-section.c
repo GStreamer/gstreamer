@@ -153,7 +153,7 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
   GST_DEBUG ("data %p", data);
 
   if (event->splice_event_cancel_indicator == 0) {
-    if (data + 5 + 6 > end)
+    if (data + 1 + 6 > end)
       goto error;
     event->out_of_network_indicator = *data >> 7;
     event->program_splice_flag = (*data >> 6) & 0x01;
@@ -186,8 +186,12 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
       }
     } else {
       if (insert_event && event->splice_immediate_flag == 0) {
+        if (data + 1 + 6 > end)
+          goto error;
         event->program_splice_time_specified = *data >> 7;
         if (event->program_splice_time_specified) {
+          if (data + 5 + 6 > end)
+            goto error;
           event->program_splice_time = ((guint64) (*data & 0x01)) << 32;
           data += 1;
           event->program_splice_time += GST_READ_UINT32_BE (data);
@@ -198,6 +202,8 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
         } else
           data += 1;
       } else if (!insert_event) {
+        if (data + 4 + 6 > end)
+          goto error;
         event->utc_splice_time = GST_READ_UINT32_BE (data);
         GST_LOG ("utc_splice_time %u", event->utc_splice_time);
         data += 4;
@@ -205,6 +211,8 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
     }
 
     if (event->duration_flag) {
+      if (data + 5 + 6 > end)
+        goto error;
       event->break_duration_auto_return = *data >> 7;
       event->break_duration = ((guint64) (*data & 0x01)) << 32;
       data += 1;
@@ -217,6 +225,8 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
           GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (event->break_duration)));
     }
 
+    if (data + 4 + 6 > end)
+      goto error;
     event->unique_program_id = GST_READ_UINT16_BE (data);
     GST_LOG ("unique_program_id:%" G_GUINT16_FORMAT, event->unique_program_id);
     data += 2;
@@ -342,8 +352,12 @@ _parse_sit (GstMpegtsSection * section)
       break;
     case GST_MTS_SCTE_SPLICE_COMMAND_TIME:
     {
+      if (end - data < 1)
+        goto error;
       sit->splice_time_specified = (*data >> 7);
       if (sit->splice_time_specified) {
+        if (end - data < 5)
+          goto error;
         sit->splice_time = ((guint64) (*data & 0x01)) << 32;
         data += 1;
         sit->splice_time += GST_READ_UINT32_BE (data);
@@ -355,7 +369,11 @@ _parse_sit (GstMpegtsSection * section)
     case GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE:
     {
       guint i;
-      guint splice_count = *data;
+      guint splice_count;
+
+      if (end - data < 1)
+        goto error;
+      splice_count = *data;
       data += 1;
 
       for (i = 0; i < splice_count; i++) {
@@ -388,8 +406,18 @@ _parse_sit (GstMpegtsSection * section)
   }
 
   /* descriptors */
-  tmp = GST_READ_UINT16_BE (data);
+  if (end - data < 2) {
+    GST_WARNING ("PID %d SCTE SIT too short for descriptor loop length",
+        section->pid);
+    goto error;
+  }
+  tmp = GST_READ_UINT16_BE (data) & 0xFFF;
   data += 2;
+  if ((gssize) tmp > end - 4 - data) {
+    GST_WARNING ("PID %d invalid SCTE SIT descriptors loop length %d",
+        section->pid, tmp);
+    goto error;
+  }
   GST_MEMDUMP ("desc ?", data, tmp);
   sit->descriptors = gst_mpegts_parse_descriptors (data, tmp);
   if (!sit->descriptors) {
