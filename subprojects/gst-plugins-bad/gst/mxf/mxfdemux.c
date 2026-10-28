@@ -5165,7 +5165,7 @@ collect_index_table_segments (GstMXFDemux * demux)
         else
           t->reordered_delta_entry = didx;
       } else if (delta->pos_table_index > 0)
-        GST_WARNING_OBJECT (delta,
+        GST_WARNING_OBJECT (demux,
             "Index Table uses fractional offset, please file a bug");
     }
 
