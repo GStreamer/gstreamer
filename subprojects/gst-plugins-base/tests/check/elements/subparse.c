@@ -21,6 +21,10 @@
 # include <config.h>
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
@@ -970,6 +974,116 @@ GST_START_TEST (test_sami_xml_entities)
 
 GST_END_TEST;
 
+/* Per HTML 4.01 tag syntax (which SAMI Sync-block markup follows), a
+ * dangling '<' turns everything up to the next '>' into one tag: the
+ * following <SYNC> is swallowed as part of the garbage tag, not an
+ * error. The parse must complete and simply yield no caption. */
+GST_START_TEST (test_sami_unclosed_tags_swallow)
+{
+  GString *garbage = g_string_new ("<SAMI>\n<BODY>\n");
+  guint i;
+
+  for (i = 0; i < 200; i++)
+    g_string_append (garbage, "<unclosed tag without end\n");
+
+  g_string_append (garbage,
+      "    <SYNC Start=5000>\n"
+      "        <P Class=CC>\n"
+      "            Swallowed caption.\n" "</BODY>\n" "</SAMI>\n");
+
+  setup_subparse ();
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          buffer_from_static_string (garbage->str)), GST_FLOW_OK);
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  teardown_subparse ();
+  g_string_free (garbage, TRUE);
+}
+
+GST_END_TEST;
+
+/* The dangling '<' swallows at most the parser's pending-tag size cap:
+ * once the pending tag exceeds it and no '<' restarts it within the kept
+ * window, the pending tag is dropped and parsing resumes, so the caption
+ * after the garbage is still emitted. */
+GST_START_TEST (test_sami_unclosed_tags_recovery)
+{
+  GString *garbage = g_string_new ("<SAMI>\n<BODY>\n<x");
+  guint i;
+
+  for (i = 0; i < 5000; i++)
+    g_string_append_c (garbage, 'a');
+  g_string_append (garbage, "\n"
+      "    <SYNC Start=5000>\n"
+      "        <P Class=CC>\n"
+      "            Recovered caption.\n" "</BODY>\n" "</SAMI>\n");
+
+  setup_subparse ();
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          buffer_from_static_string (garbage->str)), GST_FLOW_OK);
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (buffers->data),
+      5000 * GST_MSECOND);
+  {
+    GstMapInfo map;
+
+    gst_buffer_map (buffers->data, &map, GST_MAP_READ);
+    fail_unless_equals_int (map.size, strlen ("Recovered caption."));
+    fail_unless (!memcmp (map.data, "Recovered caption.", map.size));
+    gst_buffer_unmap (buffers->data, &map);
+  }
+
+  teardown_subparse ();
+  g_string_free (garbage, TRUE);
+}
+
+GST_END_TEST;
+
+/* Unclosed '<' lines must not make the HTML context buffer grow without
+ * bound nor cause quadratic rescanning: each call must do O(1) work.
+ * The header is sent once, then pure dangling-'<' lines in chunks, so the
+ * context buffer accumulates exactly like the fuzzing reproducer.
+ * Regression test for clusterfuzz-testcase-gst-subparse-5193624668405760. */
+GST_START_TEST (test_sami_unclosed_tags_perf)
+{
+  GString *chunk = g_string_new (NULL);
+  guint i;
+  gint64 start;
+
+  for (i = 0; i < 2000; i++)
+    g_string_append (chunk, "<unclosed\n");
+
+  setup_subparse ();
+  /* header once, so nothing later flushes the pending tag */
+  fail_unless_equals_int (gst_pad_push (mysrcpad,
+          buffer_from_static_string ("<SAMI>\n<BODY>\n")), GST_FLOW_OK);
+  start = g_get_monotonic_time ();
+  /* 500k dangling lines in ~20KB buffers */
+  for (i = 0; i < 250; i++) {
+    fail_unless_equals_int (gst_pad_push (mysrcpad,
+            buffer_from_static_string (chunk->str)), GST_FLOW_OK);
+  }
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+  /* no sync tag was ever reached */
+  fail_unless_equals_int (g_list_length (buffers), 0);
+#ifdef HAVE_VALGRIND
+  /* valgrind slows everything down enough that the wall-clock bound below
+   * is meaningless */
+  if (!RUNNING_ON_VALGRIND)
+#endif
+    fail_unless ((g_get_monotonic_time () - start) < 5 * G_USEC_PER_SEC,
+        "500k unclosed-tag lines took >5s (quadratic rescan / unbounded buffer?)");
+
+  teardown_subparse ();
+  g_string_free (chunk, TRUE);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_sami_html_entities)
 {
   SubParseInputChunk sami_input[] = {
@@ -1164,6 +1278,9 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_dks);
   tcase_add_test (tc_chain, test_sami);
   tcase_add_test (tc_chain, test_sami_xml_entities);
+  tcase_add_test (tc_chain, test_sami_unclosed_tags_swallow);
+  tcase_add_test (tc_chain, test_sami_unclosed_tags_recovery);
+  tcase_add_test (tc_chain, test_sami_unclosed_tags_perf);
   tcase_add_test (tc_chain, test_sami_html_entities);
   tcase_add_test (tc_chain, test_sami_bad_entities);
   tcase_add_test (tc_chain, test_sami_comment);
