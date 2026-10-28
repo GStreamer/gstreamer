@@ -535,11 +535,6 @@ class GstValidateCheckAccurateSeekingTestGenerator(GstValidatePipelineTestsGener
                       "%s is not a video, can't run accurate seeking tests" % path)
                 continue
 
-            if media_info.get_num_tracks("video") < 1:
-                error("GstValidateCheckAccurateSeekingTestGenerator",
-                      "No video track, can't run accurate seeking tests" % path)
-                continue
-
             if test_manager.options.validate_generate_ssim_reference_files:
                 scenario = None
                 test_name = media_info.get_clean_name() + '.generate_reference_files'
