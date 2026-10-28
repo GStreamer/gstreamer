@@ -545,7 +545,7 @@ static gchar *gst_rtspsrc_uri_get_uri (GstURIHandler * handler);
 static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_loop (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_stream_push_event (GstRTSPSrc * src,
-    GstRTSPStream * stream, GstEvent * event);
+    GstRTSPStream * stream, GstEvent * event, gboolean pad_push);
 static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
 static void gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush);
 static GstRTSPResult gst_rtsp_conninfo_close (GstRTSPSrc * src,
@@ -4249,11 +4249,12 @@ unknown_stream:
 }
 
 static void
-gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, GstRTSPStream * stream)
+gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, GstRTSPStream * stream,
+    gboolean pad_push)
 {
   GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", stream->id);
 
-  gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos ());
+  gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos (), pad_push);
 }
 
 static void
@@ -4268,7 +4269,7 @@ on_bye_ssrc (GObject * session, GObject * source, GstRTSPStream * stream)
       ssrc, stream->ssrc, stream->id);
 
   if (ssrc == stream->ssrc)
-    gst_rtspsrc_do_stream_eos (src, stream);
+    gst_rtspsrc_do_stream_eos (src, stream, TRUE);
 }
 
 static void
@@ -4311,7 +4312,7 @@ on_timeout_common (GObject * session, GObject * source, GstRTSPStream * stream)
       GST_DEBUG_OBJECT (src, "sending EOS on all streams");
       for (walk = src->streams; walk; walk = g_list_next (walk)) {
         GstRTSPStream *stream = (GstRTSPStream *) walk->data;
-        gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos ());
+        gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos (), TRUE);
       }
     }
   }
@@ -4346,7 +4347,7 @@ on_npt_stop (GstElement * rtpbin, guint session, guint ssrc, GstRTSPSrc * src)
   /* get stream for session */
   stream = find_stream (src, &session, (gpointer) find_stream_by_id);
   if (stream) {
-    gst_rtspsrc_do_stream_eos (src, stream);
+    gst_rtspsrc_do_stream_eos (src, stream, FALSE);
   }
 }
 
@@ -5847,9 +5848,31 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
   }
 }
 
+/* With @pad_push, push on the source pad without taking the udpsrc STATE_LOCK */
+static gboolean
+gst_rtspsrc_send_udpsrc_event (GstElement * udpsrc, GstEvent * event,
+    gboolean pad_push)
+{
+  GstPad *pad;
+  gboolean res;
+
+  if (!pad_push)
+    return gst_element_send_event (udpsrc, event);
+
+  pad = gst_element_get_static_pad (udpsrc, "src");
+  if (pad == NULL) {
+    gst_event_unref (event);
+    return FALSE;
+  }
+  res = gst_pad_push_event (pad, event);
+  gst_object_unref (pad);
+
+  return res;
+}
+
 static gboolean
 gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
-    GstEvent * event)
+    GstEvent * event, gboolean pad_push)
 {
   gboolean res = TRUE;
 
@@ -5878,7 +5901,8 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
       sent_event = gst_event_ref (event);
     }
 
-    res = gst_element_send_event (stream->udpsrc[0], sent_event);
+    res =
+        gst_rtspsrc_send_udpsrc_event (stream->udpsrc[0], sent_event, pad_push);
   } else if (stream->channelpad[0]) {
     GstEvent *sent_event;
 
@@ -5901,7 +5925,8 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
       sent_event = gst_event_ref (event);
     }
 
-    res &= gst_element_send_event (stream->udpsrc[1], sent_event);
+    res &= gst_rtspsrc_send_udpsrc_event (stream->udpsrc[1], sent_event,
+        pad_push);
   } else if (stream->channelpad[1]) {
     GstEvent *sent_event;
 
@@ -5930,7 +5955,7 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
     GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
 
     gst_event_ref (event);
-    res &= gst_rtspsrc_stream_push_event (src, ostream, event);
+    res &= gst_rtspsrc_stream_push_event (src, ostream, event, FALSE);
   }
   gst_event_unref (event);
 
@@ -6591,7 +6616,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
       gst_rtspsrc_stream_start_event_add_group_id (src, event);
 
       g_free (stream_id);
-      gst_rtspsrc_stream_push_event (src, ostream, event);
+      gst_rtspsrc_stream_push_event (src, ostream, event, FALSE);
 
       if ((caps = stream_get_caps_for_pt (ostream, ostream->default_pt))) {
         /* only streams that have a connection to the outside world */
