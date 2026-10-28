@@ -400,6 +400,10 @@ _parse_atsc_mgt (GstMpegtsSection * section)
     data += descriptors_loop_length;
   }
 
+  if (end - data < 2) {
+    GST_WARNING ("MGT data too short to parse descriptors");
+    goto error;
+  }
   descriptors_loop_length = GST_READ_UINT16_BE (data) & 0xFFF;
   data += 2;
   if (data + descriptors_loop_length >= end) {
@@ -1476,13 +1480,14 @@ _parse_rrt (GstMpegtsSection * section)
 {
   GstMpegtsAtscRRT *rrt = NULL;
   guint i = 0;
-  guint8 *data;
+  guint8 *data, *end;
   guint16 descriptors_loop_length;
   guint8 text_length;
 
   rrt = g_new0 (GstMpegtsAtscRRT, 1);
 
   data = section->data;
+  end = data + section->section_length;
 
   /* Skip already parsed data */
   data += 8;
@@ -1492,9 +1497,13 @@ _parse_rrt (GstMpegtsSection * section)
 
   text_length = GST_READ_UINT8 (data);
   data += 1;
+  if (text_length > (gsize) (end - 4 - data))
+    goto error;
   rrt->names = _parse_atsc_mult_string (data, text_length);
   data += text_length;
 
+  if (end - 4 - data < 1)
+    goto error;
   rrt->dimensions_defined = GST_READ_UINT8 (data) & 0x1f;
   data += 1;
 
@@ -1509,11 +1518,17 @@ _parse_rrt (GstMpegtsSection * section)
     dim = g_new0 (GstMpegtsAtscRRTDimension, 1);
     g_ptr_array_add (rrt->dimensions, dim);
 
+    if (end - 4 - data < 1)
+      goto error;
     text_length = GST_READ_UINT8 (data);
     data += 1;
+    if (text_length > (gsize) (end - 4 - data))
+      goto error;
     dim->names = _parse_atsc_mult_string (data, text_length);
     data += text_length;
 
+    if (end - 4 - data < 1)
+      goto error;
     tmp = GST_READ_UINT8 (data);
     data += 1;
 
@@ -1529,24 +1544,42 @@ _parse_rrt (GstMpegtsSection * section)
       val = g_new0 (GstMpegtsAtscRRTDimensionValue, 1);
       g_ptr_array_add (dim->values, val);
 
+      if (end - 4 - data < 1)
+        goto error;
       text_length = GST_READ_UINT8 (data);
       data += 1;
+      if (text_length > (gsize) (end - 4 - data))
+        goto error;
       val->abbrev_ratings = _parse_atsc_mult_string (data, text_length);
       data += text_length;
 
+      if (end - 4 - data < 1)
+        goto error;
       text_length = GST_READ_UINT8 (data);
       data += 1;
+      if (text_length > (gsize) (end - 4 - data))
+        goto error;
       val->ratings = _parse_atsc_mult_string (data, text_length);
       data += text_length;
     }
   }
 
+  if (end - 4 - data < 2)
+    goto error;
   descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x3FF;
   data += 2;
+  if (descriptors_loop_length > (gsize) (end - 4 - data))
+    goto error;
   rrt->descriptors =
       gst_mpegts_parse_descriptors (data, descriptors_loop_length);
 
   return (gpointer) rrt;
+
+error:
+  GST_WARNING ("Invalid RRT section, aborting parsing");
+  _gst_mpegts_atsc_rrt_free (rrt);
+
+  return NULL;
 }
 
 static gboolean
