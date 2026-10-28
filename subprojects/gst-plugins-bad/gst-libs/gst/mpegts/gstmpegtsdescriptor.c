@@ -145,13 +145,15 @@ __initialize_descriptors (void)
 
 /*
  * @text: The text you want to get the encoding from
+ * @length: The length of @text in bytes
  * @start_text: Location where the beginning of the actual text is stored
  * @is_multibyte: Location where information whether it's a multibyte encoding
  * or not is stored
  * @returns: GIconv for conversion or NULL
  */
 static LocalIconvCode
-get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
+get_encoding (const gchar * text, guint length, guint * start_text,
+    gboolean * is_multibyte)
 {
   LocalIconvCode encoding;
   guint8 firstbyte;
@@ -183,6 +185,11 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
     case 0x10:
     {
       guint16 table;
+
+      if (length < 3) {
+        encoding = _ICONV_UNKNOWN;
+        break;
+      }
 
       table = GST_READ_UINT16_BE (text + 1);
 
@@ -485,7 +492,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
         text += 2;
       }
     } else {
-      for (i = 0; i < length; i += 2) {
+      for (i = 0; i + 1 < length; i += 2) {
         guint16 code = GST_READ_UINT16_BE (text);
 
         switch (code) {
@@ -584,7 +591,7 @@ get_encoding_and_convert (const gchar * text, guint length)
   if (text == NULL || length == 0)
     return g_strdup ("");
 
-  encoding = get_encoding (text, &start_text, &is_multibyte);
+  encoding = get_encoding (text, length, &start_text, &is_multibyte);
 
   if (encoding > _ICONV_UNKNOWN && encoding < _ICONV_MAX) {
     GST_DEBUG ("Encoding %s", iconvtablename[encoding]);
@@ -609,7 +616,8 @@ get_encoding_and_convert (const gchar * text, guint length)
       giconv = _get_iconv (_ICONV_ISO8859_1, _ICONV_UTF8);
 
       GST_INFO ("Trying encoding ISO 8859-1");
-      converted_str = convert_to_utf8 (text, length, 1, giconv, FALSE, &error);
+      converted_str = convert_to_utf8 (text, length - 1, 1, giconv, FALSE,
+          &error);
       if (error != NULL) {
         GST_WARNING
             ("Could not convert string while assuming encoding ISO 8859-1: %s",
@@ -794,10 +802,15 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
   GST_MEMDUMP ("Full descriptor array", buffer, buf_len);
 
   while (data - buffer < buf_len) {
+    if (buf_len - (gsize) (data - buffer) < 2) {
+      GST_WARNING ("Not enough data for a descriptor header: %" G_GSIZE_FORMAT
+          " of %" G_GSIZE_FORMAT, (gsize) (data - buffer), buf_len);
+      return NULL;
+    }
     data++;                     /* skip tag */
     length = *data++;
 
-    if (data - buffer > buf_len) {
+    if (length > buf_len - (gsize) (data - buffer)) {
       GST_WARNING ("invalid descriptor length %d now at %d max %"
           G_GSIZE_FORMAT, length, (gint) (data - buffer), buf_len);
       return NULL;
@@ -834,8 +847,13 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     GST_MEMDUMP ("descriptor", desc->data + 2, desc->length);
     /* extended descriptors */
     if (G_UNLIKELY (desc->tag == GST_MTS_DESC_DVB_EXTENSION
-            || desc->tag == GST_MTS_DESC_EXTENSION))
-      desc->tag_extension = *data;
+            || desc->tag == GST_MTS_DESC_EXTENSION)) {
+      if (G_UNLIKELY (desc->length < 1)) {
+        GST_WARNING ("Extended descriptor 0x%02x has no payload", desc->tag);
+      } else {
+        desc->tag_extension = *data;
+      }
+    }
 
     data += desc->length;
 
@@ -1388,6 +1406,7 @@ gst_mpegts_descriptor_parse_metadata (const GstMpegtsDescriptor * descriptor,
     GstMpegtsMetadataDescriptor ** desc)
 {
   guint8 *data;
+  const guint8 *end;
   guint8 flag;
   GstMpegtsMetadataDescriptor *res;
 
@@ -1395,6 +1414,7 @@ gst_mpegts_descriptor_parse_metadata (const GstMpegtsDescriptor * descriptor,
   __common_desc_checks (descriptor, GST_MTS_DESC_METADATA, 5, FALSE);
 
   data = (guint8 *) descriptor->data + 2;
+  end = data + descriptor->length;
 
   res = g_new0 (GstMpegtsMetadataDescriptor, 1);
 
@@ -1402,15 +1422,23 @@ gst_mpegts_descriptor_parse_metadata (const GstMpegtsDescriptor * descriptor,
   data += 2;
   if (res->metadata_application_format ==
       GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
+    if (end - data < 4)
+      goto fail;
     // skip over metadata_application_format_identifier if it is provided
     data += 4;
   }
+  if (end - data < 1)
+    goto fail;
   res->metadata_format = *data;
   data += 1;
   if (res->metadata_format == GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD) {
+    if (end - data < 4)
+      goto fail;
     res->metadata_format_identifier = GST_READ_UINT32_BE (data);
     data += 4;
   }
+  if (end - data < 2)
+    goto fail;
   res->metadata_service_id = *data;
   data += 1;
   flag = *data;
@@ -1422,6 +1450,10 @@ gst_mpegts_descriptor_parse_metadata (const GstMpegtsDescriptor * descriptor,
   *desc = res;
 
   return TRUE;
+
+fail:
+  g_free (res);
+  return FALSE;
 }
 
 /**
