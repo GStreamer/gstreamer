@@ -841,17 +841,40 @@ gst_app_src_init (GstAppSrc * appsrc)
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
 
+/* Not stream-start and caps, as the segment would go out before them */
+static gboolean
+gst_app_src_keep_on_flush (GstMiniObject * obj)
+{
+  return gst_app_keep_on_flush (obj)
+      && GST_EVENT_TYPE (obj) != GST_EVENT_STREAM_START
+      && GST_EVENT_TYPE (obj) != GST_EVENT_CAPS;
+}
+
 /* Must be called with priv->mutex */
 static void
-gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
+gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps,
+    gboolean keep_sticky_events)
 {
   GstMiniObject *obj;
   GstAppSrcPrivate *priv = src->priv;
   GstCaps *requeue_caps = NULL;
+  GQueue sticky_events = G_QUEUE_INIT;
+
+  /* Nothing sends the queued sticky events again, keep them */
+  while ((obj = gst_vec_deque_pop_head (priv->delayed_events))) {
+    if (keep_sticky_events && gst_app_src_keep_on_flush (obj))
+      g_queue_push_tail (&sticky_events, obj);
+    else
+      gst_mini_object_unref (obj);
+  }
 
   while (!gst_vec_deque_is_empty (priv->queue)) {
     obj = gst_vec_deque_pop_head (priv->queue);
     if (obj) {
+      if (keep_sticky_events && gst_app_src_keep_on_flush (obj)) {
+        g_queue_push_tail (&sticky_events, obj);
+        continue;
+      }
       if (GST_IS_CAPS (obj) && retain_last_caps) {
         gst_caps_replace (&requeue_caps, GST_CAPS_CAST (obj));
       }
@@ -862,8 +885,9 @@ gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
   if (requeue_caps) {
     gst_vec_deque_push_tail (priv->queue, requeue_caps);
   }
+  while ((obj = g_queue_pop_head (&sticky_events)))
+    gst_vec_deque_push_tail (priv->queue, obj);
 
-  gst_vec_deque_clear (priv->delayed_events);
   priv->pushed_buffer = FALSE;
 
   gst_queue_status_info_reset (&priv->queue_status_info);
@@ -896,7 +920,7 @@ gst_app_src_dispose (GObject * obj)
     callbacks = g_steal_pointer (&priv->callbacks);
   if (priv->simple_callbacks)
     simple_callbacks = g_steal_pointer (&priv->simple_callbacks);
-  gst_app_src_flush_queued (appsrc, FALSE);
+  gst_app_src_flush_queued (appsrc, FALSE, FALSE);
   g_mutex_unlock (&priv->mutex);
 
   g_clear_pointer (&callbacks, callbacks_unref);
@@ -1124,7 +1148,7 @@ gst_app_src_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&priv->mutex);
-      gst_app_src_flush_queued (appsrc, TRUE);
+      gst_app_src_flush_queued (appsrc, TRUE, TRUE);
       priv->is_eos = FALSE;
       g_mutex_unlock (&priv->mutex);
 
@@ -1223,7 +1247,7 @@ gst_app_src_stop (GstBaseSrc * bsrc)
   priv->flushing = TRUE;
   priv->started = FALSE;
   priv->posted_latency_msg = FALSE;
-  gst_app_src_flush_queued (appsrc, TRUE);
+  gst_app_src_flush_queued (appsrc, TRUE, FALSE);
   g_cond_broadcast (&priv->cond);
   priv->in = priv->out = priv->dropped = 0;
   g_mutex_unlock (&priv->mutex);
@@ -1382,7 +1406,7 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
   if (res) {
     GST_DEBUG_OBJECT (appsrc, "flushing queue");
     g_mutex_lock (&priv->mutex);
-    gst_app_src_flush_queued (appsrc, TRUE);
+    gst_app_src_flush_queued (appsrc, TRUE, TRUE);
     gst_segment_copy_into (segment, &priv->last_segment);
     gst_segment_copy_into (segment, &priv->current_segment);
     priv->pending_custom_segment = FALSE;

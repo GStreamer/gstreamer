@@ -1557,6 +1557,145 @@ GST_START_TEST (test_appsrc_send_custom_event)
 
 GST_END_TEST;
 
+GST_START_TEST (test_appsrc_sticky_events_kept_on_flush)
+{
+  GstHarness *h;
+  GstAppSrc *src;
+  GstCaps *caps;
+  GstEvent *event;
+  gboolean got_sticky = FALSE;
+
+  h = gst_harness_new ("appsrc");
+  src = GST_APP_SRC (h->element);
+  gst_harness_play (h);
+
+  /* Without caps, the events wait while appsrc goes EOS, then flush */
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+              gst_structure_new_empty ("sticky"))));
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_stream_group_done (1)));
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new_empty ("not-sticky"))));
+  fail_unless_equals_int (gst_app_src_end_of_stream (src), GST_FLOW_OK);
+  while ((event = gst_harness_pull_event (h))) {
+    gboolean eos = GST_EVENT_TYPE (event) == GST_EVENT_EOS;
+
+    gst_event_unref (event);
+    if (eos)
+      break;
+  }
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_flush_start ()));
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_flush_stop (TRUE)));
+
+  caps = gst_caps_new_empty_simple ("foo/bar");
+  gst_app_src_set_caps (src, caps);
+  gst_caps_unref (caps);
+  fail_unless_equals_int (gst_app_src_push_buffer (src,
+          gst_buffer_new_and_alloc (1)), GST_FLOW_OK);
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* Nothing sends the sticky event again, it must be kept */
+  while ((event = gst_harness_try_pull_event (h))) {
+    if (gst_event_has_name (event, "sticky"))
+      got_sticky = TRUE;
+    fail_if (gst_event_has_name (event, "not-sticky"));
+    fail_if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_GROUP_DONE);
+    gst_event_unref (event);
+  }
+  fail_unless (got_sticky);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+static GMutex buffer_blocked_mutex;
+static GCond buffer_blocked_cond;
+static gboolean buffer_blocked;
+
+static GstPadProbeReturn
+buffer_blocked_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  g_mutex_lock (&buffer_blocked_mutex);
+  buffer_blocked = TRUE;
+  g_cond_signal (&buffer_blocked_cond);
+  g_mutex_unlock (&buffer_blocked_mutex);
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_appsrc_queued_sticky_events_kept_on_flush)
+{
+  GstHarness *h;
+  GstAppSrc *src;
+  GstPad *srcpad;
+  GstCaps *caps, *current;
+  GstEvent *event;
+  gboolean flushed = FALSE, got_sticky = FALSE;
+  gulong probe;
+
+  h = gst_harness_new ("appsrc");
+  src = GST_APP_SRC (h->element);
+  srcpad = gst_element_get_static_pad (h->element, "src");
+  gst_harness_play (h);
+
+  /* Block the streaming thread on a buffer, so the caps and sticky event
+   * stay queued, then flush */
+  buffer_blocked = FALSE;
+  probe = gst_pad_add_probe (srcpad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
+      buffer_blocked_probe, NULL, NULL);
+  caps = gst_caps_new_empty_simple ("foo/first");
+  gst_app_src_set_caps (src, caps);
+  gst_caps_unref (caps);
+  fail_unless_equals_int (gst_app_src_push_buffer (src,
+          gst_buffer_new_and_alloc (1)), GST_FLOW_OK);
+  g_mutex_lock (&buffer_blocked_mutex);
+  while (!buffer_blocked)
+    g_cond_wait (&buffer_blocked_cond, &buffer_blocked_mutex);
+  g_mutex_unlock (&buffer_blocked_mutex);
+
+  caps = gst_caps_new_empty_simple ("foo/second");
+  gst_app_src_set_caps (src, caps);
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
+              gst_structure_new_empty ("sticky"))));
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_flush_start ()));
+  gst_pad_remove_probe (srcpad, probe);
+  fail_unless (gst_element_send_event (h->element,
+          gst_event_new_flush_stop (TRUE)));
+
+  fail_unless_equals_int (gst_app_src_push_buffer (src,
+          gst_buffer_new_and_alloc (1)), GST_FLOW_OK);
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* The sticky event is kept, and goes after the new caps */
+  while ((event = gst_harness_try_pull_event (h))) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP)
+      flushed = TRUE;
+    if (flushed && GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+      fail_if (got_sticky);
+    if (gst_event_has_name (event, "sticky"))
+      got_sticky = TRUE;
+    gst_event_unref (event);
+  }
+  fail_unless (got_sticky);
+  current = gst_pad_get_current_caps (h->sinkpad);
+  fail_unless (gst_caps_is_equal (current, caps));
+  gst_caps_unref (current);
+  gst_caps_unref (caps);
+
+  gst_object_unref (srcpad);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 enum ExpectedObj
 {
   EXPECTED_STREAM_START,
@@ -1765,6 +1904,8 @@ appsrc_suite (void)
   tcase_add_test (tc_chain, test_appsrc_send_event_before_buffer);
   tcase_add_test (tc_chain, test_appsrc_send_event_before_sample);
   tcase_add_test (tc_chain, test_appsrc_send_event_between_caps_buffer);
+  tcase_add_test (tc_chain, test_appsrc_sticky_events_kept_on_flush);
+  tcase_add_test (tc_chain, test_appsrc_queued_sticky_events_kept_on_flush);
 
   if (RUNNING_ON_VALGRIND)
     tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 5);
