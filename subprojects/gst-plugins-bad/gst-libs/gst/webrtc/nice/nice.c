@@ -1606,16 +1606,26 @@ gst_webrtc_nice_get_http_proxy (GstWebRTCICE * ice)
 struct close_data
 {
   GstPromise *promise;
-  gboolean agent_closed;
+  NiceAgent *agent;
+  GMainContext *wait_context;
+  gboolean agent_closed;        /* Accessed atomically */
 };
 
 static struct close_data *
-close_data_new (GstPromise * p)
+close_data_new (GstPromise * p, NiceAgent * agent, GMainContext * wait_context)
 {
-  struct close_data *d = g_new0 (struct close_data, 1);
+  struct close_data *d = g_atomic_rc_box_new0 (struct close_data);
+
   d->promise = p ? gst_promise_ref (p) : NULL;
-  d->agent_closed = FALSE;
+  d->agent = g_object_ref (agent);
+  d->wait_context = g_main_context_ref (wait_context);
   return d;
+}
+
+static struct close_data *
+close_data_ref (struct close_data *d)
+{
+  return g_atomic_rc_box_acquire (d);
 }
 
 static void
@@ -1623,7 +1633,14 @@ close_data_free (struct close_data *d)
 {
   if (d->promise)
     gst_promise_unref (d->promise);
-  g_free (d);
+  g_object_unref (d->agent);
+  g_main_context_unref (d->wait_context);
+}
+
+static void
+close_data_unref (struct close_data *d)
+{
+  g_atomic_rc_box_release_full (d, (GDestroyNotify) close_data_free);
 }
 
 static void
@@ -1631,15 +1648,17 @@ _agent_closed_cb (GObject * src, GAsyncResult * result, gpointer user_data)
 {
   struct close_data *d = (struct close_data *) user_data;
 
-  /* 9. Set the [[IceTransportState]] slot of each of connection's
-   * RTCIceTransports to "closed". */
-  /* FIXME: We don't expose IceTransportState yet. */
+  g_atomic_int_set (&d->agent_closed, TRUE);
+  g_main_context_wakeup (d->wait_context);
+  close_data_unref (d);
+}
 
-  if (d->promise) {
-    gst_promise_reply (d->promise, NULL);
-  }
+static gboolean
+_start_agent_close (struct close_data *d)
+{
+  nice_agent_close_async (d->agent, _agent_closed_cb, close_data_ref (d));
 
-  d->agent_closed = TRUE;
+  return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -1648,7 +1667,7 @@ _agent_closed_timeout_cb (gpointer user_data)
   gboolean *agent_timeout = user_data;
 
   *agent_timeout = TRUE;
-  return FALSE;
+  return G_SOURCE_REMOVE;
 };
 
 static void
@@ -1658,6 +1677,7 @@ _close_agent (GstWebRTCNice * ice, GstPromise * promise)
   struct close_data *agent_close_data = NULL;
   gboolean agent_timeout = FALSE;
   GSource *timeout_source;
+  GSource *close_source;
 
   if (!ice->priv->thread) {
     if (promise) {
@@ -1676,28 +1696,43 @@ _close_agent (GstWebRTCNice * ice, GstPromise * promise)
 
   main_context = g_main_context_new ();
   g_main_context_push_thread_default (main_context);
+
+  /* 8. Destroy connection's ICE Agent, abruptly ending any active ICE
+   * processing and releasing any relevant resources (e.g. TURN permissions). */
+  agent_close_data =
+      close_data_new (promise, ice->priv->nice_agent, main_context);
   timeout_source = g_timeout_source_new (MAX_CLOSING_TIME_MILLI_SECONDS);
   g_source_set_callback (timeout_source, _agent_closed_timeout_cb,
       &agent_timeout, NULL);
   g_source_attach (timeout_source, main_context);
 
-  /* 8. Destroy connection's ICE Agent, abruptly ending any active ICE
-   * processing and releasing any relevant resources (e.g. TURN permissions). */
-  agent_close_data = close_data_new (promise);
-  nice_agent_close_async (ice->priv->nice_agent, _agent_closed_cb,
-      agent_close_data);
+  /* Retire sockets on the ICE context, between polling waits. Destroying a
+   * source on another thread cannot invalidate an outstanding poll snapshot. */
+  close_source = g_idle_source_new ();
+  g_source_set_priority (close_source, G_PRIORITY_DEFAULT);
+  g_source_set_callback (close_source, (GSourceFunc) _start_agent_close,
+      close_data_ref (agent_close_data), (GDestroyNotify) close_data_unref);
+  g_source_attach (close_source, ice->priv->main_context);
 
-  while (!agent_close_data->agent_closed && !agent_timeout) {
+  while (!g_atomic_int_get (&agent_close_data->agent_closed) && !agent_timeout)
     g_main_context_iteration (main_context, TRUE);
-  }
-  if (agent_timeout) {
+
+  if (g_atomic_int_get (&agent_close_data->agent_closed)) {
+    /* 9. Set the [[IceTransportState]] slot of each of connection's
+     * RTCIceTransports to "closed". */
+    /* FIXME: We don't expose IceTransportState yet. */
+    if (agent_close_data->promise)
+      gst_promise_reply (agent_close_data->promise, NULL);
+  } else {
     GST_WARNING ("nice_agent_close_async() did not finish");
   }
+  g_source_destroy (close_source);
+  g_source_unref (close_source);
   g_source_destroy (timeout_source);
   g_source_unref (timeout_source);
   g_main_context_pop_thread_default (main_context);
   g_main_context_unref (main_context);
-  close_data_free (agent_close_data);
+  close_data_unref (agent_close_data);
 
   outstanding_resolves_wait (ice->priv->outstanding_resolves);
   _stop_thread (ice);

@@ -29,6 +29,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/webrtc/webrtc.h>
+#include <gst/webrtc/ice.h>
 #include <gst/rtp/rtp.h>
 #include "../../../ext/webrtc/webrtcsdp.h"
 #include "../../../ext/webrtc/webrtcsdp.c"
@@ -1424,6 +1425,61 @@ GST_START_TEST (test_ice_agent_construct_takes_ref)
   ASSERT_OBJECT_REFCOUNT (ice, "ice-agent", 1);
 
   gst_object_unref (ice);
+}
+
+GST_END_TEST;
+
+typedef struct
+{
+  GMainContext *context;
+  gint removed;
+  gboolean wrong_context;
+} IceCloseContextData;
+
+static void
+ice_streams_removed_cb (GObject * agent, gpointer stream_ids,
+    IceCloseContextData * data)
+{
+  g_atomic_int_inc (&data->removed);
+  if (!g_main_context_is_owner (data->context))
+    g_atomic_int_set (&data->wrong_context, TRUE);
+}
+
+GST_START_TEST (test_ice_close_on_context)
+{
+  GstElement *webrtc = gst_element_factory_make ("webrtcbin", NULL);
+  GstWebRTCICE *ice = NULL;
+  GObject *agent = NULL;
+  GstPromise *promise = gst_promise_new ();
+  GstWebRTCICEStream *stream;
+  GstPromiseResult result;
+  IceCloseContextData data = { 0, };
+  gulong handler;
+
+  g_object_get (webrtc, "ice-agent", &ice, NULL);
+  g_object_get (ice, "agent", &agent, NULL);
+  g_object_get (agent, "main-context", &data.context, NULL);
+  fail_unless (data.context != NULL);
+  stream = gst_webrtc_ice_add_stream (ice, 0);
+  fail_unless (stream != NULL);
+  handler = g_signal_connect (agent, "streams-removed",
+      G_CALLBACK (ice_streams_removed_cb), &data);
+
+  /* Shutdown must retire sockets between the ICE context's polling waits. */
+  gst_webrtc_ice_close (ice, promise);
+  result = gst_promise_wait (promise);
+
+  g_signal_handler_disconnect (agent, handler);
+  gst_promise_unref (promise);
+  gst_object_unref (stream);
+  gst_object_unref (ice);
+  gst_object_unref (webrtc);
+  g_object_unref (agent);
+
+  fail_unless_equals_int (result, GST_PROMISE_RESULT_REPLIED);
+  fail_unless_equals_int (g_atomic_int_get (&data.removed), 1);
+  fail_if (g_atomic_int_get (&data.wrong_context),
+      "ICE stream removed outside its polling context");
 }
 
 GST_END_TEST;
@@ -7499,6 +7555,7 @@ webrtcbin_suite (void)
   tcase_add_test (tc, test_no_nice_elements_state_change);
   tcase_add_test (tc, test_ice_agent_not_floating);
   tcase_add_test (tc, test_ice_agent_construct_takes_ref);
+  tcase_add_test (tc, test_ice_close_on_context);
   if (nicesrc && nicesink && dtlssrtpenc && dtlssrtpdec) {
     tcase_add_test (tc, test_sdp_no_media);
     tcase_add_test (tc, test_session_stats);
