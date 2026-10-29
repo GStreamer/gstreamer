@@ -315,11 +315,13 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
   if (!filter->silent) {
     if (total > 0) {
       g_print ("%s (%02d:%02d:%02d): %" G_GINT64_FORMAT " / %"
-          G_GINT64_FORMAT " %s (%4.1f %%)\n", GST_OBJECT_NAME (filter), hh,
-          mm, ss, cur, total, format_name, (gdouble) cur / total * 100.0);
+          G_GINT64_FORMAT " %s (%4.1f %%) - %" G_GINT64_FORMAT " buffers\n",
+          GST_OBJECT_NAME (filter), hh, mm, ss, cur, total, format_name,
+          (gdouble) cur / total * 100.0, filter->buffer_count);
     } else {
-      g_print ("%s (%02d:%02d:%02d): %" G_GINT64_FORMAT " %s\n",
-          GST_OBJECT_NAME (filter), hh, mm, ss, cur, format_name);
+      g_print ("%s (%02d:%02d:%02d): %" G_GINT64_FORMAT " %s - %"
+          G_GINT64_FORMAT " buffers\n", GST_OBJECT_NAME (filter), hh, mm, ss,
+          cur, format_name, filter->buffer_count);
     }
   }
 
