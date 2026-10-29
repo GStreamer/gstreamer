@@ -2216,7 +2216,26 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
   }
 
   if (!translate) {
-    g_assert (section->data);
+    gsize section_data_size;
+
+    if (!section->data) {
+      /* Manually constructed sections have no binary representation,
+       * packetize them to get one. Their splice times are already
+       * expressed in the MPEG time domain. */
+      guint8 *packetized;
+
+      packetized = gst_mpegts_section_packetize (section, &section_data_size);
+      if (G_UNLIKELY (!packetized)) {
+        GST_WARNING_OBJECT (mux,
+            "Could not packetize SCTE section, dropping it");
+        gst_mpegts_section_unref (section);
+        return;
+      }
+      section_data = g_memdup2 (packetized, section_data_size);
+    } else {
+      section_data = g_memdup2 (section->data, section->section_length);
+      section_data_size = section->section_length;
+    }
     /* Calculate the final adjustment, as a sum of:
      * - The adjustment in the original packet
      * - The offset introduced between the original local PTS
@@ -2230,7 +2249,6 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
         GSTTIMEDIFF_TO_MPEGTIME (gst_event_get_running_time_offset (event));
 
     pts_adjust &= 0x1ffffffff;
-    section_data = g_memdup2 (section->data, section->section_length);
     section_data[4] |= pts_adjust >> 32;
     section_data[5] = pts_adjust >> 24;
     section_data[6] = pts_adjust >> 16;
@@ -2238,7 +2256,7 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
     section_data[8] = pts_adjust;
 
     /* Now rewrite our checksum */
-    crc = section_data + section->section_length - 4;
+    crc = section_data + section_data_size - 4;
     GST_WRITE_UINT32_BE (crc, _calc_crc32 (section_data, crc - section_data));
 
     GST_OBJECT_LOCK (mux);
@@ -2247,7 +2265,7 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
       gst_mpegts_section_unref (mux->pending_scte35_section);
     mux->pending_scte35_section =
         gst_mpegts_section_new (mux->scte35_pid, section_data,
-        section->section_length);
+        section_data_size);
     GST_OBJECT_UNLOCK (mux);
 
     gst_mpegts_section_unref (section);
