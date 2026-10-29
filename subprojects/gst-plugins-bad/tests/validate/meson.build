@@ -9,10 +9,11 @@ tests = [
     {'path': 'h265parse/dsc_sei'},
     {'path': 'codectimestamper/h264_propagate_caps'},
     {'path': 'wpe/load_bytes_first', 'skip': not building_wpe},
-    {'path': 'vtenc/vtenc_h264', 'skip': not applemedia_found_deps},
-    {'path': 'vtenc/vtenc_h264_b_frames', 'skip': not applemedia_found_deps},
-    {'path': 'vtenc/vtenc_h265', 'skip': not applemedia_found_deps},
-    {'path': 'vtenc/vtenc_h265_b_frames', 'skip': not applemedia_found_deps},
+    # VideoToolbox tests run alone to avoid contention for Apple media services.
+    {'path': 'vtenc/vtenc_h264', 'skip': not applemedia_found_deps, 'is_parallel': false},
+    {'path': 'vtenc/vtenc_h264_b_frames', 'skip': not applemedia_found_deps, 'is_parallel': false},
+    {'path': 'vtenc/vtenc_h265', 'skip': not applemedia_found_deps, 'is_parallel': false},
+    {'path': 'vtenc/vtenc_h265_b_frames', 'skip': not applemedia_found_deps, 'is_parallel': false},
     {'path': 'autovideoconvert/renegotiate'},
     {'path': 'pitch/maintain_pitch_with_variable_playback_rates', 'skip': not soundtouch_dep.found()},
     {'path': 'pitch/reverse.maintain_pitch_with_variable_playback_rates', 'skip': not soundtouch_dep.found()},
@@ -39,6 +40,7 @@ foreach t: tests
         test_env.set('GST_VALIDATE_LOGSDIR', join_paths(meson.current_build_dir(), test_name))
         test_file = join_paths(meson.current_source_dir(), t.get('path') + '.validatetest')
         test(test_name, gst_tester, args: [test_file, '--use-fakesinks'],
-            env: test_env, timeout : 3 * 60, protocol: 'tap')
+            env: test_env, timeout : 3 * 60, protocol: 'tap',
+            is_parallel: t.get('is_parallel', true))
     endif
 endforeach

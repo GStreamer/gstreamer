@@ -24,7 +24,8 @@ enable_gst_play_tests = get_option('gst_play_tests')
 libsoup_dep = dependency('libsoup-3.0', include_type: 'system', required: enable_gst_play_tests,
                          default_options: {'tests': false})
 
-# name, condition when to skip the test and extra dependencies
+# Sources, skip condition, extra dependencies, extra sources, parallel execution
+# Tests that autoplug Apple media elements must not contend for those services.
 base_tests = [
   [['elements/aesenc.c'], not aes_dep.found(), [aes_dep]],
   [['elements/aesdec.c'], not aes_dep.found(), [aes_dep]],
@@ -41,7 +42,7 @@ base_tests = [
   [['elements/ccextractor.c'], get_option('closedcaption').disabled()],
   [['elements/cudaconvert.c'], false, [gstgl_dep, gmodule_dep]],
   [['elements/cudafilter.c'], false, [gstgl_dep, gmodule_dep]],
-  [['elements/dashsink.c']],
+  [['elements/dashsink.c'], false, [], [], host_system != 'darwin'],
   [['elements/d3d11colorconvert.c'], host_machine.system() != 'windows', ],
   [['elements/d3d11videosink.c'], host_machine.system() != 'windows', ],
   [['elements/fdkaac.c'], not fdkaac_dep.found(), ],
@@ -111,7 +112,7 @@ base_tests = [
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
   [['libs/mse.c'], not gstmse_private_test_dep.found(), [gstmse_private_test_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
-  [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep, libsoup_dep]],
+  [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep, libsoup_dep], [], host_system != 'darwin'],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp9parser.c'], false, [gstcodecparsers_dep]],
@@ -206,20 +207,21 @@ if host_system == 'darwin'
   if gstgl_dep.found()
     vtdec_test_deps += [declare_dependency(compile_args : ['-DHAVE_GST_GL'])]
   endif
+  # Tests using Apple media services run alone to avoid resource contention.
   base_tests += [
     [['elements/avfsources-videometa.c'], false, [avfoundation_test_dep], [], false],
     [['pipelines/avfsources-output-paths.c'], false, [avfoundation_test_dep, iosurface_test_dep, gstallocators_dep], [], false],
     [['elements/vtdec.c'], false, vtdec_test_deps],
-    [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep]],
-    [['pipelines/avfassetsrc-partial.c']],
-    [['pipelines/vtdec-output-paths.c'], false, [iosurface_test_dep, gstallocators_dep]],
-    [['pipelines/vtenc-iosurface-input.c'], false, [dependency('appleframeworks', modules : ['CoreFoundation', 'CoreVideo', 'IOSurface']), gstallocators_dep]],
+    [['pipelines/avfassetsrc-supplemental.c'], false, [videotoolbox_dep], [], false],
+    [['pipelines/avfassetsrc-partial.c'], false, [], [], false],
+    [['pipelines/vtdec-output-paths.c'], false, [iosurface_test_dep, gstallocators_dep], [], false],
+    [['pipelines/vtenc-iosurface-input.c'], false, [dependency('appleframeworks', modules : ['CoreFoundation', 'CoreVideo', 'IOSurface']), gstallocators_dep], [], false],
   ]
 
   if subsystem == 'macos'
     base_tests += [
-      [['generic/avfdeviceprovider.c']],
-      [['elements/avfdeviceidentity.c']]
+      [['generic/avfdeviceprovider.c'], false, [], [], false],
+      [['elements/avfdeviceidentity.c'], false, [], [], false]
     ]
   endif
 endif
