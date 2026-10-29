@@ -1098,6 +1098,11 @@ gst_mpegts_descriptor_from_dvb_subtitling (const gchar * lang,
 }
 
 /* GST_MTS_DESC_DVB_EXTENDED_EVENT (0x4E) */
+static GstMpegtsExtendedEventItem *_gst_mpegts_extended_event_item_copy
+    (GstMpegtsExtendedEventItem * source);
+static void _gst_mpegts_extended_event_item_free (GstMpegtsExtendedEventItem *
+    item);
+
 static GstMpegtsExtendedEventDescriptor *
 _gst_mpegts_extended_event_descriptor_copy (GstMpegtsExtendedEventDescriptor *
     source)
@@ -1105,8 +1110,21 @@ _gst_mpegts_extended_event_descriptor_copy (GstMpegtsExtendedEventDescriptor *
   GstMpegtsExtendedEventDescriptor *copy;
 
   copy = g_memdup2 (source, sizeof (GstMpegtsExtendedEventDescriptor));
-  copy->items = g_ptr_array_ref (source->items);
+  copy->language_code = g_strdup (source->language_code);
   copy->text = g_strdup (source->text);
+
+  copy->items = NULL;
+  if (source->items) {
+    guint i;
+
+    copy->items = g_ptr_array_new_full (source->items->len,
+        (GDestroyNotify) _gst_mpegts_extended_event_item_free);
+    for (i = 0; i < source->items->len; i++) {
+      g_ptr_array_add (copy->items,
+          _gst_mpegts_extended_event_item_copy (g_ptr_array_index
+              (source->items, i)));
+    }
+  }
 
   return copy;
 }
