@@ -88,6 +88,7 @@ _gst_mpegts_atsc_vct_source_copy (GstMpegtsAtscVCTSource * source)
   GstMpegtsAtscVCTSource *copy;
 
   copy = g_memdup2 (source, sizeof (GstMpegtsAtscVCTSource));
+  copy->short_name = g_strdup (source->short_name);
   copy->descriptors = g_ptr_array_ref (source->descriptors);
 
   return copy;
@@ -600,6 +601,7 @@ _gst_mpegts_atsc_string_segment_copy (GstMpegtsAtscStringSegment * seg)
   GstMpegtsAtscStringSegment *copy;
 
   copy = g_memdup2 (seg, sizeof (GstMpegtsAtscStringSegment));
+  copy->cached_string = g_strdup (seg->cached_string);
 
   return copy;
 }
@@ -1174,6 +1176,8 @@ _gst_mpegts_atsc_stt_copy (GstMpegtsAtscSTT * stt)
 
   copy = g_memdup2 (stt, sizeof (GstMpegtsAtscSTT));
   copy->descriptors = g_ptr_array_ref (stt->descriptors);
+  if (stt->utc_datetime)
+    copy->utc_datetime = gst_date_time_ref (stt->utc_datetime);
 
   return copy;
 }
