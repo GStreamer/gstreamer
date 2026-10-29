@@ -249,7 +249,7 @@ typedef struct _GstMpegtsBATStream GstMpegtsBATStream;
 typedef struct _GstMpegtsBAT GstMpegtsBAT;
 
 #define GST_TYPE_MPEGTS_BAT (gst_mpegts_bat_get_type())
-#define GST_TYPE_MPEGTS_BAT_STREAM (gst_mpegts_bat_get_type())
+#define GST_TYPE_MPEGTS_BAT_STREAM (gst_mpegts_bat_stream_get_type())
 
 struct _GstMpegtsBATStream
 {
