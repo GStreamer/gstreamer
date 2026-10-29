@@ -1110,6 +1110,30 @@ gst_pipeline_get_latency (GstPipeline * pipeline)
   return latency;
 }
 
+static void
+gst_pipeline_send_instant_rate_sync_time (GstPipeline * pipeline,
+    GstEvent * event)
+{
+  guint32 seqnum = gst_event_get_seqnum (event);
+  gboolean send;
+
+  GST_STATE_LOCK (pipeline);
+
+  GST_OBJECT_LOCK (pipeline);
+  send = pipeline->priv->instant_rate_seqnum == seqnum;
+  GST_OBJECT_UNLOCK (pipeline);
+
+  if (send) {
+    gst_element_send_event (GST_ELEMENT_CAST (pipeline), event);
+  } else {
+    GST_DEBUG_OBJECT (pipeline,
+        "Dropping outdated instant-rate-sync-time with seqnum %u", seqnum);
+    gst_event_unref (event);
+  }
+
+  GST_STATE_UNLOCK (pipeline);
+}
+
 static gboolean
 gst_pipeline_handle_instant_rate (GstPipeline * pipeline, gdouble rate,
     guint32 seqnum)
@@ -1192,7 +1216,11 @@ gst_pipeline_handle_instant_rate (GstPipeline * pipeline, gdouble rate,
       upstream_running_time);
   gst_event_set_seqnum (event, seqnum);
 
-  return gst_element_send_event (GST_ELEMENT_CAST (pipeline), event);
+  /* async to avoid deadlocks with state changes happening at the same time */
+  gst_object_call_async (GST_OBJECT_CAST (pipeline),
+      (GstObjectCallAsyncFunc) gst_pipeline_send_instant_rate_sync_time, event);
+
+  return TRUE;
 }
 
 /**

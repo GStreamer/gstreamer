@@ -345,6 +345,17 @@ GST_START_TEST (basesink_stream_start_after_eos)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+sync_time_probe (GstPad * pad, GstPadProbeInfo * info, GAsyncQueue * queue)
+{
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_SYNC_TIME)
+    g_async_queue_push (queue, gst_event_ref (event));
+
+  return GST_PAD_PROBE_OK;
+}
+
 GST_START_TEST (basesink_instant_rate_change_segment)
 {
   GstElement *pipeline, *sink;
@@ -352,12 +363,16 @@ GST_START_TEST (basesink_instant_rate_change_segment)
   GstEvent *ev;
   GstSegment segment;
   GstSegment *sink_segment;
+  GAsyncQueue *sync_times;
   gint64 position_before, position_after;
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (sink, "async", FALSE, "sync", TRUE, NULL);
   pad = gst_element_get_static_pad (sink, "sink");
   sink_segment = &GST_BASE_SINK (sink)->segment;
+  sync_times = g_async_queue_new_full ((GDestroyNotify) gst_event_unref);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+      (GstPadProbeCallback) sync_time_probe, sync_times, NULL);
 
   pipeline = gst_pipeline_new (NULL);
 
@@ -383,10 +398,11 @@ GST_START_TEST (basesink_instant_rate_change_segment)
   fail_unless (gst_element_query_position (pipeline, GST_FORMAT_TIME,
           &position_before));
 
-  /* sink posts instant-rate-request, pipeline answers with
+  /* sink posts instant-rate-request, pipeline answers asynchronously with
    * instant-rate-sync-time and then sink updates its segment */
   ev = gst_event_new_instant_rate_change (2.0, 0);
   fail_unless (gst_pad_send_event (pad, ev));
+  gst_event_unref (g_async_queue_pop (sync_times));
 
   /* only the rate changes */
   fail_unless_equals_float (sink_segment->rate, 2.0);
@@ -405,6 +421,71 @@ GST_START_TEST (basesink_instant_rate_change_segment)
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pad);
   gst_object_unref (pipeline);
+  g_async_queue_unref (sync_times);
+}
+
+GST_END_TEST;
+
+static gpointer
+set_playing (GstElement * pipeline)
+{
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  return NULL;
+}
+
+GST_START_TEST (basesink_instant_rate_change_during_state_change)
+{
+  GstElement *pipeline, *sink;
+  GstPad *pad;
+  GstEvent *ev;
+  GstSegment segment;
+  GAsyncQueue *sync_times;
+  GThread *thread;
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "async", FALSE, "sync", TRUE, NULL);
+  pad = gst_element_get_static_pad (sink, "sink");
+  sync_times = g_async_queue_new_full ((GDestroyNotify) gst_event_unref);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+      (GstPadProbeCallback) sync_time_probe, sync_times, NULL);
+
+  pipeline = gst_pipeline_new (NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+
+  ev = gst_event_new_stream_start ("test");
+  fail_unless (gst_pad_send_event (pad, ev));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  ev = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  /* hold the sink state lock like gst_element_send_event() would while a
+   * pipeline state change waits for it */
+  GST_STATE_LOCK (sink);
+  thread = g_thread_new ("set-state", (GThreadFunc) set_playing, pipeline);
+  while (GST_STATE_TRYLOCK (pipeline)) {
+    GST_STATE_UNLOCK (pipeline);
+    g_thread_yield ();
+  }
+
+  ev = gst_event_new_instant_rate_change (2.0, 0);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  GST_STATE_UNLOCK (sink);
+  g_thread_join (thread);
+
+  gst_event_unref (g_async_queue_pop (sync_times));
+  fail_unless_equals_float (GST_BASE_SINK (sink)->segment.rate, 2.0);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pad);
+  gst_object_unref (pipeline);
+  g_async_queue_unref (sync_times);
 }
 
 GST_END_TEST;
@@ -423,6 +504,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesink_position_query_handles_segment_offset);
   tcase_add_test (tc, basesink_stream_start_after_eos);
   tcase_add_test (tc, basesink_instant_rate_change_segment);
+  tcase_add_test (tc, basesink_instant_rate_change_during_state_change);
 
   return s;
 }
