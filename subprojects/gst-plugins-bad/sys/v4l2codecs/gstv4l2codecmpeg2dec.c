@@ -810,7 +810,7 @@ gst_v4l2_codec_mpeg2_dec_reset_picture (GstV4l2CodecMpeg2Dec * self)
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_mpeg2_dec_ensure_output_buffer (GstV4l2CodecMpeg2Dec * self,
     GstVideoCodecFrame * frame)
 {
@@ -818,7 +818,7 @@ gst_v4l2_codec_mpeg2_dec_ensure_output_buffer (GstV4l2CodecMpeg2Dec * self,
   GstFlowReturn flow_ret;
 
   if (frame->output_buffer)
-    return TRUE;
+    return GST_FLOW_OK;
 
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
       &buffer, NULL);
@@ -828,20 +828,20 @@ gst_v4l2_codec_mpeg2_dec_ensure_output_buffer (GstV4l2CodecMpeg2Dec * self,
     else
       GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
           ("No more picture buffer available."), (NULL));
-    return FALSE;
+    return flow_ret;
   }
 
   frame->output_buffer = buffer;
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_mpeg2_dec_submit_bitstream (GstV4l2CodecMpeg2Dec * self,
     GstMpeg2Picture * picture)
 {
   GstV4l2Request *prev_request = NULL, *request = NULL;
   gsize bytesused;
-  gboolean ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_ERROR;
   guint count = 0;
   guint flags = 0;
 
@@ -873,13 +873,16 @@ gst_v4l2_codec_mpeg2_dec_submit_bitstream (GstV4l2CodecMpeg2Dec * self,
   } else {
     GstVideoCodecFrame *frame;
     guint32 system_frame_number = GST_CODEC_PICTURE_FRAME_NUMBER (picture);
+    GstFlowReturn flow_ret;
 
     frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
         system_frame_number);
-    g_return_val_if_fail (frame, FALSE);
+    g_return_val_if_fail (frame, GST_FLOW_ERROR);
 
-    if (!gst_v4l2_codec_mpeg2_dec_ensure_output_buffer (self, frame)) {
+    flow_ret = gst_v4l2_codec_mpeg2_dec_ensure_output_buffer (self, frame);
+    if (flow_ret != GST_FLOW_OK) {
       gst_video_codec_frame_unref (frame);
+      ret = flow_ret;
       goto done;
     }
 
@@ -931,7 +934,7 @@ gst_v4l2_codec_mpeg2_dec_submit_bitstream (GstV4l2CodecMpeg2Dec * self,
   gst_mpeg2_picture_set_user_data (picture, g_steal_pointer (&request),
       (GDestroyNotify) gst_v4l2_request_unref);
 
-  ret = TRUE;
+  ret = GST_FLOW_OK;
 
 done:
   if (request)
@@ -971,10 +974,7 @@ gst_v4l2_codec_mpeg2_dec_end_picture (GstMpeg2Decoder * decoder,
 {
   GstV4l2CodecMpeg2Dec *self = GST_V4L2_CODEC_MPEG2_DEC (decoder);
   /* FIXME might need to make this lazier in case we get an unpaired field */
-  if (!gst_v4l2_codec_mpeg2_dec_submit_bitstream (self, picture))
-    return GST_FLOW_ERROR;
-
-  return GST_FLOW_OK;
+  return gst_v4l2_codec_mpeg2_dec_submit_bitstream (self, picture);
 }
 
 static void
