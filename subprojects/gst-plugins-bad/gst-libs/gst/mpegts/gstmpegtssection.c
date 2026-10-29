@@ -1335,6 +1335,12 @@ gst_mpegts_section_transform_to_string (const GValue * src_value,
       || G_VALUE_HOLDS (dest_value, G_TYPE_POINTER));
 
   section = g_value_get_boxed (src_value);
+
+  if (section == NULL) {
+    g_value_set_static_string (dest_value, "");
+    return;
+  }
+
   s = g_strdup_printf
       ("type=%d pid=0x%04X table_id=0x%02X subtable_extension=0x%04X version_number=0x%02X section_number=%d last_section_number=%d%s",
       section->section_type, section->pid, section->table_id,
