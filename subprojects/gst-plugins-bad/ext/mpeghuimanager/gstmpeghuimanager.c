@@ -389,8 +389,7 @@ gst_mpeghuimanager_get_property (GObject * object, guint prop_id,
 /* Queues the XML message of an "mpegh-ui-event" event, to be applied before
  * the next frame is updated. Takes ownership of the event. */
 static gboolean
-gst_mpeghuimanager_queue_ui_event (GstMpeghUiManager * filter,
-    GstEvent * event)
+gst_mpeghuimanager_queue_ui_event (GstMpeghUiManager * filter, GstEvent * event)
 {
   const gchar *xml;
 
@@ -679,8 +678,7 @@ gst_mpeghuimanager_process (GstMpeghUiManager * filter, GstBuffer * inbuf,
 
   /* Update the bitstream data */
   *outsize = size;
-  ret = mpegh_UI_UpdateMHAS (filter->mpegh_ui_manager, data, capacity,
-      outsize);
+  ret = mpegh_UI_UpdateMHAS (filter->mpegh_ui_manager, data, capacity, outsize);
 
   /* Not an error: the UI manager is inactive and leaves the frame as it is,
    * either because no configuration has been received yet, e.g. when
@@ -708,8 +706,7 @@ gst_mpeghuimanager_process (GstMpeghUiManager * filter, GstBuffer * inbuf,
   }
   /* mpegh_UI_UpdateMHAS() fails with MPEGH_UI_BUFFER_TOO_SMALL rather than
    * exceeding capacity */
-  GST_DEBUG_OBJECT (filter, "input size: %u   output size: %u", size,
-      *outsize);
+  GST_DEBUG_OBJECT (filter, "input size: %u   output size: %u", size, *outsize);
 
   if (filter->consecutive_errors > 0) {
     GST_INFO_OBJECT (filter, "Processing recovered after %u frames passed "
