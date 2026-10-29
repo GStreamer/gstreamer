@@ -1240,7 +1240,7 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
      * _ 3 for the bytes above
      * _ 5 for the bytes below
      * _ 4 for the CRC */
-    if (G_UNLIKELY (data_size < 12))
+    if (G_UNLIKELY (data_size < 12) || G_UNLIKELY (res->section_length < 12))
       goto bad_long_packet;
 
     /* CRC is after section_length (-4 for the size of the CRC) */
