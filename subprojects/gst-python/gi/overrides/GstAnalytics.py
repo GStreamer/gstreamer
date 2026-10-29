@@ -94,7 +94,7 @@ def _wrap_mtd(module, name, getter):
 
 for c in dir(GstAnalytics):
     if c.endswith('Mtd') and c != 'Mtd':
-        lower_c = c[:-3].lower()
+        lower_c = 'tensor_provenance' if c == 'TensorProvenanceMtd' else c[:-3].lower()
         getter = getattr(GstAnalytics.RelationMeta, 'get_' + lower_c + '_mtd')
         _wrap_mtd(GstAnalytics, c, getter)
 
