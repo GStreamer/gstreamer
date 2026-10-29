@@ -108,7 +108,7 @@ gst_mpegts_descriptor_from_dvb_network_name (const gchar * name)
 {
   GstMpegtsDescriptor *descriptor;
   guint8 *converted_name;
-  gsize size;
+  gsize size = 0;
 
   g_return_val_if_fail (name != NULL, NULL);
 
@@ -552,6 +552,13 @@ gst_mpegts_descriptor_from_dvb_service (GstMpegtsDVBServiceType service_type,
   if (service_size >= 256) {
     GST_WARNING ("Service name string too big (%" G_GSIZE_FORMAT " > 256)",
         service_size);
+    goto beach;
+  }
+
+  if (provider_size + service_size + 3 > 255) {
+    GST_WARNING
+        ("Service provider and name strings too big (%" G_GSIZE_FORMAT " + %"
+        G_GSIZE_FORMAT " > 252)", provider_size, service_size);
     goto beach;
   }
 

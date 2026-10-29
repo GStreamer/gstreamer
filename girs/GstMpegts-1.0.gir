@@ -2242,8 +2242,9 @@ is invalid</doc>
       <function name="from_custom_with_extension" c:identifier="gst_mpegts_descriptor_from_custom_with_extension" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Creates a #GstMpegtsDescriptor with custom @tag, @tag_extension and @data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor, or %NULL if input
+is invalid</doc>
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
         </return-value>
         <parameters>
@@ -5154,8 +5155,9 @@ is invalid</doc>
     <function name="descriptor_from_custom_with_extension" c:identifier="gst_mpegts_descriptor_from_custom_with_extension" moved-to="Descriptor.from_custom_with_extension" version="1.20">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Creates a #GstMpegtsDescriptor with custom @tag, @tag_extension and @data</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor, or %NULL if input
+is invalid</doc>
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>

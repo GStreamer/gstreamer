@@ -902,6 +902,12 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
   g_return_val_if_fail (format_identifier != NULL, NULL);
   g_return_val_if_fail (additional_info_length > 0 || !additional_info, NULL);
 
+  if (G_UNLIKELY (additional_info_length > G_MAXUINT8 - 4)) {
+    GST_WARNING ("Additional info too big (%" G_GSIZE_FORMAT " > 251)",
+        additional_info_length);
+    return NULL;
+  }
+
   descriptor = _new_descriptor (GST_MTS_DESC_REGISTRATION,
       4 + additional_info_length);
 
@@ -1228,6 +1234,11 @@ gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
 
   g_return_val_if_fail (length > 0 || !data, NULL);
 
+  if (G_UNLIKELY (length > G_MAXUINT8)) {
+    GST_WARNING ("Descriptor data too big (%" G_GSIZE_FORMAT " > 255)", length);
+    return NULL;
+  }
+
   descriptor = _new_descriptor (tag, length);
 
   if (data && (length > 0))
@@ -1245,7 +1256,8 @@ gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
  *
  * Creates a #GstMpegtsDescriptor with custom @tag, @tag_extension and @data
  *
- * Returns: (transfer full): #GstMpegtsDescriptor
+ * Returns: (transfer full) (nullable): #GstMpegtsDescriptor, or %NULL if input
+ * is invalid
  *
  * Since: 1.20
  */
@@ -1254,6 +1266,11 @@ gst_mpegts_descriptor_from_custom_with_extension (guint8 tag,
     guint8 tag_extension, const guint8 * data, gsize length)
 {
   GstMpegtsDescriptor *descriptor;
+
+  if (G_UNLIKELY (length > G_MAXUINT8 - 1)) {
+    GST_WARNING ("Descriptor data too big (%" G_GSIZE_FORMAT " > 254)", length);
+    return NULL;
+  }
 
   descriptor = _new_descriptor_with_extension (tag, tag_extension, length);
 
@@ -1658,6 +1675,8 @@ gst_mpegts_descriptor_from_jpeg_xs (const GstMpegtsJpegXsDescriptor * jpegxs)
   GstByteWriter writer;
   guint8 *desc_data;
   GstMpegtsDescriptor *descriptor;
+
+  g_return_val_if_fail (jpegxs != NULL, NULL);
 
   gst_byte_writer_init_with_size (&writer, desc_size, FALSE);
 
