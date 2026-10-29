@@ -434,11 +434,11 @@ _parse_bat (GstMpegtsSection * section)
 
     GST_DEBUG ("descriptors_loop_length %d", descriptors_loop_length);
 
-    if (descriptors_loop_length && (data + descriptors_loop_length > end - 4)) {
+    if (descriptors_loop_length > transport_stream_loop_length - 6) {
       GST_WARNING
-          ("PID %d invalid BAT entry %d descriptors loop length %d (only have %"
-          G_GSIZE_FORMAT ")", section->pid, section->subtable_extension,
-          descriptors_loop_length, (gsize) (end - 4 - data));
+          ("PID %d invalid BAT entry %d descriptors loop length %d (remaining %d)",
+          section->pid, section->subtable_extension, descriptors_loop_length,
+          transport_stream_loop_length - 6);
       goto error;
     }
     stream->descriptors =
@@ -614,11 +614,11 @@ _parse_nit (GstMpegtsSection * section)
 
     GST_DEBUG ("descriptors_loop_length %d", descriptors_loop_length);
 
-    if (descriptors_loop_length && (data + descriptors_loop_length > end - 4)) {
+    if (descriptors_loop_length > transport_stream_loop_length - 6) {
       GST_WARNING
-          ("PID %d invalid NIT entry %d descriptors loop length %d (only have %"
-          G_GSIZE_FORMAT ")", section->pid, section->subtable_extension,
-          descriptors_loop_length, (gsize) (end - 4 - data));
+          ("PID %d invalid NIT entry %d descriptors loop length %d (remaining %d)",
+          section->pid, section->subtable_extension, descriptors_loop_length,
+          transport_stream_loop_length - 6);
       goto error;
     }
     stream->descriptors =
