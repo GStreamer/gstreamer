@@ -602,6 +602,8 @@ _gst_mpegts_atsc_string_segment_copy (GstMpegtsAtscStringSegment * seg)
 
   copy = g_memdup2 (seg, sizeof (GstMpegtsAtscStringSegment));
   copy->cached_string = g_strdup (seg->cached_string);
+  copy->compressed_data =
+      g_memdup2 (seg->compressed_data, seg->compressed_data_size);
 
   return copy;
 }
@@ -610,6 +612,7 @@ static void
 _gst_mpegts_atsc_string_segment_free (GstMpegtsAtscStringSegment * seg)
 {
   g_free (seg->cached_string);
+  g_free (seg->compressed_data);
   g_free (seg);
 }
 
@@ -673,6 +676,9 @@ gst_mpegts_atsc_string_segment_set_string (GstMpegtsAtscStringSegment * seg,
   GError *err = NULL;
   unsigned long len;
 
+  g_return_val_if_fail (seg != NULL, FALSE);
+  g_return_val_if_fail (string != NULL, FALSE);
+
   if (compression_type) {
     GST_FIXME ("Compressed strings not yet supported");
     goto done;
@@ -686,11 +692,9 @@ gst_mpegts_atsc_string_segment_set_string (GstMpegtsAtscStringSegment * seg,
       break;
   }
 
-  if (seg->cached_string)
-    g_free (seg->cached_string);
-
-  if (seg->compressed_data)
-    g_free (seg->compressed_data);
+  g_clear_pointer (&seg->cached_string, g_free);
+  g_clear_pointer (&seg->compressed_data, g_free);
+  seg->compressed_data_size = 0;
 
   seg->cached_string = g_strdup (string);
   seg->compression_type = compression_type;
@@ -818,7 +822,7 @@ _parse_atsc_mult_string (guint8 * data, guint datasize)
         }
 
         if (seg->compressed_data_size)
-          seg->compressed_data = data;
+          seg->compressed_data = g_memdup2 (data, seg->compressed_data_size);
         data += seg->compressed_data_size;
       }
 
