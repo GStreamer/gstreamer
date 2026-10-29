@@ -25,6 +25,7 @@ use crate::audio::{
 };
 use crate::bindings::gpointer;
 use crate::containers::{q3gp_probe, qt_probe, qtif_probe};
+use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::subtitles;
 use crate::xml::{XmlProbe, xml_probe};
@@ -2616,6 +2617,46 @@ extern "C" fn q3gp_type_find(tf: &mut TypeFind, _private: gpointer) {
 }
 
 // =============================================================================
+// H.26x elementary video streams
+// =============================================================================
+
+extern "C" fn h263_video_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = h263_probe(tf) {
+        suggest!(tf, probability, c"video/x-h263", [
+            (c"variant", str : c"itu"),
+        ]);
+    }
+}
+
+extern "C" fn h264_video_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = h264_probe(tf) {
+        suggest!(tf, probability, c"video/x-h264", [
+            (c"stream-format", str : c"byte-stream"),
+        ]);
+    }
+}
+
+extern "C" fn h265_video_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = h265_probe(tf) {
+        suggest!(tf, probability, c"video/x-h265", [
+            (c"stream-format", str : c"byte-stream"),
+        ]);
+    }
+}
+
+extern "C" fn h266_video_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = h266_probe(tf) {
+        suggest!(tf, probability, c"video/x-h266", [
+            (c"stream-format", str : c"byte-stream"),
+        ]);
+    }
+}
+
+// =============================================================================
+// MPEG program streams, transport streams and video elementary streams
+// =============================================================================
+
+// =============================================================================
 // Registration table and entry point
 // =============================================================================
 
@@ -3024,6 +3065,34 @@ const FEATURES: &[Feature] = &[
         SECONDARY,
         qtif_type_find,
         "qif,qtif,qti"
+    ),
+    typefinder!(
+        "video/x-h263",
+        SECONDARY,
+        h263_video_type_find,
+        "h263,263",
+        "video/x-h263, variant=(string)itu"
+    ),
+    typefinder!(
+        "video/x-h264",
+        PRIMARY,
+        h264_video_type_find,
+        "h264,x264,264",
+        "video/x-h264,stream-format=byte-stream"
+    ),
+    typefinder!(
+        "video/x-h265",
+        PRIMARY,
+        h265_video_type_find,
+        "h265,x265,265",
+        "video/x-h265,stream-format=byte-stream"
+    ),
+    typefinder!(
+        "video/x-h266",
+        PRIMARY,
+        h266_video_type_find,
+        "h266,266",
+        "video/x-h266,stream-format=byte-stream"
     ),
 ];
 

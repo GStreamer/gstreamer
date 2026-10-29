@@ -14,7 +14,9 @@
 mod audio;
 mod bindings;
 mod containers;
+mod h26x;
 mod helpers;
+mod startcode;
 mod subtitles;
 mod typefindfunctions;
 mod xml;
