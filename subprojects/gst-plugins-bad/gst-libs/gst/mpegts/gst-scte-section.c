@@ -678,6 +678,10 @@ _packetize_sit (GstMpegtsSection * section)
   length = 20;
 
   command_length = 0;
+  if (sit->splice_command_type == GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE) {
+    /* splice_count */
+    command_length += 1;
+  }
   /* Add the size of splices */
   for (i = 0; i < sit->splices->len; i++) {
     GstMpegtsSCTESpliceEvent *event = g_ptr_array_index (sit->splices, i);
@@ -781,6 +785,10 @@ _packetize_sit (GstMpegtsSection * section)
       data += 4;
     }
   }
+
+  /* splice_count : 8 bit */
+  if (sit->splice_command_type == GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE)
+    *data++ = sit->splices->len & 0xff;
 
   /* Write the events */
   for (i = 0; i < sit->splices->len; i++) {
