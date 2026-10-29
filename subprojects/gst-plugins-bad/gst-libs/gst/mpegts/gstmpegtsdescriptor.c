@@ -380,8 +380,37 @@ out:
       *out_size += 1;
       g_free (out_text);
       return out_buffer;
-    case _ICONV_UCS_2BE:
     case _ICONV_EUC_KR:
+    {
+      /* LF arrives as a single byte from iconv() but must be escaped
+       * as the control code 0xE0 0x8A (EN 300 468, annex A, table
+       * A.2). EUC-KR is not fixed width (KS X 1001 double bytes are
+       * both >= 0xA1), so unlike UCS-2/UTF-16 the escape can grow
+       * the text. */
+      gsize i, escapes = 0;
+      guint8 *d;
+
+      for (i = 0; i < *out_size; i++) {
+        if (out_text[i] == 0x0A)
+          escapes++;
+      }
+
+      out_buffer = g_malloc (*out_size + escapes + 1);
+      out_buffer[0] = encoding - _ICONV_UCS_2BE + 0x11;
+      d = out_buffer + 1;
+      for (i = 0; i < *out_size; i++) {
+        if (out_text[i] == 0x0A) {
+          *d++ = 0xE0;
+          *d++ = 0x8A;
+        } else {
+          *d++ = (guint8) out_text[i];
+        }
+      }
+      *out_size += escapes + 1;
+      g_free (out_text);
+      return out_buffer;
+    }
+    case _ICONV_UCS_2BE:
     case _ICONV_UTF_16BE:
       /* These character sets requires 1 selection byte */
       _encode_control_codes (out_text, *out_size, TRUE);
