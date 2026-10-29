@@ -16,6 +16,7 @@ mod bindings;
 mod containers;
 mod h26x;
 mod helpers;
+mod mpeg;
 mod startcode;
 mod subtitles;
 mod typefindfunctions;

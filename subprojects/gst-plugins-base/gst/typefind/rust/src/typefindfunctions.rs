@@ -27,6 +27,7 @@ use crate::bindings::gpointer;
 use crate::containers::{q3gp_probe, qt_probe, qtif_probe};
 use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
+use crate::mpeg::{mpeg_sys_probe, mpeg_ts_probe, mpeg_video_probe};
 use crate::subtitles;
 use crate::xml::{XmlProbe, xml_probe};
 #[allow(unused_imports)]
@@ -2656,6 +2657,34 @@ extern "C" fn h266_video_type_find(tf: &mut TypeFind, _private: gpointer) {
 // MPEG program streams, transport streams and video elementary streams
 // =============================================================================
 
+extern "C" fn mpeg_sys_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some((probability, mpegversion)) = mpeg_sys_probe(tf) {
+        suggest!(tf, probability, c"video/mpeg", [
+            (c"systemstream", bool: true),
+            (c"mpegversion", i32: mpegversion),
+        ]);
+    }
+}
+
+extern "C" fn mpeg_ts_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some((probability, packetsize)) = mpeg_ts_probe(tf) {
+        suggest!(tf, probability, c"video/mpegts", [
+            (c"systemstream", bool: true),
+            (c"packetsize", i32: packetsize),
+        ]);
+    }
+}
+
+extern "C" fn mpeg_video_stream_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = mpeg_video_probe(tf) {
+        suggest!(tf, probability, c"video/mpeg", [
+            (c"systemstream", bool: false),
+            (c"mpegversion", i32: 1),
+            (c"parsed", bool: false),
+        ]);
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -3093,6 +3122,27 @@ const FEATURES: &[Feature] = &[
         h266_video_type_find,
         "h266,266",
         "video/x-h266,stream-format=byte-stream"
+    ),
+    typefinder!(
+        "video/mpeg-sys",
+        PRIMARY,
+        mpeg_sys_type_find,
+        "mpe,mpeg,mpg",
+        "video/mpeg, systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]"
+    ),
+    typefinder!(
+        "video/mpegts",
+        PRIMARY,
+        mpeg_ts_type_find,
+        "ts,mts",
+        "video/mpegts, systemstream = (boolean) true, packetsize = (int) [ 188, 208 ]"
+    ),
+    typefinder!(
+        "video/mpeg-elementary",
+        MARGINAL,
+        mpeg_video_stream_type_find,
+        "mpv,mpeg,mpg",
+        "video/mpeg, systemstream = (boolean) false"
     ),
 ];
 
