@@ -441,7 +441,7 @@ _packetize_mgt (GstMpegtsSection * section)
   length = 17;
 
   for (i = 0; i < mgt->tables->len; i++) {
-    GstMpegtsAtscMGTTable *mgt_table = g_ptr_array_index (mgt->tables, 1);
+    GstMpegtsAtscMGTTable *mgt_table = g_ptr_array_index (mgt->tables, i);
     /* 2 byte table_type
      * 2 byte reserved / table_type_PID
      * 1 byte reserved / table_type_version_number
@@ -479,7 +479,7 @@ _packetize_mgt (GstMpegtsSection * section)
   data += 2;
 
   for (i = 0; i < mgt->tables_defined; i++) {
-    GstMpegtsAtscMGTTable *mgt_table = g_ptr_array_index (mgt->tables, 1);
+    GstMpegtsAtscMGTTable *mgt_table = g_ptr_array_index (mgt->tables, i);
 
     /* table_type - 16 bit uimsbf */
     GST_WRITE_UINT16_BE (data, mgt_table->table_type);
@@ -492,6 +492,10 @@ _packetize_mgt (GstMpegtsSection * section)
     /* 3 bit reserved, 5 bit table_type_version_number uimsbf */
     GST_WRITE_UINT8 (data, mgt_table->version_number | 0xe0);
     data += 1;
+
+    /* 32 bit table_type_number_bytes uimsbf */
+    GST_WRITE_UINT32_BE (data, mgt_table->number_bytes);
+    data += 4;
 
     /* 4 bit reserved, 12 bit table_type_descriptor_length uimsbf */
     pos = data;
@@ -852,8 +856,11 @@ _packetize_atsc_mult_string (GPtrArray * strings, guint8 ** data)
     GST_WRITE_UINT8 (*data, string->iso_639_langcode[2]);
     *data += 1;
     /* 8 bit number_segments */
-    GST_WRITE_UINT8 (*data, string->segments->len);
+    GST_WRITE_UINT8 (*data, string->segments ? string->segments->len : 0);
     *data += 1;
+
+    if (string->segments == NULL)
+      continue;
 
     for (j = 0; j < string->segments->len; j++) {
       GstMpegtsAtscStringSegment *seg;
@@ -882,6 +889,9 @@ _get_atsc_mult_string_packetized_length (GPtrArray * strings)
   gsize length = 1;
   guint i;
 
+  if (strings == NULL)
+    return 0;
+
   for (i = 0; i < strings->len; i++) {
     GstMpegtsAtscMultString *string;
     guint j;
@@ -889,6 +899,9 @@ _get_atsc_mult_string_packetized_length (GPtrArray * strings)
     string = g_ptr_array_index (strings, i);
 
     length += 4;
+
+    if (string->segments == NULL)
+      continue;
 
     for (j = 0; j < string->segments->len; j++) {
       GstMpegtsAtscStringSegment *seg;
@@ -1474,7 +1487,7 @@ _parse_rrt (GstMpegtsSection * section)
   rrt->names = _parse_atsc_mult_string (data, text_length);
   data += text_length;
 
-  rrt->dimensions_defined = GST_READ_UINT8 (data);
+  rrt->dimensions_defined = GST_READ_UINT8 (data) & 0x1f;
   data += 1;
 
   rrt->dimensions = g_ptr_array_new_full (rrt->dimensions_defined,
@@ -1600,6 +1613,10 @@ _packetize_rrt (GstMpegtsSection * section)
 
   _packetize_atsc_mult_string (rrt->names, &data);
 
+  /* 3 bit reserved / 5 bit dimensions_defined uimsbf */
+  GST_WRITE_UINT8 (data, 0xe0 | (rrt->dimensions_defined & 0x1f));
+  data += 1;
+
   for (i = 0; i < rrt->dimensions->len; i++) {
     GstMpegtsAtscRRTDimension *dim = g_ptr_array_index (rrt->dimensions, i);
 
@@ -1608,7 +1625,7 @@ _packetize_rrt (GstMpegtsSection * section)
         _get_atsc_mult_string_packetized_length (dim->names));
     data += 1;
 
-    _packetize_atsc_mult_string (rrt->names, &data);
+    _packetize_atsc_mult_string (dim->names, &data);
 
     /* 3 bit reserved / 1 bit graduated_scale / 4 bit values_defined */
     GST_WRITE_UINT8 (data,
