@@ -134,12 +134,12 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
   GstMpegtsSCTESpliceEvent *event = g_new0 (GstMpegtsSCTESpliceEvent, 1);
   guint8 *data = *orig_data;
 
+  event->components = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_scte_splice_component_free);
+
   /* Note : +6 is because of the final descriptor_loop_length and CRC */
   if (data + 5 + 6 > end)
     goto error;
-
-  event->components = g_ptr_array_new_with_free_func ((GDestroyNotify)
-      _gst_mpegts_scte_splice_component_free);
 
   event->insert_event = insert_event;
   event->splice_event_id = GST_READ_UINT32_BE (data);
