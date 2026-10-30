@@ -315,6 +315,17 @@ gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
         "Read frame header: size %u, pts %" G_GUINT64_FORMAT, frame_size,
         frame_pts);
 
+    /* frame_size is read from the stream. Reject values that would overflow
+     * the guint32 sum with the header size used below; no valid IVF frame is
+     * anywhere near that large. */
+    if (frame_size > G_MAXUINT32 - IVF_FRAME_HEADER_SIZE) {
+      GST_ERROR_OBJECT (ivf, "Invalid frame size %u", frame_size);
+      gst_buffer_unmap (buffer, &map);
+      ret = GST_FLOW_ERROR;
+      *skipsize = 0;
+      goto end;
+    }
+
     if (map.size < IVF_FRAME_HEADER_SIZE + frame_size) {
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (ivf),
           IVF_FRAME_HEADER_SIZE + frame_size);
