@@ -331,6 +331,55 @@ GST_START_TEST (test_deserialize_gint_failures)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_unterminated_string_failures)
+{
+  GValue value = G_VALUE_INIT;
+  const char *strings[] = {
+    "\"unterminated",           /* quoted string without closing quote */
+    "\"unterminated\\",         /* trailing escape eats the terminator */
+    "{ \"unterminated }",       /* unterminated string as a list element */
+  };
+  int i;
+
+  /* On failure the destination keeps the type it was initialized to and
+   * holds no value, so a storage-allocating type must have released what
+   * its init allocated. */
+  g_value_init (&value, GST_TYPE_LIST);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_if (gst_value_deserialize (&value, strings[i]),
+        "deserialized %s (%d), while it should have failed", strings[i], i);
+    fail_unless_equals_int (G_VALUE_TYPE (&value), GST_TYPE_LIST);
+    fail_unless (G_VALUE_HOLDS (&value, GST_TYPE_LIST));
+    fail_unless_equals_int (gst_value_list_get_size (&value), 0);
+  }
+
+  g_value_unset (&value);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deserialize_list_element_failures)
+{
+  const char *strings[] = {
+    "f/x,f={(list)",            /* element cast to a list at end of input */
+    "f/x,f={ (string) \"unterminated }",        /* unterminated string element */
+    "f/x,f={ (int) 1, \"unterminated }",        /* bad element after a good one */
+  };
+  int i;
+
+  /* Structure fields are parsed into a not-yet-initialized GValue: on
+   * failure it must be left unset again, with no element storage leaked
+   * by the failed element parse. */
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    GstStructure *s = gst_structure_from_string (strings[i], NULL);
+    fail_if (s != NULL, "parsed %s (%d), while it should have failed",
+        strings[i], i);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_guint)
 {
   GValue value = { 0 };
@@ -5499,6 +5548,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_serialize_buffer);
   tcase_add_test (tc_chain, test_deserialize_gint);
   tcase_add_test (tc_chain, test_deserialize_gint_failures);
+  tcase_add_test (tc_chain, test_deserialize_unterminated_string_failures);
+  tcase_add_test (tc_chain, test_deserialize_list_element_failures);
   tcase_add_test (tc_chain, test_deserialize_guint);
   tcase_add_test (tc_chain, test_deserialize_guint_failures);
   tcase_add_test (tc_chain, test_deserialize_gint64);

@@ -3003,8 +3003,11 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
     memset (&list_value, 0, sizeof (list_value));
 
     ret = _priv_gst_value_parse_value (s, &s, &list_value, type, element_spec);
-    if (!ret)
+    if (!ret) {
+      /* parse_value() zeroes the element on failure; a no-op safeguard. */
+      g_value_unset (&list_value);
       return FALSE;
+    }
 
     _gst_value_list_append_val (vlist, &list_value);
 
@@ -3272,8 +3275,10 @@ _priv_gst_value_parse_value (gchar * str,
     } else {
       g_value_init (value, type);
 
-      if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, FALSE)))
+      if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, FALSE))) {
+        g_value_unset (value);
         return FALSE;
+      }
       /* Set NULL terminator for deserialization */
       value_s = g_strndup (value_s, value_end - value_s);
 
