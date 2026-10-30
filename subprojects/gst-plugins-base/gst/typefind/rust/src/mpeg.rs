@@ -483,18 +483,16 @@ const M4V_VOP_CODE: u8 = 0xB6;
 const M4V_TRY_SYNC: i64 = 100 * 1024;
 const M4V_TRY_PICTURES: u32 = 6;
 
-// shortcut: headers are stepped over by a fixed count rather than measured, so
-// a header shorter than its own count hides the start code after it. Only the
-// visual object sequence header is crossed exactly, because the search after it
-// is allowed no slack and profile_and_level_indication is the one octet it has
-// to cross. The other steps land inside the header they name. For the video
-// object, layer and picture headers the search after them spans the rest of the
-// probe, so a step that falls short costs nothing; the visual object header's
-// search is limited to M4V_VISUAL_OBJ_SLACK, so overshooting it loses the next
-// start code.
+// shortcut: headers are stepped over by a fixed count rather than measured. The
+// count is what the format puts between the code octet and the next start code:
+// one octet of profile_and_level_indication after a sequence header, one octet
+// of visual_object_type after a visual object, and nothing at all after a video
+// object, whose id is the five bits of the code octet itself. The layer and
+// picture steps land inside the header they name, which costs nothing because
+// the search after them spans the rest of the probe.
 const M4V_VIOS_STEP: usize = 2;
 const M4V_VISUAL_OBJ_STEP: usize = 2;
-const M4V_VIDEO_OBJ_STEP: usize = 2;
+const M4V_VIDEO_OBJ_STEP: usize = 1;
 const M4V_VIDEO_LAYER_STEP: usize = 5;
 const M4V_VOP_STEP: usize = 2;
 /// How far past a visual object header the next start code is looked for. The
@@ -570,6 +568,10 @@ fn mpeg4_video_probability(
 /// sequence header may cross a user data block on the way, and whatever that
 /// search lands on is read the same way as any other code.
 pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
+    // Bounded so that a pack header near the end of a stream whose length is
+    // known is still inspected, and so that where the data arrives from does not
+    // change the answer.
+    let stream_len = tf.length().map(|len| len.get());
     let mut scan = Scanner::new(tf, 0);
     let mut seen_vios_at_0 = false;
     let mut seen_vios = false;
@@ -591,6 +593,27 @@ pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
         // three of them, so the octet it leaves the cursor on is always there.
         let Some(head) = scan.peek(1) else { break };
         let mut code = head[0];
+
+        if code == PACK_CODE {
+            // A pack header means this video arrives inside a multiplexed
+            // program stream, and the program stream finder is the one that
+            // should claim it. The header begins three octets behind the
+            // code. The value doubles as this format's
+            // fba_object_start_code (14496-2): an FBA extension whose
+            // octets parse as a pack is declined here, where the old
+            // typefinder would read on and claim the stream.
+            let start = scan.offset() - START_CODE_PREFIX_LEN;
+            let want = stream_len.map_or(PACK_MAX_SCAN, |len| {
+                PACK_MAX_SCAN.min(len.saturating_sub(start as u64) as usize)
+            });
+            if scan
+                .before(START_CODE_PREFIX_LEN as usize)
+                .peek(want)
+                .is_some_and(|pack| valid_pack(pack).is_some())
+            {
+                return None;
+            }
+        }
 
         if code == M4V_VIOS_CODE {
             if seen_vios {
@@ -657,6 +680,7 @@ pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::probe_engine::probe;
 
     /// An MPEG-2 pack header with a zero clock reference and mux rate and no
     /// stuffing, built from Table 2-39: `'01'` and the marker in octet 4, the
@@ -939,6 +963,10 @@ mod tests {
         assert_eq!(sys_scan(&gapped, gapped.len()), None);
     }
 
+    /// The top rung of the MPEG-4 visual ladder. Shared so a walk test can
+    /// state it reaches the same value the pure ladder gives.
+    const M4V_TOP: u32 = 99;
+
     /// The rungs of the MPEG-4 visual ladder, from a stream that showed
     /// everything down to one that showed only a video object layer header.
     #[test]
@@ -946,7 +974,7 @@ mod tests {
         let prob = |vops, at_0, vios, vos, vol| {
             mpeg4_video_probability(vops, at_0, vios, vos, vol).map(|p| p.get())
         };
-        assert_eq!(prob(6, true, true, true, true), Some(99));
+        assert_eq!(prob(6, true, true, true, true), Some(M4V_TOP));
         assert_eq!(prob(6, false, true, true, true), Some(98));
         // A sequence header at the very start and a full run of pictures are
         // worth the same when the other is missing.
@@ -967,6 +995,64 @@ mod tests {
         // format, however many other headers it carried.
         assert_eq!(prob(0, false, false, false, false), None);
         assert_eq!(prob(0, true, true, false, false), None);
+    }
+
+    /// The walk steps headers by fixed counts, and the video object header is
+    /// stepped by one octet: the code octet carries the whole header, its
+    /// `video_id` being five of its own bits. A step of two lands between the
+    /// VOP headers this stream carries, so their start code goes unseen, the
+    /// picture count comes up short of the full run, and the stream falls a
+    /// rung.
+    #[test]
+    fn a_mpeg4_stream_is_read_from_a_video_object_behind_its_layer() {
+        // Each stepped header is followed by exactly the octets its step
+        // counts — the sequence header's `profile_and_level_indication`, the
+        // user data block's one opaque octet, and the visual object's
+        // `visual_object_type` with the one the step leaves the cursor on —
+        // so the search that settles the next start code answers at its first
+        // position. The layer header carries its own octets because nothing
+        // looks past it but an open search.
+        let mut data = vec![
+            0x00,
+            0x00,
+            0x01,
+            M4V_VIOS_CODE,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            M4V_USER_DATA_CODE,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            M4V_VISUAL_OBJ_CODE,
+            0xF5,
+            0x04,
+            0x00,
+            0x00,
+            0x01,
+            M4V_VIDEO_LAYER_CODE_MIN,
+            0xF8,
+            0xE0,
+            0xA0,
+            0x1C,
+            0x04,
+            0x00,
+            0x00,
+            0x01,
+            0x01, // video object 1, id in the code octet
+        ];
+        // Pictures carry two octets of their header behind the code: a
+        // back-to-back run puts the next prefix behind the step and out of
+        // any search's reach, which no real picture header does.
+        data.extend_from_slice(&[0x00, 0x00, 0x01, M4V_VOP_CODE, 0x00, 0x00].repeat(6));
+        assert_eq!(
+            probe(&data, |tf| mpeg4_video_probe(tf).map(|p| p.get())),
+            Some(M4V_TOP)
+        );
     }
 
     /// Both counts are compared against a boundary, and each side of it is a

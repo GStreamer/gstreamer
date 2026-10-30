@@ -153,6 +153,20 @@ impl<'a> Scanner<'a> {
         self.pos += n;
     }
 
+    /// A cursor `n` bytes behind this one. A search leaves the cursor on the
+    /// octet carrying a start code value, so a caller that has to look at the
+    /// whole syntactic element from its beginning needs to step back over the
+    /// prefix first.
+    pub fn before(&self, n: usize) -> Self {
+        let mut earlier = *self;
+        earlier.offset = self.offset() - n as i64;
+        // Drop the cached window rather than index into it at the wrong place.
+        earlier.base = ptr::null();
+        earlier.len = 0;
+        earlier.pos = 0;
+        earlier
+    }
+
     /// Current stream position of the cursor.
     pub fn offset(&self) -> i64 {
         self.offset + self.pos as i64
