@@ -339,6 +339,57 @@ GST_START_TEST (encode_10bit)
 
 GST_END_TEST;
 
+/* A line narrower than one conversion group underflows the loop bounds in the
+ * v210/UYVY line converters, corrupting the heap. The parser/encoder must
+ * reject such widths instead. */
+GST_START_TEST (reject_small_pixel_width)
+{
+  /* v210 packs 6 pixels per 16-byte word, UYVY converts 4 pixels at a time */
+  const guint v210_min_width = 6;
+  const guint uyvy_min_width = 4;
+  GstVideoVBIParser *parser;
+  GstVideoVBIEncoder *encoder;
+  guint8 line[64] = { 0, };
+  GstVideoAncillary vanc;
+  guint w;
+
+  /* Below the minimum: rejected, no object leaks back to the caller. */
+  for (w = 1; w < v210_min_width; w++) {
+    fail_if (gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, w) != NULL);
+    fail_if (gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, w) != NULL);
+  }
+  for (w = 1; w < uyvy_min_width; w++) {
+    fail_if (gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, w) != NULL);
+    fail_if (gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_UYVY, w) != NULL);
+  }
+
+  /* At the minimum: accepted, and a full line converts without overrunning the
+   * workspace (empty line yields no ancillary data). */
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, v210_min_width);
+  fail_unless (parser != NULL);
+  gst_video_vbi_parser_add_line (parser, line);
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_DONE);
+  gst_video_vbi_parser_free (parser);
+
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, uyvy_min_width);
+  fail_unless (parser != NULL);
+  gst_video_vbi_parser_add_line (parser, line);
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_DONE);
+  gst_video_vbi_parser_free (parser);
+
+  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, v210_min_width);
+  fail_unless (encoder != NULL);
+  gst_video_vbi_encoder_free (encoder);
+
+  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_UYVY, uyvy_min_width);
+  fail_unless (encoder != NULL);
+  gst_video_vbi_encoder_free (encoder);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (serialize_video_caption_meta)
 {
   static const guint8 data[] = { 0x94, 0x20 };  /* CEA-608 RCL */
@@ -585,6 +636,8 @@ gst_videoanc_suite (void)
 
   tcase_add_test (tc, encode_8bit);
   tcase_add_test (tc, encode_10bit);
+
+  tcase_add_test (tc, reject_small_pixel_width);
 
   tcase_add_test (tc, serialize_video_caption_meta);
   tcase_add_test (tc, meta_serialize);
