@@ -2235,7 +2235,7 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
         GSTTIMEDIFF_TO_MPEGTIME (gst_event_get_running_time_offset (event));
 
     pts_adjust &= 0x1ffffffff;
-    section_data[4] |= pts_adjust >> 32;
+    section_data[4] = (section_data[4] & 0xfe) | ((pts_adjust >> 32) & 0x01);
     section_data[5] = pts_adjust >> 24;
     section_data[6] = pts_adjust >> 16;
     section_data[7] = pts_adjust >> 8;
