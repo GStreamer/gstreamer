@@ -707,6 +707,33 @@ GST_START_TEST (test_imagefreeze_25_1_live)
 
 GST_END_TEST;
 
+GST_START_TEST (test_imagefreeze_flush_keeps_caps)
+{
+  GstHarness *h = gst_harness_new ("imagefreeze");
+  GstSegment segment;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw, format=xRGB, width=640, height=480, framerate=0/1");
+  gst_harness_set_sink_caps_str (h,
+      "video/x-raw, format=xRGB, width=640, height=480, framerate=25/1");
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_new ()),
+      GST_FLOW_EOS);
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_flush_start ()));
+  fail_unless (gst_harness_push_event (h, gst_event_new_flush_stop (TRUE)));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_harness_push_event (h, gst_event_new_segment (&segment)));
+
+  /* No CAPS event after the flush, the caps from before it still apply */
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_new ()),
+      GST_FLOW_EOS);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 imagefreeze_suite (void)
 {
@@ -727,6 +754,7 @@ imagefreeze_suite (void)
   tcase_add_test (tc_chain, test_imagefreeze_eos);
 
   tcase_add_test (tc_chain, test_imagefreeze_25_1_live);
+  tcase_add_test (tc_chain, test_imagefreeze_flush_keeps_caps);
 
   return s;
 }

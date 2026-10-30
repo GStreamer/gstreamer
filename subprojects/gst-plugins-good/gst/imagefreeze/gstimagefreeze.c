@@ -209,6 +209,7 @@ gst_image_freeze_finalize (GObject * object)
   self->num_buffers = DEFAULT_NUM_BUFFERS;
 
   gst_image_freeze_reset (self);
+  gst_caps_replace (&self->current_caps, NULL);
 
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->blocked_cond);
@@ -224,7 +225,6 @@ gst_image_freeze_reset (GstImageFreeze * self)
   g_mutex_lock (&self->lock);
   gst_buffer_replace (&self->buffer, NULL);
   gst_caps_replace (&self->buffer_caps, NULL);
-  gst_caps_replace (&self->current_caps, NULL);
   self->num_buffers_left = self->num_buffers;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
@@ -677,11 +677,15 @@ gst_image_freeze_src_activate_mode (GstPad * pad, GstObject * parent,
 
         res = gst_pad_stop_task (pad);
         gst_image_freeze_reset (self);
+
+        /* Not in reset(): the caps stay valid across a flush, as on the pads */
+        gst_caps_replace (&self->current_caps, NULL);
       } else {
         GST_DEBUG_OBJECT (pad, "Pad activating");
         gst_image_freeze_reset (self);
 
         g_mutex_lock (&self->lock);
+        gst_caps_replace (&self->current_caps, NULL);
         self->flushing = FALSE;
         g_mutex_unlock (&self->lock);
         res = TRUE;
