@@ -41,7 +41,7 @@ setup (void)
   STATE_IGNORE_ELEMENTS = g_getenv ("GST_STATE_IGNORE_ELEMENTS");
   if (!g_getenv ("GST_NO_STATE_IGNORE_ELEMENTS") && STATE_IGNORE_ELEMENTS) {
     GST_DEBUG ("Will ignore element factories: '%s'", STATE_IGNORE_ELEMENTS);
-    ignorelist = g_strsplit (STATE_IGNORE_ELEMENTS, " ", 0);
+    ignorelist = g_strsplit_set (STATE_IGNORE_ELEMENTS, " \t\n\r\v\f", 0);
   }
 
   def = gst_registry_get ();
@@ -70,6 +70,9 @@ setup (void)
         gchar **s;
 
         for (s = ignorelist; s && *s; ++s) {
+          if (**s == '\0')
+            continue;
+
           if (g_str_has_prefix (name, *s)) {
             GST_DEBUG ("ignoring element %s", name);
             ignore = TRUE;
