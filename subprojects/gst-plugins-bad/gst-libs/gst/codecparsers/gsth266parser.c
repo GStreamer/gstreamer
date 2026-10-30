@@ -267,6 +267,9 @@ gst_h266_parse_nalu_header (GstH266NalUnit * nalu)
   if (nalu->size < 2)
     return FALSE;
 
+  if (data[0] & 0x80)
+    return FALSE;
+
   gst_bit_reader_init (&br, data, nalu->size - nalu->offset);
 
   /* skip the forbidden_zero_bit and nuh_reserved_zero_bit */
@@ -2143,8 +2146,8 @@ gst_h266_parser_identify_and_split_nalu_vvc (GstH266Parser * parser,
         nalu.data = (guint8 *) data;
         nalu.valid = TRUE;
 
-        gst_h266_parse_nalu_header (&nalu);
-        g_array_append_val (nalus, nalu);
+        if (gst_h266_parse_nalu_header (&nalu))
+          g_array_append_val (nalus, nalu);
       }
       break;
     } else if ((sc_offset == 2 && data[off + sc_offset - 1] != 0)
@@ -2163,8 +2166,8 @@ gst_h266_parser_identify_and_split_nalu_vvc (GstH266Parser * parser,
       nalu.data = (guint8 *) data;
       nalu.valid = TRUE;
 
-      gst_h266_parse_nalu_header (&nalu);
-      g_array_append_val (nalus, nalu);
+      if (gst_h266_parse_nalu_header (&nalu))
+        g_array_append_val (nalus, nalu);
     } else {
       /* CONDITION-C */
       /* startcode located at beginning of this chunk without actual nal data.

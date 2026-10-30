@@ -206,6 +206,9 @@ gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
   if (nalu->size < 1)
     return FALSE;
 
+  if (data[0] & 0x80)
+    return FALSE;
+
   nalu->type = (data[0] & 0x1f);
   nalu->ref_idc = (data[0] & 0x60) >> 5;
   nalu->idr_pic_flag = (nalu->type == 5 ? 1 : 0);
@@ -1525,6 +1528,13 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
   nalu->data = (guint8 *) data;
   nalu->size = size - nalu->offset;
 
+  /* An invalid header cannot become valid by appending more data. */
+  if (data[nalu->offset] & 0x80) {
+    GST_WARNING ("NAL has forbidden_zero_bit set");
+    nalu->size = 0;
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
+
   if (!gst_h264_parse_nalu_header (nalu)) {
     GST_DEBUG ("not enough data to parse \"NAL unit header\"");
     nalu->size = 0;
@@ -1794,8 +1804,8 @@ gst_h264_parser_identify_and_split_nalu_avc (GstH264NalParser * nalparser,
         nalu.data = (guint8 *) data;
         nalu.valid = TRUE;
 
-        gst_h264_parse_nalu_header (&nalu);
-        g_array_append_val (nalus, nalu);
+        if (gst_h264_parse_nalu_header (&nalu))
+          g_array_append_val (nalus, nalu);
       }
       break;
     } else if ((sc_offset == 2 && data[off + sc_offset - 1] != 0)
@@ -1814,8 +1824,8 @@ gst_h264_parser_identify_and_split_nalu_avc (GstH264NalParser * nalparser,
       nalu.data = (guint8 *) data;
       nalu.valid = TRUE;
 
-      gst_h264_parse_nalu_header (&nalu);
-      g_array_append_val (nalus, nalu);
+      if (gst_h264_parse_nalu_header (&nalu))
+        g_array_append_val (nalus, nalu);
     } else {
       /* CONDITION-C */
       /* startcode located at beginning of this chunk without actual nal data.
@@ -2249,6 +2259,11 @@ GstH264ParserResult
 gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps)
 {
   NalReader nr;
+
+  if (nalu->size < 1 || (nalu->data[nalu->offset] & 0x80)) {
+    memset (sps, 0, sizeof (*sps));
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
 
   GST_DEBUG ("parsing Subset SPS");
 
