@@ -1712,31 +1712,9 @@ gst_nv_decoder_handle_query (GstNvDecoder * decoder, GstElement * element,
 }
 
 #ifdef HAVE_CUDA_GST_GL
-static void
-gst_nv_decoder_check_cuda_device_from_context (GstGLContext * context,
-    gboolean * ret)
-{
-  guint device_count = 0;
-  CUdevice device_list[1] = { 0, };
-  CUresult cuda_ret;
-
-  *ret = FALSE;
-
-  cuda_ret = CuGLGetDevices (&device_count,
-      device_list, 1, CU_GL_DEVICE_LIST_ALL);
-
-  if (!gst_cuda_result (cuda_ret) || device_count == 0)
-    return;
-
-  *ret = TRUE;
-
-  return;
-}
-
 static gboolean
 gst_nv_decoder_ensure_gl_context (GstNvDecoder * decoder, GstElement * videodec)
 {
-  gboolean ret;
   GstGLDisplay *display;
   GstGLContext *context;
 
@@ -1785,11 +1763,7 @@ gst_nv_decoder_ensure_gl_context (GstNvDecoder * decoder, GstElement * videodec)
     return FALSE;
   }
 
-  gst_gl_context_thread_add (context,
-      (GstGLContextThreadFunc) gst_nv_decoder_check_cuda_device_from_context,
-      &ret);
-
-  if (!ret) {
+  if (!gst_cuda_context_supports_gl_interop (decoder->context, context)) {
     GST_WARNING_OBJECT (videodec,
         "Current OpenGL context is not CUDA-compatible");
     return FALSE;

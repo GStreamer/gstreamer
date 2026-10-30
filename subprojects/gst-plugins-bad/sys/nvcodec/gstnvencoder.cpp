@@ -638,30 +638,10 @@ gst_nv_encoder_sink_event (GstVideoEncoder * encoder, GstEvent * event)
 }
 
 #ifdef HAVE_CUDA_GST_GL
-static void
-gst_nv_encoder_check_cuda_device_from_gl_context (GstGLContext * context,
-    gboolean * ret)
-{
-  guint device_count = 0;
-  CUdevice device_list[1] = { 0, };
-  CUresult cuda_ret;
-
-  *ret = FALSE;
-
-  cuda_ret = CuGLGetDevices (&device_count,
-      device_list, 1, CU_GL_DEVICE_LIST_ALL);
-
-  if (!gst_cuda_result (cuda_ret) || device_count == 0)
-    return;
-
-  *ret = TRUE;
-}
-
 static gboolean
 gst_nv_encoder_ensure_gl_context (GstNvEncoder * self)
 {
   GstNvEncoderPrivate *priv = self->priv;
-  gboolean ret = FALSE;
 
   std::unique_lock < std::recursive_mutex > lk (priv->context_lock);
 
@@ -679,11 +659,9 @@ gst_nv_encoder_ensure_gl_context (GstNvEncoder * self)
     return FALSE;
   }
 
-  gst_gl_context_thread_add (priv->gl_context,
-      (GstGLContextThreadFunc) gst_nv_encoder_check_cuda_device_from_gl_context,
-      &ret);
-
-  return ret;
+  return priv->context &&
+      gst_cuda_context_supports_gl_interop (priv->context,
+      GST_GL_CONTEXT (priv->gl_context));
 }
 #endif
 

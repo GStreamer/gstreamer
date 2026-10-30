@@ -347,32 +347,11 @@ gst_cuda_memory_copy_transform_caps (GstBaseTransform * trans,
 }
 
 #ifdef HAVE_CUDA_GST_GL
-static void
-gst_cuda_memory_copy_ensure_gl_interop (GstGLContext * context, gboolean * ret)
-{
-  guint device_count = 0;
-  CUdevice device_list[1] = { 0, };
-  CUresult cuda_ret;
-
-  *ret = FALSE;
-
-  cuda_ret = CuGLGetDevices (&device_count,
-      device_list, 1, CU_GL_DEVICE_LIST_ALL);
-
-  if (!gst_cuda_result (cuda_ret) || device_count == 0)
-    return;
-
-  *ret = TRUE;
-
-  return;
-}
-
 static gboolean
 gst_cuda_memory_copy_ensure_gl_context (GstCudaMemoryCopy * self)
 {
   GstGLDisplay *display;
   GstGLContext *context;
-  gboolean ret = FALSE;
 
   if (!gst_gl_ensure_element_data (GST_ELEMENT (self),
           &self->gl_display, &self->other_gl_context)) {
@@ -416,9 +395,8 @@ gst_cuda_memory_copy_ensure_gl_context (GstCudaMemoryCopy * self)
     return FALSE;
   }
 
-  gst_gl_context_thread_add (context,
-      (GstGLContextThreadFunc) gst_cuda_memory_copy_ensure_gl_interop, &ret);
-  if (!ret) {
+  if (!gst_cuda_context_supports_gl_interop (GST_CUDA_BASE_TRANSFORM
+          (self)->context, context)) {
     GST_WARNING_OBJECT (self, "Current GL context is not CUDA compatible");
     return FALSE;
   }

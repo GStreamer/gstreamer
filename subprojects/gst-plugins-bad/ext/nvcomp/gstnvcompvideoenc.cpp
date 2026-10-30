@@ -25,6 +25,7 @@
 #ifdef HAVE_GST_GL
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
+#include <gst/cuda/gstcuda-private.h>
 #endif
 
 #include <nvcomp/ans.hpp>
@@ -779,28 +780,10 @@ gst_nv_comp_video_enc_src_query (GstVideoEncoder * encoder, GstQuery * query)
 }
 
 #ifdef HAVE_GST_GL
-static void
-check_cuda_device_from_gl_context (GstGLContext * context, gboolean * ret)
-{
-  guint device_count = 0;
-  CUdevice device_list[1] = { 0, };
-  CUresult cuda_ret;
-
-  *ret = FALSE;
-  cuda_ret = CuGLGetDevices (&device_count,
-      device_list, 1, CU_GL_DEVICE_LIST_ALL);
-
-  if (!gst_cuda_result (cuda_ret) || device_count == 0)
-    return;
-
-  *ret = TRUE;
-}
-
 static gboolean
 gst_nv_comp_video_enc_ensure_gl_context (GstNvCompVideoEnc * self)
 {
   auto priv = self->priv;
-  gboolean ret = FALSE;
 
   if (!gst_gl_ensure_element_data (GST_ELEMENT (self), &priv->gl_display,
           &priv->other_gl_context)) {
@@ -816,10 +799,8 @@ gst_nv_comp_video_enc_ensure_gl_context (GstNvCompVideoEnc * self)
     return FALSE;
   }
 
-  gst_gl_context_thread_add (priv->gl_context,
-      (GstGLContextThreadFunc) check_cuda_device_from_gl_context, &ret);
-
-  return ret;
+  return priv->ctx &&
+      gst_cuda_context_supports_gl_interop (priv->ctx, priv->gl_context);
 }
 #endif
 

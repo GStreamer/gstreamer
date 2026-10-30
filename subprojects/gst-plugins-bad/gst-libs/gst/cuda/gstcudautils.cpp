@@ -1123,20 +1123,88 @@ unmap_and_out:
 }
 
 #ifdef HAVE_CUDA_GST_GL
-static gboolean
-ensure_gl_interop (void)
+struct GLInteropCheckData
 {
+  GstCudaContext *context;
+  gboolean ret;
+};
+
+static void
+gl_interop_check_func (GstGLContext * gl_context, GLInteropCheckData * data)
+{
+  const GstGLFuncs *gl = gl_context->gl_vtable;
+  guint device_id = 0;
   guint device_count = 0;
   CUdevice device_list[1] = { 0, };
+  CUgraphicsResource resource;
+  GLuint pbo = 0;
   CUresult cuda_ret;
+  gchar *quark_name;
+  GQuark quark;
+  gpointer cached;
+
+  g_object_get (data->context, "cuda-device-id", &device_id, nullptr);
+  quark_name = g_strdup_printf ("GstCudaGLInterop-%u", device_id);
+  quark = g_quark_from_string (quark_name);
+  g_free (quark_name);
+
+  cached = g_object_get_qdata (G_OBJECT (gl_context), quark);
+  if (cached) {
+    data->ret = GPOINTER_TO_INT (cached) == 1;
+    return;
+  }
 
   cuda_ret = CuGLGetDevices (&device_count,
       device_list, 1, CU_GL_DEVICE_LIST_ALL);
+  if (cuda_ret == CUDA_SUCCESS && device_count > 0) {
+    data->ret = TRUE;
+  } else {
+    /* When CUDA runs on a MIG instance (a GPU partition), it reports the
+     * instance while GL reports the whole GPU, so cuGLGetDevices() finds no
+     * device even when interop works. Try registering a GL buffer instead. */
+    if (!gl->GenBuffers || !gst_cuda_context_push (data->context))
+      return;
 
-  if (cuda_ret != CUDA_SUCCESS || device_count == 0)
-    return FALSE;
+    gl->GenBuffers (1, &pbo);
+    gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, pbo);
+    gl->BufferData (GL_PIXEL_UNPACK_BUFFER, 16, nullptr, GL_STREAM_DRAW);
+    gl->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
 
-  return TRUE;
+    cuda_ret = CuGraphicsGLRegisterBuffer (&resource, pbo,
+        CU_GRAPHICS_REGISTER_FLAGS_NONE);
+    if (cuda_ret == CUDA_SUCCESS) {
+      CuGraphicsUnregisterResource (resource);
+      data->ret = TRUE;
+    }
+
+    gl->DeleteBuffers (1, &pbo);
+    gst_cuda_context_pop (nullptr);
+
+    GST_INFO_OBJECT (data->context, "No CUDA device found for %"
+        GST_PTR_FORMAT ", a GL buffer %s be registered", gl_context,
+        data->ret ? "can" : "cannot");
+  }
+
+  g_object_set_qdata (G_OBJECT (gl_context), quark,
+      GINT_TO_POINTER (data->ret ? 1 : 2));
+}
+
+/* Whether CUDA memory of @context can be shared with @gl_context */
+gboolean
+gst_cuda_context_supports_gl_interop (GstCudaContext * context,
+    GstGLContext * gl_context)
+{
+  GLInteropCheckData data = { context, FALSE };
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), FALSE);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (gl_context), FALSE);
+
+  _init_debug ();
+
+  gst_gl_context_thread_add (gl_context,
+      (GstGLContextThreadFunc) gl_interop_check_func, &data);
+
+  return data.ret;
 }
 
 typedef struct _GLCopyData
@@ -1226,7 +1294,7 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
   data->ret = FALSE;
 
   /* Incompatible gl context */
-  if (!ensure_gl_interop ())
+  if (!gst_cuda_context_supports_gl_interop (context, gl_context))
     return;
 
   if (!gst_cuda_context_push (context)) {

@@ -26,6 +26,10 @@
 
 #include <gst/video/video.h>
 
+#if defined (HAVE_CUDA_GST_GL) || defined (HAVE_GST_GL)
+#include <gst/gl/gl.h>
+#endif
+
 G_BEGIN_DECLS
 
 typedef enum
@@ -58,6 +62,12 @@ gboolean      gst_cuda_memory_is_from_fixed_pool (GstMemory * mem);
 
 GST_CUDA_API
 gboolean      gst_cuda_memory_is_stream_ordered (GstMemory * mem);
+
+#if defined (HAVE_CUDA_GST_GL) || defined (HAVE_GST_GL)
+GST_CUDA_API
+gboolean      gst_cuda_context_supports_gl_interop (GstCudaContext * context,
+                                                    GstGLContext * gl_context);
+#endif
 
 gpointer      gst_cuda_get_win32_handle_metadata (void);
 

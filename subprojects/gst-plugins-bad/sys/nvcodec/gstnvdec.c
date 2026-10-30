@@ -31,6 +31,7 @@
 
 #include "gstcuvidloader.h"
 #include "gstnvdec.h"
+#include <gst/cuda/gstcuda-private.h>
 
 #include <string.h>
 
@@ -1767,32 +1768,9 @@ gst_nvdec_finish (GstVideoDecoder * decoder)
 }
 
 #ifdef HAVE_CUDA_GST_GL
-static void
-gst_nvdec_check_cuda_device_from_context (GstGLContext * context,
-    gboolean * ret)
-{
-  guint device_count = 0;
-  CUdevice device_list[1] = { 0, };
-  CUresult cuda_ret;
-
-  *ret = FALSE;
-
-  cuda_ret = CuGLGetDevices (&device_count,
-      device_list, 1, CU_GL_DEVICE_LIST_ALL);
-
-  if (!gst_cuda_result (cuda_ret) || device_count == 0)
-    return;
-
-  *ret = TRUE;
-
-  return;
-}
-
 static gboolean
 gst_nvdec_ensure_gl_context (GstNvDec * nvdec)
 {
-  gboolean ret;
-
   if (!nvdec->gl_display) {
     GST_DEBUG_OBJECT (nvdec, "No available OpenGL display");
     return FALSE;
@@ -1828,10 +1806,8 @@ gst_nvdec_ensure_gl_context (GstNvDec * nvdec)
     return FALSE;
   }
 
-  gst_gl_context_thread_add (nvdec->gl_context,
-      (GstGLContextThreadFunc) gst_nvdec_check_cuda_device_from_context, &ret);
-
-  if (!ret) {
+  if (!gst_cuda_context_supports_gl_interop (nvdec->cuda_ctx,
+          GST_GL_CONTEXT (nvdec->gl_context))) {
     GST_WARNING_OBJECT (nvdec, "Current OpenGL context is not CUDA-compatible");
     return FALSE;
   }
