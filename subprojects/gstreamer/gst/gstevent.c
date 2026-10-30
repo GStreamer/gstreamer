@@ -209,6 +209,12 @@ gst_event_type_get_flags (GstEventType type)
 
   ret = type & ((1 << GST_EVENT_NUM_SHIFT) - 1);
 
+  /* Not in the type values, as adding it there would change them (ABI) */
+  if (type == GST_EVENT_SEGMENT || type == GST_EVENT_EOS
+      || type == GST_EVENT_STREAM_GROUP_DONE
+      || type == GST_EVENT_INSTANT_RATE_CHANGE)
+    ret |= GST_EVENT_TYPE_STICKY_FLUSHED;
+
   return ret;
 }
 

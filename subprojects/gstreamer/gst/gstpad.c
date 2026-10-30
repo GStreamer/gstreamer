@@ -580,6 +580,28 @@ remove_event_by_type (GstPad * pad, GstEventType type)
   }
 }
 
+/* Remove the sticky events that don't survive a flush */
+static void
+remove_flushed_events (GstPad * pad)
+{
+  GArray *events = pad->priv->events;
+  PadEvent *ev;
+  guint i = 0;
+
+  while (i < events->len) {
+    ev = &g_array_index (events, PadEvent, i);
+
+    if (ev->event && GST_EVENT_IS_STICKY_FLUSHED (ev->event)) {
+      gst_event_unref (ev->event);
+      g_array_remove_index (events, i);
+      pad->priv->events_cookie++;
+      continue;
+    }
+
+    i++;
+  }
+}
+
 /* check all events on srcpad against those on sinkpad. All events that are not
  * on sinkpad are marked as received=%FALSE and the PENDING_EVENTS is set on the
  * srcpad so that the events will be sent next time */
@@ -5698,12 +5720,8 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 
       GST_PAD_UNSET_FLUSHING (pad);
 
-      /* Remove sticky events that don't survive a flush */
       GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT related events");
-      remove_event_by_type (pad, GST_EVENT_EOS);
-      remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
-      remove_event_by_type (pad, GST_EVENT_SEGMENT);
-      remove_event_by_type (pad, GST_EVENT_INSTANT_RATE_CHANGE);
+      remove_flushed_events (pad);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
       pad->ABI.abi.last_flowret = GST_FLOW_OK;
 
@@ -6058,12 +6076,8 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
       GST_PAD_UNSET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
-      /* Remove sticky events that don't survive a flush */
       GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT related events");
-      remove_event_by_type (pad, GST_EVENT_EOS);
-      remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
-      remove_event_by_type (pad, GST_EVENT_SEGMENT);
-      remove_event_by_type (pad, GST_EVENT_INSTANT_RATE_CHANGE);
+      remove_flushed_events (pad);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
       pad->ABI.abi.last_flowret = GST_FLOW_OK;
 

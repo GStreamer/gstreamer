@@ -16294,6 +16294,15 @@ call.  To be used as the debug argument in #GST_ELEMENT_ERROR.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="EVENT_IS_STICKY_FLUSHED" c:identifier="GST_EVENT_IS_STICKY_FLUSHED" version="1.30" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">Check if an event is sticky and dropped from the pads when they are flushed.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
+      <parameters>
+        <parameter name="ev">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">the event to query</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="EVENT_IS_UPSTREAM" c:identifier="GST_EVENT_IS_UPSTREAM" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">Check if an event can travel upstream.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
@@ -22215,6 +22224,10 @@ gst_event_type_get_flags() function.</doc>
       <member name="sticky_multi" value="16" c:identifier="GST_EVENT_TYPE_STICKY_MULTI" glib:nick="sticky-multi" glib:name="GST_EVENT_TYPE_STICKY_MULTI">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">Multiple sticky events can be on a pad, each
                               identified by the event name.</doc>
+      </member>
+      <member name="sticky_flushed" value="1073741824" c:identifier="GST_EVENT_TYPE_STICKY_FLUSHED" version="1.30" glib:nick="sticky-flushed" glib:name="GST_EVENT_TYPE_STICKY_FLUSHED">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.h">Set if a pad drops the sticky event when it is flushed. It is not part of
+the #GstEventType values, only gst_event_type_get_flags() sets it.</doc>
       </member>
     </bitfield>
     <function-macro name="FIXME" c:identifier="GST_FIXME" introspectable="0">

@@ -750,6 +750,53 @@ GST_START_TEST (send_custom_events)
 
 GST_END_TEST;
 
+static void
+check_sticky_flushed (GstEvent * event, gboolean flushed)
+{
+  fail_unless_equals_int (GST_EVENT_IS_STICKY_FLUSHED (event), flushed);
+  gst_event_unref (event);
+}
+
+GST_START_TEST (sticky_flushed)
+{
+  GEnumClass *klass;
+  GstSegment segment;
+  GstCaps *caps;
+  guint i;
+
+  /* Computed flags must not overlap the event numbers in the type values */
+  klass = g_type_class_ref (GST_TYPE_EVENT_TYPE);
+  for (i = 0; i < klass->n_values; i++)
+    fail_if (klass->values[i].value & GST_EVENT_TYPE_STICKY_FLUSHED, "%s",
+        klass->values[i].value_name);
+  g_type_class_unref (klass);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  caps = gst_caps_new_empty_simple ("foo/bar");
+
+  check_sticky_flushed (gst_event_new_stream_start ("id"), FALSE);
+  check_sticky_flushed (gst_event_new_caps (caps), FALSE);
+  check_sticky_flushed (gst_event_new_tag (gst_tag_list_new_empty ()), FALSE);
+  check_sticky_flushed (gst_event_new_custom
+      (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, gst_structure_new_empty ("s")),
+      FALSE);
+
+  check_sticky_flushed (gst_event_new_segment (&segment), TRUE);
+  check_sticky_flushed (gst_event_new_eos (), TRUE);
+  check_sticky_flushed (gst_event_new_stream_group_done (1), TRUE);
+  check_sticky_flushed (gst_event_new_instant_rate_change (2.0, 0), TRUE);
+
+  /* Not sticky */
+  check_sticky_flushed (gst_event_new_flush_stop (TRUE), FALSE);
+  check_sticky_flushed (gst_event_new_gap (0, GST_SECOND), FALSE);
+  check_sticky_flushed (gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new_empty ("s")), FALSE);
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_event_suite (void)
 {
@@ -761,6 +808,7 @@ gst_event_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, create_events);
   tcase_add_test (tc_chain, send_custom_events);
+  tcase_add_test (tc_chain, sticky_flushed);
   return s;
 }
 

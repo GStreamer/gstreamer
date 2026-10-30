@@ -50,7 +50,21 @@ typedef enum {
   GST_EVENT_TYPE_DOWNSTREAM     = 1 << 1,
   GST_EVENT_TYPE_SERIALIZED     = 1 << 2,
   GST_EVENT_TYPE_STICKY         = 1 << 3,
-  GST_EVENT_TYPE_STICKY_MULTI   = 1 << 4
+  GST_EVENT_TYPE_STICKY_MULTI   = 1 << 4,
+
+  /* Flags from here on are not part of the #GstEventType values, they are
+   * only set by gst_event_type_get_flags() and allocated from the last bit
+   * downwards, so they never overlap the event numbers */
+
+  /**
+   * GST_EVENT_TYPE_STICKY_FLUSHED:
+   *
+   * Set if a pad drops the sticky event when it is flushed. It is not part of
+   * the #GstEventType values, only gst_event_type_get_flags() sets it.
+   *
+   * Since: 1.30
+   */
+  GST_EVENT_TYPE_STICKY_FLUSHED = 1 << 30
 } GstEventTypeFlags;
 
 /**
@@ -305,6 +319,16 @@ GST_API GType _gst_event_type;
  * Check if an event is sticky on the pads.
  */
 #define GST_EVENT_IS_STICKY(ev)     !!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_STICKY)
+/**
+ * GST_EVENT_IS_STICKY_FLUSHED:
+ * @ev: the event to query
+ *
+ * Check if an event is sticky and dropped from the pads when they are flushed.
+ *
+ * Since: 1.30
+ */
+#define GST_EVENT_IS_STICKY_FLUSHED(ev) \
+    !!(gst_event_type_get_flags (GST_EVENT_TYPE (ev)) & GST_EVENT_TYPE_STICKY_FLUSHED)
 
 #ifndef GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 static inline gboolean
