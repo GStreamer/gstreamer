@@ -939,7 +939,7 @@ gst_h264_encoder_reorder_lists_push (GstH264Encoder * self,
     GstVideoCodecFrame *last_frame;
 
     /* Ensure next push will start a new GOP. */
-    gst_h26x_gop_mapper_reset_index (priv->gop.mapper);
+    gst_h26x_gop_mapper_set_current_index (priv->gop.mapper, priv->gop.params.idr_period);
 
     if (!g_queue_is_empty (&priv->reorder_list)) {
       last_frame = g_queue_peek_tail (&priv->reorder_list);

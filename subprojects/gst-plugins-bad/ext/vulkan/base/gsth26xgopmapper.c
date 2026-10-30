@@ -314,9 +314,11 @@ gst_h26x_gop_mapper_set_current_index (GstH26XGOPMapper * self,
     guint32 cur_frame_index)
 {
   g_return_if_fail (GST_IS_H26X_GOP_MAPPER (self));
-  g_return_if_fail (cur_frame_index < self->frame_map->len);
+  g_return_if_fail (self->frame_map);
+  /* frame_map->len marks the end of the GOP, see get_next() */
+  g_return_if_fail (cur_frame_index <= self->frame_map->len);
 
-  self->cur_frame_index = MIN (cur_frame_index, self->frame_map->len - 1);
+  self->cur_frame_index = cur_frame_index;
 }
 
 void

@@ -353,6 +353,55 @@ GST_START_TEST (test_idr_with_inserted_i_frames)
 
 GST_END_TEST;
 
+/* Test for ending a GOP before its last frame, as the encoders do at drain:
+ * the index shall stay at the GOP end, otherwise the encoders keep turning
+ * the pending B frames into P frames, and the next frame starts a new GOP */
+GST_START_TEST (test_end_gop)
+{
+  GstH26XGOP *gop;
+  gboolean ret;
+  guint i;
+  GstH26XGOPParameters params = {
+    .idr_period = 16,           /* GOP size */
+    .ip_period = 4,             /* I/P to P distance */
+    .i_period = 0,
+    .num_bframes = 3,           /* 3 B frames between I/P and P */
+    .b_pyramid = FALSE,         /* No B pyramid */
+    .highest_pyramid_level = 0,
+    .num_iframes = 0,
+  };
+
+  fail_unless (mapper != NULL, "Failed to create mapper");
+
+  ret = gst_h26x_gop_mapper_set_params (mapper, &params);
+  fail_unless (ret == TRUE, "Failed to set parameters for GOP with B frames");
+
+  gst_h26x_gop_mapper_generate (mapper);
+
+  /* Stop in the middle of the GOP, with B frames pending */
+  gst_h26x_gop_mapper_reset_index (mapper);
+  for (i = 0; i < 10; i++) {
+    gop = gst_h26x_gop_mapper_get_next (mapper);
+    fail_unless (gop != NULL, "Expected GOP frame at index %u", i);
+  }
+  fail_unless (GST_H26X_GOP_IS (gop, B), "Frame at index 9 should be B frame");
+
+  gst_h26x_gop_mapper_set_current_index (mapper, params.idr_period);
+  fail_unless (gst_h26x_gop_mapper_get_current_index (mapper) ==
+      params.idr_period, "Current index should be %u after end_gop",
+      params.idr_period);
+  fail_unless (gst_h26x_gop_mapper_is_last_current_index (mapper),
+      "Expected GOP frame is last after end_gop");
+
+  gop = gst_h26x_gop_mapper_get_next (mapper);
+  fail_unless (gop && GST_H26X_GOP_IS_IDR (gop),
+      "Expected IDR GOP frame after end_gop");
+  fail_unless (gst_h26x_gop_mapper_get_current_index (mapper) == 1,
+      "Current index should be 1 after the IDR frame");
+}
+
+GST_END_TEST;
+
 /* Test suite */
 static Suite *
 gsth26xgopmapper_suite (void)
@@ -368,6 +417,7 @@ gsth26xgopmapper_suite (void)
   tcase_add_test (tc_chain, test_gop_with_b_pyramid);
   tcase_add_test (tc_chain, test_big_gop);
   tcase_add_test (tc_chain, test_idr_with_inserted_i_frames);
+  tcase_add_test (tc_chain, test_end_gop);
   suite_add_tcase (s, tc_chain);
 
   return s;
