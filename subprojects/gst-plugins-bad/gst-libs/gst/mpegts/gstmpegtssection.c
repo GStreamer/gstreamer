@@ -1233,11 +1233,11 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
   /* section_length (already parsed) : 12 bit */
   res->section_length = section_length + 3;
   if (!res->short_section) {
-    /* A long packet needs to be at least 11 bytes long
+    /* A long packet needs to be at least 12 bytes long
      * _ 3 for the bytes above
      * _ 5 for the bytes below
      * _ 4 for the CRC */
-    if (G_UNLIKELY (data_size < 11))
+    if (G_UNLIKELY (data_size < 12))
       goto bad_long_packet;
 
     /* CRC is after section_length (-4 for the size of the CRC) */
@@ -1272,7 +1272,7 @@ short_packet:
 bad_long_packet:
   {
     GST_WARNING ("PID 0x%04x long section is too short (%" G_GSIZE_FORMAT
-        " bytes, need at least 11)", pid, data_size);
+        " bytes, need at least 12)", pid, data_size);
     gst_mpegts_section_unref (res);
     return NULL;
   }
