@@ -8,15 +8,18 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-//! Probes for the MPEG-2 systems family and the MPEG-1/2 video elementary
-//! stream.
+//! Probes for the MPEG-2 systems family, the MPEG-1/2 video elementary stream
+//! and the MPEG-4 visual elementary stream.
 //!
-//! Both are built on the same start code prefix, `00 00 01`, followed by an
-//! octet that names what it starts. Which names belong to which format is what
-//! separates them: `itu-t-h.222.0-2023-08` Table 2-22 assigns the stream ids
-//! from `0xBC` upward to PES streams, `0xBA` and `0xBB` are the pack and system
-//! headers of a program stream, and `itu-t-h.262-2000-02` Table 6-1 keeps
-//! everything below `0xB9` for the video stream.
+//! All of them are built on the same start code prefix, `00 00 01`, followed by
+//! an octet that names what it starts. Which names belong to which format is
+//! what separates them: `itu-t-h.222.0-2023-08` Table 2-22 assigns the stream
+//! ids from `0xBC` upward to PES streams, `0xBA` and `0xBB` are the pack and
+//! system headers of a program stream, and `itu-t-h.262-2000-02` Table 6-1
+//! keeps everything below `0xB9` for the MPEG-1/2 video stream. The names
+//! `iso-14496-2` Table 6-3 gives MPEG-4 visual fall inside that range, so the
+//! two video formats share their octets and are told apart by the headers they
+//! put after the prefix, not by the names themselves.
 //!
 //! A program stream and a video elementary stream therefore claim overlapping
 //! octets, and the pack header is the tie-breaker: a valid one means the stream
@@ -24,7 +27,7 @@
 //! the two share [`valid_pack`].
 
 use crate::helpers::{Prob, Scanner, TypeFind, u16be};
-use crate::startcode::is_start_code;
+use crate::startcode::{is_start_code, next_start_code};
 
 /// Start code value of a pack header, H.222.0 2.5.3.4.
 const PACK_CODE: u8 = 0xBA;
@@ -464,6 +467,198 @@ pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     video_probability(paired, seen_seq_at_0, seen_seq, seen_gop)
 }
 
+/// Start code values of the MPEG-4 visual stream, from `iso-14496-2`
+/// Table 6-3. `00` to `1F` is one `video_object_start_code` per video object
+/// and `20` to `2F` one `video_object_layer_start_code` per layer, so those two
+/// are ranges rather than names.
+const M4V_VIDEO_OBJ_CODE_MAX: u8 = 0x1F;
+const M4V_VIDEO_LAYER_CODE_MIN: u8 = 0x20;
+const M4V_VIDEO_LAYER_CODE_MAX: u8 = 0x2F;
+const M4V_VIOS_CODE: u8 = 0xB0;
+/// `user_data_start_code`, which a visual object sequence may carry between its
+/// own header and the object that follows it.
+const M4V_USER_DATA_CODE: u8 = 0xB2;
+const M4V_VISUAL_OBJ_CODE: u8 = 0xB5;
+const M4V_VOP_CODE: u8 = 0xB6;
+
+/// How far the MPEG-4 visual probe looks, and how many pictures it wants to
+/// count before it is satisfied.
+const M4V_TRY_SYNC: i64 = 100 * 1024;
+const M4V_TRY_PICTURES: u32 = 6;
+
+// shortcut: headers are stepped over by a fixed count rather than measured, so
+// a header shorter than its own count hides the start code after it. Only the
+// visual object sequence header is crossed exactly, because the search after it
+// is allowed no slack and profile_and_level_indication is the one octet it has
+// to cross. The other steps land inside the header they name. For the video
+// object, layer and picture headers the search after them spans the rest of the
+// probe, so a step that falls short costs nothing; the visual object header's
+// search is limited to M4V_VISUAL_OBJ_SLACK, so overshooting it loses the next
+// start code.
+const M4V_VIOS_STEP: usize = 2;
+const M4V_VISUAL_OBJ_STEP: usize = 2;
+const M4V_VIDEO_OBJ_STEP: usize = 2;
+const M4V_VIDEO_LAYER_STEP: usize = 5;
+const M4V_VOP_STEP: usize = 2;
+/// How far past a visual object header the next start code is looked for. The
+/// mandatory fields, then `video_signal_type` with `colour_description` and its
+/// colour tables, put a conforming next start code about six octets out; 7 is
+/// that with room, not a distance the format states.
+const M4V_VISUAL_OBJ_SLACK: usize = 7;
+/// How far past a `user_data_start_code` the next start code is looked for.
+/// User data is an opaque run with no length field, so it is crossed by
+/// searching rather than by measuring.
+// shortcut: 24 is a chosen cutoff, not a distance the format states. User data
+// has no length of its own, so a run longer than this hides the next start code
+// and the walk ends where that search fails.
+const M4V_USER_DATA_SLACK: usize = 24;
+
+/// The confidence in an MPEG-4 visual elementary stream, from what the walk
+/// saw. `vops` counts picture headers; the rungs below the top ones are the
+/// shapes a stream that has lost its sequence, object or layer headers leaves.
+///
+/// A stream that showed a layer header and nothing else falls between every
+/// rung and is still suggested, at no confidence at all. The top rung asks for a
+/// sequence header at offset 0, which no walk can report; see the note where
+/// that flag is set.
+fn mpeg4_video_probability(
+    vops: u32,
+    seen_vios_at_0: bool,
+    seen_vios: bool,
+    seen_vos: bool,
+    seen_vol: bool,
+) -> Option<Prob> {
+    if vops == 0 && !seen_vol {
+        return None;
+    }
+    let full = vops >= M4V_TRY_PICTURES;
+    let several = vops > 2;
+    let any = vops > 0;
+
+    let probability = if full && seen_vios_at_0 && seen_vos && seen_vol {
+        Prob::MAXIMUM.get() - 1
+    } else if full && seen_vios && seen_vos && seen_vol {
+        Prob::NEARLY_CERTAIN.get() - 1
+    } else if (seen_vios_at_0 || full) && seen_vos && seen_vol {
+        // A sequence header at the very start of the stream and a full run of
+        // pictures carry the same weight when neither is joined by the other.
+        Prob::NEARLY_CERTAIN.get() - 6
+    } else if full && seen_vol {
+        Prob::NEARLY_CERTAIN.get() - 9
+    } else if full {
+        Prob::LIKELY.get() - 1
+    } else if several && seen_vios && seen_vos && seen_vol {
+        Prob::LIKELY.get() - 9
+    } else if seen_vios && seen_vos && seen_vol {
+        Prob::LIKELY.get() - 20
+    } else if any && seen_vos && seen_vol {
+        Prob::POSSIBLE.get()
+    } else if any {
+        Prob::POSSIBLE.get() - 10
+    } else if seen_vos && seen_vol {
+        Prob::POSSIBLE.get() - 20
+    } else {
+        Prob::NONE.get()
+    };
+    Some(probability.into())
+}
+
+/// MPEG-4 visual elementary stream: a visual object sequence header, a visual
+/// object header, then video object, video object layer and picture headers.
+/// The walk counts at most one sequence header and one video object and stops
+/// at a second of either, so a stream that repeats them is judged on what came
+/// before the repeat.
+///
+/// A sequence header and a visual object header each read on to the start code
+/// after them and take its value, so one pass can settle a video object. User
+/// data is the exception: it is crossed without taking the value it lands on,
+/// so a video object behind user data goes unseen.
+pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
+    let mut scan = Scanner::new(tf, 0);
+    let mut seen_vios_at_0 = false;
+    let mut seen_vios = false;
+    let mut seen_vos = false;
+    let mut seen_vol = false;
+    let mut vops = 0u32;
+
+    while scan.offset() < M4V_TRY_SYNC {
+        if vops >= M4V_TRY_PICTURES {
+            break;
+        }
+        // A start code beginning on the last octet of the probe is still
+        // inside it, so the search may step that far.
+        let room = (M4V_TRY_SYNC - scan.offset()) as usize;
+        if next_start_code(&mut scan, room).is_none() {
+            break;
+        }
+        // A search only answers once four octets were in view and it stepped
+        // three of them, so the octet it leaves the cursor on is always there.
+        let Some(head) = scan.peek(1) else { break };
+        let mut code = head[0];
+
+        if code == M4V_VIOS_CODE {
+            if seen_vios {
+                break;
+            }
+            // shortcut: a start code is tested at the octet carrying its value,
+            // three past the prefix that puts it there, so no sequence header
+            // can ever be at offset 0. That leaves the top rung unreachable and
+            // the sequence-at-zero half of the one below it. It matters if the
+            // test ever moves to the prefix, because the top rung comes back.
+            seen_vios_at_0 |= scan.offset() == 0;
+            seen_vios = true;
+            scan.consume(M4V_VIOS_STEP);
+            // `profile_and_level_indication` is the only thing between the
+            // sequence header and what follows it, so the next start code is
+            // exactly here.
+            if next_start_code(&mut scan, 0).is_none() {
+                break;
+            }
+            let Some(head) = scan.peek(1) else { break };
+            code = head[0];
+            // One user data block is crossed, and the code value stays the one
+            // read before the hop, so whatever the hop landed on is not counted.
+            if code == M4V_USER_DATA_CODE
+                && next_start_code(&mut scan, M4V_USER_DATA_SLACK).is_none()
+            {
+                break;
+            }
+        }
+
+        if code == M4V_VISUAL_OBJ_CODE {
+            scan.consume(M4V_VISUAL_OBJ_STEP);
+            if next_start_code(&mut scan, M4V_VISUAL_OBJ_SLACK).is_none() {
+                break;
+            }
+            let Some(head) = scan.peek(1) else { break };
+            code = head[0];
+        }
+
+        if code <= M4V_VIDEO_OBJ_CODE_MAX {
+            if seen_vos {
+                break;
+            }
+            seen_vos = true;
+            scan.consume(M4V_VIDEO_OBJ_STEP);
+            continue;
+        }
+        if (M4V_VIDEO_LAYER_CODE_MIN..=M4V_VIDEO_LAYER_CODE_MAX).contains(&code) {
+            seen_vol = true;
+            scan.consume(M4V_VIDEO_LAYER_STEP);
+            continue;
+        }
+        if code == M4V_VOP_CODE {
+            vops += 1;
+            scan.consume(M4V_VOP_STEP);
+            continue;
+        }
+        // A start code the format gives no meaning to here is evidence about
+        // nothing, and the walk goes on from where it stands.
+    }
+
+    mpeg4_video_probability(vops, seen_vios_at_0, seen_vios, seen_vos, seen_vol)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -747,5 +942,57 @@ mod tests {
         assert_eq!(sys_scan(&joined, joined.len()), Some((80, 2)));
         let gapped = window(&[&PACK2, &pes(8), &[0xFF; 6], &pes(8), &pes(8)]);
         assert_eq!(sys_scan(&gapped, gapped.len()), None);
+    }
+
+    /// The rungs of the MPEG-4 visual ladder, from a stream that showed
+    /// everything down to one that showed only a video object layer header.
+    #[test]
+    fn mpeg4_video_confidence_falls_as_the_stream_gets_thinner() {
+        let prob = |vops, at_0, vios, vos, vol| {
+            mpeg4_video_probability(vops, at_0, vios, vos, vol).map(|p| p.get())
+        };
+        // The top rung needs a sequence header at offset 0, which no walk can
+        // report. This pins the rung, not a state the probe can reach.
+        assert_eq!(prob(6, true, true, true, true), Some(99));
+        assert_eq!(prob(6, false, true, true, true), Some(98));
+        // A sequence header at the very start and a full run of pictures are
+        // worth the same when the other is missing.
+        assert_eq!(prob(1, true, true, true, true), Some(93));
+        assert_eq!(prob(6, false, false, true, true), Some(93));
+        assert_eq!(prob(6, false, false, false, true), Some(90));
+        assert_eq!(prob(6, false, false, false, false), Some(79));
+        assert_eq!(prob(3, false, true, true, true), Some(71));
+        assert_eq!(prob(1, false, true, true, true), Some(60));
+        assert_eq!(prob(1, false, false, true, true), Some(50));
+        assert_eq!(prob(1, false, false, false, false), Some(40));
+        assert_eq!(prob(0, false, false, true, true), Some(30));
+        // A layer header with no video object and no picture behind it matches
+        // no rung at all, and is still suggested, at no confidence.
+        assert_eq!(prob(0, false, false, false, true), Some(0));
+        // Short of both a picture and a layer header the stream is not this
+        // format, however many other headers it carried.
+        assert_eq!(prob(0, false, false, false, false), None);
+        assert_eq!(prob(0, true, true, false, false), None);
+    }
+
+    /// Both counts are compared against a boundary, and each side of it is a
+    /// different rung: six pictures is a full run where five is not, and three
+    /// is several where two is not.
+    #[test]
+    fn mpeg4_video_picture_counts_use_their_boundaries_exactly() {
+        let bare =
+            |vops| mpeg4_video_probability(vops, false, false, false, false).map(|p| p.get());
+        assert_eq!(bare(1), Some(40));
+        assert_eq!(bare(5), Some(40));
+        assert_eq!(bare(6), Some(79));
+        assert_eq!(bare(20), Some(79));
+
+        let full_headers =
+            |vops| mpeg4_video_probability(vops, false, true, true, true).map(|p| p.get());
+        assert_eq!(full_headers(1), Some(60));
+        assert_eq!(full_headers(2), Some(60));
+        assert_eq!(full_headers(3), Some(71));
+        assert_eq!(full_headers(5), Some(71));
+        assert_eq!(full_headers(6), Some(98));
     }
 }

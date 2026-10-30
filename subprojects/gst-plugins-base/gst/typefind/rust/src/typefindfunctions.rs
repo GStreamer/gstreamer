@@ -27,7 +27,7 @@ use crate::bindings::gpointer;
 use crate::containers::{q3gp_probe, qt_probe, qtif_probe};
 use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
-use crate::mpeg::{mpeg_sys_probe, mpeg_ts_probe, mpeg_video_probe};
+use crate::mpeg::{mpeg_sys_probe, mpeg_ts_probe, mpeg_video_probe, mpeg4_video_probe};
 use crate::subtitles;
 use crate::xml::{XmlProbe, xml_probe};
 #[allow(unused_imports)]
@@ -2685,6 +2685,16 @@ extern "C" fn mpeg_video_stream_type_find(tf: &mut TypeFind, _private: gpointer)
     }
 }
 
+extern "C" fn mpeg4_video_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = mpeg4_video_probe(tf) {
+        suggest!(tf, probability, c"video/mpeg", [
+            (c"systemstream", bool: false),
+            (c"mpegversion", i32: 4),
+            (c"parsed", bool: false),
+        ]);
+    }
+}
+
 // =============================================================================
 // Registration table and entry point
 // =============================================================================
@@ -3142,6 +3152,13 @@ const FEATURES: &[Feature] = &[
         MARGINAL,
         mpeg_video_stream_type_find,
         "mpv,mpeg,mpg",
+        "video/mpeg, systemstream = (boolean) false"
+    ),
+    typefinder!(
+        "video/mpeg4",
+        PRIMARY,
+        mpeg4_video_type_find,
+        "m4v",
         "video/mpeg, systemstream = (boolean) false"
     ),
 ];
