@@ -29,7 +29,7 @@
 #include <glib/gstdio.h>
 #include <glib/gprintf.h>
 
-static gboolean have_theora, have_ogg;
+static gboolean have_theora, have_ogg, have_mp3_parser;
 
 GST_START_TEST (test_disco_init)
 {
@@ -102,6 +102,75 @@ missing_plugins:
   gst_discoverer_info_unref (info);
   g_object_unref (dc);
   g_free (uri);
+}
+
+GST_END_TEST;
+
+/* Minimal MP3 stream (tests/files/mp3-topology-uaf.bin, from OSS-Fuzz
+ * testcase 4764783547842560) whose stream topology contains a nested "next"
+ * node whose caps match its own parent. Parsing that node used to unref the
+ * parent stream info while a caller still held it, crashing when the caller
+ * wrote through the freed pointer. Push-based discovery (appsrc) as in the
+ * fuzzing harness. */
+static void
+push_data_on_source_setup (GstDiscoverer * dc, GstElement * source,
+    gpointer data)
+{
+  GBytes *bytes = data;
+  gsize size;
+  const guint8 *map;
+  GstBuffer *buf;
+  GstFlowReturn ret;
+
+  map = g_bytes_get_data (bytes, &size);
+  buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      (gpointer) map, size, 0, size, NULL, NULL);
+  g_object_set (G_OBJECT (source), "size", (gint64) size, NULL);
+  g_signal_emit_by_name (G_OBJECT (source), "push-buffer", buf, &ret);
+  gst_buffer_unref (buf);
+}
+
+GST_START_TEST (test_disco_push_nested_same_caps)
+{
+  GError *err = NULL;
+  GstDiscoverer *dc;
+  GstDiscovererInfo *info;
+  gchar *path;
+  gpointer contents;
+  gsize size;
+  GBytes *bytes;
+
+  if (!have_mp3_parser) {
+    GST_INFO ("No mp3 parser, skipping");
+    return;
+  }
+
+  path = g_build_filename (GST_TEST_FILES_PATH, "mp3-topology-uaf.bin", NULL);
+
+  if (!g_file_get_contents (path, (gchar **) & contents, &size, &err)) {
+    g_free (path);
+    fail ("Could not read test file: %s", err->message);
+  }
+  g_free (path);
+  bytes = g_bytes_new_take (contents, size);
+
+  /* high timeout, in case we're running under valgrind */
+  dc = gst_discoverer_new (30 * GST_SECOND, &err);
+  fail_unless (dc != NULL);
+  fail_unless (err == NULL);
+
+  g_signal_connect (dc, "source-setup",
+      (GCallback) push_data_on_source_setup, bytes);
+
+  /* the point of the test is that discovery completes without crashing;
+   * the result itself depends on which plugins are available */
+  info = gst_discoverer_discover_uri (dc, "appsrc://", &err);
+  fail_unless (info != NULL);
+  g_clear_error (&err);
+
+  gst_discoverer_info_unref (info);
+  g_object_unref (dc);
+  g_bytes_unref (bytes);
 }
 
 GST_END_TEST;
@@ -394,6 +463,10 @@ discoverer_suite (void)
       "theoradec", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
   have_ogg = gst_registry_check_feature_version (gst_registry_get (),
       "oggdemux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  /* the nested-topology reproducer only exercises the topology parser, so
+   * the mp3 parser alone is enough to trigger it */
+  have_mp3_parser = gst_registry_check_feature_version (gst_registry_get (),
+      "mpegaudioparse", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_disco_init);
@@ -403,6 +476,7 @@ discoverer_suite (void)
   tcase_add_test (tc_chain, test_disco_sync_reuse_timeout);
   tcase_add_test (tc_chain, test_disco_missing_plugins);
   tcase_add_test (tc_chain, test_disco_serializing);
+  tcase_add_test (tc_chain, test_disco_push_nested_same_caps);
   tcase_add_test (tc_chain, test_disco_async);
   tcase_add_test (tc_chain, test_disco_async_custom_context);
   tcase_add_test (tc_chain, test_disco_async_reuse);

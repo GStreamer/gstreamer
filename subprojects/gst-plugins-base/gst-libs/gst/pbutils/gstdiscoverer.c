@@ -1234,6 +1234,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
 
   if (nval == NULL || GST_VALUE_HOLDS_STRUCTURE (nval)) {
     GstStructure *st = find_stream_for_node (dc, topology);
+    GstDiscovererStreamInfo *parent_arg = parent;
     gboolean add_to_list = TRUE;
 
     if (st) {
@@ -1270,19 +1271,29 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
           /* We sometimes get an extra sub-stream from the parser. If this is
            * the case, we just replace the parent caps with this stream's caps
            * since they might contain more information */
+          GstDiscovererStreamInfo *sub;
+
           gst_caps_replace (&parent->caps, caps);
 
-          parse_stream_topology (dc, st, parent);
+          sub = parse_stream_topology (dc, st, parent);
+          if (sub)
+            gst_discoverer_stream_info_unref (sub);
           add_to_list = FALSE;
         } else if (child_is_raw_stream (parent->caps, caps)) {
           /* This is the "raw" stream corresponding to the parent. This
            * contains more information than the parent, tags etc. */
-          parse_stream_topology (dc, st, parent);
+          GstDiscovererStreamInfo *sub;
+
+          sub = parse_stream_topology (dc, st, parent);
+          if (sub)
+            gst_discoverer_stream_info_unref (sub);
           add_to_list = FALSE;
         } else {
           GstDiscovererStreamInfo *next = parse_stream_topology (dc, st, NULL);
-          res->next = next;
-          next->previous = res;
+          if (next) {
+            res->next = next;
+            next->previous = res;
+          }
         }
         gst_caps_unref (caps);
       }
@@ -1292,8 +1303,13 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       res->stream_number = dc->priv->current_info_stream_count++;
       dc->priv->current_info->stream_list =
           g_list_append (dc->priv->current_info->stream_list, res);
-    } else {
+    } else if (res == parent_arg) {
+      /* collect_information() re-used the caller's parent object: drop the
+       * reference this call acquired on it and report that no standalone
+       * stream info was created. Unreffing a distinct res would drop the
+       * caller's own reference to the parent instead. */
       gst_discoverer_stream_info_unref (res);
+      res = NULL;
     }
 
   } else if (GST_VALUE_HOLDS_LIST (nval)) {
@@ -1331,6 +1347,8 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       GST_DEBUG_OBJECT (dc, "%d %" GST_PTR_FORMAT, i, subst);
 
       substream = parse_stream_topology (dc, subst, NULL);
+      if (!substream)
+        continue;
 
       substream->previous = res;
       cont->streams =
