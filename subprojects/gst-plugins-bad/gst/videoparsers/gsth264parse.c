@@ -1480,6 +1480,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
           goto skip;
         }
         break;
+      case GST_H264_PARSER_BROKEN_DATA:
+        goto broken;
       case GST_H264_PARSER_NO_NAL:
         /* we don't have enough bytes to make any decisions yet */
         goto more;

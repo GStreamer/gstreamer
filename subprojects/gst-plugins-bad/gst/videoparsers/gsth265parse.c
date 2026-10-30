@@ -1307,6 +1307,8 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
           goto skip;
         }
         break;
+      case GST_H265_PARSER_BROKEN_DATA:
+        goto broken;
       case GST_H265_PARSER_NO_NAL:
         /* start code may have up to 4 bytes, and we may also get that return
          * value if only one of the two header bytes are present, make sure

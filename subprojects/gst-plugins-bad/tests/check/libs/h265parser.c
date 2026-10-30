@@ -1648,6 +1648,53 @@ GST_START_TEST (test_h265_parse_sps_oversized_conformance_window)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_reject_forbidden_nals)
+{
+  const guint8 annexb[] = { 0x00, 0x00, 0x01, 0xc6, 0x01, 0x80 };
+  const guint8 single[] = { 0x00, 0x00, 0x00, 0x02, 0xc6, 0x01 };
+  guint8 packet[] = {
+    0x00, 0x00, 0x00, 0x11,
+    0x46, 0x01,
+    0x00, 0x00, 0x01, 0xc6, 0x01,
+    0x00, 0x00, 0x01, 0x48, 0x01,
+    0x00, 0x00, 0x01, 0xc8, 0x01
+  };
+  GstH265Parser *parser = gst_h265_parser_new ();
+  GstH265NalUnit nalu = { 0, };
+  GArray *nalus = g_array_new (FALSE, FALSE, sizeof (GstH265NalUnit));
+  gsize consumed;
+
+  fail_unless_equals_int (gst_h265_parser_identify_nalu (parser,
+          annexb, 0, sizeof (annexb), &nalu), GST_H265_PARSER_BROKEN_DATA);
+  fail_unless_equals_int (gst_h265_parser_identify_nalu_hevc (parser,
+          single, 0, sizeof (single), 4, &nalu), GST_H265_PARSER_BROKEN_DATA);
+
+  /* Keep valid NALs before and after a forbidden chunk, including when
+   * the last chunk is forbidden. */
+  fail_unless_equals_int (gst_h265_parser_identify_and_split_nalu_hevc (parser,
+          packet, 0, sizeof (packet), 4, nalus, &consumed), GST_H265_PARSER_OK);
+  fail_unless_equals_int (consumed, sizeof (packet));
+  fail_unless_equals_int (nalus->len, 2);
+  fail_unless_equals_int (g_array_index (nalus, GstH265NalUnit, 0).type,
+      GST_H265_NAL_AUD);
+  fail_unless_equals_int (g_array_index (nalus, GstH265NalUnit, 1).type,
+      GST_H265_NAL_EOS);
+
+  /* An entirely forbidden packet must not produce any usable NALs. */
+  packet[4] |= 0x80;
+  packet[14] |= 0x80;
+  fail_unless_equals_int (gst_h265_parser_identify_and_split_nalu_hevc (parser,
+          packet, 0, sizeof (packet), 4, nalus, &consumed),
+      GST_H265_PARSER_BROKEN_DATA);
+  fail_unless_equals_int (consumed, sizeof (packet));
+  fail_unless_equals_int (nalus->len, 0);
+
+  g_array_unref (nalus);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -1656,6 +1703,7 @@ h265parser_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_h265_reject_forbidden_nals);
   tcase_add_test (tc_chain, test_h265_parse_slice_eos_slice_eob);
   tcase_add_test (tc_chain, test_h265_parse_pic_timing);
   tcase_add_test (tc_chain, test_h265_parse_pic_timing_truncated);

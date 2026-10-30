@@ -1253,6 +1253,57 @@ h264parse_sliced_suite (void)
 }
 
 
+GST_START_TEST (test_parse_forbidden_nal_progress)
+{
+  static const guint8 forbidden[] = { 0x00, 0x00, 0x00, 0x01, 0xb2, 0x05 };
+  GstHarness *h = gst_harness_new ("h264parse");
+  GstBuffer *buf;
+  guint pictures = 0;
+
+  gst_harness_set_caps_str (h,
+      (__i__ & 1) ? "video/x-h264, stream-format=byte-stream" :
+      "video/x-h264, stream-format=byte-stream, alignment=au",
+      "video/x-h264, stream-format=byte-stream, alignment=au");
+
+  buf = composite_buffer (0, 0, 4,
+      h264_aud, sizeof (h264_aud),
+      h264_slicing_sps, sizeof (h264_slicing_sps),
+      h264_slicing_pps, sizeof (h264_slicing_pps),
+      h264_idr_slice_1, sizeof (h264_idr_slice_1));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Exercise a forbidden NAL both at the start of a buffer and after an AUD. */
+  if (__i__ & 2)
+    buf = composite_buffer (GST_SECOND, 0, 2,
+        h264_aud, sizeof (h264_aud), forbidden, sizeof (forbidden));
+  else
+    buf = composite_buffer (GST_SECOND, 0, 1, forbidden, sizeof (forbidden));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = composite_buffer (2 * GST_SECOND, 0, 2,
+      h264_aud, sizeof (h264_aud), h264_idr_slice_1, sizeof (h264_idr_slice_1));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  /* A following start code completes the delimiter in unaligned input. */
+  buf = composite_buffer (3 * GST_SECOND, 0, 2,
+      h264_aud, sizeof (h264_aud), h264_aud, sizeof (h264_aud));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Both pictures must arrive before EOS, rather than waiting behind metadata. */
+  while ((buf = gst_harness_try_pull (h))) {
+    gsize size = gst_buffer_get_size (buf);
+
+    if (size >= sizeof (h264_idr_slice_1) &&
+        gst_buffer_memcmp (buf, size - sizeof (h264_idr_slice_1),
+            h264_idr_slice_1, sizeof (h264_idr_slice_1)) == 0)
+      pictures++;
+    gst_buffer_unref (buf);
+  }
+  fail_unless_equals_int (pictures, 2);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_parse_sei_closedcaptions)
 {
   GstVideoCaptionMeta *cc;
@@ -1917,6 +1968,7 @@ main (int argc, char **argv)
 
     s = suite_create ("h264parse");
     suite_add_tcase (s, tc_chain);
+    tcase_add_loop_test (tc_chain, test_parse_forbidden_nal_progress, 0, 4);
     tcase_add_test (tc_chain, test_parse_sei_closedcaptions);
     tcase_add_test (tc_chain, test_parse_compatible_caps);
     tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
