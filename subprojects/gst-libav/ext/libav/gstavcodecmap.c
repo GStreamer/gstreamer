@@ -1212,6 +1212,7 @@ gst_ffmpeg_codecid_is_known (enum AVCodecID codec_id)
     case AV_CODEC_ID_PCM_MULAW:
     case AV_CODEC_ID_PCM_ALAW:
     case AV_CODEC_ID_ADPCM_G722:
+    case AV_CODEC_ID_G723_1:
     case AV_CODEC_ID_ADPCM_G726:
     case AV_CODEC_ID_ADPCM_IMA_QT:
     case AV_CODEC_ID_ADPCM_IMA_WAV:
@@ -2543,6 +2544,15 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (context)
         gst_caps_set_simple (caps,
             "block_align", G_TYPE_INT, context->block_align,
+            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
+      break;
+
+    case AV_CODEC_ID_G723_1:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/G723",
+          NULL);
+      if (context)
+        gst_caps_set_simple (caps,
             "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
       break;
 

@@ -33190,6 +33190,7 @@
   "avenc_g723_1:ar",
   "avenc_g723_1:audio-service-type",
   "avenc_g723_1:bitrate",
+  "avenc_g723_1:bitrate-tolerance",
   "avenc_g723_1:bufsize",
   "avenc_g723_1:channel-layout",
   "avenc_g723_1:compression-level",
