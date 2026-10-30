@@ -379,6 +379,45 @@ gst_uvc_sink_update_streaming (GstUvcSink * self)
   self->renegotiating = FALSE;
 }
 
+/* The colorimetry the host uses is announced by the color matching
+ * descriptor of the gadget configuration. The gadget driver ignores the
+ * colorimetry set on the video device and always reports sRGB, which
+ * v4l2sink translates to 2:4:7:1 and then refuses to set any caps with a
+ * different colorimetry, e.g. bt601 as set by jpegenc. Remove the field
+ * from the caps passed to v4l2sink, as it has no effect on the stream. */
+static GstEvent *
+gst_uvc_sink_strip_colorimetry (GstUvcSink * self, GstEvent * event)
+{
+  GstCaps *caps;
+  GstEvent *new_event;
+  guint i;
+
+  gst_event_parse_caps (event, &caps);
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    if (gst_structure_has_field (gst_caps_get_structure (caps, i),
+            "colorimetry"))
+      break;
+  }
+  if (i == gst_caps_get_size (caps))
+    return event;
+
+  caps = gst_caps_copy (caps);
+  for (i = 0; i < gst_caps_get_size (caps); i++)
+    gst_structure_remove_field (gst_caps_get_structure (caps, i),
+        "colorimetry");
+
+  GST_DEBUG_OBJECT (self, "Passing on caps without colorimetry: %"
+      GST_PTR_FORMAT, caps);
+
+  new_event = gst_event_new_caps (caps);
+  gst_event_set_seqnum (new_event, gst_event_get_seqnum (event));
+  gst_caps_unref (caps);
+  gst_event_unref (event);
+
+  return new_event;
+}
+
 static gboolean
 gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -418,6 +457,8 @@ gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (caps_changed)
         gst_uvc_sink_update_streaming (self);
+
+      event = gst_uvc_sink_strip_colorimetry (self, event);
       break;
     }
     default:
