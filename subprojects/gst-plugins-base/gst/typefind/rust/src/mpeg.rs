@@ -27,7 +27,7 @@
 //! the two share [`valid_pack`].
 
 use crate::helpers::{Prob, Scanner, TypeFind, u16be};
-use crate::startcode::{is_start_code, next_start_code};
+use crate::startcode::{START_CODE_PREFIX_LEN, is_start_code, next_start_code};
 
 /// Start code value of a pack header, H.222.0 2.5.3.4.
 const PACK_CODE: u8 = 0xBA;
@@ -92,7 +92,10 @@ const PACK_MAX_SCAN: usize = 14 + 7 + 4;
 /// A pack header that has octets after it has to be followed by another start
 /// code, which is what stops a `00 00 01 BA` that occurs by chance inside a
 /// compressed frame from being read as one.
-fn valid_pack(data: &[u8]) -> Option<usize> {
+///
+/// The answer carries which version the header is, because telling the two
+/// forms apart is what the mask on the fifth octet already does.
+fn valid_pack(data: &[u8]) -> Option<(usize, i32)> {
     if data.len() < 12 {
         return None;
     }
@@ -112,7 +115,7 @@ fn valid_pack(data: &[u8]) -> Option<usize> {
         if data.len() >= 14 + stuff + 4 && !is_start_code(&data[14 + stuff..]) {
             return None;
         }
-        Some(14 + stuff)
+        Some((14 + stuff, 2))
     } else if data[4] & 0xF1 == 0x21 {
         if data[6] & 0x01 != 0x01
             || data[8] & 0x01 != 0x01
@@ -124,7 +127,7 @@ fn valid_pack(data: &[u8]) -> Option<usize> {
         if data.len() >= 12 + 4 && !is_start_code(&data[12..]) {
             return None;
         }
-        Some(12)
+        Some((12, 1))
     } else {
         None
     }
@@ -171,14 +174,13 @@ fn valid_system_header(data: &[u8]) -> Option<usize> {
 /// Walk the program stream in `data[..end]` and settle the confidence in it,
 /// as a probability and an MPEG version.
 ///
-/// `data` reaches past `end`: the version test reads the octet after a pack
-/// start code, and the last position of the probe has one.
-///
-/// Only headers that sit close to the previous one count. A gap of more than
-/// four octets between one start code and the next restarts the count, so a
-/// stream that merely happens to contain a few `00 00 01` sequences never adds
-/// up. A header whose length is known is stepped over whole, which is what makes
-/// a run of packs, system headers and PES packets read as one run.
+/// Only headers that sit close to the previous one count. The gap is measured
+/// from the end of the packet before it, and a match already stands three
+/// octets into its own start code, so two octets of anything between two
+/// packets is enough to restart the count. A stream that merely happens to
+/// contain a few `00 00 01` sequences therefore never adds up. A header whose
+/// length is known is stepped over whole, which is what makes a run of packs,
+/// system headers and PES packets read as one run.
 fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
     let mut mpegversion = 0i32;
     let mut pack_headers = 0u32;
@@ -195,7 +197,10 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
     // to be the prefix, so the walk starts where that first becomes possible.
     let mut i = 3usize;
 
-    while i < end {
+    // Once enough headers have been seen, and some of them were PES packets,
+    // the stream is settled. Nothing further in it should be able to change the
+    // answer, so the walk stops rather than reading on.
+    while i < end && !(pes_headers > 0 && pack_headers + pes_headers > SYS_MAX_HEADERS) {
         if is_start_code(&data[i - 3..i]) {
             if first_sync.is_none() {
                 first_sync = Some(i - 3);
@@ -210,22 +215,14 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
             let rest = &data[i - 3..end];
             let mut pack_size = 0usize;
 
-            if code == PACK_CODE {
-                // The octet after the code is past the examined region on the
-                // very last position of the probe.
-                if let Some(version) = data.get(i + 1) {
-                    if version & 0xC0 == 0x40 {
-                        mpegversion = 2;
-                    } else if version & 0xF0 == 0x20 {
-                        mpegversion = 1;
-                    }
-                }
-                if mpegversion != 0
-                    && let Some(size) = valid_pack(rest)
-                {
-                    pack_headers += 1;
-                    pack_size = size;
-                }
+            if code == PACK_CODE
+                && let Some((size, version)) = valid_pack(rest)
+            {
+                pack_headers += 1;
+                pack_size = size;
+                // The version comes out of a header already known to be a pack,
+                // not out of an octet that only looks like the start of one.
+                mpegversion = version;
             } else if code >= PES_CODE_MIN {
                 if let Some(size) = valid_pes(rest) {
                     pes_headers += 1;
@@ -242,9 +239,9 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
             }
 
             if pack_size != 0 {
-                // Land on the first octet past the packet; the next candidate
-                // start code begins there. Three octets of the packet lie
-                // behind that point, which is what a match stands behind.
+                // The next candidate start code begins right after the packet,
+                // and a match stands three octets behind the octet carrying its
+                // value, so the cursor goes to where that value would be.
                 i += pack_size;
                 since_last_sync = 3;
                 continue;
@@ -253,12 +250,6 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
 
         since_last_sync += 1;
         i += 1;
-
-        // The count is re-read here rather than on the jump above, so a run of
-        // packets that follow one another is taken whole.
-        if pes_headers > 0 && pack_headers + pes_headers > SYS_MAX_HEADERS {
-            break;
-        }
     }
 
     if pes_headers == 0 || pack_headers + pes_headers <= SYS_MIN_HEADERS {
@@ -298,9 +289,11 @@ pub fn mpeg_sys_probe(tf: &mut TypeFind) -> Option<(Prob, i32)> {
 /// Whether the four octets at the start of `data` open a transport packet.
 /// `sync_byte` is a fixed `0x47` and `transport_error_indicator` is the top bit
 /// of the second octet. `adaptation_field_control` is bits 5 and 4 of the
-/// fourth; Table 2-5 reserves `'00'` and 2.4.3.3 has decoders discard such a
-/// packet, except on a null packet, whose PID of `0x1FFF` carries no payload
-/// for an adaptation field to describe.
+/// fourth, and Table 2-5 reserves `'00'`.
+// shortcut: `'00'` is still accepted on a null packet, PID `0x1FFF`. 2.4.3.3
+// says such a packet shall be discarded and that a null packet's field shall be
+// `'01'`, so this is leniency for muxers that get it wrong, not a case the spec
+// allows. Drop the second clause for a strict reading.
 fn ts_header(data: &[u8]) -> bool {
     data[0] == 0x47
         && data[1] & 0x80 == 0
@@ -406,8 +399,10 @@ fn video_probability(
 /// opens its first macroblock row.
 pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     // How much of a pack header can be inspected at the last positions of the
-    // stream decides whether the header after it is reached.
-    let stream_end = tf.length().map_or(i64::MAX, |len| len.get() as i64);
+    // stream decides whether the header after it is reached. The bound is what
+    // the stream has left, not what a read buffer happens to hold, so where the
+    // data arrives from does not change the answer.
+    let stream_len = tf.length().map(|len| len.get());
     let mut scan = Scanner::new(tf, 0);
     let mut seen_seq_at_0 = false;
     let mut seen_seq = false;
@@ -428,7 +423,9 @@ pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
         let code = head[3];
 
         if code == PACK_CODE {
-            let want = PACK_MAX_SCAN.min((stream_end - scan.offset()).max(0) as usize);
+            let want = stream_len.map_or(PACK_MAX_SCAN, |len| {
+                PACK_MAX_SCAN.min(len.saturating_sub(scan.offset() as u64) as usize)
+            });
             if scan
                 .peek(want)
                 .is_some_and(|pack| valid_pack(pack).is_some())
@@ -517,10 +514,9 @@ const M4V_USER_DATA_SLACK: usize = 24;
 /// saw. `vops` counts picture headers; the rungs below the top ones are the
 /// shapes a stream that has lost its sequence, object or layer headers leaves.
 ///
-/// A stream that showed a layer header and nothing else falls between every
-/// rung and is still suggested, at no confidence at all. The top rung asks for a
-/// sequence header at offset 0, which no walk can report; see the note where
-/// that flag is set.
+/// A stream that showed a layer header and nothing else matches no rung and is
+/// not suggested at all. A suggestion carrying no confidence would say no more
+/// than silence does.
 fn mpeg4_video_probability(
     vops: u32,
     seen_vios_at_0: bool,
@@ -558,7 +554,7 @@ fn mpeg4_video_probability(
     } else if seen_vos && seen_vol {
         Prob::POSSIBLE.get() - 20
     } else {
-        Prob::NONE.get()
+        return None;
     };
     Some(probability.into())
 }
@@ -570,9 +566,9 @@ fn mpeg4_video_probability(
 /// before the repeat.
 ///
 /// A sequence header and a visual object header each read on to the start code
-/// after them and take its value, so one pass can settle a video object. User
-/// data is the exception: it is crossed without taking the value it lands on,
-/// so a video object behind user data goes unseen.
+/// after them and take its value, so one pass can settle a video object. A
+/// sequence header may cross a user data block on the way, and whatever that
+/// search lands on is read the same way as any other code.
 pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     let mut scan = Scanner::new(tf, 0);
     let mut seen_vios_at_0 = false;
@@ -600,12 +596,9 @@ pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
             if seen_vios {
                 break;
             }
-            // shortcut: a start code is tested at the octet carrying its value,
-            // three past the prefix that puts it there, so no sequence header
-            // can ever be at offset 0. That leaves the top rung unreachable and
-            // the sequence-at-zero half of the one below it. It matters if the
-            // test ever moves to the prefix, because the top rung comes back.
-            seen_vios_at_0 |= scan.offset() == 0;
+            // The search leaves the cursor on the octet carrying the value, so
+            // a sequence header that opens the stream leaves it one prefix in.
+            seen_vios_at_0 |= scan.offset() == START_CODE_PREFIX_LEN;
             seen_vios = true;
             scan.consume(M4V_VIOS_STEP);
             // `profile_and_level_indication` is the only thing between the
@@ -616,12 +609,14 @@ pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
             }
             let Some(head) = scan.peek(1) else { break };
             code = head[0];
-            // One user data block is crossed, and the code value stays the one
-            // read before the hop, so whatever the hop landed on is not counted.
-            if code == M4V_USER_DATA_CODE
-                && next_start_code(&mut scan, M4V_USER_DATA_SLACK).is_none()
-            {
-                break;
+            // User data carries no length of its own, so it is crossed by
+            // searching, and what the search lands on is read as the next code.
+            if code == M4V_USER_DATA_CODE {
+                if next_start_code(&mut scan, M4V_USER_DATA_SLACK).is_none() {
+                    break;
+                }
+                let Some(head) = scan.peek(1) else { break };
+                code = head[0];
             }
         }
 
@@ -718,7 +713,7 @@ mod tests {
     /// produce.
     #[test]
     fn mpeg2_pack_marker_bits_are_all_required() {
-        assert_eq!(valid_pack(&stream(&[&PACK2, &TAIL])), Some(14));
+        assert_eq!(valid_pack(&stream(&[&PACK2, &TAIL])), Some((14, 2)));
         for (index, mask) in [(4, 0xC4u8), (6, 0x04), (8, 0x04), (9, 0x01), (12, 0x03)] {
             let mut pack = PACK2;
             pack[index] &= !mask;
@@ -746,8 +741,8 @@ mod tests {
     #[test]
     fn a_pack_is_followed_by_a_start_code_when_the_stream_reaches_it() {
         assert_eq!(valid_pack(&stream(&[&PACK2, &[0xFF; 4]])), None);
-        assert_eq!(valid_pack(&stream(&[&PACK2, &TAIL])), Some(14));
-        assert_eq!(valid_pack(&stream(&[&PACK2, &NOT_A_PACKET])), Some(14));
+        assert_eq!(valid_pack(&stream(&[&PACK2, &TAIL])), Some((14, 2)));
+        assert_eq!(valid_pack(&stream(&[&PACK2, &NOT_A_PACKET])), Some((14, 2)));
     }
 
     /// `pack_stuffing_length` is 3 bits, so up to 7 octets follow the header
@@ -761,12 +756,12 @@ mod tests {
             pack.resize(14 + stuff as usize, 0xFF);
             assert_eq!(
                 valid_pack(&stream(&[&pack, &NOT_A_PACKET])),
-                Some(14 + stuff as usize),
+                Some((14 + stuff as usize, 2)),
                 "stuffing {stuff}"
             );
             assert_eq!(
                 valid_pack(&pack),
-                Some(14 + stuff as usize),
+                Some((14 + stuff as usize, 2)),
                 "stuffing {stuff} with nothing after it"
             );
         }
@@ -790,8 +785,8 @@ mod tests {
     /// pattern; it is what makes a stream MPEG-1 rather than MPEG-2.
     #[test]
     fn mpeg1_pack_is_recognised_and_measured() {
-        assert_eq!(valid_pack(&stream(&[&PACK1, &TAIL])), Some(12));
-        assert_eq!(valid_pack(&stream(&[&PACK1, &NOT_A_PACKET])), Some(12));
+        assert_eq!(valid_pack(&stream(&[&PACK1, &TAIL])), Some((12, 1)));
+        assert_eq!(valid_pack(&stream(&[&PACK1, &NOT_A_PACKET])), Some((12, 1)));
         assert_eq!(valid_pack(&stream(&[&PACK1, &[0xFF; 4]])), None);
         for index in [6, 8, 9, 11] {
             let mut pack = PACK1;
@@ -951,8 +946,6 @@ mod tests {
         let prob = |vops, at_0, vios, vos, vol| {
             mpeg4_video_probability(vops, at_0, vios, vos, vol).map(|p| p.get())
         };
-        // The top rung needs a sequence header at offset 0, which no walk can
-        // report. This pins the rung, not a state the probe can reach.
         assert_eq!(prob(6, true, true, true, true), Some(99));
         assert_eq!(prob(6, false, true, true, true), Some(98));
         // A sequence header at the very start and a full run of pictures are
@@ -967,8 +960,9 @@ mod tests {
         assert_eq!(prob(1, false, false, false, false), Some(40));
         assert_eq!(prob(0, false, false, true, true), Some(30));
         // A layer header with no video object and no picture behind it matches
-        // no rung at all, and is still suggested, at no confidence.
-        assert_eq!(prob(0, false, false, false, true), Some(0));
+        // no rung, and a suggestion carrying no confidence would say nothing,
+        // so nothing is suggested.
+        assert_eq!(prob(0, false, false, false, true), None);
         // Short of both a picture and a layer header the stream is not this
         // format, however many other headers it carried.
         assert_eq!(prob(0, false, false, false, false), None);
