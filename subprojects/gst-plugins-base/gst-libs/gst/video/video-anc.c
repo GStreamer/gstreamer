@@ -338,6 +338,7 @@ GstVideoVBIParser *
 gst_video_vbi_parser_new (GstVideoFormat format, guint32 pixel_width)
 {
   GstVideoVBIParser *parser;
+  guint min_width;
 
   g_return_val_if_fail (pixel_width > 0, NULL);
 
@@ -345,14 +346,25 @@ gst_video_vbi_parser_new (GstVideoFormat format, guint32 pixel_width)
     case GST_VIDEO_FORMAT_v210:
       parser = g_new0 (GstVideoVBIParser, 1);
       parser->bit16 = TRUE;
+      min_width = 6;            /* v210 packs 6 pixels per 16-byte word */
       break;
     case GST_VIDEO_FORMAT_UYVY:
       parser = g_new0 (GstVideoVBIParser, 1);
       parser->bit16 = FALSE;
+      min_width = 4;            /* UYVY lines convert 4 pixels at a time */
       break;
     default:
       GST_WARNING ("Format not supported by GstVideoVBIParser");
       return NULL;
+  }
+
+  /* Line conversion walks whole pixel groups and indexes the workspace
+   * relative to info.width; a line narrower than one group underflows the
+   * loop bounds. */
+  if (pixel_width < min_width) {
+    GST_WARNING ("Pixel width %u too small for this format", pixel_width);
+    g_free (parser);
+    return NULL;
   }
 
   gst_video_info_init (&parser->info);
@@ -619,6 +631,7 @@ GstVideoVBIEncoder *
 gst_video_vbi_encoder_new (GstVideoFormat format, guint32 pixel_width)
 {
   GstVideoVBIEncoder *encoder;
+  guint min_width;
 
   g_return_val_if_fail (pixel_width > 0, NULL);
 
@@ -626,14 +639,25 @@ gst_video_vbi_encoder_new (GstVideoFormat format, guint32 pixel_width)
     case GST_VIDEO_FORMAT_v210:
       encoder = g_new0 (GstVideoVBIEncoder, 1);
       encoder->bit16 = TRUE;
+      min_width = 6;            /* v210 packs 6 pixels per 16-byte word */
       break;
     case GST_VIDEO_FORMAT_UYVY:
       encoder = g_new0 (GstVideoVBIEncoder, 1);
       encoder->bit16 = FALSE;
+      min_width = 4;            /* UYVY lines convert 4 pixels at a time */
       break;
     default:
       GST_WARNING ("Format not supported by GstVideoVBIEncoder");
       return NULL;
+  }
+
+  /* Line conversion walks whole pixel groups and indexes the workspace
+   * relative to info.width; a line narrower than one group underflows the
+   * loop bounds. */
+  if (pixel_width < min_width) {
+    GST_WARNING ("Pixel width %u too small for this format", pixel_width);
+    g_free (encoder);
+    return NULL;
   }
 
   gst_video_info_init (&encoder->info);
