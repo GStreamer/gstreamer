@@ -51,6 +51,16 @@ G_BEGIN_DECLS
 /* 7.4.3.3 vps_num_ptls_minus1 shall be less than TotalNumOlss,
  * which is MAX(GST_H266_MAX_LAYERS, GST_H266_MAX_TOTAL_NUM_OLSS) */
 #define GST_H266_MAX_PTLS GST_H266_MAX_TOTAL_NUM_OLSS
+/**
+ * GST_H266_MAX_DCI_PTLS:
+ *
+ * Maximum number of profile tier level structures in a DCI. 7.4.3.5: The
+ * value of dci_num_ptls_minus1 shall be in the range of 0 to 14, inclusive
+ * (15 is reserved)
+ *
+ * Since: 1.28.9
+ */
+#define GST_H266_MAX_DCI_PTLS 15
 /* 7.3.2.3: vps_video_parameter_set_id is u(4). */
 #define GST_H266_MAX_VPS_COUNT 16
 /* 7.3.2.4: sps_seq_parameter_set_id is u(4) */
@@ -2884,7 +2894,7 @@ struct _GstH266OPI {
  */
 struct _GstH266DCI {
   guint8 num_ptls_minus1;
-  GstH266ProfileTierLevel profile_tier_level[15];
+  GstH266ProfileTierLevel profile_tier_level[GST_H266_MAX_DCI_PTLS];
   guint8 extension_flag;
   guint8 extension_data_flag;
 
