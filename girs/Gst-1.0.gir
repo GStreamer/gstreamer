@@ -36347,59 +36347,49 @@ pad functions cannot be called from within the callback.</doc>
         </parameter>
       </parameters>
     </callback>
-    <class name="ParamArray" c:symbol-prefix="param_spec_array" version="1.12" parent="GObject.ParamSpec" glib:type-name="GstParamArray" glib:get-type="gst_param_spec_array_get_type" glib:fundamental="1">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A fundamental type that describes a #GParamSpec for arrays of
-values</doc>
-    </class>
-    <class name="ParamFraction" c:symbol-prefix="param_spec_fraction" parent="GObject.ParamSpec" glib:type-name="GstParamFraction" glib:get-type="gst_param_spec_fraction_get_type" glib:fundamental="1">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A fundamental type that describes a #GParamSpec for fractional
-properties</doc>
-    </class>
-    <record name="ParamSpecArray" c:type="GstParamSpecArray">
+    <class name="ParamSpecArray" c:symbol-prefix="param_spec_array" c:type="GstParamSpecArray" parent="GObject.ParamSpec" glib:type-name="GstParamSpecArray" glib:get-type="gst_param_spec_array_get_type" glib:fundamental="1">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A GParamSpec derived structure for arrays of values.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
-      <field name="parent_instance" writable="1">
+      <field name="parent_instance">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">super class</doc>
         <type name="GObject.ParamSpec" c:type="GParamSpec"/>
       </field>
-      <field name="element_spec" writable="1">
+      <field name="element_spec">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">the #GParamSpec of the type of values in the array</doc>
         <type name="GObject.ParamSpec" c:type="GParamSpec*"/>
       </field>
-    </record>
-    <record name="ParamSpecFraction" c:type="GstParamSpecFraction">
+    </class>
+    <class name="ParamSpecFraction" c:symbol-prefix="param_spec_fraction" c:type="GstParamSpecFraction" parent="GObject.ParamSpec" glib:type-name="GstParamSpecFraction" glib:get-type="gst_param_spec_fraction_get_type" glib:fundamental="1">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">A GParamSpec derived structure that contains the meta data for fractional
 properties.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstparamspecs.h"/>
-      <field name="parent_instance" writable="1">
+      <field name="parent_instance">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">super class</doc>
         <type name="GObject.ParamSpec" c:type="GParamSpec"/>
       </field>
-      <field name="min_num" writable="1">
+      <field name="min_num">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">minimal numerator</doc>
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="min_den" writable="1">
+      <field name="min_den">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">minimal denominator</doc>
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="max_num" writable="1">
+      <field name="max_num">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">maximal numerator</doc>
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="max_den" writable="1">
+      <field name="max_den">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">maximal denominator</doc>
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="def_num" writable="1">
+      <field name="def_num">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">default numerator</doc>
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="def_den" writable="1">
+      <field name="def_den">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstparamspecs.h">default denominator</doc>
         <type name="gint" c:type="gint"/>
       </field>
-    </record>
+    </class>
     <record name="ParentBufferMeta" c:type="GstParentBufferMeta" version="1.6">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">The #GstParentBufferMeta is a #GstMeta which can be attached to a #GstBuffer
 to hold a reference to another buffer that is only released when the child

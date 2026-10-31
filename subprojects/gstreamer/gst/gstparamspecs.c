@@ -139,7 +139,7 @@ gst_param_spec_fraction_get_type (void)
       _gst_param_fraction_values_cmp,   /* values_cmp        */
     };
     pspec_info.value_type = gst_fraction_get_type ();
-    type = g_param_type_register_static ("GstParamFraction", &pspec_info);
+    type = g_param_type_register_static ("GstParamSpecFraction", &pspec_info);
     g_once_init_leave (&gst_faction_type, type);
   }
 
@@ -320,7 +320,7 @@ gst_param_spec_array_get_type (void)
       _gst_param_array_values_cmp,      /* values_cmp        */
     };
     pspec_info.value_type = gst_value_array_get_type ();
-    type = g_param_type_register_static ("GstParamArray", &pspec_info);
+    type = g_param_type_register_static ("GstParamSpecArray", &pspec_info);
     g_once_init_leave (&gst_array_type, type);
   }
 
