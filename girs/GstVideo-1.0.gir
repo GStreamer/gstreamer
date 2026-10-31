@@ -17703,7 +17703,9 @@ parameters.</doc>
         </parameter>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">contains the dynamic HDR data</doc>
-          <type name="guint8" c:type="const guint8*"/>
+          <array length="3" zero-terminated="0" c:type="const guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="size" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">The size in bytes of @data</doc>
@@ -20907,7 +20909,9 @@ and SMPTE ST2094-40</doc>
       <parameters>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">HDR10+ data</doc>
-          <type name="guint8" c:type="const guint8*"/>
+          <array length="1" zero-terminated="0" c:type="const guint8*">
+            <type name="guint8" c:type="guint8"/>
+          </array>
         </parameter>
         <parameter name="size" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-hdr.c">size of data</doc>

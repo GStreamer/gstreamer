@@ -542,7 +542,7 @@ gst_video_hdr_meta_get_info (void)
  * gst_buffer_add_video_hdr_meta:
  * @buffer: a #GstBuffer
  * @format: The type of dynamic HDR contained in the meta.
- * @data: contains the dynamic HDR data
+ * @data: (array length=size): contains the dynamic HDR data
  * @size: The size in bytes of @data
  *
  * Attaches #GstVideoHDRMeta metadata to @buffer with the given
@@ -580,7 +580,7 @@ if (gst_bit_reader_get_remaining (&br) < needed) { \
 
 /**
  * gst_video_hdr_parse_hdr10_plus:
- * @data: HDR10+ data
+ * @data: (array length=size): HDR10+ data
  * @size: size of data
  * @hdr10_plus: (out): #GstVideoHDR10Plus structure to fill in.
  *
