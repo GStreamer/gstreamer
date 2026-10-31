@@ -4810,7 +4810,7 @@ gst_h266_parser_parse_dci (GstH266Parser * parser,
 
   READ_UINT8 (&nr, dci_reserved_zero_4bits, 4);
   READ_UINT8 (&nr, dci->num_ptls_minus1, 4);
-  CHECK_ALLOWED_MAX (dci->num_ptls_minus1, 15);
+  CHECK_ALLOWED_MAX (dci->num_ptls_minus1, GST_H266_MAX_DCI_PTLS - 1);
   for (i = 0; i <= dci->num_ptls_minus1; i++) {
     if (!gst_h266_parse_profile_tier_level (&dci->profile_tier_level[i],
             &nr, 1, 0))

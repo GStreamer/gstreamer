@@ -13685,6 +13685,13 @@ bcw_enabled_flag: specifies whether bi-prediction with CU weights is enabled
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <constant name="H266_MAX_DCI_PTLS" value="15" c:type="GST_H266_MAX_DCI_PTLS" version="1.28.9">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h">Maximum number of profile tier level structures in a DCI. 7.4.3.5: The
+value of dci_num_ptls_minus1 shall be in the range of 0 to 14, inclusive
+(15 is reserved)</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
     <constant name="H266_MAX_DECODING_UNITS_IN_PIC_TIMING" value="600" c:type="GST_H266_MAX_DECODING_UNITS_IN_PIC_TIMING">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/gsth266parser.h"/>
       <type name="gint" c:type="gint"/>
