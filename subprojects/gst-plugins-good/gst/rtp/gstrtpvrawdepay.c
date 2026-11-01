@@ -309,7 +309,6 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   srccaps = gst_video_info_to_caps (&rtpvrawdepay->vinfo);
   res = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
-  gst_caps_unref (srccaps);
 
   GST_DEBUG_OBJECT (depayload, "width %d, height %d, format %d", width, height,
       format);
@@ -317,8 +316,12 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       xinc, yinc, pgroup);
 
   /* negotiate a bufferpool */
-  if ((ret = gst_rtp_vraw_depay_negotiate_pool (rtpvrawdepay, srccaps,
-              &rtpvrawdepay->vinfo)) != GST_FLOW_OK)
+  ret = gst_rtp_vraw_depay_negotiate_pool (rtpvrawdepay, srccaps,
+      &rtpvrawdepay->vinfo);
+
+  gst_caps_unref (srccaps);
+
+  if (ret != GST_FLOW_OK)
     goto no_bufferpool;
 
   return res;
