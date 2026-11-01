@@ -497,12 +497,11 @@ gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
     if (length > payload_len)
       length = payload_len;
 
-    /* sanity check */
-    if (line > (height - yinc)) {
+    if (line + yinc > (guint) height) {
       GST_WARNING_OBJECT (depayload, "skipping line %d: out of range", line);
       goto next;
     }
-    if (offs > (width - xinc)) {
+    if (offs + xinc > (guint) width) {
       GST_WARNING_OBJECT (depayload, "skipping offset %d: out of range", offs);
       goto next;
     }
