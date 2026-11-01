@@ -112,6 +112,7 @@ struct _GstV4l2CodecH264Dec
   gboolean streaming;
   gboolean interlaced;
   gboolean need_sequence;
+  gboolean need_negotiation;
   gboolean copy_frames;
   gboolean scaling_matrix_present;
 
@@ -983,12 +984,10 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
   gst_v4l2_codec_h264_dec_fill_sequence (self, sps);
   self->need_sequence = TRUE;
 
+  /* downstream may not be linked yet when the sequence comes from caps */
   if (negotiation_needed) {
     gst_v4l2_codec_h264_dec_streamoff (self);
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
+    self->need_negotiation = TRUE;
   }
 
   return GST_FLOW_OK;
@@ -1027,6 +1026,14 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+
+  if (self->need_negotiation) {
+    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+    self->need_negotiation = FALSE;
+  }
 
   /* FIXME base class should not call us if negotiation failed */
   if (!self->sink_allocator)
