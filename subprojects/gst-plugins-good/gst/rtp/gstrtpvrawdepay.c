@@ -195,6 +195,26 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
   return GST_FLOW_OK;
 }
 
+/* All the integer caps fields are counts or sizes, so zero is never valid. */
+static gboolean
+gst_rtp_vraw_depay_parse_positive_int (GstStructure * structure,
+    const gchar * field, gint * value)
+{
+  const gchar *str;
+  gchar *end = NULL;
+  gint64 v;
+
+  if (!(str = gst_structure_get_string (structure, field)))
+    return FALSE;
+
+  v = g_ascii_strtoll (str, &end, 10);
+  if (end == str || *end != '\0' || v < 1 || v > G_MAXINT)
+    return FALSE;
+
+  *value = (gint) v;
+  return TRUE;
+}
+
 static gboolean
 gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
@@ -217,17 +237,14 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
-  if (!(str = gst_structure_get_string (structure, "width")))
-    goto no_width;
-  width = atoi (str);
+  if (!gst_rtp_vraw_depay_parse_positive_int (structure, "width", &width))
+    goto invalid_width;
 
-  if (!(str = gst_structure_get_string (structure, "height")))
-    goto no_height;
-  height = atoi (str);
+  if (!gst_rtp_vraw_depay_parse_positive_int (structure, "height", &height))
+    goto invalid_height;
 
-  if (!(str = gst_structure_get_string (structure, "depth")))
-    goto no_depth;
-  depth = atoi (str);
+  if (!gst_rtp_vraw_depay_parse_positive_int (structure, "depth", &depth))
+    goto invalid_depth;
 
   /* optional interlace value but we don't handle interlaced
    * formats yet */
@@ -274,8 +291,15 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     goto unknown_format;
   }
 
+  /* The packet bounds checks rely on width >= xinc and height >= yinc, and the
+   * payload header line and offset fields are only 15 bits, so anything above
+   * 32767 can never be addressed. */
+  if (width < xinc || height < yinc || width > 32767 || height > 32767)
+    goto invalid_dimensions;
+
   gst_video_info_init (&rtpvrawdepay->vinfo);
-  gst_video_info_set_format (&rtpvrawdepay->vinfo, format, width, height);
+  if (!gst_video_info_set_format (&rtpvrawdepay->vinfo, format, width, height))
+    goto invalid_dimensions;
   GST_VIDEO_INFO_FPS_N (&rtpvrawdepay->vinfo) = 0;
   GST_VIDEO_INFO_FPS_D (&rtpvrawdepay->vinfo) = 1;
 
@@ -300,19 +324,19 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   return res;
 
   /* ERRORS */
-no_width:
+invalid_width:
   {
-    GST_ERROR_OBJECT (depayload, "no width specified");
+    GST_ERROR_OBJECT (depayload, "invalid or missing width specified");
     return FALSE;
   }
-no_height:
+invalid_height:
   {
-    GST_ERROR_OBJECT (depayload, "no height specified");
+    GST_ERROR_OBJECT (depayload, "invalid or missing height specified");
     return FALSE;
   }
-no_depth:
+invalid_depth:
   {
-    GST_ERROR_OBJECT (depayload, "no depth specified");
+    GST_ERROR_OBJECT (depayload, "invalid or missing depth specified");
     return FALSE;
   }
 interlaced:
@@ -328,6 +352,13 @@ no_sampling:
 unknown_format:
   {
     GST_ERROR_OBJECT (depayload, "unknown sampling format '%s'", str);
+    return FALSE;
+  }
+invalid_dimensions:
+  {
+    GST_ERROR_OBJECT (depayload,
+        "invalid dimensions %dx%d for sampling increments %dx%d", width,
+        height, xinc, yinc);
     return FALSE;
   }
 no_bufferpool:
