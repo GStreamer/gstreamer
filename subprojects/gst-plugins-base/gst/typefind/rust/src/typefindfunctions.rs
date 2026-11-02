@@ -23,8 +23,11 @@ use crate::audio::{
     AacFraming, Ac3Stream, aa_probe, aac_probe, ac3_probe, ac4_probe, dts_probe, mod_probe,
     mp3_probe, sbc_probe, wavpack_probe,
 };
+use crate::av1::av1_probe;
 use crate::bindings::gpointer;
-use crate::containers::{q3gp_probe, qt_probe, qtif_probe};
+use crate::containers::{
+    MXF_SCAN_MAX, matroska_probe, mxf_partition_pack, q3gp_probe, qt_probe, qtif_probe,
+};
 use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::mpeg::{mpeg_sys_probe, mpeg_ts_probe, mpeg_video_probe, mpeg4_video_probe};
@@ -1379,6 +1382,18 @@ extern "C" fn gxf_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// MXF - application/mxf
+// Magic: the 13-octet header partition pack key, its pack type, a partition
+// status below five and a reserved octet, anywhere in the first 64 KiB.
+extern "C" fn mxf_type_find(tf: &mut TypeFind, _private: gpointer) {
+    let Some(data) = tf.peek_at_most(MXF_SCAN_MAX) else {
+        return;
+    };
+    if mxf_partition_pack(data) {
+        suggest!(tf, Prob::MAXIMUM, c"application/mxf");
+    }
+}
+
 // MS-DOS/PE executable - application/x-ms-dos-executable
 // Magic: "MZ" @ 0, u16 LE @ 8 == 4, "PE" at the u32 LE offset @ 60.
 extern "C" fn msdos_type_find(tf: &mut TypeFind, _private: gpointer) {
@@ -2655,6 +2670,25 @@ extern "C" fn h266_video_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// Matroska and WebM - video/x-matroska
+// EBML header @ 0; a DocType and the first tracks set the media type.
+extern "C" fn matroska_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some((caps, probability)) = matroska_probe(tf) {
+        suggest!(tf, probability, caps);
+    }
+}
+
+// AV1 - video/x-av1
+// A parseable OBU header at offset 0, bare or length-prefixed.
+extern "C" fn av1_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some((stream_format, probability)) = av1_probe(tf) {
+        suggest!(tf, probability, c"video/x-av1", [
+            (c"stream-format", str : stream_format),
+            (c"alignment", str : c"none"),
+        ]);
+    }
+}
+
 // =============================================================================
 // MPEG program streams, transport streams and video elementary streams
 // =============================================================================
@@ -3134,6 +3168,23 @@ const FEATURES: &[Feature] = &[
         h266_video_type_find,
         "h266,266",
         "video/x-h266,stream-format=byte-stream"
+    ),
+    // Matroska - video/x-matroska
+    typefinder!(
+        "video/x-matroska",
+        PRIMARY,
+        matroska_type_find,
+        "mkv,mka,mk3d,webm"
+    ),
+    // MXF - application/mxf
+    typefinder!("application/mxf", PRIMARY, mxf_type_find, "mxf"),
+    // AV1 - video/x-av1
+    typefinder!(
+        "video/x-av1",
+        MARGINAL,
+        av1_type_find,
+        "av1",
+        "video/x-av1, stream-format=(string){ obu-stream, annexb }, alignment=(string)none"
     ),
     typefinder!(
         "video/mpeg-sys",

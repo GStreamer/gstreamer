@@ -247,7 +247,7 @@ macro_rules! map_type_name {
 }
 
 /// Typefind probability / confidence level.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct TypeFindProbability(c_uint);
 
