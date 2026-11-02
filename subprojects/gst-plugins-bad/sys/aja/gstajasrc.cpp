@@ -2593,9 +2593,8 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   bool clock_is_system_monotonic = false;
   // if the next frame is the first one after autocirculate was started
   bool first_frame_after_start = true;
-  // acFrameTime of the last captured frame. Used to detect
-  // if a frame is actually missing or the signal changed
-  GstClockTime last_frame_time = GST_CLOCK_TIME_NONE;
+  // if the clock mapping needs to be re-initialized after signal recovery
+  bool reset_clock = false;
   // Base time of the first frame after a clock observation reset
   // Internal frame time is calculated from this and the number of frames
   // captured so far.
@@ -2653,7 +2652,7 @@ restart:
   pending_recovery = FALSE;
   discont = true;
   first_frame_after_start = true;
-  last_frame_time = GST_CLOCK_TIME_NONE;
+  reset_clock = false;
   first_frame_time = GST_CLOCK_TIME_NONE;
   num_frames = 0;
   frames_to_drop = 0;
@@ -2874,7 +2873,7 @@ restart:
 
       if (pending_recovery) {
         pending_recovery = FALSE;
-        last_frame_time = GST_CLOCK_TIME_NONE;
+        reset_clock = true;
 
         // Drop the next frames after signal recovery as the capture times
         // are generally just wrong.
@@ -3021,56 +3020,16 @@ restart:
         frame_time_monotonic = frame_time_real + diff;
       }
 
-      // Detect frame drop: backwards capture time is clearly a problem,
-      // otherwise consider a frame being dropped if more than 1.75 frame
-      // durations are between two frames
-      if (last_frame_time != GST_CLOCK_TIME_NONE) {
-        GstClockTime frame_drop_threshold =
-            (7 * self->configured_info.fps_d * GST_SECOND) /
-            (4 * self->configured_info.fps_n);
-        if (last_frame_time >= frame_time_monotonic) {
-          GST_ERROR_OBJECT(self, "Frame capture time went backwards");
-          last_frame_time = GST_CLOCK_TIME_NONE;
-        } else if (frame_time_monotonic - last_frame_time >
-                   frame_drop_threshold) {
-          GstClockTime timestamp =
-              last_frame_time + self->configured_info.fps_d * GST_SECOND /
-                                    self->configured_info.fps_n;
-          GstClockTime timestamp_end = frame_time_monotonic;
-
-          GST_WARNING_OBJECT(self,
-                             "Frame drop of %" GST_TIME_FORMAT " detected",
-                             GST_TIME_ARGS(timestamp_end - timestamp));
-
-          QueueItem item = {QUEUE_ITEM_TYPE_FRAMES_DROPPED};
-          item.frames_dropped = {TRUE, timestamp, timestamp_end};
-          gst_vec_deque_push_tail_struct(self->queue, &item);
-          g_cond_signal(&self->queue_cond);
-
-          last_frame_time = GST_CLOCK_TIME_NONE;
-        } else {
-          GST_TRACE_OBJECT(
-              self, "Time since last frame: %" GST_TIME_FORMAT,
-              GST_TIME_ARGS(frame_time_monotonic - last_frame_time));
-        }
-      }
-
       GstClockTime frame_src_time;
 
       // Update clock mapping
-      if (first_frame_after_start || last_frame_time == GST_CLOCK_TIME_NONE) {
+      if (first_frame_after_start || reset_clock) {
         GstClockTime internal, external;
         guint64 num, denom;
 
-        // Keep observations if there was only temporary signal loss as the
-        // source is either using the same clock as before, or it's different
-        // but then our previous configuration would be as good/bad as the
-        // local monotonic system clock and over some frames we would converge
-        // to the new clock.
-        if (first_frame_after_start) {
-          // FIXME: Workaround to get rid of all previous observations
-          g_object_set(self->clock, "window-size", 32, NULL);
-        }
+        // FIXME: Workaround to reset the calibration and get rid of all
+        // previous observations on stream start and after signal recovery.
+        g_object_set(self->clock, "window-size", 32, NULL);
 
         // Use the monotonic frame time converted back to our clock as base.
         // In the beginning this would be equal to the monotonic clock, at
@@ -3090,6 +3049,7 @@ restart:
             GST_TIME_ARGS(first_frame_time));
 
         first_frame_after_start = false;
+        reset_clock = false;
         discont = TRUE;
         num_frames = 0;
       } else {
@@ -3105,7 +3065,6 @@ restart:
                                   frame_src_time, &r_squared);
       }
 
-      last_frame_time = frame_time_monotonic;
       num_frames += 1;
 
       GstClockTime capture_time;
