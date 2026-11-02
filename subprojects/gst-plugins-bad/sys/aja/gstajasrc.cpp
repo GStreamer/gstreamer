@@ -126,6 +126,14 @@ typedef enum {
   QUEUE_ITEM_TYPE_FRAMES_DROPPED,
 } QueueItemType;
 
+// Signal state as tracked by the capture thread. Unknown means the input was
+// never observed since start, so there is nothing to notify about it yet.
+typedef enum {
+  SIGNAL_STATE_UNKNOWN,
+  SIGNAL_STATE_PRESENT,
+  SIGNAL_STATE_ABSENT,
+} SignalState;
+
 typedef struct {
   QueueItemType type;
 
@@ -664,19 +672,212 @@ static gboolean gst_aja_src_close(GstAjaSrc *self) {
   return TRUE;
 }
 
+static gboolean gst_aja_src_needs_quad_mode(GstAjaSrc *self) {
+  return self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_SQD ||
+         self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI ||
+         (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
+          self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4);
+}
+
+static void gst_aja_src_get_input_config(GstAjaSrc *self,
+                                         NTV2InputSource *input_source,
+                                         NTV2OutputCrosspointID *input_source_id,
+                                         NTV2VANCMode *vanc_mode) {
+  switch (self->input_source) {
+    case GST_AJA_INPUT_SOURCE_AUTO:
+      *input_source = ::NTV2ChannelToInputSource(self->channel);
+      *input_source_id = ::GetSDIInputOutputXptFromChannel(self->channel, false);
+      *vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
+                       ? ::NTV2_VANCMODE_OFF
+                       : ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_ANALOG1:
+      *input_source = ::NTV2_INPUTSOURCE_ANALOG1;
+      *input_source_id = ::NTV2_XptAnalogIn;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI1:
+      *input_source = ::NTV2_INPUTSOURCE_HDMI1;
+      *input_source_id = ::NTV2_XptHDMIIn1;
+      *vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI2:
+      *input_source = ::NTV2_INPUTSOURCE_HDMI2;
+      *input_source_id = ::NTV2_XptHDMIIn2;
+      *vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI3:
+      *input_source = ::NTV2_INPUTSOURCE_HDMI3;
+      *input_source_id = ::NTV2_XptHDMIIn3;
+      *vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI4:
+      *input_source = ::NTV2_INPUTSOURCE_HDMI4;
+      *input_source_id = ::NTV2_XptHDMIIn4;
+      *vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI1:
+      *input_source = ::NTV2_INPUTSOURCE_SDI1;
+      *input_source_id = ::NTV2_XptSDIIn1;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI2:
+      *input_source = ::NTV2_INPUTSOURCE_SDI2;
+      *input_source_id = ::NTV2_XptSDIIn2;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI3:
+      *input_source = ::NTV2_INPUTSOURCE_SDI3;
+      *input_source_id = ::NTV2_XptSDIIn3;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI4:
+      *input_source = ::NTV2_INPUTSOURCE_SDI4;
+      *input_source_id = ::NTV2_XptSDIIn4;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI5:
+      *input_source = ::NTV2_INPUTSOURCE_SDI5;
+      *input_source_id = ::NTV2_XptSDIIn5;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI6:
+      *input_source = ::NTV2_INPUTSOURCE_SDI6;
+      *input_source_id = ::NTV2_XptSDIIn6;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI7:
+      *input_source = ::NTV2_INPUTSOURCE_SDI7;
+      *input_source_id = ::NTV2_XptSDIIn7;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI8:
+      *input_source = ::NTV2_INPUTSOURCE_SDI8;
+      *input_source_id = ::NTV2_XptSDIIn8;
+      *vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+}
+
+// Map the detected format to the configured one for the psf/i variants that
+// are reported as interlaced by the input sense.
+static NTV2VideoFormat gst_aja_src_map_detected_format(
+    NTV2VideoFormat configured_format, NTV2VideoFormat detected_format) {
+  switch (configured_format) {
+    case NTV2_FORMAT_1080psf_2500_2:
+      if (detected_format == NTV2_FORMAT_1080i_5000)
+        return NTV2_FORMAT_1080psf_2500_2;
+      break;
+    case NTV2_FORMAT_1080psf_2997_2:
+      if (detected_format == NTV2_FORMAT_1080i_5994)
+        return NTV2_FORMAT_1080psf_2997_2;
+      break;
+    case NTV2_FORMAT_1080psf_3000_2:
+      if (detected_format == NTV2_FORMAT_1080i_6000)
+        return NTV2_FORMAT_1080psf_3000_2;
+      break;
+    default:
+      break;
+  }
+  return detected_format;
+}
+
+static gboolean gst_aja_src_format_matches(GstAjaSrc *self,
+                                           NTV2VideoFormat detected_format,
+                                           gboolean quad_mode) {
+  if (detected_format == NTV2_FORMAT_UNKNOWN)
+    return FALSE;
+
+  if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO)
+    return TRUE;
+
+  NTV2VideoFormat configured_format = gst_ntv2_video_format_from_aja_format(
+      self->video_format_setting, quad_mode);
+  if (configured_format == NTV2_FORMAT_UNKNOWN)
+    return FALSE;
+
+  detected_format =
+      gst_aja_src_map_detected_format(configured_format, detected_format);
+
+  NTV2VideoFormat effective_format =
+      quad_mode ? ::GetQuarterSizedVideoFormat(configured_format)
+                : configured_format;
+  return detected_format == effective_format ||
+         detected_format == configured_format;
+}
+
+// The lock bit is only meaningful for SDI inputs and only when the device
+// supports the SDI error checks. Otherwise the format sense is the only
+// available signal.
+static gboolean gst_aja_src_input_locked(GstAjaSrc *self,
+                                         NTV2InputSource input_source,
+                                         gboolean quad_mode) {
+  if (!self->device->device->IsSupported(kDeviceCanDoSDIErrorChecks))
+    return TRUE;
+
+  if (input_source < NTV2_INPUTSOURCE_SDI1 ||
+      input_source > NTV2_INPUTSOURCE_SDI8)
+    return TRUE;
+
+  NTV2Channel channel = ::NTV2InputSourceToChannel(input_source);
+  if (!self->device->device->GetSDILock(channel))
+    return FALSE;
+
+  if (quad_mode) {
+    for (int i = 1; i < 4; i++) {
+      if (!self->device->device->GetSDILock((NTV2Channel)(channel + i)))
+        return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+// Read the current signal state from the input sense. Must be called with
+// GstAjaNtv2DeviceLocker.
+static gboolean gst_aja_src_read_signal(GstAjaSrc *self,
+                                        NTV2InputSource input_source,
+                                        gboolean quad_mode,
+                                        NTV2VideoFormat *detected_format,
+                                        guint32 *vpid) {
+  NTV2VideoFormat format =
+      self->device->device->GetInputVideoFormat(input_source);
+  if (format == NTV2_FORMAT_UNKNOWN)
+    return FALSE;
+
+  if (quad_mode) {
+    for (int i = 1; i < 4; i++) {
+      if (self->device->device->GetInputVideoFormat(
+              (NTV2InputSource)(input_source + i)) != format)
+        return FALSE;
+    }
+  }
+
+  if (!gst_aja_src_input_locked(self, input_source, quad_mode))
+    return FALSE;
+
+  if (!gst_aja_src_format_matches(self, format, quad_mode))
+    return FALSE;
+
+  ULWord vpid_a = 0;
+  ULWord vpid_b = 0;
+  self->device->device->ReadSDIInVPID(self->channel, vpid_a, vpid_b);
+
+  *detected_format = format;
+  *vpid = vpid_a;
+  return TRUE;
+}
+
 // Must be called with GstAjaNtv2DeviceLocker
-static gboolean gst_aja_src_configure(GstAjaSrc *self) {
+// signal_state: failing to detect a format before the first lock is normal.
+static gboolean gst_aja_src_configure(GstAjaSrc* self,
+                                      SignalState signal_state) {
   GST_DEBUG_OBJECT(self, "Starting");
 
-#define NEEDS_QUAD_MODE(self)                           \
-  (self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_SQD ||  \
-   self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI ||  \
-   (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 && \
-    self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4))
-
-  self->quad_mode = NEEDS_QUAD_MODE(self);
-
-#undef NEEDS_QUAD_MODE
+  self->quad_mode = gst_aja_src_needs_quad_mode(self);
 
   if (self->quad_mode) {
     if (self->input_source != GST_AJA_INPUT_SOURCE_AUTO &&
@@ -768,83 +969,8 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
   NTV2VANCMode vanc_mode;
   NTV2InputSource input_source;
   NTV2OutputCrosspointID input_source_id;
-  switch (self->input_source) {
-    case GST_AJA_INPUT_SOURCE_AUTO:
-      input_source = ::NTV2ChannelToInputSource(self->channel);
-      input_source_id = ::GetSDIInputOutputXptFromChannel(self->channel, false);
-      vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
-                      ? ::NTV2_VANCMODE_OFF
-                      : ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_ANALOG1:
-      input_source = ::NTV2_INPUTSOURCE_ANALOG1;
-      input_source_id = ::NTV2_XptAnalogIn;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_HDMI1:
-      input_source = ::NTV2_INPUTSOURCE_HDMI1;
-      input_source_id = ::NTV2_XptHDMIIn1;
-      vanc_mode = ::NTV2_VANCMODE_OFF;
-      break;
-    case GST_AJA_INPUT_SOURCE_HDMI2:
-      input_source = ::NTV2_INPUTSOURCE_HDMI2;
-      input_source_id = ::NTV2_XptHDMIIn2;
-      vanc_mode = ::NTV2_VANCMODE_OFF;
-      break;
-    case GST_AJA_INPUT_SOURCE_HDMI3:
-      input_source = ::NTV2_INPUTSOURCE_HDMI3;
-      input_source_id = ::NTV2_XptHDMIIn3;
-      vanc_mode = ::NTV2_VANCMODE_OFF;
-      break;
-    case GST_AJA_INPUT_SOURCE_HDMI4:
-      input_source = ::NTV2_INPUTSOURCE_HDMI4;
-      input_source_id = ::NTV2_XptHDMIIn4;
-      vanc_mode = ::NTV2_VANCMODE_OFF;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI1:
-      input_source = ::NTV2_INPUTSOURCE_SDI1;
-      input_source_id = ::NTV2_XptSDIIn1;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI2:
-      input_source = ::NTV2_INPUTSOURCE_SDI2;
-      input_source_id = ::NTV2_XptSDIIn2;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI3:
-      input_source = ::NTV2_INPUTSOURCE_SDI3;
-      input_source_id = ::NTV2_XptSDIIn3;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI4:
-      input_source = ::NTV2_INPUTSOURCE_SDI4;
-      input_source_id = ::NTV2_XptSDIIn4;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI5:
-      input_source = ::NTV2_INPUTSOURCE_SDI5;
-      input_source_id = ::NTV2_XptSDIIn5;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI6:
-      input_source = ::NTV2_INPUTSOURCE_SDI6;
-      input_source_id = ::NTV2_XptSDIIn6;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI7:
-      input_source = ::NTV2_INPUTSOURCE_SDI7;
-      input_source_id = ::NTV2_XptSDIIn7;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    case GST_AJA_INPUT_SOURCE_SDI8:
-      input_source = ::NTV2_INPUTSOURCE_SDI8;
-      input_source_id = ::NTV2_XptSDIIn8;
-      vanc_mode = ::NTV2_VANCMODE_TALL;
-      break;
-    default:
-      g_assert_not_reached();
-      break;
-  }
+  gst_aja_src_get_input_config(self, &input_source, &input_source_id,
+                               &vanc_mode);
 
   self->configured_input_source = input_source;
 
@@ -873,7 +999,10 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
     self->video_format = self->device->device->GetInputVideoFormat(
         self->configured_input_source);
     if (self->video_format == NTV2_FORMAT_UNKNOWN) {
-      GST_ERROR_OBJECT(self, "Input video format not detected");
+      if (signal_state == SIGNAL_STATE_PRESENT)
+        GST_ERROR_OBJECT(self, "Input video format not detected");
+      else
+        GST_INFO_OBJECT(self, "Input video format not detected yet");
       return TRUE;
     }
     std::string configured_string = NTV2VideoFormatToString(self->video_format);
@@ -1557,6 +1686,31 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
 
   self->video_format = NTV2_FORMAT_UNKNOWN;
   self->signal = FALSE;
+  self->initial_signal_present = FALSE;
+  self->initial_detected_video_format = NTV2_FORMAT_UNKNOWN;
+
+  // The device is open but not configured yet. The input sense is a pure
+  // register read, so seed the property before the capture thread starts and
+  // before the application has a chance to read it.
+  {
+    GstAjaNtv2DeviceLocker locker(self->device);
+
+    NTV2InputSource input_source;
+    NTV2OutputCrosspointID input_source_id;
+    NTV2VANCMode vanc_mode;
+    gst_aja_src_get_input_config(self, &input_source, &input_source_id,
+                                 &vanc_mode);
+
+    const gboolean quad_mode = gst_aja_src_needs_quad_mode(self);
+    NTV2VideoFormat detected_format;
+    guint32 vpid;
+    if (gst_aja_src_read_signal(self, input_source, quad_mode,
+                                &detected_format, &vpid)) {
+      self->initial_signal_present = TRUE;
+      self->initial_detected_video_format = detected_format;
+      self->signal = TRUE;
+    }
+  }
 
   self->capture_thread = new AJAThread();
   self->capture_thread->Attach(capture_thread_func, self);
@@ -2307,6 +2461,71 @@ next_item:
   }                                                                         \
   G_STMT_END;
 
+// The capture loop wakes at the input's vertical interrupt rate when locked
+// and only at the interrupt timeout when there is no signal, so a new state
+// has to hold for a wall-clock time rather than a number of iterations.
+#define SIGNAL_PRESENT_HOLD_US (100 * G_TIME_SPAN_MILLISECOND)
+#define SIGNAL_ABSENT_HOLD_US (300 * G_TIME_SPAN_MILLISECOND)
+
+// Update the signal state with hysteresis and push a signal change item on a
+// transition. Must be called with queue_lock held.
+static SignalState gst_aja_src_update_signal_state(
+    GstAjaSrc *self, SignalState signal_state, gboolean present,
+    gboolean *candidate_present, NTV2VideoFormat detected_format, guint32 vpid,
+    gint64 *state_since, gboolean *pending_recovery,
+    NTV2VideoFormat *last_detected_video_format) {
+  const gint64 now = g_get_monotonic_time();
+
+  if (present != *candidate_present) {
+    *candidate_present = present;
+    *state_since = now;
+  } else if (*state_since == 0) {
+    *state_since = now;
+  }
+
+  if (present) {
+    if (signal_state == SIGNAL_STATE_PRESENT)
+      return signal_state;
+
+    if (signal_state == SIGNAL_STATE_ABSENT)
+      *pending_recovery = TRUE;
+
+    if (now - *state_since < SIGNAL_PRESENT_HOLD_US)
+      return signal_state;
+
+    QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+    item.signal_change = {TRUE, detected_format, vpid};
+    gst_vec_deque_push_tail_struct(self->queue, &item);
+    g_cond_signal(&self->queue_cond);
+
+    *last_detected_video_format = detected_format;
+    *state_since = 0;
+    return SIGNAL_STATE_PRESENT;
+  }
+
+  if (signal_state == SIGNAL_STATE_UNKNOWN) {
+    // Nothing was ever observed, so there is nothing to hold or notify.
+    *state_since = 0;
+    return SIGNAL_STATE_ABSENT;
+  }
+
+  if (signal_state == SIGNAL_STATE_ABSENT)
+    return signal_state;
+
+  if (now - *state_since < SIGNAL_ABSENT_HOLD_US)
+    return signal_state;
+
+  QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
+  item.signal_change = {FALSE, detected_format, vpid};
+  gst_vec_deque_push_tail_struct(self->queue, &item);
+  g_cond_signal(&self->queue_cond);
+
+  *last_detected_video_format = detected_format;
+  *state_since = 0;
+  *pending_recovery = FALSE;
+  return SIGNAL_STATE_ABSENT;
+}
+
 static void capture_thread_func(AJAThread *thread, void *data) {
   GstAjaSrc *self = GST_AJA_SRC(data);
   GstClock *clock = NULL;
@@ -2353,8 +2572,9 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   // g_get_real_time() is less accurate generally.
   real_time_clock = gst_system_clock_new (NULL, GST_CLOCK_TYPE_REALTIME);
 
-  // if we currently have signal
-  bool have_signal = true;
+  // the signal state of the input. If we had no signal observation ever
+  // then don't report this as signal loss.
+  SignalState signal_state = SIGNAL_STATE_UNKNOWN;
   // if the *next* output frame should have the discont flag set
   bool discont = true;
   // if the pipeline clock is the monotonic system clock
@@ -2376,6 +2596,16 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   // Number of vsync iterations without a captured frame. If this becomes too
   // high we assume signal loss.
   guint iterations_without_frame = 0;
+  // Monotonic time when the current signal candidate state started, to
+  // measure the hold.
+  gint64 signal_state_since = 0;
+  // Whether the current signal candidate is present, to measure the hold.
+  gboolean signal_candidate_present = FALSE;
+  // Whether the first frame after signal recovery still needs the timestamp
+  // reset and frame dropping.
+  gboolean pending_recovery = FALSE;
+  // Whether this is the first start, to seed the state from the sensor.
+  gboolean first_start = TRUE;
 
   g_mutex_lock(&self->queue_lock);
 restart:
@@ -2395,8 +2625,20 @@ restart:
 
   clock_is_system_monotonic = gst_clock_is_system_monotonic(clock);
 
-  // Reset all local state after restart
-  have_signal = true;
+  // Reset all local state after restart. The first start is seeded from the
+  // sensor reading in gst_aja_src_start().
+  if (first_start) {
+    signal_state = self->initial_signal_present ? SIGNAL_STATE_PRESENT
+                                                : SIGNAL_STATE_ABSENT;
+    last_detected_video_format = self->initial_detected_video_format;
+    first_start = FALSE;
+  } else {
+    signal_state = SIGNAL_STATE_UNKNOWN;
+    last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
+  }
+  signal_state_since = 0;
+  signal_candidate_present = FALSE;
+  pending_recovery = FALSE;
   discont = true;
   first_frame_after_start = true;
   last_frame_time = GST_CLOCK_TIME_NONE;
@@ -2419,7 +2661,7 @@ restart:
       // global shared state
       GstAjaNtv2DeviceLocker locker(self->device);
 
-      if (!gst_aja_src_configure(self)) {
+      if (!gst_aja_src_configure(self, signal_state)) {
         g_mutex_lock(&self->queue_lock);
         AJA_SRC_ERROR(self, STREAM, FAILED, (NULL),
                       ("Failed to configure device"));
@@ -2431,13 +2673,10 @@ restart:
 
       if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
         GST_DEBUG_OBJECT(self, "No signal, waiting");
-        if (have_signal) {
-          QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-          item.signal_change = {FALSE, ::NTV2_FORMAT_UNKNOWN, 0};
-          gst_vec_deque_push_tail_struct(self->queue, &item);
-          g_cond_signal(&self->queue_cond);
-          have_signal = false;
-        }
+        signal_state = gst_aja_src_update_signal_state(
+            self, signal_state, FALSE, &signal_candidate_present,
+            ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
+            &last_detected_video_format);
         self->device->device->WaitForInputVerticalInterrupt(self->channel);
         continue;
       }
@@ -2527,37 +2766,19 @@ restart:
       effective_video_format =
           ::GetQuarterSizedVideoFormat(effective_video_format);
     }
-    switch (self->video_format) {
-      case NTV2_FORMAT_1080psf_2500_2:
-        if (current_video_format == NTV2_FORMAT_1080i_5000)
-          current_video_format = NTV2_FORMAT_1080psf_2500_2;
-        break;
-      case NTV2_FORMAT_1080psf_2997_2:
-        if (current_video_format == NTV2_FORMAT_1080i_5994)
-          current_video_format = NTV2_FORMAT_1080psf_2997_2;
-        break;
-      case NTV2_FORMAT_1080psf_3000_2:
-        if (current_video_format == NTV2_FORMAT_1080i_6000)
-          current_video_format = NTV2_FORMAT_1080psf_3000_2;
-        break;
-      default:
-        break;
-    }
+    current_video_format = gst_aja_src_map_detected_format(
+        self->video_format, current_video_format);
 
     if (current_video_format == ::NTV2_FORMAT_UNKNOWN || !all_quads_equal) {
       if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO)
         self->video_format = NTV2_FORMAT_UNKNOWN;
 
       GST_DEBUG_OBJECT(self, "No signal, waiting");
+      signal_state = gst_aja_src_update_signal_state(
+          self, signal_state, FALSE, &signal_candidate_present,
+          ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
+          &last_detected_video_format);
       g_mutex_unlock(&self->queue_lock);
-      if (have_signal || current_video_format != last_detected_video_format) {
-        QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-        item.signal_change = {FALSE, ::NTV2_FORMAT_UNKNOWN, 0};
-        last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
-        gst_vec_deque_push_tail_struct(self->queue, &item);
-        g_cond_signal(&self->queue_cond);
-        have_signal = false;
-      }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
@@ -2581,25 +2802,30 @@ restart:
                        "(effective %s), waiting",
                        current_string.c_str(), configured_string.c_str(),
                        effective_string.c_str());
+      signal_state = gst_aja_src_update_signal_state(
+          self, signal_state, FALSE, &signal_candidate_present,
+          current_video_format, vpid_a, &signal_state_since, &pending_recovery,
+          &last_detected_video_format);
       g_mutex_unlock(&self->queue_lock);
-      if (have_signal || current_video_format != last_detected_video_format) {
-        QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-        item.signal_change = {FALSE, current_video_format, vpid_a};
-        last_detected_video_format = current_video_format;
-        gst_vec_deque_push_tail_struct(self->queue, &item);
-        g_cond_signal(&self->queue_cond);
-        have_signal = false;
-      }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
-    } else if (have_signal &&
-               current_video_format != last_detected_video_format) {
-      QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-      item.signal_change = {TRUE, current_video_format, vpid_a};
-      last_detected_video_format = current_video_format;
-      gst_vec_deque_push_tail_struct(self->queue, &item);
-      g_cond_signal(&self->queue_cond);
+    } else if (!gst_aja_src_input_locked(self, self->configured_input_source,
+                                         self->quad_mode)) {
+      GST_DEBUG_OBJECT(self, "Input not locked, waiting");
+      signal_state = gst_aja_src_update_signal_state(
+          self, signal_state, FALSE, &signal_candidate_present,
+          current_video_format, vpid_a, &signal_state_since, &pending_recovery,
+          &last_detected_video_format);
+      g_mutex_unlock(&self->queue_lock);
+      self->device->device->WaitForInputVerticalInterrupt(self->channel);
+      g_mutex_lock(&self->queue_lock);
+      continue;
+    } else {
+      signal_state = gst_aja_src_update_signal_state(
+          self, signal_state, TRUE, &signal_candidate_present,
+          current_video_format, vpid_a, &signal_state_since, &pending_recovery,
+          &last_detected_video_format);
     }
 
     AUTOCIRCULATE_STATUS status;
@@ -2634,12 +2860,8 @@ restart:
       GstMapInfo anc_map2 = GST_MAP_INFO_INIT;
       AUTOCIRCULATE_TRANSFER transfer;
 
-      if (!have_signal) {
-        QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-        item.signal_change = {TRUE, current_video_format, vpid_a};
-        gst_vec_deque_push_tail_struct(self->queue, &item);
-        g_cond_signal(&self->queue_cond);
-        have_signal = true;
+      if (pending_recovery) {
+        pending_recovery = FALSE;
         last_frame_time = GST_CLOCK_TIME_NONE;
 
         // Drop the next frames after signal recovery as the capture times
@@ -3028,16 +3250,21 @@ restart:
       // If we don't have a frame for 32 iterations (512ms) then consider
       // this as signal loss too even if the driver still reports the
       // expected mode above
-      if (have_signal && iterations_without_frame < 32) {
+      if (signal_state != SIGNAL_STATE_ABSENT &&
+          iterations_without_frame < 32) {
         iterations_without_frame++;
       } else {
-        if (have_signal || last_detected_video_format != current_video_format) {
+        // A frame that is simply not ready yet must not restart the hold,
+        // so only reset the state on an actual loss.
+        if (signal_state == SIGNAL_STATE_PRESENT) {
           QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-          item.signal_change = {TRUE, current_video_format, vpid_a};
+          item.signal_change = {FALSE, current_video_format, vpid_a};
           last_detected_video_format = current_video_format;
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
-          have_signal = false;
+          signal_state = SIGNAL_STATE_ABSENT;
+          signal_state_since = 0;
+          pending_recovery = FALSE;
         }
       }
 
