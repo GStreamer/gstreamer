@@ -1232,12 +1232,14 @@ extern "C" fn ogmtext_type_find(tf: &mut TypeFind, _private: gpointer) {
 // FLAC - audio/x-flac
 // Magic: "fLaC" @ 0 or 0x7F "FLAC" 0x01 (FLAC-in-Ogg) @ 0.
 extern "C" fn flac_type_find(tf: &mut TypeFind, _private: gpointer) {
-    let Some(data) = tf.peek::<6>(0) else { return };
+    let Some(data) = tf.peek::<4>(0) else { return };
 
-    if data[..4] == *b"fLaC" {
+    if *data == *b"fLaC" {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-flac");
         return;
     }
+
+    let Some(data) = tf.peek::<6>(0) else { return };
 
     if *data == *b"\x7FFLAC\x01" {
         suggest!(tf, Prob::MAXIMUM, c"audio/x-flac");
