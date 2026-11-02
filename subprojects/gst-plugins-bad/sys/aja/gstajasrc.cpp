@@ -158,6 +158,8 @@ typedef struct {
       gboolean have_signal;
       NTV2VideoFormat detected_format;
       guint32 vpid;
+      // No frames were captured but the driver reports a valid video format.
+      gboolean no_frames;
     } signal_change;
     // For ERROR
     struct {
@@ -1984,12 +1986,22 @@ next_item:
           gchar *format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
           std::string format_string =
               NTV2VideoFormatToString(item.signal_change.detected_format);
-          GST_ELEMENT_WARNING_WITH_DETAILS(
-              GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
-              ("Input source with different mode %s was detected", format_str),
-              ("detected-format", G_TYPE_STRING, format_string.c_str(),
-               "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
-               item.signal_change.vpid, NULL));
+          if (item.signal_change.no_frames) {
+            GST_ELEMENT_WARNING_WITH_DETAILS(
+                GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+                ("No frames were captured"),
+                ("detected-format", G_TYPE_STRING, format_string.c_str(),
+                 "gst-aja-format", G_TYPE_STRING, format_str, "vpid",
+                 G_TYPE_UINT, item.signal_change.vpid, NULL));
+          } else {
+            GST_ELEMENT_WARNING_WITH_DETAILS(
+                GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+                ("Input source with different mode %s was detected",
+                 format_str),
+                ("detected-format", G_TYPE_STRING, format_string.c_str(),
+                 "gst-aja-format", G_TYPE_STRING, format_str, "vpid",
+                 G_TYPE_UINT, item.signal_change.vpid, NULL));
+          }
           g_free(format_str);
         } else {
           GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ,
@@ -3258,7 +3270,7 @@ restart:
         // so only reset the state on an actual loss.
         if (signal_state == SIGNAL_STATE_PRESENT) {
           QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-          item.signal_change = {FALSE, current_video_format, vpid_a};
+          item.signal_change = {FALSE, current_video_format, vpid_a, TRUE};
           last_detected_video_format = current_video_format;
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
