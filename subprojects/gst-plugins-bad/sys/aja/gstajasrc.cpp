@@ -2015,10 +2015,21 @@ next_item:
       queue_item_clear(&item);
       return GST_FLOW_ERROR;
     case QUEUE_ITEM_TYPE_FRAMES_DROPPED:
-      GST_WARNING_OBJECT(
-          self, "Dropped frames from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS(item.frames_dropped.timestamp_start),
-          GST_TIME_ARGS(item.frames_dropped.timestamp_end));
+      if (item.frames_dropped.driver_side) {
+        GST_WARNING_OBJECT(
+            self,
+            "The input device dropped frames from %" GST_TIME_FORMAT
+            " to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS(item.frames_dropped.timestamp_start),
+            GST_TIME_ARGS(item.frames_dropped.timestamp_end));
+      } else {
+        GST_WARNING_OBJECT(
+            self,
+            "The element queue dropped frames from %" GST_TIME_FORMAT
+            " to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS(item.frames_dropped.timestamp_start),
+            GST_TIME_ARGS(item.frames_dropped.timestamp_end));
+      }
       gst_element_post_message(
           GST_ELEMENT(self),
           gst_message_new_qos(GST_OBJECT_CAST(self), TRUE, GST_CLOCK_TIME_NONE,
@@ -2595,6 +2606,10 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   // captured so far.
   GstClockTime first_frame_time = GST_CLOCK_TIME_NONE;
   guint64 num_frames = 0;
+  // Frame drop counter of the previous transfer and the host monotonic
+  // time of that sample. NONE until the first transfer.
+  guint64 driver_drops = 0;
+  GstClockTime driver_drops_time = GST_CLOCK_TIME_NONE;
   // Number of frames to drop. After signal loss the first few frames
   // often have invalid acFrameTime so we drop them to calculate valid
   // timestamps afterwards
@@ -2652,6 +2667,8 @@ restart:
   num_frames = 0;
   frames_to_drop = 0;
   iterations_without_frame = 0;
+  driver_drops = 0;
+  driver_drops_time = GST_CLOCK_TIME_NONE;
 
   g_mutex_lock(&self->queue_lock);
   self->video_format = ::NTV2_FORMAT_UNKNOWN;
@@ -2683,6 +2700,7 @@ restart:
             self, signal_state, FALSE, &signal_candidate_present,
             ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
             &last_detected_video_format);
+        driver_drops_time = GST_CLOCK_TIME_NONE;
         self->device->device->WaitForInputVerticalInterrupt(self->channel);
         continue;
       }
@@ -2785,6 +2803,7 @@ restart:
           ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
           &last_detected_video_format);
       g_mutex_unlock(&self->queue_lock);
+      driver_drops_time = GST_CLOCK_TIME_NONE;
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
@@ -2813,6 +2832,7 @@ restart:
           current_video_format, vpid_a, &signal_state_since, &pending_recovery,
           &last_detected_video_format);
       g_mutex_unlock(&self->queue_lock);
+      driver_drops_time = GST_CLOCK_TIME_NONE;
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
@@ -2982,6 +3002,57 @@ restart:
                        transfer_status.acFramesDropped,
                        transfer_status.acBufferLevel);
 
+      GstClockTime now_monotonic_sys = gst_clock_get_internal_time(self->clock);
+
+      // Read the total frame drop counter of the driver as the only
+      // source of dropped frame information. Drops might only be counted a
+      // few transfers after they happen, so the reported drop can end up a few
+      // frames before its actual position. acCurrentReps might specify how
+      // many times a frame was repeated but the SDK does not define what
+      // its value means.
+      guint64 driver_drops_now = transfer_status.GetDroppedFrameCount();
+      guint64 dropped_frames = 0;
+      if (driver_drops_time == GST_CLOCK_TIME_NONE) {
+        // First transfer after a restart or after the signal was lost
+      } else if (driver_drops_now < driver_drops) {
+        // AutoCirculateResume(), AutoCirculateFlush() and other API can clear
+        // the counter and the counter can also wrap around.
+        GST_INFO_OBJECT(self, "Frame drop counter was reset");
+      } else if (frames_to_drop == 0 && !first_frame_after_start &&
+                 !reset_clock) {
+        guint64 delta = driver_drops_now - driver_drops;
+        guint64 elapsed_frames = gst_util_uint64_scale(
+            now_monotonic_sys - driver_drops_time, self->configured_info.fps_n,
+            self->configured_info.fps_d * GST_SECOND);
+        // The counter is updated with a delay, so allow a margin of 32
+        // frames, about half a second. More dropped frames than elapsed
+        // frames plus the margin can only be a bogus counter value. The
+        // margin is generous on purpose: hiding a real drop is worse than
+        // reporting an impossible one.
+        if (delta > elapsed_frames + 32) {
+          GST_FIXME_OBJECT(
+              self,
+              "Ignoring impossible drop of %" G_GUINT64_FORMAT
+              " frames in %u ms",
+              delta,
+              (guint)((now_monotonic_sys - driver_drops_time) / GST_MSECOND));
+        } else {
+          dropped_frames = delta;
+        }
+      }
+      driver_drops = driver_drops_now;
+      driver_drops_time = now_monotonic_sys;
+
+      if (dropped_frames > 0) {
+        GST_WARNING_OBJECT(self,
+                           "The driver dropped %" G_GUINT64_FORMAT " frames",
+                           dropped_frames);
+        // The dropped frames are missing between the previous frame and
+        // this one.
+        num_frames += dropped_frames;
+        discont = true;
+      }
+
       if (frames_to_drop > 0) {
         GST_TRACE_OBJECT(self, "Dropping frame");
         frames_to_drop -= 1;
@@ -2998,7 +3069,6 @@ restart:
       // sampling both and working with the difference. The monotonic clock is
       // used for all further calculations because it is more reliable.
       GstClockTime now_real_sys = gst_clock_get_time(real_time_clock);
-      GstClockTime now_monotonic_sys = gst_clock_get_internal_time(self->clock);
       GstClockTime now_gst = gst_clock_get_time(clock);
 
       GstClockTime frame_time_monotonic;
@@ -3192,6 +3262,30 @@ restart:
         discont = false;
       }
 
+      if (dropped_frames > 0) {
+        if (pts != GST_CLOCK_TIME_NONE) {
+          GstClockTime gap_duration =
+              dropped_frames *
+              gst_util_uint64_scale(GST_SECOND, self->configured_info.fps_d,
+                                    self->configured_info.fps_n);
+          GstClockTime timestamp_start;
+          if (pts < gap_duration) {
+            // Only possible when the frame timestamp was clamped to zero
+            // above.
+            GST_DEBUG_OBJECT(self,
+                             "Reporting the gap from the start of the stream");
+            timestamp_start = 0;
+          } else {
+            timestamp_start = pts - gap_duration;
+          }
+
+          QueueItem item = {QUEUE_ITEM_TYPE_FRAMES_DROPPED};
+          item.frames_dropped = {TRUE, timestamp_start, pts};
+          gst_vec_deque_push_tail_struct(self->queue, &item);
+          g_cond_signal(&self->queue_cond);
+        }
+      }
+
       QueueItem item = {QUEUE_ITEM_TYPE_FRAME};
       item.frame = {
           capture_time,
@@ -3213,6 +3307,10 @@ restart:
     } else {
       g_mutex_unlock(&self->queue_lock);
 
+      if (!status.IsRunning()) {
+        driver_drops_time = GST_CLOCK_TIME_NONE;
+      }
+
       // If we don't have a frame for 32 iterations (512ms) then consider
       // this as signal loss too even if the driver still reports the
       // expected mode above
@@ -3232,6 +3330,7 @@ restart:
           signal_state_since = 0;
           pending_recovery = FALSE;
         }
+        driver_drops_time = GST_CLOCK_TIME_NONE;
       }
 
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
