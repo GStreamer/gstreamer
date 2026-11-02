@@ -205,6 +205,29 @@ gst_video_info_dma_drm_to_caps (const GstVideoInfoDmaDrm * drm_info)
   return caps;
 }
 
+/* Change the format of @info, the memory layout is reset and all other fields
+ * are kept */
+static gboolean
+video_info_change_format (GstVideoInfo * info, GstVideoFormat format)
+{
+  GstVideoInfo tmp_info;
+  guint i;
+
+  if (!gst_video_info_set_interlaced_format (&tmp_info,
+          format, GST_VIDEO_INFO_INTERLACE_MODE (info),
+          GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info)))
+    return FALSE;
+
+  info->finfo = tmp_info.finfo;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    info->stride[i] = tmp_info.stride[i];
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    info->offset[i] = tmp_info.offset[i];
+  info->size = tmp_info.size;
+
+  return TRUE;
+}
+
 /**
  * gst_video_info_dma_drm_from_caps:
  * @drm_info: (out caller-allocates): #GstVideoInfoDmaDrm
@@ -352,14 +375,12 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
   drm_info->drm_fourcc = fourcc;
   drm_info->drm_modifier = modifier;
 
-  /* no need to change format to GST_VIDEO_INFO_DMA_DRM since its modifier is
+  /* no need to change format to GST_VIDEO_FORMAT_DMA_DRM since its modifier is
    * linear */
   if (modifier == DRM_FORMAT_MOD_LINEAR)
     return TRUE;
 
-  return gst_video_info_set_interlaced_format (&drm_info->vinfo,
-      GST_VIDEO_FORMAT_DMA_DRM, GST_VIDEO_INFO_INTERLACE_MODE (info),
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+  return video_info_change_format (&drm_info->vinfo, GST_VIDEO_FORMAT_DMA_DRM);
 }
 
 /**
@@ -382,35 +403,20 @@ gst_video_info_dma_drm_to_video_info (const GstVideoInfoDmaDrm * drm_info,
     GstVideoInfo * info)
 {
   GstVideoFormat video_format;
-  GstVideoInfo tmp_info;
-  guint i;
 
   g_return_val_if_fail (drm_info, FALSE);
   g_return_val_if_fail (info, FALSE);
 
-  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_DMA_DRM) {
-    *info = drm_info->vinfo;
+  *info = drm_info->vinfo;
+
+  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_DMA_DRM)
     return TRUE;
-  }
 
   video_format = gst_video_dma_drm_fourcc_to_format (drm_info->drm_fourcc);
   if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
-  if (!gst_video_info_set_format (&tmp_info, video_format,
-          GST_VIDEO_INFO_WIDTH (&drm_info->vinfo),
-          GST_VIDEO_INFO_HEIGHT (&drm_info->vinfo)))
-    return FALSE;
-
-  *info = drm_info->vinfo;
-  info->finfo = tmp_info.finfo;
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    info->stride[i] = tmp_info.stride[i];
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    info->offset[i] = tmp_info.offset[i];
-  info->size = tmp_info.size;
-
-  return TRUE;
+  return video_info_change_format (info, video_format);
 }
 
 /**

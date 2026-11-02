@@ -4854,6 +4854,42 @@ GST_START_TEST (test_info_dma_drm)
 
 GST_END_TEST;
 
+GST_START_TEST (test_info_dma_drm_from_video_info)
+{
+  /* Fields unrelated to the memory layout are kept when converting to a
+   * non linear DMA_DRM format */
+  GstVideoInfoDmaDrm drm_info;
+  GstVideoInfo vinfo, info;
+
+  fail_unless (gst_video_info_set_format (&vinfo,
+          GST_VIDEO_FORMAT_NV12, 1920, 1080));
+  fail_unless (gst_video_colorimetry_from_string (&vinfo.colorimetry, "bt601"));
+  vinfo.chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
+  vinfo.fps_n = 30;
+  vinfo.fps_d = 1;
+  vinfo.par_n = 4;
+  vinfo.par_d = 3;
+
+  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo,
+          0x100000000000002));
+  fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
+      GST_VIDEO_FORMAT_DMA_DRM);
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_STRIDE (&drm_info.vinfo, 0), 0);
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, 1), 0);
+  fail_unless_equals_int (GST_VIDEO_INFO_SIZE (&drm_info.vinfo), 0);
+
+  fail_unless (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_NV12);
+  fail_unless (gst_video_colorimetry_matches (&info.colorimetry, "bt601"));
+  fail_unless_equals_int (info.chroma_site, GST_VIDEO_CHROMA_SITE_JPEG);
+  fail_unless_equals_int (info.fps_n, 30);
+  fail_unless_equals_int (info.fps_d, 1);
+  fail_unless_equals_int (info.par_n, 4);
+  fail_unless_equals_int (info.par_d, 3);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_meta_serialize)
 {
   GstBuffer *buf;
@@ -5909,6 +5945,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_auto_video_frame_unmap);
   tcase_add_test (tc_chain, test_video_color_primaries_equivalent);
   tcase_add_test (tc_chain, test_info_dma_drm);
+  tcase_add_test (tc_chain, test_info_dma_drm_from_video_info);
   tcase_add_test (tc_chain, test_info_ahb_fmt);
   tcase_add_test (tc_chain, test_video_meta_serialize);
   tcase_add_test (tc_chain, test_video_meta_deserialize);
