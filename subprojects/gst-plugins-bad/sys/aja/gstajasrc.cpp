@@ -3168,16 +3168,16 @@ restart:
             GST_WARNING_OBJECT(self,
                                "Element queue overrun, dropping old frame");
 
+            GstClockTime pts = GST_BUFFER_PTS(tmp->frame.video_buffer);
+            GstClockTime duration =
+                GST_BUFFER_DURATION(tmp->frame.video_buffer);
+
             QueueItem item = {QUEUE_ITEM_TYPE_FRAMES_DROPPED};
-            item.frames_dropped = {
-                FALSE, tmp->frame.capture_time,
-                tmp->frame.capture_time +
-                    gst_util_uint64_scale(GST_SECOND,
-                                          self->configured_info.fps_d,
-                                          self->configured_info.fps_n)};
+            item.frames_dropped = {FALSE, pts, pts + duration};
+            // Replace the frame with the notification to keep the gap at
+            // its position in the queue.
             queue_item_clear(tmp);
-            gst_vec_deque_drop_struct(self->queue, i, NULL);
-            gst_vec_deque_push_tail_struct(self->queue, &item);
+            *tmp = item;
             self->queue_num_frames -= 1;
             discont = true;
             g_cond_signal(&self->queue_cond);
