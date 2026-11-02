@@ -17,14 +17,16 @@
 //! ids from `0xBC` upward to PES streams, `0xBA` and `0xBB` are the pack and
 //! system headers of a program stream, and `itu-t-h.262-2000-02` Table 6-1
 //! keeps everything below `0xB9` for the MPEG-1/2 video stream. The names
-//! `iso-14496-2` Table 6-3 gives MPEG-4 visual fall inside that range, so the
-//! two video formats share their octets and are told apart by the headers they
-//! put after the prefix, not by the names themselves.
+//! `iso-14496-2` Table 6-3 gives MPEG-4 visual open below `0xB0` and run on to
+//! `C3`, so they overlap both the MPEG-1/2 video range and the range Table 2-22
+//! gives to PES streams. The two video formats are told apart by the headers
+//! they put after the prefix, not by the names themselves.
 //!
 //! A program stream and a video elementary stream therefore claim overlapping
-//! octets, and the pack header is the tie-breaker: a valid one means the stream
-//! carries multiplexed programs, so the elementary finder declines. That is why
-//! the two share [`valid_pack`].
+//! octets, and the pack header is the tie-breaker: a valid one means the octets
+//! belong to a multiplexed program, so both elementary finders decline and the
+//! program stream finder is left to claim them. That is why all three share
+//! [`valid_pack`].
 
 use crate::helpers::{Prob, Scanner, TypeFind, u16be};
 use crate::startcode::{START_CODE_PREFIX_LEN, is_start_code, next_start_code};
@@ -41,23 +43,28 @@ const PES_CODE_MIN: u8 = 0xBC;
 const SYS_MAX_PROBE: usize = 128 * 1024;
 /// Shortest program stream it will examine at all.
 const SYS_MIN_PROBE: usize = 16;
-/// Octets peeked past the examined region, so that the last position can read
-/// the octet after its own start code.
-const SYS_PROBE_SLACK: usize = 5;
-/// A run of headers has to exceed these counts to be worth suggesting.
+/// A run of headers has to exceed this count to be worth suggesting.
 const SYS_MIN_HEADERS: u32 = 2;
+/// The walk stops once a run that includes a PES packet passes this count.
+/// Nothing further in the stream can change the answer, so reading on would be
+/// work for nothing.
 const SYS_MAX_HEADERS: u32 = 5;
 
-/// Pack header sizes a transport stream may carry: the standard 188, the DVHS
-/// 192, and 188 with 16 or 20 octets of Reed-Solomon.
+/// Transport packet sizes a stream may carry: the standard 188, the DVHS 192,
+/// and 188 with 16 or 20 octets of Reed-Solomon.
 const TS_PACKET_SIZES: [i32; 4] = [188, 192, 204, 208];
 const TS_MAX_PACKET_SIZE: usize = 208;
-/// Headers whose worth a sync window has to hold.
+/// How many headers at one stride make a transport stream, and the most the
+/// stride walk counts before it is satisfied.
 const TS_MIN_HEADERS: u32 = 4;
 const TS_MAX_HEADERS: u32 = 10;
-const TS_SYNC_SIZE: usize = TS_MIN_HEADERS as usize * TS_MAX_PACKET_SIZE;
 const TS_SCAN_LENGTH: i64 = TS_MAX_HEADERS as i64 * TS_MAX_PACKET_SIZE as i64 * 4;
-const TS_HDR_SIZE: usize = 4;
+/// Octets a packet header occupies: the sync byte, the two carrying the flags
+/// and PID, and the one carrying `adaptation_field_control`.
+///
+/// The size a header occupies is also the fewest octets a probe must have in
+/// view to read one, so it is the size the walk asks the engine for.
+const TS_HEADER_SIZE: usize = 4;
 
 /// How far the video probe looks, and how many pictures it wants to pair up.
 const VID_TRY_SYNC: i64 = 100 * 1024;
@@ -68,8 +75,8 @@ const GROUP_CODE: u8 = 0xB8;
 const PICTURE_CODE: u8 = 0x00;
 const FIRST_SLICE_CODE: u8 = 0x01;
 /// A first slice header belongs to the picture header before it when it sits
-/// between 4 and 64 octets after it.
-const SLICE_MIN_GAP: i64 = 4;
+/// no more than 64 octets after it. The shortest gap the walk can ever see is
+/// the 8 octets a picture header steps over.
 const SLICE_MAX_GAP: i64 = 64;
 /// Longest pack header, so that the header after it can be inspected: 14
 /// octets, at most 7 of stuffing, and the 4 that make up the next start code.
@@ -171,8 +178,8 @@ fn valid_system_header(data: &[u8]) -> Option<usize> {
     Some(6 + length)
 }
 
-/// Walk the program stream in `data[..end]` and settle the confidence in it,
-/// as a probability and an MPEG version.
+/// Walk the program stream in `data` and settle the confidence in it, as a
+/// probability and an MPEG version.
 ///
 /// Only headers that sit close to the previous one count. The gap is measured
 /// from the end of the packet before it, and a match already stands three
@@ -181,12 +188,15 @@ fn valid_system_header(data: &[u8]) -> Option<usize> {
 /// contain a few `00 00 01` sequences therefore never adds up. A header whose
 /// length is known is stepped over whole, which is what makes a run of packs,
 /// system headers and PES packets read as one run.
-fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
+fn sys_scan(data: &[u8]) -> Option<(u32, i32)> {
+    let end = data.len();
     let mut mpegversion = 0i32;
     let mut pack_headers = 0u32;
     let mut pes_headers = 0u32;
     let mut potential_headers = 0u32;
-    let mut first_sync: Option<usize> = None;
+    // Whether the first start code the walk matched began on the first octet.
+    // That is the only question ever asked of where the run began.
+    let mut first_at_zero = false;
     // A match needs three prefix octets behind the octet that carries the
     // code, so wherever the walk first becomes able to match it has already
     // crossed three octets since the last sync. The count decides whether
@@ -202,8 +212,10 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
     // answer, so the walk stops rather than reading on.
     while i < end && !(pes_headers > 0 && pack_headers + pes_headers > SYS_MAX_HEADERS) {
         if is_start_code(&data[i - 3..i]) {
-            if first_sync.is_none() {
-                first_sync = Some(i - 3);
+            if potential_headers == 0 {
+                // A match stands three octets behind the octet carrying its
+                // value, so one on the first octet leaves the cursor here.
+                first_at_zero = i == START_CODE_PREFIX_LEN as usize;
             }
             if since_last_sync > 4 {
                 pes_headers = 0;
@@ -213,36 +225,33 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
 
             let code = data[i];
             let rest = &data[i - 3..end];
-            let mut pack_size = 0usize;
-
-            if code == PACK_CODE
-                && let Some((size, version)) = valid_pack(rest)
-            {
-                pack_headers += 1;
-                pack_size = size;
-                // The version comes out of a header already known to be a pack,
-                // not out of an octet that only looks like the start of one.
-                mpegversion = version;
+            let packet = if code == PACK_CODE {
+                valid_pack(rest).map(|(size, version)| {
+                    // The version comes out of a header already known to be a
+                    // pack, not out of an octet that only looks like the start
+                    // of one.
+                    mpegversion = version;
+                    pack_headers += 1;
+                    size
+                })
             } else if code >= PES_CODE_MIN {
-                if let Some(size) = valid_pes(rest) {
+                valid_pes(rest).inspect(|_| {
                     pes_headers += 1;
-                    pack_size = size;
                     if mpegversion == 0 {
                         mpegversion = 2;
                     }
-                }
-            } else if code == SYSTEM_CODE
-                && let Some(size) = valid_system_header(rest)
-            {
-                pack_headers += 1;
-                pack_size = size;
-            }
+                })
+            } else if code == SYSTEM_CODE {
+                valid_system_header(rest).inspect(|_| pack_headers += 1)
+            } else {
+                None
+            };
 
-            if pack_size != 0 {
+            if let Some(size) = packet {
                 // The next candidate start code begins right after the packet,
                 // and a match stands three octets behind the octet carrying its
                 // value, so the cursor goes to where that value would be.
-                i += pack_size;
+                i += size;
                 since_last_sync = 3;
                 continue;
             }
@@ -264,8 +273,10 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
     if potential_headers == pack_headers + pes_headers {
         probability = (probability + 10).min(maximum);
     }
-    // Less when the first packet was not right at the start of the stream.
-    if first_sync != Some(0) && probability >= 10 {
+    // Less when the first packet was not right at the start of the stream. The
+    // run that got here is worth at least three headers, so the floor of the
+    // ladder is 50 + 30 and the subtraction can never underflow.
+    if !first_at_zero {
         probability -= 10;
     }
     Some((probability, mpegversion))
@@ -275,14 +286,14 @@ fn sys_scan(data: &[u8], end: usize) -> Option<(u32, i32)> {
 /// another.
 pub fn mpeg_sys_probe(tf: &mut TypeFind) -> Option<(Prob, i32)> {
     let mut len = SYS_MAX_PROBE;
-    while len >= SYS_MIN_PROBE && tf.peek_var(0, (len + SYS_PROBE_SLACK) as u32).is_none() {
+    while len >= SYS_MIN_PROBE && tf.peek_var(0, len as u32).is_none() {
         len /= 2;
     }
     if len < SYS_MIN_PROBE {
         return None;
     }
-    let data = tf.peek_var(0, (len + SYS_PROBE_SLACK) as u32)?;
-    let (probability, mpegversion) = sys_scan(data, len)?;
+    let data = tf.peek_var(0, len as u32)?;
+    let (probability, mpegversion) = sys_scan(data)?;
     Some((probability.into(), mpegversion))
 }
 
@@ -300,47 +311,33 @@ fn ts_header(data: &[u8]) -> bool {
         && (data[3] & 0x30 != 0 || (data[1] & 0x1F == 0x1F && data[2] == 0xFF))
 }
 
-/// How many packet headers lie at `packet_size` stride from the cursor,
-/// counting the one the caller already found. The walk stops at the first
-/// offset that does not carry a header.
-fn ts_stride(scan: &mut Scanner, packet_size: usize) -> u32 {
-    let mut probe = *scan;
-    let mut found = 1;
-    while found < TS_MAX_HEADERS {
-        probe.consume(packet_size);
-        let Some(head) = probe.peek(TS_HDR_SIZE) else {
-            break;
-        };
-        if !ts_header(head) {
-            break;
-        }
-        found += 1;
-    }
-    found
-}
-
 /// MPEG transport stream: `0x47` at a constant stride. A capture can begin in
 /// the middle of a packet, so the stride is searched for rather than assumed,
 /// and each of the four packet sizes is tried at every candidate offset.
-///
-/// A sync window has to fit ahead of each point where the scan reloads, so a
-/// stream shorter than one is not examined at all.
 pub fn mpeg_ts_probe(tf: &mut TypeFind) -> Option<(Prob, i32)> {
     let mut scan = Scanner::new(tf, 0);
-    let mut window = 0usize;
 
     while scan.offset() < TS_SCAN_LENGTH {
-        if window < TS_HDR_SIZE {
-            if scan.peek(TS_SYNC_SIZE).is_none() {
-                break;
-            }
-            window = TS_SYNC_SIZE;
-        }
-
-        let head = scan.peek(TS_HDR_SIZE)?;
+        let Some(head) = scan.peek(TS_HEADER_SIZE) else {
+            break;
+        };
         if ts_header(head) {
             for size in TS_PACKET_SIZES {
-                let found = ts_stride(&mut scan, size as usize);
+                // How many packet headers lie at this stride, counting the one
+                // already found. The walk stops at the first offset that does
+                // not carry a header.
+                let mut stride = scan;
+                let mut found = 1u32;
+                while found < TS_MAX_HEADERS {
+                    stride.consume(size as usize);
+                    let Some(next) = stride.peek(TS_HEADER_SIZE) else {
+                        break;
+                    };
+                    if !ts_header(next) {
+                        break;
+                    }
+                    found += 1;
+                }
                 if found >= TS_MIN_HEADERS {
                     // One tenth per header found, so four is the floor and ten
                     // the ceiling.
@@ -351,7 +348,6 @@ pub fn mpeg_ts_probe(tf: &mut TypeFind) -> Option<(Prob, i32)> {
         }
 
         scan.consume(1);
-        window -= 1;
     }
     None
 }
@@ -399,9 +395,9 @@ fn video_probability(
 /// opens its first macroblock row.
 pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     // How much of a pack header can be inspected at the last positions of the
-    // stream decides whether the header after it is reached. The bound is what
-    // the stream has left, not what a read buffer happens to hold, so where the
-    // data arrives from does not change the answer.
+    // stream decides whether the header after it is reached. When the stream
+    // states its length the bound is what it has left, so a pack near the end
+    // is judged on the same octets however they were read.
     let stream_len = tf.length().map(|len| len.get());
     let mut scan = Scanner::new(tf, 0);
     let mut seen_seq_at_0 = false;
@@ -411,10 +407,7 @@ pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     let mut paired = 0u32;
     let mut last_pic_offset = 0i64;
 
-    while scan.offset() < VID_TRY_SYNC {
-        if paired >= VID_TRY_PICTURES {
-            break;
-        }
+    while scan.offset() < VID_TRY_SYNC && paired < VID_TRY_PICTURES {
         let Some(head) = scan.peek(5) else { break };
         if !is_start_code(head) {
             scan.consume(1);
@@ -451,7 +444,6 @@ pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
             // One slice header per picture header, and the first slice of a
             // picture starts with slice_vertical_position 1 (6.3.16).
             && picture_headers > paired
-            && (scan.offset() - last_pic_offset) >= SLICE_MIN_GAP
             && (scan.offset() - last_pic_offset) <= SLICE_MAX_GAP
         {
             scan.consume(4);
@@ -534,8 +526,9 @@ fn mpeg4_video_probability(
     } else if full && seen_vios && seen_vos && seen_vol {
         Prob::NEARLY_CERTAIN.get() - 1
     } else if (seen_vios_at_0 || full) && seen_vos && seen_vol {
-        // A sequence header at the very start of the stream and a full run of
-        // pictures carry the same weight when neither is joined by the other.
+        // Either a sequence header on the very first octet or a full run of
+        // pictures reaches this rung with the video object and its layer, and
+        // neither one needs the other.
         Prob::NEARLY_CERTAIN.get() - 6
     } else if full && seen_vol {
         Prob::NEARLY_CERTAIN.get() - 9
@@ -568,9 +561,10 @@ fn mpeg4_video_probability(
 /// sequence header may cross a user data block on the way, and whatever that
 /// search lands on is read the same way as any other code.
 pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
-    // Bounded so that a pack header near the end of a stream whose length is
-    // known is still inspected, and so that where the data arrives from does not
-    // change the answer.
+    // How much of a pack header can be inspected at the last positions of the
+    // stream decides whether the header after it is reached. When the stream
+    // states its length the bound is what it has left, so a pack near the end
+    // is judged on the same octets however they were read.
     let stream_len = tf.length().map(|len| len.get());
     let mut scan = Scanner::new(tf, 0);
     let mut seen_vios_at_0 = false;
@@ -579,13 +573,10 @@ pub fn mpeg4_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     let mut seen_vol = false;
     let mut vops = 0u32;
 
-    while scan.offset() < M4V_TRY_SYNC {
-        if vops >= M4V_TRY_PICTURES {
-            break;
-        }
-        // A start code beginning on the last octet of the probe is still
-        // inside it, so the search may step that far.
-        let room = (M4V_TRY_SYNC - scan.offset()) as usize;
+    while scan.offset() < M4V_TRY_SYNC && vops < M4V_TRY_PICTURES {
+        // A search tries one position more than the room it is given, so the
+        // room is one less than what the probe has left.
+        let room = (M4V_TRY_SYNC - scan.offset() - 1) as usize;
         if next_start_code(&mut scan, room).is_none() {
             break;
         }
@@ -682,11 +673,12 @@ mod tests {
     use super::*;
     use crate::helpers::probe_engine::probe;
 
-    /// An MPEG-2 pack header with a zero clock reference and mux rate and no
-    /// stuffing, built from Table 2-39: `'01'` and the marker in octet 4, the
-    /// three `marker_bit`s closing the clock reference runs in octets 6, 8 and
-    /// 9, the two `marker_bit`s after `program_mux_rate` in octet 12, and
-    /// `pack_stuffing_length` zero in octet 13.
+    /// An MPEG-2 pack header built from Table 2-39: `'01'` and the marker in
+    /// octet 4, the three `marker_bit`s closing the clock reference runs in
+    /// octets 6, 8 and 9, the two `marker_bit`s after `program_mux_rate` in
+    /// octet 12, and `pack_stuffing_length` zero in octet 13. The clock and mux
+    /// rate fields hold whatever keeps those markers in place and mean nothing
+    /// to these cases.
     const PACK2: [u8; 14] = [
         0x00, 0x00, 0x01, 0xBA, 0x4C, 0x00, 0x04, 0x00, 0x04, 0x01, 0x00, 0x00, 0x03, 0x00,
     ];
@@ -862,10 +854,11 @@ mod tests {
         }
     }
 
-    /// Table 2-5 reserves an `adaptation_field_control` of `'00'` and 2.4.3.3
-    /// has decoders discard such a packet, so a header only counts when it has
-    /// payload or an adaptation field - unless it is a null packet, whose PID of
-    /// `0x1FFF` carries no payload for an adaptation field to describe.
+    /// Table 2-5 reserves an `adaptation_field_control` of `'00'`, so a header
+    /// only counts when it has payload or an adaptation field. A null packet,
+    /// PID `0x1FFF`, is accepted with `'00'` as leniency for muxers that get it
+    /// wrong; 2.4.3.3 says such a packet shall carry `'01'` and shall be
+    /// discarded.
     #[test]
     fn a_transport_packet_header_needs_sync_and_a_payload() {
         for afc in [0x10u8, 0x20, 0x30] {
@@ -881,6 +874,82 @@ mod tests {
         // The sync byte is 0x47 and nothing else.
         assert!(!ts_header(&[0x46, 0x10, 0x00, 0x30]));
         assert!(!ts_header(&[0x4F, 0x10, 0x00, 0x30]));
+    }
+
+    /// One transport packet header with payload to show for it, at the one
+    /// size the cases below build streams at.
+    fn ts_packet_head() -> [u8; TS_HEADER_SIZE] {
+        [0x47, 0x50, 0x00, 0x10]
+    }
+
+    /// `n` packet headers spaced at `stride` octets, the bytes between them
+    /// holding no sync byte. The probe cannot tell these from the front of a
+    /// real stream of that size; nothing behind the last header is counted.
+    fn ts_heads(n: u32, stride: i32) -> Vec<u8> {
+        let mut stream = vec![0x00u8; (n as usize - 1) * stride as usize + TS_HEADER_SIZE];
+        for i in 0..n as usize {
+            stream[i * stride as usize..][..TS_HEADER_SIZE].copy_from_slice(&ts_packet_head());
+        }
+        stream
+    }
+
+    /// A probe-level walk, which is where the last header a stride can count
+    /// is settled: the walk stops at the first offset without a header in
+    /// view, and the probability follows the count one tenth to the header.
+    #[test]
+    fn transport_headers_count_one_tenth_each_up_to_the_cap() {
+        let count = |n| {
+            probe(&ts_heads(n, TS_PACKET_SIZES[0]), |tf| {
+                mpeg_ts_probe(tf).map(|(p, size)| (p.get(), size))
+            })
+        };
+        // One short of the run that is a stream at all, then the run, the cap,
+        // and a stream long enough to reach it.
+        assert_eq!(count(TS_MIN_HEADERS - 1), None);
+        assert_eq!(count(TS_MIN_HEADERS), Some((10 * TS_MIN_HEADERS, 188)));
+        assert_eq!(count(TS_MAX_HEADERS), Some((Prob::MAXIMUM.get(), 188)));
+        assert_eq!(count(TS_MAX_HEADERS + 4), Some((Prob::MAXIMUM.get(), 188)));
+    }
+
+    /// A capture can begin in the middle of a packet, and the first stride
+    /// that fills is answered from wherever it starts.
+    #[test]
+    fn transport_headers_are_found_at_an_offset_and_at_their_own_stride() {
+        let at = |lead: usize| {
+            let mut data = vec![0x00u8; lead];
+            data.extend(ts_heads(TS_MIN_HEADERS, TS_PACKET_SIZES[0]));
+            probe(&data, |tf| {
+                mpeg_ts_probe(tf).map(|(p, size)| (p.get(), size))
+            })
+        };
+        assert_eq!(at(7), Some((40, 188)));
+        // The same headers at the same offset, spaced 204 apart.
+        let mut data = vec![0x00u8; 7];
+        data.extend(ts_heads(TS_MIN_HEADERS, 204));
+        assert_eq!(
+            probe(&data, |tf| mpeg_ts_probe(tf)
+                .map(|(p, size)| (p.get(), size))),
+            Some((40, 204))
+        );
+    }
+
+    /// Headers short of the cap are counted to the last one the stream
+    /// reaches: the confidence says how many were seen, not that the walk ran
+    /// out of stream rather than of headers.
+    #[test]
+    fn a_transport_stream_short_of_the_cap_is_still_a_stream() {
+        assert_eq!(
+            probe(&ts_heads(TS_MIN_HEADERS, TS_PACKET_SIZES[0]), |tf| {
+                mpeg_ts_probe(tf).map(|(p, size)| (p.get(), size))
+            }),
+            Some((40, 188))
+        );
+        assert_eq!(
+            probe(&ts_heads(TS_MIN_HEADERS + 1, TS_PACKET_SIZES[0]), |tf| {
+                mpeg_ts_probe(tf).map(|(p, size)| (p.get(), size))
+            }),
+            Some((50, 188))
+        );
     }
 
     /// The rungs of the video ladder, from a full sequence down to a lone
@@ -915,13 +984,13 @@ mod tests {
     #[test]
     fn a_run_of_recognised_headers_is_a_program_stream() {
         let data = stream(&[&PACK2, &pes(8), &pes(8), &TAIL]);
-        assert_eq!(sys_scan(&data, data.len()), Some((90, 2)));
+        assert_eq!(sys_scan(&data), Some((90, 2)));
         // The same run with an MPEG-1 pack reads as MPEG-1.
         let data = stream(&[&PACK1, &pes(8), &pes(8), &TAIL]);
-        assert_eq!(sys_scan(&data, data.len()), Some((90, 1)));
+        assert_eq!(sys_scan(&data), Some((90, 1)));
         // A system header counts with the packs and is stepped over whole.
         let data = stream(&[&PACK2, &system_header(), &pes(8), &TAIL]);
-        assert_eq!(sys_scan(&data, data.len()), Some((90, 2)));
+        assert_eq!(sys_scan(&data), Some((90, 2)));
     }
 
     /// A stream that does not begin with its first packet is worth ten points
@@ -929,7 +998,7 @@ mod tests {
     #[test]
     fn a_first_packet_not_at_the_start_costs_confidence() {
         let data = stream(&[&[0xFF; 6], &PACK2, &pes(8), &pes(8), &TAIL]);
-        assert_eq!(sys_scan(&data, data.len()), Some((80, 2)));
+        assert_eq!(sys_scan(&data), Some((80, 2)));
     }
 
     /// A start code the format does not define for a program stream does more
@@ -939,9 +1008,9 @@ mod tests {
     #[test]
     fn an_unrecognised_start_code_breaks_the_run() {
         let plain = window(&[&PACK2, &pes(8), &pes(8), &pes(8)]);
-        assert_eq!(sys_scan(&plain, plain.len()), Some((80, 2)));
+        assert_eq!(sys_scan(&plain), Some((80, 2)));
         let broken = window(&[&PACK2, &NOT_A_PACKET, &pes(8), &pes(8), &pes(8)]);
-        assert_eq!(sys_scan(&broken, broken.len()), None);
+        assert_eq!(sys_scan(&broken), None);
     }
 
     /// Pack headers are optional in a program stream but PES packets are not:
@@ -949,7 +1018,7 @@ mod tests {
     #[test]
     fn packs_without_a_pes_packet_are_not_a_program_stream() {
         let data = stream(&[&PACK2, &PACK2, &PACK2, &TAIL]);
-        assert_eq!(sys_scan(&data, data.len()), None);
+        assert_eq!(sys_scan(&data), None);
     }
 
     /// Only headers that sit close to the previous one make a run: a gap of more
@@ -958,9 +1027,44 @@ mod tests {
     #[test]
     fn headers_separated_by_a_gap_do_not_add_up() {
         let joined = window(&[&PACK2, &pes(8), &pes(8), &pes(8)]);
-        assert_eq!(sys_scan(&joined, joined.len()), Some((80, 2)));
+        assert_eq!(sys_scan(&joined), Some((80, 2)));
         let gapped = window(&[&PACK2, &pes(8), &[0xFF; 6], &pes(8), &pes(8)]);
-        assert_eq!(sys_scan(&gapped, gapped.len()), None);
+        assert_eq!(sys_scan(&gapped), None);
+    }
+
+    /// A run of which some are PES packets is settled once it passes
+    /// [`SYS_MAX_HEADERS`], and the walk stops there rather than reading on.
+    /// Everything behind the boundary is therefore unseen, including an MPEG-1
+    /// pack that would otherwise say which version the stream is. Six PES
+    /// packets is 50 + 60 capped at 100, and every start code the walk reached
+    /// is one the format defines.
+    #[test]
+    fn a_long_run_is_settled_at_the_header_cap() {
+        let data = stream(&[
+            &pes(8),
+            &pes(8),
+            &pes(8),
+            &pes(8),
+            &pes(8),
+            &pes(8),
+            &PACK1,
+            &TAIL,
+        ]);
+        assert_eq!(sys_scan(&data), Some((100, 2)));
+    }
+
+    /// The version comes out of a header already known to be a pack. An octet 4
+    /// that opens with `'0010'` but whose marker bits do not line up is not one
+    /// the format can produce, so it neither counts nor calls the stream
+    /// MPEG-1; the PES packets behind it make it MPEG-2.
+    #[test]
+    fn a_half_pack_does_not_decide_the_version() {
+        let mut half_pack = PACK1;
+        half_pack[6] = 0x00;
+        assert_eq!(valid_pack(&stream(&[&half_pack, &TAIL])), None);
+
+        let data = stream(&[&half_pack, &pes(8), &pes(8), &pes(8), &TAIL]);
+        assert_eq!(sys_scan(&data), Some((80, 2)));
     }
 
     /// The top rung of the MPEG-4 visual ladder. Shared so a walk test can
