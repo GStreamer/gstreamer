@@ -172,7 +172,9 @@ gst_hip_color_range_adjust_matrix_unorm (const GstVideoInfo * in_info,
 
   if (in_range == GST_VIDEO_COLOR_RANGE_UNKNOWN) {
     GST_WARNING ("Unknown input color range");
-    if (in_rgb || GST_VIDEO_INFO_IS_GRAY (in_info))
+    if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (in_info->finfo))
+      in_range = GST_VIDEO_COLOR_RANGE_0_1;
+    else if (in_rgb || GST_VIDEO_INFO_IS_GRAY (in_info))
       in_range = GST_VIDEO_COLOR_RANGE_0_255;
     else
       in_range = GST_VIDEO_COLOR_RANGE_16_235;
@@ -180,7 +182,9 @@ gst_hip_color_range_adjust_matrix_unorm (const GstVideoInfo * in_info,
 
   if (out_range == GST_VIDEO_COLOR_RANGE_UNKNOWN) {
     GST_WARNING ("Unknown output color range");
-    if (out_rgb || GST_VIDEO_INFO_IS_GRAY (out_info))
+    if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (out_info->finfo))
+      out_range = GST_VIDEO_COLOR_RANGE_0_1;
+    else if (out_rgb || GST_VIDEO_INFO_IS_GRAY (out_info))
       out_range = GST_VIDEO_COLOR_RANGE_0_255;
     else
       out_range = GST_VIDEO_COLOR_RANGE_16_235;
@@ -1072,8 +1076,10 @@ convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
   }
 
   tmp.colorimetry.range = gray->colorimetry.range;
-  if (tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN)
+  if (tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN ||
+      tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_0_1) {
     tmp.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+  }
 
   tmp.colorimetry.primaries = gray->colorimetry.primaries;
   if (tmp.colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
@@ -1376,6 +1382,9 @@ gst_hip_converter_setup (GstHipConverter * self)
   if (GST_VIDEO_INFO_IS_RGB (out_info)) {
     GstVideoInfo rgb_info = *out_info;
     rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+    if (GST_VIDEO_FORMAT_INFO_IS_FLOAT (rgb_info.finfo))
+      rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_1;
+
     gst_hip_color_range_adjust_matrix_unorm (&rgb_info, out_info,
         &border_color_matrix);
   } else {
