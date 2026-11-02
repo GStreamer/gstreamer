@@ -50,7 +50,7 @@
  * ## Example launch line
  *
  * ```
- * gst-launch-1.0 v4l2src ! videoconvert ! cvtracker box-x=50 box-y=50 box-wdith=50 box-height=50 ! videoconvert ! xvimagesink
+ * gst-launch-1.0 v4l2src ! videoconvert ! cvtracker object-initial-x=50 object-initial-y=50 object-initial-width=50 object-initial-height=50 ! videoconvert ! xvimagesink
  * ```
  *
  * Since: 1.20
