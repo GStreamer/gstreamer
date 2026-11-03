@@ -2842,8 +2842,8 @@ restart:
           self, signal_state, FALSE, &signal_candidate_present,
           ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
           &last_detected_video_format);
-      g_mutex_unlock(&self->queue_lock);
       driver_drops_time = GST_CLOCK_TIME_NONE;
+      g_mutex_unlock(&self->queue_lock);
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
@@ -2871,8 +2871,8 @@ restart:
           self, signal_state, FALSE, &signal_candidate_present,
           current_video_format, vpid_a, &signal_state_since, &pending_recovery,
           &last_detected_video_format);
-      g_mutex_unlock(&self->queue_lock);
       driver_drops_time = GST_CLOCK_TIME_NONE;
+      g_mutex_unlock(&self->queue_lock);
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
