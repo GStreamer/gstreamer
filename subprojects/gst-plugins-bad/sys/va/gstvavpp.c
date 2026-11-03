@@ -738,7 +738,8 @@ _add_filter_hdr_buffer (GstVaVpp * self,
           && (caps->caps_flag & VA_TONE_MAPPING_HDR_TO_SDR)))
     goto bail;
 
-  if (self->op_flags & VPP_CONVERT_FORMAT) {
+  if (GST_VIDEO_INFO_FORMAT (&btrans->in_info) !=
+      GST_VIDEO_INFO_FORMAT (&btrans->out_info)) {
     GST_WARNING_OBJECT (self, "Cannot apply HDR with color conversion");
     goto bail;
   }
