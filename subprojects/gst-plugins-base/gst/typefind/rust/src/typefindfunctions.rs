@@ -621,6 +621,45 @@ extern "C" fn ds_store_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
+// DVD image (ISO 9660) - application/octet-stream
+// ECMA-119 puts the Primary Volume Descriptor in sector 16: a one type
+// octet and `CD001` at 0x8000. The standard lets a file fill the system
+// area before it; the finder insists it is all zero, a heuristic beyond
+// the standard that keeps the claim off any file that merely carries an
+// ISO 9660 volume behind other data.
+const DVD_PVD_OFFSET: usize = 0x8000;
+const DVD_SCAN_WINDOW: usize = 4096;
+
+fn dvdiso_iso9660(tf: &mut TypeFind) -> bool {
+    // The descriptor first: a foreign stream should not pay for a scan
+    // through its first thirty-two KiB before being dismissed.
+    let mut pvd = Scanner::new(tf, DVD_PVD_OFFSET as i64);
+    if !matches!(pvd.peek(6), Some(p) if p == b"\x01CD001") {
+        return false;
+    }
+    // The system area, zero to the octet the descriptor starts at.
+    let mut scan = Scanner::new(tf, 0);
+    let mut left = DVD_PVD_OFFSET;
+    while left > 0 {
+        let want = left.min(DVD_SCAN_WINDOW);
+        let Some(area) = scan.peek(want) else {
+            return false;
+        };
+        if area.iter().any(|&b| b != 0) {
+            return false;
+        }
+        scan.consume(want);
+        left -= want;
+    }
+    true
+}
+
+extern "C" fn dvdiso_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if dvdiso_iso9660(tf) {
+        suggest!(tf, Prob::LIKELY, c"application/octet-stream");
+    }
+}
+
 // DMP - audio/x-tap-dmp (Tape2029)
 extern "C" fn dmp_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"DC2N-TAP-RAW") {
@@ -2889,6 +2928,9 @@ const FEATURES: &[Feature] = &[
         ds_store_type_find,
         "DS_Store"
     ),
+    // Registers after the DS_Store row of the same name, and replaces it
+    // in the registry: the feature answers for both, as it does upstream.
+    typefinder!("application/octet-stream", MARGINAL, dvdiso_type_find),
     typefinder!("audio/x-tap-dmp", SECONDARY, dmp_type_find, "dmp"),
     typefinder!("video/x-avs", SECONDARY, avs_type_find),
     typefinder!("image/vnd.adobe.photoshop", SECONDARY, psd_type_find, "psd"),
@@ -3285,7 +3327,49 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
 
 #[cfg(test)]
 mod tests {
-    use super::looks_like_text;
+    use super::{dvdiso_iso9660, looks_like_text};
+    use crate::helpers::probe_engine::probe;
+
+    fn iso9660(pvd: &[u8], junk_at: Option<usize>) -> bool {
+        let mut data = vec![0u8; 0x8000];
+        data.extend_from_slice(pvd);
+        if let Some(at) = junk_at {
+            data[at] = 0x20;
+        }
+        probe(&data, dvdiso_iso9660)
+    }
+
+    /// A volume whose system area is empty and whose descriptor opens
+    /// with ECMA-119's type octet and identifier answers, however long
+    /// the file runs on behind it.
+    #[test]
+    fn an_empty_iso9660_system_area_answers() {
+        assert!(iso9660(b"\x01CD001", None));
+        assert!(iso9660(b"\x01CD001\x01Volume space", None));
+        // A file ending on the descriptor's last octet is enough; one
+        // octet shorter holds no descriptor.
+        let mut exact = vec![0u8; 0x8000];
+        exact.extend(b"\x01CD001");
+        assert!(probe(&exact, dvdiso_iso9660));
+        exact.pop();
+        assert!(!probe(&exact, dvdiso_iso9660));
+    }
+
+    /// The system area is read to its last octet: one byte set anywhere
+    /// in the thirty-two KiB dismisses the file, and so does a descriptor
+    /// that differs in its type octet or its identifier.
+    #[test]
+    fn one_foreign_octet_dismisses_the_volume() {
+        for at in [0, 1, 0x1000, 0x7FFF] {
+            assert!(!iso9660(b"\x01CD001", Some(at)), "octet {at} set");
+        }
+        assert!(!iso9660(b"\x00CD001", None));
+        assert!(!iso9660(b"\x02CD001", None));
+        assert!(!iso9660(b"\x01CD002", None));
+        assert!(!iso9660(b"\x01CD00", None)); // the identifier runs off the file
+        assert!(!iso9660(b"", None)); // zeros alone: nothing behind them
+        assert!(!probe(b"", dvdiso_iso9660));
+    }
 
     #[test]
     fn text_rule() {
