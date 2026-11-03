@@ -49,6 +49,10 @@ struct _GstAjaSrc {
   GCond queue_cond;
   GstVecDeque *queue;
   guint queue_num_frames;
+  // QoS statistics in nanoseconds: processed is written on the streaming
+  // thread, dropped on the capture thread
+  guint64 qos_processed;
+  guint64 qos_dropped;
   gboolean playing;
   gboolean shutdown;
   gboolean flushing;

@@ -1752,6 +1752,11 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
   }
   self->queue_num_frames = 0;
 
+  // QoS statistics count frames since the last state change to READY.
+  // Flushing does not reset them.
+  self->qos_processed = 0;
+  self->qos_dropped = 0;
+
   if (self->buffer_pool) {
     gst_buffer_pool_set_active(self->buffer_pool, FALSE);
     gst_clear_object(&self->buffer_pool);
@@ -1786,6 +1791,8 @@ static GstStateChangeReturn gst_aja_src_change_state(
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      self->qos_processed = 0;
+      self->qos_dropped = 0;
       if (!gst_aja_src_open(self)) return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -1932,6 +1939,7 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   GstAjaSrc *self = GST_AJA_SRC(psrc);
   GstFlowReturn flow_ret = GST_FLOW_OK;
   QueueItem item = {QUEUE_ITEM_TYPE_DUMMY};
+  guint64 processed, dropped;
 
 next_item:
   item.type = QUEUE_ITEM_TYPE_DUMMY;
@@ -1950,7 +1958,12 @@ next_item:
   item = *(QueueItem *)gst_vec_deque_pop_head_struct(self->queue);
   if (item.type == QUEUE_ITEM_TYPE_FRAME) {
     self->queue_num_frames -= 1;
+    // Only count a frame as processed once it was removed from the queue,
+    // while it is in there the capture thread may still drop it on overrun.
+    self->qos_processed += GST_BUFFER_DURATION(item.frame.video_buffer);
   }
+  processed = self->qos_processed;
+  dropped = self->qos_dropped;
   g_mutex_unlock(&self->queue_lock);
 
   switch (item.type) {
@@ -2014,7 +2027,7 @@ next_item:
                                (GstMessage *)g_steal_pointer(&item.error.msg));
       queue_item_clear(&item);
       return GST_FLOW_ERROR;
-    case QUEUE_ITEM_TYPE_FRAMES_DROPPED:
+    case QUEUE_ITEM_TYPE_FRAMES_DROPPED: {
       if (item.frames_dropped.driver_side) {
         GST_WARNING_OBJECT(
             self,
@@ -2030,15 +2043,16 @@ next_item:
             GST_TIME_ARGS(item.frames_dropped.timestamp_start),
             GST_TIME_ARGS(item.frames_dropped.timestamp_end));
       }
-      gst_element_post_message(
-          GST_ELEMENT(self),
-          gst_message_new_qos(GST_OBJECT_CAST(self), TRUE, GST_CLOCK_TIME_NONE,
-                              GST_CLOCK_TIME_NONE,
-                              item.frames_dropped.timestamp_start,
-                              item.frames_dropped.timestamp_end -
-                                  item.frames_dropped.timestamp_start));
+      GstMessage *msg = gst_message_new_qos(
+          GST_OBJECT_CAST(self), TRUE, item.frames_dropped.timestamp_start,
+          GST_CLOCK_TIME_NONE, item.frames_dropped.timestamp_start,
+          item.frames_dropped.timestamp_end -
+              item.frames_dropped.timestamp_start);
+      gst_message_set_qos_stats(msg, GST_FORMAT_TIME, processed, dropped);
+      gst_element_post_message(GST_ELEMENT(self), msg);
       queue_item_clear(&item);
       goto next_item;
+    }
     case QUEUE_ITEM_TYPE_FRAME:
       // fall through below
       break;
@@ -3010,6 +3024,8 @@ restart:
       // frames before its actual position. acCurrentReps might specify how
       // many times a frame was repeated but the SDK does not define what
       // its value means.
+      GstClockTime frame_duration = gst_util_uint64_scale(
+          GST_SECOND, self->configured_info.fps_d, self->configured_info.fps_n);
       guint64 driver_drops_now = transfer_status.GetDroppedFrameCount();
       guint64 dropped_frames = 0;
       if (driver_drops_time == GST_CLOCK_TIME_NONE) {
@@ -3018,8 +3034,7 @@ restart:
         // AutoCirculateResume(), AutoCirculateFlush() and other API can clear
         // the counter and the counter can also wrap around.
         GST_INFO_OBJECT(self, "Frame drop counter was reset");
-      } else if (frames_to_drop == 0 && !first_frame_after_start &&
-                 !reset_clock) {
+      } else {
         guint64 delta = driver_drops_now - driver_drops;
         guint64 elapsed_frames = gst_util_uint64_scale(
             now_monotonic_sys - driver_drops_time, self->configured_info.fps_n,
@@ -3037,7 +3052,11 @@ restart:
               delta,
               (guint)((now_monotonic_sys - driver_drops_time) / GST_MSECOND));
         } else {
-          dropped_frames = delta;
+          // Count every dropped frame for the QoS statistics, even the ones
+          // that are dropped by the code below and thus are never reported.
+          self->qos_dropped += delta * frame_duration;
+          if (frames_to_drop == 0 && !first_frame_after_start && !reset_clock)
+            dropped_frames = delta;
         }
       }
       driver_drops = driver_drops_now;
@@ -3056,6 +3075,7 @@ restart:
       if (frames_to_drop > 0) {
         GST_TRACE_OBJECT(self, "Dropping frame");
         frames_to_drop -= 1;
+        self->qos_dropped += frame_duration;
         gst_clear_buffer(&anc_buffer2);
         gst_clear_buffer(&anc_buffer);
         gst_clear_buffer(&audio_buffer);
@@ -3249,6 +3269,7 @@ restart:
             queue_item_clear(tmp);
             *tmp = item;
             self->queue_num_frames -= 1;
+            self->qos_dropped += duration;
             discont = true;
             g_cond_signal(&self->queue_cond);
             break;
@@ -3264,10 +3285,7 @@ restart:
 
       if (dropped_frames > 0) {
         if (pts != GST_CLOCK_TIME_NONE) {
-          GstClockTime gap_duration =
-              dropped_frames *
-              gst_util_uint64_scale(GST_SECOND, self->configured_info.fps_d,
-                                    self->configured_info.fps_n);
+          GstClockTime gap_duration = dropped_frames * frame_duration;
           GstClockTime timestamp_start;
           if (pts < gap_duration) {
             // Only possible when the frame timestamp was clamped to zero
