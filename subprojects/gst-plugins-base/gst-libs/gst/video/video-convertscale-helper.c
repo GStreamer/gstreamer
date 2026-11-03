@@ -923,6 +923,28 @@ transfer_colorimetry_from_input (GstObject * object, GstCaps * in_caps,
   }
 }
 
+static void
+copy_misc_fields_from_input (GstCaps * in_caps, GstCaps * out_caps)
+{
+  const gchar *fields[] = { "interlace-mode", "field-order", "multiview-mode",
+    "multiview-flags", "framerate"
+  };
+  GstStructure *out_caps_s = gst_caps_get_structure (out_caps, 0);
+  GstStructure *in_caps_s = gst_caps_get_structure (in_caps, 0);
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (fields); i++) {
+    const GValue *in_field = gst_structure_get_value (in_caps_s, fields[i]);
+    const GValue *out_field = gst_structure_get_value (out_caps_s, fields[i]);
+
+    if (out_field && gst_value_is_fixed (out_field))
+      continue;
+
+    if (in_field)
+      gst_structure_set_value (out_caps_s, fields[i], in_field);
+  }
+}
+
 /**
  * gst_video_convertscale_fixate_caps:
  * @object: The object to use for logging
@@ -1004,6 +1026,9 @@ gst_video_convertscale_fixate_caps (GstObject * object,
         gst_caps_features_copy (features));
     gst_clear_caps (&tmp);
   }
+
+  /* some fields might be lost while feature caps conversion */
+  copy_misc_fields_from_input (caps, result);
 
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
