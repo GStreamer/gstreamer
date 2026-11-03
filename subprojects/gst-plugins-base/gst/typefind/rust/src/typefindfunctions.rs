@@ -634,7 +634,10 @@ fn dvdiso_iso9660(tf: &mut TypeFind) -> bool {
     // The descriptor first: a foreign stream should not pay for a scan
     // through its first thirty-two KiB before being dismissed.
     let mut pvd = Scanner::new(tf, DVD_PVD_OFFSET as i64);
-    if !matches!(pvd.peek(6), Some(p) if p == b"\x01CD001") {
+    let Some(descriptor) = pvd.peek(6) else {
+        return false;
+    };
+    if descriptor != b"\x01CD001" {
         return false;
     }
     // The system area, zero to the octet the descriptor starts at.
@@ -3327,16 +3330,21 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
 
 #[cfg(test)]
 mod tests {
-    use super::{dvdiso_iso9660, looks_like_text};
-    use crate::helpers::probe_engine::probe;
+    use super::{dvdiso_iso9660, dvdiso_type_find, looks_like_text};
+    use crate::helpers::Prob;
+    use crate::helpers::probe_engine::{probe, probe_suggestions};
 
-    fn iso9660(pvd: &[u8], junk_at: Option<usize>) -> bool {
+    fn iso9660_bytes(pvd: &[u8], junk_at: Option<usize>) -> Vec<u8> {
         let mut data = vec![0u8; 0x8000];
         data.extend_from_slice(pvd);
         if let Some(at) = junk_at {
             data[at] = 0x20;
         }
-        probe(&data, dvdiso_iso9660)
+        data
+    }
+
+    fn iso9660(pvd: &[u8], junk_at: Option<usize>) -> bool {
+        probe(&iso9660_bytes(pvd, junk_at), dvdiso_iso9660)
     }
 
     /// A volume whose system area is empty and whose descriptor opens
@@ -3369,6 +3377,26 @@ mod tests {
         assert!(!iso9660(b"\x01CD00", None)); // the identifier runs off the file
         assert!(!iso9660(b"", None)); // zeros alone: nothing behind them
         assert!(!probe(b"", dvdiso_iso9660));
+    }
+
+    /// The whole typefinding function answers at likely, with the
+    /// shared octet-stream caps; a file with one octet set in the
+    /// system area suggests nothing.
+    #[test]
+    fn dvdiso_suggests_at_likely() {
+        let suggestions = probe_suggestions(&iso9660_bytes(b"\x01CD001", None), |tf| {
+            dvdiso_type_find(tf, std::ptr::null_mut())
+        });
+        assert_eq!(
+            suggestions,
+            [(Prob::LIKELY.get(), "application/octet-stream".to_string())]
+        );
+        assert!(
+            probe_suggestions(&iso9660_bytes(b"\x01CD001", Some(0x1234)), |tf| {
+                dvdiso_type_find(tf, std::ptr::null_mut())
+            })
+            .is_empty()
+        );
     }
 
     #[test]
