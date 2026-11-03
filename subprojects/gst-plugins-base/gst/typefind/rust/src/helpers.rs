@@ -49,7 +49,9 @@ impl TypeFind {
 
     /// Returns the data stream length in bytes, or None if unknown.
     ///
-    /// Per the C API: `0` means "not available"; positive values are known lengths.
+    /// Per the C API: `0` means "not available". A seekable stream states
+    /// its total size; a pushed one states the bytes gathered so far, a
+    /// known bound on what peeks can reach but not the whole file.
     pub fn length(&mut self) -> Option<NonZeroU64> {
         let raw = unsafe { bindings::gst_type_find_get_length(&mut self.0) };
         NonZeroU64::new(raw)
@@ -501,73 +503,163 @@ pub(crate) use TypeFindProbability as Prob;
 // Re-export macros and items needed by typefindfunctions.rs.
 pub(crate) use {map_type_name, map_value, opt, suggest, typefinder};
 
-/// A byte slice playing the engine, for tests that drive a probe.
+/// A real typefind context, for tests that drive a finder.
 ///
-/// The finders reach the engine through `gst_type_find_peek` and
-/// `gst_type_find_get_length` alone. These definitions shadow libgstreamer's
-/// at link time — the same interposition the fuzz harness runs on — so a
-/// probe reads the bytes its test handed it through the very peek the
-/// production path takes. The context handed to the probe is a placeholder:
-/// neither entry point looks at it, and suggesting is out of a probe's way.
+/// `GstTypeFind` is a struct the caller of a typefinding function builds
+/// and owns, and libgstreamer's `gst_type_find_peek`,
+/// `gst_type_find_get_length` and `gst_type_find_suggest_simple` are thin
+/// dispatchers over its callbacks (gst/gsttypefind.c). So a test builds
+/// the context itself: the callbacks read the bytes its test handed over
+/// and record the suggestion, and everything between the finder and the
+/// callbacks runs the real libgstreamer code — the variadic
+/// `suggest_simple` included, which marshals the caps field values a Rust
+/// shim could never read. Per-run state lives in the `Probe` `probe`
+/// owns, reached only through the context's own `data` pointer: the seam
+/// the C API offers for exactly this. Suggesting builds a `GstCaps`,
+/// whose type registers at `gst_init`, so the engine initializes
+/// GStreamer once per test binary.
 #[cfg(test)]
 pub(crate) mod probe_engine {
     use super::{TypeFind, bindings};
-    use std::cell::RefCell;
     use std::os::raw::c_uint;
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+    use std::ptr;
 
-    thread_local! {
-        static STREAM: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+    /// The stream under test and the suggestions made to it.
+    struct Probe {
+        stream: Vec<u8>,
+        /// Suggestions in the order the finder made them; a typefinding
+        /// function may suggest several times (gst/gsttypefind.h).
+        suggestions: Vec<(c_uint, String)>,
     }
 
-    /// The whole request or nothing, and a negative offset measured back from
-    /// the end: the real helper's contract, pinned in the fuzz harness.
-    #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn gst_type_find_peek(
-        _find: *mut bindings::GstTypeFind,
-        offset: i64,
-        size: c_uint,
-    ) -> *const u8 {
-        STREAM
-            .with(|cell| {
-                let data = cell.borrow();
-                let size = usize::try_from(size).ok()?;
-                if size == 0 {
-                    return Some(std::ptr::null());
-                }
-                let len = i64::try_from(data.len()).ok()?;
-                let at = if offset < 0 {
-                    let back = offset.checked_neg()?;
-                    if back > len {
-                        return Some(std::ptr::null());
-                    }
-                    len - back
-                } else {
-                    offset
-                };
-                let at = usize::try_from(at).ok()?;
-                let end = at.checked_add(size)?;
-                if end > data.len() {
-                    return Some(std::ptr::null());
-                }
-                Some(unsafe { data.as_ptr().add(at) })
-            })
-            .unwrap_or(std::ptr::null())
+    /// The whole request or nothing, and a negative offset measured back
+    /// from the end: the real element's peek contract, pinned in the
+    /// fuzz harness.
+    unsafe extern "C" fn peek(data: bindings::gpointer, offset: i64, size: c_uint) -> *const u8 {
+        let probe = unsafe { &*(data as *const Probe) };
+        let Ok(size) = usize::try_from(size) else {
+            return ptr::null();
+        };
+        if size == 0 {
+            return ptr::null();
+        }
+        let Ok(len) = i64::try_from(probe.stream.len()) else {
+            return ptr::null();
+        };
+        let at = if offset < 0 {
+            let Some(back) = offset.checked_neg() else {
+                return ptr::null();
+            };
+            if back > len {
+                return ptr::null();
+            }
+            len - back
+        } else {
+            offset
+        };
+        let Ok(at) = usize::try_from(at) else {
+            return ptr::null();
+        };
+        match at.checked_add(size) {
+            Some(end) if end <= probe.stream.len() => unsafe { probe.stream.as_ptr().add(at) },
+            _ => ptr::null(),
+        }
     }
 
-    /// Every stream these cases build is a complete file, so its length is
-    /// known. A stream that leaves it unknown is the pushed case, which no
-    /// probe-level test can tell the engine through this door.
-    #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn gst_type_find_get_length(_find: *mut bindings::GstTypeFind) -> u64 {
-        STREAM.with(|cell| cell.borrow().len() as u64)
+    /// Every stream these cases build is a complete file, so its length
+    /// is known. A pushed stream states the bytes gathered so far and an
+    /// unknown one answers zero (gst/gsttypefindhelper.c); neither is a
+    /// complete file, so no probe-level test here models them.
+    unsafe extern "C" fn get_length(data: bindings::gpointer) -> u64 {
+        let probe = unsafe { &*(data as *const Probe) };
+        probe.stream.len() as u64
+    }
+
+    /// Record the suggestion. libgstreamer built the caps from the
+    /// variadic tail and owns it across this call, so it is serialized
+    /// here: that pins a field's value as well as the media type. Only
+    /// the list is borrowed mutably; a peek slice from earlier in the
+    /// run may still be alive sharing `stream`.
+    unsafe extern "C" fn suggest(
+        data: bindings::gpointer,
+        probability: c_uint,
+        caps: *mut bindings::GstCaps,
+    ) {
+        let suggestions = unsafe { &mut (*(data as *mut Probe)).suggestions };
+        let raw = unsafe { bindings::gst_caps_to_string(caps) };
+        let caps_str = if raw.is_null() {
+            String::new()
+        } else {
+            let s = unsafe { std::ffi::CStr::from_ptr(raw) }
+                .to_string_lossy()
+                .into_owned();
+            unsafe { bindings::g_free(raw.cast()) };
+            s
+        };
+        suggestions.push((probability, caps_str));
+    }
+
+    /// Run `run` over a fresh context on `probe`, guarded: a panic from
+    /// `read` is caught at the boundary of the whole run, the context —
+    /// and its `data` pointer into `probe` — is dropped inside it, and
+    /// the half-run's suggestions are dropped with the decision to
+    /// propagate. The guard is the run's whole contract in one place:
+    /// panic or return, `probe` holds nothing a half-run wrote.
+    fn guarded<T, F>(probe: &mut Probe, run: F) -> T
+    where
+        F: for<'a> FnOnce(&'a mut TypeFind) -> T,
+    {
+        let mut tf = TypeFind(bindings::GstTypeFind {
+            peek: Some(peek),
+            suggest: Some(suggest),
+            data: probe as *mut Probe as bindings::gpointer,
+            get_length: Some(get_length),
+            _gst_reserved: [ptr::null_mut(); 4],
+        });
+        match catch_unwind(AssertUnwindSafe(|| run(&mut tf))) {
+            Ok(answer) => answer,
+            Err(cause) => {
+                probe.suggestions.clear();
+                std::panic::resume_unwind(cause);
+            }
+        }
+    }
+
+    /// GStreamer initializes once: the suggestion path builds caps
+    /// through libgstreamer, so its types register as production's do.
+    fn init_gstreamer() {
+        use std::sync::Once;
+        static INIT: Once = Once::new();
+        INIT.call_once(|| unsafe {
+            bindings::gst_init(ptr::null_mut(), ptr::null_mut());
+        });
     }
 
     /// Run `read` with the engine answering from `data`.
     pub(crate) fn probe<T>(data: &[u8], read: impl FnOnce(&mut TypeFind) -> T) -> T {
-        STREAM.with(|cell| *cell.borrow_mut() = data.to_vec());
-        let mut tf = TypeFind(bindings::GstTypeFind { _private: [] });
-        let answer = read(&mut tf);
-        STREAM.with(|cell| cell.borrow_mut().clear());
-        answer
+        init_gstreamer();
+        let mut probe = Probe {
+            stream: data.to_vec(),
+            suggestions: Vec::new(),
+        };
+        guarded(&mut probe, read)
+    }
+
+    /// Run `read` (a whole typefinding function, suggestions included)
+    /// against `data` and report its suggestions in the order they were
+    /// made: each one's probability and full caps string. An empty
+    /// answer means nothing was suggested.
+    pub(crate) fn probe_suggestions(
+        data: &[u8],
+        read: impl FnOnce(&mut TypeFind),
+    ) -> Vec<(c_uint, String)> {
+        init_gstreamer();
+        let mut probe = Probe {
+            stream: data.to_vec(),
+            suggestions: Vec::new(),
+        };
+        guarded(&mut probe, read);
+        probe.suggestions
     }
 }

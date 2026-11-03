@@ -23,11 +23,29 @@ use std::os::raw::{c_char, c_int, c_uint, c_void};
 
 use crate::helpers::TypeFindFunc;
 
-/// Opaque typefind context
+/// The typefind context a caller of a typefinding function builds and
+/// owns: `struct _GstTypeFind` in gst/gsttypefind.h — three callbacks
+/// that receive `data`, the pointer itself, and the reserved padding.
+/// Production code never reads a field; it receives the pointer from
+/// libgstreamer and passes it to the helpers. Tests build the struct by
+/// hand to drive a finder (helpers.rs::probe_engine).
 #[repr(C)]
 pub struct GstTypeFind {
-    pub(crate) _private: [u8; 0],
+    /// The requested bytes, or NULL when they are not available.
+    /// A negative offset counts back from the end of the stream.
+    pub peek: Option<unsafe extern "C" fn(data: gpointer, offset: i64, size: c_uint) -> *const u8>,
+    /// A fixed caps answer at some confidence. The caps are borrowed
+    /// across the call: the suggesting side owns them.
+    pub suggest:
+        Option<unsafe extern "C" fn(data: gpointer, probability: c_uint, caps: *mut GstCaps)>,
+    /// The context the callbacks receive.
+    pub data: gpointer,
+    /// The length of the stream in bytes, or 0 when unknown.
+    pub get_length: Option<unsafe extern "C" fn(data: gpointer) -> u64>,
+    pub(crate) _gst_reserved: [gpointer; 4],
 }
+
+const _: () = assert!(core::mem::size_of::<GstTypeFind>() == 8 * core::mem::size_of::<gpointer>());
 
 /// Opaque plugin object
 #[repr(C)]
@@ -132,4 +150,7 @@ unsafe extern "C" {
 
     pub fn g_free(mem: gpointer);
     pub fn g_error_free(error: *mut GError);
+
+    pub fn gst_caps_to_string(caps: *const GstCaps) -> *mut c_char;
+    pub fn gst_init(argc: *mut c_int, argv: *mut *mut *mut c_char);
 }

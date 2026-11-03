@@ -968,6 +968,18 @@ mod tests {
         );
     }
 
+    /// A run that panics propagates: the guard's boundary is the whole
+    /// run, so a half-run neither returns a value nor keeps suggestions —
+    /// what an aborted run holds is not evidence of anything.
+    #[test]
+    #[should_panic(expected = "half a search")]
+    fn a_panicking_run_propagates() {
+        crate::helpers::probe_engine::probe_suggestions(
+            &master(EBML_HEADER, &el(DOCTYPE, b"matroska")),
+            |_tf| panic!("half a search"),
+        );
+    }
+
     /// The kind test reads the value as one big-endian integer for video
     /// and only its first octet for audio: a multi-octet value opening
     /// with 2 is audio, and one spelling one across octets is video.
