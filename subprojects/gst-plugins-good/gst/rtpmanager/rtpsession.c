@@ -2062,6 +2062,15 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     /* configure a callback on the source */
     rtp_source_set_callbacks (source, &callbacks, sess);
 
+    /* Ref the source early, because add_source_to_lru_queue may release
+     * the session lock temporarily when timing out an old source */
+    g_object_ref (source);
+
+    /* update last activity */
+    source->last_activity = pinfo->current_time;
+    if (rtp)
+      source->last_rtp_activity = pinfo->current_time;
+
     add_source (sess, source);
 
     add_source_to_lru_queue (sess, source);
@@ -2069,6 +2078,15 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     *created = TRUE;
   } else {
     *created = FALSE;
+
+    /* Ref the source early, because add_source_to_lru_queue may release
+     * the session lock temporarily when timing out an old source */
+    g_object_ref (source);
+
+    /* update last activity */
+    source->last_activity = pinfo->current_time;
+    if (rtp)
+      source->last_rtp_activity = pinfo->current_time;
 
     // When the source we obtained was an internal one (for example mixer sending us
     // back a composite packet with one of our own sources contributing), we do not
@@ -2080,6 +2098,7 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
 
     /* check for collision, this updates the address when not previously set */
     if (check_collision (sess, source, pinfo, rtp)) {
+      g_object_unref (source);
       return NULL;
     }
     /* Receiving RTCP packets of an SSRC is a strong indication that we
@@ -2087,11 +2106,6 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     if (!rtp)
       g_object_set (source, "probation", 0, NULL);
   }
-  /* update last activity */
-  source->last_activity = pinfo->current_time;
-  if (rtp)
-    source->last_rtp_activity = pinfo->current_time;
-  g_object_ref (source);
 
   return source;
 }
