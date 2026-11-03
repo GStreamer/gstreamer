@@ -67,6 +67,10 @@
 GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define GST_CAT_DEFAULT gst_aja_src_debug
 
+// The device audio clock in FRAME_STAMP::acAudioClockTimeStamp ticks at
+// 10 MHz, no matter what the current libajantv2 headers claim
+#define GST_AJA_DEVICE_AUDIO_CLOCK_HZ (10000000)
+
 #define DEFAULT_DEVICE_IDENTIFIER ("0")
 #define DEFAULT_CHANNEL (::NTV2_CHANNEL1)
 #define DEFAULT_VIDEO_FORMAT (GST_AJA_VIDEO_FORMAT_AUTO)
@@ -2624,6 +2628,22 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   // time of that sample. NONE until the first transfer.
   guint64 driver_drops = 0;
   GstClockTime driver_drops_time = GST_CLOCK_TIME_NONE;
+  // Frames we discarded with frames_to_drop and dropped from the queue
+  // on overrun, for the log-only measurement checks below
+  guint64 discarded = 0;
+  guint64 queue_drops = 0;
+  // Sum of the drop counter deltas since the measurement window was taken.
+  // All baselines come from one transfer status sample and the window is
+  // reset on every restart, so the checks never see counter resets.
+  guint64 driver_drops_seen = 0;
+  gboolean measurements_valid = FALSE;
+  guint64 nf_base = 0, discarded_base = 0, p_base = 0, b_base = 0, d_base = 0;
+  GstClockTime diverged_at = GST_CLOCK_TIME_NONE;
+  // Device audio clock of the previous frame, for the log-only gap check
+  gboolean audio_clock_valid = FALSE;
+  guint64 last_audio_clock = 0;
+  // When the last audio gap was logged, to rate-limit the log
+  GstClockTime audio_gap_logged = GST_CLOCK_TIME_NONE;
   // Number of frames to drop. After signal loss the first few frames
   // often have invalid acFrameTime so we drop them to calculate valid
   // timestamps afterwards
@@ -2683,6 +2703,12 @@ restart:
   iterations_without_frame = 0;
   driver_drops = 0;
   driver_drops_time = GST_CLOCK_TIME_NONE;
+  discarded = 0;
+  queue_drops = 0;
+  measurements_valid = FALSE;
+  diverged_at = GST_CLOCK_TIME_NONE;
+  audio_clock_valid = FALSE;
+  audio_gap_logged = GST_CLOCK_TIME_NONE;
 
   g_mutex_lock(&self->queue_lock);
   self->video_format = ::NTV2_FORMAT_UNKNOWN;
@@ -3034,6 +3060,7 @@ restart:
         // AutoCirculateResume(), AutoCirculateFlush() and other API can clear
         // the counter and the counter can also wrap around.
         GST_INFO_OBJECT(self, "Frame drop counter was reset");
+        measurements_valid = FALSE;
       } else {
         guint64 delta = driver_drops_now - driver_drops;
         guint64 elapsed_frames = gst_util_uint64_scale(
@@ -3051,10 +3078,12 @@ restart:
               " frames in %u ms",
               delta,
               (guint)((now_monotonic_sys - driver_drops_time) / GST_MSECOND));
+          measurements_valid = FALSE;
         } else {
           // Count every dropped frame for the QoS statistics, even the ones
           // that are dropped by the code below and thus are never reported.
           self->qos_dropped += delta * frame_duration;
+          driver_drops_seen += delta;
           if (frames_to_drop == 0 && !first_frame_after_start && !reset_clock)
             dropped_frames = delta;
         }
@@ -3072,10 +3101,52 @@ restart:
         discont = true;
       }
 
+      // Log-only check for frame gaps that the drop counter missed: the
+      // device audio clock advances by about one frame duration between
+      // two transferred frames. A gap after a signal loss is valid, and
+      // counted drops show up here too, so log at most one gap per second
+      // with the state the frame arrived in.
+      guint64 audio_clock = frame_stamp.acAudioClockTimeStamp;
+      guint64 frame_ticks = gst_util_uint64_scale(GST_AJA_DEVICE_AUDIO_CLOCK_HZ,
+                                                  self->configured_info.fps_d,
+                                                  self->configured_info.fps_n);
+      // A zero timestamp means the device audio clock was not valid for
+      // this frame (e.g. after a device reset), so re-prime the check
+      // instead of comparing against it.
+      if (audio_clock != 0) {
+        gint64 clock_diff = (gint64)audio_clock - (gint64)last_audio_clock;
+        if (audio_clock_valid &&
+            (clock_diff < 0 ||
+             clock_diff > (gint64)(frame_ticks + frame_ticks / 2)) &&
+            (audio_gap_logged == GST_CLOCK_TIME_NONE ||
+             now_monotonic_sys > audio_gap_logged + GST_SECOND)) {
+          if (clock_diff < 0) {
+            GST_FIXME_OBJECT(
+                self,
+                "The device audio clock went backwards by %" G_GINT64_FORMAT
+                " ticks",
+                -clock_diff);
+          } else {
+            GST_FIXME_OBJECT(self,
+                             "The device audio clock advanced by %u frame "
+                             "durations, with signal state %d and %u frames to "
+                             "drop",
+                             (guint)(clock_diff / frame_ticks), signal_state,
+                             frames_to_drop);
+          }
+          audio_gap_logged = now_monotonic_sys;
+        }
+        last_audio_clock = audio_clock;
+        audio_clock_valid = TRUE;
+      } else {
+        audio_clock_valid = FALSE;
+      }
+
       if (frames_to_drop > 0) {
         GST_TRACE_OBJECT(self, "Dropping frame");
         frames_to_drop -= 1;
         self->qos_dropped += frame_duration;
+        discarded += 1;
         gst_clear_buffer(&anc_buffer2);
         gst_clear_buffer(&anc_buffer);
         gst_clear_buffer(&audio_buffer);
@@ -3137,6 +3208,7 @@ restart:
         reset_clock = false;
         discont = TRUE;
         num_frames = 0;
+        measurements_valid = FALSE;
       } else {
         gdouble r_squared;
 
@@ -3151,6 +3223,70 @@ restart:
       }
 
       num_frames += 1;
+
+      // Log-only checks of our values against the driver counters: every
+      // frame the driver processed left its buffer either to us or as a
+      // drop, and our frame index counts the transferred frames plus the
+      // drops. Reset the baselines whenever the driver counters restart.
+      if (!measurements_valid ||
+          transfer_status.GetProcessedFrameCount() < p_base ||
+          driver_drops_now < d_base) {
+        measurements_valid = TRUE;
+        nf_base = num_frames;
+        discarded_base = discarded;
+        p_base = transfer_status.GetProcessedFrameCount();
+        b_base = transfer_status.GetBufferLevel();
+        d_base = driver_drops_now;
+        driver_drops_seen = 0;
+        diverged_at = GST_CLOCK_TIME_NONE;
+      }
+
+      gint64 transferred =
+          (gint64)(transfer_status.GetProcessedFrameCount() - p_base) -
+          ((gint64)transfer_status.GetBufferLevel() - (gint64)b_base);
+      // The driver drop deltas that did not become a notification were only
+      // added on frames that restarted the window below, so on a valid
+      // window driver_drops_seen is exactly part of num_frames and
+      // subtracting it is correct.
+      gint64 accounted = (gint64)(num_frames - nf_base) +
+                         (gint64)(discarded - discarded_base) -
+                         (gint64)driver_drops_seen;
+      gint64 drops =
+          (gint64)(driver_drops_now - d_base) - (gint64)driver_drops_seen;
+      // The counters are updated with a delay, so tolerate up to the
+      // driver buffer depth plus two frames.
+      gint64 tolerance = 2 + (gint64)transfer_status.GetBufferLevel();
+      gint64 frame_diff = transferred > accounted ? transferred - accounted
+                                                  : accounted - transferred;
+      gint64 drop_diff = drops > 0 ? drops : -drops;
+
+      if (frame_diff > tolerance || drop_diff > tolerance) {
+        if (diverged_at == GST_CLOCK_TIME_NONE) {
+          diverged_at = now_monotonic_sys;
+        } else if (now_monotonic_sys > diverged_at + GST_SECOND) {
+          GST_FIXME_OBJECT(
+              self,
+              "Frame measurements diverged, driver transferred %" G_GINT64_FORMAT
+              " but we counted %" G_GINT64_FORMAT
+              ", driver dropped %" G_GUINT64_FORMAT
+              " but we saw %" G_GUINT64_FORMAT,
+              transferred, accounted, driver_drops_now - d_base,
+              driver_drops_seen);
+          diverged_at = now_monotonic_sys;
+        }
+      } else {
+        diverged_at = GST_CLOCK_TIME_NONE;
+      }
+
+      if (num_frames % 300 == 0) {
+        GST_INFO_OBJECT(
+            self,
+            "Frame index %" G_GUINT64_FORMAT ", discarded %" G_GUINT64_FORMAT
+            ", queue dropped %" G_GUINT64_FORMAT ", driver dropped %" G_GUINT64_FORMAT
+            " and has %" G_GUINT64_FORMAT " frames buffered",
+            num_frames, discarded, queue_drops, driver_drops_now,
+            (guint64)transfer_status.GetBufferLevel());
+      }
 
       GstClockTime capture_time;
       if (self->clock == clock) {
@@ -3270,6 +3406,7 @@ restart:
             *tmp = item;
             self->queue_num_frames -= 1;
             self->qos_dropped += duration;
+            queue_drops += 1;
             discont = true;
             g_cond_signal(&self->queue_cond);
             break;
