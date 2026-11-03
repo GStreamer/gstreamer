@@ -3491,6 +3491,10 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
     }
   }
 
+  /* A failed message may still own allocations, drop them before returning. */
+  if (res != GST_H265_PARSER_OK)
+    goto error;
+
   /* Not parsing the reserved_payload_extension, but it shouldn't be
    * an issue because of 1: There shall not be any reserved_payload_extension
    * present in bitstreams conforming to the specification.2. Even though
@@ -3595,7 +3599,9 @@ gst_h265_sei_copy (GstH265SEIMessage * dst_sei,
     GstH265PicTiming *dst_pic_timing = &dst_sei->payload.pic_timing;
     const GstH265PicTiming *src_pic_timing = &src_sei->payload.pic_timing;
 
-    if (dst_pic_timing->num_decoding_units_minus1 > 0) {
+    /* The arrays are allocated for a single decoding unit too, so their
+     * presence, not num_decoding_units_minus1, tells whether to copy them. */
+    if (src_pic_timing->num_nalus_in_du_minus1) {
       dst_pic_timing->num_nalus_in_du_minus1 =
           g_new0 (guint32, (dst_pic_timing->num_decoding_units_minus1 + 1));
       dst_pic_timing->du_cpb_removal_delay_increment_minus1 =
@@ -3657,12 +3663,11 @@ gst_h265_sei_free (GstH265SEIMessage * sei)
 
   if (sei->payloadType == GST_H265_SEI_PIC_TIMING) {
     GstH265PicTiming *pic_timing = &sei->payload.pic_timing;
-    if (pic_timing->num_decoding_units_minus1 > 0) {
-      g_free (pic_timing->num_nalus_in_du_minus1);
-      g_free (pic_timing->du_cpb_removal_delay_increment_minus1);
-    }
-    pic_timing->num_nalus_in_du_minus1 = 0;
-    pic_timing->du_cpb_removal_delay_increment_minus1 = 0;
+
+    g_free (pic_timing->num_nalus_in_du_minus1);
+    g_free (pic_timing->du_cpb_removal_delay_increment_minus1);
+    pic_timing->num_nalus_in_du_minus1 = NULL;
+    pic_timing->du_cpb_removal_delay_increment_minus1 = NULL;
   } else if (sei->payloadType == GST_H265_SEI_REGISTERED_USER_DATA) {
     GstH265RegisteredUserData *rud = &sei->payload.registered_user_data;
     g_free ((guint8 *) rud->data);

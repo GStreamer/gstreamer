@@ -113,6 +113,13 @@ static guint8 h265_sei_pic_timing[] = {
   0xff, 0xfe, 0x80
 };
 
+/* Same picture timing SEI, but the payload ends while the decoding unit loop
+ * is still running. The decoding unit arrays have been allocated by then. */
+static guint8 h265_sei_pic_timing_truncated[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x01, 0x10, 0x04, 0x00, 0x00, 0x03, 0x00,
+  0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x08, 0xaf
+};
+
 /* hdr10plus dynamic metadata */
 static guint8 h265_sei_user_data_registered[] = {
   0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x04, 0x40, 0xb5, 0x00, 0x3c, 0x00, 0x01,
@@ -341,6 +348,71 @@ GST_START_TEST (test_h265_parse_pic_timing)
   }
   g_array_free (messages, TRUE);
   gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_parse_pic_timing_truncated)
+{
+  GstH265NalUnit nalu;
+  GstH265Parser *parser = gst_h265_parser_new ();
+  const guint8 *buf = h265_sps;
+  guint buf_size = sizeof (h265_sps);
+  GArray *messages;
+  GstH265SPS sps;
+
+  assert_equals_int (gst_h265_parser_identify_nalu (parser, buf, 0, buf_size,
+          &nalu), GST_H265_PARSER_NO_NAL_END);
+  assert_equals_int (gst_h265_parser_parse_sps (parser, &nalu, &sps, TRUE),
+      GST_H265_PARSER_OK);
+
+  buf = h265_sei_pic_timing_truncated;
+  buf_size = sizeof (h265_sei_pic_timing_truncated);
+
+  assert_equals_int (gst_h265_parser_identify_nalu (parser, buf, 0, buf_size,
+          &nalu), GST_H265_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H265_NAL_PREFIX_SEI);
+
+  /* The message must be rejected, and the arrays allocated for its decoding
+   * units must not be leaked. */
+  assert_equals_int (gst_h265_parser_parse_sei (parser, &nalu, &messages),
+      GST_H265_PARSER_ERROR);
+  assert_equals_int (messages->len, 0);
+
+  g_array_free (messages, TRUE);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_sei_free_pic_timing_single_du)
+{
+  GstH265SEIMessage sei = { 0, };
+  GstH265SEIMessage copy = { 0, };
+
+  /* A single decoding unit still gets arrays allocated by the parser. */
+  sei.payloadType = GST_H265_SEI_PIC_TIMING;
+  sei.payload.pic_timing.num_decoding_units_minus1 = 0;
+  sei.payload.pic_timing.num_nalus_in_du_minus1 = g_new0 (guint32, 1);
+  sei.payload.pic_timing.du_cpb_removal_delay_increment_minus1 =
+      g_new0 (guint8, 1);
+
+  /* The copy must own its own arrays, not alias the source ones. */
+  fail_unless (gst_h265_sei_copy (&copy, &sei));
+  fail_unless (copy.payload.pic_timing.num_nalus_in_du_minus1 != NULL);
+  fail_unless (copy.payload.pic_timing.num_nalus_in_du_minus1 !=
+      sei.payload.pic_timing.num_nalus_in_du_minus1);
+  fail_unless (copy.payload.pic_timing.du_cpb_removal_delay_increment_minus1 !=
+      NULL);
+  fail_unless (copy.payload.pic_timing.du_cpb_removal_delay_increment_minus1 !=
+      sei.payload.pic_timing.du_cpb_removal_delay_increment_minus1);
+
+  gst_h265_sei_free (&copy);
+  gst_h265_sei_free (&sei);
+
+  fail_unless (sei.payload.pic_timing.num_nalus_in_du_minus1 == NULL);
+  fail_unless (sei.payload.pic_timing.du_cpb_removal_delay_increment_minus1 ==
+      NULL);
 }
 
 GST_END_TEST;
@@ -1976,6 +2048,8 @@ h265parser_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_h265_parse_slice_eos_slice_eob);
   tcase_add_test (tc_chain, test_h265_parse_pic_timing);
+  tcase_add_test (tc_chain, test_h265_parse_pic_timing_truncated);
+  tcase_add_test (tc_chain, test_h265_sei_free_pic_timing_single_du);
   tcase_add_test (tc_chain, test_h265_parse_slice_6bytes);
   tcase_add_test (tc_chain, test_h265_parse_identify_nalu_hevc);
   tcase_add_test (tc_chain, test_h265_base_profiles);
