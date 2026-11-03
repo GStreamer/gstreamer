@@ -66,6 +66,14 @@ static GstMpegVideoPacketTypeCode ordercode[] = {
   GST_MPEG_VIDEO_PACKET_GOP,
 };
 
+/* 720x576, 4:3, 25fps, bit_rate_value 2000, vbv_buffer_size_value 112,
+ * followed by a sequence extension with bit_rate_extension 3984. */
+static const guint8 mpeg2_seq_large_bitrate_ext[] = {
+  0x00, 0x00, 0x01, 0xb3, 0x2d, 0x02, 0x40, 0x23, 0x01, 0xf4, 0x23, 0x80,
+  0x00, 0x00, 0x01, 0xb5, 0x14, 0x8a, 0x1f, 0x21, 0x00, 0x00,
+  0x00, 0x00, 0x01, 0x00
+};
+
 GST_START_TEST (test_mpeg_parse)
 {
   gint i, off;
@@ -163,6 +171,75 @@ GST_START_TEST (test_mis_identified_datas)
 
 GST_END_TEST;
 
+/* Contribution of one bit_rate_extension step to the bitrate, in bits per
+ * second: (1 << 18) * 400. */
+#define BITRATE_EXT_STEP ((guint64) (1 << 18) * 400)
+/* Largest bit_rate_extension whose contribution still fits in 32 bits: 40. */
+#define BITRATE_EXT_MAX_FITTING (G_MAXUINT / BITRATE_EXT_STEP)
+
+GST_START_TEST (test_mpeg_parse_sequence_extension_large_bitrate)
+{
+  static const struct
+  {
+    guint32 base;
+    guint16 ext;
+    guint expected;
+    const gchar *name;
+  } cases[] = {
+    /* No extension: the base bitrate is passed through unchanged. */
+    {800000, 0, 800000, "no extension"},
+    {G_MAXUINT, 0, G_MAXUINT, "no extension, maximum base"},
+    /* The extension contribution lands exactly on G_MAXUINT: no clamping. */
+    {G_MAXUINT % BITRATE_EXT_STEP, BITRATE_EXT_MAX_FITTING, G_MAXUINT,
+        "sum is exactly G_MAXUINT"},
+    /* One bit per second past G_MAXUINT: must clamp to G_MAXUINT, not wrap. */
+    {G_MAXUINT % BITRATE_EXT_STEP + 1, BITRATE_EXT_MAX_FITTING, G_MAXUINT,
+        "sum is G_MAXUINT + 1"},
+    /* Far past G_MAXUINT, the case from the original oss-fuzz report. */
+    {800000, 3984, G_MAXUINT, "far past G_MAXUINT"},
+    {G_MAXUINT, G_MAXUINT16, G_MAXUINT, "maximum extension"},
+  };
+  GstMpegVideoSequenceHdr seqhdr;
+  GstMpegVideoSequenceExt seqext;
+  GstMpegVideoPacket packet;
+  guint i;
+
+  /* End-to-end check: parse a real sequence header and its extension. */
+  fail_unless (gst_mpeg_video_parse (&packet, mpeg2_seq_large_bitrate_ext,
+          sizeof (mpeg2_seq_large_bitrate_ext), 0));
+  fail_unless (packet.type == GST_MPEG_VIDEO_PACKET_SEQUENCE);
+  fail_unless (gst_mpeg_video_packet_parse_sequence_header (&packet, &seqhdr));
+  assert_equals_uint64 (seqhdr.bitrate, 2000 * 400);
+
+  fail_unless (gst_mpeg_video_parse (&packet, mpeg2_seq_large_bitrate_ext,
+          sizeof (mpeg2_seq_large_bitrate_ext), 12));
+  fail_unless (packet.type == GST_MPEG_VIDEO_PACKET_EXTENSION);
+  fail_unless (gst_mpeg_video_packet_parse_sequence_extension (&packet,
+          &seqext));
+  assert_equals_int (seqext.bitrate_ext, 3984);
+
+  /* The extension brings the bitrate to (2000 + (3984 << 18)) * 400 bits per
+   * second, which does not fit in 32 bits. It must saturate. */
+  gst_mpeg_video_finalise_mpeg2_sequence_header (&seqhdr, &seqext, NULL);
+  assert_equals_uint64 (seqhdr.bitrate, G_MAXUINT);
+
+  /* Boundary cases around G_MAXUINT, built directly to pin the clamp point. */
+  for (i = 0; i < G_N_ELEMENTS (cases); i++) {
+    memset (&seqhdr, 0, sizeof (seqhdr));
+    memset (&seqext, 0, sizeof (seqext));
+    seqhdr.bitrate = cases[i].base;
+    seqext.bitrate_ext = cases[i].ext;
+
+    gst_mpeg_video_finalise_mpeg2_sequence_header (&seqhdr, &seqext, NULL);
+
+    fail_unless (seqhdr.bitrate == cases[i].expected,
+        "%s: expected bitrate %" G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
+        cases[i].name, (guint64) cases[i].expected, (guint64) seqhdr.bitrate);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 mpegvideoparsers_suite (void)
 {
@@ -174,6 +251,7 @@ mpegvideoparsers_suite (void)
   tcase_add_test (tc_chain, test_mpeg_parse);
   tcase_add_test (tc_chain, test_mpeg_parse_sequence_header);
   tcase_add_test (tc_chain, test_mpeg_parse_sequence_extension);
+  tcase_add_test (tc_chain, test_mpeg_parse_sequence_extension_large_bitrate);
   tcase_add_test (tc_chain, test_mis_identified_datas);
 
   return s;

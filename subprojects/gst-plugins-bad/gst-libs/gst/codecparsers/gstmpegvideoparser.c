@@ -584,12 +584,19 @@ gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
   guint32 h;
 
   if (seqext) {
+    guint64 bitrate;
+
     seqhdr->fps_n = seqhdr->fps_n * (seqext->fps_n_ext + 1);
     seqhdr->fps_d = seqhdr->fps_d * (seqext->fps_d_ext + 1);
     /* Extend width and height to 14 bits by adding the extension bits */
     seqhdr->width |= (seqext->horiz_size_ext << 12);
     seqhdr->height |= (seqext->vert_size_ext << 12);
-    seqhdr->bitrate += (seqext->bitrate_ext << 18) * 400;
+    /* bit_rate_extension extends the 18 bit bit_rate_value to 30 bits, so
+     * the resulting bitrate in bits per second can exceed 32 bits. Compute
+     * it in 64 bits and saturate rather than wrap around. */
+    bitrate = (guint64) seqhdr->bitrate +
+        ((guint64) seqext->bitrate_ext << 18) * 400;
+    seqhdr->bitrate = (guint) MIN (bitrate, G_MAXUINT);
   }
 
   w = seqhdr->width;
