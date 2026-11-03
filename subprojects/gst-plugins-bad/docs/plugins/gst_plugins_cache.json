@@ -948,6 +948,18 @@
                         "type": "GstAjaTimecodeIndex",
                         "writable": true
                     },
+                    "use-audio-clock": {
+                        "blurb": "Base timestamps on the device audio clock instead of counting captured frames",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "video-format": {
                         "blurb": "Video format to use",
                         "conditionally-available": false,

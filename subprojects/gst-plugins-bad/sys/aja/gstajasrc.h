@@ -87,6 +87,7 @@ struct _GstAjaSrc {
   gboolean signal;
   gboolean initial_signal_present;
   gboolean attach_ancillary_meta;
+  gboolean use_audio_clock;
 
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;

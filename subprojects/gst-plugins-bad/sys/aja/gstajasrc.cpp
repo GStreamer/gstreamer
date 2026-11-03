@@ -89,6 +89,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_END_FRAME (8)
 #define DEFAULT_CAPTURE_CPU_CORE (G_MAXUINT)
 #define DEFAULT_ATTACH_ANCILLARY_META (FALSE)
+#define DEFAULT_USE_AUDIO_CLOCK (FALSE)
 
 enum {
   PROP_0,
@@ -112,6 +113,7 @@ enum {
 #endif
   PROP_SIGNAL,
   PROP_ATTACH_ANCILLARY_META,
+  PROP_USE_AUDIO_CLOCK,
 };
 
 // Make these plain C structs for usage in GstVecDeque
@@ -392,6 +394,33 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstAjaSrc:use-audio-clock:
+   *
+   * If set to %TRUE base the timestamps on the device audio clock, which
+   * keeps running while no frames are captured and turns lost frames into
+   * gaps in the timestamps. The card reference this clock runs on can
+   * only be set for the whole card and not per input, so the inputs of a
+   * card usually do not run on it.
+   *
+   * If set to %FALSE advance the timestamps by the nominal frame duration
+   * of the input signal, and after a signal recovery jump to the capture
+   * time of the first kept frame so that the lost time appears in the
+   * timestamps. The first frames after a signal recovery are dropped
+   * because their capture times are unreliable.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_USE_AUDIO_CLOCK,
+      g_param_spec_boolean(
+          "use-audio-clock", "Use Audio Clock",
+          "Base timestamps on the device audio clock instead of counting "
+          "captured frames",
+          DEFAULT_USE_AUDIO_CLOCK,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
   element_class->change_state = GST_DEBUG_FUNCPTR(gst_aja_src_change_state);
   element_class->provide_clock = GST_DEBUG_FUNCPTR(gst_aja_src_provide_clock);
 
@@ -441,6 +470,7 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->capture_cpu_core = DEFAULT_CAPTURE_CPU_CORE;
 #endif
   self->attach_ancillary_meta = DEFAULT_ATTACH_ANCILLARY_META;
+  self->use_audio_clock = DEFAULT_USE_AUDIO_CLOCK;
 
   self->queue =
       gst_vec_deque_new_for_struct(sizeof(QueueItem), self->queue_size);
@@ -511,6 +541,9 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
     case PROP_ATTACH_ANCILLARY_META:
       self->attach_ancillary_meta = g_value_get_boolean(value);
       break;
+    case PROP_USE_AUDIO_CLOCK:
+      self->use_audio_clock = g_value_get_boolean(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
@@ -580,6 +613,9 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
     }
     case PROP_ATTACH_ANCILLARY_META:
       g_value_set_boolean(value, self->attach_ancillary_meta);
+      break;
+    case PROP_USE_AUDIO_CLOCK:
+      g_value_set_boolean(value, self->use_audio_clock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -2633,18 +2669,24 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   bool first_frame_after_start = true;
   // if the clock mapping needs to be re-initialized after signal recovery
   bool reset_clock = false;
-  // Base time of the first frame after a clock observation reset
-  // Internal frame time is calculated from this and the number of frames
-  // captured so far.
-  GstClockTime first_frame_time = GST_CLOCK_TIME_NONE;
+  // Base of the frame timestamps: the stream time of the frame with
+  // device audio clock tick dev_time_base. NONE until a valid audio
+  // clock timestamp was seen since the last clock re-initialization.
+  GstClockTime stream_time_base = GST_CLOCK_TIME_NONE;
+  guint64 dev_time_base = 0;
+  // Stream time of the previous frame, to continue it while the device
+  // audio clock is not valid.
+  GstClockTime last_frame_src_time = GST_CLOCK_TIME_NONE;
   guint64 num_frames = 0;
+  // Frames discarded with frames_to_drop, for the log-only measurement
+  // checks below
+  guint64 discarded = 0;
   // Frame drop counter of the previous transfer and the host monotonic
   // time of that sample. NONE until the first transfer.
   guint64 driver_drops = 0;
   GstClockTime driver_drops_time = GST_CLOCK_TIME_NONE;
-  // Frames we discarded with frames_to_drop and dropped from the queue
-  // on overrun, for the log-only measurement checks below
-  guint64 discarded = 0;
+  // Frames dropped from the queue on overrun, for the log-only measurement
+  // checks below
   guint64 queue_drops = 0;
   // Sum of the drop counter deltas since the measurement window was taken.
   // All baselines come from one transfer status sample and the window is
@@ -2660,7 +2702,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   GstClockTime audio_gap_logged = GST_CLOCK_TIME_NONE;
   // Number of frames to drop. After signal loss the first few frames
   // often have invalid acFrameTime so we drop them to calculate valid
-  // timestamps afterwards
+  // timestamps afterwards. Only used for frame counting timestamps.
   guint frames_to_drop = 0;
   // Number of vsync iterations without a captured frame. If this becomes too
   // high we assume signal loss.
@@ -2708,7 +2750,9 @@ restart:
   discont = true;
   first_frame_after_start = true;
   reset_clock = false;
-  first_frame_time = GST_CLOCK_TIME_NONE;
+  stream_time_base = GST_CLOCK_TIME_NONE;
+  dev_time_base = 0;
+  last_frame_src_time = GST_CLOCK_TIME_NONE;
   num_frames = 0;
   frames_to_drop = 0;
   iterations_without_frame = 0;
@@ -2961,11 +3005,13 @@ restart:
         pending_recovery = FALSE;
         reset_clock = true;
 
-        // Drop the next frames after signal recovery as the capture times
-        // are generally just wrong.
-        frames_to_drop = MAX(status.acBufferLevel + 1, 5);
-        GST_TRACE_OBJECT(self, "Dropping %u frames after signal recovery",
-                         frames_to_drop);
+        if (!self->use_audio_clock) {
+          // Drop the next frames after signal recovery as the capture times
+          // are generally just wrong.
+          frames_to_drop = MAX(status.acBufferLevel + 1, 5);
+          GST_TRACE_OBJECT(self, "Dropping %u frames after signal recovery",
+                           frames_to_drop);
+        }
       }
 
       iterations_without_frame = 0;
@@ -3146,7 +3192,9 @@ restart:
       // instead of comparing against it.
       if (audio_clock != 0) {
         gint64 clock_diff = (gint64)audio_clock - (gint64)last_audio_clock;
-        if (audio_clock_valid &&
+        // Only audio clock based timestamps can be wrong when it jumps.
+        // Frame counting timestamps do not use the audio clock.
+        if (audio_clock_valid && self->use_audio_clock &&
             (clock_diff < 0 ||
              clock_diff > (gint64)(frame_ticks + frame_ticks / 2)) &&
             (audio_gap_logged == GST_CLOCK_TIME_NONE ||
@@ -3160,10 +3208,8 @@ restart:
           } else {
             GST_FIXME_OBJECT(self,
                              "The device audio clock advanced by %u frame "
-                             "durations, with signal state %d and %u frames to "
-                             "drop",
-                             (guint)(clock_diff / frame_ticks), signal_state,
-                             frames_to_drop);
+                             "durations, with signal state %d",
+                             (guint)(clock_diff / frame_ticks), signal_state);
           }
           audio_gap_logged = now_monotonic_sys;
         }
@@ -3208,50 +3254,130 @@ restart:
       }
 
       GstClockTime frame_src_time;
+      // if this frame restarts the clock mapping
+      gboolean new_clock = first_frame_after_start || reset_clock;
+      // if the stream time base is resynced on this frame: only on a cold
+      // start in audio clock mode, where signal losses become gaps measured
+      // with the device audio clock, on every clock restart in frame
+      // counting mode, where losses become gaps in the capture time domain
+      // of the input signal
+      gboolean resync = self->use_audio_clock
+                            ? first_frame_after_start &&
+                                  stream_time_base == GST_CLOCK_TIME_NONE
+                            : new_clock;
 
-      // Update clock mapping
-      if (first_frame_after_start || reset_clock) {
-        GstClockTime internal, external;
-        guint64 num, denom;
-
+      // Update clock mapping. Signal recovery resets the calibration, and
+      // in audio clock mode the stream time continues from its old base:
+      // the device audio clock gap between the frames before and after the
+      // loss turns the signal loss into a stream time gap. In frame
+      // counting mode the stream time is resynced to the capture time of
+      // the first kept frame instead.
+      if (new_clock) {
         // FIXME: Workaround to reset the calibration and get rid of all
         // previous observations on stream start and after signal recovery.
         g_object_set(self->clock, "window-size", 32, NULL);
-
-        // Use the monotonic frame time converted back to our clock as base.
-        // In the beginning this would be equal to the monotonic clock, at
-        // later times this is needed to avoid jumps (possibly backwards!) of
-        // the clock time when the framerate changes.
-        //
-        // We manually adjust with the calibration here because otherwise the
-        // clock will clamp it to the last returned clock time, which most
-        // likely is in the future.
-        gst_clock_get_calibration(self->clock, &internal, &external, &num,
-                                  &denom);
-        first_frame_time = frame_src_time = gst_clock_adjust_with_calibration(
-            NULL, frame_time_monotonic, internal, external, num, denom);
-
-        GST_TRACE_OBJECT(
-            self, "Initializing clock with first frame time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS(first_frame_time));
 
         first_frame_after_start = false;
         reset_clock = false;
         discont = TRUE;
         num_frames = 0;
         measurements_valid = FALSE;
+      }
+
+      if (resync) {
+        GstClockTime internal, external;
+        guint64 num, denom;
+
+        // Resync the stream time: in audio clock mode to the current clock
+        // time, in frame counting mode to the capture time of this frame,
+        // which keeps signal losses in the capture time domain and avoids
+        // jumps of the clock time when the framerate changes. The following
+        // frames continue it with the device audio clock or with the nominal
+        // frame duration.
+        //
+        // We manually adjust with the calibration here because otherwise the
+        // clock will clamp it to the last returned clock time, which most
+        // likely is in the future.
+        gst_clock_get_calibration(self->clock, &internal, &external, &num,
+                                  &denom);
+        frame_src_time = stream_time_base = gst_clock_adjust_with_calibration(
+            NULL,
+            self->use_audio_clock ? now_monotonic_sys : frame_time_monotonic,
+            internal, external, num, denom);
+
+        if (self->use_audio_clock) {
+          // Base the stream time on the device audio clock of this frame, but
+          // only if it is valid, otherwise wait for the first valid one below.
+          if (audio_clock != 0) {
+            dev_time_base = audio_clock;
+          } else {
+            stream_time_base = GST_CLOCK_TIME_NONE;
+          }
+        }
+
+        GST_TRACE_OBJECT(
+            self, "Initializing clock with first frame time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS(frame_src_time));
       } else {
         gdouble r_squared;
 
-        frame_src_time =
-            first_frame_time +
-            gst_util_uint64_scale_ceil(num_frames,
-                                       self->configured_info.fps_d * GST_SECOND,
-                                       self->configured_info.fps_n);
+        if (self->use_audio_clock && audio_clock != 0) {
+          gboolean init_base = stream_time_base == GST_CLOCK_TIME_NONE;
+
+          if (!init_base && audio_clock < dev_time_base) {
+            // The device was reset and its audio clock started again from
+            // zero, the old base does not apply anymore. The gap check
+            // above reports these jumps.
+            init_base = TRUE;
+          }
+
+          if (init_base) {
+            GstClockTime internal, external;
+            guint64 num, denom;
+
+            // Initialize the stream time base with the current clock time.
+            // The stream time of the frames with an invalid device audio
+            // clock was only guessed, and the real stream time replaces the
+            // guess now, so the stream time makes a jump.
+            discont = true;
+
+            gst_clock_get_calibration(self->clock, &internal, &external, &num,
+                                      &denom);
+            stream_time_base = gst_clock_adjust_with_calibration(
+                NULL, now_monotonic_sys, internal, external, num, denom);
+            dev_time_base = audio_clock;
+
+            GST_TRACE_OBJECT(self,
+                             "Initializing stream time base with device audio "
+                             "clock tick %" G_GUINT64_FORMAT,
+                             dev_time_base);
+          }
+
+          frame_src_time =
+              stream_time_base +
+              gst_util_uint64_scale(audio_clock - dev_time_base, GST_SECOND,
+                                    GST_AJA_DEVICE_AUDIO_CLOCK_HZ);
+        } else if (self->use_audio_clock) {
+          // The device audio clock is not valid for this frame, continue the
+          // stream time with the nominal frame duration until it is valid
+          // again and the stream time is based on it.
+          frame_src_time = last_frame_src_time + frame_duration;
+          stream_time_base = GST_CLOCK_TIME_NONE;
+        } else {
+          // Frame counting mode: continue the stream time from the last
+          // resync with one nominal frame duration per captured frame.
+          frame_src_time =
+              stream_time_base + gst_util_uint64_scale_ceil(
+                                     num_frames,
+                                     self->configured_info.fps_d * GST_SECOND,
+                                     self->configured_info.fps_n);
+        }
 
         gst_clock_add_observation(self->clock, frame_time_monotonic,
                                   frame_src_time, &r_squared);
       }
+
+      last_frame_src_time = frame_src_time;
 
       num_frames += 1;
 
@@ -3310,25 +3436,25 @@ restart:
       }
 
       if (num_frames % 300 == 0) {
-        GST_INFO_OBJECT(
-            self,
-            "Frame index %" G_GUINT64_FORMAT ", discarded %" G_GUINT64_FORMAT
-            ", queue dropped %" G_GUINT64_FORMAT ", driver dropped %" G_GUINT64_FORMAT
-            " and has %" G_GUINT64_FORMAT " frames buffered",
-            num_frames, discarded, queue_drops, driver_drops_now,
-            (guint64)transfer_status.GetBufferLevel());
+        GST_INFO_OBJECT(self,
+                        "Frame index %" G_GUINT64_FORMAT
+                        ", queue dropped %" G_GUINT64_FORMAT
+                        ", driver dropped %" G_GUINT64_FORMAT
+                        " and has %" G_GUINT64_FORMAT " frames buffered",
+                        num_frames, queue_drops, driver_drops_now,
+                        (guint64)transfer_status.GetBufferLevel());
       }
 
       GstClockTime capture_time;
       if (self->clock == clock) {
         // If the pipeline is using our clock then we can directly use the
-        // frame counter based time as capture time.
+        // stream time as capture time.
         capture_time = frame_src_time;
       } else {
         GstClockTime internal, external;
         guint64 num, denom;
 
-        // Otherwise convert the frame counter based time to the monotonic
+        // Otherwise convert the stream time to the monotonic
         // clock via our clock, which should give a smoother time than just
         // the raw capture time.
         //
