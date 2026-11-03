@@ -2695,6 +2695,16 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   gboolean measurements_valid = FALSE;
   guint64 nf_base = 0, discarded_base = 0, p_base = 0, b_base = 0, d_base = 0;
   GstClockTime diverged_at = GST_CLOCK_TIME_NONE;
+  // Stream time and frame index the frame counter based time is relative
+  // to, for the log-only deviation check below
+  GstClockTime counter_base = GST_CLOCK_TIME_NONE;
+  guint64 counter_nf_base = 0;
+  // Sum and number of the differences since the last statistics line, to
+  // report their average
+  gint64 counter_diff_sum = 0;
+  guint counter_diff_count = 0;
+  // When the last deviation was logged, to rate-limit the log
+  GstClockTime counter_diverged_at = GST_CLOCK_TIME_NONE;
   // Device audio clock of the previous frame, for the log-only gap check
   gboolean audio_clock_valid = FALSE;
   guint64 last_audio_clock = 0;
@@ -2762,6 +2772,11 @@ restart:
   queue_drops = 0;
   measurements_valid = FALSE;
   diverged_at = GST_CLOCK_TIME_NONE;
+  counter_base = GST_CLOCK_TIME_NONE;
+  counter_nf_base = 0;
+  counter_diff_sum = 0;
+  counter_diff_count = 0;
+  counter_diverged_at = GST_CLOCK_TIME_NONE;
   audio_clock_valid = FALSE;
   audio_gap_logged = GST_CLOCK_TIME_NONE;
 
@@ -3346,6 +3361,10 @@ restart:
             stream_time_base = gst_clock_adjust_with_calibration(
                 NULL, now_monotonic_sys, internal, external, num, denom);
             dev_time_base = audio_clock;
+            counter_base = stream_time_base;
+            counter_nf_base = num_frames;
+            counter_diff_sum = 0;
+            counter_diff_count = 0;
 
             GST_TRACE_OBJECT(self,
                              "Initializing stream time base with device audio "
@@ -3377,7 +3396,52 @@ restart:
                                   frame_src_time, &r_squared);
       }
 
-      last_frame_src_time = frame_src_time;
+      if (self->use_audio_clock) {
+        last_frame_src_time = frame_src_time;
+
+        // Log-only check of the device audio clock against the frame counter:
+        // on a locked signal both advance by the frame duration within a few
+        // microseconds, so a difference that stays larger than a frame
+        // duration means the audio clock or the configured framerate is wrong.
+        // In frame counting mode the timestamps are the frame counter time,
+        // so there is nothing to compare.
+        if (new_clock || counter_base == GST_CLOCK_TIME_NONE) {
+          // The frame counter can not see the gap of a clock restart, e.g. a
+          // signal loss turns into an audio clock gap it knows nothing
+          // about, so it is rebased to this frame instead of comparing
+          // across the restart.
+          counter_base = frame_src_time;
+          counter_nf_base = num_frames;
+          counter_diff_sum = 0;
+          counter_diff_count = 0;
+          counter_diverged_at = GST_CLOCK_TIME_NONE;
+        } else {
+          GstClockTime counter_time =
+              counter_base + gst_util_uint64_scale_ceil(
+                                 num_frames - counter_nf_base,
+                                 self->configured_info.fps_d * GST_SECOND,
+                                 self->configured_info.fps_n);
+          gint64 counter_diff = (gint64)frame_src_time - (gint64)counter_time;
+          gint64 abs_counter_diff =
+              counter_diff < 0 ? -counter_diff : counter_diff;
+          counter_diff_sum += counter_diff;
+          counter_diff_count += 1;
+
+          if (abs_counter_diff > (gint64)frame_duration) {
+            if (counter_diverged_at == GST_CLOCK_TIME_NONE) {
+              counter_diverged_at = now_monotonic_sys;
+            } else if (now_monotonic_sys > counter_diverged_at + GST_SECOND) {
+              GST_FIXME_OBJECT(self,
+                               "The stream time and the frame counter time "
+                               "diverge by %" G_GINT64_FORMAT " ms",
+                               counter_diff / GST_MSECOND);
+              counter_diverged_at = now_monotonic_sys;
+            }
+          } else {
+            counter_diverged_at = GST_CLOCK_TIME_NONE;
+          }
+        }
+      }
 
       num_frames += 1;
 
@@ -3436,13 +3500,30 @@ restart:
       }
 
       if (num_frames % 300 == 0) {
-        GST_INFO_OBJECT(self,
-                        "Frame index %" G_GUINT64_FORMAT
-                        ", queue dropped %" G_GUINT64_FORMAT
-                        ", driver dropped %" G_GUINT64_FORMAT
-                        " and has %" G_GUINT64_FORMAT " frames buffered",
-                        num_frames, queue_drops, driver_drops_now,
-                        (guint64)transfer_status.GetBufferLevel());
+        if (self->use_audio_clock) {
+          GST_INFO_OBJECT(self,
+                          "Frame index %" G_GUINT64_FORMAT
+                          ", queue dropped %" G_GUINT64_FORMAT
+                          ", driver dropped %" G_GUINT64_FORMAT
+                          " and has %" G_GUINT64_FORMAT
+                          " frames buffered, audio clock %" G_GINT64_FORMAT
+                          " us off the frame counter",
+                          num_frames, queue_drops, driver_drops_now,
+                          (guint64)transfer_status.GetBufferLevel(),
+                          counter_diff_count > 0
+                              ? counter_diff_sum / counter_diff_count / 1000
+                              : 0);
+          counter_diff_sum = 0;
+          counter_diff_count = 0;
+        } else {
+          GST_INFO_OBJECT(self,
+                          "Frame index %" G_GUINT64_FORMAT
+                          ", queue dropped %" G_GUINT64_FORMAT
+                          ", driver dropped %" G_GUINT64_FORMAT
+                          " and has %" G_GUINT64_FORMAT " frames buffered",
+                          num_frames, queue_drops, driver_drops_now,
+                          (guint64)transfer_status.GetBufferLevel());
+        }
       }
 
       GstClockTime capture_time;
