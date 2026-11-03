@@ -102,6 +102,27 @@ if __name__ == "__main__":
         env["RUSTFLAGS"] = shlex_join(rust_flags)
         env["RUSTC"] = rustc_cmdline[0]
 
+    if rustc_target:
+        triple = rustc_target.replace("-", "_")
+        # Translate the cross hints set by meson.build into the
+        # triple-suffixed variables understood by the pkg-config and bindgen
+        # crates. The suffixed variants only apply to target lookups, so host
+        # build dependencies keep using the host pkg-config environment.
+        sysroot = env.pop("MESON_CROSS_SYSROOT", None)
+        if sysroot:
+            env.setdefault(f"PKG_CONFIG_SYSROOT_DIR_{triple}", sysroot)
+            bindgen_args = env.get("TARGET_CFLAGS", "") \
+                + f" --sysroot={sysroot} --target={rustc_target}"
+            env.setdefault(f"BINDGEN_EXTRA_CLANG_ARGS_{triple}",
+                           bindgen_args.strip())
+        pkg_config_libdir = env.pop("MESON_CROSS_PKG_CONFIG_LIBDIR", None)
+        if pkg_config_libdir:
+            # The triple-suffixed variable replaces the generic one for
+            # target lookups, so keep the uninstalled GStreamer .pc paths
+            # from PKG_CONFIG_PATH visible by prepending them.
+            env.setdefault(f"PKG_CONFIG_PATH_{triple}", os.pathsep.join(
+                [env["PKG_CONFIG_PATH"], pkg_config_libdir]))
+
     features = opts.features
     if opts.command == "build":
         cargo_cmd = ["cargo"]
