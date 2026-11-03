@@ -283,8 +283,8 @@ gst_video_info_dma_drm_from_caps (GstVideoInfoDmaDrm * drm_info,
     goto out;
   }
 
-  /* If the modifier is linear, set the according format in video info,
-   * otherwise, just let the format to be GST_VIDEO_FORMAT_DMA_DRM. */
+  /* Set native gst format if one exists, otherwise, just let the format to be
+   * GST_VIDEO_FORMAT_DMA_DRM. */
   format = gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
   if (format != GST_VIDEO_FORMAT_UNKNOWN) {
     gst_structure_set (structure, "format", G_TYPE_STRING,
@@ -359,6 +359,8 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
     const GstVideoInfo * info, guint64 modifier)
 {
   GstVideoFormat format;
+  GstVideoFormat new_format;
+  guint64 format_modifier;
   guint32 fourcc;
 
   g_return_val_if_fail (drm_info != NULL, FALSE);
@@ -367,7 +369,7 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
   if (modifier == DRM_FORMAT_MOD_INVALID)
     return FALSE;
   format = GST_VIDEO_INFO_FORMAT (info);
-  fourcc = gst_video_dma_drm_fourcc_from_format (format);
+  fourcc = gst_video_dma_drm_format_from_gst_format (format, &format_modifier);
   if (fourcc == DRM_FORMAT_INVALID)
     return FALSE;
 
@@ -375,12 +377,15 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
   drm_info->drm_fourcc = fourcc;
   drm_info->drm_modifier = modifier;
 
-  /* no need to change format to GST_VIDEO_FORMAT_DMA_DRM since its modifier is
-   * linear */
-  if (modifier == DRM_FORMAT_MOD_LINEAR)
+  /* no need to change format to GST_VIDEO_FORMAT_DMA_DRM if we have a native
+   * gst format. */
+  new_format = gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
+  if (new_format == GST_VIDEO_FORMAT_UNKNOWN)
+    new_format = GST_VIDEO_FORMAT_DMA_DRM;
+  if (new_format == format)
     return TRUE;
 
-  return video_info_change_format (&drm_info->vinfo, GST_VIDEO_FORMAT_DMA_DRM);
+  return video_info_change_format (&drm_info->vinfo, new_format);
 }
 
 /**
@@ -389,8 +394,8 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
  * @info: (out caller-allocates): #GstVideoInfo
  *
  * Convert the #GstVideoInfoDmaDrm into a traditional #GstVideoInfo with
- * recognized video format. For DMA kind memory, the non linear DMA format
- * should be recognized as #GST_VIDEO_FORMAT_DMA_DRM. This helper function
+ * recognized video format. For DMA kind memory, #GST_VIDEO_FORMAT_DMA_DRM is
+ * kept if no native gst format exists. This helper function
  * sets @info's video format into the default value according to @drm_info's
  * drm_fourcc field.
  *
@@ -412,9 +417,12 @@ gst_video_info_dma_drm_to_video_info (const GstVideoInfoDmaDrm * drm_info,
   if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_DMA_DRM)
     return TRUE;
 
-  video_format = gst_video_dma_drm_fourcc_to_format (drm_info->drm_fourcc);
+  /* Keep GST_VIDEO_FORMAT_DMA_DRM if we don't have a native gst format */
+  video_format =
+      gst_video_dma_drm_format_to_gst_format (drm_info->drm_fourcc,
+      drm_info->drm_modifier);
   if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
-    return FALSE;
+    return TRUE;
 
   return video_info_change_format (info, video_format);
 }

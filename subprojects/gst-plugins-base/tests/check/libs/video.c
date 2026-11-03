@@ -4814,7 +4814,7 @@ GST_START_TEST (test_info_dma_drm)
       && drm_info.drm_modifier == 0x100000000000002);
 
   fail_unless (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
-  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_NV12);
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_DMA_DRM);
 
   ncaps = gst_video_info_dma_drm_to_caps (&drm_info);
   fail_unless (ncaps);
@@ -4879,13 +4879,20 @@ GST_START_TEST (test_info_dma_drm_from_video_info)
   fail_unless_equals_int (GST_VIDEO_INFO_SIZE (&drm_info.vinfo), 0);
 
   fail_unless (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
-  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_NV12);
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_DMA_DRM);
   fail_unless (gst_video_colorimetry_matches (&info.colorimetry, "bt601"));
   fail_unless_equals_int (info.chroma_site, GST_VIDEO_CHROMA_SITE_JPEG);
   fail_unless_equals_int (info.fps_n, 30);
   fail_unless_equals_int (info.fps_d, 1);
   fail_unless_equals_int (info.par_n, 4);
   fail_unless_equals_int (info.par_d, 3);
+
+  /* Native non-linear format can be converted to linear */
+  fail_unless (gst_video_info_set_format (&vinfo,
+          GST_VIDEO_FORMAT_NV12_4L4, 1920, 1080));
+  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo, 0));
+  fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
+      GST_VIDEO_FORMAT_NV12);
 }
 
 GST_END_TEST;
