@@ -369,6 +369,54 @@ GST_START_TEST (test_filesource_natural_size_transposed)
 
 GST_END_TEST;
 
+GST_START_TEST (test_filesource_direction_set_after_creation)
+{
+  GESTimeline *timeline;
+  GESTrack *v;
+  GESTimelineElement *source;
+  GstCaps *caps;
+  gint width, height;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  v = GES_TRACK (ges_video_track_new ());
+  caps = gst_caps_from_string ("video/x-raw,width=1280,height=720");
+  ges_track_set_restriction_caps (v, caps);
+  gst_caps_unref (caps);
+  fail_unless (ges_timeline_add_track (timeline, v));
+  source = GES_TIMELINE_ELEMENT (_add_video_source (ges_timeline_append_layer
+          (timeline), image_uri));
+
+  /* The 1920x1080 image is scaled down to fill the 1280x720 track */
+  ges_timeline_element_get_child_properties (source, "width", &width,
+      "height", &height, NULL);
+  assert_equals_int (width, 1280);
+  assert_equals_int (height, 720);
+
+  /* Turned a quarter, the frame is 1080x1920: keeping its aspect ratio, it
+   * is scaled to the track's height */
+  ges_timeline_element_set_child_properties (source, "video-direction",
+      GST_VIDEO_ORIENTATION_90R, NULL);
+  ges_timeline_element_get_child_properties (source, "width", &width,
+      "height", &height, NULL);
+  assert_equals_int (width, 1080 * 720 / 1920);
+  assert_equals_int (height, 720);
+
+  ges_timeline_element_set_child_properties (source, "video-direction",
+      GST_VIDEO_ORIENTATION_IDENTITY, NULL);
+  ges_timeline_element_get_child_properties (source, "width", &width,
+      "height", &height, NULL);
+  assert_equals_int (width, 1280);
+  assert_equals_int (height, 720);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 /* A hermetic multi-stream URI: two audio streams and one video stream, so a
  * single URI exposes several streams of the same type - which is what stream
  * selection to distinct tracks is about. */
@@ -959,6 +1007,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_filesource_images);
   tcase_add_test (tc_chain, test_filesource_properties);
   tcase_add_test (tc_chain, test_filesource_natural_size_transposed);
+  tcase_add_test (tc_chain, test_filesource_direction_set_after_creation);
   tcase_add_test (tc_chain, test_filesource_stream_selection_routing);
   tcase_add_test (tc_chain, test_filesource_stream_selection_prune);
   tcase_add_test (tc_chain,

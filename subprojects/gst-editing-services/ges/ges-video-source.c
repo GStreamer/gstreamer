@@ -108,6 +108,20 @@ _set_parent (GESTimelineElement * element, GESTimelineElement * parent)
 }
 
 
+static void
+_video_direction_changed_cb (GObject * flip, GParamSpec * pspec,
+    GESVideoSource * self)
+{
+  gint width = 0, height = 0;
+
+  if (!self->priv->positioner)
+    return;
+
+  if (ges_video_source_get_natural_size (self, &width, &height))
+    ges_frame_positioner_set_natural_size (self->priv->positioner, width,
+        height);
+}
+
 static gboolean
 ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
     gboolean needs_converters)
@@ -148,6 +162,10 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
         (ges_video_element_selector (), "track-element-videoflip", &flip_core);
     g_object_set (flip_core, "video-direction", GST_VIDEO_ORIENTATION_AUTO,
         NULL);
+    /* The natural size follows video-direction, which is often set after the
+     * source is built */
+    g_signal_connect_object (flip_core, "notify::video-direction",
+        G_CALLBACK (_video_direction_changed_cb), self, 0);
     g_ptr_array_add (elements, videoflip);
   }
 

@@ -102,6 +102,9 @@ G_GNUC_INTERNAL GType gst_compositor_operator_get_type_and_default_value (int *d
  * value. Called when the selected compositor changes at runtime so the
  * next _get_type_and_default_value() re-queries the new compositor. */
 G_GNUC_INTERNAL void gst_compositor_operator_reset_cache (void);
+G_GNUC_INTERNAL void ges_frame_positioner_set_natural_size (GstFramePositioner *pos,
+                                                            gint width,
+                                                            gint height);
 G_GNUC_INTERNAL void ges_frame_positioner_set_source_and_filter (GstFramePositioner *pos,
 						  GESTrackElement *trksrc,
 						  GstElement *capsfilter);

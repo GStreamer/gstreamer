@@ -525,6 +525,23 @@ _trk_element_weak_notify_cb (GstFramePositioner * pos, GObject * old)
 }
 
 void
+ges_frame_positioner_set_natural_size (GstFramePositioner * pos, gint width,
+    gint height)
+{
+  gboolean track_mixing = TRUE;
+
+  if (pos->natural_width == width && pos->natural_height == height)
+    return;
+
+  if (pos->current_track)
+    track_mixing = ges_track_get_mixing (pos->current_track);
+
+  pos->natural_width = width;
+  pos->natural_height = height;
+  gst_frame_positioner_update_properties (pos, track_mixing, 0, 0);
+}
+
+void
 ges_frame_positioner_set_source_and_filter (GstFramePositioner * pos,
     GESTrackElement * trksrc, GstElement * capsfilter)
 {
