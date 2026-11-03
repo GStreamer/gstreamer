@@ -21,6 +21,7 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 #include <stdarg.h>
+#include <glib/gstdio.h>
 
 /* This test uri will eventually have to be fixed */
 #define TEST_URI "http://nowhere/blahblahblah"
@@ -268,6 +269,100 @@ GST_START_TEST (test_filesource_images)
 
   gst_object_unref (asset);
   gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+static GESVideoSource *
+_add_video_source (GESLayer * layer, const gchar * uri)
+{
+  GESAsset *asset;
+  GESClip *clip;
+
+  asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, NULL));
+  fail_unless (asset != NULL);
+  clip = ges_layer_add_asset (layer, asset, 0, 0, GST_SECOND,
+      GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip != NULL);
+  gst_object_unref (asset);
+
+  return GES_VIDEO_SOURCE (GES_CONTAINER_CHILDREN (clip)->data);
+}
+
+GST_START_TEST (test_filesource_natural_size_transposed)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESVideoSource *source;
+  GstElement *pipeline, *sink;
+  GstMessage *msg;
+  GError *error = NULL;
+  gchar *tmpdir, *path, *uri;
+  gint width, height;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+
+  source = _add_video_source (layer, image_uri);
+  fail_unless (ges_video_source_get_natural_size (source, &width, &height));
+  assert_equals_int (width, 1920);
+  assert_equals_int (height, 1080);
+
+  ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (source),
+      "video-direction", GST_VIDEO_ORIENTATION_UL_LR, NULL);
+  fail_unless (ges_video_source_get_natural_size (source, &width, &height));
+  assert_equals_int (width, 1080);
+  assert_equals_int (height, 1920);
+
+  ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (source),
+      "video-direction", GST_VIDEO_ORIENTATION_UR_LL, NULL);
+  fail_unless (ges_video_source_get_natural_size (source, &width, &height));
+  assert_equals_int (width, 1080);
+  assert_equals_int (height, 1920);
+
+  ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (source),
+      "video-direction", GST_VIDEO_ORIENTATION_180, NULL);
+  fail_unless (ges_video_source_get_natural_size (source, &width, &height));
+  assert_equals_int (width, 1920);
+  assert_equals_int (height, 1080);
+
+  /* A mirrored quarter turn from the file's orientation tag transposes too */
+  tmpdir = g_dir_make_tmp ("ges-uriclip-XXXXXX", NULL);
+  fail_unless (tmpdir != NULL);
+  path = g_build_filename (tmpdir, "flip-rotate-90.mkv", NULL);
+  pipeline = gst_parse_launch ("videotestsrc num-buffers=1 "
+      "! video/x-raw,format=I420,width=320,height=240 "
+      "! taginject tags=\"image-orientation=flip-rotate-90\" "
+      "! matroskamux ! filesink name=sink", &error);
+  fail_unless (error == NULL, "%s", error ? error->message : "");
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  g_object_set (sink, "location", path, NULL);
+  gst_object_unref (sink);
+  fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
+      GST_STATE_CHANGE_FAILURE);
+  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
+      GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  assert_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  uri = gst_filename_to_uri (path, NULL);
+  source = _add_video_source (ges_timeline_append_layer (timeline), uri);
+  fail_unless (ges_video_source_get_natural_size (source, &width, &height));
+  assert_equals_int (width, 240);
+  assert_equals_int (height, 320);
+
+  gst_object_unref (timeline);
+  g_unlink (path);
+  g_rmdir (tmpdir);
+  g_free (uri);
+  g_free (path);
+  g_free (tmpdir);
 
   ges_deinit ();
 }
@@ -863,6 +958,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_filesource_basic);
   tcase_add_test (tc_chain, test_filesource_images);
   tcase_add_test (tc_chain, test_filesource_properties);
+  tcase_add_test (tc_chain, test_filesource_natural_size_transposed);
   tcase_add_test (tc_chain, test_filesource_stream_selection_routing);
   tcase_add_test (tc_chain, test_filesource_stream_selection_prune);
   tcase_add_test (tc_chain,

@@ -27,7 +27,6 @@
 #include "config.h"
 #endif
 
-#include <stdio.h>
 
 #include "ges-utils.h"
 #include "ges-internal.h"
@@ -105,8 +104,9 @@ ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
     gint * height)
 {
   const GstTagList *tags = NULL;
-  gchar *rotation_info = NULL;
-  gint videoflip_method, rotate_angle;
+  GstVideoOrientationMethod videoflip_method;
+  GParamSpec *pspec = NULL;
+  gboolean is_orientation;
   guint par_n, par_d;
   GstDiscovererVideoInfo *info =
       _get_video_stream_info (GES_VIDEO_URI_SOURCE (source));
@@ -129,38 +129,43 @@ ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
     }
   }
 
+  /* Not prefixed with a type name: the flip can be any element implementing
+   * video-direction (videoflip, glvideoflip, ...) */
   if (!ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (source),
-          "GstVideoFlip::video-direction", NULL, NULL))
+          "video-direction", NULL, &pspec))
+    goto done;
+
+  is_orientation =
+      G_PARAM_SPEC_VALUE_TYPE (pspec) == GST_TYPE_VIDEO_ORIENTATION_METHOD;
+  g_param_spec_unref (pspec);
+  if (!is_orientation)
     goto done;
 
   ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT (source),
-      "GstVideoFlip::video-direction", &videoflip_method, NULL);
-
-  /* Rotating 90 degrees, either way, rotate */
-  if (videoflip_method == 1 || videoflip_method == 3)
-    goto rotate;
-
-  if (videoflip_method != 8)
-    goto done;
+      "video-direction", &videoflip_method, NULL);
 
   /* Rotation is automatic, we need to check if the media file is naturally
      rotated */
-  tags =
-      gst_discoverer_stream_info_get_tags (GST_DISCOVERER_STREAM_INFO (info));
-  if (!tags)
-    goto done;
+  if (videoflip_method == GST_VIDEO_ORIENTATION_AUTO) {
+    tags =
+        gst_discoverer_stream_info_get_tags (GST_DISCOVERER_STREAM_INFO (info));
+    if (!tags || !gst_video_orientation_from_tag ((GstTagList *) tags,
+            &videoflip_method))
+      goto done;
+  }
 
-  if (!gst_tag_list_get_string (tags, GST_TAG_IMAGE_ORIENTATION,
-          &rotation_info))
-    goto done;
-
-  if (sscanf (rotation_info, "rotate-%d", &rotate_angle) == 1) {
-    if (rotate_angle == 90 || rotate_angle == 270)
+  /* Rotating 90 degrees or transposing, either way, rotate */
+  switch (videoflip_method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
       goto rotate;
+    default:
+      break;
   }
 
 done:
-  g_free (rotation_info);
   return TRUE;
 
 rotate:
