@@ -702,8 +702,13 @@ typedef struct _TextureFormat
 #define MAKE_FORMAT_RGBAP(f,cf,sample_func) \
   { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf, \
       CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf }, {1, 1, 1, 1}, sample_func }
+#define MAKE_FORMAT_GRAY(f,cf,sample_func) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_NONE, \
+      CU_AD_FORMAT_NONE, CU_AD_FORMAT_NONE }, {1, 0, 0, 0}, sample_func }
 
 static const TextureFormat format_map[] = {
+  MAKE_FORMAT_GRAY (GRAY8, UNSIGNED_INT8, "GRAY"),
+  MAKE_FORMAT_GRAY (GRAY16_LE, UNSIGNED_INT16, "GRAY"),
   MAKE_FORMAT_YUV_PLANAR (I420, UNSIGNED_INT8, SAMPLE_YUV_PLANAR),
   MAKE_FORMAT_YUV_PLANAR (YV12, UNSIGNED_INT8, SAMPLE_YV12),
   MAKE_FORMAT_YUV_SEMI_PLANAR (NV12, UNSIGNED_INT8, SAMPLE_SEMI_PLANAR),
@@ -1216,6 +1221,45 @@ gst_cuda_converter_update_transform (GstCudaConverter * self, float input_width,
       priv->const_buf->transform_offset[1]);
 }
 
+static void
+convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
+{
+  GstVideoInfo tmp;
+
+  if (!GST_VIDEO_INFO_IS_GRAY (gray)) {
+    *yuv = *gray;
+    return;
+  }
+
+  if (gray->finfo->depth[0] == 8) {
+    gst_video_info_set_format (&tmp,
+        GST_VIDEO_FORMAT_Y444, gray->width, gray->height);
+  } else {
+    gst_video_info_set_format (&tmp,
+        GST_VIDEO_FORMAT_Y444_16LE, gray->width, gray->height);
+  }
+
+  tmp.colorimetry.range = gray->colorimetry.range;
+  if (tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN ||
+      tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_0_1) {
+    tmp.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+  }
+
+  tmp.colorimetry.primaries = gray->colorimetry.primaries;
+  if (tmp.colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
+    tmp.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+
+  tmp.colorimetry.transfer = gray->colorimetry.transfer;
+  if (tmp.colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN)
+    tmp.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+
+  tmp.colorimetry.matrix = gray->colorimetry.matrix;
+  if (tmp.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN)
+    tmp.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+
+  *yuv = tmp;
+}
+
 static gboolean
 gst_cuda_converter_setup (GstCudaConverter * self)
 {
@@ -1223,6 +1267,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   const GstVideoInfo *in_info;
   const GstVideoInfo *out_info;
   const GstVideoInfo *texture_info;
+  GstVideoInfo matrix_in, matrix_out;
   GstCudaColorMatrix convert_matrix;
   GstCudaColorMatrix border_color_matrix;
   gdouble border_color[4];
@@ -1240,6 +1285,9 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   texture_info = &priv->texture_info;
   in_color = &in_info->colorimetry;
   out_color = &out_info->colorimetry;
+
+  convert_info_gray_to_yuv (in_info, &matrix_in);
+  convert_info_gray_to_yuv (out_info, &matrix_out);
 
   memset (&convert_matrix, 0, sizeof (GstCudaColorMatrix));
   color_matrix_identity (&convert_matrix);
@@ -1340,6 +1388,12 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     case GST_VIDEO_FORMAT_GBRA:
       output_name = "GBRA";
       break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      output_name = "GRAY8";
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      output_name = "GRAY16";
+      break;
     case GST_VIDEO_FORMAT_VUYA:
       output_name = "VUYA";
       break;
@@ -1413,7 +1467,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
         out_info->width, out_info->height);
 
     gst_cuda_rgb_to_yuv_matrix_unorm (&rgb_info,
-        out_info, &border_color_matrix);
+        &matrix_out, &border_color_matrix);
   }
 
   for (i = 0; i < 3; i++) {
@@ -1435,7 +1489,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       if (in_color->range == out_color->range) {
         GST_DEBUG_OBJECT (self, "RGB -> RGB conversion without matrix");
       } else {
-        if (!gst_cuda_color_range_adjust_matrix_unorm (in_info, out_info,
+        if (!gst_cuda_color_range_adjust_matrix_unorm (&matrix_in, &matrix_out,
                 &convert_matrix)) {
           GST_ERROR_OBJECT (self, "Failed to get RGB range adjust matrix");
           return FALSE;
@@ -1451,8 +1505,8 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       }
     } else {
       /* RGB -> YUV */
-      if (!gst_cuda_rgb_to_yuv_matrix_unorm (in_info,
-              out_info, &convert_matrix)) {
+      if (!gst_cuda_rgb_to_yuv_matrix_unorm (&matrix_in,
+              &matrix_out, &convert_matrix)) {
         GST_ERROR_OBJECT (self, "Failed to get RGB -> YUV transform matrix");
         return FALSE;
       }
@@ -1466,7 +1520,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   } else {
     if (GST_VIDEO_INFO_IS_RGB (out_info)) {
       /* YUV -> RGB */
-      if (!gst_cuda_yuv_to_rgb_matrix_unorm (in_info, out_info,
+      if (!gst_cuda_yuv_to_rgb_matrix_unorm (&matrix_in, &matrix_out,
               &convert_matrix)) {
         GST_ERROR_OBJECT (self, "Failed to get YUV -> RGB transform matrix");
         return FALSE;
@@ -1482,7 +1536,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       if (in_color->range == out_color->range) {
         GST_DEBUG_OBJECT (self, "YUV -> YU conversion without matrix");
       } else {
-        if (!gst_cuda_color_range_adjust_matrix_unorm (in_info, out_info,
+        if (!gst_cuda_color_range_adjust_matrix_unorm (&matrix_in, &matrix_out,
                 &convert_matrix)) {
           GST_ERROR_OBJECT (self, "Failed to get GRAY range adjust matrix");
           return FALSE;

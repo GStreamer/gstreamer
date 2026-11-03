@@ -21,6 +21,7 @@ conv_input_formats = [
   'GBR_10',
   'GBR_12',
   'GBRA',
+  'GRAY',
 ]
 
 conv_output_formats = [
@@ -55,6 +56,8 @@ conv_output_formats = [
   'GBR_12',
   'GBR_16',
   'GBRA',
+  'GRAY8',
+  'GRAY16',
 ]
 
 header_collector = find_program('collect_ptx_headers.py')

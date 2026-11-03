@@ -403,6 +403,17 @@ struct SampleVUYA : public ISampler
   }
 };
 
+struct SampleGRAY : public ISampler
+{
+  __device__ float4
+  Execute (cudaTextureObject_t tex0, cudaTextureObject_t tex1,
+      cudaTextureObject_t tex2, cudaTextureObject_t tex3, float x, float y)
+  {
+    float luma = tex2D<float> (tex0, x, y);
+    return make_float4 (luma, 0.5f, 0.5f, 1.0f);
+  }
+};
+
 struct IOutput
 {
   __device__ virtual void
@@ -1326,6 +1337,49 @@ struct OutputGBRA : public IOutput
   }
 };
 
+struct OutputGRAY8 : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1)
+  {
+    dst0[x + y * stride0] = scale_to_uchar (sample.x);
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1)
+  {
+    int pos = x + y * stride0;
+    dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);
+  }
+};
+
+struct OutputGRAY16 : public IOutput
+{
+  __device__ void
+  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1)
+  {
+    int pos = x * sizeof (unsigned short) + y * stride0;
+    *(unsigned short *) &dst0[pos] = scale_to_ushort (sample.x);
+  }
+
+  __device__ void
+  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
+      unsigned char * dst3, float4 sample, int x, int y, int stride0,
+      int stride1)
+  {
+    int pos = x * sizeof (unsigned short) + y * stride0;
+    unsigned short *target = (unsigned short *) &dst0[pos];
+
+    *target = blend_ushort (*target, sample.x, sample.w);
+  }
+};
+
 struct OutputVUYA : public IOutput
 {
   __device__ void
@@ -1788,6 +1842,17 @@ static const char GstCudaConverterMain_str[] =
 "  {\n"
 "    float4 vuya = tex2D<float4>(tex0, x, y);\n"
 "    return make_float4 (vuya.z, vuya.y, vuya.x, vuya.w);\n"
+"  }\n"
+"};\n"
+"\n"
+"struct SampleGRAY : public ISampler\n"
+"{\n"
+"  __device__ float4\n"
+"  Execute (cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
+"      cudaTextureObject_t tex2, cudaTextureObject_t tex3, float x, float y)\n"
+"  {\n"
+"    float luma = tex2D<float> (tex0, x, y);\n"
+"    return make_float4 (luma, 0.5f, 0.5f, 1.0f);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -2711,6 +2776,49 @@ static const char GstCudaConverterMain_str[] =
 "    dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);\n"
 "    dst2[pos] = blend_uchar (dst2[pos], sample.x, sample.w);\n"
 "    dst3[pos] = blend_uchar (dst3[pos], 1.0f, sample.w);\n"
+"  }\n"
+"};\n"
+"\n"
+"struct OutputGRAY8 : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1)\n"
+"  {\n"
+"    dst0[x + y * stride0] = scale_to_uchar (sample.x);\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1)\n"
+"  {\n"
+"    int pos = x + y * stride0;\n"
+"    dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  }\n"
+"};\n"
+"\n"
+"struct OutputGRAY16 : public IOutput\n"
+"{\n"
+"  __device__ void\n"
+"  Write (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1)\n"
+"  {\n"
+"    int pos = x * sizeof (unsigned short) + y * stride0;\n"
+"    *(unsigned short *) &dst0[pos] = scale_to_ushort (sample.x);\n"
+"  }\n"
+"\n"
+"  __device__ void\n"
+"  Blend (unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"      unsigned char * dst3, float4 sample, int x, int y, int stride0,\n"
+"      int stride1)\n"
+"  {\n"
+"    int pos = x * sizeof (unsigned short) + y * stride0;\n"
+"    unsigned short *target = (unsigned short *) &dst0[pos];\n"
+"\n"
+"    *target = blend_ushort (*target, sample.x, sample.w);\n"
 "  }\n"
 "};\n"
 "\n"

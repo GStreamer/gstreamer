@@ -275,6 +275,8 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_VUYA:
       ret.stride[0] = pitch;
       ret.offset[0] = 0;
@@ -783,8 +785,13 @@ typedef struct _TextureFormat
 #define MAKE_FORMAT_RGBAP(f,cf) \
   { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf, \
       CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf }, {1, 1, 1, 1} }
+#define MAKE_FORMAT_GRAY(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_NONE, \
+      CU_AD_FORMAT_NONE, CU_AD_FORMAT_NONE }, {1, 0, 0, 0} }
 
 static const TextureFormat format_map[] = {
+  MAKE_FORMAT_GRAY (GRAY8, UNSIGNED_INT8),
+  MAKE_FORMAT_GRAY (GRAY16_LE, UNSIGNED_INT16),
   MAKE_FORMAT_YUV_PLANAR (I420, UNSIGNED_INT8),
   MAKE_FORMAT_YUV_PLANAR (YV12, UNSIGNED_INT8),
   MAKE_FORMAT_YUV_SEMI_PLANAR (NV12, UNSIGNED_INT8),
