@@ -99,7 +99,7 @@ gst_flow_combiner_new (void)
 
   g_queue_init (&combiner->pads);
   combiner->last_ret = GST_FLOW_OK;
-  g_atomic_int_set (&combiner->ref_count, 1);
+  g_atomic_ref_count_init ((gatomicrefcount *) & combiner->ref_count);
 
   /* Make sure debug category is initialised */
   gst_flow_combiner_get_type ();
@@ -136,7 +136,7 @@ gst_flow_combiner_ref (GstFlowCombiner * combiner)
 {
   g_return_val_if_fail (combiner != NULL, NULL);
 
-  g_atomic_int_inc (&combiner->ref_count);
+  g_atomic_ref_count_inc ((gatomicrefcount *) & combiner->ref_count);
 
   return combiner;
 }
@@ -153,9 +153,9 @@ void
 gst_flow_combiner_unref (GstFlowCombiner * combiner)
 {
   g_return_if_fail (combiner != NULL);
-  g_return_if_fail (combiner->ref_count > 0);
+  g_return_if_fail (g_atomic_int_get (&combiner->ref_count) > 0);
 
-  if (g_atomic_int_dec_and_test (&combiner->ref_count)) {
+  if (g_atomic_ref_count_dec ((gatomicrefcount *) & combiner->ref_count)) {
     GstPad *pad;
 
     while ((pad = g_queue_pop_head (&combiner->pads)))

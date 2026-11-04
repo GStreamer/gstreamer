@@ -112,7 +112,7 @@ typedef struct _GstSingleQueue GstSingleQueue;
 
 struct _GstSingleQueue
 {
-  gint refcount;
+  gatomicrefcount refcount;
 
   /* unique identifier of the queue */
   guint id;
@@ -3462,7 +3462,7 @@ gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full)
 static void
 gst_single_queue_unref (GstSingleQueue * sq)
 {
-  if (g_atomic_int_dec_and_test (&sq->refcount)) {
+  if (g_atomic_ref_count_dec (&sq->refcount)) {
     /* DRAIN QUEUE */
     gst_data_queue_flush (sq->queue);
     g_object_unref (sq->queue);
@@ -3482,7 +3482,7 @@ gst_single_queue_unref (GstSingleQueue * sq)
 static GstSingleQueue *
 gst_single_queue_ref (GstSingleQueue * squeue)
 {
-  g_atomic_int_inc (&squeue->refcount);
+  g_atomic_ref_count_inc (&squeue->refcount);
 
   return squeue;
 }
@@ -3518,7 +3518,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   }
 
   sq = g_new0 (GstSingleQueue, 1);
-  g_atomic_int_set (&sq->refcount, 1);
+  g_atomic_ref_count_init (&sq->refcount);
 
   mqueue->nbqueues++;
   sq->id = temp_id;
