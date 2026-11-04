@@ -579,7 +579,7 @@ struct _QtDemuxStream
   /* KEY_UNITS trickmode with an interval */
   GstClockTime last_keyframe_pts;
 
-  gint ref_count;               /* atomic */
+  gatomicrefcount ref_count;
 };
 
 G_END_DECLS

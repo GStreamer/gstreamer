@@ -46,7 +46,7 @@ enum _DownloadRequestState {
 
 struct _DownloadRequest
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
 
   gboolean in_use; /* TRUE if this request is being serviced */
   gboolean send_progress; /* TRUE if this request wants progress events */

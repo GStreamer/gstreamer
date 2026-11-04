@@ -77,7 +77,7 @@ static GList *connections;
 /* the connection to a server  */
 typedef struct
 {
-  gint refcount;
+  grefcount refcount;
   GMutex lock;
   GCond flush_cond;
 
@@ -320,7 +320,7 @@ gst_jack_audio_make_connection (const gchar * id, const gchar * server,
 
   /* now create object */
   conn = g_new (GstJackAudioConnection, 1);
-  conn->refcount = 1;
+  g_ref_count_init (&conn->refcount);
   g_mutex_init (&conn->lock);
   g_cond_init (&conn->flush_cond);
   conn->id = g_strdup (id);
@@ -386,7 +386,7 @@ gst_jack_audio_get_connection (const gchar * id, const gchar * server,
   if (found != NULL && jclient != NULL) {
     /* we found it, increase refcount and return it */
     conn = (GstJackAudioConnection *) found->data;
-    conn->refcount++;
+    g_ref_count_inc (&conn->refcount);
 
     GST_DEBUG ("found connection %p", conn);
   } else {
@@ -411,11 +411,10 @@ gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
   gint res;
   gboolean zero;
 
-  GST_DEBUG ("unref connection %p refcnt %d", conn, conn->refcount);
+  GST_DEBUG ("unref connection %p refcnt %u", conn, conn->refcount);
 
   G_LOCK (connections_lock);
-  conn->refcount--;
-  if ((zero = (conn->refcount == 0))) {
+  if ((zero = g_ref_count_dec (&conn->refcount))) {
     GST_DEBUG ("closing connection %p", conn);
     /* remove from list, we can release the mutex after removing the connection
      * from the list because after that, nobody can access the connection anymore. */

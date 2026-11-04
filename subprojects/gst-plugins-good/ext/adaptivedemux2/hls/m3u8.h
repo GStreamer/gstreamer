@@ -155,7 +155,7 @@ struct _GstHLSMediaPlaylist
    * See gst_hls_media_playlist_has_same_data()  */
   gchar   *last_data;
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 /* gst_hls_media_playlist_new: Internal function : Do not use from demuxer code, only for unit
@@ -183,7 +183,7 @@ struct _GstM3U8PartialSegment
   GstClockTimeDiff stream_time;	/* Computed stream time */
   GstClockTime duration;
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstM3U8PartialSegment *
@@ -215,7 +215,7 @@ struct _GstM3U8PreloadHint
   gchar *uri;
   gint64 offset, size;
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstM3U8PreloadHint *
@@ -254,14 +254,14 @@ struct _GstM3U8MediaSegment
 
   GPtrArray *partial_segments; /* If there are Partial Segments for this Media Segment */
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 struct _GstM3U8InitFile
 {
   gchar *uri;
   gint64 offset, size;
-  guint ref_count;      /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstM3U8InitFile *gst_m3u8_init_file_ref (GstM3U8InitFile * ifile);
@@ -394,7 +394,7 @@ struct _GstHLSRenditionStream {
   gboolean autoselect;
   gboolean forced;
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstHLSRenditionStream *
@@ -433,7 +433,7 @@ struct _GstHLSVariantStream {
   gint height;
   gboolean iframe;
 
-  gint refcount;       /* ATOMIC */
+  gatomicrefcount refcount;
 
   /* alternative renditions (names) */
   gchar *media_groups[GST_HLS_N_MEDIA_TYPES];
@@ -485,7 +485,7 @@ struct _GstHLSMasterPlaylist
   /*< private > */
   gchar   *last_data;		/* Copy of the incoming data that created this master playlist */
 
-  gint      refcount;                    /* ATOMIC */
+  gatomicrefcount refcount;
 };
 
 /* Notes: #define are to avoid symbol clashes with legacy hlsdemux */

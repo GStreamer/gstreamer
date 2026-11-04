@@ -36,7 +36,7 @@ gst_adaptive_demux_period_new (GstAdaptiveDemux * demux)
   GstAdaptiveDemuxPeriod *period;
 
   period = g_new0 (GstAdaptiveDemuxPeriod, 1);
-  g_atomic_int_set (&period->ref_count, 1);
+  g_atomic_ref_count_init (&period->ref_count);
 
   period->demux = demux;
   period->period_num = demux->priv->n_periods++;
@@ -71,7 +71,7 @@ gst_adaptive_demux_period_ref (GstAdaptiveDemuxPeriod * period)
 
   GST_TRACE ("%p %d -> %d", period, period->ref_count, period->ref_count + 1);
 
-  g_atomic_int_inc (&period->ref_count);
+  g_atomic_ref_count_inc (&period->ref_count);
 
   return period;
 }
@@ -83,7 +83,7 @@ gst_adaptive_demux_period_unref (GstAdaptiveDemuxPeriod * period)
 
   GST_TRACE ("%p %d -> %d", period, period->ref_count, period->ref_count - 1);
 
-  if (g_atomic_int_dec_and_test (&period->ref_count)) {
+  if (g_atomic_ref_count_dec (&period->ref_count)) {
     _demux_period_free (period);
   }
 }
