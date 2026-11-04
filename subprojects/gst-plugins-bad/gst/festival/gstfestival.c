@@ -110,6 +110,8 @@
 GST_DEBUG_CATEGORY_STATIC (festival_debug);
 #define GST_CAT_DEFAULT festival_debug
 
+#define MAX_WAVEFORM_SIZE_BYTES (128 * 1024 * 1024)     /* 128 MB, or about an hour worth of samples */
+
 static void gst_festival_finalize (GObject * object);
 
 static GstFlowReturn gst_festival_chain (GstPad * pad, GstObject * parent,
@@ -477,8 +479,36 @@ socket_receive_file_to_buff (GstFestival * festival, int fd, int *size)
     }
 
     if ((*size) + k + 1 >= bufflen) {
+      if (bufflen == MAX_WAVEFORM_SIZE_BYTES) {
+        GST_ELEMENT_ERROR (festival,
+            LIBRARY,
+            FAILED,
+            ("Maximum waveform size exceeded"),
+            ("Maximum waveform size exceeded"));
+
+        g_free (buff);
+        return NULL;
+      }
+
       /* +1 so you can add a NULL if you want */
       bufflen += bufflen / 4;
+
+      if (bufflen > MAX_WAVEFORM_SIZE_BYTES) {
+        bufflen = MAX_WAVEFORM_SIZE_BYTES;
+
+        /* Sanity check as we just capped the reallocation size */
+        if ((*size) + k + 1 >= bufflen) {
+          GST_ELEMENT_ERROR (festival,
+              LIBRARY,
+              FAILED,
+              ("Maximum waveform size exceeded"),
+              ("Maximum waveform size exceeded"));
+
+          g_free (buff);
+          return NULL;
+        }
+      }
+
       buff = (char *) g_realloc (buff, bufflen);
     }
     if (file_stuff_key[k] == c)
