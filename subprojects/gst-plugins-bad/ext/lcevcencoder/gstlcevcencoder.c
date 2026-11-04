@@ -46,7 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (lcevcencoder_debug);
 
 struct GstEILContext_
 {
-  grefcount ref;
+  gatomicrefcount ref;
   EILContext context;
 };
 typedef struct GstEILContext_ GstEILContext;
@@ -114,14 +114,14 @@ gst_eil_context_new (GstLcevcEncoder * eil, const gchar * plugin_name,
     return NULL;
 
   /* Init refcount */
-  g_ref_count_init (&ctx->ref);
+  g_atomic_ref_count_init (&ctx->ref);
   return ctx;
 }
 
 static void
 gst_eil_context_unref (GstEILContext * ctx)
 {
-  if (g_ref_count_dec (&ctx->ref)) {
+  if (g_atomic_ref_count_dec (&ctx->ref)) {
     EIL_Close (ctx->context);
     g_free (ctx);
   }
@@ -130,7 +130,7 @@ gst_eil_context_unref (GstEILContext * ctx)
 static GstEILContext *
 gst_eil_context_ref (GstEILContext * ctx)
 {
-  g_ref_count_inc (&ctx->ref);
+  g_atomic_ref_count_inc (&ctx->ref);
   return ctx;
 }
 
