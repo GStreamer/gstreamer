@@ -200,6 +200,12 @@ pub fn qt_probe(tf: &mut TypeFind) -> Option<(Prob, Option<&'static CStr>)> {
         if next <= offset || next.saturating_add(16) >= i64::MAX as u64 {
             break;
         }
+        // The stream holds no header at or past its end, and asking the
+        // engine there reports a broken read rather than nothing. A box
+        // declared as far as that ends the walk.
+        if tf.length().is_some_and(|len| next >= len.get()) {
+            break 'walk;
+        }
         offset = next;
     }
 
@@ -252,6 +258,12 @@ pub fn qtif_probe(tf: &mut TypeFind) -> Option<Prob> {
             break;
         };
         if next.saturating_add(8) >= i64::MAX as u64 {
+            break;
+        }
+        // The stream holds no header at or past its end, and asking the
+        // engine there reports a broken read rather than nothing. A box
+        // declared as far as that ends the walk.
+        if tf.length().is_some_and(|len| next >= len.get()) {
             break;
         }
         offset = next;
@@ -743,6 +755,39 @@ mod tests {
 
     fn probe_matroska(data: &[u8]) -> Option<(&'static CStr, Prob)> {
         probe(data, matroska_probe)
+    }
+
+    /// A log whose first octets read `0:00` spells a box header of
+    /// 772 MiB in a stream that is megabytes shorter. The walk reads
+    /// the stream length to stop at its end; asking the engine at or
+    /// past that end reports a broken read, which the element turns
+    /// into an error and discards every finder's answer.
+    #[test]
+    fn a_box_claiming_past_the_end_ends_the_walks() {
+        // The size octets spell 772 MiB; the box type is a real one, so
+        // the walk has a reason to keep going past this box.
+        let mut data = b"0:00moov".to_vec();
+        data.resize(8192, b'a');
+        assert!(probe(&data, qtif_probe).is_none());
+        // The presentation box was seen before the claim, and a walk kept
+        // to the stream's end keeps what it has found.
+        assert_eq!(probe(&data, qt_probe), Some((Prob::LIKELY, None)));
+    }
+
+    /// The bound reads the stream length rather than trusting a claimed
+    /// box size: a `largesize` header claiming four GiB ends the walk
+    /// the same way a short one does, without a read the stream cannot
+    /// answer.
+    #[test]
+    fn a_largesize_past_the_end_ends_the_walk_too() {
+        let mut data = (8u32).to_be_bytes().to_vec(); // one header-only box
+        data.extend(*b"junk");
+        data.extend(1u32.to_be_bytes()); // largesize follows
+        data.extend(*b"junk");
+        data.extend((1u64 << 32).to_be_bytes());
+        data.resize(8192, 0x00);
+        assert!(probe(&data, qtif_probe).is_none());
+        assert!(probe(&data, qt_probe).is_none());
     }
 
     /// Append Void elements until the stream reaches at least `min_len`:

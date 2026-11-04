@@ -177,19 +177,23 @@ impl<'a> Scanner<'a> {
     /// Query the engine for up to `WINDOW` bytes at `offset`, falling back
     /// to whatever the stream has left (at least `min`) for short tails.
     fn refill(&mut self, offset: i64, min: usize) -> Option<(*const u8, usize)> {
-        let chunk = WINDOW.max(min) as u32;
-        let base = unsafe { bindings::gst_type_find_peek(self.tf, offset, chunk) };
-        if !base.is_null() {
-            return Some((base, chunk as usize));
-        }
-        // Short tail: the stream ends before a full window. An unknown
-        // length lands here and asks for at least `min` bytes.
+        // A stream that cannot serve `min` bytes answers nothing, decided
+        // before asking: a read starting at or past the end of a known
+        // stream reports a broken read to the engine rather than nothing,
+        // and a cursor may well walk there — a frame that runs to the last
+        // octet leaves the cursor exactly at the end.
         let left = NonZeroU64::new(unsafe { bindings::gst_type_find_get_length(self.tf) })
-            .map_or(0, NonZeroU64::get)
-            .saturating_sub(offset as u64);
-        let len = left.clamp(min as u64, chunk as u64) as u32;
-        let base = unsafe { bindings::gst_type_find_peek(self.tf, offset, len) };
-        (!base.is_null()).then_some((base, len as usize))
+            .map_or(u64::MAX, NonZeroU64::get)
+            .checked_sub(offset.max(0) as u64)?;
+        if left < min as u64 {
+            return None;
+        }
+        // Short tail: the stream ends before a full window, so a full-window
+        // read would reach past its end. Ask for the remainder instead, an
+        // exact request the engine can serve whole.
+        let chunk = WINDOW.max(min).min(left as usize) as u32;
+        let base = unsafe { bindings::gst_type_find_peek(self.tf, offset, chunk) };
+        (!base.is_null()).then_some((base, chunk as usize))
     }
 }
 
