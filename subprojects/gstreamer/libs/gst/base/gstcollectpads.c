@@ -390,16 +390,16 @@ ref_data (GstCollectData * data)
 {
   g_assert (data != NULL);
 
-  g_atomic_int_inc (&(data->priv->refcount));
+  g_atomic_ref_count_inc ((gatomicrefcount *) & (data->priv->refcount));
 }
 
 static void
 unref_data (GstCollectData * data)
 {
   g_assert (data != NULL);
-  g_assert (data->priv->refcount > 0);
+  g_assert (g_atomic_int_get (&data->priv->refcount) > 0);
 
-  if (!g_atomic_int_dec_and_test (&(data->priv->refcount)))
+  if (!g_atomic_ref_count_dec ((gatomicrefcount *) & (data->priv->refcount)))
     return;
 
   if (data->priv->destroy_notify)
@@ -643,7 +643,7 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size,
   gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
   data->state = GST_COLLECT_PADS_STATE_WAITING;
   data->state |= lock ? GST_COLLECT_PADS_STATE_LOCKED : 0;
-  data->priv->refcount = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & data->priv->refcount);
   data->priv->destroy_notify = destroy_notify;
   data->ABI.abi.dts = G_MININT64;
 

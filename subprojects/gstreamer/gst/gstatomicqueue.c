@@ -159,7 +159,7 @@ gst_atomic_queue_new (guint initial_size)
 
   queue = g_new (GstAtomicQueue, 1);
 
-  queue->refcount = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & queue->refcount);
 #ifdef LOW_MEM
   queue->num_readers = 0;
 #endif
@@ -180,7 +180,7 @@ gst_atomic_queue_ref (GstAtomicQueue * queue)
 {
   g_return_if_fail (queue != NULL);
 
-  g_atomic_int_inc (&queue->refcount);
+  g_atomic_ref_count_inc ((gatomicrefcount *) & queue->refcount);
 }
 
 static void
@@ -204,7 +204,7 @@ gst_atomic_queue_unref (GstAtomicQueue * queue)
 {
   g_return_if_fail (queue != NULL);
 
-  if (g_atomic_int_dec_and_test (&queue->refcount))
+  if (g_atomic_ref_count_dec ((gatomicrefcount *) & queue->refcount))
     gst_atomic_queue_free (queue);
 }
 

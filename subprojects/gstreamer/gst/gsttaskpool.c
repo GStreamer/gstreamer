@@ -392,13 +392,13 @@ typedef struct
   gpointer user_data;
   GMutex done_lock;
   GCond done_cond;
-  gint refcount;
+  gatomicrefcount refcount;
 } SharedTaskData;
 
 static SharedTaskData *
 shared_task_data_ref (SharedTaskData * tdata)
 {
-  g_atomic_int_add (&tdata->refcount, 1);
+  g_atomic_ref_count_inc (&tdata->refcount);
 
   return tdata;
 }
@@ -406,7 +406,7 @@ shared_task_data_ref (SharedTaskData * tdata)
 static void
 shared_task_data_unref (SharedTaskData * tdata)
 {
-  if (g_atomic_int_dec_and_test (&tdata->refcount)) {
+  if (g_atomic_ref_count_dec (&tdata->refcount)) {
     g_mutex_clear (&tdata->done_lock);
     g_cond_clear (&tdata->done_cond);
     g_free (tdata);
@@ -454,7 +454,7 @@ shared_push (GstTaskPool * pool, GstTaskPoolFunction func,
   ret->done = FALSE;
   ret->func = func;
   ret->user_data = user_data;
-  g_atomic_int_set (&ret->refcount, 1);
+  g_atomic_ref_count_init (&ret->refcount);
   g_cond_init (&ret->done_cond);
   g_mutex_init (&ret->done_lock);
 

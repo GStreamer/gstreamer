@@ -115,13 +115,13 @@ typedef struct
   GstBusSyncHandler handler;
   gpointer user_data;
   GDestroyNotify destroy_notify;
-  gint ref_count;
+  gatomicrefcount ref_count;
 } SyncHandler;
 
 static SyncHandler *
 sync_handler_ref (SyncHandler * handler)
 {
-  g_atomic_int_inc (&handler->ref_count);
+  g_atomic_ref_count_inc (&handler->ref_count);
 
   return handler;
 }
@@ -129,7 +129,7 @@ sync_handler_ref (SyncHandler * handler)
 static void
 sync_handler_unref (SyncHandler * handler)
 {
-  if (!g_atomic_int_dec_and_test (&handler->ref_count))
+  if (!g_atomic_ref_count_dec (&handler->ref_count))
     return;
 
   if (handler->destroy_notify)
@@ -757,7 +757,7 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func,
     new_handler->handler = func;
     new_handler->user_data = user_data;
     new_handler->destroy_notify = notify;
-    new_handler->ref_count = 1;
+    g_atomic_ref_count_init (&new_handler->ref_count);
   }
 
   GST_OBJECT_LOCK (bus);
