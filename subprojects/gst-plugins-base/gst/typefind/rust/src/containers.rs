@@ -588,6 +588,74 @@ pub(crate) fn mxf_partition_pack(data: &[u8]) -> bool {
         .any(|w| w[..13] == MXF_HEADER_PACK && w[13] == 0x02 && w[14] < 5 && w[15] == 0)
 }
 
+// =============================================================================
+// application/x-pxstr
+// =============================================================================
+
+// A raw CD stream, read as sectors of one frame each. The spec's Notes
+// record the source loop as inverted, making the finder never suggest;
+// this is the documented intent, per the house rule that ports follow
+// the documented behaviour of a recorded defect (07-notes, bugs table).
+
+const PXSTR_SECTOR: usize = 2352;
+const PXSTR_SECTORS_MAX: usize = 5;
+const PXSTR_SYNC: [u8; 12] = [
+    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
+];
+
+pub(crate) fn pxstr_probe(tf: &mut TypeFind) -> Option<Prob> {
+    let data = tf.peek_at_most(PXSTR_SECTORS_MAX * PXSTR_SECTOR)?;
+    if data.len() < PXSTR_SECTOR {
+        return None;
+    }
+    // A CDXA wrapper puts a chunk header ahead of the sectors. The
+    // window is taken before the header is dropped, so a wrapped file
+    // reaches four whole sectors and the head of a fifth at best.
+    let body = if data.starts_with(b"RIFF") && data[8..12] == *b"CDXA" {
+        &data[0x2C..]
+    } else {
+        data
+    };
+    let mut counted = 0u32;
+    let mut at = 0usize;
+    while at + PXSTR_SECTOR <= body.len() {
+        let sector = &body[at..at + PXSTR_SECTOR];
+        let mode = sector[0x12] & 0x0E;
+        if !pxstr_sector(sector, mode) {
+            break;
+        }
+        counted += u32::from(mode != 0);
+        at += PXSTR_SECTOR;
+    }
+    if counted > 3 {
+        Some(Prob::POSSIBLE)
+    } else if counted > 0 {
+        Some(Prob::MINIMUM)
+    } else {
+        None
+    }
+}
+
+/// One sector's claim: the frame sync and a video mode whose geometry
+/// adds up, or an audio mode with its reserved bits clear. A sector
+/// named neither is stepped over; anything named and wrong ends the
+/// walk.
+fn pxstr_sector(sector: &[u8], mode: u8) -> bool {
+    sector[..12] == PXSTR_SYNC
+        && sector[0x11] < 32
+        && match mode {
+            0x08 | 0x02 => {
+                let current = i16::from_le_bytes([sector[0x1C], sector[0x1D]]) as i32;
+                let count = i16::from_le_bytes([sector[0x1E], sector[0x1F]]) as i32;
+                let frame = i16::from_le_bytes([sector[0x24], sector[0x25]]) as i32;
+                frame > 0 && current < count && count * 0x780 >= frame
+            }
+            0x04 => sector[0x13] & 0x2A == 0,
+            0 => true,
+            _ => false,
+        }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1051,5 +1119,187 @@ mod tests {
         let mut truncated = vec![0u8; 64 * 1024 - 8];
         truncated.extend_from_slice(&MXF_HEADER_PACK[..10]);
         assert!(!mxf_partition_pack(&truncated));
+    }
+
+    // ---------------------------------------------------------------------
+    // pxstr
+    // ---------------------------------------------------------------------
+
+    fn pxstr_sector_bytes(mode: u8, current: i16, count: i16, frame: i16) -> Vec<u8> {
+        let mut s = vec![0u8; PXSTR_SECTOR];
+        s[..12].copy_from_slice(&PXSTR_SYNC);
+        s[0x12] = mode;
+        s[0x1C..0x1E].copy_from_slice(&current.to_le_bytes());
+        s[0x1E..0x20].copy_from_slice(&count.to_le_bytes());
+        s[0x24..0x26].copy_from_slice(&frame.to_le_bytes());
+        s
+    }
+
+    fn video() -> Vec<u8> {
+        pxstr_sector_bytes(0x08, 0, 4, 0x780)
+    }
+
+    fn audio() -> Vec<u8> {
+        pxstr_sector_bytes(0x04, 0, 0, 0)
+    }
+
+    fn pxstr_walk(sectors: &[&[u8]]) -> Option<Prob> {
+        let data: Vec<u8> = sectors.iter().flat_map(|s| s.iter().copied()).collect();
+        probe(&data, pxstr_probe)
+    }
+
+    /// Four whole sectors of a named mode answer at the possible tier;
+    /// fewer are a whisper, none is silence. Both video arms count, the
+    /// mode byte is masked, and equality of a frame with the room that
+    /// holds it still counts. The sectors may sit bare or behind a CDXA
+    /// chunk header.
+    #[test]
+    fn pxstr_counts_named_sectors() {
+        assert_eq!(
+            pxstr_walk(&[&video(), &video(), &video(), &video()]),
+            Some(Prob::POSSIBLE)
+        );
+        // The second video arm, 0x02, is the first one's equal.
+        let mut mode2 = video();
+        mode2[0x12] = 0x02;
+        assert_eq!(
+            pxstr_walk(&[&mode2, &mode2, &mode2, &mode2]),
+            Some(Prob::POSSIBLE)
+        );
+        assert_eq!(
+            pxstr_walk(&[&audio(), &audio(), &video(), &video()]),
+            Some(Prob::POSSIBLE)
+        );
+        assert_eq!(
+            pxstr_walk(&[&video(), &video(), &video()]),
+            Some(Prob::MINIMUM)
+        );
+        assert_eq!(pxstr_walk(&[&audio()]), Some(Prob::MINIMUM));
+        // The mode byte is read through its mask: 0x09 is video.
+        let mut masked = video();
+        masked[0x12] = 0x09;
+        assert_eq!(probe(&masked, pxstr_probe), Some(Prob::MINIMUM));
+        // A frame filling the room that holds it to the last byte is
+        // still a frame that fits.
+        assert_eq!(
+            probe(&pxstr_sector_bytes(0x08, 0, 1, 0x780), pxstr_probe),
+            Some(Prob::MINIMUM)
+        );
+        // The audio reserved bits are read whole: any of 0x2A set is
+        // silence, anything else passes.
+        for (reserved, expected) in [
+            (0x00u8, Some(Prob::MINIMUM)),
+            (0x05, Some(Prob::MINIMUM)),
+            (0x02, None),
+            (0x08, None),
+            (0x20, None),
+        ] {
+            let mut s = audio();
+            s[0x13] = reserved;
+            assert_eq!(probe(&s, pxstr_probe), expected, "reserved {reserved:#04x}");
+        }
+        // Nothing named, nothing said: a mode-zero sector is stepped
+        // over, not an end — four named across five sectors answer.
+        let mode_zero = pxstr_sector_bytes(0x00, 0, 0, 0);
+        assert_eq!(pxstr_walk(&[&mode_zero]), None);
+        assert_eq!(
+            pxstr_walk(&[&video(), &mode_zero, &video(), &video(), &video()]),
+            Some(Prob::POSSIBLE)
+        );
+        // The CDXA wrapper precedes the sectors; what follows reads the same.
+        let mut wrapped = b"RIFF".to_vec();
+        wrapped.extend(0u32.to_le_bytes());
+        wrapped.extend_from_slice(b"CDXA");
+        wrapped.resize(0x2C, 0x00);
+        let bare: Vec<u8> = [video(), video(), video(), video()].concat();
+        let with_header = [wrapped, bare.clone()].concat();
+        assert_eq!(probe(&with_header, pxstr_probe), Some(Prob::POSSIBLE));
+        assert_eq!(probe(&bare, pxstr_probe), Some(Prob::POSSIBLE));
+    }
+
+    /// A sector that fails the sync, the channel byte, the video
+    /// geometry, the audio reserved bits or the mode table ends the
+    /// walk; what was counted before it stands and nothing behind it
+    /// counts. Three named sectors ahead of the bad one put the answer
+    /// one step below the tier a fourth would reach: were the bad
+    /// sector stepped over instead, the fifth would lift it.
+    #[test]
+    fn pxstr_first_bad_sector_ends_the_walk() {
+        let good = video();
+        let mut no_sync = good.clone();
+        no_sync[5] = 0x00;
+        let mut channel_32 = good.clone();
+        channel_32[0x11] = 32;
+        let mut frame_zero = good.clone();
+        frame_zero[0x24..0x26].copy_from_slice(&0i16.to_le_bytes());
+        let mut current_eq_count = good.clone();
+        current_eq_count[0x1C..0x20].copy_from_slice(&[2, 0, 2, 0]);
+        // One sector holds 0x780 bytes of frame; a frame needing more
+        // cannot fit the count that holds it.
+        let frame_too_big = pxstr_sector_bytes(0x08, 0, 1, 0x781);
+        let mut count_negative = good.clone();
+        count_negative[0x1E..0x20].copy_from_slice(&(-1i16).to_le_bytes());
+        let mut audio_reserved = audio();
+        audio_reserved[0x13] = 0x08;
+        let mut mode_masks_to_reserved = good.clone();
+        mode_masks_to_reserved[0x12] = 0x0D; // & 0x0E = 0x0C
+        let mut mode_unnamed = good.clone();
+        mode_unnamed[0x12] = 0x06;
+
+        for bad in [
+            no_sync,
+            channel_32,
+            frame_zero,
+            current_eq_count,
+            frame_too_big,
+            count_negative,
+            audio_reserved,
+            mode_unnamed,
+            mode_masks_to_reserved,
+        ] {
+            // Three named sectors before it are kept; the bad one and
+            // all behind it are not.
+            assert_eq!(
+                pxstr_walk(&[&good, &good, &good, &bad, &good]),
+                Some(Prob::MINIMUM),
+                "bad sector {:?}",
+                &bad[..0x28]
+            );
+        }
+        // The channel byte is read up to its bound: 31 passes where 32
+        // ends the walk.
+        let mut channel_31 = good.clone();
+        channel_31[0x11] = 31;
+        assert_eq!(
+            pxstr_walk(&[&channel_31, &good, &good, &good]),
+            Some(Prob::POSSIBLE)
+        );
+    }
+
+    /// One whole sector is the smallest thing the finder will read,
+    /// and five sectors is as far as it reaches: named sectors behind
+    /// the fifth are not read.
+    #[test]
+    fn pxstr_wants_a_whole_sector_and_reads_five() {
+        let one = video();
+        assert_eq!(probe(&one[..PXSTR_SECTOR - 1], pxstr_probe), None);
+        assert_eq!(probe(&one, pxstr_probe), Some(Prob::MINIMUM));
+        // Five mode-zero sectors fill the window; the four video
+        // sectors behind it are never reached.
+        let mode_zero = pxstr_sector_bytes(0x00, 0, 0, 0);
+        assert_eq!(
+            pxstr_walk(&[
+                &mode_zero,
+                &mode_zero,
+                &mode_zero,
+                &mode_zero,
+                &mode_zero,
+                &video(),
+                &video(),
+                &video(),
+                &video()
+            ]),
+            None
+        );
     }
 }

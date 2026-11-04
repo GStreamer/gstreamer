@@ -26,7 +26,7 @@ use crate::audio::{
 use crate::av1::av1_probe;
 use crate::bindings::gpointer;
 use crate::containers::{
-    MXF_SCAN_MAX, matroska_probe, mxf_partition_pack, q3gp_probe, qt_probe, qtif_probe,
+    MXF_SCAN_MAX, matroska_probe, mxf_partition_pack, pxstr_probe, q3gp_probe, qt_probe, qtif_probe,
 };
 use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
@@ -618,6 +618,13 @@ extern "C" fn doc_type_find(tf: &mut TypeFind, _private: gpointer) {
 extern "C" fn ds_store_type_find(tf: &mut TypeFind, _private: gpointer) {
     if tf.starts_with(b"\x00\x00\x00\x01Bud1") {
         suggest!(tf, Prob::LIKELY, c"application/octet-stream");
+    }
+}
+
+// CD stream with XA sector headers - application/x-pxstr
+extern "C" fn pxstr_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(probability) = pxstr_probe(tf) {
+        suggest!(tf, probability, c"application/x-pxstr");
     }
 }
 
@@ -3214,6 +3221,8 @@ const FEATURES: &[Feature] = &[
         "h266,266",
         "video/x-h266,stream-format=byte-stream"
     ),
+    // PXSTR - application/x-pxstr
+    typefinder!("application/x-pxstr", MARGINAL, pxstr_type_find, "pxstr"),
     // SSA/ASS - application/x-ssa
     typefinder!(
         "application/x-ssa",
