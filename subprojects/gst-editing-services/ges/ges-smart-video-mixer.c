@@ -143,7 +143,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 
 typedef struct _PadInfos
 {
-  gint refcount;
+  gatomicrefcount refcount;
 
   GESSmartMixer *self;
   GstPad *mixer_pad;
@@ -154,7 +154,7 @@ typedef struct _PadInfos
 static void
 pad_infos_unref (PadInfos * infos)
 {
-  if (g_atomic_int_dec_and_test (&infos->refcount)) {
+  if (g_atomic_ref_count_dec (&infos->refcount)) {
     GST_DEBUG_OBJECT (infos->mixer_pad, "Releasing pad");
     if (infos->mixer_pad) {
       gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
@@ -170,7 +170,7 @@ static PadInfos *
 pad_infos_new (void)
 {
   PadInfos *info = g_new0 (PadInfos, 1);
-  g_atomic_int_set (&info->refcount, 1);
+  g_atomic_ref_count_init (&info->refcount);
 
   return info;
 }
@@ -178,7 +178,7 @@ pad_infos_new (void)
 static PadInfos *
 pad_infos_ref (PadInfos * info)
 {
-  g_atomic_int_inc (&info->refcount);
+  g_atomic_ref_count_inc (&info->refcount);
   return info;
 }
 
