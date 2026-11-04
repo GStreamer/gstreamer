@@ -860,7 +860,7 @@ video_info_from_caps (GstVideoInfo * info, GstCaps * caps)
 
 static void
 transfer_colorimetry_from_input (GstObject * object, GstCaps * in_caps,
-    GstCaps * out_caps)
+    GstCaps * out_caps, gboolean default_colorimetry)
 {
   GstStructure *out_caps_s = gst_caps_get_structure (out_caps, 0);
   GstStructure *in_caps_s = gst_caps_get_structure (in_caps, 0);
@@ -891,7 +891,15 @@ transfer_colorimetry_from_input (GstObject * object, GstCaps * in_caps,
       return;
     }
 
-    if (!have_colorimetry && in_colorimetry != NULL) {
+    if (!have_colorimetry && default_colorimetry) {
+      /* Set default colorimetry instead of transfering from input */
+      gchar *colorimetry_str =
+          gst_video_colorimetry_to_string (&out_info.colorimetry);
+      if (colorimetry_str)
+        gst_caps_set_simple (out_caps, "colorimetry", G_TYPE_STRING,
+            colorimetry_str, NULL);
+      g_free (colorimetry_str);
+    } else if (!have_colorimetry && in_colorimetry != NULL) {
       if ((GST_VIDEO_INFO_IS_YUV (&out_info)
               && GST_VIDEO_INFO_IS_YUV (&in_info))
           || (GST_VIDEO_INFO_IS_RGB (&out_info)
@@ -1048,7 +1056,8 @@ gst_video_convertscale_fixate_caps (GstObject * object,
   if ((flags & GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT)
       && direction == GST_PAD_SINK) {
     /* transfer colorimetry and chroma-site from input if possible */
-    transfer_colorimetry_from_input (object, caps, result);
+    transfer_colorimetry_from_input (object, caps, result, flags &
+        GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_DEFAULT_COLORIMETRY);
   }
 
   return result;

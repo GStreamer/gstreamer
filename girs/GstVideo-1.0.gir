@@ -7130,6 +7130,13 @@ with the parsed values.</doc>
       <member name="size" value="2" c:identifier="GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">fixate the size</doc>
       </member>
+      <member name="default_colorimetry" value="4" c:identifier="GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_DEFAULT_COLORIMETRY">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">if colorimetry
+  is not present in the output caps, set the default colorimetry of the
+  output format instead of copying the colorimetry from the input caps. This
+  should be used when the conversion also changes colorimetry, for example
+  when doing HDR tone mapping.</doc>
+      </member>
     </bitfield>
     <callback name="VideoConvertScaleFormatLossFunc" c:type="GstVideoConvertScaleFormatLossFunc" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">Callback to guestimate conversion loss between the input and output formats.

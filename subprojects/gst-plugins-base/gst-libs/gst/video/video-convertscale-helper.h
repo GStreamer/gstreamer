@@ -30,6 +30,11 @@ G_BEGIN_DECLS
  * @GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_NONE: no flags
  * @GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT: fixate the format
  * @GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE: fixate the size
+ * @GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_DEFAULT_COLORIMETRY: if colorimetry
+ *   is not present in the output caps, set the default colorimetry of the
+ *   output format instead of copying the colorimetry from the input caps. This
+ *   should be used when the conversion also changes colorimetry, for example
+ *   when doing HDR tone mapping.
  *
  * Flags for gst_video_convertscale_fixate_caps().
  *
@@ -40,6 +45,7 @@ typedef enum
   GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_NONE = 0,
   GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT = (1 << 0),
   GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE = (1 << 1),
+  GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_DEFAULT_COLORIMETRY = (1 << 2)
 } GstVideoConvertScaleFixateFlags;
 
 /**
