@@ -58,7 +58,7 @@ struct _GstAmcAImage
 
 struct _GstAmcAImageReader
 {
-  gint refcount;
+  gatomicrefcount refcount;
   AImageReader *reader;
   GMutex lock;
   GCond cond;
@@ -722,7 +722,7 @@ gst_amc_codec_ndk_new_image_reader (gint width, gint height, guint max_images,
   }
 
   reader = g_new0 (GstAmcAImageReader, 1);
-  reader->refcount = 1;
+  g_atomic_ref_count_init (&reader->refcount);
   g_mutex_init (&reader->lock);
   g_cond_init (&reader->cond);
 
@@ -760,7 +760,7 @@ gst_amc_codec_ndk_image_reader_ref (GstAmcAImageReader * reader)
 {
   g_return_val_if_fail (reader != NULL, NULL);
 
-  g_atomic_int_inc (&reader->refcount);
+  g_atomic_ref_count_inc (&reader->refcount);
   return reader;
 }
 
@@ -769,7 +769,7 @@ gst_amc_codec_ndk_image_reader_unref (GstAmcAImageReader * reader)
 {
   g_return_if_fail (reader != NULL);
 
-  if (g_atomic_int_dec_and_test (&reader->refcount)) {
+  if (g_atomic_ref_count_dec (&reader->refcount)) {
     if (reader->reader) {
       a_media_codec.image_reader_set_image_listener (reader->reader, NULL);
       a_media_codec.image_reader_delete (reader->reader);

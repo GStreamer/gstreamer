@@ -115,7 +115,7 @@ GstD3D11Device * gst_msdk_context_get_d3d11_device (GstMsdkContext * context);
 typedef struct _GstMsdkAllocResponse GstMsdkAllocResponse;
 
 struct _GstMsdkAllocResponse {
-  gint refcount;
+  gatomicrefcount refcount;
   mfxFrameAllocResponse response;
   mfxFrameAllocRequest request;
 };

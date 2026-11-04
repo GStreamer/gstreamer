@@ -130,7 +130,7 @@ G_DEFINE_TYPE (GstBaseAutoConvert, gst_base_auto_convert, GST_TYPE_BIN);
 
 typedef struct
 {
-  gint refcount;
+  gatomicrefcount refcount;
 
   GstPad *sink;
   GstPad *src;
@@ -142,7 +142,7 @@ internal_pads_new (GstBaseAutoConvert * self, const gchar * subelement_name)
   InternalPads *pads = g_new0 (InternalPads, 1);
   gchar *name = g_strdup_printf ("internal_sink_%s", subelement_name);
 
-  pads->refcount = 1;
+  g_atomic_ref_count_init (&pads->refcount);
   pads->sink = g_object_new (gst_base_auto_convert_pad_get_type (),
       "name", name, "direction", GST_PAD_SINK, NULL);
   g_free (name);
@@ -160,7 +160,7 @@ internal_pads_new (GstBaseAutoConvert * self, const gchar * subelement_name)
 static void
 internal_pads_unref (InternalPads * pads)
 {
-  if (!g_atomic_int_dec_and_test (&pads->refcount))
+  if (!g_atomic_ref_count_dec (&pads->refcount))
     return;
 
   gst_clear_object (&pads->sink);
@@ -171,7 +171,7 @@ internal_pads_unref (InternalPads * pads)
 static InternalPads *
 internal_pads_ref (InternalPads * pads)
 {
-  g_atomic_int_inc (&pads->refcount);
+  g_atomic_ref_count_inc (&pads->refcount);
 
   return pads;
 }

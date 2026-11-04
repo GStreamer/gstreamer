@@ -103,7 +103,7 @@ struct _GstVaBufferSurface
   VASurfaceID surface;
   guint n_mems;
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  gint ref_count;
+  gatomicrefcount ref_count;
   gint ref_mems_count;
 };
 
@@ -114,7 +114,7 @@ gst_va_buffer_surface_unref (gpointer data)
 
   g_return_if_fail (buf && GST_IS_VA_DISPLAY (buf->display));
 
-  if (g_atomic_int_dec_and_test (&buf->ref_count)) {
+  if (g_atomic_ref_count_dec (&buf->ref_count)) {
     GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
     va_destroy_surfaces (buf->display, &buf->surface, 1);
     gst_clear_object (&buf->display);
@@ -134,6 +134,18 @@ gst_va_buffer_surface_new (VASurfaceID surface)
   buf->n_mems = 0;
 
   return buf;
+}
+
+/* The refcount starts at zero and the first attach sets it to one.
+ * A saturated refcount keeps the surface alive on purpose instead
+ * of freeing it too early. */
+static void
+gst_va_buffer_surface_ref (GstVaBufferSurface * buf)
+{
+  if (g_atomic_ref_count_compare (&buf->ref_count, 0))
+    g_atomic_ref_count_init (&buf->ref_count);
+  else
+    g_atomic_ref_count_inc (&buf->ref_count);
 }
 
 /*=========================== GstVaMemoryPool ================================*/
@@ -182,7 +194,7 @@ gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
     buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
         gst_va_buffer_surface_quark ());
     if (buf) {
-      if (g_atomic_int_dec_and_test (&buf->ref_count)) {
+      if (g_atomic_ref_count_dec (&buf->ref_count)) {
         GST_LOG ("Destroying surface %#x", buf->surface);
         va_destroy_surfaces (display, &buf->surface, 1);
         self->surface_count -= 1;       /* GstVaDmabufAllocator */
@@ -778,7 +790,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
       buffer_destroy = gst_va_buffer_surface_unref;
     }
 
-    g_atomic_int_add (&buf->ref_count, 1);
+    gst_va_buffer_surface_ref (buf);
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
         gst_va_buffer_surface_quark (), buf, buffer_destroy);
 
@@ -1220,7 +1232,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display,
   memcpy (buf->mems, mem, sizeof (buf->mems));
 
   for (i = 0; i < n_planes; i++) {
-    g_atomic_int_add (&buf->ref_count, 1);
+    gst_va_buffer_surface_ref (buf);
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem[i]),
         gst_va_buffer_surface_quark (), buf, gst_va_buffer_surface_unref);
     GST_INFO_OBJECT (display, "setting surface %#x to dmabuf fd %d",
@@ -2257,7 +2269,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
 
   surface_buffer = gst_va_buffer_surface_new (surface);
   surface_buffer->display = gst_object_ref (display);
-  g_atomic_int_add (&surface_buffer->ref_count, 1);
+  gst_va_buffer_surface_ref (surface_buffer);
 
   gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
       gst_va_buffer_aux_surface_quark (), surface_buffer,

@@ -81,7 +81,7 @@ struct _GstM3U8
   gchar *last_data;
   GMutex lock;
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstM3U8 *          gst_m3u8_ref   (GstM3U8 * m3u8);
@@ -100,7 +100,7 @@ struct _GstM3U8MediaFile
   guint8 iv[16];
   gint64 offset, size;
   GstDateTime *program_dt;      /* program date time */
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
   GstM3U8InitFile *init_file;   /* Media Initialization (hold ref) */
 };
 
@@ -108,7 +108,7 @@ struct _GstM3U8InitFile
 {
   gchar *uri;
   gint64 offset, size;
-  guint ref_count;      /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstM3U8MediaFile * gst_m3u8_media_file_ref   (GstM3U8MediaFile * mfile);
@@ -171,7 +171,7 @@ struct _GstHLSMedia {
 
   GstM3U8 *playlist;            /* media playlist */
 
-  gint ref_count;               /* ATOMIC */
+  gatomicrefcount ref_count;
 };
 
 GstHLSMedia * gst_hls_media_ref   (GstHLSMedia * media);
@@ -192,7 +192,7 @@ struct _GstHLSVariantStream {
   gint height;
   gboolean iframe;
 
-  gint refcount;       /* ATOMIC */
+  gatomicrefcount refcount;
 
   GstM3U8 *m3u8;       /* media playlist */
 
@@ -221,7 +221,7 @@ struct _GstHLSMasterPlaylist
 
   gint      version;                     /* EXT-X-VERSION */
 
-  gint      refcount;                    /* ATOMIC */
+  gatomicrefcount refcount;
 
   gboolean  is_simple;                   /* TRUE if simple main media playlist,
                                           * FALSE if variant playlist (either

@@ -211,7 +211,7 @@ struct _GstAdaptiveDemuxPrivate
 
 typedef struct _GstAdaptiveDemuxTimer
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
   GCond *cond;
   GMutex *mutex;
   GstClockID clock_id;
@@ -4582,7 +4582,7 @@ gst_adaptive_demux_timer_new (GCond * cond, GMutex * mutex)
   timer->fired = FALSE;
   timer->cond = cond;
   timer->mutex = mutex;
-  g_atomic_int_set (&timer->ref_count, 1);
+  g_atomic_ref_count_init (&timer->ref_count);
   return timer;
 }
 
@@ -4590,7 +4590,7 @@ static GstAdaptiveDemuxTimer *
 gst_adaptive_demux_timer_ref (GstAdaptiveDemuxTimer * timer)
 {
   g_return_val_if_fail (timer != NULL, NULL);
-  g_atomic_int_inc (&timer->ref_count);
+  g_atomic_ref_count_inc (&timer->ref_count);
   return timer;
 }
 
@@ -4598,7 +4598,7 @@ static void
 gst_adaptive_demux_timer_unref (GstAdaptiveDemuxTimer * timer)
 {
   g_return_if_fail (timer != NULL);
-  if (g_atomic_int_dec_and_test (&timer->ref_count)) {
+  if (g_atomic_ref_count_dec (&timer->ref_count)) {
     g_slice_free (GstAdaptiveDemuxTimer, timer);
   }
 }

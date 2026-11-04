@@ -50,7 +50,7 @@ typedef enum
  */
 typedef struct
 {
-  guint refcount;
+  gatomicrefcount refcount;
   GMutex mutex;
   CVPixelBufferRef buf;
   /* Allows mem_map to refuse Read-Write locking a buffer that was previously

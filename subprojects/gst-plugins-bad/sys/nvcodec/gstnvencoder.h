@@ -234,7 +234,7 @@ typedef struct
   guint cuda_device_id_size;
   guint cuda_device_id_list[8];
 
-  gint ref_count;
+  gatomicrefcount ref_count;
 } GstNvEncoderClassData;
 
 typedef struct
