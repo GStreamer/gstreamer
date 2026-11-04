@@ -1328,9 +1328,17 @@ gst_amc_audio_dec_drain (GstAmcAudioDec * self)
       if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info,
               &err)) {
         GST_DEBUG_OBJECT (self, "Waiting until codec is drained");
-        g_cond_wait (&self->drain_cond, &self->drain_lock);
-        GST_DEBUG_OBJECT (self, "Drained codec");
-        ret = GST_FLOW_OK;
+        while (self->draining && self->downstream_flow_ret == GST_FLOW_OK)
+          g_cond_wait (&self->drain_cond, &self->drain_lock);
+
+        ret = self->downstream_flow_ret;
+
+        if (ret == GST_FLOW_OK)
+          GST_DEBUG_OBJECT (self, "Drained codec");
+        else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)
+          GST_ERROR_OBJECT (self, "Not drained: %s", gst_flow_get_name (ret));
+        else
+          GST_DEBUG_OBJECT (self, "Not drained: %s", gst_flow_get_name (ret));
       } else {
         GST_ERROR_OBJECT (self, "Failed to queue input buffer");
         if (self->flushing) {
