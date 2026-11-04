@@ -2790,6 +2790,11 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
         goto flushing;
       }
 
+      if (self->downstream_flow_ret != GST_FLOW_OK) {
+        g_clear_error (&err);
+        goto downstream_error;
+      }
+
       switch (idx) {
         case INFO_TRY_AGAIN_LATER:
           GST_DEBUG_OBJECT (self, "Dequeueing input buffer timed out");
