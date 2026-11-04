@@ -670,6 +670,7 @@ _reset_rc_props (GstVulkanH264Encoder * self,
     const GstVulkanVideoCapabilities * vk_caps)
 {
   GstVulkanVideoCapabilities _vkcaps;
+  gint32 min_qp_caps, max_qp_caps;
 
   if (!self->encoder)
     return;
@@ -683,12 +684,20 @@ _reset_rc_props (GstVulkanH264Encoder * self,
     vk_caps = &_vkcaps;
   }
 
+  /* minQp is signed and may be negative for high bit depths, while the QP
+   * properties are unsigned. */
+  if (vk_caps->encoder.codec.h264.minQp < 0)
+    GST_FIXME ("Ignoring driver's negative minQp capability");
+
+  min_qp_caps = MAX (vk_caps->encoder.codec.h264.minQp, 0);
+  max_qp_caps = vk_caps->encoder.codec.h264.maxQp;
+
   GST_OBJECT_LOCK (self);
   self->rc.ratecontrol = self->prop.ratecontrol;
   self->rc.min_qp = (self->prop.min_qp > 0) ?
-      MAX (self->prop.min_qp, vk_caps->encoder.codec.h264.minQp) : 0;
+      MAX ((gint32) self->prop.min_qp, min_qp_caps) : 0;
   self->rc.max_qp = (self->prop.max_qp > 0) ?
-      MIN (self->prop.max_qp, vk_caps->encoder.codec.h264.maxQp) : 0;
+      MIN ((gint32) self->prop.max_qp, max_qp_caps) : 0;
   GST_OBJECT_UNLOCK (self);
 
   {
@@ -702,15 +711,9 @@ _reset_rc_props (GstVulkanH264Encoder * self,
   if (self->rc.ratecontrol ==
       VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR) {
     GST_OBJECT_LOCK (self);
-    self->rc.qp_i =
-        CLAMP (self->prop.qp_i, vk_caps->encoder.codec.h264.minQp,
-        vk_caps->encoder.codec.h264.maxQp);
-    self->rc.qp_p =
-        CLAMP (self->prop.qp_p, vk_caps->encoder.codec.h264.minQp,
-        vk_caps->encoder.codec.h264.maxQp);
-    self->rc.qp_b =
-        CLAMP (self->prop.qp_b, vk_caps->encoder.codec.h264.minQp,
-        vk_caps->encoder.codec.h264.maxQp);
+    self->rc.qp_i = CLAMP ((gint32) self->prop.qp_i, min_qp_caps, max_qp_caps);
+    self->rc.qp_p = CLAMP ((gint32) self->prop.qp_p, min_qp_caps, max_qp_caps);
+    self->rc.qp_b = CLAMP ((gint32) self->prop.qp_b, min_qp_caps, max_qp_caps);
     GST_OBJECT_UNLOCK (self);
   } else {
     self->rc.qp_i = 0;
