@@ -138,6 +138,102 @@ GST_START_TEST (test_glcolorconvert_meta_copy)
 
 GST_END_TEST;
 
+#define N_CAPS_QUERY_THREADS 4
+#define N_CAPS_QUERY_ITERATIONS 200
+
+typedef struct
+{
+  GstElement *element;
+  GMutex lock;
+  GCond cond;
+  gboolean go;
+} CapsQueryData;
+
+static gpointer
+query_caps_thread (gpointer user_data)
+{
+  CapsQueryData *data = user_data;
+  GstPad *pad;
+  GstCaps *caps;
+
+  g_mutex_lock (&data->lock);
+  while (!data->go)
+    g_cond_wait (&data->cond, &data->lock);
+  g_mutex_unlock (&data->lock);
+
+  pad = gst_element_get_static_pad (data->element, "src");
+  caps = gst_pad_query_caps (pad, NULL);
+  gst_clear_caps (&caps);
+  gst_object_unref (pad);
+
+  return NULL;
+}
+
+static void
+context_finalized (gpointer user_data, GObject * where_the_object_was)
+{
+  *(gboolean *) user_data = TRUE;
+}
+
+GST_START_TEST (test_glcolorconvert_concurrent_caps_queries)
+{
+  GstGLDisplay *display;
+  GstGLContext *gl_context;
+  GstContext *context;
+  gboolean finalized = FALSE;
+  gint i, j;
+
+  /* caps queries from several threads at once must not leave a converter,
+   * and with it a reference on the GL context, behind */
+
+  display = gst_gl_display_new ();
+  fail_unless (gst_gl_display_create_context (display, NULL, &gl_context,
+          NULL));
+  fail_unless (gst_gl_display_add_context (display, gl_context));
+  g_object_weak_ref (G_OBJECT (gl_context), context_finalized, &finalized);
+
+  context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
+  gst_context_set_gl_display (context, display);
+
+  for (i = 0; i < N_CAPS_QUERY_ITERATIONS; i++) {
+    GThread *threads[N_CAPS_QUERY_THREADS];
+    CapsQueryData data = { NULL, };
+
+    data.element = gst_element_factory_make ("glcolorconvert", NULL);
+    fail_unless (data.element != NULL);
+    gst_element_set_context (data.element, context);
+    fail_unless_equals_int (gst_element_set_state (data.element,
+            GST_STATE_READY), GST_STATE_CHANGE_SUCCESS);
+
+    g_mutex_init (&data.lock);
+    g_cond_init (&data.cond);
+    for (j = 0; j < N_CAPS_QUERY_THREADS; j++)
+      threads[j] = g_thread_new ("caps-query", query_caps_thread, &data);
+
+    g_mutex_lock (&data.lock);
+    data.go = TRUE;
+    g_cond_broadcast (&data.cond);
+    g_mutex_unlock (&data.lock);
+
+    for (j = 0; j < N_CAPS_QUERY_THREADS; j++)
+      g_thread_join (threads[j]);
+    g_cond_clear (&data.cond);
+    g_mutex_clear (&data.lock);
+
+    fail_unless_equals_int (gst_element_set_state (data.element,
+            GST_STATE_NULL), GST_STATE_CHANGE_SUCCESS);
+    gst_object_unref (data.element);
+  }
+
+  gst_context_unref (context);
+  gst_object_unref (gl_context);
+  gst_object_unref (display);
+
+  fail_unless (finalized, "the GL context was leaked");
+}
+
+GST_END_TEST;
+
 static Suite *
 glfilter_suite (void)
 {
@@ -147,6 +243,7 @@ glfilter_suite (void)
   tcase_add_test (tc, test_glupload_display_replace);
   tcase_add_test (tc, test_glcolorconvert_display_replace);
   tcase_add_test (tc, test_glcolorconvert_meta_copy);
+  tcase_add_test (tc, test_glcolorconvert_concurrent_caps_queries);
   suite_add_tcase (s, tc);
 
   return s;

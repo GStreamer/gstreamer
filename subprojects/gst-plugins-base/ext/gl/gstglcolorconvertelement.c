@@ -152,7 +152,6 @@ static GstCaps *
 gst_gl_color_convert_element_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (bt);
   GstGLBaseFilter *base_filter = GST_GL_BASE_FILTER (bt);
   GstGLContext *context;
   GstCaps *ret;
@@ -161,9 +160,6 @@ gst_gl_color_convert_element_transform_caps (GstBaseTransform * bt,
     return gst_caps_new_empty ();
 
   context = gst_gl_base_filter_get_gl_context (base_filter);
-
-  if (!convert->convert && context)
-    convert->convert = gst_gl_color_convert_new (context);
 
   ret = gst_gl_color_convert_transform_caps (context, direction, caps, filter);
 
