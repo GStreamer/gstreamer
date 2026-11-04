@@ -818,7 +818,7 @@ gst_codec_sei_inserter_chain (GstPad * pad, GstObject * parent,
   }
 
   frame = g_new0 (GstVideoCodecFrame, 1);
-  frame->ref_count = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & frame->ref_count);
   frame->input_buffer = buffer;
   frame->events = priv->current_frame_events;
   frame->pts = pts;

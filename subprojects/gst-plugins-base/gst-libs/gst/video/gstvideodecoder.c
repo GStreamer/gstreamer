@@ -845,7 +845,7 @@ _new_input_state (GstCaps * caps)
   const GValue *codec_data;
 
   state = g_new0 (GstVideoCodecState, 1);
-  state->ref_count = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & state->ref_count);
   gst_video_info_init (&state->info);
   if (G_UNLIKELY (!gst_video_info_from_caps (&state->info, caps)))
     goto parse_fail;
@@ -874,7 +874,7 @@ _new_output_state (GstVideoFormat fmt, GstVideoInterlaceMode interlace_mode,
   GstVideoCodecState *state;
 
   state = g_new0 (GstVideoCodecState, 1);
-  state->ref_count = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & state->ref_count);
   gst_video_info_init (&state->info);
   if (!gst_video_info_set_interlaced_format (&state->info, fmt, interlace_mode,
           width, height)) {
@@ -3159,7 +3159,7 @@ gst_video_decoder_new_frame (GstVideoDecoder * decoder)
 
   frame = g_new0 (GstVideoCodecFrame, 1);
 
-  frame->ref_count = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & frame->ref_count);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   frame->system_frame_number = priv->system_frame_number;

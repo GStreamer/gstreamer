@@ -114,7 +114,7 @@ gst_video_codec_frame_ref (GstVideoCodecFrame * frame)
 
   GST_TRACE ("%p ref %d->%d", frame, frame->ref_count, frame->ref_count + 1);
 
-  g_atomic_int_inc (&frame->ref_count);
+  g_atomic_ref_count_inc ((gatomicrefcount *) & frame->ref_count);
 
   return frame;
 }
@@ -134,7 +134,7 @@ gst_video_codec_frame_unref (GstVideoCodecFrame * frame)
 
   GST_TRACE ("%p unref %d->%d", frame, frame->ref_count, frame->ref_count - 1);
 
-  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
+  if (g_atomic_ref_count_dec ((gatomicrefcount *) & frame->ref_count)) {
     _gst_video_codec_frame_free (frame);
   }
 }
@@ -155,7 +155,7 @@ gst_video_codec_state_ref (GstVideoCodecState * state)
 
   GST_TRACE ("%p ref %d->%d", state, state->ref_count, state->ref_count + 1);
 
-  g_atomic_int_inc (&state->ref_count);
+  g_atomic_ref_count_inc ((gatomicrefcount *) & state->ref_count);
 
   return state;
 }
@@ -193,7 +193,7 @@ gst_video_codec_state_unref (GstVideoCodecState * state)
 
   GST_TRACE ("%p unref %d->%d", state, state->ref_count, state->ref_count - 1);
 
-  if (g_atomic_int_dec_and_test (&state->ref_count)) {
+  if (g_atomic_ref_count_dec ((gatomicrefcount *) & state->ref_count)) {
     _gst_video_codec_state_free (state);
   }
 }
