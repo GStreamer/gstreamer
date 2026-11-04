@@ -81,7 +81,7 @@ G_DEFINE_BOXED_TYPE (GstCapsFeatures, gst_caps_features,
 
 #define IS_MUTABLE(features) \
     (!features->parent_refcount || \
-     g_atomic_int_get (features->parent_refcount) == 1)
+     g_atomic_ref_count_compare ((gatomicrefcount *) features->parent_refcount, 1))
 
 static void
 gst_caps_features_transform_to_string (const GValue * src_value,

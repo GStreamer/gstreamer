@@ -164,7 +164,7 @@ gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
     GstMiniObjectFreeFunction free_func)
 {
   mini_object->type = type;
-  mini_object->refcount = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & mini_object->refcount);
   mini_object->lockstate = 0;
   mini_object->flags = flags;
 
@@ -368,7 +368,8 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
   if (GST_MINI_OBJECT_IS_LOCKABLE (mini_object)) {
     result = !IS_SHARED (g_atomic_int_get (&mini_object->lockstate));
   } else {
-    result = (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) == 1);
+    result = g_atomic_ref_count_compare ((gatomicrefcount *)
+        & mini_object->refcount, 1);
   }
   if (!result)
     return result;
@@ -472,8 +473,20 @@ gst_mini_object_ref (GstMiniObject * mini_object)
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
 
-  old_refcount = g_atomic_int_add (&mini_object->refcount, 1);
-  new_refcount = old_refcount + 1;
+  /* Mini-objects are resurrected here from refcount 0 by a dispose
+   * function that recycles them (e.g. pooled buffers, see the comment
+   * above). That happens synchronously on the thread holding the last
+   * reference, so no other thread can observe or touch the object and
+   * re-initialising the refcount is race-free. */
+  if (G_UNLIKELY (g_atomic_int_get (&mini_object->refcount) == 0)) {
+    old_refcount = 0;
+    new_refcount = 1;
+    g_atomic_ref_count_init ((gatomicrefcount *) & mini_object->refcount);
+  } else {
+    old_refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object);
+    g_atomic_ref_count_inc ((gatomicrefcount *) & mini_object->refcount);
+    new_refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object);
+  }
 
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p ref %d->%d", mini_object,
       old_refcount, new_refcount);
@@ -649,7 +662,8 @@ free_priv_data (GstMiniObject * obj)
 void
 gst_mini_object_unref (GstMiniObject * mini_object)
 {
-  gint old_refcount, new_refcount;
+  gint old_refcount;
+  gboolean reached_zero;
 
   /* FIXME: The GstBufferMapInfo clear function before 1.28 could call
    * gst_memory_unref() with NULL, and because we use macros/inline functions
@@ -657,19 +671,22 @@ gst_mini_object_unref (GstMiniObject * mini_object)
   if (!mini_object)
     return;
 
-  g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) > 0);
-
-  old_refcount = g_atomic_int_add (&mini_object->refcount, -1);
-  new_refcount = old_refcount - 1;
+  old_refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object);
 
   g_return_if_fail (old_refcount > 0);
 
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p unref %d->%d",
-      mini_object, old_refcount, new_refcount);
+      mini_object, old_refcount, old_refcount - 1);
 
-  GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, new_refcount);
+  reached_zero =
+      g_atomic_ref_count_dec ((gatomicrefcount *) & mini_object->refcount);
 
-  if (new_refcount == 0) {
+  GST_TRACER_MINI_OBJECT_UNREFFED (mini_object, old_refcount - 1);
+
+  if (!reached_zero)
+    return;
+
+  {
     gboolean do_free;
 
     if (mini_object->dispose)

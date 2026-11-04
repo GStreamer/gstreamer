@@ -192,7 +192,7 @@ typedef struct
 
 #define IS_MUTABLE(structure) \
     (!GST_STRUCTURE_REFCOUNT(structure) || \
-     g_atomic_int_get (GST_STRUCTURE_REFCOUNT(structure)) == 1)
+     g_atomic_ref_count_compare ((gatomicrefcount *) GST_STRUCTURE_REFCOUNT(structure), 1))
 
 #define IS_TAGLIST(structure) \
     (((const GstIdStrPrivate *) GST_STRUCTURE_NAME (structure))->s.string_type.t == 0 && \
