@@ -2071,7 +2071,7 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   g_queue_init (&stream->protection_scheme_event_queue);
   gst_video_info_init (&stream->info);
   gst_video_info_init (&stream->pre_info);
-  stream->ref_count = 1;
+  g_atomic_ref_count_init (&stream->ref_count);
   /* consistent default for push based mode */
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
   return stream;
@@ -2820,7 +2820,7 @@ gst_qtdemux_stream_reset (QtDemuxStream * stream)
 static QtDemuxStream *
 gst_qtdemux_stream_ref (QtDemuxStream * stream)
 {
-  g_atomic_int_add (&stream->ref_count, 1);
+  g_atomic_ref_count_inc (&stream->ref_count);
 
   return stream;
 }
@@ -2828,7 +2828,7 @@ gst_qtdemux_stream_ref (QtDemuxStream * stream)
 static void
 gst_qtdemux_stream_unref (QtDemuxStream * stream)
 {
-  if (g_atomic_int_dec_and_test (&stream->ref_count)) {
+  if (g_atomic_ref_count_dec (&stream->ref_count)) {
     gst_qtdemux_stream_reset (stream);
     gst_tag_list_unref (stream->stream_tags);
     if (stream->pad) {

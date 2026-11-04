@@ -46,18 +46,18 @@ gst_m3u8_media_segment_fill_partial_stream_times (GstM3U8MediaSegment *
 GstHLSMediaPlaylist *
 gst_hls_media_playlist_ref (GstHLSMediaPlaylist * m3u8)
 {
-  g_assert (m3u8 != NULL && m3u8->ref_count > 0);
+  g_assert (m3u8 != NULL);
 
-  g_atomic_int_add (&m3u8->ref_count, 1);
+  g_atomic_ref_count_inc (&m3u8->ref_count);
   return m3u8;
 }
 
 void
 gst_hls_media_playlist_unref (GstHLSMediaPlaylist * self)
 {
-  g_return_if_fail (self != NULL && self->ref_count > 0);
+  g_return_if_fail (self != NULL);
 
-  if (g_atomic_int_dec_and_test (&self->ref_count)) {
+  if (g_atomic_ref_count_dec (&self->ref_count)) {
     g_free (self->uri);
     g_free (self->base_uri);
 
@@ -87,7 +87,7 @@ gst_m3u8_media_segment_new (gchar * uri, gchar * title, GstClockTime duration,
   file->duration = duration;
   file->sequence = sequence;
   file->discont_sequence = discont_sequence;
-  file->ref_count = 1;
+  g_atomic_ref_count_init (&file->ref_count);
 
   file->stream_time = GST_CLOCK_STIME_NONE;
 
@@ -102,18 +102,18 @@ gst_m3u8_media_segment_new (gchar * uri, gchar * title, GstClockTime duration,
 GstM3U8MediaSegment *
 gst_m3u8_media_segment_ref (GstM3U8MediaSegment * mfile)
 {
-  g_assert (mfile != NULL && mfile->ref_count > 0);
+  g_assert (mfile != NULL);
 
-  g_atomic_int_add (&mfile->ref_count, 1);
+  g_atomic_ref_count_inc (&mfile->ref_count);
   return mfile;
 }
 
 void
 gst_m3u8_media_segment_unref (GstM3U8MediaSegment * self)
 {
-  g_return_if_fail (self != NULL && self->ref_count > 0);
+  g_return_if_fail (self != NULL);
 
-  if (g_atomic_int_dec_and_test (&self->ref_count)) {
+  if (g_atomic_ref_count_dec (&self->ref_count)) {
     if (self->init_file)
       gst_m3u8_init_file_unref (self->init_file);
     g_free (self->title);
@@ -130,18 +130,18 @@ gst_m3u8_media_segment_unref (GstM3U8MediaSegment * self)
 GstM3U8PartialSegment *
 gst_m3u8_partial_segment_ref (GstM3U8PartialSegment * part)
 {
-  g_assert (part != NULL && part->ref_count > 0);
+  g_assert (part != NULL);
 
-  g_atomic_int_add (&part->ref_count, 1);
+  g_atomic_ref_count_inc (&part->ref_count);
   return part;
 }
 
 void
 gst_m3u8_partial_segment_unref (GstM3U8PartialSegment * part)
 {
-  g_return_if_fail (part != NULL && part->ref_count > 0);
+  g_return_if_fail (part != NULL);
 
-  if (g_atomic_int_dec_and_test (&part->ref_count)) {
+  if (g_atomic_ref_count_dec (&part->ref_count)) {
     g_free (part->uri);
     g_free (part);
   }
@@ -150,18 +150,18 @@ gst_m3u8_partial_segment_unref (GstM3U8PartialSegment * part)
 GstM3U8PreloadHint *
 gst_m3u8_preload_hint_ref (GstM3U8PreloadHint * hint)
 {
-  g_assert (hint != NULL && hint->ref_count > 0);
+  g_assert (hint != NULL);
 
-  g_atomic_int_add (&hint->ref_count, 1);
+  g_atomic_ref_count_inc (&hint->ref_count);
   return hint;
 }
 
 void
 gst_m3u8_preload_hint_unref (GstM3U8PreloadHint * hint)
 {
-  g_return_if_fail (hint != NULL && hint->ref_count > 0);
+  g_return_if_fail (hint != NULL);
 
-  if (g_atomic_int_dec_and_test (&hint->ref_count)) {
+  if (g_atomic_ref_count_dec (&hint->ref_count)) {
     g_free (hint->uri);
     g_free (hint);
   }
@@ -193,7 +193,7 @@ gst_m3u8_init_file_new (gchar * uri, gint64 size, gint64 offset)
 
   file = g_new0 (GstM3U8InitFile, 1);
   file->uri = uri;
-  file->ref_count = 1;
+  g_atomic_ref_count_init (&file->ref_count);
 
   file->size = size;
   if (size != -1 && offset != -1) {
@@ -206,18 +206,18 @@ gst_m3u8_init_file_new (gchar * uri, gint64 size, gint64 offset)
 GstM3U8InitFile *
 gst_m3u8_init_file_ref (GstM3U8InitFile * ifile)
 {
-  g_assert (ifile != NULL && ifile->ref_count > 0);
+  g_assert (ifile != NULL);
 
-  g_atomic_int_add (&ifile->ref_count, 1);
+  g_atomic_ref_count_inc (&ifile->ref_count);
   return ifile;
 }
 
 void
 gst_m3u8_init_file_unref (GstM3U8InitFile * self)
 {
-  g_return_if_fail (self != NULL && self->ref_count > 0);
+  g_return_if_fail (self != NULL);
 
-  if (g_atomic_int_dec_and_test (&self->ref_count)) {
+  if (g_atomic_ref_count_dec (&self->ref_count)) {
     g_free (self->uri);
     g_free (self);
   }
@@ -435,7 +435,7 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
   m3u8->part_hold_back = GST_CLOCK_TIME_NONE;
 
   g_mutex_init (&m3u8->lock);
-  m3u8->ref_count = 1;
+  g_atomic_ref_count_init (&m3u8->ref_count);
 
   return m3u8;
 }
@@ -636,7 +636,7 @@ gst_m3u8_parse_partial_segment (gchar * data, const gchar * base_uri)
   gboolean have_duration = FALSE;
   GstM3U8PartialSegment *part = g_new0 (GstM3U8PartialSegment, 1);
 
-  part->ref_count = 1;
+  g_atomic_ref_count_init (&part->ref_count);
   part->stream_time = GST_CLOCK_STIME_NONE;
   part->size = -1;
 
@@ -692,7 +692,7 @@ gst_m3u8_parse_preload_hint (gchar * data, const gchar * base_uri)
   GstM3U8PreloadHint *hint = g_new0 (GstM3U8PreloadHint, 1);
   gboolean have_hint_type = FALSE;
 
-  hint->ref_count = 1;
+  g_atomic_ref_count_init (&hint->ref_count);
   hint->size = -1;
 
   while (data != NULL && parse_attributes (&data, &a, &v)) {
@@ -2643,16 +2643,16 @@ gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
 GstHLSRenditionStream *
 gst_hls_rendition_stream_ref (GstHLSRenditionStream * media)
 {
-  g_assert (media != NULL && media->ref_count > 0);
-  g_atomic_int_add (&media->ref_count, 1);
+  g_assert (media != NULL);
+  g_atomic_ref_count_inc (&media->ref_count);
   return media;
 }
 
 void
 gst_hls_rendition_stream_unref (GstHLSRenditionStream * media)
 {
-  g_assert (media != NULL && media->ref_count > 0);
-  if (g_atomic_int_dec_and_test (&media->ref_count)) {
+  g_assert (media != NULL);
+  if (g_atomic_ref_count_dec (&media->ref_count)) {
     if (media->caps)
       gst_caps_unref (media->caps);
     g_free (media->group_id);
@@ -2716,7 +2716,7 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
   gchar *a, *v;
 
   media = g_new0 (GstHLSRenditionStream, 1);
-  media->ref_count = 1;
+  g_atomic_ref_count_init (&media->ref_count);
   media->mtype = GST_HLS_RENDITION_STREAM_TYPE_INVALID;
 
   GST_LOG ("parsing %s", desc);
@@ -2826,7 +2826,7 @@ gst_hls_variant_stream_new (void)
   GstHLSVariantStream *stream;
 
   stream = g_new0 (GstHLSVariantStream, 1);
-  stream->refcount = 1;
+  g_atomic_ref_count_init (&stream->refcount);
   stream->codecs_stream_type = 0;
   return stream;
 }
@@ -2834,14 +2834,14 @@ gst_hls_variant_stream_new (void)
 GstHLSVariantStream *
 hls_variant_stream_ref (GstHLSVariantStream * stream)
 {
-  g_atomic_int_inc (&stream->refcount);
+  g_atomic_ref_count_inc (&stream->refcount);
   return stream;
 }
 
 void
 hls_variant_stream_unref (GstHLSVariantStream * stream)
 {
-  if (g_atomic_int_dec_and_test (&stream->refcount)) {
+  if (g_atomic_ref_count_dec (&stream->refcount)) {
     gint i;
 
     g_free (stream->name);
@@ -2979,7 +2979,7 @@ gst_hls_master_playlist_new (void)
   GstHLSMasterPlaylist *playlist;
 
   playlist = g_new0 (GstHLSMasterPlaylist, 1);
-  playlist->refcount = 1;
+  g_atomic_ref_count_init (&playlist->refcount);
   playlist->is_simple = FALSE;
 
   return playlist;
@@ -2988,7 +2988,7 @@ gst_hls_master_playlist_new (void)
 void
 hls_master_playlist_unref (GstHLSMasterPlaylist * playlist)
 {
-  if (g_atomic_int_dec_and_test (&playlist->refcount)) {
+  if (g_atomic_ref_count_dec (&playlist->refcount)) {
     g_list_free_full (playlist->renditions,
         (GDestroyNotify) gst_hls_rendition_stream_unref);
     g_list_free_full (playlist->variants,

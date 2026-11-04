@@ -849,7 +849,7 @@ gst_adaptive_demux_track_ref (GstAdaptiveDemuxTrack * track)
 {
   g_return_val_if_fail (track != NULL, NULL);
   GST_TRACE_ID (track->id, "%d -> %d", track->ref_count, track->ref_count + 1);
-  g_atomic_int_inc (&track->ref_count);
+  g_atomic_ref_count_inc (&track->ref_count);
 
   return track;
 }
@@ -860,7 +860,7 @@ gst_adaptive_demux_track_unref (GstAdaptiveDemuxTrack * track)
   g_return_if_fail (track != NULL);
 
   GST_TRACE_ID (track->id, "%d -> %d", track->ref_count, track->ref_count - 1);
-  if (g_atomic_int_dec_and_test (&track->ref_count)) {
+  if (g_atomic_ref_count_dec (&track->ref_count)) {
     _demux_track_free (track);
   }
 }
@@ -941,7 +941,7 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
       gst_stream_type_get_name (type), stream_id, caps);
 
   track = g_new0 (GstAdaptiveDemuxTrack, 1);
-  g_atomic_int_set (&track->ref_count, 1);
+  g_atomic_ref_count_init (&track->ref_count);
   track->demux = demux;
   track->type = type;
   track->flags = flags;

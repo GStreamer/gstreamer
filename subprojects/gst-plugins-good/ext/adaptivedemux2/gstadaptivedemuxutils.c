@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 
 struct _GstAdaptiveDemuxClock
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
 
   GstClock *gst_clock;
   GstClockTimeDiff clock_offset;        /* offset between realtime_clock and UTC */
@@ -42,7 +42,7 @@ struct _GstAdaptiveDemuxClock
 
 struct _GstAdaptiveDemuxLoop
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
   GCond cond;
   GMutex lock;
 
@@ -69,7 +69,7 @@ gst_adaptive_demux_clock_new (void)
   GstClockType clock_type = GST_CLOCK_TYPE_OTHER;
   GObjectClass *gobject_class;
 
-  g_atomic_int_set (&clock->ref_count, 1);
+  g_atomic_ref_count_init (&clock->ref_count);
 
   clock->gst_clock = gst_system_clock_obtain ();
   g_assert (clock->gst_clock != NULL);
@@ -98,7 +98,7 @@ GstAdaptiveDemuxClock *
 gst_adaptive_demux_clock_ref (GstAdaptiveDemuxClock * clock)
 {
   g_return_val_if_fail (clock != NULL, NULL);
-  g_atomic_int_inc (&clock->ref_count);
+  g_atomic_ref_count_inc (&clock->ref_count);
   return clock;
 }
 
@@ -106,7 +106,7 @@ void
 gst_adaptive_demux_clock_unref (GstAdaptiveDemuxClock * clock)
 {
   g_return_if_fail (clock != NULL);
-  if (g_atomic_int_dec_and_test (&clock->ref_count)) {
+  if (g_atomic_ref_count_dec (&clock->ref_count)) {
     gst_object_unref (clock->gst_clock);
     g_free (clock);
   }
@@ -159,7 +159,7 @@ GstAdaptiveDemuxLoop *
 gst_adaptive_demux_loop_new (void)
 {
   GstAdaptiveDemuxLoop *loop = g_new0 (GstAdaptiveDemuxLoop, 1);
-  g_atomic_int_set (&loop->ref_count, 1);
+  g_atomic_ref_count_init (&loop->ref_count);
 
   g_mutex_init (&loop->lock);
   g_rec_mutex_init (&loop->context_lock);
@@ -178,7 +178,7 @@ GstAdaptiveDemuxLoop *
 gst_adaptive_demux_loop_ref (GstAdaptiveDemuxLoop * loop)
 {
   g_return_val_if_fail (loop != NULL, NULL);
-  g_atomic_int_inc (&loop->ref_count);
+  g_atomic_ref_count_inc (&loop->ref_count);
   return loop;
 }
 
@@ -186,7 +186,7 @@ void
 gst_adaptive_demux_loop_unref (GstAdaptiveDemuxLoop * loop)
 {
   g_return_if_fail (loop != NULL);
-  if (g_atomic_int_dec_and_test (&loop->ref_count)) {
+  if (g_atomic_ref_count_dec (&loop->ref_count)) {
     gst_adaptive_demux_loop_stop (loop, TRUE);
 
     g_mutex_clear (&loop->lock);

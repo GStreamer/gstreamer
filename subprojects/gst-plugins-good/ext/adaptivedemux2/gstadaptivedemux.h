@@ -93,7 +93,7 @@ typedef struct _GstAdaptiveDemuxPrivate GstAdaptiveDemuxPrivate;
 
 struct _GstAdaptiveDemuxTrack
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
 
   /* Demux */
   GstAdaptiveDemux *demux;
@@ -206,7 +206,7 @@ struct _GstAdaptiveDemuxTrack
  * The opaque #GstAdaptiveDemuxPeriod data structure. */
 struct _GstAdaptiveDemuxPeriod
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
 
   GstAdaptiveDemux *demux;
 

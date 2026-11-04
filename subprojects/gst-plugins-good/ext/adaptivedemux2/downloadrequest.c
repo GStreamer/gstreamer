@@ -57,7 +57,7 @@ download_request_new (void)
       (DownloadRequest *) g_new0 (DownloadRequestPrivate, 1);
   DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
 
-  g_atomic_int_set (&request->ref_count, 1);
+  g_atomic_ref_count_init (&request->ref_count);
 
   g_rec_mutex_init (&priv->lock);
 
@@ -184,7 +184,7 @@ DownloadRequest *
 download_request_ref (DownloadRequest * request)
 {
   g_return_val_if_fail (request != NULL, NULL);
-  g_atomic_int_inc (&request->ref_count);
+  g_atomic_ref_count_inc (&request->ref_count);
 
   return request;
 }
@@ -194,7 +194,7 @@ download_request_unref (DownloadRequest * request)
 {
   g_return_if_fail (request != NULL);
 
-  if (g_atomic_int_dec_and_test (&request->ref_count)) {
+  if (g_atomic_ref_count_dec (&request->ref_count)) {
     download_request_free (request);
   }
 }
