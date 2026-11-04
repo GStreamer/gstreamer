@@ -79,6 +79,123 @@ pub(crate) extern "C" fn subtitle_type_find(tf: &mut TypeFind, _private: gpointe
     }
 }
 
+// SSA/ASS subtitles - application/x-ssa and application/x-ass
+//
+// The dialect opens its Script Info section and names its version in
+// it; either fact alone is a claim, and the version settles which of
+// the two media types answers.
+
+/// How far the search for the version reaches.
+const SSA_WINDOW: usize = 8192;
+
+/// How far back from the window end a cut-through character may reach.
+/// No UTF-8 sequence is longer than four octets; the tolerance is the
+/// spec's, six, and it is spent only on sequences that could continue.
+const UTF8_PARTIAL_MAX: usize = 6;
+
+pub(crate) extern "C" fn ssa_type_find(tf: &mut TypeFind, _private: gpointer) {
+    if let Some(caps) = ssa_probe(tf) {
+        suggest!(tf, Prob::MAXIMUM, caps, [
+            (c"parsed", bool : false),
+        ]);
+    }
+}
+
+fn ssa_probe(tf: &mut TypeFind) -> Option<&'static CStr> {
+    // A file shorter than the search window is judged on what it holds.
+    let data = tf.peek_at_most(SSA_WINDOW)?;
+    ssa_detect(data)
+}
+
+fn ssa_detect(data: &[u8]) -> Option<&'static CStr> {
+    let body = data
+        .strip_prefix(b"\xEF\xBB\xBF".as_slice())
+        .unwrap_or(data);
+    if !body.starts_with(b"[Script Info]") {
+        return None;
+    }
+    // The text must read as UTF-8, with one tolerance: a trailing
+    // sequence the window could have cut mid-character. An error
+    // without a length is the final incomplete sequence, and anything
+    // wrong before it rules.
+    if let Err(e) = std::str::from_utf8(body)
+        && !(e.error_len().is_none() && body.len() - e.valid_up_to() <= UTF8_PARTIAL_MAX)
+    {
+        return None;
+    }
+    if let Some(mut value) = find_key(data, b"ScriptType=") {
+        value = strip_spaces(value);
+        if let Some(rest) = value
+            .strip_prefix(b"v".as_slice())
+            .or_else(|| value.strip_prefix(b"V".as_slice()))
+        {
+            value = rest;
+        }
+        if let Some((number, read)) = decimal(value) {
+            if number == 4.0 && value[read..].starts_with(b"+") {
+                return Some(c"application/x-ass");
+            }
+            if (1.0..=4.0).contains(&number) {
+                return Some(c"application/x-ssa");
+            }
+            // A version out of the claimed range says nothing more than
+            // the section names below do.
+        }
+    }
+    // An unparseable version still names its styles section in both
+    // cases of the v, and the case of the letter is the claim.
+    for (section, caps) in [
+        (b"[v4+ Styles]".as_slice(), c"application/x-ass"),
+        (b"[V4+ Styles]".as_slice(), c"application/x-ass"),
+        (b"[v4 Styles]".as_slice(), c"application/x-ssa"),
+        (b"[V4 Styles]".as_slice(), c"application/x-ssa"),
+    ] {
+        if data.windows(section.len()).any(|w| w == section) {
+            return Some(caps);
+        }
+    }
+    None
+}
+
+/// The bytes behind the first occurrence of `key`, or None when the key
+/// is beyond the window.
+fn find_key<'a>(data: &'a [u8], key: &[u8]) -> Option<&'a [u8]> {
+    let at = data.windows(key.len()).position(|w| w == key)?;
+    Some(&data[at + key.len()..])
+}
+
+fn strip_spaces(mut value: &[u8]) -> &[u8] {
+    while let Some(rest) = value.strip_prefix(b" ".as_slice()) {
+        value = rest;
+    }
+    value
+}
+
+/// The decimal at the head of `value` and the octets it spans, parsed
+/// as a prefix: `4.00 rev 1` is four, and the span ends where the
+/// number does. A run of digits without a fractional part is whole.
+fn decimal(value: &[u8]) -> Option<(f64, usize)> {
+    let mut at = 0;
+    let mut whole: f64 = 0.0;
+    while at < value.len() && value[at].is_ascii_digit() {
+        whole = whole * 10.0 + f64::from(value[at] - b'0');
+        at += 1;
+    }
+    if at == 0 {
+        return None;
+    }
+    let mut scale = 0.1;
+    if at < value.len() && value[at] == b'.' {
+        at += 1;
+        while at < value.len() && value[at].is_ascii_digit() {
+            whole += f64::from(value[at] - b'0') * scale;
+            scale *= 0.1;
+            at += 1;
+        }
+    }
+    Some((whole, at))
+}
+
 /// Convert the raw subtitle data to UTF-8, if possible.
 ///
 /// - data with a BOM at the beginning is converted unconditionally,
@@ -463,6 +580,7 @@ fn match_lrc_line(line: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::probe_engine::probe;
 
     /// The index line and the timestamp are separated by the feed and at
     /// most one space; a deeper indent is not that.
@@ -548,5 +666,149 @@ mod tests {
                 assert_eq!(detect_format(input), Some(*format), "input: {input:?}");
             }
         }
+    }
+
+    // ssa / ass
+
+    fn ssa_doc(head: &[u8], version: &[u8], tail: &[u8]) -> Vec<u8> {
+        let mut data = head.to_vec();
+        data.extend_from_slice(b"[Script Info]\nTitle: fixture\n");
+        if !version.is_empty() {
+            data.extend_from_slice(b"ScriptType=");
+            data.extend_from_slice(version);
+            data.push(b'\n');
+        }
+        data.extend_from_slice(tail);
+        data
+    }
+
+    /// The version claims the dialect: 4.0 with a plus is the ass
+    /// script format, the whole span one to four is substation alpha,
+    /// and a plain 4.00 sits on the ssa side of the border.
+    #[test]
+    fn ssa_versions_name_their_dialect() {
+        for version in [b"v4.00+".as_slice(), b"4.0+", b"  V4.00+", b"v4+"] {
+            assert_eq!(
+                ssa_detect(&ssa_doc(b"", version, b"")),
+                Some(c"application/x-ass"),
+                "version: {version:?}"
+            );
+        }
+        for version in [b"v4.00".as_slice(), b"v1.00", b"2.00", b"3.00", b"4.0"] {
+            assert_eq!(
+                ssa_detect(&ssa_doc(b"", version, b"")),
+                Some(c"application/x-ssa"),
+                "version: {version:?}"
+            );
+        }
+        // Out of the span, just below its lower edge included: the
+        // version says nothing.
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"v5.00", b"")), None);
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"0.99", b"")), None);
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"0.9", b"")), None);
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"zero", b"")), None);
+    }
+
+    /// An unreadable version falls through to the styles section, whose
+    /// leading letter claims the dialect in both cases.
+    #[test]
+    fn ssa_sections_settle_the_fall_through() {
+        for (section, dialect) in [
+            (b"[v4+ Styles]".as_slice(), c"application/x-ass"),
+            (b"[V4+ Styles]".as_slice(), c"application/x-ass"),
+            (b"[v4 Styles]".as_slice(), c"application/x-ssa"),
+            (b"[V4 Styles]".as_slice(), c"application/x-ssa"),
+        ] {
+            let tail = [section, b"\n[Events]\n"].concat();
+            assert_eq!(ssa_detect(&ssa_doc(b"", b"", &tail)), Some(dialect));
+            // A version the reading cannot settle lands here too.
+            assert_eq!(ssa_detect(&ssa_doc(b"", b"zero", &tail)), Some(dialect));
+        }
+        // The section names are read whole: a plus in the plain name is
+        // not decoration, in either case of the letter.
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"", b"[v4++ Styles]\n")), None);
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"", b"[V4++ Styles]\n")), None);
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"", b"[v4  Styles]\n")), None);
+    }
+
+    /// The opening names the file, the text has to read as UTF-8, and a
+    /// window cut through a character is tolerated.
+    #[test]
+    fn ssa_opening_and_textuality() {
+        assert_eq!(
+            ssa_detect(&ssa_doc(b"\xEF\xBB\xBF", b"v4.00+", b"")),
+            Some(c"application/x-ass")
+        );
+        // The header alone claims nothing, and its name is exact in
+        // its case.
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"v4.00", b"")[..13]), None);
+        assert_eq!(ssa_detect(b"[script info]\nScriptType=v4.00+\n"), None);
+        // Ill-formed UTF-8 dismisses the file, version or not.
+        assert_eq!(
+            ssa_detect(&ssa_doc(
+                b"",
+                b"v4.00+",
+                b"[\xFF]\npadding padding padding\n"
+            )),
+            None
+        );
+        // A octet that opens no sequence is not a window cut, even
+        // alone at the end.
+        assert_eq!(ssa_detect(&ssa_doc(b"", b"v4.00+", b"tail\xFF")), None);
+        // A sequence the window could have cut mid-way is tolerated,
+        // however near the end its opening sits: the emoji arrives as
+        // its first two octets and nothing else follows.
+        let mut tail = "\u{1F600}".as_bytes().to_vec();
+        tail.truncate(2);
+        assert_eq!(
+            ssa_detect(&ssa_doc(b"", b"v4.00+", &tail)),
+            Some(c"application/x-ass")
+        );
+        // Text whole up to the cut, a whole character between: the cut
+        // reaches back past it into the window's last six octets.
+        let mut tail = "é".as_bytes().to_vec();
+        tail.extend_from_slice(&"☃".as_bytes()[..2]);
+        assert_eq!(
+            ssa_detect(&ssa_doc(b"", b"v4.00+", &tail)),
+            Some(c"application/x-ass")
+        );
+        // A suggestion at full confidence with the parsed field, the
+        // whole typefinding function answering. The caps string is
+        // exactly what gst_caps_to_string spells: serialization pinned.
+        assert_eq!(
+            crate::helpers::probe_engine::probe_suggestions(&ssa_doc(b"", b"v4.00+", b""), |tf| {
+                ssa_type_find(tf, std::ptr::null_mut())
+            }),
+            [(100, "application/x-ass, parsed=(boolean)false".to_string())]
+        );
+    }
+
+    /// The version is searched as far as the window reaches, and no
+    /// further: the same document reads differently by one octet of
+    /// padding.
+    #[test]
+    fn ssa_version_search_stops_at_the_window() {
+        let build = |key_at: usize| -> Vec<u8> {
+            let mut data = b"[Script Info]\n".to_vec();
+            data.resize(key_at, b';');
+            data.extend_from_slice(b"ScriptType=v4.00+\n");
+            data
+        };
+        // The key ends six octets shy of the window; its value fills the rest.
+        let inside = build(SSA_WINDOW - b"ScriptType=".len() - 6);
+        assert_eq!(probe(&inside, ssa_probe), Some(c"application/x-ass"));
+        // One octet further the key straddles the window end and is no
+        // longer found in it.
+        let outside = build(SSA_WINDOW - b"ScriptType=".len() + 1);
+        assert_eq!(probe(&outside, ssa_probe), None);
+    }
+
+    #[test]
+    fn ssa_decimal_reads_its_prefix() {
+        assert_eq!(decimal(b"4.00 rev 1"), Some((4.0, 4)));
+        assert_eq!(decimal(b"1"), Some((1.0, 1)));
+        assert_eq!(decimal(b"14.5x"), Some((14.5, 4)));
+        assert_eq!(decimal(b".5"), None);
+        assert_eq!(decimal(b""), None);
     }
 }

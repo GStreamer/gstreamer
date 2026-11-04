@@ -3214,6 +3214,14 @@ const FEATURES: &[Feature] = &[
         "h266,266",
         "video/x-h266,stream-format=byte-stream"
     ),
+    // SSA/ASS - application/x-ssa
+    typefinder!(
+        "application/x-ssa",
+        SECONDARY,
+        subtitles::ssa_type_find,
+        "ssa,ass",
+        "application/x-ssa; application/x-ass"
+    ),
     // Matroska - video/x-matroska
     typefinder!(
         "video/x-matroska",
