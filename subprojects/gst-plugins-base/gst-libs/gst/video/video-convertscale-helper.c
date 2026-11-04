@@ -840,6 +840,18 @@ video_info_from_caps (GstVideoInfo * info, GstCaps * caps)
   if (!gst_video_info_dma_drm_from_caps (&drm_info, caps))
     return FALSE;
 
+  /* If we don't have a native gst format, try to find one with the same fourcc.
+   * This makes _IS_YUV(), etc work, and fill default colorimetry. */
+  if (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) == GST_VIDEO_FORMAT_DMA_DRM) {
+    GstVideoFormat format =
+        gst_video_dma_drm_fourcc_to_format (drm_info.drm_fourcc);
+    if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+      return gst_video_info_set_format (info, format,
+          GST_VIDEO_INFO_WIDTH (&drm_info.vinfo),
+          GST_VIDEO_INFO_HEIGHT (&drm_info.vinfo));
+    }
+  }
+
   if (!gst_video_info_dma_drm_to_video_info (&drm_info, info))
     return FALSE;
 
