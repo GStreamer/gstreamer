@@ -1960,6 +1960,17 @@ find_source (RTPSession * sess, guint32 ssrc)
       GINT_TO_POINTER (ssrc));
 }
 
+static RTPSource *
+steal_source (RTPSession * sess, guint32 ssrc)
+{
+  RTPSource *ret = NULL;
+
+  g_hash_table_steal_extended (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (ssrc), NULL, (gpointer *) & ret);
+
+  return ret;
+}
+
 static void
 remove_source (RTPSession * sess, RTPSource * source, gboolean byetimeout)
 {
@@ -1998,7 +2009,7 @@ add_source_to_lru_queue (RTPSession * sess, RTPSource * source)
 
   if (g_queue_get_length (&sess->ssrc_queue) >= sess->max_sources) {
     guint32 existing = GPOINTER_TO_UINT (g_queue_pop_head (&sess->ssrc_queue));
-    RTPSource *old_source = find_source (sess, existing);
+    RTPSource *old_source = steal_source (sess, existing);
 
     if (old_source) {
       GST_DEBUG_OBJECT (sess, "trimming oldest source %08x from LRU queue",
@@ -2008,8 +2019,7 @@ add_source_to_lru_queue (RTPSession * sess, RTPSource * source)
 
       old_source->lru_link = NULL;
       remove_source (sess, old_source, FALSE);
-      g_hash_table_remove (sess->ssrcs[sess->mask_idx],
-          GUINT_TO_POINTER (old_source->ssrc));
+      g_object_unref (old_source);
     }
   }
 
@@ -2570,7 +2580,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
         while (rtp_source_has_max_csrcs (source)) {
           RTPSource *old_source =
-              find_source (sess, rtp_source_pop_csrc (source));
+              steal_source (sess, rtp_source_pop_csrc (source));
 
           if (old_source) {
             GST_DEBUG_OBJECT (sess,
@@ -2578,8 +2588,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
                 source->ssrc, old_source->ssrc);
 
             remove_source (sess, old_source, FALSE);
-            g_hash_table_remove (sess->ssrcs[sess->mask_idx],
-                GUINT_TO_POINTER (old_source->ssrc));
+            g_object_unref (old_source);
           }
         }
 
