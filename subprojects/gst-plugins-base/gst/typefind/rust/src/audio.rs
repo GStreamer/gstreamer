@@ -539,12 +539,6 @@ const MP3_WRONG_HEADER: u32 = 10;
 /// contain some.
 const MP3_AT_ZERO: u32 = 10;
 
-/// How far a free format frame may reach. The bitrate bound usually ends the
-/// search well short of this, but not at the low sample rates, where the
-/// implied bitrate only passes 1000 kbit/s past this point. There the read caps
-/// the search and the upper half of the free format range goes unsearched.
-const MP3_FREE_WINDOW: usize = 4608;
-
 /// Bitrates in kbit/s by bitrate index: 11172-3 2.4.2.3 for MPEG-1 and
 /// 13818-3 2.4.2.3 for MPEG-2, whose row MPEG-2.5 shares. Index 0 is free
 /// format and index 15 is forbidden, so neither is ever read.
@@ -601,6 +595,9 @@ impl MpegAudioLayer {
 /// What a frame header says about the frame it opens.
 struct Mp3Frame {
     layer: MpegAudioLayer,
+    /// Whether the stream speaks MPEG-1, whose bitrate tables differ from
+    /// the later versions'.
+    mpeg1: bool,
     /// Samples in a frame, which the format fixes per layer and version.
     samples: u32,
     /// Sample rate in hertz.
@@ -658,6 +655,7 @@ fn mp3_frame(word: u32) -> Option<Mp3Frame> {
     });
     Some(Mp3Frame {
         layer,
+        mpeg1,
         samples,
         sample_rate,
         channels: 2 - u32::from((word >> 6) & 3 == 3),
@@ -666,38 +664,26 @@ fn mp3_frame(word: u32) -> Option<Mp3Frame> {
     })
 }
 
-/// Free format carries no bitrate, so the frame reaches to the next header that
-/// agrees with this one on everything an encoder may not change. The implied
-/// bitrate has to land inside what the format allows, which both rejects runs
-/// of periodic data that merely look like frames and bounds the search without
-/// a window. The bounds are the ones the parser that reads such a stream uses.
-fn mp3_free_len(scan: &mut Scanner, word: u32, frame: &Mp3Frame) -> Option<usize> {
-    // Bitrate, padding, mode and the trailing bits are all a later frame may
-    // change. Everything else has to agree.
-    const AGREEMENT: u32 = !((0xF << 12) | (1 << 9) | (0xF << 4) | 0xF);
-    let want = word & AGREEMENT;
-    let window = scan.peek(MP3_FREE_WINDOW)?;
-    for len in 4..window.len().saturating_sub(3) {
-        // The bitrate a frame this long would have to be carrying, in kbit/s.
-        // Layer I counts four octets to a slot, so its padding is worth four.
-        let slot = if frame.layer == MpegAudioLayer::One {
-            4
-        } else {
-            1
-        };
-        let slots = len as u32 + slot - slot * frame.padding;
-        let bitrate = frame.sample_rate * slots / (frame.samples * 125);
-        if bitrate > 1_000 {
-            return None;
-        }
-        let next = u32be(&window[len..]);
-        if next & AGREEMENT != want || (next >> 12) & 0xF == 0xF {
-            continue;
-        }
-        return (bitrate >= 8 && !(frame.layer == MpegAudioLayer::Three && bitrate > 640))
-            .then_some(len);
-    }
-    None
+/// A free frame reaches from its header to the one that follows, so the
+/// distance between the two headers is the frame's length. The bitrate that
+/// distance implies has to be at least the layer's highest ordinary-table
+/// value, its index 14: 448/384/320 kbit/s for MPEG-1, 256/160/160 for the
+/// later versions. A frame implying less is periodic data that merely agrees
+/// with itself, and a distance no header reached is no frame length at all;
+/// the parser that reads such a stream sets the same floor (11172-3) and
+/// counts the octets the same way — header to header, at the pitch the
+/// distance itself carries.
+fn free_frame_len(distance: usize, frame: &Mp3Frame) -> Option<usize> {
+    // Layer I counts four octets to a slot, so its padding is worth four.
+    let slot = if frame.layer == MpegAudioLayer::One {
+        4
+    } else {
+        1
+    };
+    let reached = distance + slot * frame.padding as usize;
+    let bitrate = frame.sample_rate * reached as u32 / (frame.samples * 125);
+    let floor = MP3_BITRATES[usize::from(!frame.mpeg1)][frame.layer as usize - 1][14];
+    (bitrate >= floor).then_some(reached)
 }
 
 /// Frames counted from the cursor on. A frame that disagrees with the one
@@ -710,24 +696,37 @@ struct Mp3Run {
     layer: Option<MpegAudioLayer>,
     changed: bool,
     short: bool,
-    /// How far past the first header the run's evidence really starts. See
-    /// `mp3_run`.
-    lead: usize,
 }
 
 /// `None` when the octets at the cursor are no frame header at all, which is
 /// what tells a missed sync from a stream that merely stops.
-fn mp3_run(scan: &mut Scanner) -> Option<Mp3Run> {
+///
+/// A free frame has no length of its own. The first one met only leaves a
+/// mark (`pending`); the header that follows it says the distance, and the
+/// walk turns back to the marked header to read the frame at that distance,
+/// counting from the mark to the end of the frame the distance reaches.
+/// A distance below the format's floor settles nothing and ends the run.
+/// A distance that once settled a free frame stays in `settled`, because a
+/// free-format stream carries its frames at one pitch: the frames after the
+/// first read at that pitch without waiting for a partner, until a real
+/// header clears the mark. Both marks belong to the scan rather than the
+/// run — a candidate the scan turns away leaves them for the next one, and
+/// the mark and its partner are both inside the window the scan walks.
+fn mp3_run(
+    scan: &mut Scanner,
+    pending: &mut Option<i64>,
+    settled: &mut Option<usize>,
+) -> Option<Mp3Run> {
     let mut run = Mp3Run {
         found: 0,
         layer: None,
         changed: false,
         short: false,
-        lead: 0,
     };
     let mut prev: Option<Mp3Frame> = None;
     let mut seen = 0;
     while run.found < MP3_TRY_HEADERS && seen < MP3_MAX_FRAMES {
+        let at = scan.offset();
         let Some(head) = scan.peek(4) else {
             run.short = true;
             break;
@@ -741,7 +740,38 @@ fn mp3_run(scan: &mut Scanner) -> Option<Mp3Run> {
             }
             return None;
         };
-        let Some(len) = frame.length.or_else(|| mp3_free_len(scan, word, &frame)) else {
+        let len = if frame.length.is_some() {
+            *settled = None;
+            frame.length
+        } else if let Some(pitch) = *settled {
+            // A pitch that no longer clears the floor is no pitch at all:
+            // the mark is dropped, as the parser that reads such a stream
+            // drops the length it held, and this frame resolves as none.
+            let len = free_frame_len(pitch, &frame);
+            if len.is_none() {
+                *settled = None;
+            }
+            len
+        } else if let Some(first) = *pending {
+            let distance = (at - first) as usize;
+            if let Some(len) = free_frame_len(distance, &frame) {
+                *settled = Some(distance);
+                // Turn back to the marked header: the run is read from
+                // there, at the pitch the two headers agreed on.
+                *scan = scan.before(distance);
+                Some(len)
+            } else {
+                // Below the floor this is periodic data agreeing with
+                // itself. The mark stays for a distance that does settle.
+                None
+            }
+        } else {
+            *pending = Some(at);
+            None
+        };
+        // An unresolved free frame ends the run here: nothing past a frame
+        // of unknown length can be read as one.
+        let Some(len) = len else {
             break;
         };
         // A frame the stream does not have in full is not a frame, and nothing
@@ -749,12 +779,6 @@ fn mp3_run(scan: &mut Scanner) -> Option<Mp3Run> {
         if scan.peek(len).is_none() {
             run.short = true;
             break;
-        }
-        if prev.is_none() && frame.length.is_none() {
-            // Nothing before this header said how long its frame is, so the
-            // stream is only evidenced from the header that settles the length,
-            // one frame on. Confidence is reckoned from there.
-            run.lead = len;
         }
         if prev.as_ref().is_some_and(|p| {
             p.layer != frame.layer
@@ -781,6 +805,10 @@ fn mp3_run(scan: &mut Scanner) -> Option<Mp3Run> {
 fn mp3_scan(tf: &mut TypeFind, start: i64) -> (u32, Option<MpegAudioLayer>) {
     let mut scan = Scanner::new(tf, start);
     let mut missed = false;
+    // The free-frame marks, kept by the scan across its candidates for the
+    // whole start. See `mp3_run`.
+    let mut pending: Option<i64> = None;
+    let mut settled: Option<usize> = None;
     while scan.offset() < start + MP3_WINDOW {
         let at = scan.offset();
         let Some(head) = scan.peek(4) else { break };
@@ -792,19 +820,22 @@ fn mp3_scan(tf: &mut TypeFind, start: i64) -> (u32, Option<MpegAudioLayer>) {
         // about where the next candidate starts. A copy of the cursor reads
         // ahead; the scan stays on the byte it is trying.
         let mut probe = scan;
-        let Some(run) = mp3_run(&mut probe) else {
+        let Some(run) = mp3_run(&mut probe, &mut pending, &mut settled) else {
             missed = true;
             scan.consume(1);
             continue;
         };
         let accepted = run.found == MP3_TRY_HEADERS || (run.found >= MP3_MIN_HEADERS && run.short);
         if !accepted {
+            // The walk goes on from the byte after this one, whatever the
+            // run read ahead to. The marks the run left say what it learned.
             scan.consume(1);
             continue;
         }
-        let skipped = (at - start) as u32 + run.lead as u32;
-        // `lead` is a frame length, so `skipped` can pass the window and
-        // underflow it. Past the window there is nothing left to count.
+        // The run's evidence reaches back to the marked header, which is
+        // inside the window the scan walked to reach this candidate; the
+        // confidence is reckoned from where the walk got to. See `mp3_run`.
+        let skipped = (at - start) as u32;
         let inside = (MP3_WINDOW as u32).saturating_sub(skipped);
         let mut probability = run.found as u32 * Prob::MAXIMUM.get() * inside
             / MP3_TRY_HEADERS as u32
@@ -1372,6 +1403,48 @@ pub fn mod_probe(tf: &mut TypeFind) -> Option<(Prob, &'static CStr)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::probe_engine::probe;
+
+    /// A free-format frame reaches to the next header the walk meets,
+    /// and the bitrate that distance implies decides whether the frame
+    /// is real: at least the layer's highest ordinary-table bitrate, or
+    /// the run is periodic data that merely agrees with itself. A
+    /// 480-octet pitch at 44100 Hz implies 441 kbit/s, under the
+    /// table's 448; a 768-octet one implies 706, which a free-format
+    /// encoder may well carry. Once a pitch has settled one frame the
+    /// rest read at it, and the run counts.
+    #[test]
+    fn free_frames_resolve_only_within_the_bitrate_tables() {
+        let free = [0xFF, 0xFE, 0x00, 0x00]; // MPEG-1 Layer I, 44.1 kHz
+        let real = [0xFF, 0xFE, 0xA0, 0x00]; // 320 kbit/s, 348 octets
+        let stream = |gap: usize| {
+            let mut data = Vec::new();
+            // A free-format run: headers at the pitch, each frame's end
+            // announcing free again. The second settles the pitch and
+            // the run counts from the first.
+            for _ in 0..6 {
+                data.extend(free);
+                data.resize(data.len() + gap - 4, 0x00);
+            }
+            data.resize(data.len() + 6000, 0x00);
+            data
+        };
+        // 441 kbit/s implied is not a bitrate the format carries, at
+        // any pitch the periodic headers imply.
+        assert!(probe(&stream(480), mp3_probe).is_none());
+        // 706 kbit/s is: the free run counts as a stream.
+        assert!(probe(&stream(768), mp3_probe).is_some());
+        // Real frames behind a free header resolve nothing: no free
+        // header ever follows, so the free frame has no witness — and
+        // four real frames alone are not a run either.
+        let mut orphan = free.to_vec();
+        for _ in 0..4 {
+            orphan.extend(real);
+            orphan.resize(orphan.len() + 344, 0x00);
+        }
+        orphan.resize(orphan.len() + 6000, 0x00);
+        assert!(probe(&orphan, mp3_probe).is_none());
+    }
 
     /// Hand-checked against the field layouts, so a shift that drifts from the
     /// table fails here and not only in a fixture sweep.
