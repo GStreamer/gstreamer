@@ -640,6 +640,18 @@ gst_analytics_tensor_provenance_mtd_transform_rectangle (const
   return ret;
 }
 
+/**
+ * gst_analytics_tensor_provenance_mtd_set_timestamp:
+ * @mtd: a #GstAnalyticsTensorProvenanceMtd
+ * @timestamp: the timestamp
+ * @duration: the duration
+ *
+ * Sets the timestamp and duration of the tensor provenance metadata.
+ *
+ * Returns: %TRUE on success, otherwise %FALSE
+ *
+ * Since: 1.30
+ */
 gboolean
     gst_analytics_tensor_provenance_mtd_set_timestamp
     (GstAnalyticsTensorProvenanceMtd * mtd, GstClockTime timestamp,
@@ -657,6 +669,19 @@ gboolean
   return TRUE;
 }
 
+/**
+ * gst_analytics_tensor_provenance_mtd_get_timestamp:
+ * @mtd: a #GstAnalyticsTensorProvenanceMtd
+ * @timestamp: (out) (optional): return location for the timestamp
+ * @duration: (out) (optional): return location for the duration
+ *
+ * Gets the timestamp and duration of the tensor provenance metadata.
+ * Each value is %GST_CLOCK_TIME_NONE if it has not been set.
+ *
+ * Returns: %TRUE on success, otherwise %FALSE
+ *
+ * Since: 1.30
+ */
 gboolean
 gst_analytics_tensor_provenance_mtd_get_timestamp (const
     GstAnalyticsTensorProvenanceMtd * mtd, GstClockTime * timestamp,

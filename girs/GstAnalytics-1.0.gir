@@ -3683,19 +3683,25 @@ carrying the #GstAnalyticsRelationMeta.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_timestamp" c:identifier="gst_analytics_tensor_provenance_mtd_get_timestamp">
+      <method name="get_timestamp" c:identifier="gst_analytics_tensor_provenance_mtd_get_timestamp" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Gets the timestamp and duration of the tensor provenance metadata.
+Each value is %GST_CLOCK_TIME_NONE if it has not been set.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
         <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success, otherwise %FALSE</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
             <type name="TensorProvenanceMtd" c:type="const GstAnalyticsTensorProvenanceMtd*"/>
           </instance-parameter>
-          <parameter name="timestamp" transfer-ownership="none">
+          <parameter name="timestamp" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">return location for the timestamp</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime*"/>
           </parameter>
-          <parameter name="duration" transfer-ownership="none">
+          <parameter name="duration" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">return location for the duration</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime*"/>
           </parameter>
         </parameters>
@@ -3762,19 +3768,24 @@ gst_analytics_tensor_provenance_mtd_set_spatial_transform().</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_timestamp" c:identifier="gst_analytics_tensor_provenance_mtd_set_timestamp">
+      <method name="set_timestamp" c:identifier="gst_analytics_tensor_provenance_mtd_set_timestamp" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">Sets the timestamp and duration of the tensor provenance metadata.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
         <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">%TRUE on success, otherwise %FALSE</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">a #GstAnalyticsTensorProvenanceMtd</doc>
             <type name="TensorProvenanceMtd" c:type="GstAnalyticsTensorProvenanceMtd*"/>
           </instance-parameter>
           <parameter name="timestamp" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the timestamp</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
           <parameter name="duration" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.c">the duration</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
         </parameters>
