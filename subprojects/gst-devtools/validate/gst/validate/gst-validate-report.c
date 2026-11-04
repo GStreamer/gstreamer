@@ -122,7 +122,7 @@ gst_validate_issue_ref (GstValidateIssue * issue)
 {
   g_return_val_if_fail (issue != NULL, NULL);
 
-  g_atomic_int_inc (&issue->refcount);
+  g_atomic_ref_count_inc ((gatomicrefcount *) & issue->refcount);
 
   return issue;
 }
@@ -130,7 +130,8 @@ gst_validate_issue_ref (GstValidateIssue * issue)
 static void
 gst_validate_issue_unref (GstValidateIssue * issue)
 {
-  if (G_UNLIKELY (g_atomic_int_dec_and_test (&issue->refcount))) {
+  if (G_UNLIKELY (g_atomic_ref_count_dec ((gatomicrefcount *) &
+              issue->refcount))) {
     g_free (issue->summary);
     g_free (issue->description);
     g_free (issue->area);
@@ -251,7 +252,7 @@ gst_validate_issue_new_full (GstValidateIssueId issue_id, const gchar * summary,
   }
 
   issue = g_new (GstValidateIssue, 1);
-  issue->refcount = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & issue->refcount);
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
@@ -289,7 +290,7 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   }
 
   issue = g_new (GstValidateIssue, 1);
-  issue->refcount = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & issue->refcount);
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
