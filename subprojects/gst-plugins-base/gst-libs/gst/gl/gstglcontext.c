@@ -170,7 +170,7 @@ load_self_module (gpointer user_data)
  */
 struct ContextShareGroup
 {
-  int refcount;
+  gatomicrefcount refcount;
 };
 
 static struct ContextShareGroup *
@@ -178,7 +178,7 @@ _context_share_group_new (void)
 {
   struct ContextShareGroup *ret = g_new0 (struct ContextShareGroup, 1);
 
-  ret->refcount = 1;
+  g_atomic_ref_count_init (&ret->refcount);
 
   return ret;
 }
@@ -186,14 +186,14 @@ _context_share_group_new (void)
 static struct ContextShareGroup *
 _context_share_group_ref (struct ContextShareGroup *share)
 {
-  g_atomic_int_inc (&share->refcount);
+  g_atomic_ref_count_inc (&share->refcount);
   return share;
 }
 
 static void
 _context_share_group_unref (struct ContextShareGroup *share)
 {
-  if (g_atomic_int_dec_and_test (&share->refcount))
+  if (g_atomic_ref_count_dec (&share->refcount))
     g_free (share);
 }
 

@@ -460,7 +460,7 @@ struct _GstDecodeChain
   GstDecodeGroup *parent;
   GstDecodeBin *dbin;
 
-  gint refs;                    /* Number of references to this object */
+  gatomicrefcount refs;         /* Number of references to this object */
 
   GMutex lock;                  /* Protects this chain and its groups */
 
@@ -3381,7 +3381,7 @@ static void gst_decode_group_free_internal (GstDecodeGroup * group,
 static void
 gst_decode_chain_unref (GstDecodeChain * chain)
 {
-  if (g_atomic_int_dec_and_test (&chain->refs)) {
+  if (g_atomic_ref_count_dec (&chain->refs)) {
     g_mutex_clear (&chain->lock);
     g_free (chain);
   }
@@ -3390,7 +3390,7 @@ gst_decode_chain_unref (GstDecodeChain * chain)
 static GstDecodeChain *
 gst_decode_chain_ref (GstDecodeChain * chain)
 {
-  g_atomic_int_inc (&chain->refs);
+  g_atomic_ref_count_inc (&chain->refs);
   return chain;
 }
 
@@ -3568,7 +3568,7 @@ gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
 
   chain->dbin = dbin;
   chain->parent = parent;
-  chain->refs = 1;
+  g_atomic_ref_count_init (&chain->refs);
   g_mutex_init (&chain->lock);
   chain->pad = gst_object_ref (pad);
 

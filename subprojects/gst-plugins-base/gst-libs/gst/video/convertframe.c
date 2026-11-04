@@ -598,7 +598,7 @@ state_change_failed:
 
 typedef struct
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
   GMutex mutex;
   GstElement *pipeline;
   GstVideoConvertSampleCallback callback;
@@ -617,7 +617,7 @@ typedef struct
 static GstVideoConvertSampleContext *
 gst_video_convert_frame_context_ref (GstVideoConvertSampleContext * ctx)
 {
-  g_atomic_int_inc (&ctx->ref_count);
+  g_atomic_ref_count_inc (&ctx->ref_count);
 
   return ctx;
 }
@@ -625,7 +625,7 @@ gst_video_convert_frame_context_ref (GstVideoConvertSampleContext * ctx)
 static void
 gst_video_convert_frame_context_unref (GstVideoConvertSampleContext * ctx)
 {
-  if (!g_atomic_int_dec_and_test (&ctx->ref_count))
+  if (!g_atomic_ref_count_dec (&ctx->ref_count))
     return;
 
   g_mutex_clear (&ctx->mutex);
@@ -902,7 +902,7 @@ gst_video_convert_sample_async (GstSample * sample,
    * broken up once the finish() is called on the context. At latest when the
    * timeout triggers the context will be freed */
   ctx = g_new0 (GstVideoConvertSampleContext, 1);
-  ctx->ref_count = 1;
+  g_atomic_ref_count_init (&ctx->ref_count);
   g_mutex_init (&ctx->mutex);
   ctx->sample = gst_sample_ref (sample);
   ctx->callback = callback;
