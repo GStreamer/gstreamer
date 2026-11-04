@@ -255,7 +255,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
 
-  entry->refcount = 1;
+  g_atomic_ref_count_init ((gatomicrefcount *) & entry->refcount);
 #ifndef GST_REMOVE_DEPRECATED
 #ifndef GST_DISABLE_DEPRECATED
   entry->clock = clock;
@@ -357,7 +357,8 @@ gst_clock_id_ref (GstClockID id)
 {
   g_return_val_if_fail (id != NULL, NULL);
 
-  g_atomic_int_inc (&((GstClockEntry *) id)->refcount);
+  g_atomic_ref_count_inc ((gatomicrefcount *) & ((GstClockEntry *)
+          id)->refcount);
 
   return id;
 }
@@ -400,7 +401,8 @@ gst_clock_id_unref (GstClockID id)
 
   g_return_if_fail (id != NULL);
 
-  zero = g_atomic_int_dec_and_test (&((GstClockEntry *) id)->refcount);
+  zero = g_atomic_ref_count_dec ((gatomicrefcount *) & ((GstClockEntry *)
+          id)->refcount);
   /* if we ended up with the refcount at zero, free the id */
   if (zero) {
     _gst_clock_id_free (id);
