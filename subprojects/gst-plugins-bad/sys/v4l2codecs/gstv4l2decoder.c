@@ -58,7 +58,7 @@ enum
 struct _GstV4l2Request
 {
   /* non-thread safe */
-  gint ref_count;
+  grefcount ref_count;
 
   GstV4l2Decoder *decoder;
   gint fd;
@@ -1263,7 +1263,7 @@ gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self, guint32 frame_num,
   request->bitstream = gst_memory_ref (bitstream);
   request->pic_buf = gst_buffer_ref (pic_buf);
   request->frame_num = frame_num;
-  request->ref_count = 1;
+  g_ref_count_init (&request->ref_count);
 
   return request;
 }
@@ -1311,7 +1311,7 @@ gst_v4l2_decoder_alloc_sub_request (GstV4l2Decoder * self,
   request->pic_buf = gst_buffer_ref (prev_request->pic_buf);
   request->frame_num = prev_request->frame_num;
   request->sub_request = TRUE;
-  request->ref_count = 1;
+  g_ref_count_init (&request->ref_count);
 
   return request;
 }
@@ -1376,7 +1376,7 @@ gst_v4l2_decoder_in_doc_mode (GstV4l2Decoder * self)
 GstV4l2Request *
 gst_v4l2_request_ref (GstV4l2Request * request)
 {
-  request->ref_count++;
+  g_ref_count_inc (&request->ref_count);
   return request;
 }
 
@@ -1400,9 +1400,7 @@ gst_v4l2_request_unref (GstV4l2Request * request)
   GstV4l2Decoder *decoder = request->decoder;
   gint ret;
 
-  g_return_if_fail (request->ref_count > 0);
-
-  if (--request->ref_count > 0)
+  if (!g_ref_count_dec (&request->ref_count))
     return;
 
   g_clear_pointer (&request->bitstream, gst_memory_unref);

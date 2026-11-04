@@ -47,7 +47,7 @@ gst_apple_core_video_pixel_buffer_new (CVPixelBufferRef buf)
 {
   GstAppleCoreVideoPixelBuffer *gpixbuf =
       g_slice_new (GstAppleCoreVideoPixelBuffer);
-  gpixbuf->refcount = 1;
+  g_atomic_ref_count_init (&gpixbuf->refcount);
   g_mutex_init (&gpixbuf->mutex);
   gpixbuf->buf = CVPixelBufferRetain (buf);
   gpixbuf->lock_state = GST_APPLE_CORE_VIDEO_MEMORY_UNLOCKED;
@@ -58,14 +58,14 @@ gst_apple_core_video_pixel_buffer_new (CVPixelBufferRef buf)
 GstAppleCoreVideoPixelBuffer *
 gst_apple_core_video_pixel_buffer_ref (GstAppleCoreVideoPixelBuffer * gpixbuf)
 {
-  g_atomic_int_inc (&gpixbuf->refcount);
+  g_atomic_ref_count_inc (&gpixbuf->refcount);
   return gpixbuf;
 }
 
 void
 gst_apple_core_video_pixel_buffer_unref (GstAppleCoreVideoPixelBuffer * gpixbuf)
 {
-  if (g_atomic_int_dec_and_test (&gpixbuf->refcount)) {
+  if (g_atomic_ref_count_dec (&gpixbuf->refcount)) {
     if (gpixbuf->lock_state != GST_APPLE_CORE_VIDEO_MEMORY_UNLOCKED) {
       GST_ERROR
           ("%p: CVPixelBuffer memory still locked (lock_count = %d), likely forgot to unmap GstAppleCoreVideoMemory",

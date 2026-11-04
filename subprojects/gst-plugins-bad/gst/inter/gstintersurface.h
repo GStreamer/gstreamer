@@ -31,7 +31,7 @@ typedef struct _GstInterSurface GstInterSurface;
 struct _GstInterSurface
 {
   GMutex mutex;
-  gint ref_count;
+  grefcount ref_count;
 
   char *name;
 

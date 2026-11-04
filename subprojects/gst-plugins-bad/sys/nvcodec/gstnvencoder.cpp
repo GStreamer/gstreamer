@@ -3139,7 +3139,7 @@ GstNvEncoderClassData *
 gst_nv_encoder_class_data_new (void)
 {
   GstNvEncoderClassData *data = g_new0 (GstNvEncoderClassData, 1);
-  data->ref_count = 1;
+  g_atomic_ref_count_init (&data->ref_count);
 
   return data;
 }
@@ -3147,7 +3147,7 @@ gst_nv_encoder_class_data_new (void)
 GstNvEncoderClassData *
 gst_nv_encoder_class_data_ref (GstNvEncoderClassData * cdata)
 {
-  g_atomic_int_add (&cdata->ref_count, 1);
+  g_atomic_ref_count_inc (&cdata->ref_count);
 
   return cdata;
 }
@@ -3155,7 +3155,7 @@ gst_nv_encoder_class_data_ref (GstNvEncoderClassData * cdata)
 void
 gst_nv_encoder_class_data_unref (GstNvEncoderClassData * cdata)
 {
-  if (g_atomic_int_dec_and_test (&cdata->ref_count)) {
+  if (g_atomic_ref_count_dec (&cdata->ref_count)) {
     gst_clear_caps (&cdata->sink_caps);
     gst_clear_caps (&cdata->src_caps);
     if (cdata->formats)

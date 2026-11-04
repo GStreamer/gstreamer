@@ -76,7 +76,7 @@ struct _BufferIdentification
 
 struct gl_sync_result
 {
-  gint refcount;
+  gatomicrefcount refcount;
   gint64 frame_available_ts;
   gboolean updated;             /* only every call update_tex_image once */
   gboolean released;            /* only every call release_output_buffer once */
@@ -88,7 +88,7 @@ _gl_sync_result_ref (struct gl_sync_result *result)
 {
   g_assert (result != NULL);
 
-  g_atomic_int_inc (&result->refcount);
+  g_atomic_ref_count_inc (&result->refcount);
 
   GST_TRACE ("gl_sync result %p ref", result);
 
@@ -102,7 +102,7 @@ _gl_sync_result_unref (struct gl_sync_result *result)
 
   GST_TRACE ("gl_sync result %p unref", result);
 
-  if (g_atomic_int_dec_and_test (&result->refcount)) {
+  if (g_atomic_ref_count_dec (&result->refcount)) {
     GST_TRACE ("freeing gl_sync result %p", result);
     g_free (result);
   }
@@ -110,7 +110,7 @@ _gl_sync_result_unref (struct gl_sync_result *result)
 
 struct gl_sync
 {
-  gint refcount;
+  gatomicrefcount refcount;
   GstAmcVideoDec *sink;         /* back reference for statistics, lock, cond, etc */
   gint buffer_idx;              /* idx of the AMC buffer we should render */
   GstBuffer *buffer;            /* back reference to the buffer */
@@ -126,7 +126,7 @@ _gl_sync_ref (struct gl_sync *sync)
 {
   g_assert (sync != NULL);
 
-  g_atomic_int_inc (&sync->refcount);
+  g_atomic_ref_count_inc (&sync->refcount);
 
   GST_TRACE ("gl_sync %p ref", sync);
 
@@ -140,7 +140,7 @@ _gl_sync_unref (struct gl_sync *sync)
 
   GST_TRACE ("gl_sync %p unref", sync);
 
-  if (g_atomic_int_dec_and_test (&sync->refcount)) {
+  if (g_atomic_ref_count_dec (&sync->refcount)) {
     GST_TRACE ("freeing gl_sync %p", sync);
 
     _gl_sync_result_unref (sync->result);
@@ -1259,7 +1259,7 @@ _amc_gl_copy (GstGLSyncMeta * src, GstBuffer * sbuffer, GstGLSyncMeta * dest,
 
   g_mutex_lock (&sync->sink->gl_lock);
 
-  tmp->refcount = 1;
+  g_atomic_ref_count_init (&tmp->refcount);
   tmp->sink = gst_object_ref (sync->sink);
   tmp->buffer = dbuffer;
   tmp->oes_mem = (GstGLMemory *) gst_memory_ref ((GstMemory *) sync->oes_mem);
@@ -1460,7 +1460,7 @@ retry:
         gst_memory_ref ((GstMemory *) self->oes_mem));
 
     sync = g_new0 (struct gl_sync, 1);
-    sync->refcount = 1;
+    g_atomic_ref_count_init (&sync->refcount);
     sync->sink = g_object_ref (self);
     sync->buffer = outbuf;
     sync->surface = g_object_ref (self->surface);
@@ -1468,7 +1468,7 @@ retry:
         (GstGLMemory *) gst_memory_ref ((GstMemory *) self->oes_mem);
     sync->buffer_idx = idx;
     sync->result = g_new0 (struct gl_sync_result, 1);
-    sync->result->refcount = 1;
+    g_atomic_ref_count_init (&sync->result->refcount);
     sync->result->updated = FALSE;
 
     GST_TRACE ("new gl_sync %p result %p", sync, sync->result);

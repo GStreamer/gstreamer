@@ -276,7 +276,7 @@ gst_nvcodec_load_encoder_class_data (const GstStructure *
   }
 
   cdata = g_new0 (GstNvEncoderClassData, 1);
-  cdata->ref_count = 1;
+  g_atomic_ref_count_init (&cdata->ref_count);
   cdata->codec = codec;
   cdata->sink_caps = sink_caps;
   cdata->src_caps = src_caps;

@@ -84,7 +84,7 @@ struct _GstVulkanH264Picture
   StdVideoDecodeH264PictureInfo std_h264pic;
 
   gint32 slot_idx;
-  guint ref_count;
+  gatomicrefcount ref_count;
 };
 
 struct _GstVulkanH264Decoder
@@ -429,7 +429,7 @@ gst_vulkan_h264_picture_new (GstVulkanH264Decoder * self, GstBuffer * out)
   GstVulkanH264Picture *pic;
 
   pic = g_new0 (GstVulkanH264Picture, 1);
-  g_atomic_int_inc (&pic->ref_count);
+  g_atomic_ref_count_init (&pic->ref_count);
   gst_vulkan_decoder_picture_init (self->decoder, &pic->base, out);
 
   return pic;
@@ -438,7 +438,7 @@ gst_vulkan_h264_picture_new (GstVulkanH264Decoder * self, GstBuffer * out)
 static inline gpointer
 gst_vulkan_h264_picture_ref (GstVulkanH264Picture * pic)
 {
-  g_atomic_int_inc (&pic->ref_count);
+  g_atomic_ref_count_inc (&pic->ref_count);
   return pic;
 }
 
@@ -455,7 +455,7 @@ static inline void
 gst_vulkan_h264_picture_unref (gpointer data)
 {
   GstVulkanH264Picture *pic = data;
-  if (g_atomic_int_dec_and_test (&pic->ref_count))
+  if (g_atomic_ref_count_dec (&pic->ref_count))
     gst_vulkan_h264_picture_free (data);
 }
 

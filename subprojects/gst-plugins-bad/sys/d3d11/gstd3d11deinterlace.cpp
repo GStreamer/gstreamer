@@ -163,7 +163,7 @@ typedef struct
 
   GstD3D11DeinterlaceDeviceCaps device_caps;
 
-  guint ref_count;
+  gatomicrefcount ref_count;
 } GstD3D11DeinterlaceClassData;
 
 static GstD3D11DeinterlaceClassData *
@@ -171,7 +171,7 @@ gst_d3d11_deinterlace_class_data_new (void)
 {
   GstD3D11DeinterlaceClassData *self = g_new0 (GstD3D11DeinterlaceClassData, 1);
 
-  self->ref_count = 1;
+  g_atomic_ref_count_init (&self->ref_count);
 
   return self;
 }
@@ -181,7 +181,7 @@ gst_d3d11_deinterlace_class_data_ref (GstD3D11DeinterlaceClassData * data)
 {
   g_assert (data != NULL);
 
-  g_atomic_int_add (&data->ref_count, 1);
+  g_atomic_ref_count_inc (&data->ref_count);
 
   return data;
 }
@@ -191,7 +191,7 @@ gst_d3d11_deinterlace_class_data_unref (GstD3D11DeinterlaceClassData * data)
 {
   g_assert (data != NULL);
 
-  if (g_atomic_int_dec_and_test (&data->ref_count)) {
+  if (g_atomic_ref_count_dec (&data->ref_count)) {
     gst_clear_caps (&data->sink_caps);
     gst_clear_caps (&data->src_caps);
     g_free (data->description);
