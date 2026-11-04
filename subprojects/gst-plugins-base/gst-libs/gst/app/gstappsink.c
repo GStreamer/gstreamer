@@ -92,13 +92,13 @@ typedef struct
   GstAppSinkCallbacks callbacks;
   gpointer user_data;
   GDestroyNotify destroy_notify;
-  gint ref_count;
+  gatomicrefcount ref_count;
 } Callbacks;
 
 static Callbacks *
 callbacks_ref (Callbacks * callbacks)
 {
-  g_atomic_int_inc (&callbacks->ref_count);
+  g_atomic_ref_count_inc (&callbacks->ref_count);
 
   return callbacks;
 }
@@ -106,7 +106,7 @@ callbacks_ref (Callbacks * callbacks)
 static void
 callbacks_unref (Callbacks * callbacks)
 {
-  if (!g_atomic_int_dec_and_test (&callbacks->ref_count))
+  if (!g_atomic_ref_count_dec (&callbacks->ref_count))
     return;
 
   if (callbacks->destroy_notify)
@@ -120,7 +120,7 @@ G_DEFINE_BOXED_TYPE (GstAppSinkSimpleCallbacks, gst_app_sink_simple_callbacks,
 
 struct _GstAppSinkSimpleCallbacks
 {
-  int ref_count;
+  gatomicrefcount ref_count;
   gboolean attached;
 
   GstAppSinkEosCallback eos_cb;
@@ -2660,7 +2660,7 @@ gst_app_sink_set_callbacks (GstAppSink * appsink,
     new_callbacks->callbacks = *callbacks;
     new_callbacks->user_data = user_data;
     new_callbacks->destroy_notify = notify;
-    new_callbacks->ref_count = 1;
+    g_atomic_ref_count_init (&new_callbacks->ref_count);
   }
 
   g_mutex_lock (&priv->mutex);
@@ -2839,7 +2839,7 @@ gst_app_sink_simple_callbacks_new (void)
 {
   GstAppSinkSimpleCallbacks *cb = g_new0 (GstAppSinkSimpleCallbacks, 1);
 
-  cb->ref_count = 1;
+  g_atomic_ref_count_init (&cb->ref_count);
   cb->attached = FALSE;
 
   return cb;
@@ -2860,7 +2860,7 @@ gst_app_sink_simple_callbacks_ref (GstAppSinkSimpleCallbacks * cb)
 {
   g_return_val_if_fail (cb != NULL, NULL);
 
-  g_atomic_int_inc (&cb->ref_count);
+  g_atomic_ref_count_inc (&cb->ref_count);
 
   return cb;
 }
@@ -2879,7 +2879,7 @@ gst_app_sink_simple_callbacks_unref (GstAppSinkSimpleCallbacks * cb)
 {
   g_return_if_fail (cb != NULL);
 
-  if (!g_atomic_int_dec_and_test (&cb->ref_count))
+  if (!g_atomic_ref_count_dec (&cb->ref_count))
     return;
 
   if (cb->eos_destroy_notify)
