@@ -2294,7 +2294,7 @@ static const UploadMethod _upload_meta_upload = {
 
 struct RawUploadFrame
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
   GstVideoFrame frame;
 };
 
@@ -2317,7 +2317,7 @@ _raw_upload_frame_new (struct RawUpload *raw, GstBuffer * buffer)
     return NULL;
 
   frame = g_new (struct RawUploadFrame, 1);
-  frame->ref_count = 1;
+  g_atomic_ref_count_init (&frame->ref_count);
 
   if (!gst_video_frame_map (&frame->frame, &raw->upload->priv->in_info,
           buffer, GST_MAP_READ)) {
@@ -2341,13 +2341,13 @@ _raw_upload_frame_new (struct RawUpload *raw, GstBuffer * buffer)
 static void
 _raw_upload_frame_ref (struct RawUploadFrame *frame)
 {
-  g_atomic_int_inc (&frame->ref_count);
+  g_atomic_ref_count_inc (&frame->ref_count);
 }
 
 static void
 _raw_upload_frame_unref (struct RawUploadFrame *frame)
 {
-  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
+  if (g_atomic_ref_count_dec (&frame->ref_count)) {
     gst_video_frame_unmap (&frame->frame);
     g_free (frame);
   }

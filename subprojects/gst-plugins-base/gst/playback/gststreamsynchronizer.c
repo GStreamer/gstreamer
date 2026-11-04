@@ -208,14 +208,14 @@ typedef struct
   guint32 segment_seqnum;
   guint group_id;
 
-  gint refcount;
+  gatomicrefcount refcount;
 } GstSyncStream;
 
 static GstSyncStream *
 gst_syncstream_ref (GstSyncStream * stream)
 {
   g_return_val_if_fail (stream != NULL, NULL);
-  g_atomic_int_add (&stream->refcount, 1);
+  g_atomic_ref_count_inc (&stream->refcount);
   return stream;
 }
 
@@ -223,9 +223,9 @@ static void
 gst_syncstream_unref (GstSyncStream * stream)
 {
   g_return_if_fail (stream != NULL);
-  g_return_if_fail (stream->refcount > 0);
+  g_return_if_fail (g_atomic_int_get (&stream->refcount) > 0);
 
-  if (g_atomic_int_dec_and_test (&stream->refcount))
+  if (g_atomic_ref_count_dec (&stream->refcount))
     g_free (stream);
 }
 
@@ -1059,7 +1059,7 @@ gst_stream_synchronizer_new_pad (GstStreamSynchronizer * sync)
   stream->group_id = G_MAXUINT;
   stream->seen_data = FALSE;
   stream->send_gap_event = FALSE;
-  stream->refcount = 1;
+  g_atomic_ref_count_init (&stream->refcount);
 
   tmp = g_strdup_printf ("sink_%u", sync->current_stream_number);
   stream->sinkpad =
