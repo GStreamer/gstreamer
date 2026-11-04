@@ -33,7 +33,7 @@ struct _GstEGLImageCacheEntry
 
 struct _GstEGLImageCache
 {
-  gint ref_count;
+  gatomicrefcount ref_count;
   GHashTable *hash_table;       /* for GstMemory -> GstEGLImageCacheEntry lookup */
   GMutex lock;                  /* protects hash_table */
 };
@@ -51,7 +51,7 @@ struct _GstEGLImageCache
 GstEGLImageCache *
 gst_egl_image_cache_ref (GstEGLImageCache * cache)
 {
-  g_atomic_int_inc (&cache->ref_count);
+  g_atomic_ref_count_inc (&cache->ref_count);
   return cache;
 }
 
@@ -67,7 +67,7 @@ gst_egl_image_cache_ref (GstEGLImageCache * cache)
 void
 gst_egl_image_cache_unref (GstEGLImageCache * cache)
 {
-  if (g_atomic_int_dec_and_test (&cache->ref_count)) {
+  if (g_atomic_ref_count_dec (&cache->ref_count)) {
     g_hash_table_unref (cache->hash_table);
     g_mutex_clear (&cache->lock);
     g_free (cache);
@@ -191,7 +191,7 @@ gst_egl_image_cache_new (void)
   GstEGLImageCache *cache;
 
   cache = g_new0 (GstEGLImageCache, 1);
-  cache->ref_count = 1;
+  g_atomic_ref_count_init (&cache->ref_count);
 
   cache->hash_table = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) gst_egl_image_cache_entry_free);
