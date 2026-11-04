@@ -1121,6 +1121,11 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
         goto flushing;
       }
 
+      if (self->downstream_flow_ret != GST_FLOW_OK) {
+        g_clear_error (&err);
+        goto downstream_error;
+      }
+
       switch (idx) {
         case INFO_TRY_AGAIN_LATER:
           GST_DEBUG_OBJECT (self, "Dequeueing input buffer timed out");
