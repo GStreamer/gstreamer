@@ -1248,8 +1248,6 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
   AMF_VIDEO_ENCODER_AV1_RATE_CONTROL_METHOD_ENUM rc_mode;
   amf_int64 color_depth;
   AMF_SURFACE_FORMAT surface_format;
-  const GstVideoColorimetry *cinfo = &info->colorimetry;
-  amf_int64 color_profile;
 
   g_mutex_lock (&self->prop_lock);
   result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_FRAMESIZE,
@@ -1393,112 +1391,19 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
           GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     }
   }
-  color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN;
-  switch (cinfo->matrix) {
-      /* XXX: There's a driver bug that BT601 color matrix here results in
-       * identity matrix specified */
-#if 0
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
-        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_601;
-      } else {
-        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_601;
-      }
-      break;
-#endif
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
-        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_709;
-      } else {
-        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_709;
-      }
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT2020:
-      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
-        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_2020;
-      } else {
-        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_2020;
-      }
-      break;
-    default:
-      break;
-  }
-
-  result =
-      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_OUTPUT_COLOR_PROFILE,
-      color_profile);
-  if (result != AMF_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set output color profile, result %"
-        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-    goto error;
-  }
-
-  result =
-      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_OUTPUT_TRANSFER_CHARACTERISTIC,
-      gst_video_transfer_function_to_iso (cinfo->transfer));
-  if (result != AMF_OK) {
-    GST_ERROR_OBJECT (self,
-        "Failed to set output transfer characteristic, result %"
-        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-    goto error;
-  }
-
-  result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_OUTPUT_COLOR_PRIMARIES,
-      gst_video_color_primaries_to_iso (cinfo->primaries));
-  if (result != AMF_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set output color primaries, result %"
-        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-    goto error;
-  }
-
-  if (cinfo->transfer == GST_VIDEO_TRANSFER_SMPTE2084 &&
-      state->mastering_display_info && state->content_light_level) {
-    AMFBuffer *hdrmeta_buffer = NULL;
-    result =
-        comp->GetContext ()->AllocBuffer (AMF_MEMORY_HOST,
-        sizeof (AMFHDRMetadata), &hdrmeta_buffer);
-    if (result != AMF_OK) {
-      GST_ERROR_OBJECT (self, "Failed to allocate HDR metadata buffer, result %"
-          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+  {
+    GstAmfColorInfoPropertyNames names = {
+      AMF_VIDEO_ENCODER_AV1_OUTPUT_COLOR_PROFILE,
+      AMF_VIDEO_ENCODER_AV1_OUTPUT_TRANSFER_CHARACTERISTIC,
+      AMF_VIDEO_ENCODER_AV1_OUTPUT_COLOR_PRIMARIES,
+      AMF_VIDEO_ENCODER_AV1_INPUT_HDR_METADATA,
+      AMF_VIDEO_ENCODER_AV1_OUTPUT_MATRIX_COEFF,
+    };
+    /* XXX: There's a driver bug that BT601 color matrix here results in
+     * identity matrix specified */
+    if (!gst_amf_encoder_set_color_info (encoder, comp, state, &names, TRUE))
       goto error;
-    }
-    AMFHDRMetadata *hdrmeta = (AMFHDRMetadata *) hdrmeta_buffer->GetNative ();
-    GstVideoMasteringDisplayInfo *minfo = state->mastering_display_info;
-    GstVideoContentLightLevel *cllinfo = state->content_light_level;
-    hdrmeta->maxMasteringLuminance =
-        (amf_uint32) minfo->max_display_mastering_luminance;
-    hdrmeta->minMasteringLuminance =
-        (amf_uint32) minfo->min_display_mastering_luminance;
-
-    hdrmeta->redPrimary[0] = minfo->display_primaries[0].x;
-    hdrmeta->redPrimary[1] = minfo->display_primaries[0].y;
-
-    hdrmeta->greenPrimary[0] = minfo->display_primaries[1].x;
-    hdrmeta->greenPrimary[1] = minfo->display_primaries[1].y;
-
-    hdrmeta->bluePrimary[0] = minfo->display_primaries[2].x;
-    hdrmeta->bluePrimary[1] = minfo->display_primaries[2].y;
-
-    hdrmeta->whitePoint[0] = minfo->white_point.x;
-    hdrmeta->whitePoint[1] = minfo->white_point.y;
-
-    hdrmeta->maxContentLightLevel =
-        (amf_uint16) cllinfo->max_content_light_level;
-    hdrmeta->maxFrameAverageLightLevel =
-        (amf_uint16) cllinfo->max_frame_average_light_level;
-
-    result =
-        comp->SetProperty (AMF_VIDEO_ENCODER_AV1_INPUT_HDR_METADATA,
-        hdrmeta_buffer);
-
-    hdrmeta_buffer->Release ();
-    if (result != AMF_OK) {
-      GST_ERROR_OBJECT (self, "Failed to set HDR metadata, result %"
-          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
-      goto error;
-    }
   }
-
   if (dev_caps->pre_encode_supported) {
     result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_RATE_CONTROL_PREENCODE,
         (amf_bool) self->pre_encode);

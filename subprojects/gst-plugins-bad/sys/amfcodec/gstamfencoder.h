@@ -125,6 +125,23 @@ AMF_RESULT gst_amf_encoder_set_pre_analysis_options (GstAmfEncoder * self,
 
 void gst_amf_encoder_check_pa_supported_options (GstAmfEncoderPASupportedOptions * pa_supported,
                                                  amf::AMFComponent * comp);
+typedef struct
+{
+  const wchar_t * output_color_profile;
+  const wchar_t * output_transfer_characteristic;
+  const wchar_t * output_color_primaries;
+  const wchar_t * input_hdr_metadata;
+  const wchar_t * output_matrix_coeff;
+} GstAmfColorInfoPropertyNames;
+
+/* avoid_bt601_color_profile: some AMF encoders (e.g. AV1) report an
+ * identity matrix instead of BT601 due to a driver bug, so pass TRUE to
+ * leave the color profile unset for BT601 input on those encoders */
+gboolean
+gst_amf_encoder_set_color_info (GstAmfEncoder * encoder, amf::AMFComponent * comp,
+                                GstVideoCodecState * state,
+                                const GstAmfColorInfoPropertyNames *names,
+                                gboolean avoid_bt601_color_profile);
 
 // Pre-analysis settings
 #define DEFAULT_PRE_ANALYSIS FALSE

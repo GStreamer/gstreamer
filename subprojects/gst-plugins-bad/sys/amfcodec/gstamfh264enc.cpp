@@ -1661,6 +1661,17 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
           GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     }
   }
+  {
+    GstAmfColorInfoPropertyNames names = {
+      AMF_VIDEO_ENCODER_OUTPUT_COLOR_PROFILE,
+      AMF_VIDEO_ENCODER_OUTPUT_TRANSFER_CHARACTERISTIC,
+      AMF_VIDEO_ENCODER_OUTPUT_COLOR_PRIMARIES,
+      AMF_VIDEO_ENCODER_INPUT_HDR_METADATA,
+      AMF_VIDEO_ENCODER_OUTPUT_MATRIX_COEFF,
+    };
+    if (!gst_amf_encoder_set_color_info (encoder, comp, state, &names, FALSE))
+      goto error;
+  }
   if (dev_caps->pre_encode_supported) {
     result = comp->SetProperty (AMF_VIDEO_ENCODER_PREENCODE_ENABLE,
         (amf_bool) self->pre_encode);
