@@ -804,7 +804,7 @@ typedef struct
    * same codec frame, so we end up with multiple VidDecVideoFrames referencing
    * the same codec frame.
    */
-  guint refcount;
+  grefcount refcount;
 } GstFFMpegVidDecCodecFrameData;
 
 /* Replaces the 'frame' reference of a VidDecVideoFrame to its codec frame.
@@ -822,14 +822,15 @@ gst_ffmpegviddec_video_frame_take_frame (GstFFMpegVidDecVideoFrame * dframe,
   if (dframe->frame) {
     GstFFMpegVidDecCodecFrameData *data =
         gst_video_codec_frame_get_user_data (dframe->frame);
+    gboolean zero;
 
-    data->refcount--;
+    zero = g_ref_count_dec (&data->refcount);
 
     GST_DEBUG_OBJECT (dframe->ffmpegdec,
         "unreffed codec frame %p sfn # %u ref ->%u", dframe->frame,
         dframe->frame->system_frame_number, data->refcount);
 
-    if (data->refcount == 0) {
+    if (zero) {
       GST_VIDEO_CODEC_FRAME_FLAG_UNSET (dframe->frame,
           GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
       gst_video_decoder_release_frame (GST_VIDEO_DECODER (dframe->ffmpegdec),
@@ -848,8 +849,10 @@ gst_ffmpegviddec_video_frame_take_frame (GstFFMpegVidDecVideoFrame * dframe,
     if (data == NULL) {
       data = g_new0 (GstFFMpegVidDecCodecFrameData, 1);
       gst_video_codec_frame_set_user_data (frame, data, g_free);
+      g_ref_count_init (&data->refcount);
+    } else {
+      g_ref_count_inc (&data->refcount);
     }
-    data->refcount++;
 
     GST_DEBUG_OBJECT (dframe->ffmpegdec,
         "reffed codec frame %p sfn # %u ref ->%u", frame,
