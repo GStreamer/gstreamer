@@ -170,6 +170,14 @@ gst_asf_parse_handle_frame_push_object (GstAsfParse * asfparse,
       goto end;
     }
 
+    if (size > G_MAXUINT32) {
+      GST_ERROR_OBJECT (asfparse, "Object size %" G_GUINT64_FORMAT
+          " is larger than the largest supported object", size);
+      ret = GST_FLOW_ERROR;
+      gst_buffer_unmap (buffer, &map);
+      goto end;
+    }
+
     if (size > map.size) {
       /* request all the obj data */
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (asfparse), size);
@@ -208,6 +216,14 @@ gst_asf_parse_handle_frame_headers (GstAsfParse * asfparse,
 
     if (size == 0) {
       GST_ERROR_OBJECT (asfparse, "ASF starting identifier missing");
+      ret = GST_FLOW_ERROR;
+      gst_buffer_unmap (buffer, &map);
+      goto end;
+    }
+
+    if (size > G_MAXUINT32) {
+      GST_ERROR_OBJECT (asfparse, "Object size %" G_GUINT64_FORMAT
+          " is larger than the largest supported object", size);
       ret = GST_FLOW_ERROR;
       gst_buffer_unmap (buffer, &map);
       goto end;
