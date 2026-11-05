@@ -72,6 +72,7 @@ struct _GstAjaSrc {
   GstAjaAudioSystem audio_system_setting;
   GstAjaVideoFormat video_format_setting;
   GstAjaSdiMode sdi_mode;
+  GstAjaFrameBufferFormat frame_buffer_format;
   GstAjaInputSource input_source;
   GstAjaAudioSource audio_source;
   GstAjaEmbeddedAudioInput embedded_audio_input;

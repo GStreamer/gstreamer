@@ -77,6 +77,7 @@ struct _GstAjaSink {
   GstAjaAudioSystem audio_system_setting;
   GstAjaOutputDestination output_destination;
   GstAjaSdiMode sdi_mode;
+  GstAjaFrameBufferFormat frame_buffer_format;
   GstAjaTimecodeIndex timecode_index;
   gboolean rp188;
   GstAjaReferenceSource reference_source;

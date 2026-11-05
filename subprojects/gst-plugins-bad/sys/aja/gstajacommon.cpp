@@ -175,7 +175,54 @@ static const FormatMapEntry format_map[] = {
      NTV2_FORMAT_4x4096x2160p_6000},
 };
 
-GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id) {
+GType gst_aja_frame_buffer_format_get_type(void) {
+  static gsize id = 0;
+  static const GEnumValue formats[] = {{GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV,
+                                        "8bit-yuv", "8-bit YUV 4:2:2 (UYVY)"},
+                                       {GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV,
+                                        "10bit-yuv", "10-bit YUV 4:2:2 (v210)"},
+                                       {0, NULL, NULL}};
+
+  if (g_once_init_enter(&id)) {
+    GType tmp = g_enum_register_static("GstAjaFrameBufferFormat", formats);
+    g_once_init_leave(&id, tmp);
+  }
+
+  return (GType)id;
+}
+
+NTV2FrameBufferFormat gst_aja_frame_buffer_format_to_fbf(
+    GstAjaFrameBufferFormat format) {
+  switch (format) {
+    case GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV:
+      return ::NTV2_FBF_8BIT_YCBCR;
+    case GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV:
+      break;
+    default:
+      g_warn_if_reached();
+      break;
+  }
+
+  return ::NTV2_FBF_10BIT_YCBCR;
+}
+
+GstVideoFormat gst_aja_frame_buffer_format_to_gst_format(
+    GstAjaFrameBufferFormat format) {
+  switch (format) {
+    case GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV:
+      return GST_VIDEO_FORMAT_UYVY;
+    case GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV:
+      break;
+    default:
+      g_warn_if_reached();
+      break;
+  }
+
+  return GST_VIDEO_FORMAT_v210;
+}
+
+GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id,
+                                 GstAjaFrameBufferFormat frame_buffer_format) {
   GstCaps* caps = gst_caps_new_empty();
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
@@ -183,12 +230,14 @@ GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id) {
     GstCaps* tmp = NULL;
 
     if (device_id == DEVICE_ID_INVALID) {
-      tmp = gst_aja_video_format_to_caps(format.gst_format);
+      tmp =
+          gst_aja_video_format_to_caps(format.gst_format, frame_buffer_format);
     } else if ((format.aja_format != NTV2_FORMAT_UNKNOWN &&
                 ::NTV2DeviceCanDoVideoFormat(device_id, format.aja_format)) ||
                (format.quad_format != NTV2_FORMAT_UNKNOWN &&
                 ::NTV2DeviceCanDoVideoFormat(device_id, format.quad_format))) {
-      tmp = gst_aja_video_format_to_caps(format.gst_format);
+      tmp =
+          gst_aja_video_format_to_caps(format.gst_format, frame_buffer_format);
     }
 
     if (tmp) {
@@ -214,7 +263,19 @@ GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id) {
   return caps;
 }
 
-GstCaps* gst_aja_video_format_to_caps(GstAjaVideoFormat format) {
+GstCaps* gst_ntv2_supported_caps_any_fbf(NTV2DeviceID device_id) {
+  GstCaps *caps, *tmp = gst_ntv2_supported_caps(
+                     device_id, GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV);
+
+  caps =
+      gst_ntv2_supported_caps(device_id, GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV);
+  gst_caps_append(caps, tmp);
+
+  return caps;
+}
+
+GstCaps* gst_aja_video_format_to_caps(
+    GstAjaVideoFormat format, GstAjaFrameBufferFormat frame_buffer_format) {
   const FormatMapEntry* entry = NULL;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
@@ -228,15 +289,18 @@ GstCaps* gst_aja_video_format_to_caps(GstAjaVideoFormat format) {
   g_assert(entry != NULL);
 
   if (entry->aja_format != NTV2_FORMAT_UNKNOWN)
-    return gst_ntv2_video_format_to_caps(entry->aja_format);
+    return gst_ntv2_video_format_to_caps(entry->aja_format,
+                                         frame_buffer_format);
   if (entry->quad_format != NTV2_FORMAT_UNKNOWN)
-    return gst_ntv2_video_format_to_caps(entry->quad_format);
+    return gst_ntv2_video_format_to_caps(entry->quad_format,
+                                         frame_buffer_format);
 
   g_assert_not_reached();
 }
 
-bool gst_video_info_from_aja_video_format(GstVideoInfo* info,
-                                          GstAjaVideoFormat format) {
+bool gst_video_info_from_aja_video_format(
+    GstVideoInfo* info, GstAjaVideoFormat format,
+    GstAjaFrameBufferFormat frame_buffer_format) {
   const FormatMapEntry* entry = NULL;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
@@ -250,18 +314,23 @@ bool gst_video_info_from_aja_video_format(GstVideoInfo* info,
   g_assert(entry != NULL);
 
   if (entry->aja_format != NTV2_FORMAT_UNKNOWN)
-    return gst_video_info_from_ntv2_video_format(info, entry->aja_format);
+    return gst_video_info_from_ntv2_video_format(info, entry->aja_format,
+                                                 frame_buffer_format);
   if (entry->quad_format != NTV2_FORMAT_UNKNOWN)
-    return gst_video_info_from_ntv2_video_format(info, entry->quad_format);
+    return gst_video_info_from_ntv2_video_format(info, entry->quad_format,
+                                                 frame_buffer_format);
 
   g_assert_not_reached();
 }
 
-GstCaps* gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
+GstCaps* gst_ntv2_video_format_to_caps(
+    NTV2VideoFormat format, GstAjaFrameBufferFormat frame_buffer_format) {
   GstVideoInfo info;
   GstCaps* caps;
 
-  if (!gst_video_info_from_ntv2_video_format(&info, format)) return NULL;
+  if (!gst_video_info_from_ntv2_video_format(&info, format,
+                                             frame_buffer_format))
+    return NULL;
 
   caps = gst_video_info_to_caps(&info);
   if (!caps) return caps;
@@ -276,8 +345,9 @@ GstCaps* gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
   return caps;
 }
 
-bool gst_video_info_from_ntv2_video_format(GstVideoInfo* info,
-                                           NTV2VideoFormat format) {
+bool gst_video_info_from_ntv2_video_format(
+    GstVideoInfo* info, NTV2VideoFormat format,
+    GstAjaFrameBufferFormat frame_buffer_format) {
   if (format == NTV2_FORMAT_UNKNOWN) return false;
 
   NTV2Standard standard = ::GetNTV2StandardFromVideoFormat(format);
@@ -287,7 +357,9 @@ bool gst_video_info_from_ntv2_video_format(GstVideoInfo* info,
   guint fps_n, fps_d;
   ::GetFramesPerSecond(fps, fps_n, fps_d);
 
-  gst_video_info_set_format(info, GST_VIDEO_FORMAT_v210, width, height);
+  gst_video_info_set_format(
+      info, gst_aja_frame_buffer_format_to_gst_format(frame_buffer_format),
+      width, height);
   info->fps_n = fps_n;
   info->fps_d = fps_d;
   if (NTV2_IS_525_FORMAT(format)) {
@@ -316,11 +388,19 @@ bool gst_video_info_from_ntv2_video_format(GstVideoInfo* info,
   return true;
 }
 
-NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps* caps,
-                                                bool quad) {
+NTV2VideoFormat gst_ntv2_video_format_from_caps(
+    const GstCaps* caps, bool quad,
+    GstAjaFrameBufferFormat frame_buffer_format) {
   GstVideoInfo info;
 
   if (!gst_video_info_from_caps(&info, caps)) return NTV2_FORMAT_UNKNOWN;
+
+  // The frame buffer layout must match the pixel layout of the caps, the
+  // hardware never converts between them.
+  if (info.finfo->format !=
+      gst_aja_frame_buffer_format_to_gst_format(frame_buffer_format)) {
+    return NTV2_FORMAT_UNKNOWN;
+  }
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
     const FormatMapEntry& format = format_map[i];
@@ -1238,6 +1318,8 @@ void gst_aja_common_init(void) {
                               (GstPluginAPIFlags)0);
   gst_type_mark_as_plugin_api(GST_TYPE_AJA_INPUT_SOURCE, (GstPluginAPIFlags)0);
   gst_type_mark_as_plugin_api(GST_TYPE_AJA_SDI_MODE, (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_FRAME_BUFFER_FORMAT,
+                              (GstPluginAPIFlags)0);
   gst_type_mark_as_plugin_api(GST_TYPE_AJA_VIDEO_FORMAT, (GstPluginAPIFlags)0);
   gst_type_mark_as_plugin_api(GST_TYPE_AJA_AUDIO_SOURCE, (GstPluginAPIFlags)0);
   gst_type_mark_as_plugin_api(GST_TYPE_AJA_EMBEDDED_AUDIO_INPUT,

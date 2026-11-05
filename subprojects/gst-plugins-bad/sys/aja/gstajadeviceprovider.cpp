@@ -116,7 +116,7 @@ static GstDevice* gst_aja_device_new(CNTV2Card& device, guint index,
   display_name = g_strdup_printf("AJA %s (%s)", device.GetDisplayName().c_str(),
                                  is_capture ? "Source" : "Sink");
 
-  caps = gst_ntv2_supported_caps(device.GetDeviceID());
+  caps = gst_ntv2_supported_caps_any_fbf(device.GetDeviceID());
 
   properties = gst_structure_new_empty("properties");
 

@@ -191,6 +191,32 @@ typedef enum {
 G_GNUC_INTERNAL
 GType gst_aja_sdi_mode_get_type(void);
 
+/**
+ * GstAjaFrameBufferFormat:
+ * @GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV: 8-bit YUV 4:2:2 (UYVY)
+ * @GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV: 10-bit YUV 4:2:2 (v210)
+ *
+ * Frame buffer formats the hardware stores frames in.
+ *
+ * Since: 1.30
+ */
+typedef enum {
+  GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV,
+  GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV,
+} GstAjaFrameBufferFormat;
+
+#define GST_TYPE_AJA_FRAME_BUFFER_FORMAT \
+  (gst_aja_frame_buffer_format_get_type())
+G_GNUC_INTERNAL
+GType gst_aja_frame_buffer_format_get_type(void);
+
+G_GNUC_INTERNAL
+NTV2FrameBufferFormat gst_aja_frame_buffer_format_to_fbf(
+    GstAjaFrameBufferFormat format);
+G_GNUC_INTERNAL
+GstVideoFormat gst_aja_frame_buffer_format_to_gst_format(
+    GstAjaFrameBufferFormat format);
+
 typedef enum {
   GST_AJA_VIDEO_FORMAT_INVALID = -1,
   GST_AJA_VIDEO_FORMAT_AUTO,
@@ -334,21 +360,30 @@ class GstAjaNtv2DeviceLocker {
 };
 
 G_GNUC_INTERNAL
-GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id);
+GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id,
+                                 GstAjaFrameBufferFormat frame_buffer_format);
+G_GNUC_INTERNAL
+GstCaps* gst_ntv2_supported_caps_any_fbf(NTV2DeviceID device_id);
 
 G_GNUC_INTERNAL
-GstCaps* gst_ntv2_video_format_to_caps(NTV2VideoFormat format);
+GstCaps* gst_ntv2_video_format_to_caps(
+    NTV2VideoFormat format, GstAjaFrameBufferFormat frame_buffer_format);
 G_GNUC_INTERNAL
-bool gst_video_info_from_ntv2_video_format(GstVideoInfo* info,
-                                           NTV2VideoFormat format);
+bool gst_video_info_from_ntv2_video_format(
+    GstVideoInfo* info, NTV2VideoFormat format,
+    GstAjaFrameBufferFormat frame_buffer_format);
 G_GNUC_INTERNAL
-NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps* caps, bool quad);
+NTV2VideoFormat gst_ntv2_video_format_from_caps(
+    const GstCaps* caps, bool quad,
+    GstAjaFrameBufferFormat frame_buffer_format);
 
 G_GNUC_INTERNAL
-GstCaps* gst_aja_video_format_to_caps(GstAjaVideoFormat format);
+GstCaps* gst_aja_video_format_to_caps(
+    GstAjaVideoFormat format, GstAjaFrameBufferFormat frame_buffer_format);
 G_GNUC_INTERNAL
-bool gst_video_info_from_aja_video_format(GstVideoInfo* info,
-                                          GstAjaVideoFormat format);
+bool gst_video_info_from_aja_video_format(
+    GstVideoInfo* info, GstAjaVideoFormat format,
+    GstAjaFrameBufferFormat frame_buffer_format);
 G_GNUC_INTERNAL
 GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps* caps);
 

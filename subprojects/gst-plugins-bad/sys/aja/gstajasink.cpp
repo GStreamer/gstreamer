@@ -77,6 +77,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_AUDIO_SYSTEM (GST_AJA_AUDIO_SYSTEM_AUTO)
 #define DEFAULT_OUTPUT_DESTINATION (GST_AJA_OUTPUT_DESTINATION_AUTO)
 #define DEFAULT_SDI_MODE (GST_AJA_SDI_MODE_SINGLE_LINK)
+#define DEFAULT_FRAME_BUFFER_FORMAT (GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV)
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_RP188 (TRUE)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_AUTO)
@@ -95,6 +96,7 @@ enum {
   PROP_AUDIO_SYSTEM,
   PROP_OUTPUT_DESTINATION,
   PROP_SDI_MODE,
+  PROP_FRAME_BUFFER_FORMAT,
   PROP_TIMECODE_INDEX,
   PROP_RP188,
   PROP_REFERENCE_SOURCE,
@@ -233,6 +235,25 @@ static void gst_aja_sink_class_init(GstAjaSinkClass* klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstAjaSink:frame-buffer-format:
+   *
+   * Frame buffer format to output. The hardware does not convert between
+   * frame buffer formats, so the format of the input caps must match the
+   * selected frame buffer format.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_FRAME_BUFFER_FORMAT,
+      g_param_spec_enum(
+          "frame-buffer-format", "Frame Buffer Format",
+          "Frame buffer format to output, must match the input caps format, "
+          "can only be changed up to the READY state",
+          GST_TYPE_AJA_FRAME_BUFFER_FORMAT, DEFAULT_FRAME_BUFFER_FORMAT,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT | GST_PARAM_MUTABLE_READY)));
+
   g_object_class_install_property(
       gobject_class, PROP_TIMECODE_INDEX,
       g_param_spec_enum(
@@ -314,7 +335,7 @@ static void gst_aja_sink_class_init(GstAjaSinkClass* klass) {
       GST_DEBUG_FUNCPTR(gst_aja_sink_propose_allocation);
   basesink_class->render = GST_DEBUG_FUNCPTR(gst_aja_sink_render);
 
-  templ_caps = gst_ntv2_supported_caps(DEVICE_ID_INVALID);
+  templ_caps = gst_ntv2_supported_caps_any_fbf(DEVICE_ID_INVALID);
   gst_element_class_add_pad_template(
       element_class,
       gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, templ_caps));
@@ -340,6 +361,7 @@ static void gst_aja_sink_init(GstAjaSink* self) {
   self->end_frame = DEFAULT_END_FRAME;
   self->audio_system_setting = DEFAULT_AUDIO_SYSTEM;
   self->output_destination = DEFAULT_OUTPUT_DESTINATION;
+  self->frame_buffer_format = DEFAULT_FRAME_BUFFER_FORMAT;
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
 #if !defined(__APPLE__)
@@ -381,6 +403,10 @@ void gst_aja_sink_set_property(GObject* object, guint property_id,
       break;
     case PROP_SDI_MODE:
       self->sdi_mode = (GstAjaSdiMode)g_value_get_enum(value);
+      break;
+    case PROP_FRAME_BUFFER_FORMAT:
+      self->frame_buffer_format =
+          (GstAjaFrameBufferFormat)g_value_get_enum(value);
       break;
     case PROP_TIMECODE_INDEX:
       self->timecode_index = (GstAjaTimecodeIndex)g_value_get_enum(value);
@@ -439,6 +465,9 @@ void gst_aja_sink_get_property(GObject* object, guint property_id,
       break;
     case PROP_SDI_MODE:
       g_value_set_enum(value, self->sdi_mode);
+      break;
+    case PROP_FRAME_BUFFER_FORMAT:
+      g_value_set_enum(value, self->frame_buffer_format);
       break;
     case PROP_TIMECODE_INDEX:
       g_value_set_enum(value, self->timecode_index);
@@ -720,9 +749,17 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
   GST_OBJECT_UNLOCK(self);
 
   bool quad_mode = (self->sdi_mode != GST_AJA_SDI_MODE_SINGLE_LINK);
-  video_format = gst_ntv2_video_format_from_caps(caps, quad_mode);
+  video_format = gst_ntv2_video_format_from_caps(caps, quad_mode,
+                                                 self->frame_buffer_format);
   if (video_format == NTV2_FORMAT_UNKNOWN) {
-    GST_ERROR_OBJECT(self, "Unsupported caps %" GST_PTR_FORMAT, caps);
+    GST_ERROR_OBJECT(
+        self,
+        "Unsupported caps %" GST_PTR_FORMAT
+        ", input format must match frame-buffer-format (%s)",
+        caps,
+        self->frame_buffer_format == GST_AJA_FRAME_BUFFER_FORMAT_8BIT_YUV
+            ? "8bit-yuv"
+            : "10bit-yuv");
     return FALSE;
   }
 
@@ -772,18 +809,22 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
                                            (NTV2Channel)(self->channel + i));
   }
 
-  if (!::NTV2DeviceCanDoFrameBufferFormat(self->device_id,
-                                          ::NTV2_FBF_10BIT_YCBCR)) {
-    GST_ERROR_OBJECT(self, "Device does not support frame buffer format %d",
-                     (int)::NTV2_FBF_10BIT_YCBCR);
+  if (!::NTV2DeviceCanDoFrameBufferFormat(
+          self->device_id,
+          gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format))) {
+    GST_ERROR_OBJECT(
+        self, "Device does not support frame buffer format %d",
+        (int)gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format));
     return FALSE;
   }
-  self->device->device->SetFrameBufferFormat(self->channel,
-                                             ::NTV2_FBF_10BIT_YCBCR);
+  self->device->device->SetFrameBufferFormat(
+      self->channel,
+      gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format));
   if (self->quad_mode) {
     for (int i = 1; i < 4; i++)
       self->device->device->SetFrameBufferFormat(
-          (NTV2Channel)(self->channel + i), ::NTV2_FBF_10BIT_YCBCR);
+          (NTV2Channel)(self->channel + i),
+          gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format));
   }
 
   NTV2ReferenceSource reference_source;
@@ -1398,9 +1439,10 @@ static GstCaps* gst_aja_sink_get_caps(GstBaseSink* bsink, GstCaps* filter) {
   GstCaps* caps;
 
   if (self->device) {
-    caps = gst_ntv2_supported_caps(self->device_id);
+    caps = gst_ntv2_supported_caps(self->device_id, self->frame_buffer_format);
   } else {
-    caps = gst_pad_get_pad_template_caps(GST_BASE_SINK_PAD(self));
+    caps =
+        gst_ntv2_supported_caps(DEVICE_ID_INVALID, self->frame_buffer_format);
   }
 
   if (filter) {
@@ -1502,10 +1544,11 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink* bsink,
       QUEUE_ITEM_TYPE_FRAME, NULL, GST_MAP_INFO_INIT, NULL, GST_MAP_INFO_INIT,
       NTV2_RP188(),          NULL, GST_MAP_INFO_INIT, NULL, GST_MAP_INFO_INIT};
 
-  guint video_buffer_size = ::GetVideoActiveSize(
-      self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
-  NTV2FormatDescriptor format_desc(self->video_format, ::NTV2_FBF_10BIT_YCBCR,
-                                   self->vanc_mode);
+  const NTV2FrameBufferFormat fbf =
+      gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format);
+  guint video_buffer_size =
+      ::GetVideoActiveSize(self->video_format, fbf, self->vanc_mode);
+  NTV2FormatDescriptor format_desc(self->video_format, fbf, self->vanc_mode);
 
   meta = gst_buffer_get_aja_audio_meta(buffer);
   tc_meta = gst_buffer_get_video_time_code_meta(buffer);
@@ -1562,7 +1605,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink* bsink,
     guint size = format_desc.GetVisibleRasterBytes();
 
     if (offset != 0)
-      ::SetRasterLinesBlack(::NTV2_FBF_10BIT_YCBCR, item.video_map.data,
+      ::SetRasterLinesBlack(fbf, item.video_map.data,
                             format_desc.GetBytesPerRow(),
                             format_desc.GetFirstActiveLine());
     memcpy(item.video_map.data + offset,

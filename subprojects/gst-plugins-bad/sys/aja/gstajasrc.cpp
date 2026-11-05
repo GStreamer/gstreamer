@@ -82,6 +82,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_AUDIO_SYSTEM (GST_AJA_AUDIO_SYSTEM_AUTO)
 #define DEFAULT_INPUT_SOURCE (GST_AJA_INPUT_SOURCE_AUTO)
 #define DEFAULT_SDI_MODE (GST_AJA_SDI_MODE_SINGLE_LINK)
+#define DEFAULT_FRAME_BUFFER_FORMAT (GST_AJA_FRAME_BUFFER_FORMAT_10BIT_YUV)
 #define DEFAULT_AUDIO_SOURCE (GST_AJA_AUDIO_SOURCE_EMBEDDED)
 #define DEFAULT_EMBEDDED_AUDIO_INPUT (GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO)
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
@@ -104,6 +105,7 @@ enum {
   PROP_AUDIO_SYSTEM,
   PROP_INPUT_SOURCE,
   PROP_SDI_MODE,
+  PROP_FRAME_BUFFER_FORMAT,
   PROP_AUDIO_SOURCE,
   PROP_EMBEDDED_AUDIO_INPUT,
   PROP_TIMECODE_INDEX,
@@ -314,6 +316,25 @@ static void gst_aja_src_class_init(GstAjaSrcClass* klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstAjaSrc:frame-buffer-format:
+   *
+   * Frame buffer format to capture in. The hardware does not convert
+   * between frame buffer formats, so the format of the caps must match the
+   * selected frame buffer format.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_FRAME_BUFFER_FORMAT,
+      g_param_spec_enum(
+          "frame-buffer-format", "Frame Buffer Format",
+          "Frame buffer format to capture in, can only be changed up to the "
+          "READY state",
+          GST_TYPE_AJA_FRAME_BUFFER_FORMAT, DEFAULT_FRAME_BUFFER_FORMAT,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT | GST_PARAM_MUTABLE_READY)));
+
   g_object_class_install_property(
       gobject_class, PROP_AUDIO_SOURCE,
       g_param_spec_enum(
@@ -437,7 +458,7 @@ static void gst_aja_src_class_init(GstAjaSrcClass* klass) {
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR(gst_aja_src_create);
 
-  templ_caps = gst_ntv2_supported_caps(DEVICE_ID_INVALID);
+  templ_caps = gst_ntv2_supported_caps_any_fbf(DEVICE_ID_INVALID);
   gst_element_class_add_pad_template(
       element_class,
       gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -466,6 +487,7 @@ static void gst_aja_src_init(GstAjaSrc* self) {
   self->video_format_setting = DEFAULT_VIDEO_FORMAT;
   self->audio_system_setting = DEFAULT_AUDIO_SYSTEM;
   self->input_source = DEFAULT_INPUT_SOURCE;
+  self->frame_buffer_format = DEFAULT_FRAME_BUFFER_FORMAT;
   self->audio_source = DEFAULT_AUDIO_SOURCE;
   self->embedded_audio_input = DEFAULT_EMBEDDED_AUDIO_INPUT;
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
@@ -517,6 +539,10 @@ void gst_aja_src_set_property(GObject* object, guint property_id,
       break;
     case PROP_SDI_MODE:
       self->sdi_mode = (GstAjaSdiMode)g_value_get_enum(value);
+      break;
+    case PROP_FRAME_BUFFER_FORMAT:
+      self->frame_buffer_format =
+          (GstAjaFrameBufferFormat)g_value_get_enum(value);
       break;
     case PROP_AUDIO_SOURCE:
       self->audio_source = (GstAjaAudioSource)g_value_get_enum(value);
@@ -586,6 +612,9 @@ void gst_aja_src_get_property(GObject* object, guint property_id, GValue* value,
       break;
     case PROP_SDI_MODE:
       g_value_set_enum(value, self->sdi_mode);
+      break;
+    case PROP_FRAME_BUFFER_FORMAT:
+      g_value_set_enum(value, self->frame_buffer_format);
       break;
     case PROP_AUDIO_SOURCE:
       g_value_set_enum(value, self->audio_source);
@@ -1147,8 +1176,8 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
     return FALSE;
   }
 
-  gst_video_info_from_ntv2_video_format(&self->configured_info,
-                                        self->video_format);
+  gst_video_info_from_ntv2_video_format(
+      &self->configured_info, self->video_format, self->frame_buffer_format);
 
   if (self->quad_mode) {
     if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
@@ -1226,17 +1255,21 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
     return FALSE;
   }
 
-  if (!::NTV2DeviceCanDoFrameBufferFormat(self->device_id,
-                                          ::NTV2_FBF_10BIT_YCBCR)) {
-    GST_ERROR_OBJECT(self, "Device does not support frame buffer format %d",
-                     (int)::NTV2_FBF_10BIT_YCBCR);
+  if (!::NTV2DeviceCanDoFrameBufferFormat(
+          self->device_id,
+          gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format))) {
+    GST_ERROR_OBJECT(
+        self, "Device does not support frame buffer format %d",
+        (int)gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format));
     return FALSE;
   }
 
-  if (!self->device->device->SetFrameBufferFormat(self->channel,
-                                                  ::NTV2_FBF_10BIT_YCBCR)) {
-    GST_ERROR_OBJECT(self, "Failed configuring frame buffer format %d",
-                     (int)::NTV2_FBF_10BIT_YCBCR);
+  if (!self->device->device->SetFrameBufferFormat(
+          self->channel,
+          gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format))) {
+    GST_ERROR_OBJECT(
+        self, "Failed configuring frame buffer format %d",
+        (int)gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format));
     return FALSE;
   }
 
@@ -1262,7 +1295,8 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
   if (self->quad_mode) {
     for (int i = 1; i < 4; i++)
       self->device->device->SetFrameBufferFormat(
-          (NTV2Channel)(self->channel + i), ::NTV2_FBF_10BIT_YCBCR);
+          (NTV2Channel)(self->channel + i),
+          gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format));
   }
 
   self->device->device->DMABufferAutoLock(false, true, 0);
@@ -1759,7 +1793,9 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
   self->device->device->SetRP188SourceFilter(self->channel, 0xff);
 
   guint video_buffer_size = ::GetVideoActiveSize(
-      self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
+      self->video_format,
+      gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format),
+      self->vanc_mode);
 
   self->buffer_pool = gst_buffer_pool_new();
   GstStructure* config = gst_buffer_pool_get_config(self->buffer_pool);
@@ -1967,16 +2003,17 @@ static GstCaps* gst_aja_src_get_caps(GstBaseSrc* bsrc, GstCaps* filter) {
   GstCaps* caps;
 
   if (self->device) {
-    caps = gst_ntv2_supported_caps(self->device_id);
+    caps = gst_ntv2_supported_caps(self->device_id, self->frame_buffer_format);
   } else {
-    caps = gst_pad_get_pad_template_caps(GST_BASE_SRC_PAD(self));
+    caps =
+        gst_ntv2_supported_caps(DEVICE_ID_INVALID, self->frame_buffer_format);
   }
 
   // Intersect with the configured video format if any to constrain the caps
   // further.
   if (self->video_format_setting != GST_AJA_VIDEO_FORMAT_AUTO) {
-    GstCaps* configured_caps =
-        gst_aja_video_format_to_caps(self->video_format_setting);
+    GstCaps* configured_caps = gst_aja_video_format_to_caps(
+        self->video_format_setting, self->frame_buffer_format);
 
     if (configured_caps) {
       GstCaps* tmp;
@@ -2215,8 +2252,10 @@ next_item:
   } else if (self->vanc_mode != ::NTV2_VANCMODE_OFF) {
     GstMapInfo map;
 
-    NTV2FormatDescriptor format_desc(self->video_format, ::NTV2_FBF_10BIT_YCBCR,
-                                     self->vanc_mode);
+    NTV2FormatDescriptor format_desc(
+        self->video_format,
+        gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format),
+        self->vanc_mode);
 
     gst_buffer_map(*buffer, &map, GST_MAP_READ);
     NTV2_POINTER ptr(map.data, map.size);
@@ -2408,8 +2447,8 @@ next_item:
       GST_TRACE_OBJECT(self, "Got valid VPID %s", os.str().c_str());
     }
 
-    if (gst_video_info_from_ntv2_video_format(&info,
-                                              item.frame.detected_format)) {
+    if (gst_video_info_from_ntv2_video_format(&info, item.frame.detected_format,
+                                              self->frame_buffer_format)) {
       switch (vpid.GetTransferCharacteristics()) {
         default:
         case NTV2_VPID_TC_SDR_TV:
@@ -2470,8 +2509,8 @@ next_item:
   } else {
     GstVideoInfo info;
 
-    if (gst_video_info_from_ntv2_video_format(&info,
-                                              item.frame.detected_format)) {
+    if (gst_video_info_from_ntv2_video_format(&info, item.frame.detected_format,
+                                              self->frame_buffer_format)) {
       // Widescreen PAL/NTSC
       if (aspect_ratio_flag && info.height == 486) {
         info.par_n = 40;
@@ -3074,7 +3113,8 @@ restart:
       if (anc_buffer2)
         gst_buffer_map(anc_buffer2, &anc_map2, GST_MAP_READWRITE);
 
-      transfer.acFrameBufferFormat = ::NTV2_FBF_10BIT_YCBCR;
+      transfer.acFrameBufferFormat =
+          gst_aja_frame_buffer_format_to_fbf(self->frame_buffer_format);
 
       transfer.SetVideoBuffer((ULWord*)video_map.data, video_map.size);
       transfer.SetAudioBuffer((ULWord*)audio_map.data, audio_map.size);
