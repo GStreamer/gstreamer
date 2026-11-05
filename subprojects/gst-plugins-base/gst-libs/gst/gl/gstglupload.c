@@ -42,13 +42,9 @@
 #include <gst/allocators/gstdmabuf.h>
 #include <gst/allocators/gstudmabufallocator.h>
 #include <gst/video/gstvideodmabufpool.h>
-#ifdef HAVE_LIBDRM
-#include <drm_fourcc.h>
 #endif
-#else
-/* to avoid ifdef in _gst_gl_upload_set_caps_unlocked() */
-#define DRM_FORMAT_MOD_LINEAR  0ULL
-#endif
+
+#include "ext/drm_fourcc.h"
 
 #if GST_GL_HAVE_VIV_DIRECTVIV
 #include <gst/allocators/gstphysmemory.h>

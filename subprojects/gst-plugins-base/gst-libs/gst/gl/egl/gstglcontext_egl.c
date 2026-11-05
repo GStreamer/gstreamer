@@ -57,13 +57,7 @@
 #include "../viv-fb/gstglwindow_viv_fb_egl.h"
 #endif
 
-#if GST_GL_HAVE_DMABUF
-#ifdef HAVE_LIBDRM
-#include <drm_fourcc.h>
-#endif
-#else
-#define DRM_FORMAT_MOD_LINEAR  0ULL
-#endif
+#include "ext/drm_fourcc.h"
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 

@@ -35,6 +35,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/video-overlay-composition.h>
 #include <string.h>
+#include "ext/drm_fourcc.h"
 
 /* These are from the current/old videotestsrc; we check our new public API
  * in libgstvideo against the old one to make sure the sizes and offsets
@@ -4810,8 +4811,8 @@ GST_START_TEST (test_info_dma_drm)
   fail_unless (gst_video_info_from_caps (&info, caps));
   fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_DMA_DRM);
   fail_unless (gst_video_info_dma_drm_from_caps (&drm_info, caps));
-  fail_unless (drm_info.drm_fourcc == 0x3231564e
-      && drm_info.drm_modifier == 0x100000000000002);
+  fail_unless (drm_info.drm_fourcc == DRM_FORMAT_NV12
+      && drm_info.drm_modifier == I915_FORMAT_MOD_Y_TILED);
 
   fail_unless (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
   fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_DMA_DRM);
@@ -4829,8 +4830,8 @@ GST_START_TEST (test_info_dma_drm)
   fail_unless (gst_video_info_set_format (&vinfo,
           GST_VIDEO_FORMAT_NV12, 16, 16));
   drm_info.vinfo = vinfo;
-  drm_info.drm_fourcc = 0x3231564e;
-  drm_info.drm_modifier = 0x100000000000002;
+  drm_info.drm_fourcc = DRM_FORMAT_NV12;
+  drm_info.drm_modifier = I915_FORMAT_MOD_Y_TILED;
   ncaps = gst_video_info_dma_drm_to_caps (&drm_info);
   fail_unless (ncaps);
   /* remove some fields unrelated to this test. */
@@ -4842,12 +4843,13 @@ GST_START_TEST (test_info_dma_drm)
   gst_caps_unref (caps);
   gst_caps_unref (ncaps);
 
-  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo, 0));
+  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo,
+          DRM_FORMAT_MOD_LINEAR));
   fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
       GST_VIDEO_FORMAT_NV12);
 
   fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo,
-          0x100000000000002));
+          I915_FORMAT_MOD_Y_TILED));
   fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
       GST_VIDEO_FORMAT_DMA_DRM);
 }
@@ -4871,7 +4873,7 @@ GST_START_TEST (test_info_dma_drm_from_video_info)
   vinfo.par_d = 3;
 
   fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo,
-          0x100000000000002));
+          I915_FORMAT_MOD_Y_TILED));
   fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
       GST_VIDEO_FORMAT_DMA_DRM);
   fail_unless_equals_int (GST_VIDEO_INFO_PLANE_STRIDE (&drm_info.vinfo, 0), 0);
@@ -4890,7 +4892,8 @@ GST_START_TEST (test_info_dma_drm_from_video_info)
   /* Native non-linear format can be converted to linear */
   fail_unless (gst_video_info_set_format (&vinfo,
           GST_VIDEO_FORMAT_NV12_4L4, 1920, 1080));
-  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo, 0));
+  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo,
+          DRM_FORMAT_MOD_LINEAR));
   fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
       GST_VIDEO_FORMAT_NV12);
 }

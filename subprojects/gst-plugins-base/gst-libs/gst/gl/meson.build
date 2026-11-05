@@ -1120,7 +1120,7 @@ if build_gstgl
     c_args : common_args,
     cpp_args : common_args,
     objc_args : common_args + gl_objc_args,
-    include_directories : [configinc, libsinc, gl_includes],
+    include_directories : [configinc, libsinc, gl_includes, drm_fourcc_inc],
     version : libversion,
     soversion : soversion,
     darwin_versions : osxversion,

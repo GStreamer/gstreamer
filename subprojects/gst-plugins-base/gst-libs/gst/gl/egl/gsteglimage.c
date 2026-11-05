@@ -50,59 +50,10 @@
 #include "gst/gl/egl/gstglcontext_egl_private.h"
 #include "gst/gl/egl/gstgldisplay_egl.h"
 
+#include "ext/drm_fourcc.h"
+
 #if GST_GL_HAVE_DMABUF
 #include <gst/allocators/gstdmabuf.h>
-#ifdef HAVE_LIBDRM
-#include <drm_fourcc.h>
-#endif
-
-#ifndef DRM_FORMAT_R8
-#define DRM_FORMAT_R8 fourcc_code('R', '8', ' ', ' ')
-#endif
-
-#ifndef DRM_FORMAT_RG88
-#define DRM_FORMAT_RG88 fourcc_code('R', 'G', '8', '8')
-#endif
-
-#ifndef DRM_FORMAT_GR88
-#define DRM_FORMAT_GR88 fourcc_code('G', 'R', '8', '8')
-#endif
-
-#ifndef DRM_FORMAT_NV24
-#define DRM_FORMAT_NV24 fourcc_code('N', 'V', '2', '4')
-#endif
-#endif
-
-#ifndef DRM_FORMAT_BGRA1010102
-#define DRM_FORMAT_BGRA1010102  fourcc_code('B', 'A', '3', '0')
-#endif
-
-#ifndef DRM_FORMAT_RGBA1010102
-#define DRM_FORMAT_RGBA1010102  fourcc_code('R', 'A', '3', '0')
-#endif
-
-#ifndef DRM_FORMAT_R16
-#define DRM_FORMAT_R16          fourcc_code('R', '1', '6', ' ')
-#endif
-
-#ifndef DRM_FORMAT_GR1616
-#define DRM_FORMAT_GR1616       fourcc_code('G', 'R', '3', '2')
-#endif
-
-#ifndef DRM_FORMAT_RG1616
-#define DRM_FORMAT_RG1616       fourcc_code('R', 'G', '3', '2')
-#endif
-
-#ifndef DRM_FORMAT_ABGR2101010
-#define DRM_FORMAT_ABGR2101010    fourcc_code('A', 'B', '3', '0')
-#endif
-
-#ifndef DRM_FORMAT_RGBA1010102
-#define DRM_FORMAT_RGBA1010102    fourcc_code('R', 'A', '3', '0')
-#endif
-
-#ifndef DRM_FORMAT_ABGR16161616
-#define DRM_FORMAT_ABGR16161616   fourcc_code('A', 'B', '4', '8')
 #endif
 
 #ifndef EGL_LINUX_DMA_BUF_EXT
@@ -147,10 +98,6 @@
 
 #ifndef EGL_DMA_BUF_PLANE2_PITCH_EXT
 #define EGL_DMA_BUF_PLANE2_PITCH_EXT 0x327A
-#endif
-
-#ifndef DRM_FORMAT_MOD_LINEAR
-#define DRM_FORMAT_MOD_LINEAR 0ULL
 #endif
 
 #ifndef EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT

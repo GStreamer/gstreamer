@@ -48,11 +48,7 @@
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gstglcontext_egl_private.h"
 #include "egl/gsteglimage.h"
-#if GST_GL_HAVE_DMABUF
-#ifdef HAVE_LIBDRM
-#include <drm_fourcc.h>
-#endif
-#endif
+#include "ext/drm_fourcc.h"
 #endif
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
