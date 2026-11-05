@@ -3440,7 +3440,8 @@ gst_video_decoder_release_frame (GstVideoDecoder * dec,
 
 /* called with STREAM_LOCK */
 static void
-gst_video_decoder_post_qos_drop (GstVideoDecoder * dec, GstClockTime timestamp)
+gst_video_decoder_post_qos_drop (GstVideoDecoder * dec, GstClockTime timestamp,
+    GstClockTime duration)
 {
   GstClockTime stream_time, jitter, earliest_time, qostime;
   GstSegment *segment;
@@ -3463,7 +3464,7 @@ gst_video_decoder_post_qos_drop (GstVideoDecoder * dec, GstClockTime timestamp)
   jitter = GST_CLOCK_DIFF (qostime, earliest_time);
   qos_msg =
       gst_message_new_qos (GST_OBJECT_CAST (dec), FALSE, qostime, stream_time,
-      timestamp, GST_CLOCK_TIME_NONE);
+      timestamp, duration);
   gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
   gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
       dec->priv->processed, dec->priv->dropped);
@@ -3497,7 +3498,7 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
   GST_DEBUG_OBJECT (dec, "dropping frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->pts));
 
-  gst_video_decoder_post_qos_drop (dec, frame->pts);
+  gst_video_decoder_post_qos_drop (dec, frame->pts, frame->duration);
 
   /* now free the frame */
   gst_video_decoder_release_frame (dec, frame);
@@ -3920,7 +3921,8 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
           GST_TIME_FORMAT " earliest_time:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (start), GST_TIME_ARGS (deadline),
           GST_TIME_ARGS (priv->earliest_time));
-      gst_video_decoder_post_qos_drop (decoder, cstart);
+      gst_video_decoder_post_qos_drop (decoder, cstart,
+          GST_BUFFER_DURATION (buf));
       gst_buffer_unref (buf);
       priv->discont = TRUE;
       goto done;
