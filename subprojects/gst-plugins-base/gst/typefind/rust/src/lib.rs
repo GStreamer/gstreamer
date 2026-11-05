@@ -21,8 +21,10 @@ mod mpeg;
 mod startcode;
 mod subtitles;
 mod typefindfunctions;
-// The shared MIME database reader is not wired into plugin registration
-// yet; it builds and is exercised by its own unit tests.
+// Vendored shared-MIME reader (see the module docs). The finder uses only
+// the content-sniffing entry point; the rest of the API is kept whole from
+// upstream xdg-mime for fidelity and is covered by this module's tests, so
+// it is not dead in intent — only from the non-test build's single call site.
 #[allow(dead_code)]
 mod xdg_mime;
 mod xml;

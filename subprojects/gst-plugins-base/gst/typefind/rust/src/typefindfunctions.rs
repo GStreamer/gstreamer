@@ -18,6 +18,7 @@ use bindings::{GstPlugin, gboolean, gst_caps_from_string, gst_caps_unref, gst_ty
 use std::ffi::{CStr, CString};
 use std::num::NonZeroU64;
 use std::ptr;
+use std::sync::OnceLock;
 
 use crate::audio::{
     AacFraming, Ac3Stream, aa_probe, aac_probe, ac3_probe, ac4_probe, dts_probe, mod_probe,
@@ -32,6 +33,7 @@ use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::mpeg::{mpeg_sys_probe, mpeg_ts_probe, mpeg_video_probe, mpeg4_video_probe};
 use crate::subtitles;
+use crate::xdg_mime::SharedMimeInfo;
 use crate::xml::{XmlProbe, xml_probe};
 #[allow(unused_imports)]
 use bindings::{
@@ -3276,7 +3278,61 @@ const FEATURES: &[Feature] = &[
         "m4v",
         "video/mpeg, systemstream = (boolean) false"
     ),
+    // Content types from the OS-installed shared MIME database, for streams
+    // no specific finder claimed.
+    typefinder!("xdgmime-base", MARGINAL, xdgmime_type_find, none, none),
 ];
+
+/// The content-type fallback: the installed XDG shared MIME database is
+/// consulted for streams no specific finder claimed, and only non-media
+/// types are suggested — media formats are what the specific finders
+/// above are for. The suggestion is POSSIBLE, so this only beats
+/// uncertain results; it exists mainly to keep those false positives away.
+///
+/// The database is read on first use: loading the text files is cheap
+/// compared to doing it for every stream, and plugin init stays fast.
+const XDGMIME_PROBE_WINDOW: u64 = 16384;
+
+extern "C" fn xdgmime_type_find(tf: &mut TypeFind, _private: gpointer) {
+    static DB: OnceLock<SharedMimeInfo> = OnceLock::new();
+
+    let length = tf.length().map_or(XDGMIME_PROBE_WINDOW, |len| {
+        len.get().min(XDGMIME_PROBE_WINDOW)
+    });
+    let Some(data) = tf.peek_var(0, length as u32) else {
+        return;
+    };
+
+    let db = DB.get_or_init(SharedMimeInfo::new);
+    let Some((mime, _priority)) = db.get_mime_type_for_data(data) else {
+        return;
+    };
+
+    // Media types stay with the specific finders, not even at POSSIBLE.
+    if mime.starts_with("audio/") || mime.starts_with("video/") {
+        return;
+    }
+
+    // Cheap guard against names the typefind machinery cannot express.
+    let mut name = mime.bytes();
+    if !(name.next().is_some_and(|b| b.is_ascii_alphabetic())
+        && name.all(|ch| ch.is_ascii_alphanumeric() || b"/-_.:+".contains(&ch)))
+    {
+        return;
+    }
+
+    let Ok(mime) = CString::new(mime) else {
+        return;
+    };
+    unsafe {
+        bindings::gst_type_find_suggest_simple(
+            &mut tf.0,
+            Prob::POSSIBLE.get(),
+            mime.as_ptr(),
+            ptr::null::<std::os::raw::c_char>(),
+        );
+    }
+}
 
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
 #[unsafe(no_mangle)]
