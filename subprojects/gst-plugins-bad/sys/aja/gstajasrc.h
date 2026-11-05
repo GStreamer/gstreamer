@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_AJA_SRC (gst_aja_src_get_type())
 #define GST_AJA_SRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AJA_SRC, GstAjaSrc))
-#define GST_AJA_SRC_CAST(obj) ((GstAjaSrc *)obj)
+#define GST_AJA_SRC_CAST(obj) ((GstAjaSrc*)obj)
 #define GST_AJA_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AJA_SRC, GstAjaSrcClass))
 #define GST_IS_AJA_SRC(obj) \
@@ -47,7 +47,7 @@ struct _GstAjaSrc {
   // Everything below protected by queue lock
   GMutex queue_lock;
   GCond queue_cond;
-  GstVecDeque *queue;
+  GstVecDeque* queue;
   guint queue_num_frames;
   // QoS statistics in nanoseconds: processed is written on the streaming
   // thread, dropped on the capture thread
@@ -57,17 +57,17 @@ struct _GstAjaSrc {
   gboolean shutdown;
   gboolean flushing;
 
-  GstAjaNtv2Device *device;
+  GstAjaNtv2Device* device;
   NTV2DeviceID device_id;
-  GstAllocator *allocator;
-  GstBufferPool *buffer_pool;
-  GstBufferPool *audio_buffer_pool;
-  GstBufferPool *anc_buffer_pool;
+  GstAllocator* allocator;
+  GstBufferPool* buffer_pool;
+  GstBufferPool* audio_buffer_pool;
+  GstBufferPool* anc_buffer_pool;
 
-  GstClock *clock;
+  GstClock* clock;
 
   // Properties
-  gchar *device_identifier;
+  gchar* device_identifier;
   NTV2Channel channel;
   GstAjaAudioSystem audio_system_setting;
   GstAjaVideoFormat video_format_setting;
@@ -100,7 +100,7 @@ struct _GstAjaSrc {
 
   gint configured_audio_channels;
 
-  AJAThread *capture_thread;
+  AJAThread* capture_thread;
 };
 
 struct _GstAjaSrcClass {

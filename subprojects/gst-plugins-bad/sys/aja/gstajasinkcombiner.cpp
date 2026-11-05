@@ -44,8 +44,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE(
 G_DEFINE_TYPE(GstAjaSinkCombiner, gst_aja_sink_combiner, GST_TYPE_AGGREGATOR);
 #define parent_class gst_aja_sink_combiner_parent_class
 
-static void gst_aja_sink_combiner_finalize(GObject *object) {
-  GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(object);
+static void gst_aja_sink_combiner_finalize(GObject* object) {
+  GstAjaSinkCombiner* self = GST_AJA_SINK_COMBINER(object);
 
   gst_caps_replace(&self->audio_caps, NULL);
   gst_caps_replace(&self->video_caps, NULL);
@@ -53,9 +53,9 @@ static void gst_aja_sink_combiner_finalize(GObject *object) {
   G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static GstFlowReturn gst_aja_sink_combiner_aggregate(GstAggregator *aggregator,
+static GstFlowReturn gst_aja_sink_combiner_aggregate(GstAggregator* aggregator,
                                                      gboolean timeout) {
-  GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(aggregator);
+  GstAjaSinkCombiner* self = GST_AJA_SINK_COMBINER(aggregator);
   GstBuffer *video_buffer, *audio_buffer;
 
   if (gst_aggregator_pad_is_eos(GST_AGGREGATOR_PAD_CAST(self->audio_sinkpad)) &&
@@ -100,12 +100,12 @@ static GstFlowReturn gst_aja_sink_combiner_aggregate(GstAggregator *aggregator,
 
   if (!gst_pad_has_current_caps(GST_AGGREGATOR_SRC_PAD(self)) ||
       self->caps_changed) {
-    GstCaps *caps = gst_caps_copy(self->video_caps);
-    GstStructure *s;
+    GstCaps* caps = gst_caps_copy(self->video_caps);
+    GstStructure* s;
 
     s = gst_caps_get_structure(caps, 0);
     if (self->audio_caps) {
-      const GstStructure *s2;
+      const GstStructure* s2;
       gint audio_channels;
 
       s2 = gst_caps_get_structure(self->audio_caps, 0);
@@ -133,15 +133,15 @@ static GstFlowReturn gst_aja_sink_combiner_aggregate(GstAggregator *aggregator,
   return gst_aggregator_finish_buffer(GST_AGGREGATOR_CAST(self), video_buffer);
 }
 
-static gboolean gst_aja_sink_combiner_sink_event(GstAggregator *aggregator,
-                                                 GstAggregatorPad *agg_pad,
-                                                 GstEvent *event) {
-  GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(aggregator);
+static gboolean gst_aja_sink_combiner_sink_event(GstAggregator* aggregator,
+                                                 GstAggregatorPad* agg_pad,
+                                                 GstEvent* event) {
+  GstAjaSinkCombiner* self = GST_AJA_SINK_COMBINER(aggregator);
 
   switch (GST_EVENT_TYPE(event)) {
     case GST_EVENT_SEGMENT: {
       if (agg_pad == GST_AGGREGATOR_PAD_CAST(self->video_sinkpad)) {
-        const GstSegment *segment;
+        const GstSegment* segment;
 
         gst_event_parse_segment(event, &segment);
         gst_aggregator_update_segment(GST_AGGREGATOR(self), segment);
@@ -149,7 +149,7 @@ static gboolean gst_aja_sink_combiner_sink_event(GstAggregator *aggregator,
       break;
     }
     case GST_EVENT_CAPS: {
-      GstCaps *caps;
+      GstCaps* caps;
 
       gst_event_parse_caps(event, &caps);
 
@@ -171,10 +171,10 @@ static gboolean gst_aja_sink_combiner_sink_event(GstAggregator *aggregator,
       ->sink_event(aggregator, agg_pad, event);
 }
 
-static gboolean gst_aja_sink_combiner_sink_query(GstAggregator *aggregator,
-                                                 GstAggregatorPad *agg_pad,
-                                                 GstQuery *query) {
-  GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(aggregator);
+static gboolean gst_aja_sink_combiner_sink_query(GstAggregator* aggregator,
+                                                 GstAggregatorPad* agg_pad,
+                                                 GstQuery* query) {
+  GstAjaSinkCombiner* self = GST_AJA_SINK_COMBINER(aggregator);
 
   switch (GST_QUERY_TYPE(query)) {
     case GST_QUERY_CAPS: {
@@ -189,7 +189,7 @@ static gboolean gst_aja_sink_combiner_sink_query(GstAggregator *aggregator,
         caps = gst_caps_make_writable(caps);
         guint caps_size = gst_caps_get_size(caps);
         for (guint i = 0; i < caps_size; i++) {
-          GstStructure *s = gst_caps_get_structure(caps, i);
+          GstStructure* s = gst_caps_get_structure(caps, i);
           gst_structure_remove_field(s, "audio-channels");
         }
       } else {
@@ -197,7 +197,7 @@ static gboolean gst_aja_sink_combiner_sink_query(GstAggregator *aggregator,
       }
 
       if (filter) {
-        GstCaps *tmp = gst_caps_intersect(filter, caps);
+        GstCaps* tmp = gst_caps_intersect(filter, caps);
         gst_caps_unref(caps);
         caps = tmp;
       }
@@ -219,12 +219,12 @@ static gboolean gst_aja_sink_combiner_sink_query(GstAggregator *aggregator,
       ->sink_query(aggregator, agg_pad, query);
 }
 
-static gboolean gst_aja_sink_combiner_negotiate(GstAggregator *aggregator) {
+static gboolean gst_aja_sink_combiner_negotiate(GstAggregator* aggregator) {
   return TRUE;
 }
 
-static gboolean gst_aja_sink_combiner_stop(GstAggregator *aggregator) {
-  GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(aggregator);
+static gboolean gst_aja_sink_combiner_stop(GstAggregator* aggregator) {
+  GstAjaSinkCombiner* self = GST_AJA_SINK_COMBINER(aggregator);
 
   gst_caps_replace(&self->audio_caps, NULL);
   gst_caps_replace(&self->video_caps, NULL);
@@ -232,14 +232,14 @@ static gboolean gst_aja_sink_combiner_stop(GstAggregator *aggregator) {
   return TRUE;
 }
 
-static void gst_aja_sink_combiner_class_init(GstAjaSinkCombinerClass *klass) {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstAggregatorClass *aggregator_class;
+static void gst_aja_sink_combiner_class_init(GstAjaSinkCombinerClass* klass) {
+  GObjectClass* gobject_class;
+  GstElementClass* gstelement_class;
+  GstAggregatorClass* aggregator_class;
 
-  gobject_class = (GObjectClass *)klass;
-  gstelement_class = (GstElementClass *)klass;
-  aggregator_class = (GstAggregatorClass *)klass;
+  gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
+  aggregator_class = (GstAggregatorClass*)klass;
 
   gobject_class->finalize = gst_aja_sink_combiner_finalize;
 
@@ -269,8 +269,8 @@ static void gst_aja_sink_combiner_class_init(GstAjaSinkCombinerClass *klass) {
                           "AJA sink combiner");
 }
 
-static void gst_aja_sink_combiner_init(GstAjaSinkCombiner *self) {
-  GstPadTemplate *templ;
+static void gst_aja_sink_combiner_init(GstAjaSinkCombiner* self) {
+  GstPadTemplate* templ;
 
   templ = gst_static_pad_template_get(&video_sink_template);
   self->video_sinkpad =

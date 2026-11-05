@@ -25,16 +25,16 @@
 #include "gstajacommon.h"
 #include "gstajadeviceprovider.h"
 
-static GstDevice *gst_aja_device_new(CNTV2Device &device, guint index,
+static GstDevice* gst_aja_device_new(CNTV2Device& device, guint index,
                                      gboolean video);
 
 G_DEFINE_TYPE(GstAjaDeviceProvider, gst_aja_device_provider,
               GST_TYPE_DEVICE_PROVIDER);
 
-static void gst_aja_device_provider_init(GstAjaDeviceProvider *self) {}
+static void gst_aja_device_provider_init(GstAjaDeviceProvider* self) {}
 
-static GList *gst_aja_device_provider_probe(GstDeviceProvider *provider) {
-  GList *ret = NULL;
+static GList* gst_aja_device_provider_probe(GstDeviceProvider* provider) {
+  GList* ret = NULL;
 
   CNTV2Card device;
   guint device_idx = 0;
@@ -42,7 +42,8 @@ static GList *gst_aja_device_provider_probe(GstDeviceProvider *provider) {
   while (CNTV2DeviceScanner::GetDeviceAtIndex(device_idx, device)) {
     auto features = device.features();
     // Skip non-input / non-output devices
-    if (features.GetNumVideoInputs() == 0 && features.GetNumVideoOutputs() == 0) {
+    if (features.GetNumVideoInputs() == 0 &&
+        features.GetNumVideoOutputs() == 0) {
       device_idx += 1;
       continue;
     }
@@ -60,8 +61,8 @@ static GList *gst_aja_device_provider_probe(GstDeviceProvider *provider) {
 }
 
 static void gst_aja_device_provider_class_init(
-    GstAjaDeviceProviderClass *klass) {
-  GstDeviceProviderClass *dm_class = GST_DEVICE_PROVIDER_CLASS(klass);
+    GstAjaDeviceProviderClass* klass) {
+  GstDeviceProviderClass* dm_class = GST_DEVICE_PROVIDER_CLASS(klass);
 
   dm_class->probe = GST_DEBUG_FUNCPTR(gst_aja_device_provider_probe);
 
@@ -73,12 +74,12 @@ static void gst_aja_device_provider_class_init(
 
 G_DEFINE_TYPE(GstAjaDevice, gst_aja_device, GST_TYPE_DEVICE);
 
-static void gst_aja_device_init(GstAjaDevice *self) {}
+static void gst_aja_device_init(GstAjaDevice* self) {}
 
-static GstElement *gst_aja_device_create_element(GstDevice *device,
-                                                 const gchar *name) {
-  GstAjaDevice *self = GST_AJA_DEVICE(device);
-  GstElement *ret = NULL;
+static GstElement* gst_aja_device_create_element(GstDevice* device,
+                                                 const gchar* name) {
+  GstAjaDevice* self = GST_AJA_DEVICE(device);
+  GstElement* ret = NULL;
 
   if (self->is_capture) {
     ret = gst_element_factory_make("ajasrc", name);
@@ -87,7 +88,7 @@ static GstElement *gst_aja_device_create_element(GstDevice *device,
   }
 
   if (ret) {
-    gchar *device_identifier = g_strdup_printf("%u", self->device_index);
+    gchar* device_identifier = g_strdup_printf("%u", self->device_index);
 
     g_object_set(ret, "device-identifier", device_identifier, NULL);
     g_free(device_identifier);
@@ -96,20 +97,20 @@ static GstElement *gst_aja_device_create_element(GstDevice *device,
   return ret;
 }
 
-static void gst_aja_device_class_init(GstAjaDeviceClass *klass) {
-  GstDeviceClass *gst_device_class = GST_DEVICE_CLASS(klass);
+static void gst_aja_device_class_init(GstAjaDeviceClass* klass) {
+  GstDeviceClass* gst_device_class = GST_DEVICE_CLASS(klass);
 
   gst_device_class->create_element =
       GST_DEBUG_FUNCPTR(gst_aja_device_create_element);
 }
 
-static GstDevice *gst_aja_device_new(CNTV2Card &device, guint index,
+static GstDevice* gst_aja_device_new(CNTV2Card& device, guint index,
                                      gboolean is_capture) {
-  GstDevice *ret;
-  gchar *display_name;
-  const gchar *device_class;
-  GstCaps *caps = NULL;
-  GstStructure *properties;
+  GstDevice* ret;
+  gchar* display_name;
+  const gchar* device_class;
+  GstCaps* caps = NULL;
+  GstStructure* properties;
 
   device_class = is_capture ? "Audio/Video/Source" : "Audio/Video/Sink";
   display_name = g_strdup_printf("AJA %s (%s)", device.GetDisplayName().c_str(),

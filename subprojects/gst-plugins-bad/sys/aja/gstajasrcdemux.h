@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_AJA_SRC_DEMUX (gst_aja_src_demux_get_type())
 #define GST_AJA_SRC_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AJA_SRC_DEMUX, GstAjaSrcDemux))
-#define GST_AJA_SRC_DEMUX_CAST(obj) ((GstAjaSrcDemux *)obj)
+#define GST_AJA_SRC_DEMUX_CAST(obj) ((GstAjaSrcDemux*)obj)
 #define GST_AJA_SRC_DEMUX_CLASS(klass)                      \
   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AJA_SRC_DEMUX, \
                            GstAjaSrcDemuxClass))
@@ -45,7 +45,7 @@ typedef struct _GstAjaSrcDemuxClass GstAjaSrcDemuxClass;
 struct _GstAjaSrcDemux {
   GstElement parent;
 
-  GstPad *sink;
+  GstPad* sink;
   GstPad *video_src, *audio_src;
 };
 

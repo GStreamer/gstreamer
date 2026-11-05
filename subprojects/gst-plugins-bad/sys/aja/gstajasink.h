@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_AJA_SINK (gst_aja_sink_get_type())
 #define GST_AJA_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AJA_SINK, GstAjaSink))
-#define GST_AJA_SINK_CAST(obj) ((GstAjaSink *)obj)
+#define GST_AJA_SINK_CAST(obj) ((GstAjaSink*)obj)
 #define GST_AJA_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AJA_SINK, GstAjaSinkClass))
 #define GST_IS_AJA_SINK(obj) \
@@ -47,7 +47,7 @@ struct _GstAjaSink {
   // Everything below protected by queue lock
   GMutex queue_lock;
   GCond queue_cond;
-  GstVecDeque *queue;
+  GstVecDeque* queue;
   gboolean eos;
   gboolean playing;
   gboolean shutdown;
@@ -56,17 +56,17 @@ struct _GstAjaSink {
   GCond drain_cond;
   gboolean flushing;
 
-  GstAjaNtv2Device *device;
+  GstAjaNtv2Device* device;
   NTV2DeviceID device_id;
-  GstAllocator *allocator;
+  GstAllocator* allocator;
 
   // Only allocated on demand
-  GstBufferPool *buffer_pool;
-  GstBufferPool *audio_buffer_pool;
-  GstBufferPool *anc_buffer_pool;
+  GstBufferPool* buffer_pool;
+  GstBufferPool* audio_buffer_pool;
+  GstBufferPool* anc_buffer_pool;
 
   // Properties
-  gchar *device_identifier;
+  gchar* device_identifier;
   NTV2Channel channel;
   guint queue_size;
   guint start_frame, end_frame;
@@ -90,13 +90,13 @@ struct _GstAjaSink {
   bool quad_mode;
   NTV2VANCMode vanc_mode;
   guint32 f2_start_line;
-  NTV2TCIndexes *tc_indexes;
+  NTV2TCIndexes* tc_indexes;
 
-  GstCaps *configured_caps;
+  GstCaps* configured_caps;
   GstVideoInfo configured_info;
   gint configured_audio_channels;
 
-  AJAThread *output_thread;
+  AJAThread* output_thread;
 };
 
 struct _GstAjaSinkClass {

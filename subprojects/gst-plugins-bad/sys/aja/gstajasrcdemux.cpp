@@ -38,23 +38,23 @@ static GstStaticPadTemplate audio_src_template = GST_STATIC_PAD_TEMPLATE(
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE(
     "sink", GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS("video/x-raw"));
 
-static GstFlowReturn gst_aja_src_demux_sink_chain(GstPad *pad,
-                                                  GstObject *parent,
-                                                  GstBuffer *buffer);
-static gboolean gst_aja_src_demux_sink_event(GstPad *pad, GstObject *parent,
-                                             GstEvent *event);
-static gboolean gst_aja_src_demux_audio_src_query(GstPad *pad,
-                                                  GstObject *parent,
-                                                  GstQuery *query);
-static gboolean gst_aja_src_demux_video_src_query(GstPad *pad,
-                                                  GstObject *parent,
-                                                  GstQuery *query);
+static GstFlowReturn gst_aja_src_demux_sink_chain(GstPad* pad,
+                                                  GstObject* parent,
+                                                  GstBuffer* buffer);
+static gboolean gst_aja_src_demux_sink_event(GstPad* pad, GstObject* parent,
+                                             GstEvent* event);
+static gboolean gst_aja_src_demux_audio_src_query(GstPad* pad,
+                                                  GstObject* parent,
+                                                  GstQuery* query);
+static gboolean gst_aja_src_demux_video_src_query(GstPad* pad,
+                                                  GstObject* parent,
+                                                  GstQuery* query);
 
 #define parent_class gst_aja_src_demux_parent_class
 G_DEFINE_TYPE(GstAjaSrcDemux, gst_aja_src_demux, GST_TYPE_ELEMENT);
 
-static void gst_aja_src_demux_class_init(GstAjaSrcDemuxClass *klass) {
-  GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
+static void gst_aja_src_demux_class_init(GstAjaSrcDemuxClass* klass) {
+  GstElementClass* element_class = GST_ELEMENT_CLASS(klass);
 
   gst_element_class_add_static_pad_template(element_class, &sink_template);
   gst_element_class_add_static_pad_template(element_class, &video_src_template);
@@ -69,7 +69,7 @@ static void gst_aja_src_demux_class_init(GstAjaSrcDemuxClass *klass) {
                           "AJA source demuxer");
 }
 
-static void gst_aja_src_demux_init(GstAjaSrcDemux *self) {
+static void gst_aja_src_demux_init(GstAjaSrcDemux* self) {
   self->sink = gst_pad_new_from_static_template(&sink_template, "sink");
   gst_pad_set_chain_function(self->sink,
                              GST_DEBUG_FUNCPTR(gst_aja_src_demux_sink_chain));
@@ -90,16 +90,16 @@ static void gst_aja_src_demux_init(GstAjaSrcDemux *self) {
   gst_element_add_pad(GST_ELEMENT(self), self->video_src);
 }
 
-static GstFlowReturn gst_aja_src_demux_sink_chain(GstPad *pad,
-                                                  GstObject *parent,
-                                                  GstBuffer *buffer) {
-  GstAjaSrcDemux *self = GST_AJA_SRC_DEMUX(parent);
-  GstAjaAudioMeta *meta = gst_buffer_get_aja_audio_meta(buffer);
+static GstFlowReturn gst_aja_src_demux_sink_chain(GstPad* pad,
+                                                  GstObject* parent,
+                                                  GstBuffer* buffer) {
+  GstAjaSrcDemux* self = GST_AJA_SRC_DEMUX(parent);
+  GstAjaAudioMeta* meta = gst_buffer_get_aja_audio_meta(buffer);
   GstFlowReturn audio_flow_ret = GST_FLOW_OK;
   GstFlowReturn video_flow_ret = GST_FLOW_OK;
 
   if (meta) {
-    GstBuffer *audio_buffer;
+    GstBuffer* audio_buffer;
     buffer = gst_buffer_make_writable(buffer);
     meta = gst_buffer_get_aja_audio_meta(buffer);
     audio_buffer = gst_buffer_ref(meta->buffer);
@@ -107,7 +107,7 @@ static GstFlowReturn gst_aja_src_demux_sink_chain(GstPad *pad,
 
     audio_flow_ret = gst_pad_push(self->audio_src, audio_buffer);
   } else {
-    GstEvent *event =
+    GstEvent* event =
         gst_event_new_gap(GST_BUFFER_PTS(buffer), GST_BUFFER_DURATION(buffer));
     gst_pad_push_event(self->audio_src, event);
   }
@@ -129,14 +129,14 @@ static GstFlowReturn gst_aja_src_demux_sink_chain(GstPad *pad,
   return GST_FLOW_OK;
 }
 
-static gboolean gst_aja_src_demux_sink_event(GstPad *pad, GstObject *parent,
-                                             GstEvent *event) {
-  GstAjaSrcDemux *self = GST_AJA_SRC_DEMUX(parent);
+static gboolean gst_aja_src_demux_sink_event(GstPad* pad, GstObject* parent,
+                                             GstEvent* event) {
+  GstAjaSrcDemux* self = GST_AJA_SRC_DEMUX(parent);
 
   switch (GST_EVENT_TYPE(event)) {
     case GST_EVENT_CAPS: {
-      GstCaps *caps;
-      GstStructure *s;
+      GstCaps* caps;
+      GstStructure* s;
       GstAudioInfo audio_info;
       gint audio_channels = 0;
 
@@ -169,10 +169,10 @@ static gboolean gst_aja_src_demux_sink_event(GstPad *pad, GstObject *parent,
   }
 }
 
-static gboolean gst_aja_src_demux_audio_src_query(GstPad *pad,
-                                                  GstObject *parent,
-                                                  GstQuery *query) {
-  GstAjaSrcDemux *self = GST_AJA_SRC_DEMUX(parent);
+static gboolean gst_aja_src_demux_audio_src_query(GstPad* pad,
+                                                  GstObject* parent,
+                                                  GstQuery* query) {
+  GstAjaSrcDemux* self = GST_AJA_SRC_DEMUX(parent);
 
   switch (GST_QUERY_TYPE(query)) {
     case GST_QUERY_CAPS: {
@@ -186,13 +186,13 @@ static gboolean gst_aja_src_demux_audio_src_query(GstPad *pad,
         guint n;
         GstAudioInfo audio_info;
         gint audio_channels = 0;
-        GstCaps *tmp;
+        GstCaps* tmp;
 
         GST_DEBUG_OBJECT(pad, "Got upstream caps %" GST_PTR_FORMAT, caps);
 
         n = gst_caps_get_size(caps);
         for (guint i = 0; i < n; i++) {
-          GstStructure *s = gst_caps_get_structure(caps, i);
+          GstStructure* s = gst_caps_get_structure(caps, i);
           gint tmp;
 
           if (!gst_structure_get_int(s, "audio-channels", &tmp)) {
@@ -228,7 +228,7 @@ static gboolean gst_aja_src_demux_audio_src_query(GstPad *pad,
       }
 
       if (filter) {
-        GstCaps *tmp =
+        GstCaps* tmp =
             gst_caps_intersect_full(filter, caps, GST_CAPS_INTERSECT_FIRST);
         gst_caps_unref(caps);
         caps = tmp;
@@ -244,10 +244,10 @@ static gboolean gst_aja_src_demux_audio_src_query(GstPad *pad,
   }
 }
 
-static gboolean gst_aja_src_demux_video_src_query(GstPad *pad,
-                                                  GstObject *parent,
-                                                  GstQuery *query) {
-  GstAjaSrcDemux *self = GST_AJA_SRC_DEMUX(parent);
+static gboolean gst_aja_src_demux_video_src_query(GstPad* pad,
+                                                  GstObject* parent,
+                                                  GstQuery* query) {
+  GstAjaSrcDemux* self = GST_AJA_SRC_DEMUX(parent);
 
   switch (GST_QUERY_TYPE(query)) {
     case GST_QUERY_CAPS: {
@@ -265,7 +265,7 @@ static gboolean gst_aja_src_demux_video_src_query(GstPad *pad,
         caps = gst_caps_make_writable(caps);
         n = gst_caps_get_size(caps);
         for (guint i = 0; i < n; i++) {
-          GstStructure *s = gst_caps_get_structure(caps, i);
+          GstStructure* s = gst_caps_get_structure(caps, i);
           gst_structure_remove_field(s, "audio-channels");
         }
       } else {
@@ -275,7 +275,7 @@ static gboolean gst_aja_src_demux_video_src_query(GstPad *pad,
       }
 
       if (filter) {
-        GstCaps *tmp =
+        GstCaps* tmp =
             gst_caps_intersect_full(filter, caps, GST_CAPS_INTERSECT_FIRST);
         gst_caps_unref(caps);
         caps = tmp;

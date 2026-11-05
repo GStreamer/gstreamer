@@ -27,18 +27,24 @@
  * Output a 1080p2997 test audio/video stream
  *
  * ```sh
- * gst-launch-1.0 videotestsrc pattern=ball ! video/x-raw,format=v210,width=1920,height=1080,framerate=30000/1001,interlace-mode=progressive ! timeoverlay ! timecodestamper ! combiner.video \
- *     audiotestsrc freq=440 ! audio/x-raw,format=S32LE,rate=48000,channels=16 ! audiobuffersplit output-buffer-duration=1/30 ! combiner.audio \
+ * gst-launch-1.0 videotestsrc pattern=ball !
+ * video/x-raw,format=v210,width=1920,height=1080,framerate=30000/1001,interlace-mode=progressive
+ * ! timeoverlay ! timecodestamper ! combiner.video \
+ *     audiotestsrc freq=440 ! audio/x-raw,format=S32LE,rate=48000,channels=16 !
+ * audiobuffersplit output-buffer-duration=1/30 ! combiner.audio \
  *     ajasinkcombiner name=combiner ! ajasink channel=0
  * ```
  *
  * Capture 1080p30 audio/video and directly output it again on the same card
  *
  * ```sh
- * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1 audio-system=2 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.video \
- *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.audio \
- *     ajasinkcombiner name=c ! ajasink channel=0 reference-source=input-1
+ * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1
+ * audio-system=2 ! ajasrcdemux name=d \
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! c.video \
+ *     d.audio ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! c.audio \ ajasinkcombiner name=c ! ajasink
+ * channel=0 reference-source=input-1
  * ```
  *
  * Since: 1.24
@@ -111,48 +117,48 @@ typedef struct {
   QueueItemType type;
 
   // For FRAME
-  GstBuffer *video_buffer;
+  GstBuffer* video_buffer;
   GstMapInfo video_map;
-  GstBuffer *audio_buffer;
+  GstBuffer* audio_buffer;
   GstMapInfo audio_map;
   NTV2_RP188 tc;
-  GstBuffer *anc_buffer;
+  GstBuffer* anc_buffer;
   GstMapInfo anc_map;
-  GstBuffer *anc_buffer2;
+  GstBuffer* anc_buffer2;
   GstMapInfo anc_map2;
 } QueueItem;
 
-static void gst_aja_sink_set_property(GObject *object, guint property_id,
-                                      const GValue *value, GParamSpec *pspec);
-static void gst_aja_sink_get_property(GObject *object, guint property_id,
-                                      GValue *value, GParamSpec *pspec);
-static void gst_aja_sink_finalize(GObject *object);
+static void gst_aja_sink_set_property(GObject* object, guint property_id,
+                                      const GValue* value, GParamSpec* pspec);
+static void gst_aja_sink_get_property(GObject* object, guint property_id,
+                                      GValue* value, GParamSpec* pspec);
+static void gst_aja_sink_finalize(GObject* object);
 
-static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps);
-static GstCaps *gst_aja_sink_get_caps(GstBaseSink *bsink, GstCaps *filter);
-static gboolean gst_aja_sink_event(GstBaseSink *bsink, GstEvent *event);
-static gboolean gst_aja_sink_propose_allocation(GstBaseSink *bsink,
-                                                GstQuery *query);
-static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink, GstBuffer *buffer);
+static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps);
+static GstCaps* gst_aja_sink_get_caps(GstBaseSink* bsink, GstCaps* filter);
+static gboolean gst_aja_sink_event(GstBaseSink* bsink, GstEvent* event);
+static gboolean gst_aja_sink_propose_allocation(GstBaseSink* bsink,
+                                                GstQuery* query);
+static GstFlowReturn gst_aja_sink_render(GstBaseSink* bsink, GstBuffer* buffer);
 
-static gboolean gst_aja_sink_open(GstAjaSink *sink);
-static gboolean gst_aja_sink_close(GstAjaSink *sink);
-static gboolean gst_aja_sink_start(GstAjaSink *sink);
-static gboolean gst_aja_sink_stop(GstAjaSink *sink);
+static gboolean gst_aja_sink_open(GstAjaSink* sink);
+static gboolean gst_aja_sink_close(GstAjaSink* sink);
+static gboolean gst_aja_sink_start(GstAjaSink* sink);
+static gboolean gst_aja_sink_stop(GstAjaSink* sink);
 
 static GstStateChangeReturn gst_aja_sink_change_state(
-    GstElement *element, GstStateChange transition);
+    GstElement* element, GstStateChange transition);
 
-static void output_thread_func(AJAThread *thread, void *data);
+static void output_thread_func(AJAThread* thread, void* data);
 
 #define parent_class gst_aja_sink_parent_class
 G_DEFINE_TYPE(GstAjaSink, gst_aja_sink, GST_TYPE_BASE_SINK);
 
-static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
-  GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
-  GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS(klass);
-  GstCaps *templ_caps;
+static void gst_aja_sink_class_init(GstAjaSinkClass* klass) {
+  GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+  GstElementClass* element_class = GST_ELEMENT_CLASS(klass);
+  GstBaseSinkClass* basesink_class = GST_BASE_SINK_CLASS(klass);
+  GstCaps* templ_caps;
 
   gobject_class->set_property = gst_aja_sink_set_property;
   gobject_class->get_property = gst_aja_sink_get_property;
@@ -322,7 +328,7 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
   GST_DEBUG_CATEGORY_INIT(gst_aja_sink_debug, "ajasink", 0, "AJA sink");
 }
 
-static void gst_aja_sink_init(GstAjaSink *self) {
+static void gst_aja_sink_init(GstAjaSink* self) {
   g_mutex_init(&self->queue_lock);
   g_cond_init(&self->queue_cond);
   g_cond_init(&self->drain_cond);
@@ -345,9 +351,9 @@ static void gst_aja_sink_init(GstAjaSink *self) {
       gst_vec_deque_new_for_struct(sizeof(QueueItem), self->queue_size);
 }
 
-void gst_aja_sink_set_property(GObject *object, guint property_id,
-                               const GValue *value, GParamSpec *pspec) {
-  GstAjaSink *self = GST_AJA_SINK(object);
+void gst_aja_sink_set_property(GObject* object, guint property_id,
+                               const GValue* value, GParamSpec* pspec) {
+  GstAjaSink* self = GST_AJA_SINK(object);
 
   switch (property_id) {
     case PROP_DEVICE_IDENTIFIER:
@@ -405,9 +411,9 @@ void gst_aja_sink_set_property(GObject *object, guint property_id,
   }
 }
 
-void gst_aja_sink_get_property(GObject *object, guint property_id,
-                               GValue *value, GParamSpec *pspec) {
-  GstAjaSink *self = GST_AJA_SINK(object);
+void gst_aja_sink_get_property(GObject* object, guint property_id,
+                               GValue* value, GParamSpec* pspec) {
+  GstAjaSink* self = GST_AJA_SINK(object);
 
   switch (property_id) {
     case PROP_DEVICE_IDENTIFIER:
@@ -463,8 +469,8 @@ void gst_aja_sink_get_property(GObject *object, guint property_id,
   }
 }
 
-void gst_aja_sink_finalize(GObject *object) {
-  GstAjaSink *self = GST_AJA_SINK(object);
+void gst_aja_sink_finalize(GObject* object) {
+  GstAjaSink* self = GST_AJA_SINK(object);
 
   g_assert(self->device == NULL);
   g_assert(gst_vec_deque_get_length(self->queue) == 0);
@@ -478,7 +484,7 @@ void gst_aja_sink_finalize(GObject *object) {
   G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static gboolean gst_aja_sink_open(GstAjaSink *self) {
+static gboolean gst_aja_sink_open(GstAjaSink* self) {
   GST_DEBUG_OBJECT(self, "Opening device");
 
   g_assert(self->device == NULL);
@@ -526,7 +532,7 @@ static gboolean gst_aja_sink_open(GstAjaSink *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_sink_close(GstAjaSink *self) {
+static gboolean gst_aja_sink_close(GstAjaSink* self) {
   gst_clear_object(&self->allocator);
   g_clear_pointer(&self->device, gst_aja_ntv2_device_unref);
   self->device_id = DEVICE_ID_INVALID;
@@ -536,7 +542,7 @@ static gboolean gst_aja_sink_close(GstAjaSink *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_sink_start(GstAjaSink *self) {
+static gboolean gst_aja_sink_start(GstAjaSink* self) {
   GST_DEBUG_OBJECT(self, "Starting");
   self->output_thread = new AJAThread();
   self->output_thread->Attach(output_thread_func, self);
@@ -552,8 +558,8 @@ static gboolean gst_aja_sink_start(GstAjaSink *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_sink_stop(GstAjaSink *self) {
-  QueueItem *item;
+static gboolean gst_aja_sink_stop(GstAjaSink* self) {
+  QueueItem* item;
 
   GST_DEBUG_OBJECT(self, "Stopping");
 
@@ -574,7 +580,7 @@ static gboolean gst_aja_sink_stop(GstAjaSink *self) {
   self->configured_audio_channels = 0;
   GST_OBJECT_UNLOCK(self);
 
-  while ((item = (QueueItem *)gst_vec_deque_pop_head_struct(self->queue))) {
+  while ((item = (QueueItem*)gst_vec_deque_pop_head_struct(self->queue))) {
     if (item->type == QUEUE_ITEM_TYPE_FRAME) {
       gst_buffer_unmap(item->video_buffer, &item->video_map);
       gst_buffer_unref(item->video_buffer);
@@ -620,8 +626,8 @@ static gboolean gst_aja_sink_stop(GstAjaSink *self) {
 }
 
 static GstStateChangeReturn gst_aja_sink_change_state(
-    GstElement *element, GstStateChange transition) {
-  GstAjaSink *self = GST_AJA_SINK(element);
+    GstElement* element, GstStateChange transition) {
+  GstAjaSink* self = GST_AJA_SINK(element);
   GstStateChangeReturn ret;
 
   switch (transition) {
@@ -666,9 +672,9 @@ static GstStateChangeReturn gst_aja_sink_change_state(
   return ret;
 }
 
-static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
-  GstAjaSink *self = GST_AJA_SINK(bsink);
-  const GstStructure *s;
+static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
+  GstAjaSink* self = GST_AJA_SINK(bsink);
+  const GstStructure* s;
   NTV2VideoFormat video_format = ::NTV2_FORMAT_UNKNOWN;
 
   GST_DEBUG_OBJECT(self, "Configuring caps %" GST_PTR_FORMAT, caps);
@@ -1387,9 +1393,9 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
   return TRUE;
 }
 
-static GstCaps *gst_aja_sink_get_caps(GstBaseSink *bsink, GstCaps *filter) {
-  GstAjaSink *self = GST_AJA_SINK(bsink);
-  GstCaps *caps;
+static GstCaps* gst_aja_sink_get_caps(GstBaseSink* bsink, GstCaps* filter) {
+  GstAjaSink* self = GST_AJA_SINK(bsink);
+  GstCaps* caps;
 
   if (self->device) {
     caps = gst_ntv2_supported_caps(self->device_id);
@@ -1398,7 +1404,7 @@ static GstCaps *gst_aja_sink_get_caps(GstBaseSink *bsink, GstCaps *filter) {
   }
 
   if (filter) {
-    GstCaps *tmp =
+    GstCaps* tmp =
         gst_caps_intersect_full(filter, caps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref(caps);
     caps = tmp;
@@ -1407,8 +1413,8 @@ static GstCaps *gst_aja_sink_get_caps(GstBaseSink *bsink, GstCaps *filter) {
   return caps;
 }
 
-static gboolean gst_aja_sink_event(GstBaseSink *bsink, GstEvent *event) {
-  GstAjaSink *self = GST_AJA_SINK(bsink);
+static gboolean gst_aja_sink_event(GstBaseSink* bsink, GstEvent* event) {
+  GstAjaSink* self = GST_AJA_SINK(bsink);
 
   switch (GST_EVENT_TYPE(event)) {
     case GST_EVENT_EOS: {
@@ -1430,11 +1436,10 @@ static gboolean gst_aja_sink_event(GstBaseSink *bsink, GstEvent *event) {
       break;
     }
     case GST_EVENT_FLUSH_STOP: {
-      QueueItem *item;
+      QueueItem* item;
 
       g_mutex_lock(&self->queue_lock);
-      while (
-          (item = (QueueItem *)gst_vec_deque_pop_head_struct(self->queue))) {
+      while ((item = (QueueItem*)gst_vec_deque_pop_head_struct(self->queue))) {
         if (item->type == QUEUE_ITEM_TYPE_FRAME) {
           gst_buffer_unmap(item->video_buffer, &item->video_map);
           gst_buffer_unref(item->video_buffer);
@@ -1468,9 +1473,9 @@ static gboolean gst_aja_sink_event(GstBaseSink *bsink, GstEvent *event) {
   return GST_BASE_SINK_CLASS(parent_class)->event(bsink, event);
 }
 
-static gboolean gst_aja_sink_propose_allocation(GstBaseSink *bsink,
-                                                GstQuery *query) {
-  GstAjaSink *self = GST_AJA_SINK(bsink);
+static gboolean gst_aja_sink_propose_allocation(GstBaseSink* bsink,
+                                                GstQuery* query) {
+  GstAjaSink* self = GST_AJA_SINK(bsink);
 
   if (self->allocator && self->vanc_mode == ::NTV2_VANCMODE_OFF) {
     GstAllocationParams params;
@@ -1486,9 +1491,9 @@ static gboolean gst_aja_sink_propose_allocation(GstBaseSink *bsink,
   return TRUE;
 }
 
-static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
-                                         GstBuffer *buffer) {
-  GstAjaSink *self = GST_AJA_SINK(bsink);
+static GstFlowReturn gst_aja_sink_render(GstBaseSink* bsink,
+                                         GstBuffer* buffer) {
+  GstAjaSink* self = GST_AJA_SINK(bsink);
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstAjaAudioMeta* meta = NULL;
   GstBuffer *item_buffer = NULL, *item_audio_buffer = NULL;
@@ -1507,7 +1512,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
   if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
       gst_buffer_n_memory(buffer) == 1) {
-    GstMemory *mem = gst_buffer_peek_memory(buffer, 0);
+    GstMemory* mem = gst_buffer_peek_memory(buffer, 0);
     gsize offset;
 
     if (gst_memory_get_sizes(mem, &offset, NULL) == video_buffer_size &&
@@ -1526,7 +1531,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
     if (!self->buffer_pool) {
       self->buffer_pool = gst_buffer_pool_new();
-      GstStructure *config = gst_buffer_pool_get_config(self->buffer_pool);
+      GstStructure* config = gst_buffer_pool_get_config(self->buffer_pool);
       gst_buffer_pool_config_set_params(config, NULL, video_buffer_size,
                                         self->queue_size, 0);
       gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
@@ -1573,7 +1578,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
   if (meta) {
     if (gst_buffer_n_memory(meta->buffer) == 1) {
-      GstMemory *mem = gst_buffer_peek_memory(meta->buffer, 0);
+      GstMemory* mem = gst_buffer_peek_memory(meta->buffer, 0);
 
       if (strcmp(mem->allocator->mem_type, GST_AJA_ALLOCATOR_MEMTYPE) == 0 &&
           GST_AJA_ALLOCATOR(mem->allocator)->device->device->GetIndexNumber() ==
@@ -1591,7 +1596,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
         guint audio_buffer_size = 1UL * 1024UL * 1024UL;
 
         self->audio_buffer_pool = gst_buffer_pool_new();
-        GstStructure *config =
+        GstStructure* config =
             gst_buffer_pool_get_config(self->audio_buffer_pool);
         gst_buffer_pool_config_set_params(config, NULL, audio_buffer_size,
                                           self->queue_size, 0);
@@ -1686,11 +1691,10 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
     }
 #endif
 
-  GstVideoCaptionMeta *caption_meta;
+  GstVideoCaptionMeta* caption_meta;
   gpointer iter = NULL;
-  while (
-      (caption_meta = (GstVideoCaptionMeta *)gst_buffer_iterate_meta_filtered(
-           buffer, &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
+  while ((caption_meta = (GstVideoCaptionMeta*)gst_buffer_iterate_meta_filtered(
+              buffer, &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
     if (caption_meta->caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_CDP) {
       if (self->cea708_line_number != -1) {
         const AJAAncillaryDataLocation kCEA708LocF1(
@@ -1743,9 +1747,9 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
   }
 
   if (self->handle_ancillary_meta) {
-    GstAncillaryMeta *anc_meta;
+    GstAncillaryMeta* anc_meta;
     iter = NULL;
-    while ((anc_meta = (GstAncillaryMeta *)gst_buffer_iterate_meta_filtered(
+    while ((anc_meta = (GstAncillaryMeta*)gst_buffer_iterate_meta_filtered(
                 buffer, &iter, GST_ANCILLARY_META_API_TYPE))) {
       const AJAAncillaryDataLocation loc(
           AJAAncillaryDataLink_A,
@@ -1780,7 +1784,7 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
         ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
       if (!self->anc_buffer_pool) {
         self->anc_buffer_pool = gst_buffer_pool_new();
-        GstStructure *config =
+        GstStructure* config =
             gst_buffer_pool_get_config(self->anc_buffer_pool);
         gst_buffer_pool_config_set_params(
             config, NULL, 8 * 1024,
@@ -1851,12 +1855,12 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
 
   g_mutex_lock(&self->queue_lock);
   while (gst_vec_deque_get_length(self->queue) >= self->queue_size) {
-    QueueItem *tmp = (QueueItem *)gst_vec_deque_pop_head_struct(self->queue);
+    QueueItem* tmp = (QueueItem*)gst_vec_deque_pop_head_struct(self->queue);
 
     if (tmp->type == QUEUE_ITEM_TYPE_FRAME) {
       GST_WARNING_OBJECT(self, "Element queue overrun, dropping old frame");
 
-      GstMessage *msg = gst_message_new_qos(
+      GstMessage* msg = gst_message_new_qos(
           GST_OBJECT_CAST(self), TRUE, GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE,
           GST_BUFFER_PTS(tmp->video_buffer),
           gst_util_uint64_scale(GST_SECOND, self->configured_info.fps_d,
@@ -1891,9 +1895,9 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
   return flow_ret;
 }
 
-static void output_thread_func(AJAThread *thread, void *data) {
-  GstAjaSink *self = GST_AJA_SINK(data);
-  GstClock *clock = NULL;
+static void output_thread_func(AJAThread* thread, void* data) {
+  GstAjaSink* self = GST_AJA_SINK(data);
+  GstClock* clock = NULL;
   guint64 frames_rendered_start = G_MAXUINT64;
   GstClockTime frames_rendered_start_time = GST_CLOCK_TIME_NONE;
   guint64 frames_dropped_last = G_MAXUINT64;
@@ -2081,7 +2085,7 @@ restart:
           status.acFramesProcessed + status.acFramesDropped,
           self->configured_info.fps_n,
           self->configured_info.fps_d * GST_SECOND);
-      GstMessage *msg = gst_message_new_qos(
+      GstMessage* msg = gst_message_new_qos(
           GST_OBJECT_CAST(self), TRUE, GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE,
           timestamp, timestamp_end - timestamp);
       gst_element_post_message(GST_ELEMENT_CAST(self), msg);
@@ -2092,7 +2096,7 @@ restart:
     if (status.GetNumAvailableOutputFrames() > 1) {
       QueueItem item, *item_p;
 
-      while ((item_p = (QueueItem *)gst_vec_deque_pop_head_struct(
+      while ((item_p = (QueueItem*)gst_vec_deque_pop_head_struct(
                   self->queue)) == NULL &&
              self->playing && !self->shutdown && !self->draining) {
         GST_DEBUG_OBJECT(
@@ -2146,18 +2150,18 @@ restart:
       if (item.tc.IsValid() && item.tc.fDBB != 0xffffffff && self->tc_indexes) {
         NTV2TimeCodes timecodes;
 
-        for (const auto &tc_index : *self->tc_indexes) {
+        for (const auto& tc_index : *self->tc_indexes) {
           timecodes[tc_index] = item.tc;
         }
         transfer.SetOutputTimeCodes(timecodes);
       }
 
-      transfer.SetVideoBuffer((ULWord *)item.video_map.data,
+      transfer.SetVideoBuffer((ULWord*)item.video_map.data,
                               item.video_map.size);
-      transfer.SetAudioBuffer((ULWord *)item.audio_map.data,
+      transfer.SetAudioBuffer((ULWord*)item.audio_map.data,
                               item.audio_map.size);
-      transfer.SetAncBuffers((ULWord *)item.anc_map.data, item.anc_map.size,
-                             (ULWord *)item.anc_map2.data, item.anc_map2.size);
+      transfer.SetAncBuffers((ULWord*)item.anc_map.data, item.anc_map.size,
+                             (ULWord*)item.anc_map2.data, item.anc_map2.size);
 
       if (!self->device->device->AutoCirculateTransfer(self->channel,
                                                        transfer)) {
@@ -2182,9 +2186,9 @@ restart:
         gst_buffer_unref(item.anc_buffer2);
       }
 
-      const AUTOCIRCULATE_TRANSFER_STATUS &transfer_status =
+      const AUTOCIRCULATE_TRANSFER_STATUS& transfer_status =
           transfer.GetTransferStatus();
-      const FRAME_STAMP &frame_stamp = transfer_status.GetFrameStamp();
+      const FRAME_STAMP& frame_stamp = transfer_status.GetFrameStamp();
 
       GST_TRACE_OBJECT(self,
                        "State %d "
@@ -2271,22 +2275,23 @@ restart:
     }
   }
 
-out: {
-  // Make sure to globally lock here as the routing settings and others are
-  // global shared state
-  GstAjaNtv2DeviceLocker locker(self->device);
+out:
+  {
+    // Make sure to globally lock here as the routing settings and others are
+    // global shared state
+    GstAjaNtv2DeviceLocker locker(self->device);
 
-  self->device->device->AutoCirculateStop(self->channel);
-  self->device->device->UnsubscribeOutputVerticalEvent(self->channel);
-  self->device->device->DisableOutputInterrupt(self->channel);
+    self->device->device->AutoCirculateStop(self->channel);
+    self->device->device->UnsubscribeOutputVerticalEvent(self->channel);
+    self->device->device->DisableOutputInterrupt(self->channel);
 
-  self->device->device->DisableChannel(self->channel);
-  if (self->quad_mode) {
-    for (int i = 1; i < 4; i++) {
-      self->device->device->DisableChannel((NTV2Channel)(self->channel + i));
+    self->device->device->DisableChannel(self->channel);
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++) {
+        self->device->device->DisableChannel((NTV2Channel)(self->channel + i));
+      }
     }
   }
-}
 
   if ((!self->playing || self->draining) && !self->shutdown) goto restart;
   g_mutex_unlock(&self->queue_lock);

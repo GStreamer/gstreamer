@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 typedef struct {
   GstMeta meta;
 
-  GstBuffer *buffer;
+  GstBuffer* buffer;
 } GstAjaAudioMeta;
 
 G_GNUC_INTERNAL
@@ -44,18 +44,18 @@ GType gst_aja_audio_meta_api_get_type(void);
 #define GST_AJA_AUDIO_META_API_TYPE (gst_aja_audio_meta_api_get_type())
 
 G_GNUC_INTERNAL
-const GstMetaInfo *gst_aja_audio_meta_get_info(void);
+const GstMetaInfo* gst_aja_audio_meta_get_info(void);
 #define GST_AJA_AUDIO_META_INFO (gst_aja_audio_meta_get_info())
 
 #define gst_buffer_get_aja_audio_meta(b) \
-  ((GstAjaAudioMeta *)gst_buffer_get_meta((b), GST_AJA_AUDIO_META_API_TYPE))
+  ((GstAjaAudioMeta*)gst_buffer_get_meta((b), GST_AJA_AUDIO_META_API_TYPE))
 
 G_GNUC_INTERNAL
-GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
-                                               GstBuffer *audio_buffer);
+GstAjaAudioMeta* gst_buffer_add_aja_audio_meta(GstBuffer* buffer,
+                                               GstBuffer* audio_buffer);
 
 typedef struct {
-  CNTV2Card *device;
+  CNTV2Card* device;
 #ifdef _WIN32
   HANDLE fd;
 #else
@@ -64,14 +64,14 @@ typedef struct {
 } GstAjaNtv2Device;
 
 G_GNUC_INTERNAL
-GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier);
+GstAjaNtv2Device* gst_aja_ntv2_device_obtain(const gchar* device_identifier);
 G_GNUC_INTERNAL
-GstAjaNtv2Device *gst_aja_ntv2_device_ref(GstAjaNtv2Device *device);
+GstAjaNtv2Device* gst_aja_ntv2_device_ref(GstAjaNtv2Device* device);
 G_GNUC_INTERNAL
-void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device);
+void gst_aja_ntv2_device_unref(GstAjaNtv2Device* device);
 
 G_GNUC_INTERNAL
-gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device *device,
+gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device* device,
                                                  NTV2Channel channel,
                                                  guint frame_count);
 
@@ -87,7 +87,7 @@ gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device *device,
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AJA_ALLOCATOR))
 #define GST_IS_Aja_ALLOCATOR_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AJA_ALLOCATOR))
-#define GST_AJA_ALLOCATOR_CAST(obj) ((GstAjaAllocator *)(obj))
+#define GST_AJA_ALLOCATOR_CAST(obj) ((GstAjaAllocator*)(obj))
 
 typedef struct _GstAjaAllocator GstAjaAllocator;
 typedef struct _GstAjaAllocatorClass GstAjaAllocatorClass;
@@ -95,8 +95,8 @@ typedef struct _GstAjaAllocatorClass GstAjaAllocatorClass;
 struct _GstAjaAllocator {
   GstAllocator allocator;
 
-  GstAjaNtv2Device *device;
-  GstVecDeque *freed_mems;
+  GstAjaNtv2Device* device;
+  GstVecDeque* freed_mems;
 };
 
 struct _GstAjaAllocatorClass {
@@ -106,7 +106,7 @@ struct _GstAjaAllocatorClass {
 G_GNUC_INTERNAL
 GType gst_aja_allocator_get_type(void);
 G_GNUC_INTERNAL
-GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device);
+GstAllocator* gst_aja_allocator_new(GstAjaNtv2Device* device);
 
 typedef enum {
   GST_AJA_AUDIO_SYSTEM_AUTO,
@@ -326,30 +326,31 @@ G_END_DECLS
 
 class GstAjaNtv2DeviceLocker {
  public:
-  GstAjaNtv2DeviceLocker(GstAjaNtv2Device *device);
+  GstAjaNtv2DeviceLocker(GstAjaNtv2Device* device);
   ~GstAjaNtv2DeviceLocker();
+
  private:
-  GstAjaNtv2Device *_device;
+  GstAjaNtv2Device* _device;
 };
 
 G_GNUC_INTERNAL
-GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id);
+GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id);
 
 G_GNUC_INTERNAL
-GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format);
+GstCaps* gst_ntv2_video_format_to_caps(NTV2VideoFormat format);
 G_GNUC_INTERNAL
-bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
+bool gst_video_info_from_ntv2_video_format(GstVideoInfo* info,
                                            NTV2VideoFormat format);
 G_GNUC_INTERNAL
-NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps *caps, bool quad);
+NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps* caps, bool quad);
 
 G_GNUC_INTERNAL
-GstCaps *gst_aja_video_format_to_caps(GstAjaVideoFormat format);
+GstCaps* gst_aja_video_format_to_caps(GstAjaVideoFormat format);
 G_GNUC_INTERNAL
-bool gst_video_info_from_aja_video_format(GstVideoInfo *info,
+bool gst_video_info_from_aja_video_format(GstVideoInfo* info,
                                           GstAjaVideoFormat format);
 G_GNUC_INTERNAL
-GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps *caps);
+GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps* caps);
 
 G_GNUC_INTERNAL
 GstAjaVideoFormat gst_aja_video_format_from_ntv2_format(NTV2VideoFormat format);

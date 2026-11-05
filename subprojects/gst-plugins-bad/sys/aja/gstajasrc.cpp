@@ -28,17 +28,22 @@
  *
  * ```sh
  * gst-launch-1.0 ajasrc video-format=1080p-3000 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! videoconvert ! autovideosink \
- *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! audioconvert ! audioresample ! autoaudiosink
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! videoconvert ! autovideosink \ d.audio ! queue
+ * max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! audioconvert !
+ * audioresample ! autoaudiosink
  * ```
  *
  * Capture 1080p30 audio/video and directly output it again on the same card
  *
  * ```sh
- * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1 audio-system=2 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.video \
- *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.audio \
- *     ajasinkcombiner name=c ! ajasink channel=0 reference-source=input-1
+ * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1
+ * audio-system=2 ! ajasrcdemux name=d \
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! c.video \
+ *     d.audio ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! c.audio \ ajasinkcombiner name=c ! ajasink
+ * channel=0 reference-source=input-1
  * ```
  *
  * Since: 1.24
@@ -151,8 +156,8 @@ typedef struct {
     // For FRAME
     struct {
       GstClockTime capture_time;
-      GstBuffer *video_buffer;
-      GstBuffer *audio_buffer;
+      GstBuffer* video_buffer;
+      GstBuffer* audio_buffer;
       GstBuffer *anc_buffer, *anc_buffer2;
       NTV2_RP188 tc;
 
@@ -161,7 +166,7 @@ typedef struct {
     } frame;
     // For ERROR
     struct {
-      GstMessage *msg;
+      GstMessage* msg;
     } error;
     // For FRAMES_DROPPED
     struct {
@@ -173,7 +178,7 @@ typedef struct {
 
 G_END_DECLS
 
-static void queue_item_clear(QueueItem *item) {
+static void queue_item_clear(QueueItem* item) {
   switch (item->type) {
     case QUEUE_ITEM_TYPE_DUMMY:
       break;
@@ -194,39 +199,39 @@ static void queue_item_clear(QueueItem *item) {
   item->type = QUEUE_ITEM_TYPE_DUMMY;
 }
 
-static void gst_aja_src_set_property(GObject *object, guint property_id,
-                                     const GValue *value, GParamSpec *pspec);
-static void gst_aja_src_get_property(GObject *object, guint property_id,
-                                     GValue *value, GParamSpec *pspec);
-static void gst_aja_src_constructed(GObject *object);
-static void gst_aja_src_finalize(GObject *object);
+static void gst_aja_src_set_property(GObject* object, guint property_id,
+                                     const GValue* value, GParamSpec* pspec);
+static void gst_aja_src_get_property(GObject* object, guint property_id,
+                                     GValue* value, GParamSpec* pspec);
+static void gst_aja_src_constructed(GObject* object);
+static void gst_aja_src_finalize(GObject* object);
 
-static GstCaps *gst_aja_src_get_caps(GstBaseSrc *bsrc, GstCaps *filter);
-static gboolean gst_aja_src_query(GstBaseSrc *bsrc, GstQuery *query);
-static gboolean gst_aja_src_unlock(GstBaseSrc *bsrc);
-static gboolean gst_aja_src_unlock_stop(GstBaseSrc *bsrc);
+static GstCaps* gst_aja_src_get_caps(GstBaseSrc* bsrc, GstCaps* filter);
+static gboolean gst_aja_src_query(GstBaseSrc* bsrc, GstQuery* query);
+static gboolean gst_aja_src_unlock(GstBaseSrc* bsrc);
+static gboolean gst_aja_src_unlock_stop(GstBaseSrc* bsrc);
 
-static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer);
+static GstFlowReturn gst_aja_src_create(GstPushSrc* psrc, GstBuffer** buffer);
 
-static gboolean gst_aja_src_open(GstAjaSrc *src);
-static gboolean gst_aja_src_close(GstAjaSrc *src);
-static gboolean gst_aja_src_stop(GstAjaSrc *src);
+static gboolean gst_aja_src_open(GstAjaSrc* src);
+static gboolean gst_aja_src_close(GstAjaSrc* src);
+static gboolean gst_aja_src_stop(GstAjaSrc* src);
 
-static GstStateChangeReturn gst_aja_src_change_state(GstElement *element,
+static GstStateChangeReturn gst_aja_src_change_state(GstElement* element,
                                                      GstStateChange transition);
-static GstClock *gst_aja_src_provide_clock(GstElement *element);
+static GstClock* gst_aja_src_provide_clock(GstElement* element);
 
-static void capture_thread_func(AJAThread *thread, void *data);
+static void capture_thread_func(AJAThread* thread, void* data);
 
 #define parent_class gst_aja_src_parent_class
 G_DEFINE_TYPE(GstAjaSrc, gst_aja_src, GST_TYPE_PUSH_SRC);
 
-static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
-  GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
-  GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS(klass);
-  GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS(klass);
-  GstCaps *templ_caps;
+static void gst_aja_src_class_init(GstAjaSrcClass* klass) {
+  GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+  GstElementClass* element_class = GST_ELEMENT_CLASS(klass);
+  GstBaseSrcClass* basesrc_class = GST_BASE_SRC_CLASS(klass);
+  GstPushSrcClass* pushsrc_class = GST_PUSH_SRC_CLASS(klass);
+  GstCaps* templ_caps;
 
   gobject_class->set_property = gst_aja_src_set_property;
   gobject_class->get_property = gst_aja_src_get_property;
@@ -446,7 +451,7 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
   GST_DEBUG_CATEGORY_INIT(gst_aja_src_debug, "ajasrc", 0, "AJA src");
 }
 
-static void gst_aja_src_init(GstAjaSrc *self) {
+static void gst_aja_src_init(GstAjaSrc* self) {
   GST_OBJECT_FLAG_SET(
       self, GST_ELEMENT_FLAG_PROVIDE_CLOCK | GST_ELEMENT_FLAG_REQUIRE_CLOCK);
 
@@ -480,9 +485,9 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->video_format = NTV2_FORMAT_UNKNOWN;
 }
 
-void gst_aja_src_set_property(GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec) {
-  GstAjaSrc *self = GST_AJA_SRC(object);
+void gst_aja_src_set_property(GObject* object, guint property_id,
+                              const GValue* value, GParamSpec* pspec) {
+  GstAjaSrc* self = GST_AJA_SRC(object);
 
   switch (property_id) {
     case PROP_DEVICE_IDENTIFIER:
@@ -550,9 +555,9 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
   }
 }
 
-void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
-                              GParamSpec *pspec) {
-  GstAjaSrc *self = GST_AJA_SRC(object);
+void gst_aja_src_get_property(GObject* object, guint property_id, GValue* value,
+                              GParamSpec* pspec) {
+  GstAjaSrc* self = GST_AJA_SRC(object);
 
   switch (property_id) {
     case PROP_DEVICE_IDENTIFIER:
@@ -623,18 +628,18 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
   }
 }
 
-void gst_aja_src_constructed(GObject *object) {
-  GstAjaSrc *self = GST_AJA_SRC(object);
+void gst_aja_src_constructed(GObject* object) {
+  GstAjaSrc* self = GST_AJA_SRC(object);
 
   G_OBJECT_CLASS(parent_class)->constructed(object);
 
-  gchar *aja_clock_name = g_strdup_printf("ajaclock-%s", GST_OBJECT_NAME(self));
-  self->clock = gst_system_clock_new (aja_clock_name, GST_CLOCK_TYPE_MONOTONIC);
+  gchar* aja_clock_name = g_strdup_printf("ajaclock-%s", GST_OBJECT_NAME(self));
+  self->clock = gst_system_clock_new(aja_clock_name, GST_CLOCK_TYPE_MONOTONIC);
   g_free(aja_clock_name);
 }
 
-void gst_aja_src_finalize(GObject *object) {
-  GstAjaSrc *self = GST_AJA_SRC(object);
+void gst_aja_src_finalize(GObject* object) {
+  GstAjaSrc* self = GST_AJA_SRC(object);
 
   g_assert(self->device == NULL);
   g_assert(gst_vec_deque_get_length(self->queue) == 0);
@@ -649,7 +654,7 @@ void gst_aja_src_finalize(GObject *object) {
   G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static gboolean gst_aja_src_open(GstAjaSrc *self) {
+static gboolean gst_aja_src_open(GstAjaSrc* self) {
   GST_DEBUG_OBJECT(self, "Opening device");
 
   g_assert(self->device == NULL);
@@ -697,7 +702,7 @@ static gboolean gst_aja_src_open(GstAjaSrc *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_src_close(GstAjaSrc *self) {
+static gboolean gst_aja_src_close(GstAjaSrc* self) {
   gst_clear_object(&self->allocator);
   g_clear_pointer(&self->device, gst_aja_ntv2_device_unref);
   self->device_id = DEVICE_ID_INVALID;
@@ -707,21 +712,21 @@ static gboolean gst_aja_src_close(GstAjaSrc *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_src_needs_quad_mode(GstAjaSrc *self) {
+static gboolean gst_aja_src_needs_quad_mode(GstAjaSrc* self) {
   return self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_SQD ||
          self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI ||
          (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
           self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4);
 }
 
-static void gst_aja_src_get_input_config(GstAjaSrc *self,
-                                         NTV2InputSource *input_source,
-                                         NTV2OutputCrosspointID *input_source_id,
-                                         NTV2VANCMode *vanc_mode) {
+static void gst_aja_src_get_input_config(
+    GstAjaSrc* self, NTV2InputSource* input_source,
+    NTV2OutputCrosspointID* input_source_id, NTV2VANCMode* vanc_mode) {
   switch (self->input_source) {
     case GST_AJA_INPUT_SOURCE_AUTO:
       *input_source = ::NTV2ChannelToInputSource(self->channel);
-      *input_source_id = ::GetSDIInputOutputXptFromChannel(self->channel, false);
+      *input_source_id =
+          ::GetSDIInputOutputXptFromChannel(self->channel, false);
       *vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
                        ? ::NTV2_VANCMODE_OFF
                        : ::NTV2_VANCMODE_TALL;
@@ -820,19 +825,16 @@ static NTV2VideoFormat gst_aja_src_map_detected_format(
   return detected_format;
 }
 
-static gboolean gst_aja_src_format_matches(GstAjaSrc *self,
+static gboolean gst_aja_src_format_matches(GstAjaSrc* self,
                                            NTV2VideoFormat detected_format,
                                            gboolean quad_mode) {
-  if (detected_format == NTV2_FORMAT_UNKNOWN)
-    return FALSE;
+  if (detected_format == NTV2_FORMAT_UNKNOWN) return FALSE;
 
-  if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO)
-    return TRUE;
+  if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO) return TRUE;
 
   NTV2VideoFormat configured_format = gst_ntv2_video_format_from_aja_format(
       self->video_format_setting, quad_mode);
-  if (configured_format == NTV2_FORMAT_UNKNOWN)
-    return FALSE;
+  if (configured_format == NTV2_FORMAT_UNKNOWN) return FALSE;
 
   detected_format =
       gst_aja_src_map_detected_format(configured_format, detected_format);
@@ -847,7 +849,7 @@ static gboolean gst_aja_src_format_matches(GstAjaSrc *self,
 // The lock bit is only meaningful for SDI inputs and only when the device
 // supports the SDI error checks. Otherwise the format sense is the only
 // available signal.
-static gboolean gst_aja_src_input_locked(GstAjaSrc *self,
+static gboolean gst_aja_src_input_locked(GstAjaSrc* self,
                                          NTV2InputSource input_source,
                                          gboolean quad_mode) {
   if (!self->device->device->IsSupported(kDeviceCanDoSDIErrorChecks))
@@ -858,8 +860,7 @@ static gboolean gst_aja_src_input_locked(GstAjaSrc *self,
     return TRUE;
 
   NTV2Channel channel = ::NTV2InputSourceToChannel(input_source);
-  if (!self->device->device->GetSDILock(channel))
-    return FALSE;
+  if (!self->device->device->GetSDILock(channel)) return FALSE;
 
   if (quad_mode) {
     for (int i = 1; i < 4; i++) {
@@ -873,15 +874,14 @@ static gboolean gst_aja_src_input_locked(GstAjaSrc *self,
 
 // Read the current signal state from the input sense. Must be called with
 // GstAjaNtv2DeviceLocker.
-static gboolean gst_aja_src_read_signal(GstAjaSrc *self,
+static gboolean gst_aja_src_read_signal(GstAjaSrc* self,
                                         NTV2InputSource input_source,
                                         gboolean quad_mode,
-                                        NTV2VideoFormat *detected_format,
-                                        guint32 *vpid) {
+                                        NTV2VideoFormat* detected_format,
+                                        guint32* vpid) {
   NTV2VideoFormat format =
       self->device->device->GetInputVideoFormat(input_source);
-  if (format == NTV2_FORMAT_UNKNOWN)
-    return FALSE;
+  if (format == NTV2_FORMAT_UNKNOWN) return FALSE;
 
   if (quad_mode) {
     for (int i = 1; i < 4; i++) {
@@ -891,11 +891,9 @@ static gboolean gst_aja_src_read_signal(GstAjaSrc *self,
     }
   }
 
-  if (!gst_aja_src_input_locked(self, input_source, quad_mode))
-    return FALSE;
+  if (!gst_aja_src_input_locked(self, input_source, quad_mode)) return FALSE;
 
-  if (!gst_aja_src_format_matches(self, format, quad_mode))
-    return FALSE;
+  if (!gst_aja_src_format_matches(self, format, quad_mode)) return FALSE;
 
   ULWord vpid_a = 0;
   ULWord vpid_b = 0;
@@ -980,7 +978,7 @@ static void gst_aja_src_notify_signal_change(GstObject* object,
 }
 
 // Must be called without queue_lock.
-static void gst_aja_src_queue_signal_change(GstAjaSrc *self,
+static void gst_aja_src_queue_signal_change(GstAjaSrc* self,
                                             gboolean have_signal,
                                             NTV2VideoFormat detected_format,
                                             guint32 vpid, gboolean no_frames) {
@@ -1764,7 +1762,7 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
       self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
 
   self->buffer_pool = gst_buffer_pool_new();
-  GstStructure *config = gst_buffer_pool_get_config(self->buffer_pool);
+  GstStructure* config = gst_buffer_pool_get_config(self->buffer_pool);
   gst_buffer_pool_config_set_params(config, NULL, video_buffer_size,
                                     2 * self->queue_size, 0);
   gst_buffer_pool_config_set_allocator(config, self->allocator, NULL);
@@ -1806,7 +1804,7 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
   return TRUE;
 }
 
-static gboolean gst_aja_src_start(GstAjaSrc *self) {
+static gboolean gst_aja_src_start(GstAjaSrc* self) {
   GST_DEBUG_OBJECT(self, "Starting");
 
   self->video_format = NTV2_FORMAT_UNKNOWN;
@@ -1828,8 +1826,8 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     const gboolean quad_mode = gst_aja_src_needs_quad_mode(self);
     NTV2VideoFormat detected_format;
     guint32 vpid;
-    if (gst_aja_src_read_signal(self, input_source, quad_mode,
-                                &detected_format, &vpid)) {
+    if (gst_aja_src_read_signal(self, input_source, quad_mode, &detected_format,
+                                &vpid)) {
       self->initial_signal_present = TRUE;
       if (gst_aja_src_set_signal(self, TRUE))
         g_object_notify(G_OBJECT(self), "signal");
@@ -1850,8 +1848,8 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_src_stop(GstAjaSrc *self) {
-  QueueItem *item;
+static gboolean gst_aja_src_stop(GstAjaSrc* self) {
+  QueueItem* item;
 
   GST_DEBUG_OBJECT(self, "Stopping");
 
@@ -1874,7 +1872,7 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
   self->configured_audio_channels = 0;
   GST_OBJECT_UNLOCK(self);
 
-  while ((item = (QueueItem *)gst_vec_deque_pop_head_struct(self->queue))) {
+  while ((item = (QueueItem*)gst_vec_deque_pop_head_struct(self->queue))) {
     queue_item_clear(item);
   }
   self->queue_num_frames = 0;
@@ -1910,8 +1908,8 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
 }
 
 static GstStateChangeReturn gst_aja_src_change_state(
-    GstElement *element, GstStateChange transition) {
-  GstAjaSrc *self = GST_AJA_SRC(element);
+    GstElement* element, GstStateChange transition) {
+  GstAjaSrc* self = GST_AJA_SRC(element);
   GstStateChangeReturn ret;
 
   switch (transition) {
@@ -1958,15 +1956,15 @@ static GstStateChangeReturn gst_aja_src_change_state(
   return ret;
 }
 
-static GstClock *gst_aja_src_provide_clock(GstElement *element) {
-  GstAjaSrc *self = GST_AJA_SRC(element);
+static GstClock* gst_aja_src_provide_clock(GstElement* element) {
+  GstAjaSrc* self = GST_AJA_SRC(element);
 
   return GST_CLOCK(gst_object_ref(self->clock));
 }
 
-static GstCaps *gst_aja_src_get_caps(GstBaseSrc *bsrc, GstCaps *filter) {
-  GstAjaSrc *self = GST_AJA_SRC(bsrc);
-  GstCaps *caps;
+static GstCaps* gst_aja_src_get_caps(GstBaseSrc* bsrc, GstCaps* filter) {
+  GstAjaSrc* self = GST_AJA_SRC(bsrc);
+  GstCaps* caps;
 
   if (self->device) {
     caps = gst_ntv2_supported_caps(self->device_id);
@@ -1977,18 +1975,18 @@ static GstCaps *gst_aja_src_get_caps(GstBaseSrc *bsrc, GstCaps *filter) {
   // Intersect with the configured video format if any to constrain the caps
   // further.
   if (self->video_format_setting != GST_AJA_VIDEO_FORMAT_AUTO) {
-    GstCaps *configured_caps =
+    GstCaps* configured_caps =
         gst_aja_video_format_to_caps(self->video_format_setting);
 
     if (configured_caps) {
-      GstCaps *tmp;
+      GstCaps* tmp;
 
       // Remove pixel-aspect-ratio from the configured caps to allow for both
       // widescreen and non-widescreen PAL/NTSC. It's added back by the
       // template caps above when intersecting.
       guint n = gst_caps_get_size(configured_caps);
       for (guint i = 0; i < n; i++) {
-        GstStructure *s = gst_caps_get_structure(configured_caps, i);
+        GstStructure* s = gst_caps_get_structure(configured_caps, i);
 
         gst_structure_remove_fields(s, "pixel-aspect-ratio", NULL);
       }
@@ -2001,7 +1999,7 @@ static GstCaps *gst_aja_src_get_caps(GstBaseSrc *bsrc, GstCaps *filter) {
   }
 
   if (filter) {
-    GstCaps *tmp =
+    GstCaps* tmp =
         gst_caps_intersect_full(filter, caps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref(caps);
     caps = tmp;
@@ -2010,8 +2008,8 @@ static GstCaps *gst_aja_src_get_caps(GstBaseSrc *bsrc, GstCaps *filter) {
   return caps;
 }
 
-static gboolean gst_aja_src_query(GstBaseSrc *bsrc, GstQuery *query) {
-  GstAjaSrc *self = GST_AJA_SRC(bsrc);
+static gboolean gst_aja_src_query(GstBaseSrc* bsrc, GstQuery* query) {
+  GstAjaSrc* self = GST_AJA_SRC(bsrc);
   gboolean ret = TRUE;
 
   switch (GST_QUERY_TYPE(query)) {
@@ -2039,8 +2037,8 @@ static gboolean gst_aja_src_query(GstBaseSrc *bsrc, GstQuery *query) {
   }
 }
 
-static gboolean gst_aja_src_unlock(GstBaseSrc *bsrc) {
-  GstAjaSrc *self = GST_AJA_SRC(bsrc);
+static gboolean gst_aja_src_unlock(GstBaseSrc* bsrc) {
+  GstAjaSrc* self = GST_AJA_SRC(bsrc);
 
   g_mutex_lock(&self->queue_lock);
   self->flushing = TRUE;
@@ -2050,8 +2048,8 @@ static gboolean gst_aja_src_unlock(GstBaseSrc *bsrc) {
   return TRUE;
 }
 
-static gboolean gst_aja_src_unlock_stop(GstBaseSrc *bsrc) {
-  GstAjaSrc *self = GST_AJA_SRC(bsrc);
+static gboolean gst_aja_src_unlock_stop(GstBaseSrc* bsrc) {
+  GstAjaSrc* self = GST_AJA_SRC(bsrc);
 
   g_mutex_lock(&self->queue_lock);
   self->flushing = FALSE;
@@ -2060,8 +2058,8 @@ static gboolean gst_aja_src_unlock_stop(GstBaseSrc *bsrc) {
   return TRUE;
 }
 
-static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
-  GstAjaSrc *self = GST_AJA_SRC(psrc);
+static GstFlowReturn gst_aja_src_create(GstPushSrc* psrc, GstBuffer** buffer) {
+  GstAjaSrc* self = GST_AJA_SRC(psrc);
   GstFlowReturn flow_ret = GST_FLOW_OK;
   QueueItem item = {QUEUE_ITEM_TYPE_DUMMY};
   guint64 processed, dropped;
@@ -2080,7 +2078,7 @@ next_item:
     return GST_FLOW_FLUSHING;
   }
 
-  item = *(QueueItem *)gst_vec_deque_pop_head_struct(self->queue);
+  item = *(QueueItem*)gst_vec_deque_pop_head_struct(self->queue);
   if (item.type == QUEUE_ITEM_TYPE_FRAME) {
     self->queue_num_frames -= 1;
     // Only count a frame as processed once it was removed from the queue,
@@ -2098,7 +2096,7 @@ next_item:
     case QUEUE_ITEM_TYPE_ERROR:
       GST_ERROR_OBJECT(self, "Stopping because of error on capture thread");
       gst_element_post_message(GST_ELEMENT(self),
-                               (GstMessage *)g_steal_pointer(&item.error.msg));
+                               (GstMessage*)g_steal_pointer(&item.error.msg));
       queue_item_clear(&item);
       return GST_FLOW_ERROR;
     case QUEUE_ITEM_TYPE_FRAMES_DROPPED: {
@@ -2117,7 +2115,7 @@ next_item:
             GST_TIME_ARGS(item.frames_dropped.timestamp_start),
             GST_TIME_ARGS(item.frames_dropped.timestamp_end));
       }
-      GstMessage *msg = gst_message_new_qos(
+      GstMessage* msg = gst_message_new_qos(
           GST_OBJECT_CAST(self), TRUE, item.frames_dropped.timestamp_start,
           GST_CLOCK_TIME_NONE, item.frames_dropped.timestamp_start,
           item.frames_dropped.timestamp_end -
@@ -2134,7 +2132,7 @@ next_item:
 
   g_assert(item.type == QUEUE_ITEM_TYPE_FRAME);
 
-  *buffer = (GstBuffer *)g_steal_pointer(&item.frame.video_buffer);
+  *buffer = (GstBuffer*)g_steal_pointer(&item.frame.video_buffer);
   gst_buffer_add_aja_audio_meta(*buffer, item.frame.audio_buffer);
   gst_clear_buffer(&item.frame.audio_buffer);
 
@@ -2247,7 +2245,7 @@ next_item:
   bool have_cea608 = false;
   bool have_cea708 = false;
   for (guint32 i = 0; i < n_vanc_packets; i++) {
-    AJAAncillaryData *packet = anc_packets.GetAncillaryDataAtIndex(i);
+    AJAAncillaryData* packet = anc_packets.GetAncillaryDataAtIndex(i);
 
     if (packet->GetDID() == AJAAncillaryData_Cea608_Vanc_DID &&
         packet->GetSID() == AJAAncillaryData_Cea608_Vanc_SID &&
@@ -2297,7 +2295,7 @@ next_item:
   bool aspect_ratio_flag = false;
   bool have_afd_bar = false;
   for (guint32 i = 0; i < n_vanc_packets; i++) {
-    AJAAncillaryData *packet = anc_packets.GetAncillaryDataAtIndex(i);
+    AJAAncillaryData* packet = anc_packets.GetAncillaryDataAtIndex(i);
 
     if (want_cea608 && packet->GetDID() == AJAAncillaryData_Cea608_Vanc_DID &&
         packet->GetSID() == AJAAncillaryData_Cea608_Vanc_SID &&
@@ -2322,7 +2320,7 @@ next_item:
           packet->GetPayloadByteCount());
     } else if (packet->GetDID() == 0x41 && packet->GetSID() == 0x05 &&
                packet->GetPayloadData() && packet->GetPayloadByteCount() == 8) {
-      const guint8 *data = packet->GetPayloadData();
+      const guint8* data = packet->GetPayloadData();
 
       have_afd_bar = true;
       aspect_ratio_flag = (data[0] >> 2) & 0x1;
@@ -2359,7 +2357,7 @@ next_item:
     // Skip non-SMPTE 291M ancillary data
     if (packet->GetDataCoding() != AJAAncillaryDataCoding_Digital) continue;
 
-    const guint8 *in_data = packet->GetPayloadData();
+    const guint8* in_data = packet->GetPayloadData();
     guint data_count = packet->GetDC();
 
     guint16 line_number = packet->GetLocationLineNumber();
@@ -2376,7 +2374,7 @@ next_item:
                      "Adding ANC meta for %s (%04x) at (%u,%u) of size %u",
                      packet->IDAsString().c_str(), packet->GetDIDSID(),
                      line_number, horiz_offset, data_count);
-    GstAncillaryMeta *anc_meta = gst_buffer_add_ancillary_meta(*buffer);
+    GstAncillaryMeta* anc_meta = gst_buffer_add_ancillary_meta(*buffer);
 
     anc_meta->c_not_y_channel = packet->IsChromaChannel();
     anc_meta->line = line_number;
@@ -2389,7 +2387,7 @@ next_item:
 
     anc_meta->data_count = AJAAncillaryData::AddEvenParity(data_count);
 
-    guint16 *data = g_new(guint16, packet->GetDC());
+    guint16* data = g_new(guint16, packet->GetDC());
     for (guint i = 0; i < data_count; i++) {
       data[i] = AJAAncillaryData::AddEvenParity(in_data[i]);
     }
@@ -2505,7 +2503,7 @@ next_item:
   }
 
   if (caps_changed) {
-    GstCaps *caps = gst_video_info_to_caps(&self->current_info);
+    GstCaps* caps = gst_video_info_to_caps(&self->current_info);
     gst_caps_set_simple(caps, "audio-channels", G_TYPE_INT,
                         self->configured_audio_channels, NULL);
     GST_DEBUG_OBJECT(self, "Configuring caps %" GST_PTR_FORMAT, caps);
@@ -2531,35 +2529,35 @@ next_item:
   return flow_ret;
 }
 
-#define AJA_SRC_ERROR(el, domain, code, text, debug)                        \
-  G_STMT_START {                                                            \
-    gchar *__txt = _gst_element_error_printf text;                          \
-    gchar *__dbg = _gst_element_error_printf debug;                         \
-    GstMessage *__msg;                                                      \
-    GError *__err;                                                          \
-    gchar *__name, *__fmt_dbg;                                              \
-    if (__txt) GST_WARNING_OBJECT(el, "error: %s", __txt);                  \
-    if (__dbg) GST_WARNING_OBJECT(el, "error: %s", __dbg);                  \
-    if (!__txt)                                                             \
-      __txt = gst_error_get_message(GST_##domain##_ERROR,                   \
-                                    GST_##domain##_ERROR_##code);           \
-    __err = g_error_new_literal(GST_##domain##_ERROR,                       \
-                                GST_##domain##_ERROR_##code, __txt);        \
-    __name = gst_object_get_path_string(GST_OBJECT_CAST(el));               \
-    if (__dbg)                                                              \
-      __fmt_dbg = g_strdup_printf("%s(%d): %s (): %s:\n%s", __FILE__,       \
-                                  __LINE__, GST_FUNCTION, __name, __dbg);   \
-    else                                                                    \
-      __fmt_dbg = g_strdup_printf("%s(%d): %s (): %s", __FILE__, __LINE__,  \
-                                  GST_FUNCTION, __name);                    \
-    g_free(__name);                                                         \
-    g_free(__dbg);                                                          \
-    __msg = gst_message_new_error(GST_OBJECT(el), __err, __fmt_dbg);        \
-    QueueItem item = {QUEUE_ITEM_TYPE_ERROR};                               \
-    item.error = { __msg };                                                 \
-    gst_vec_deque_push_tail_struct(el->queue, &item);                       \
-    g_cond_signal(&el->queue_cond);                                         \
-  }                                                                         \
+#define AJA_SRC_ERROR(el, domain, code, text, debug)                       \
+  G_STMT_START {                                                           \
+    gchar* __txt = _gst_element_error_printf text;                         \
+    gchar* __dbg = _gst_element_error_printf debug;                        \
+    GstMessage* __msg;                                                     \
+    GError* __err;                                                         \
+    gchar *__name, *__fmt_dbg;                                             \
+    if (__txt) GST_WARNING_OBJECT(el, "error: %s", __txt);                 \
+    if (__dbg) GST_WARNING_OBJECT(el, "error: %s", __dbg);                 \
+    if (!__txt)                                                            \
+      __txt = gst_error_get_message(GST_##domain##_ERROR,                  \
+                                    GST_##domain##_ERROR_##code);          \
+    __err = g_error_new_literal(GST_##domain##_ERROR,                      \
+                                GST_##domain##_ERROR_##code, __txt);       \
+    __name = gst_object_get_path_string(GST_OBJECT_CAST(el));              \
+    if (__dbg)                                                             \
+      __fmt_dbg = g_strdup_printf("%s(%d): %s (): %s:\n%s", __FILE__,      \
+                                  __LINE__, GST_FUNCTION, __name, __dbg);  \
+    else                                                                   \
+      __fmt_dbg = g_strdup_printf("%s(%d): %s (): %s", __FILE__, __LINE__, \
+                                  GST_FUNCTION, __name);                   \
+    g_free(__name);                                                        \
+    g_free(__dbg);                                                         \
+    __msg = gst_message_new_error(GST_OBJECT(el), __err, __fmt_dbg);       \
+    QueueItem item = {QUEUE_ITEM_TYPE_ERROR};                              \
+    item.error = {__msg};                                                  \
+    gst_vec_deque_push_tail_struct(el->queue, &item);                      \
+    g_cond_signal(&el->queue_cond);                                        \
+  }                                                                        \
   G_STMT_END;
 
 // The capture loop wakes at the input's vertical interrupt rate when locked
@@ -2571,8 +2569,8 @@ next_item:
 // Update the signal state with hysteresis. Must be called with queue_lock
 // held. Returns the transition to report after releasing the lock.
 static SignalTransition gst_aja_src_update_signal_state(
-    SignalState *signal_state, gboolean present, gboolean *candidate_present,
-    gint64 *state_since, gboolean *pending_recovery) {
+    SignalState* signal_state, gboolean present, gboolean* candidate_present,
+    gint64* state_since, gboolean* pending_recovery) {
   const gint64 now = g_get_monotonic_time();
 
   if (present != *candidate_present) {
@@ -2604,8 +2602,7 @@ static SignalTransition gst_aja_src_update_signal_state(
 
   if (*signal_state == SIGNAL_STATE_ABSENT) return SIGNAL_TRANSITION_NONE;
 
-  if (now - *state_since < SIGNAL_ABSENT_HOLD_US)
-    return SIGNAL_TRANSITION_NONE;
+  if (now - *state_since < SIGNAL_ABSENT_HOLD_US) return SIGNAL_TRANSITION_NONE;
 
   *signal_state = SIGNAL_STATE_ABSENT;
   *state_since = 0;
@@ -2613,10 +2610,10 @@ static SignalTransition gst_aja_src_update_signal_state(
   return SIGNAL_TRANSITION_ABSENT;
 }
 
-static void capture_thread_func(AJAThread *thread, void *data) {
-  GstAjaSrc *self = GST_AJA_SRC(data);
-  GstClock *clock = NULL;
-  GstClock *real_time_clock;
+static void capture_thread_func(AJAThread* thread, void* data) {
+  GstAjaSrc* self = GST_AJA_SRC(data);
+  GstClock* clock = NULL;
+  GstClock* real_time_clock;
   AUTOCIRCULATE_TRANSFER transfer;
 
 #if defined(__APPLE__)
@@ -2656,7 +2653,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
 
   // We're getting a system clock for the real-time clock here because
   // g_get_real_time() is less accurate generally.
-  real_time_clock = gst_system_clock_new (NULL, GST_CLOCK_TYPE_REALTIME);
+  real_time_clock = gst_system_clock_new(NULL, GST_CLOCK_TYPE_REALTIME);
 
   // the signal state of the input. If we had no signal observation ever
   // then don't report this as signal loss.
@@ -2977,9 +2974,9 @@ restart:
           &pending_recovery);
       if (transition != SIGNAL_TRANSITION_NONE) {
         g_mutex_unlock(&self->queue_lock);
-        gst_aja_src_queue_signal_change(
-            self, transition == SIGNAL_TRANSITION_PRESENT, current_video_format,
-            vpid_a, FALSE);
+        gst_aja_src_queue_signal_change(self,
+                                        transition == SIGNAL_TRANSITION_PRESENT,
+                                        current_video_format, vpid_a, FALSE);
         g_mutex_lock(&self->queue_lock);
       }
     }
@@ -3007,8 +3004,8 @@ restart:
         status.acFramesProcessed, status.acFramesDropped, status.acBufferLevel);
 
     if (status.IsRunning() && status.HasAvailableInputFrame()) {
-      GstBuffer *video_buffer = NULL;
-      GstBuffer *audio_buffer = NULL;
+      GstBuffer* video_buffer = NULL;
+      GstBuffer* audio_buffer = NULL;
       GstBuffer *anc_buffer = NULL, *anc_buffer2 = NULL;
       GstMapInfo video_map = GST_MAP_INFO_INIT;
       GstMapInfo audio_map = GST_MAP_INFO_INIT;
@@ -3079,10 +3076,10 @@ restart:
 
       transfer.acFrameBufferFormat = ::NTV2_FBF_10BIT_YCBCR;
 
-      transfer.SetVideoBuffer((ULWord *)video_map.data, video_map.size);
-      transfer.SetAudioBuffer((ULWord *)audio_map.data, audio_map.size);
-      transfer.SetAncBuffers((ULWord *)anc_map.data, anc_map.size,
-                             (ULWord *)anc_map2.data, anc_map2.size);
+      transfer.SetVideoBuffer((ULWord*)video_map.data, video_map.size);
+      transfer.SetAudioBuffer((ULWord*)audio_map.data, audio_map.size);
+      transfer.SetAncBuffers((ULWord*)anc_map.data, anc_map.size,
+                             (ULWord*)anc_map2.data, anc_map2.size);
 
       g_mutex_unlock(&self->queue_lock);
 
@@ -3108,9 +3105,9 @@ restart:
         continue;
       }
 
-      const AUTOCIRCULATE_TRANSFER_STATUS &transfer_status =
+      const AUTOCIRCULATE_TRANSFER_STATUS& transfer_status =
           transfer.GetTransferStatus();
-      const FRAME_STAMP &frame_stamp = transfer_status.GetFrameStamp();
+      const FRAME_STAMP& frame_stamp = transfer_status.GetFrameStamp();
 
       GST_TRACE_OBJECT(self,
                        "State %d "
@@ -3485,14 +3482,14 @@ restart:
         if (diverged_at == GST_CLOCK_TIME_NONE) {
           diverged_at = now_monotonic_sys;
         } else if (now_monotonic_sys > diverged_at + GST_SECOND) {
-          GST_FIXME_OBJECT(
-              self,
-              "Frame measurements diverged, driver transferred %" G_GINT64_FORMAT
-              " but we counted %" G_GINT64_FORMAT
-              ", driver dropped %" G_GUINT64_FORMAT
-              " but we saw %" G_GUINT64_FORMAT,
-              transferred, accounted, driver_drops_now - d_base,
-              driver_drops_seen);
+          GST_FIXME_OBJECT(self,
+                           "Frame measurements diverged, driver transferred "
+                           "%" G_GINT64_FORMAT
+                           " but we counted %" G_GINT64_FORMAT
+                           ", driver dropped %" G_GUINT64_FORMAT
+                           " but we saw %" G_GUINT64_FORMAT,
+                           transferred, accounted, driver_drops_now - d_base,
+                           driver_drops_seen);
           diverged_at = now_monotonic_sys;
         }
       } else {
@@ -3626,8 +3623,8 @@ restart:
         guint n = gst_vec_deque_get_length(self->queue);
 
         for (guint i = 0; i < n; i++) {
-          QueueItem *tmp =
-              (QueueItem *)gst_vec_deque_peek_nth_struct(self->queue, i);
+          QueueItem* tmp =
+              (QueueItem*)gst_vec_deque_peek_nth_struct(self->queue, i);
           if (tmp->type == QUEUE_ITEM_TYPE_FRAME) {
             GST_WARNING_OBJECT(self,
                                "Element queue overrun, dropping old frame");
@@ -3729,22 +3726,23 @@ restart:
     }
   }
 
-out: {
-  // Make sure to globally lock here as the routing settings and others are
-  // global shared state
-  GstAjaNtv2DeviceLocker locker(self->device);
+out:
+  {
+    // Make sure to globally lock here as the routing settings and others are
+    // global shared state
+    GstAjaNtv2DeviceLocker locker(self->device);
 
-  self->device->device->AutoCirculateStop(self->channel);
-  self->device->device->UnsubscribeInputVerticalEvent(self->channel);
-  self->device->device->DisableInputInterrupt(self->channel);
+    self->device->device->AutoCirculateStop(self->channel);
+    self->device->device->UnsubscribeInputVerticalEvent(self->channel);
+    self->device->device->DisableInputInterrupt(self->channel);
 
-  self->device->device->DisableChannel(self->channel);
-  if (self->quad_mode) {
-    for (int i = 1; i < 4; i++) {
-      self->device->device->DisableChannel((NTV2Channel)(self->channel + i));
+    self->device->device->DisableChannel(self->channel);
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++) {
+        self->device->device->DisableChannel((NTV2Channel)(self->channel + i));
+      }
     }
   }
-}
 
   if (!self->playing && !self->shutdown) goto restart;
   g_mutex_unlock(&self->queue_lock);

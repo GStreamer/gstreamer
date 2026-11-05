@@ -175,12 +175,12 @@ static const FormatMapEntry format_map[] = {
      NTV2_FORMAT_4x4096x2160p_6000},
 };
 
-GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id) {
-  GstCaps *caps = gst_caps_new_empty();
+GstCaps* gst_ntv2_supported_caps(NTV2DeviceID device_id) {
+  GstCaps* caps = gst_caps_new_empty();
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &format = format_map[i];
-    GstCaps *tmp = NULL;
+    const FormatMapEntry& format = format_map[i];
+    GstCaps* tmp = NULL;
 
     if (device_id == DEVICE_ID_INVALID) {
       tmp = gst_aja_video_format_to_caps(format.gst_format);
@@ -196,12 +196,12 @@ GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id) {
       if (format.gst_format == GST_AJA_VIDEO_FORMAT_525_2398 ||
           format.gst_format == GST_AJA_VIDEO_FORMAT_525_2400 ||
           format.gst_format == GST_AJA_VIDEO_FORMAT_525_5994) {
-        GstCaps *tmp2 = gst_caps_copy(tmp);
+        GstCaps* tmp2 = gst_caps_copy(tmp);
         gst_caps_set_simple(tmp2, "pixel-aspect-ratio", GST_TYPE_FRACTION, 40,
                             33, NULL);
         gst_caps_append(tmp, tmp2);
       } else if (format.gst_format == GST_AJA_VIDEO_FORMAT_625_5000) {
-        GstCaps *tmp2 = gst_caps_copy(tmp);
+        GstCaps* tmp2 = gst_caps_copy(tmp);
         gst_caps_set_simple(tmp2, "pixel-aspect-ratio", GST_TYPE_FRACTION, 16,
                             11, NULL);
         gst_caps_append(tmp, tmp2);
@@ -214,11 +214,11 @@ GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id) {
   return caps;
 }
 
-GstCaps *gst_aja_video_format_to_caps(GstAjaVideoFormat format) {
-  const FormatMapEntry *entry = NULL;
+GstCaps* gst_aja_video_format_to_caps(GstAjaVideoFormat format) {
+  const FormatMapEntry* entry = NULL;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &tmp = format_map[i];
+    const FormatMapEntry& tmp = format_map[i];
 
     if (tmp.gst_format == format) {
       entry = &tmp;
@@ -235,12 +235,12 @@ GstCaps *gst_aja_video_format_to_caps(GstAjaVideoFormat format) {
   g_assert_not_reached();
 }
 
-bool gst_video_info_from_aja_video_format(GstVideoInfo *info,
+bool gst_video_info_from_aja_video_format(GstVideoInfo* info,
                                           GstAjaVideoFormat format) {
-  const FormatMapEntry *entry = NULL;
+  const FormatMapEntry* entry = NULL;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &tmp = format_map[i];
+    const FormatMapEntry& tmp = format_map[i];
 
     if (tmp.gst_format == format) {
       entry = &tmp;
@@ -257,9 +257,9 @@ bool gst_video_info_from_aja_video_format(GstVideoInfo *info,
   g_assert_not_reached();
 }
 
-GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
+GstCaps* gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
   GstVideoInfo info;
-  GstCaps *caps;
+  GstCaps* caps;
 
   if (!gst_video_info_from_ntv2_video_format(&info, format)) return NULL;
 
@@ -268,7 +268,7 @@ GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
 
   guint n = gst_caps_get_size(caps);
   for (guint i = 0; i < n; i++) {
-    GstStructure *s = gst_caps_get_structure(caps, i);
+    GstStructure* s = gst_caps_get_structure(caps, i);
 
     gst_structure_remove_fields(s, "chroma-site", "colorimetry", NULL);
   }
@@ -276,7 +276,7 @@ GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
   return caps;
 }
 
-bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
+bool gst_video_info_from_ntv2_video_format(GstVideoInfo* info,
                                            NTV2VideoFormat format) {
   if (format == NTV2_FORMAT_UNKNOWN) return false;
 
@@ -316,14 +316,14 @@ bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
   return true;
 }
 
-NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps *caps,
+NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps* caps,
                                                 bool quad) {
   GstVideoInfo info;
 
   if (!gst_video_info_from_caps(&info, caps)) return NTV2_FORMAT_UNKNOWN;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &format = format_map[i];
+    const FormatMapEntry& format = format_map[i];
     NTV2VideoFormat f = !quad ? format.aja_format : format.quad_format;
 
     if (f == NTV2_FORMAT_UNKNOWN) continue;
@@ -346,14 +346,14 @@ NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps *caps,
   return NTV2_FORMAT_UNKNOWN;
 }
 
-GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps *caps) {
+GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps* caps) {
   GstVideoInfo info;
 
   if (!gst_video_info_from_caps(&info, caps))
     return GST_AJA_VIDEO_FORMAT_INVALID;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &format = format_map[i];
+    const FormatMapEntry& format = format_map[i];
     NTV2VideoFormat f = (format.aja_format != NTV2_FORMAT_UNKNOWN)
                             ? format.aja_format
                             : format.quad_format;
@@ -383,7 +383,7 @@ GstAjaVideoFormat gst_aja_video_format_from_ntv2_format(
   if (format == NTV2_FORMAT_UNKNOWN) return GST_AJA_VIDEO_FORMAT_INVALID;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &entry = format_map[i];
+    const FormatMapEntry& entry = format_map[i];
     if (entry.aja_format == format || entry.quad_format == format)
       return entry.gst_format;
   }
@@ -396,7 +396,7 @@ NTV2VideoFormat gst_ntv2_video_format_from_aja_format(GstAjaVideoFormat format,
   if (format == GST_AJA_VIDEO_FORMAT_INVALID) return NTV2_FORMAT_UNKNOWN;
 
   for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
-    const FormatMapEntry &entry = format_map[i];
+    const FormatMapEntry& entry = format_map[i];
     if (entry.gst_format == format) {
       if (!quad && entry.aja_format != NTV2_FORMAT_UNKNOWN)
         return entry.aja_format;
@@ -423,7 +423,7 @@ GType gst_aja_audio_meta_api_get_type(void) {
   static GType type;
 
   if (g_once_init_enter(&type)) {
-    static const gchar *tags[] = {NULL};
+    static const gchar* tags[] = {NULL};
     GType _type = gst_meta_api_type_register("GstAjaAudioMetaAPI", tags);
     GST_INFO("registering");
     g_once_init_leave(&type, _type);
@@ -431,13 +431,13 @@ GType gst_aja_audio_meta_api_get_type(void) {
   return type;
 }
 
-static gboolean gst_aja_audio_meta_transform(GstBuffer *dest, GstMeta *meta,
-                                             GstBuffer *buffer, GQuark type,
+static gboolean gst_aja_audio_meta_transform(GstBuffer* dest, GstMeta* meta,
+                                             GstBuffer* buffer, GQuark type,
                                              gpointer data) {
   GstAjaAudioMeta *dmeta, *smeta;
 
   if (GST_META_TRANSFORM_IS_COPY(type)) {
-    smeta = (GstAjaAudioMeta *)meta;
+    smeta = (GstAjaAudioMeta*)meta;
 
     GST_TRACE("copy AJA audio metadata");
     dmeta = gst_buffer_add_aja_audio_meta(dest, smeta->buffer);
@@ -449,43 +449,43 @@ static gboolean gst_aja_audio_meta_transform(GstBuffer *dest, GstMeta *meta,
   return TRUE;
 }
 
-static gboolean gst_aja_audio_meta_init(GstMeta *meta, gpointer params,
-                                        GstBuffer *buffer) {
-  GstAjaAudioMeta *emeta = (GstAjaAudioMeta *)meta;
+static gboolean gst_aja_audio_meta_init(GstMeta* meta, gpointer params,
+                                        GstBuffer* buffer) {
+  GstAjaAudioMeta* emeta = (GstAjaAudioMeta*)meta;
 
   emeta->buffer = NULL;
 
   return TRUE;
 }
 
-static void gst_aja_audio_meta_free(GstMeta *meta, GstBuffer *buffer) {
-  GstAjaAudioMeta *emeta = (GstAjaAudioMeta *)meta;
+static void gst_aja_audio_meta_free(GstMeta* meta, GstBuffer* buffer) {
+  GstAjaAudioMeta* emeta = (GstAjaAudioMeta*)meta;
 
   gst_buffer_replace(&emeta->buffer, NULL);
 }
 
-const GstMetaInfo *gst_aja_audio_meta_get_info(void) {
-  static const GstMetaInfo *meta_info = NULL;
+const GstMetaInfo* gst_aja_audio_meta_get_info(void) {
+  static const GstMetaInfo* meta_info = NULL;
 
-  if (g_once_init_enter((GstMetaInfo **)&meta_info)) {
-    const GstMetaInfo *mi = gst_meta_register(
+  if (g_once_init_enter((GstMetaInfo**)&meta_info)) {
+    const GstMetaInfo* mi = gst_meta_register(
         GST_AJA_AUDIO_META_API_TYPE, "GstAjaAudioMeta", sizeof(GstAjaAudioMeta),
         gst_aja_audio_meta_init, gst_aja_audio_meta_free,
         gst_aja_audio_meta_transform);
-    g_once_init_leave((GstMetaInfo **)&meta_info, (GstMetaInfo *)mi);
+    g_once_init_leave((GstMetaInfo**)&meta_info, (GstMetaInfo*)mi);
   }
   return meta_info;
 }
 
-GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
-                                               GstBuffer *audio_buffer) {
-  GstAjaAudioMeta *meta;
+GstAjaAudioMeta* gst_buffer_add_aja_audio_meta(GstBuffer* buffer,
+                                               GstBuffer* audio_buffer) {
+  GstAjaAudioMeta* meta;
 
   g_return_val_if_fail(buffer != NULL, NULL);
   g_return_val_if_fail(audio_buffer != NULL, NULL);
 
-  meta = (GstAjaAudioMeta *)gst_buffer_add_meta(buffer, GST_AJA_AUDIO_META_INFO,
-                                                NULL);
+  meta = (GstAjaAudioMeta*)gst_buffer_add_meta(buffer, GST_AJA_AUDIO_META_INFO,
+                                               NULL);
 
   meta->buffer = gst_buffer_ref(audio_buffer);
 
@@ -495,53 +495,53 @@ GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
 typedef struct {
   GstMemory mem;
 
-  guint8 *data;
+  guint8* data;
 } GstAjaMemory;
 
 typedef struct {
-  guint8 *data;
+  guint8* data;
   gsize size;
 } FreedMemory;
 
 G_DEFINE_TYPE(GstAjaAllocator, gst_aja_allocator, GST_TYPE_ALLOCATOR);
 
-static inline void _aja_memory_init(GstAjaAllocator *alloc, GstAjaMemory *mem,
-                                    GstMemoryFlags flags, GstMemory *parent,
+static inline void _aja_memory_init(GstAjaAllocator* alloc, GstAjaMemory* mem,
+                                    GstMemoryFlags flags, GstMemory* parent,
                                     gpointer data, gsize maxsize, gsize offset,
                                     gsize size) {
   gst_memory_init(GST_MEMORY_CAST(mem), flags, GST_ALLOCATOR(alloc), parent,
                   maxsize, 4095, offset, size);
 
-  mem->data = (guint8 *)data;
+  mem->data = (guint8*)data;
 }
 
-static inline GstAjaMemory *_aja_memory_new(GstAjaAllocator *alloc,
+static inline GstAjaMemory* _aja_memory_new(GstAjaAllocator* alloc,
                                             GstMemoryFlags flags,
-                                            GstAjaMemory *parent, gpointer data,
+                                            GstAjaMemory* parent, gpointer data,
                                             gsize maxsize, gsize offset,
                                             gsize size) {
-  GstAjaMemory *mem;
+  GstAjaMemory* mem;
 
-  mem = (GstAjaMemory *)g_new0(GstAjaMemory, 1);
-  _aja_memory_init(alloc, mem, flags, (GstMemory *)parent, data, maxsize,
-                   offset, size);
+  mem = (GstAjaMemory*)g_new0(GstAjaMemory, 1);
+  _aja_memory_init(alloc, mem, flags, (GstMemory*)parent, data, maxsize, offset,
+                   size);
 
   return mem;
 }
 
-static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
+static GstAjaMemory* _aja_memory_new_block(GstAjaAllocator* alloc,
                                            GstMemoryFlags flags, gsize maxsize,
                                            gsize offset, gsize size) {
-  GstAjaMemory *mem;
-  guint8 *data = NULL;
+  GstAjaMemory* mem;
+  guint8* data = NULL;
 
-  mem = (GstAjaMemory *)g_new0(GstAjaMemory, 1);
+  mem = (GstAjaMemory*)g_new0(GstAjaMemory, 1);
 
   GST_OBJECT_LOCK(alloc);
   guint n = gst_vec_deque_get_length(alloc->freed_mems);
   for (guint i = 0; i < n; i++) {
-    FreedMemory *fmem =
-        (FreedMemory *)gst_vec_deque_peek_nth_struct(alloc->freed_mems, i);
+    FreedMemory* fmem =
+        (FreedMemory*)gst_vec_deque_peek_nth_struct(alloc->freed_mems, i);
 
     if (fmem->size == size) {
       data = fmem->data;
@@ -555,11 +555,11 @@ static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
   GST_OBJECT_UNLOCK(alloc);
 
   if (!data) {
-    data = (guint8 *)AJAMemory::AllocateAligned(maxsize, 4096);
+    data = (guint8*)AJAMemory::AllocateAligned(maxsize, 4096);
     GST_TRACE_OBJECT(alloc,
                      "Allocated memory of size %" G_GSIZE_FORMAT " at %p",
                      maxsize, data);
-    if (!alloc->device->device->DMABufferLock((ULWord *)data, maxsize, true)) {
+    if (!alloc->device->device->DMABufferLock((ULWord*)data, maxsize, true)) {
       GST_WARNING_OBJECT(alloc, "Failed to pre-lock memory");
     }
   }
@@ -569,16 +569,16 @@ static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
   return mem;
 }
 
-static gpointer _aja_memory_map(GstAjaMemory *mem, gsize maxsize,
+static gpointer _aja_memory_map(GstAjaMemory* mem, gsize maxsize,
                                 GstMapFlags flags) {
   return mem->data;
 }
 
-static gboolean _aja_memory_unmap(GstAjaMemory *mem) { return TRUE; }
+static gboolean _aja_memory_unmap(GstAjaMemory* mem) { return TRUE; }
 
-static GstMemory *_aja_memory_copy(GstAjaMemory *mem, gssize offset,
+static GstMemory* _aja_memory_copy(GstAjaMemory* mem, gssize offset,
                                    gsize size) {
-  GstMemory *copy;
+  GstMemory* copy;
   GstMapInfo map;
 
   if (size == (gsize)-1)
@@ -593,14 +593,14 @@ static GstMemory *_aja_memory_copy(GstAjaMemory *mem, gssize offset,
   return copy;
 }
 
-static GstAjaMemory *_aja_memory_share(GstAjaMemory *mem, gssize offset,
+static GstAjaMemory* _aja_memory_share(GstAjaMemory* mem, gssize offset,
                                        gsize size) {
-  GstAjaMemory *sub;
-  GstAjaMemory *parent;
+  GstAjaMemory* sub;
+  GstAjaMemory* parent;
 
   /* find the real parent */
-  if ((parent = (GstAjaMemory *)mem->mem.parent) == NULL)
-    parent = (GstAjaMemory *)mem;
+  if ((parent = (GstAjaMemory*)mem->mem.parent) == NULL)
+    parent = (GstAjaMemory*)mem;
 
   if (size == (gsize)-1) size = mem->mem.size - offset;
 
@@ -613,30 +613,30 @@ static GstAjaMemory *_aja_memory_share(GstAjaMemory *mem, gssize offset,
   return sub;
 }
 
-static GstMemory *gst_aja_allocator_alloc(GstAllocator *alloc, gsize size,
-                                          GstAllocationParams *params) {
+static GstMemory* gst_aja_allocator_alloc(GstAllocator* alloc, gsize size,
+                                          GstAllocationParams* params) {
   g_warn_if_fail(params->prefix == 0);
   g_warn_if_fail(params->padding == 0);
 
-  return (GstMemory *)_aja_memory_new_block(GST_AJA_ALLOCATOR(alloc),
-                                            params->flags, size, 0, size);
+  return (GstMemory*)_aja_memory_new_block(GST_AJA_ALLOCATOR(alloc),
+                                           params->flags, size, 0, size);
 }
 
-static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
-  GstAjaMemory *dmem = (GstAjaMemory *)mem;
+static void gst_aja_allocator_free(GstAllocator* alloc, GstMemory* mem) {
+  GstAjaMemory* dmem = (GstAjaMemory*)mem;
 
   if (!mem->parent) {
-    GstAjaAllocator *aja_alloc = GST_AJA_ALLOCATOR(alloc);
+    GstAjaAllocator* aja_alloc = GST_AJA_ALLOCATOR(alloc);
 
     GST_OBJECT_LOCK(aja_alloc);
     while (gst_vec_deque_get_length(aja_alloc->freed_mems) > 8) {
-      FreedMemory *fmem =
-          (FreedMemory *)gst_vec_deque_pop_head_struct(aja_alloc->freed_mems);
+      FreedMemory* fmem =
+          (FreedMemory*)gst_vec_deque_pop_head_struct(aja_alloc->freed_mems);
 
       GST_TRACE_OBJECT(
           alloc, "Freeing cached memory of size %" G_GSIZE_FORMAT " at %p",
           fmem->size, fmem->data);
-      aja_alloc->device->device->DMABufferUnlock((ULWord *)fmem->data,
+      aja_alloc->device->device->DMABufferUnlock((ULWord*)fmem->data,
                                                  fmem->size);
       AJAMemory::FreeAligned(fmem->data);
     }
@@ -654,16 +654,16 @@ static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
   g_free(dmem);
 }
 
-static void gst_aja_allocator_finalize(GObject *alloc) {
-  GstAjaAllocator *aja_alloc = GST_AJA_ALLOCATOR(alloc);
+static void gst_aja_allocator_finalize(GObject* alloc) {
+  GstAjaAllocator* aja_alloc = GST_AJA_ALLOCATOR(alloc);
 
   GST_DEBUG_OBJECT(alloc, "Freeing allocator");
 
-  FreedMemory *mem;
-  while ((mem = (FreedMemory *)gst_vec_deque_pop_head_struct(
+  FreedMemory* mem;
+  while ((mem = (FreedMemory*)gst_vec_deque_pop_head_struct(
               aja_alloc->freed_mems))) {
     GST_TRACE_OBJECT(alloc, "Freeing cached memory at %p", mem->data);
-    aja_alloc->device->device->DMABufferUnlock((ULWord *)mem->data, mem->size);
+    aja_alloc->device->device->DMABufferUnlock((ULWord*)mem->data, mem->size);
     AJAMemory::FreeAligned(mem->data);
   }
 
@@ -672,12 +672,12 @@ static void gst_aja_allocator_finalize(GObject *alloc) {
   G_OBJECT_CLASS(gst_aja_allocator_parent_class)->finalize(alloc);
 }
 
-static void gst_aja_allocator_class_init(GstAjaAllocatorClass *klass) {
-  GObjectClass *gobject_class;
-  GstAllocatorClass *allocator_class;
+static void gst_aja_allocator_class_init(GstAjaAllocatorClass* klass) {
+  GObjectClass* gobject_class;
+  GstAllocatorClass* allocator_class;
 
-  gobject_class = (GObjectClass *)klass;
-  allocator_class = (GstAllocatorClass *)klass;
+  gobject_class = (GObjectClass*)klass;
+  allocator_class = (GstAllocatorClass*)klass;
 
   gobject_class->finalize = gst_aja_allocator_finalize;
 
@@ -685,8 +685,8 @@ static void gst_aja_allocator_class_init(GstAjaAllocatorClass *klass) {
   allocator_class->free = gst_aja_allocator_free;
 }
 
-static void gst_aja_allocator_init(GstAjaAllocator *aja_alloc) {
-  GstAllocator *alloc = GST_ALLOCATOR_CAST(aja_alloc);
+static void gst_aja_allocator_init(GstAjaAllocator* aja_alloc) {
+  GstAllocator* alloc = GST_ALLOCATOR_CAST(aja_alloc);
 
   alloc->mem_type = GST_AJA_ALLOCATOR_MEMTYPE;
   alloc->mem_map = (GstMemoryMapFunction)_aja_memory_map;
@@ -695,9 +695,9 @@ static void gst_aja_allocator_init(GstAjaAllocator *aja_alloc) {
   alloc->mem_share = (GstMemoryShareFunction)_aja_memory_share;
 }
 
-GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device) {
-  GstAjaAllocator *alloc =
-      (GstAjaAllocator *)g_object_new(GST_TYPE_AJA_ALLOCATOR, NULL);
+GstAllocator* gst_aja_allocator_new(GstAjaNtv2Device* device) {
+  GstAjaAllocator* alloc =
+      (GstAjaAllocator*)g_object_new(GST_TYPE_AJA_ALLOCATOR, NULL);
 
   alloc->device = gst_aja_ntv2_device_ref(device);
   alloc->freed_mems = gst_vec_deque_new_for_struct(sizeof(FreedMemory), 16);
@@ -708,10 +708,10 @@ GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device) {
   return GST_ALLOCATOR(alloc);
 }
 
-GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
+GstAjaNtv2Device* gst_aja_ntv2_device_obtain(const gchar* device_identifier) {
   using unique_string_ptr = std::unique_ptr<gchar, decltype(&g_free)>;
 
-  CNTV2Device *device = new CNTV2Device();
+  CNTV2Device* device = new CNTV2Device();
 
   if (!CNTV2DeviceScanner::GetFirstDeviceFromArgument(device_identifier,
                                                       *device)) {
@@ -724,10 +724,12 @@ GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
   {
     std::string serial;
     g_assert(device->GetSerialNumberString(serial));
-    unique_string_ptr path(g_strdup_printf("Global\\\\gst-aja-%s", serial.c_str()), &g_free);
+    unique_string_ptr path(
+        g_strdup_printf("Global\\\\gst-aja-%s", serial.c_str()), &g_free);
     fd = CreateMutexA(NULL, FALSE, path.get());
     if (fd == NULL) {
-      GST_ERROR("Failed to open mutex %s (errno = %lu)", path.get(), GetLastError());
+      GST_ERROR("Failed to open mutex %s (errno = %lu)", path.get(),
+                GetLastError());
       delete device;
       return NULL;
     }
@@ -736,10 +738,12 @@ GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
   int fd = -1;
 #if defined(__linux__)
   {
-    unique_string_ptr path(g_strdup_printf("/dev/ajantv2%d", device->GetIndexNumber()), &g_free);
+    unique_string_ptr path(
+        g_strdup_printf("/dev/ajantv2%d", device->GetIndexNumber()), &g_free);
     fd = open(path.get(), O_RDONLY);
     if (fd < 0) {
-      GST_ERROR("Failed to open device node %s: %s", path.get(), g_strerror(errno));
+      GST_ERROR("Failed to open device node %s: %s", path.get(),
+                g_strerror(errno));
       delete device;
       return NULL;
     }
@@ -750,10 +754,13 @@ GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
     g_assert(device->GetSerialNumberString(serial));
     if (!serial.empty()) {
       const gchar* tmpdir = g_get_tmp_dir();
-      unique_string_ptr path (g_strdup_printf("%s/gst-aja-%s.lock", tmpdir, serial.c_str()), &g_free);
+      unique_string_ptr path(
+          g_strdup_printf("%s/gst-aja-%s.lock", tmpdir, serial.c_str()),
+          &g_free);
       fd = open(path.get(), O_RDONLY);
       if (fd < 0) {
-        GST_ERROR("Failed to open lockfile %s: %s", path.get(), g_strerror(errno));
+        GST_ERROR("Failed to open lockfile %s: %s", path.get(),
+                  g_strerror(errno));
         delete device;
         return NULL;
       }
@@ -762,20 +769,20 @@ GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
 #endif  // !defined(__linux__)
 #endif
 
-  GstAjaNtv2Device *dev = g_atomic_rc_box_new0(GstAjaNtv2Device);
+  GstAjaNtv2Device* dev = g_atomic_rc_box_new0(GstAjaNtv2Device);
   dev->device = device;
   dev->fd = fd;
 
   return dev;
 }
 
-GstAjaNtv2Device *gst_aja_ntv2_device_ref(GstAjaNtv2Device *device) {
-  return (GstAjaNtv2Device *)g_atomic_rc_box_acquire(device);
+GstAjaNtv2Device* gst_aja_ntv2_device_ref(GstAjaNtv2Device* device) {
+  return (GstAjaNtv2Device*)g_atomic_rc_box_acquire(device);
 }
 
-void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device) {
+void gst_aja_ntv2_device_unref(GstAjaNtv2Device* device) {
   g_atomic_rc_box_release_full(device, [](gpointer data) {
-    GstAjaNtv2Device *dev = (GstAjaNtv2Device *)data;
+    GstAjaNtv2Device* dev = (GstAjaNtv2Device*)data;
 
     delete dev->device;
 #ifdef _WIN32
@@ -786,7 +793,7 @@ void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device) {
   });
 }
 
-GstAjaNtv2DeviceLocker::GstAjaNtv2DeviceLocker(GstAjaNtv2Device *device) {
+GstAjaNtv2DeviceLocker::GstAjaNtv2DeviceLocker(GstAjaNtv2Device* device) {
   _device = gst_aja_ntv2_device_ref(device);
 #if defined(_WIN32)
   WaitForSingleObject(_device->fd, INFINITE);
@@ -804,7 +811,7 @@ GstAjaNtv2DeviceLocker::~GstAjaNtv2DeviceLocker() {
   gst_aja_ntv2_device_unref(_device);
 }
 
-static guint gst_aja_device_get_frame_multiplier(GstAjaNtv2Device *device,
+static guint gst_aja_device_get_frame_multiplier(GstAjaNtv2Device* device,
                                                  NTV2Channel channel) {
   // quad formats use 4x as many frames, quad-quad formats 8x
   bool quad_enabled = false;
@@ -853,7 +860,7 @@ static guint gst_aja_device_get_frame_multiplier(GstAjaNtv2Device *device,
 
 // Returns -1 on failure or otherwise the start_frame.
 // end_frame would be start_frame + frame_count - 1
-gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device *device,
+gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device* device,
                                                  NTV2Channel channel,
                                                  guint frame_count) {
   g_assert(frame_count != 0);
