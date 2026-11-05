@@ -755,6 +755,12 @@ gst_asf_parse_file_properties_obj (GstByteReader * reader,
     return FALSE;
   }
 
+  if (min_ps < ASF_MIN_PACKET_SIZE) {
+    GST_WARNING ("ASF: Packet size %u is smaller than the smallest "
+        "packet that can carry any data", min_ps);
+    return FALSE;
+  }
+
   GST_DEBUG ("ASF: Packet size: %" G_GUINT32_FORMAT, min_ps);
   asfinfo->packet_size = min_ps;
   if (!gst_byte_reader_skip (reader, 4))
