@@ -387,6 +387,20 @@ gst_asf_mux_push_buffer (GstAsfMux * asfmux, GstBuffer * buf, gsize bufsize)
   return ret;
 }
 
+/* Returns the number of bytes gst_asf_mux_write_string_with_size() will
+ * write for @text: its UTF-16LE length plus a 2-byte NUL terminator. */
+static guint
+gst_asf_mux_utf16_size (const gchar * text)
+{
+  gsize utf16_len = 0;
+  gchar *utf16;
+
+  utf16 = g_convert (text, -1, "UTF-16LE", "UTF-8", NULL, &utf16_len, NULL);
+  g_free (utf16);
+
+  return utf16_len + 2;
+}
+
 /**
  * content_description_calc_size_for_tag:
  * @taglist: the #GstTagList that contains the tag
@@ -423,10 +437,9 @@ content_description_calc_size_for_tag (const GstTagList * taglist,
       const gchar *text;
 
       text = g_value_get_string (&value);
-      /* +1 -> because of the \0 at the end
-       * 2* -> because we have uft8, and asf demands utf16
-       */
-      content_size = 2 * (1 + g_utf8_strlen (text, -1));
+      /* UTF-16LE size including the NUL terminator; characters outside
+       * the BMP take 4 bytes in UTF-16, not 2 */
+      content_size = gst_asf_mux_utf16_size (text);
 
       if (gst_asf_tag_present_in_content_description (tag)) {
         asftags->cont_desc_size += content_size;
@@ -533,10 +546,9 @@ add_metadata_tag_size (const GstTagList * taglist, const gchar * tag,
       const gchar *text;
 
       text = g_value_get_string (&value);
-      /* +1 -> because of the \0 at the end
-       * 2* -> because we have uft8, and asf demands utf16
-       */
-      content_size = 2 * (1 + g_utf8_strlen (text, -1));
+      /* UTF-16LE size including the NUL terminator; characters outside
+       * the BMP take 4 bytes in UTF-16, not 2 */
+      content_size = gst_asf_mux_utf16_size (text);
     }
       break;
     case ASF_TAG_TYPE_DWORD:
