@@ -174,10 +174,18 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
     gst_asf_parse_packet (buffer, &info, FALSE, 0);
   }
 
-  if (packetinfo->padding != 0)
+  if (packetinfo->padding != 0) {
+    if (packetinfo->padding >= rtpasfpay->asfinfo.packet_size) {
+      GST_ERROR_OBJECT (rtpasfpay, "Padding size %" G_GUINT32_FORMAT
+          " is not smaller than the packet size %" G_GUINT32_FORMAT,
+          packetinfo->padding, rtpasfpay->asfinfo.packet_size);
+      gst_buffer_unref (buffer);
+      return GST_FLOW_ERROR;
+    }
     packet_util_size = rtpasfpay->asfinfo.packet_size - packetinfo->padding;
-  else
+  } else {
     packet_util_size = packetinfo->packet_size;
+  }
   packet_offset = 0;
   while (packet_util_size > 0) {
     /* Even if we don't fill completely an output buffer we
