@@ -295,7 +295,7 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
 
 /**
  * gst_cuda_context_find_dxgi_adapter_luid:
- * @cuda_device: a CUDA device index
+ * @cuda_device: (type gint): a CUDA device index
  *
  * Finds the DXGI adapter LUID corresponding to the given CUDA device.
  * This is useful for matching CUDA devices with Direct3D adapters on Windows.
@@ -586,10 +586,11 @@ gst_cuda_context_push (GstCudaContext * ctx)
 
 /**
  * gst_cuda_context_pop:
+ * @cuda_ctx: (type gpointer) (out) (optional) (transfer none): the popped CUDA context
  *
  * Pops the current CUDA context from CPU thread
  *
- * Returns: %TRUE if @ctx was pushed without error.
+ * Returns: %TRUE if the current context was popped without error.
  *
  * Since: 1.22
  */
@@ -668,10 +669,10 @@ gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)
 
 /**
  * gst_cuda_context_new_wrapped:
- * @handler: A
+ * @handler: (type gpointer): A
  * [CUcontext](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__TYPES.html#group__CUDA__TYPES_1gf9f5bd81658f866613785b3a0bb7d7d9)
  * to wrap
- * @device: A
+ * @device: (type gint): A
  * [CUDevice](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__TYPES.html#group__CUDA__TYPES_1gf9f5bd81658f866613785b3a0bb7d7d9)
  * to wrap
  *

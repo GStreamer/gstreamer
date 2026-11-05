@@ -88,6 +88,8 @@ typedef enum
 
 /**
  * GstCudaGraphicsResource:
+ * @resource: (type gpointer): a CUgraphicsResource handle
+ * @flags: (type gint): CUgraphicsRegisterFlags used to register the resource
  *
  * Since: 1.22
  */

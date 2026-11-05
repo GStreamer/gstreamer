@@ -453,9 +453,9 @@ gst_cuda_graphics_resource_new (GstCudaContext *
 
 /**
  * gst_cuda_graphics_resource_register_gl_buffer: (skip)
- * @resource a #GstCudaGraphicsResource
+ * @resource: a #GstCudaGraphicsResource
  * @buffer: a GL buffer object
- * @flags: a `CUgraphicsRegisterFlags`
+ * @flags: (type gint): a `CUgraphicsRegisterFlags`
  *
  * Register the @buffer for access by CUDA.
  * Must be called from the gl context thread with current cuda context was
@@ -491,9 +491,9 @@ gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource *
 #ifdef G_OS_WIN32
 /**
  * gst_cuda_graphics_resource_register_d3d11_resource: (skip)
- * @resource a #GstCudaGraphicsResource
+ * @resource: a #GstCudaGraphicsResource
  * @d3d11_resource: a ID3D11Resource
- * @flags: a CUgraphicsRegisterFlags
+ * @flags: (type gint): a CUgraphicsRegisterFlags
  *
  * Register the @d3d11_resource for accessing by CUDA.
  * Must be called with d3d11 device lock with current cuda context was
@@ -559,12 +559,13 @@ gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
 /**
  * gst_cuda_graphics_resource_map: (skip)
  * @resource: a #GstCudaGraphicsResource
- * @stream: a CUstream
- * @flags: a CUgraphicsMapResourceFlags
+ * @stream: (type gpointer) (nullable): a CUstream
+ * @flags: (type gint): a CUgraphicsMapResourceFlags
  *
  * Map previously registered resource with map flags
  *
- * Returns: (nullable): the `CUgraphicsResource` if successful or %NULL when failed
+ * Returns: (type gpointer) (transfer none) (nullable): the `CUgraphicsResource`
+ * if successful or %NULL when failed
  *
  * Since: 1.22
  */
@@ -595,7 +596,7 @@ gst_cuda_graphics_resource_map (GstCudaGraphicsResource * resource,
 /**
  * gst_cuda_graphics_resource_unmap: (skip)
  * @resource: a #GstCudaGraphicsResource
- * @stream: a `CUstream`
+ * @stream: (type gpointer) (nullable): a `CUstream`
  *
  * Unmap previously mapped resource
  *
@@ -1843,7 +1844,7 @@ _abort_on_error (CUresult result)
 
 /**
  * _gst_cuda_debug:
- * @result: CUDA result code
+ * @result: (type gint): CUDA result code
  * @cat: a #GstDebugCategory
  * @file: the file that checking the result code
  * @function: the function that checking the result code

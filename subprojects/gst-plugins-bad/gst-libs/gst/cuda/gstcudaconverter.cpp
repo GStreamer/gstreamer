@@ -1955,7 +1955,7 @@ out:
 
 /**
  * gst_cuda_converter_convert_frame:
- * @convert: a #GstCudaConverter
+ * @converter: a #GstCudaConverter
  * @stream: (nullable): a #GstCudaStream
  * @src_frame: a #GstVideoFrame
  * @dst_frame: a #GstVideoFrame

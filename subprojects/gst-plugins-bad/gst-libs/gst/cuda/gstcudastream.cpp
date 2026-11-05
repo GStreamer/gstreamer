@@ -142,7 +142,8 @@ gst_cuda_stream_new (GstCudaContext * context)
  *
  * Get CUDA stream handle
  *
- * Returns: a `CUstream` handle of @stream or %NULL if @stream is %NULL
+ * Returns: (type gpointer) (transfer none) (nullable): a `CUstream` handle of
+ * @stream or %NULL if @stream is %NULL
  *
  * Since: 1.24
  */

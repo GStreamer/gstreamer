@@ -173,7 +173,7 @@ gstcuda= library('gstcuda-' + api_version,
 gen_sources = []
 library_def = {'lib': gstcuda}
 if build_gir
-  gir_includes = ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', 'CudaGst-1.0']
+  gir_includes = ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0']
   if gstglproto_dep.found()
     gir_includes += ['GstGL-1.0']
   endif
@@ -204,7 +204,6 @@ if build_gir
     cudagst_gir = gnome.generate_gir(gstcuda, kwargs: cuda_gir)
     library_def += {'gir_targets':  library_def.get('gir_targets', []) + [cudagst_gir]}
 
-    gir += {'includes': gir['includes'] + [cudagst_gir[0]]}
     gst_cuda_gir = gnome.generate_gir(gstcuda, kwargs: gir)
     library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gst_cuda_gir]}
     gen_sources += gst_cuda_gir

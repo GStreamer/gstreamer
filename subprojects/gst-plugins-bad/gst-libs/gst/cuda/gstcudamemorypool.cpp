@@ -96,7 +96,7 @@ _gst_cuda_memory_pool_free (GstCudaMemoryPool * self)
 /**
  * gst_cuda_memory_pool_new:
  * @context: a #GstCudaContext
- * @props: (allow-none): a CUmemPoolProps
+ * @props: (type gpointer) (allow-none): a CUmemPoolProps
  *
  * Creates a new #GstCudaMemoryPool with @props. If @props is %NULL,
  * non-exportable pool property will be used.
@@ -157,7 +157,7 @@ gst_cuda_memory_pool_new (GstCudaContext * context,
  *
  * Get CUDA memory pool handle
  *
- * Returns: a CUmemoryPool handle
+ * Returns: (type gpointer) (transfer none): a CUmemoryPool handle
  *
  * Since: 1.26
  */

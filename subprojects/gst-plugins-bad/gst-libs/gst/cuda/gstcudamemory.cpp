@@ -829,8 +829,8 @@ static const TextureFormat format_map[] = {
  * gst_cuda_memory_get_texture:
  * @mem: A #GstCudaMemory
  * @plane: the plane index
- * @filter_mode: filter mode
- * @texture: (out) (transfer none): a pointer to CUtexObject object
+ * @filter_mode: (type gint): filter mode
+ * @texture: (type guint64) (out) (transfer none): a pointer to CUtexObject object
  *
  * Creates CUtexObject with given parameters
  *
@@ -1246,7 +1246,7 @@ gst_cuda_allocator_set_active (GstCudaAllocator * allocator, gboolean active)
  * @context: (transfer none): a #GstCudaContext
  * @stream: (transfer none) (allow-none): a #GstCudaStream
  * @info: a #GstVideoInfo
- * @dev_ptr: a CUdeviceptr CUDA device memory
+ * @dev_ptr: (type guintptr): a CUdeviceptr CUDA device memory
  * @user_data: (allow-none): user data
  * @notify: (allow-none) (scope async) (closure user_data):
  *   Called with @user_data when the memory is freed
@@ -1348,8 +1348,8 @@ gst_cuda_memory_is_stream_ordered (GstMemory * mem)
  * @context: a #GstCudaContext
  * @stream: a #GstCudaStream
  * @info: a #GstVideoInfo
- * @prop: allocation property
- * @granularity_flags: allocation flags
+ * @prop: (type gpointer): allocation property
+ * @granularity_flags: (type gint): allocation flags
  *
  * Allocates new #GstMemory object with CUDA virtual memory.
  *
@@ -1938,6 +1938,8 @@ gst_cuda_pool_allocator_new (GstCudaContext * context, GstCudaStream * stream,
  * @context: a #GstCudaContext
  * @stream: (allow-none): a #GstCudaStream
  * @info: a #GstVideoInfo
+ * @prop: (type gpointer): allocation property
+ * @granularity_flags: (type gint): allocation flags
  *
  * Creates a new #GstCudaPoolAllocator instance for virtual memory allocation.
  *
