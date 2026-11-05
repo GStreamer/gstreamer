@@ -154,6 +154,15 @@ gboolean gst_asf_tag_present_in_content_description (const gchar * tag);
 #define ASF_DATA_OBJECT_SIZE 50
 #define ASF_SINGLE_PAYLOAD_HEADER_SIZE 15
 #define ASF_MULTIPLE_PAYLOAD_HEADER_SIZE 17
+/* Payload parsing info header of a data packet with all its variable size
+ * fields set to none: two flag bytes, presentation time and duration */
+#define ASF_PAYLOAD_PARSING_INFO_MIN_SIZE 8
+/* Smallest ASF data packet that can carry any payload data: single payload
+ * packets have an implicit payload size and their header is the most
+ * compact. Smaller packets would need non-standard payload parsing info
+ * field sizes, which we do not support anyway */
+#define ASF_MIN_PACKET_SIZE (ASF_PAYLOAD_PARSING_INFO_MIN_SIZE + \
+    ASF_SINGLE_PAYLOAD_HEADER_SIZE + 1)
 #define ASF_EXTENDED_STREAM_PROPERTIES_OBJECT_SIZE 88
 #define ASF_CONTENT_DESCRIPTION_OBJECT_SIZE 34
 #define ASF_EXT_CONTENT_DESCRIPTION_OBJECT_SIZE 26
