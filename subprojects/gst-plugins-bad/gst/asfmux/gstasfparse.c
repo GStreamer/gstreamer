@@ -278,17 +278,22 @@ gst_asf_parse_handle_frame_data_header (GstAsfParse * asfparse,
     }
 
     if (gst_asf_parse_parse_data_object (asfparse, map.data,
-            map.size) == GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (asfparse, "Successfully parsed data object");
-      asfparse->parse_state = ASF_PARSING_PACKETS;
+            map.size) != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (asfparse, "Failed to parse data object");
       gst_buffer_unmap (buffer, &map);
-
-      gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (asfparse),
-          asfparse->asfinfo->packet_size);
-
-      gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (asfparse), frame,
-          ASF_DATA_OBJECT_SIZE);
+      ret = GST_FLOW_ERROR;
+      goto end;
     }
+
+    GST_DEBUG_OBJECT (asfparse, "Successfully parsed data object");
+    asfparse->parse_state = ASF_PARSING_PACKETS;
+    gst_buffer_unmap (buffer, &map);
+
+    gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (asfparse),
+        asfparse->asfinfo->packet_size);
+
+    gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (asfparse), frame,
+        ASF_DATA_OBJECT_SIZE);
   } else {
     gst_buffer_unmap (buffer, &map);
     *skipsize = 0;
