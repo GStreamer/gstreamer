@@ -186,6 +186,15 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
   } else {
     packet_util_size = packetinfo->packet_size;
   }
+
+  if (packet_util_size > gst_buffer_get_size (buffer)) {
+    GST_ERROR_OBJECT (rtpasfpay, "Packet payload size %" G_GUINT32_FORMAT
+        " is larger than the buffer size %" G_GSIZE_FORMAT,
+        packet_util_size, gst_buffer_get_size (buffer));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
+
   packet_offset = 0;
   while (packet_util_size > 0) {
     /* Even if we don't fill completely an output buffer we
@@ -239,7 +248,7 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
       rtpasfpay->ts = packetinfo->send_time;
     }
 
-    if (size_left >= packet_util_size + 8) {
+    if (packet_util_size <= size_left - 8) {
       /* enough space for the rest of the packet */
       if (packet_offset == 0) {
         flags = flags | 0x40;
