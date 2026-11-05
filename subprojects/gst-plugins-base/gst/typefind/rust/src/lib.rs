@@ -21,4 +21,8 @@ mod mpeg;
 mod startcode;
 mod subtitles;
 mod typefindfunctions;
+// The shared MIME database reader is not wired into plugin registration
+// yet; it builds and is exercised by its own unit tests.
+#[allow(dead_code)]
+mod xdg_mime;
 mod xml;
