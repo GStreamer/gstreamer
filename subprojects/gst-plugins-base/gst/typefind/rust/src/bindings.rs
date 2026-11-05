@@ -148,6 +148,11 @@ unsafe extern "C" {
 
     pub fn g_get_charset(charset: *mut *const c_char) -> gboolean;
 
+    // XDG base directory resolution. The returned storage belongs to GLib and
+    // must not be freed; the directory list is NUL-pointer terminated.
+    pub fn g_get_user_data_dir() -> *const c_char;
+    pub fn g_get_system_data_dirs() -> *const *const c_char;
+
     pub fn g_free(mem: gpointer);
     pub fn g_error_free(error: *mut GError);
 

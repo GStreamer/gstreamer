@@ -7,18 +7,19 @@
 // headers; LICENSE-APACHE in this directory is the upstream notice.
 // Modifications are licensed under the same terms.
 
-//! XDG shared MIME database reader, std-only.
+//! XDG shared MIME database reader, free of external crates.
 //!
 //! Derived from the xdg-mime crate v0.4.0
 //! (<https://github.com/ebassi/xdg-mime-rs>), Copyright (c) Emmanuele Bassi,
 //! Apache-2.0. The logic of the glob and magic matchers and of the guessing
-//! pipeline follows upstream; its five dependencies are replaced by
-//! std-only equivalents so the typefinder crate keeps building offline with
-//! no external crates:
+//! pipeline follows upstream; its five dependencies are replaced by std or
+//! GLib equivalents so the typefinder crate keeps building offline with no
+//! external crates:
 //!
 //! - `mime` → plain `String`s, validated by [`is_mime_type`] at load time
 //!   (RFC 9110 tokens, mirroring the `mime` crate's checks).
-//! - `dirs-next` → the XDG base-directory rules in [`data_dirs`].
+//! - `dirs-next` → GLib's XDG base-directory resolution (`g_get_user_data_dir`
+//!   and `g_get_system_data_dirs`) in [`data_dirs`].
 //! - `unicase` → ASCII case folding. Unicode case folding is lost; database
 //!   glob patterns are effectively ASCII.
 //! - `glob` → [`glob::wildcard_match`] (`*`, `?`, `[...]`, `\`). No `{}`
@@ -39,7 +40,10 @@ mod glob;
 mod magic;
 mod parent;
 
+use std::ffi::CStr;
 use std::path::{Path, PathBuf};
+
+use crate::bindings;
 
 const APPLICATION_OCTET_STREAM: &str = "application/octet-stream";
 const TEXT_PLAIN: &str = "text/plain";
@@ -261,34 +265,23 @@ impl Default for SharedMimeInfo {
     }
 }
 
-/// The data directories of the XDG base directory spec: `$XDG_DATA_HOME`
-/// (or `$HOME/.local/share`), then `$XDG_DATA_DIRS` (or the standard
-/// `/usr/local/share:/usr/share`). Non-absolute values are ignored.
+/// The data directories of the XDG base directory spec, as GLib resolves
+/// them: `$XDG_DATA_HOME` (or `$HOME/.local/share`), then `$XDG_DATA_DIRS`
+/// (or the standard `/usr/local/share:/usr/share`).
 fn data_dirs() -> Vec<PathBuf> {
     let mut dirs = Vec::new();
 
-    let home = std::env::var_os("XDG_DATA_HOME")
-        .filter(|h| !h.is_empty())
-        .map(PathBuf::from)
-        .or_else(|| {
-            std::env::var_os("HOME")
-                .filter(|h| !h.is_empty())
-                .map(|h| PathBuf::from(h).join(".local").join("share"))
-        });
-    if let Some(home) = home
-        && home.is_absolute()
-    {
-        dirs.push(home);
+    let user = unsafe { bindings::g_get_user_data_dir() };
+    if !user.is_null() {
+        let user = unsafe { CStr::from_ptr(user) }.to_string_lossy();
+        dirs.push(PathBuf::from(user.as_ref()));
     }
 
-    match std::env::var_os("XDG_DATA_DIRS") {
-        Some(list) if !list.is_empty() => {
-            dirs.extend(std::env::split_paths(&list).filter(|p| p.is_absolute()));
-        }
-        _ => {
-            dirs.push("/usr/local/share".into());
-            dirs.push("/usr/share".into());
-        }
+    let mut system = unsafe { bindings::g_get_system_data_dirs() };
+    while !system.is_null() && unsafe { !(*system).is_null() } {
+        let dir = unsafe { CStr::from_ptr(*system) }.to_string_lossy();
+        dirs.push(PathBuf::from(dir.as_ref()));
+        system = unsafe { system.add(1) };
     }
 
     dirs
