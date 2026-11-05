@@ -528,7 +528,7 @@ gst_asf_parse_single_payload (GstByteReader * reader, gboolean * has_keyframe)
 {
   guint8 stream_num = 0;
   if (!gst_byte_reader_get_uint8 (reader, &stream_num))
-    return GST_FLOW_ERROR;
+    return FALSE;
   *has_keyframe = (stream_num & 0x80) != 0;
 
   /* we do not skip the rest of the payload bytes as
@@ -740,13 +740,13 @@ gst_asf_parse_file_properties_obj (GstByteReader * reader,
     return FALSE;
 
   if (!gst_byte_reader_get_uint32_le (reader, &flags))
-    return GST_FLOW_ERROR;
+    return FALSE;
   asfinfo->broadcast = (flags & 0x1) == 1;
   GST_DEBUG ("ASF: broadcast flag: %s", asfinfo->broadcast ? "true" : "false");
   if (!gst_byte_reader_get_uint32_le (reader, &min_ps))
-    return GST_FLOW_ERROR;
+    return FALSE;
   if (!gst_byte_reader_get_uint32_le (reader, &max_ps))
-    return GST_FLOW_ERROR;
+    return FALSE;
 
   if (min_ps != max_ps) {
     GST_WARNING ("Minimum and maximum packet size differ "
