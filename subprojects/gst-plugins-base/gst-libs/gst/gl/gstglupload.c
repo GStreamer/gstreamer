@@ -3968,7 +3968,7 @@ _gst_gl_upload_set_caps_unlocked (GstGLUpload * upload, GstCaps * in_caps,
   } else {
     gst_video_info_from_caps (&upload->priv->in_info, in_caps);
     gst_video_info_dma_drm_from_video_info (&upload->priv->in_info_drm,
-        &upload->priv->in_info, DRM_FORMAT_MOD_LINEAR);
+        &upload->priv->in_info, DRM_FORMAT_MOD_INVALID);
   }
   gst_video_info_from_caps (&upload->priv->out_info, out_caps);
 

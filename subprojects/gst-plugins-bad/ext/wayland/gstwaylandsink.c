@@ -710,7 +710,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       goto invalid_format;
 
     if (!gst_video_info_dma_drm_from_video_info (&self->drm_info,
-            &self->render_info, DRM_FORMAT_MOD_LINEAR))
+            &self->render_info, DRM_FORMAT_MOD_INVALID))
       gst_video_info_dma_drm_init (&self->drm_info);
   }
 

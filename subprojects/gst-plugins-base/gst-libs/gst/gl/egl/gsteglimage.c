@@ -744,7 +744,7 @@ gst_egl_image_check_dmabuf_direct (GstGLContext * context,
   GstVideoInfoDmaDrm in_info_dma;
 
   if (!gst_video_info_dma_drm_from_video_info (&in_info_dma, in_info,
-          DRM_FORMAT_MOD_LINEAR))
+          DRM_FORMAT_MOD_INVALID))
     return FALSE;
 
   return gst_egl_image_check_dmabuf_direct_with_dma_drm (context, &in_info_dma,
@@ -845,7 +845,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
   GstVideoInfoDmaDrm in_info_dma;
 
   if (!gst_video_info_dma_drm_from_video_info (&in_info_dma, in_info,
-          DRM_FORMAT_MOD_LINEAR))
+          DRM_FORMAT_MOD_INVALID))
     return NULL;
 
   return gst_egl_image_from_dmabuf_direct_target_with_dma_drm (context,

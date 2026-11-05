@@ -4896,6 +4896,15 @@ GST_START_TEST (test_info_dma_drm_from_video_info)
           DRM_FORMAT_MOD_LINEAR));
   fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
       GST_VIDEO_FORMAT_NV12);
+
+  /* DRM_FORMAT_MOD_INVALID preserves the native non-linear format */
+  fail_unless (gst_video_info_dma_drm_from_video_info (&drm_info, &vinfo,
+          DRM_FORMAT_MOD_INVALID));
+  fail_unless (GST_VIDEO_INFO_FORMAT (&drm_info.vinfo) ==
+      GST_VIDEO_FORMAT_NV12_4L4);
+  fail_unless_equals_int (drm_info.drm_fourcc, DRM_FORMAT_NV12);
+  fail_unless_equals_uint64 (drm_info.drm_modifier,
+      DRM_FORMAT_MOD_VIVANTE_TILED);
 }
 
 GST_END_TEST;

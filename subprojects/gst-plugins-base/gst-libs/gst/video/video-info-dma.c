@@ -350,6 +350,16 @@ gst_video_info_dma_drm_new_from_caps (const GstCaps * caps)
  * Fills @drm_info if @info's format has a valid drm format and @modifier is also
  * valid
  *
+ * Since 1.30 non-linear @info formats are allowed, they will be converted to
+ * the corresponding format with the same fourcc and @modifier. If @modifier is
+ * DRM_FORMAT_MOD_INVALID, the modifier from @info is preserved. If non-linear
+ * #GstVideoFormat exists for the given fourcc and modifier
+ * (e.g. GST_VIDEO_FORMAT_NV12_4L4), it will be used instead of
+ * #GST_VIDEO_FORMAT_DMA_DRM.
+ *
+ * The @modifier parameter is considered deprecated, and should always be set to
+ * DRM_FORMAT_MOD_INVALID.
+ *
  * Returns: %TRUE if @drm_info is filled correctly.
  *
  * Since: 1.24
@@ -366,8 +376,6 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
   g_return_val_if_fail (drm_info != NULL, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
 
-  if (modifier == DRM_FORMAT_MOD_INVALID)
-    return FALSE;
   format = GST_VIDEO_INFO_FORMAT (info);
   fourcc = gst_video_dma_drm_format_from_gst_format (format, &format_modifier);
   if (fourcc == DRM_FORMAT_INVALID)
@@ -375,15 +383,17 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
 
   drm_info->vinfo = *info;
   drm_info->drm_fourcc = fourcc;
-  drm_info->drm_modifier = modifier;
+  drm_info->drm_modifier = format_modifier;
 
-  /* no need to change format to GST_VIDEO_FORMAT_DMA_DRM if we have a native
-   * gst format. */
+  if (modifier == DRM_FORMAT_MOD_INVALID || modifier == format_modifier)
+    return TRUE;
+
+  /* We are entering deprecated territory, convert to a different modifier.
+   * Use a new native gst format if available, otherwise GST_VIDEO_FORMAT_DMA_DRM. */
+  drm_info->drm_modifier = modifier;
   new_format = gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
   if (new_format == GST_VIDEO_FORMAT_UNKNOWN)
     new_format = GST_VIDEO_FORMAT_DMA_DRM;
-  if (new_format == format)
-    return TRUE;
 
   return video_info_change_format (&drm_info->vinfo, new_format);
 }
