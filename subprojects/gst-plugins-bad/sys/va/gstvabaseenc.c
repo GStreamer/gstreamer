@@ -144,12 +144,25 @@ gst_va_base_enc_close (GstVideoEncoder * venc)
   return TRUE;
 }
 
+static void
+_release_all_frames (GstVaBaseEnc * base)
+{
+  GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
+  GList *frames, *l;
+
+  frames = gst_video_encoder_get_frames (venc);
+  for (l = frames; l; l = l->next)
+    gst_video_encoder_release_frame (venc, (GstVideoCodecFrame *) l->data);
+  g_list_free_full (frames, (GDestroyNotify) gst_video_codec_frame_unref);
+}
+
 static gboolean
 gst_va_base_enc_stop (GstVideoEncoder * venc)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
 
   _flush_all_frames (base);
+  _release_all_frames (base);
 
   if (!gst_va_encoder_close (base->encoder)) {
     GST_ERROR_OBJECT (base, "Failed to close the VA encoder");
