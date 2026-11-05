@@ -815,6 +815,11 @@ gst_asf_parse_headers_from_data (guint8 * data, guint size,
       goto error;
     if (!gst_byte_reader_get_uint64_le (&reader, &obj_size))
       goto error;
+    if (obj_size < ASF_GUID_OBJSIZE_SIZE) {
+      GST_WARNING ("ASF: Child object size %" G_GUINT64_FORMAT
+          " is smaller than the object header", obj_size);
+      goto error;
+    }
 
     if (gst_asf_match_guid (guid, &guids[ASF_FILE_PROPERTIES_OBJECT_INDEX])) {
       ret = gst_asf_parse_file_properties_obj (&reader, file_info);
