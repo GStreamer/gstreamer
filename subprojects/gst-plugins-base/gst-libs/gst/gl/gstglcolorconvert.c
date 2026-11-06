@@ -1904,27 +1904,6 @@ gst_gl_color_convert_transform_caps (GstGLContext * context,
   return caps;
 }
 
-/* fixation from videoconvert */
-#define SCORE_FORMAT_CHANGE             1
-#define SCORE_DEPTH_CHANGE              1
-#define SCORE_ALPHA_CHANGE              1
-#define SCORE_CHROMA_W_CHANGE           1
-#define SCORE_CHROMA_H_CHANGE           1
-#define SCORE_PALETTE_CHANGE            1
-
-#define SCORE_COLORSPACE_LOSS           2       /* RGB <-> YUV */
-#define SCORE_DEPTH_LOSS                4       /* change bit depth */
-#define SCORE_ALPHA_LOSS                8       /* lose the alpha channel */
-#define SCORE_CHROMA_W_LOSS             16      /* vertical subsample */
-#define SCORE_CHROMA_H_LOSS             32      /* horizontal subsample */
-#define SCORE_PALETTE_LOSS              64      /* convert to palette format */
-#define SCORE_COLOR_LOSS                128     /* convert to GRAY */
-
-#define COLORSPACE_MASK (GST_VIDEO_FORMAT_FLAG_YUV | \
-                         GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_GRAY)
-#define ALPHA_MASK      (GST_VIDEO_FORMAT_FLAG_ALPHA)
-#define PALETTE_MASK    (GST_VIDEO_FORMAT_FLAG_PALETTE)
-
 static GstGLTextureTarget
 _texture_target_demask (guint target_mask)
 {
@@ -1941,168 +1920,55 @@ _texture_target_demask (guint target_mask)
   return 0;
 }
 
-/* calculate how much loss a conversion would be */
-static void
-score_format_target (const GstVideoFormatInfo * in_info, guint targets_mask,
-    GstVideoFormat v_format, guint other_targets_mask, gint * min_loss,
-    const GstVideoFormatInfo ** out_info, GstGLTextureTarget * result)
+static guint
+_texture_target_mask (const GstStructure * s)
 {
-  const GstVideoFormatInfo *t_info;
-  GstVideoFormatFlags in_flags, t_flags;
-  gint loss;
-
-  t_info = gst_video_format_get_info (v_format);
-  if (!t_info)
-    return;
-
-  /* accept input format immediately without loss */
-  if (in_info == t_info && (targets_mask & other_targets_mask) != 0) {
-    *min_loss = 0;
-    *out_info = t_info;
-    *result = _texture_target_demask (targets_mask & other_targets_mask);
-    return;
-  }
-
-  /* can only passthrough external-oes textures */
-  other_targets_mask &= ~(1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
-  /* try to keep the same target */
-  if (targets_mask & other_targets_mask)
-    other_targets_mask = targets_mask & other_targets_mask;
-
-  loss = SCORE_FORMAT_CHANGE;
-
-  in_flags = GST_VIDEO_FORMAT_INFO_FLAGS (in_info);
-  in_flags &= ~GST_VIDEO_FORMAT_FLAG_LE;
-  in_flags &= ~GST_VIDEO_FORMAT_FLAG_COMPLEX;
-  in_flags &= ~GST_VIDEO_FORMAT_FLAG_UNPACK;
-
-  t_flags = GST_VIDEO_FORMAT_INFO_FLAGS (t_info);
-  t_flags &= ~GST_VIDEO_FORMAT_FLAG_LE;
-  t_flags &= ~GST_VIDEO_FORMAT_FLAG_COMPLEX;
-  t_flags &= ~GST_VIDEO_FORMAT_FLAG_UNPACK;
-
-  if (!conversion_formats_are_supported (in_info, t_info))
-    return;
-
-  if ((t_flags & PALETTE_MASK) != (in_flags & PALETTE_MASK)) {
-    loss += SCORE_PALETTE_CHANGE;
-    if (t_flags & PALETTE_MASK)
-      loss += SCORE_PALETTE_LOSS;
-  }
-
-  if ((t_flags & COLORSPACE_MASK) != (in_flags & COLORSPACE_MASK)) {
-    loss += SCORE_COLORSPACE_LOSS;
-    if (t_flags & GST_VIDEO_FORMAT_FLAG_GRAY)
-      loss += SCORE_COLOR_LOSS;
-  }
-
-  if ((t_flags & ALPHA_MASK) != (in_flags & ALPHA_MASK)) {
-    loss += SCORE_ALPHA_CHANGE;
-    if (in_flags & ALPHA_MASK)
-      loss += SCORE_ALPHA_LOSS;
-  }
-
-  if ((in_info->h_sub[1]) != (t_info->h_sub[1])) {
-    loss += SCORE_CHROMA_H_CHANGE;
-    if ((in_info->h_sub[1]) < (t_info->h_sub[1]))
-      loss += SCORE_CHROMA_H_LOSS;
-  }
-  if ((in_info->w_sub[1]) != (t_info->w_sub[1])) {
-    loss += SCORE_CHROMA_W_CHANGE;
-    if ((in_info->w_sub[1]) < (t_info->w_sub[1]))
-      loss += SCORE_CHROMA_W_LOSS;
-  }
-
-  if ((in_info->bits) != (t_info->bits)) {
-    loss += SCORE_DEPTH_CHANGE;
-    if ((in_info->bits) > (t_info->bits))
-      loss += SCORE_DEPTH_LOSS;
-  }
-
-  if (loss < *min_loss) {
-    GstGLTextureTarget target = _texture_target_demask (other_targets_mask);
-
-    *out_info = t_info;
-    *min_loss = loss;
-    *result = target;
-  }
-}
-
-static void
-gst_gl_color_convert_fixate_format_target (GstCaps * caps, GstCaps * result)
-{
-  GstStructure *ins, *outs;
-  const gchar *in_format;
-  const GstVideoFormatInfo *in_info, *out_info = NULL;
   const GValue *targets;
   guint targets_mask = 0;
-  GstGLTextureTarget target = GST_GL_TEXTURE_TARGET_NONE;
-  gint min_loss = G_MAXINT;
-  guint i, capslen;
 
-  ins = gst_caps_get_structure (caps, 0);
-  in_format = gst_structure_get_string (ins, "format");
-  if (!in_format)
-    return;
-  targets = gst_structure_get_value (ins, "texture-target");
+  targets = gst_structure_get_value (s, "texture-target");
   if (targets)
     targets_mask = gst_gl_value_get_texture_target_mask (targets);
 
-  in_info =
-      gst_video_format_get_info (gst_video_format_from_string (in_format));
-  if (!in_info)
-    return;
+  return targets_mask;
+}
 
-  outs = gst_caps_get_structure (result, 0);
+static gint
+format_loss (GstObject * object, const GstVideoFormatInfo * in_info,
+    const GstVideoFormatInfo * out_info, const GstCapsFeatures * out_features,
+    const GstStructure * ins, GstStructure * outs)
+{
+  gint loss = 0;
 
-  capslen = gst_caps_get_size (result);
-  for (i = 0; i < capslen; i++) {
-    GstStructure *tests;
-    const GValue *format;
-    const GValue *other_targets;
-    guint other_targets_mask = 0;
+  if (gst_caps_features_contains (out_features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    guint in_target_mask = _texture_target_mask (ins);
+    guint out_target_mask = _texture_target_mask (outs);
 
-    tests = gst_caps_get_structure (result, i);
+    /* can only passthrough external-oes textures */
+    if (in_info != out_info)
+      out_target_mask &= ~(1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
 
-    format = gst_structure_get_value (tests, "format");
-    /* should not happen */
-    if (format == NULL)
-      continue;
-
-    other_targets = gst_structure_get_value (tests, "texture-target");
-    if (other_targets)
-      other_targets_mask = gst_gl_value_get_texture_target_mask (other_targets);
-
-    if (GST_VALUE_HOLDS_LIST (format)) {
-      gint j, len;
-
-      len = gst_value_list_get_size (format);
-      for (j = 0; j < len; j++) {
-        const GValue *val;
-
-        val = gst_value_list_get_value (format, j);
-        if (G_VALUE_HOLDS_STRING (val)) {
-          const gchar *format_str = g_value_get_string (val);
-          GstVideoFormat v_format = gst_video_format_from_string (format_str);
-          score_format_target (in_info, targets_mask, v_format,
-              other_targets_mask, &min_loss, &out_info, &target);
-          if (min_loss == 0)
-            break;
-        }
-      }
-    } else if (G_VALUE_HOLDS_STRING (format)) {
-      const gchar *format_str = g_value_get_string (format);
-      GstVideoFormat v_format = gst_video_format_from_string (format_str);
-      score_format_target (in_info, targets_mask, v_format, other_targets_mask,
-          &min_loss, &out_info, &target);
+    GstGLTextureTarget target =
+        _texture_target_demask (in_target_mask & out_target_mask);
+    if (target == GST_GL_TEXTURE_TARGET_NONE) {
+      /* There is no common texture-target, we'll have to convert to one
+       * supported by downstream */
+      target = _texture_target_demask (out_target_mask);
+      loss += 1;
     }
-  }
-  if (out_info)
-    gst_structure_set (outs, "format", G_TYPE_STRING,
-        GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
-  if (target != GST_GL_TEXTURE_TARGET_NONE)
+
+    if (target == GST_GL_TEXTURE_TARGET_NONE) {
+      /* This format has no texture-target field, or only external-oes,
+       * we can't use it. */
+      return G_MAXINT;
+    }
+
     gst_structure_set (outs, "texture-target", G_TYPE_STRING,
         gst_gl_texture_target_to_string (target), NULL);
+  }
+
+  return loss;
 }
 
 /**
@@ -2124,24 +1990,21 @@ gst_gl_color_convert_fixate_caps (GstGLContext * context,
 {
   GstCaps *result;
 
-  result = gst_caps_intersect (other, caps);
-  if (gst_caps_is_empty (result)) {
-    gst_caps_unref (result);
-    result = other;
-  } else {
-    gst_caps_unref (other);
-  }
+  result =
+      gst_video_convertscale_fixate_caps (GST_OBJECT (context), direction,
+      GST_VIDEO_ORIENTATION_IDENTITY, format_loss,
+      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT, caps, other);
+  if (!result)
+    return other;
 
-  result = gst_caps_make_writable (result);
-  gst_gl_color_convert_fixate_format_target (caps, result);
-
-  result = gst_caps_fixate (result);
+  gst_clear_caps (&other);
 
   if (direction == GST_PAD_SINK) {
-    if (gst_caps_is_subset (caps, result)) {
+    if (gst_caps_is_subset (caps, result))
       gst_caps_replace (&result, caps);
-    }
   }
+
+  GST_DEBUG_OBJECT (context, "fixated othercaps to %" GST_PTR_FORMAT, result);
 
   return result;
 }
