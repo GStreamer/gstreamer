@@ -3170,6 +3170,14 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
  *
  * status and jitter contain the return values from the clock wait.
  *
+ * render tells whether the object is rendered when it is not too late.
+ *
+ * As a side effect, last_render_time and earliest_in_time are updated from
+ * rstart when render is %TRUE and the object is not too late, or when the
+ * object is too late and last_render_time is not valid, as at the start or
+ * after the QoS is reset. The emergency rendering and throttle-time are based
+ * on them.
+ *
  * returns %TRUE if the buffer was too late.
  */
 static gboolean
@@ -3234,7 +3242,8 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
   }
 
 done:
-  if (render && (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_render_time))) {
+  if ((render && !late) || (late
+          && !GST_CLOCK_TIME_IS_VALID (priv->last_render_time))) {
     priv->last_render_time = rstart;
     /* the next allowed input timestamp */
     if (priv->throttle_time > 0)
