@@ -1742,6 +1742,51 @@ GST_START_TEST (test_transform_caps_duplicate_group_fails)
 
 GST_END_TEST;
 
+/* Test that tensor groups proposed by downstream are not propagated
+ * upstream, whether or not they are our own group. */
+GST_START_TEST (test_query_caps_drops_downstream_tensor_groups)
+{
+  gchar *model = g_build_filename (GST_TFLITE_TEST_DATA_PATH,
+      "flatten_uint8in_float32out.tflite", NULL);
+  GstHarness *h = harness_new_with_model (model);
+  GstPad *sinkpad = gst_element_get_static_pad (h->element, "sink");
+  GstStructure *produced_groups;
+  GstStructure *dn_proposed_groups;
+  GstCaps *downstream_caps;
+  GstCaps *upstream_caps;
+  guint i;
+
+  produced_groups = gst_structure_new ("tensorgroups",
+      "flatten_uint8in_float32out-group", G_TYPE_INT, 0, NULL);
+  dn_proposed_groups = gst_structure_new ("tensorgroups",
+      "beaver-group", G_TYPE_INT, 0, NULL);
+  downstream_caps = gst_caps_new_simple ("video/x-raw",
+      "tensors", GST_TYPE_STRUCTURE, dn_proposed_groups, NULL);
+  gst_caps_append_structure (downstream_caps,
+      gst_structure_new ("video/x-raw",
+          "tensors", GST_TYPE_STRUCTURE, produced_groups, NULL));
+  gst_structure_free (produced_groups);
+  gst_structure_free (dn_proposed_groups);
+
+  gst_harness_set_sink_caps (h, downstream_caps);
+
+  upstream_caps = gst_pad_query_caps (sinkpad, NULL);
+  fail_unless (upstream_caps != NULL);
+  fail_if (gst_caps_is_empty (upstream_caps));
+
+  for (i = 0; i < gst_caps_get_size (upstream_caps); i++) {
+    fail_unless (get_tensorgroups (gst_caps_get_structure (upstream_caps,
+                i)) == NULL);
+  }
+
+  gst_caps_unref (upstream_caps);
+  gst_object_unref (sinkpad);
+  gst_harness_teardown (h);
+  g_free (model);
+}
+
+GST_END_TEST;
+
 static Suite *
 tfliteinference_suite (void)
 {
@@ -1777,6 +1822,7 @@ tfliteinference_suite (void)
   tcase_add_test (tc, test_transform_caps_preserves_alternative_tensor_groups);
   tcase_add_test (tc, test_transform_caps_accumulates_tensor_groups);
   tcase_add_test (tc, test_transform_caps_duplicate_group_fails);
+  tcase_add_test (tc, test_query_caps_drops_downstream_tensor_groups);
 
   return s;
 }
