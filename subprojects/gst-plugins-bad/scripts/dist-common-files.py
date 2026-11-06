@@ -42,10 +42,14 @@ if __name__ == "__main__":
 
     # Release notes (instead of NEWS) - could also write it out as NEWS.md
     print('Copying release notes into dist staging directory ..')
-    relnotes_src = os.path.join(source_root, '..', '..', 'release-notes', major_minor, f'release-notes-{major_minor}.md')
+    relnotes_src = os.path.join(source_root, '..', '..', 'release-notes',
+                                major_minor, f'release-notes-{major_minor}.md')
     with open(relnotes_src, 'r') as f:
         lines = f.readlines()
-    if not f'### {project_version}\n' in lines:
+    if not f'  - version: "{project_version}"\n' in lines:
+        sys.exit(
+            f'Update {relnotes_src} first, must contain a header entry for {project_version}')
+    if not f'### {project_version} {{#{project_version}}}\n' in lines:
         sys.exit(f'Update {relnotes_src} first, must contain a section for {project_version}')
     if not project_version.endswith('.0'):
         found = False
