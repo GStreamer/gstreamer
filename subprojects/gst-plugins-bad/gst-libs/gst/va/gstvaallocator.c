@@ -37,18 +37,11 @@
 
 #include "gstvaallocator.h"
 
-#ifndef G_OS_WIN32
-#include <sys/types.h>
-#include <unistd.h>
-#endif
-
+#include "gstvaallocator_priv.h"
+#include "gstvadisplay_priv.h"
 #include "gstvasurfacecopy.h"
 #include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
-
-#ifndef DRM_FORMAT_INVALID
-#define DRM_FORMAT_INVALID    0
-#endif
 
 #define GST_CAT_DEFAULT gst_va_memory_debug
 GST_DEBUG_CATEGORY (gst_va_memory_debug);
@@ -497,16 +490,6 @@ gst_va_dmabuf_allocator_new (GstVaDisplay * display)
   return GST_ALLOCATOR (self);
 }
 
-static inline goffset
-_get_fd_size (gint fd)
-{
-#ifndef G_OS_WIN32
-  return lseek (fd, 0, SEEK_END);
-#else
-  return 0;
-#endif
-}
-
 static gboolean
 gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
 {
@@ -766,7 +749,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     gint fd = desc.objects[i].fd;
     /* prime descriptor reports the total size of the object, including regions
      * which aren't part surface's space. Let's just grab the surface's size: */
-    gsize size = _get_fd_size (fd);
+    gsize size = gst_va_get_fd_size (fd);
     GstMemory *mem = gst_dmabuf_allocator_alloc_with_flags (allocator, fd,
         size, GST_FD_MEMORY_FLAG_KEEP_MAPPED);
 
@@ -1105,141 +1088,14 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
   return TRUE;
 }
 
-static gboolean
-_is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
-{
-  guint i;
-
-  g_assert (cur <= GST_VIDEO_MAX_PLANES);
-
-  if (cur == 0)
-    return FALSE;
-
-  for (i = 0; i < cur; i++) {
-    if (fds[i] == fds[cur]) {
-      if (prev)
-        *prev = i;
-      return TRUE;
-    }
-  }
-  return FALSE;
-}
-
-/**
- * gst_va_dmabuf_memories_setup:
- * @display: a #GstVaDisplay
- * @drm_info: a #GstVideoInfoDmaDrm
- * @mem: (array fixed-size=4) (element-type GstMemory): Memories. One
- *     per plane.
- * @fds: (array fixed-size=4) (element-type uintptr_t): array of
- *     DMABuf file descriptors.
- * @offset: (array fixed-size=4) (element-type gsize): array of memory
- *     offsets.
- * @usage_hint: VA usage hint.
- *
- * It imports the array of @mem, representing a single frame, into a
- * VASurfaceID and it's attached into every @mem.
- *
- * Returns: %TRUE if frame is imported correctly into a VASurfaceID;
- * %FALSE otherwise.
- *
- * Since: 1.22
- */
-/* XXX: use a surface pool to control the created surfaces */
 gboolean
 gst_va_dmabuf_memories_setup (GstVaDisplay * display,
     GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
     uintptr_t fds[GST_VIDEO_MAX_PLANES], gsize offset[GST_VIDEO_MAX_PLANES],
     guint usage_hint)
 {
-  GstVideoFormat format;
-  GstVaBufferSurface *buf;
-  GstVideoInfo *info = &drm_info->vinfo;
-  /* *INDENT-OFF* */
-  VADRMPRIMESurfaceDescriptor desc = {
-    .width = GST_VIDEO_INFO_WIDTH (info),
-    .height = GST_VIDEO_INFO_HEIGHT (info),
-    /* GStreamer can only describe one PRIME layer */
-    .num_layers = 1,
-  };
-  /* *INDENT-ON* */
-  VASurfaceID surface;
-  guint32 fourcc, rt_format, drm_fourcc;
-  guint64 drm_modifier;
-  guint i, j, prev, n_planes;
-  gboolean ret;
-
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
-
-  n_planes = GST_VIDEO_INFO_N_PLANES (info);
-
-  format = (drm_info->drm_fourcc == DRM_FORMAT_INVALID) ?
-      GST_VIDEO_INFO_FORMAT (info) :
-      gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
-    return FALSE;
-
-  drm_fourcc = (drm_info->drm_fourcc == DRM_FORMAT_INVALID) ?
-      gst_va_drm_fourcc_from_video_format (format) : drm_info->drm_fourcc;
-  if (drm_fourcc == 0)
-    return FALSE;
-
-  rt_format = gst_va_chroma_from_video_format (format);
-  if (rt_format == 0)
-    return FALSE;
-
-  fourcc = gst_va_fourcc_from_video_format (format);
-  if (fourcc == 0)
-    return FALSE;
-
-  drm_modifier = (drm_info->drm_modifier == DRM_FORMAT_MOD_INVALID) ?
-      DRM_FORMAT_MOD_LINEAR : drm_info->drm_modifier;
-
-  desc.fourcc = fourcc;
-  desc.layers[0].num_planes = n_planes;
-  desc.layers[0].drm_format = drm_fourcc;
-
-  for (i = j = 0; i < n_planes; i++) {
-    desc.layers[0].pitch[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
-    desc.layers[0].offset[i] = offset[i];
-
-    if (_is_fd_repeated (fds, i, &prev)) {
-      desc.layers[0].object_index[i] = prev;
-      continue;
-    }
-
-    desc.objects[j].fd = fds[i];
-    desc.objects[j].size = _get_fd_size (fds[i]);
-    desc.objects[j].drm_format_modifier = drm_modifier;
-
-    desc.layers[0].object_index[i] = j;
-    j++;
-  }
-
-  desc.num_objects = j;
-
-  ret = va_create_surfaces (display, rt_format, fourcc, desc.width, desc.height,
-      usage_hint, NULL, 0, &desc, &surface, 1);
-  if (!ret)
-    return FALSE;
-
-  GST_LOG_OBJECT (display, "Created surface %#x [%dx%d]", surface, desc.width,
-      desc.height);
-
-  buf = gst_va_buffer_surface_new (surface);
-  buf->display = gst_object_ref (display);
-  buf->n_mems = n_planes;
-  memcpy (buf->mems, mem, sizeof (buf->mems));
-
-  for (i = 0; i < n_planes; i++) {
-    gst_va_buffer_surface_ref (buf);
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem[i]),
-        gst_va_buffer_surface_quark (), buf, gst_va_buffer_surface_unref);
-    GST_INFO_OBJECT (display, "setting surface %#x to dmabuf fd %d",
-        buf->surface, gst_dmabuf_memory_get_fd (mem[i]));
-  }
-
-  return TRUE;
+  return gst_va_display_setup_dmabuf_memories (display, drm_info, mem, fds,
+      offset, usage_hint);
 }
 
 /*===================== GstVaAllocator / GstVaMemory =========================*/
@@ -2332,4 +2188,26 @@ gst_va_buffer_peek_display (GstBuffer * buffer)
     return NULL;
 
   return gst_va_memory_peek_display (mem);
+}
+
+/* Transitional method for setting a VASurface to a set of memories */
+void
+gst_va_memories_set_surface (GstVaDisplay * display, VASurfaceID surface,
+    GstMemory * mem[GST_VIDEO_MAX_PLANES], guint n_mems)
+{
+  GstVaBufferSurface *buf;
+  guint i;
+
+  buf = gst_va_buffer_surface_new (surface);
+  buf->display = gst_object_ref (display);
+  buf->n_mems = n_mems;
+  memcpy (buf->mems, mem, sizeof (buf->mems));
+
+  for (i = 0; i < n_mems; i++) {
+    gst_va_buffer_surface_ref (buf);
+    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem[i]),
+        gst_va_buffer_surface_quark (), buf, gst_va_buffer_surface_unref);
+    GST_INFO_OBJECT (display, "setting surface %#x to dmabuf fd %d",
+        buf->surface, gst_dmabuf_memory_get_fd (mem[i]));
+  }
 }
