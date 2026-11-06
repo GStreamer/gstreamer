@@ -480,6 +480,38 @@ VADisplay.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="import_buffer" c:identifier="gst_va_display_import_buffer" version="1.30" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">Returns the VASurfaceID of @buffer in @self. If @buffer is made of
+DMABuf memories not yet imported in @self, they are imported into a
+new VASurfaceID.
+
+It is safe to call this function concurrently with the same @buffer:
+only one VASurfaceID is created in @self.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">the VASurfaceID of @buffer, or VA_INVALID_ID
+    if @buffer cannot be imported.</doc>
+          <type name="guint" c:type="VASurfaceID"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="drm_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVideoInfoDmaDrm describing @buffer</doc>
+            <type name="GstVideo.VideoInfoDmaDrm" c:type="const GstVideoInfoDmaDrm*"/>
+          </parameter>
+          <parameter name="usage_hint" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">VA usage hint.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="initialize" c:identifier="gst_va_display_initialize" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">If the display is set by the user (foreign) it is assumed that the
 driver is already initialized, thus this function is noop.

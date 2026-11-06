@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/va/va_fwd.h>
 #include <gst/va/va-prelude.h>
 #include <va/va.h>
@@ -132,6 +133,11 @@ GST_VA_API
 gboolean              gst_va_display_check_version        (GstVaDisplay * self,
                                                            guint major,
                                                            guint minor);
+GST_VA_API
+VASurfaceID           gst_va_display_import_buffer        (GstVaDisplay * self,
+                                                           GstBuffer * buffer,
+                                                           const GstVideoInfoDmaDrm * drm_info,
+                                                           guint usage_hint);
 GST_VA_API
 VASurfaceID           gst_va_display_get_memory_surface   (GstVaDisplay * self,
                                                            GstMemory * mem);

@@ -62,8 +62,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
         "vabaseenc", 0, "vabaseenc element"););
 /* *INDENT-ON* */
 
-extern GRecMutex GST_VA_SHARED_LOCK;
-
 static void
 gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
 {

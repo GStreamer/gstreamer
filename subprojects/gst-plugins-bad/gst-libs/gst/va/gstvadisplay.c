@@ -793,6 +793,125 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
   return surface != VA_INVALID_ID;
 }
 
+/* Finds the DMABuf memory, fd and offset of each plane of @buffer, and
+ * updates @drm_info with @buffer's video meta. */
+static gboolean
+_find_dmabuf_memories (GstBuffer * buffer, GstVideoInfoDmaDrm * drm_info,
+    GstMemory * mems[GST_VIDEO_MAX_PLANES], uintptr_t fds[GST_VIDEO_MAX_PLANES],
+    gsize offset[GST_VIDEO_MAX_PLANES])
+{
+  GstVideoMeta *meta;
+  guint i, n_planes;
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (&drm_info->vinfo);
+
+  meta = gst_buffer_get_video_meta (buffer);
+
+  /* Update video info based on video meta */
+  if (meta) {
+    if (meta->n_planes != n_planes)
+      return FALSE;
+
+    GST_VIDEO_INFO_WIDTH (&drm_info->vinfo) = meta->width;
+    GST_VIDEO_INFO_HEIGHT (&drm_info->vinfo) = meta->height;
+
+    for (i = 0; i < n_planes; i++) {
+      GST_VIDEO_INFO_PLANE_OFFSET (&drm_info->vinfo, i) = meta->offset[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (&drm_info->vinfo, i) = meta->stride[i];
+    }
+  }
+
+  /* Find and validate all memories */
+  for (i = 0; i < n_planes; i++) {
+    guint length;
+    guint mem_idx;
+    gsize mem_skip;
+
+    if (!gst_buffer_find_memory (buffer,
+            GST_VIDEO_INFO_PLANE_OFFSET (&drm_info->vinfo, i), 1, &mem_idx,
+            &length, &mem_skip))
+      return FALSE;
+
+    /* We can't have more then one dmabuf per plane */
+    if (length != 1)
+      return FALSE;
+
+    mems[i] = gst_buffer_peek_memory (buffer, mem_idx);
+
+    /* And all memory found must be dmabuf */
+    if (!gst_is_dmabuf_memory (mems[i]))
+      return FALSE;
+
+    offset[i] = mems[i]->offset + mem_skip;
+    fds[i] = gst_dmabuf_memory_get_fd (mems[i]);
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_va_display_import_buffer: (skip)
+ * @self: a #GstVaDisplay
+ * @buffer: a #GstBuffer
+ * @drm_info: a #GstVideoInfoDmaDrm describing @buffer
+ * @usage_hint: VA usage hint.
+ *
+ * Returns the VASurfaceID of @buffer in @self. If @buffer is made of
+ * DMABuf memories not yet imported in @self, they are imported into a
+ * new VASurfaceID.
+ *
+ * It is safe to call this function concurrently with the same @buffer:
+ * only one VASurfaceID is created in @self.
+ *
+ * Returns: (type guint): the VASurfaceID of @buffer, or VA_INVALID_ID
+ *     if @buffer cannot be imported.
+ *
+ * Since: 1.30
+ */
+VASurfaceID
+gst_va_display_import_buffer (GstVaDisplay * self, GstBuffer * buffer,
+    const GstVideoInfoDmaDrm * drm_info, guint usage_hint)
+{
+  GstVaDisplayPrivate *priv;
+  GstVaBufferSurface *buf;
+  GstMemory *mem;
+  VASurfaceID surface = VA_INVALID_ID;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), VA_INVALID_ID);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), VA_INVALID_ID);
+  g_return_val_if_fail (drm_info != NULL, VA_INVALID_ID);
+
+  if (gst_buffer_n_memory (buffer) == 0)
+    return VA_INVALID_ID;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+
+  /* This will eliminate most non-dmabuf out there */
+  if (!gst_is_dmabuf_memory (mem))
+    return gst_va_display_get_memory_surface (self, mem);
+
+  priv = GET_PRIV (self);
+
+  g_mutex_lock (&priv->surfaces_lock);
+  buf = g_hash_table_lookup (priv->surfaces, mem);
+  if (buf) {
+    surface = buf->surface;
+  } else {
+    GstVideoInfoDmaDrm info = *drm_info;
+    GstMemory *mems[GST_VIDEO_MAX_PLANES];
+    uintptr_t fds[GST_VIDEO_MAX_PLANES];
+    gsize offset[GST_VIDEO_MAX_PLANES];
+
+    if (_find_dmabuf_memories (buffer, &info, mems, fds, offset)) {
+      surface = _import_dmabuf_memories_unlocked (self, &info, mems, fds,
+          offset, usage_hint);
+    }
+  }
+  g_mutex_unlock (&priv->surfaces_lock);
+
+  return surface;
+}
+
 /**
  * gst_va_display_get_memory_surface: (skip)
  * @self: a #GstVaDisplay

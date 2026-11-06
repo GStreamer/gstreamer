@@ -31,89 +31,16 @@
 
 #define GST_CAT_DEFAULT (importer->debug_category)
 
-/* big bad mutex to exclusive access to shared stream buffers, such as
- * DMABuf after a tee */
-static GRecMutex GST_VA_SHARED_LOCK = { 0, };
-
 static gboolean
-_try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
+_try_import_buffer (GstVaBufferImporter * importer, GstBuffer * inbuf)
 {
-  GstVideoMeta *meta;
-  GstVideoInfoDmaDrm drm_info = *importer->in_drm_info;
-  GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  guint i, n_planes, usage_hint;
-  gsize offset[GST_VIDEO_MAX_PLANES];
-  uintptr_t fd[GST_VIDEO_MAX_PLANES];
-
-  /* This will eliminate most non-dmabuf out there */
-  if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
-    return FALSE;
-
-  n_planes = GST_VIDEO_INFO_N_PLANES (&drm_info.vinfo);
-
-  meta = gst_buffer_get_video_meta (inbuf);
-
-  /* Update video info importerd on video meta */
-  if (meta) {
-    GST_VIDEO_INFO_WIDTH (&drm_info.vinfo) = meta->width;
-    GST_VIDEO_INFO_HEIGHT (&drm_info.vinfo) = meta->height;
-
-    g_assert (n_planes == meta->n_planes);
-
-    for (i = 0; i < n_planes; i++) {
-      GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, i) = meta->offset[i];
-      GST_VIDEO_INFO_PLANE_STRIDE (&drm_info.vinfo, i) = meta->stride[i];
-    }
-  }
-
-  /* Find and validate all memories */
-  for (i = 0; i < n_planes; i++) {
-    guint length;
-    guint mem_idx;
-    gsize mem_skip;
-
-    if (!gst_buffer_find_memory (inbuf,
-            GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, i), 1, &mem_idx,
-            &length, &mem_skip))
-      return FALSE;
-
-    /* We can't have more then one dmabuf per plane */
-    if (length != 1)
-      return FALSE;
-
-    mems[i] = gst_buffer_peek_memory (inbuf, mem_idx);
-
-    /* And all memory found must be dmabuf */
-    if (!gst_is_dmabuf_memory (mems[i]))
-      return FALSE;
-
-    offset[i] = mems[i]->offset + mem_skip;
-    fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
-  }
+  guint usage_hint;
 
   usage_hint = va_get_surface_usage_hint (importer->display,
       importer->entrypoint, GST_PAD_SINK, TRUE);
 
-  /* Now create a VASurfaceID for the buffer */
-  return gst_va_dmabuf_memories_setup (importer->display, &drm_info, mems, fd,
-      offset, usage_hint);
-}
-
-static gboolean
-_try_import_buffer (GstVaBufferImporter * importer, GstBuffer * inbuf)
-{
-  VASurfaceID surface;
-  gboolean ret;
-
-  surface = gst_va_display_get_buffer_surface (importer->display, inbuf);
-  if (surface != VA_INVALID_ID)
-    return TRUE;
-
-  g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
-  ret = _try_import_dmabuf_unlocked (importer, inbuf);
-  g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
-
-  return ret;
+  return gst_va_display_import_buffer (importer->display, inbuf,
+      importer->in_drm_info, usage_hint) != VA_INVALID_ID;
 }
 
 GstFlowReturn
@@ -124,10 +51,9 @@ gst_va_buffer_importer_import (GstVaBufferImporter * importer,
   GstBufferPool *pool;
   GstFlowReturn ret;
   GstVideoFrame in_frame, out_frame;
-  gboolean imported, copied;
+  gboolean copied;
 
-  imported = _try_import_buffer (importer, inbuf);
-  if (imported) {
+  if (_try_import_buffer (importer, inbuf)) {
     *outbuf = gst_buffer_ref (inbuf);
     return GST_FLOW_OK;
   }

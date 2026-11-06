@@ -988,6 +988,28 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
   return TRUE;
 }
 
+/**
+ * gst_va_dmabuf_memories_setup:
+ * @display: a #GstVaDisplay
+ * @drm_info: a #GstVideoInfoDmaDrm
+ * @mem: (array fixed-size=4) (element-type GstMemory): Memories. One
+ *     per plane.
+ * @fds: (array fixed-size=4) (element-type uintptr_t): array of
+ *     DMABuf file descriptors.
+ * @offset: (array fixed-size=4) (element-type gsize): array of memory
+ *     offsets.
+ * @usage_hint: VA usage hint.
+ *
+ * It imports the array of @mem, representing a single frame, into a
+ * VASurfaceID and it's attached into every @mem.
+ *
+ * Returns: %TRUE if frame is imported correctly into a VASurfaceID;
+ * %FALSE otherwise.
+ *
+ * Since: 1.22
+ *
+ * Deprecated: 1.30: Use gst_va_display_import_buffer() instead.
+ */
 gboolean
 gst_va_dmabuf_memories_setup (GstVaDisplay * display,
     GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
