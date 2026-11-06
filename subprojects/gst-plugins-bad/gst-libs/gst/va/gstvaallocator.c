@@ -60,51 +60,6 @@ _init_debug_category (void)
 #endif
 }
 
-/*=========================== Quarks for GstMemory ===========================*/
-
-static GQuark
-gst_va_buffer_surface_quark (void)
-{
-  static gsize surface_quark = 0;
-
-  if (g_once_init_enter (&surface_quark)) {
-    GQuark quark = g_quark_from_string ("GstVaBufferSurface");
-    g_once_init_leave (&surface_quark, quark);
-  }
-
-  return surface_quark;
-}
-
-static GQuark
-gst_va_buffer_aux_surface_quark (void)
-{
-  static gsize surface_quark = 0;
-
-  if (g_once_init_enter (&surface_quark)) {
-    GQuark quark = g_quark_from_string ("GstVaBufferAuxSurface");
-    g_once_init_leave (&surface_quark, quark);
-  }
-
-  return surface_quark;
-}
-
-/*========================= GstVaBufferSurface ===============================*/
-
-
-static GstVaBufferSurface *
-gst_va_display_peek_buffer_surface (GstVaDisplay * display, GstMemory * mem)
-{
-  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      gst_va_buffer_surface_quark());
-}
-
-static GstVaBufferSurface *
-gst_va_display_peek_aux_surface (GstVaDisplay * display, GstMemory * mem)
-{
-  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      gst_va_buffer_aux_surface_quark());
-}
-
 /*=========================== GstVaMemoryPool ================================*/
 
 /* queue for disposed surfaces */
@@ -150,12 +105,10 @@ gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
     /* destroy the surface */
     buf = gst_va_display_peek_buffer_surface (display, mem);
     if (buf) {
-      if (g_atomic_ref_count_dec (&buf->ref_count)) {
-        GST_LOG ("Destroying surface %#x", buf->surface);
-        va_destroy_surfaces (display, &buf->surface, 1);
+      /* the display holds one reference per memory: if this is the last
+       * one, the surface is destroyed when the memory is finalized */
+      if (g_atomic_ref_count_compare (&buf->ref_count, 1))
         self->surface_count -= 1;       /* GstVaDmabufAllocator */
-        g_free (buf);
-      }
     } else {
       self->surface_count -= 1; /* GstVaAllocator */
     }
@@ -674,8 +627,8 @@ gst_va_dmabuf_try_modifier_for_format (GstVaDisplay * display,
   return TRUE;
 }
 
-/* Creates an exported VASurfaceID and adds it as @buffer's memories
- * qdata
+/* Creates an exported VASurfaceID and associates it with @buffer's
+ * memories in the display
  *
  * If @info is not NULL, a dummy (non-pooled) buffer is created to
  * update offsets and strides, and it has to be unrefed immediately.
@@ -689,7 +642,6 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   VADRMPRIMESurfaceDescriptor desc = { 0, };
   VASurfaceID surface;
   guint32 i;
-  GDestroyNotify buffer_destroy = NULL;
   gsize object_offset[4];
 
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
@@ -698,7 +650,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
           &self->info.drm_modifier, 1, &self->info.vinfo, &surface, &desc))
     return FALSE;
 
-  buf = gst_va_buffer_surface_new (NULL, surface);
+  buf = gst_va_buffer_surface_new (self->display, surface);
   if (G_UNLIKELY (info))
     *info = self->info;
 
@@ -722,21 +674,12 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     gst_buffer_append_memory (buffer, mem);
     buf->mems[i] = mem;
 
+    /* if @info, surface will be destroyed as soon as buffer is
+     * destroyed (e.g. gst_va_dmabuf_allocator_try()) */
     if (G_LIKELY (!info)) {
       GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
       g_atomic_int_add (&buf->ref_mems_count, 1);
     } else {
-      /* if no @info, surface will be destroyed as soon as buffer is
-       * destroyed (e.g. gst_va_dmabuf_allocator_try()) */
-      buf->display = gst_object_ref (self->display);
-      buffer_destroy = gst_va_buffer_surface_unref;
-    }
-
-    gst_va_buffer_surface_ref (buf);
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
-        gst_va_buffer_surface_quark (), buf, buffer_destroy);
-
-    if (G_UNLIKELY (info)) {
       GST_VIDEO_INFO_PLANE_OFFSET (&info->vinfo, i) =
           GST_VIDEO_INFO_SIZE (&info->vinfo);
     }
@@ -747,6 +690,9 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
         GST_VIDEO_INFO_HEIGHT (&self->info.vinfo), size,
         self->info.drm_modifier);
   }
+
+  gst_va_display_set_buffer_surface (self->display, buf);
+  gst_va_buffer_surface_unref (buf);
 
   if (G_UNLIKELY (info)) {
     if (desc.num_objects > 0) {
@@ -849,8 +795,6 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
 
     /* if not found, free all the popped memories and bail */
     if (!found) {
-      if (!buf->display)
-        buf->display = gst_object_ref (self->display);
       for (j = 0; j < idx; j++) {
         gst_object_ref (buf->mems[j]->allocator);
         GST_MINI_OBJECT (mems[j])->dispose = NULL;
@@ -1947,6 +1891,17 @@ _memory_peek_display (GstMemory * mem)
   return gst_va_allocator_peek_display (mem->allocator);
 }
 
+static VASurfaceID
+_memory_get_surface (GstMemory * mem)
+{
+  GstVaDisplay *display = _memory_peek_display (mem);
+
+  if (!display)
+    return VA_INVALID_ID;
+
+  return gst_va_display_get_memory_surface (display, mem);
+}
+
 /**
  * gst_va_memory_get_surface: (skip)
  * @mem: a #GstMemory
@@ -1962,23 +1917,10 @@ _memory_peek_display (GstMemory * mem)
 VASurfaceID
 gst_va_memory_get_surface (GstMemory * mem)
 {
-  VASurfaceID surface = VA_INVALID_ID;
+  g_return_val_if_fail (GST_IS_MINI_OBJECT_TYPE (mem, GST_TYPE_MEMORY),
+      VA_INVALID_ID);
 
-  if (!mem->allocator)
-    return VA_INVALID_ID;
-
-  if (GST_IS_DMABUF_ALLOCATOR (mem->allocator)) {
-    GstVaBufferSurface *buf;
-
-    buf = gst_va_display_peek_buffer_surface (_memory_peek_display (mem), mem);
-    if (buf)
-      surface = buf->surface;
-  } else if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
-    GstVaMemory *va_mem = (GstVaMemory *) mem;
-    surface = va_mem->surface;
-  }
-
-  return surface;
+  return _memory_get_surface (mem);
 }
 
 /**
@@ -1989,21 +1931,15 @@ gst_va_memory_get_surface (GstMemory * mem)
  *     this @mem belongs to. The reference of the display is unchanged.
  *
  * Since: 1.22
+ *
+ * Deprecated: 1.30: Use gst_va_display_get_memory_surface() to check
+ * whether @mem has a VASurfaceID in a given display. This function only
+ * works with memories allocated by a VA allocator.
  */
 GstVaDisplay *
 gst_va_memory_peek_display (GstMemory * mem)
 {
-  GstAllocator *allocator;
-
-  if (!mem)
-    return NULL;
-
-  allocator = GST_MEMORY_CAST (mem)->allocator;
-  /* no allocator, not VA kind memory. */
-  if (!allocator)
-    return NULL;
-
-  return gst_va_allocator_peek_display (allocator);
+  return _memory_peek_display (mem);
 }
 
 /**
@@ -2023,11 +1959,13 @@ gst_va_buffer_get_surface (GstBuffer * buffer)
 {
   GstMemory *mem;
 
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), VA_INVALID_ID);
+
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!mem)
     return VA_INVALID_ID;
 
-  return gst_va_memory_get_surface (mem);
+  return _memory_get_surface (mem);
 }
 
 /**
@@ -2105,11 +2043,8 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     return FALSE;
 
   surface_buffer = gst_va_buffer_surface_new (display, surface);
-  gst_va_buffer_surface_ref (surface_buffer);
-
-  gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
-      gst_va_buffer_aux_surface_quark (), surface_buffer,
-      gst_va_buffer_surface_unref);
+  gst_va_display_set_aux_surface (display, mem, surface_buffer);
+  gst_va_buffer_surface_unref (surface_buffer);
 
   return TRUE;
 }
@@ -2142,9 +2077,9 @@ gst_va_buffer_get_aux_surface (GstBuffer * buffer)
   if (!surface_buffer)
     return VA_INVALID_ID;
 
-  /* No one increments it, and its lifetime is the same with the
+  /* Only the display holds it, and its lifetime is the same with the
      gstmemory itself */
-  g_assert (g_atomic_int_get (&surface_buffer->ref_count) == 1);
+  g_assert (g_atomic_ref_count_compare (&surface_buffer->ref_count, 1));
 
   return surface_buffer->surface;
 }
@@ -2157,6 +2092,10 @@ gst_va_buffer_get_aux_surface (GstBuffer * buffer)
  *     @buffer belongs to. The reference of the display is unchanged.
  *
  * Since: 1.22
+ *
+ * Deprecated: 1.30: Use gst_va_display_get_buffer_surface() to check
+ * whether @buffer has a VASurfaceID in a given display. This function
+ * only works with memories allocated by a VA allocator.
  */
 GstVaDisplay *
 gst_va_buffer_peek_display (GstBuffer * buffer)
@@ -2171,26 +2110,5 @@ gst_va_buffer_peek_display (GstBuffer * buffer)
   if (!mem)
     return NULL;
 
-  return gst_va_memory_peek_display (mem);
-}
-
-/* Transitional method for setting a VASurface to a set of memories */
-void
-gst_va_memories_set_surface (GstVaDisplay * display, VASurfaceID surface,
-    GstMemory * mem[GST_VIDEO_MAX_PLANES], guint n_mems)
-{
-  GstVaBufferSurface *buf;
-  guint i;
-
-  buf = gst_va_buffer_surface_new (display, surface);
-  buf->n_mems = n_mems;
-  memcpy (buf->mems, mem, sizeof (buf->mems));
-
-  for (i = 0; i < n_mems; i++) {
-    gst_va_buffer_surface_ref (buf);
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem[i]),
-        gst_va_buffer_surface_quark (), buf, gst_va_buffer_surface_unref);
-    GST_INFO_OBJECT (display, "setting surface %#x to dmabuf fd %d",
-        buf->surface, gst_dmabuf_memory_get_fd (mem[i]));
-  }
+  return _memory_peek_display (mem);
 }

@@ -43,10 +43,12 @@ G_GNUC_INTERNAL
 void                  gst_va_buffer_surface_unref         (gpointer data);
 
 G_GNUC_INTERNAL
-void                  gst_va_buffer_surface_ref           (GstVaBufferSurface * buf);
-
-G_GNUC_INTERNAL
 GstVaBufferSurface *  gst_va_buffer_surface_new           (GstVaDisplay * display,
                                                            VASurfaceID surface);
+
+static inline
+void gst_va_buffer_surface_ref (GstVaBufferSurface * buf) {
+  g_atomic_ref_count_inc (&buf->ref_count);
+}
 
 G_END_DECLS

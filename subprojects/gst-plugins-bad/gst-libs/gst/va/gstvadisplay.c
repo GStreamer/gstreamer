@@ -73,6 +73,13 @@ struct _GstVaDisplayPrivate
 
   guint driver_major;
   guint driver_minor;
+
+  /* GstMemory (weak ref) -> GstVaBufferSurface (ref) */
+  GMutex surfaces_lock;
+  GHashTable *surfaces;
+  /* GstMemory (weak ref) -> GstVaBufferSurface (ref) */
+  GMutex aux_surfaces_lock;
+  GHashTable *aux_surfaces;
 };
 
 #define gst_va_display_parent_class parent_class
@@ -299,6 +306,14 @@ gst_va_display_finalize (GObject * object)
 
   g_free (priv->vendor_desc);
 
+  /* every surface in the table holds a reference on the display */
+  g_assert (g_hash_table_size (priv->surfaces) == 0);
+  g_hash_table_unref (priv->surfaces);
+  g_assert (g_hash_table_size (priv->aux_surfaces) == 0);
+  g_hash_table_unref (priv->aux_surfaces);
+  g_mutex_clear (&priv->surfaces_lock);
+  g_mutex_clear (&priv->aux_surfaces_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -331,6 +346,13 @@ gst_va_display_init (GstVaDisplay * self)
   GstVaDisplayPrivate *priv = GET_PRIV (self);
 
   priv->impl = GST_VA_IMPLEMENTATION_INVALID;
+
+  g_mutex_init (&priv->surfaces_lock);
+  g_mutex_init (&priv->aux_surfaces_lock);
+  priv->surfaces =
+      g_hash_table_new_full (NULL, NULL, NULL, gst_va_buffer_surface_unref);
+  priv->aux_surfaces =
+      g_hash_table_new_full (NULL, NULL, NULL, gst_va_buffer_surface_unref);
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -498,6 +520,94 @@ gst_va_display_check_version (GstVaDisplay * self, guint major, guint minor)
   return TRUE;
 }
 
+/*========================= GstVaBufferSurface ===============================*/
+
+static void
+_memory_weak_notify (gpointer data, GstMiniObject * obj)
+{
+  GstVaDisplay *self = data;
+  GstVaDisplayPrivate *priv = GET_PRIV (self);
+  GstVaBufferSurface *buf = NULL;
+
+  g_mutex_lock (&priv->surfaces_lock);
+  g_hash_table_steal_extended (priv->surfaces, obj, NULL, (gpointer *) & buf);
+  g_mutex_unlock (&priv->surfaces_lock);
+
+  gst_va_buffer_surface_unref (buf);
+}
+
+static void
+_memory_aux_weak_notify (gpointer data, GstMiniObject * obj)
+{
+  GstVaDisplay *self = data;
+  GstVaDisplayPrivate *priv = GET_PRIV (self);
+  GstVaBufferSurface *buf = NULL;
+
+  g_mutex_lock (&priv->aux_surfaces_lock);
+  g_hash_table_steal_extended (priv->aux_surfaces, obj, NULL,
+      (gpointer *) & buf);
+  g_mutex_unlock (&priv->aux_surfaces_lock);
+
+  gst_va_buffer_surface_unref (buf);
+}
+
+static void
+_set_buffer_surface_unlocked (GstVaDisplay * self, GstVaBufferSurface * buf)
+{
+  GstVaDisplayPrivate *priv = GET_PRIV (self);
+
+  for (guint i = 0; i < buf->n_mems; i++) {
+    gst_va_buffer_surface_ref (buf);
+
+    /* We could have multiple times the same memory, when planes are on a single
+     * dmabuf. Only take one weak ref in that case, the hash table's destroy
+     * function will unref buf. */
+    if (g_hash_table_insert (priv->surfaces, buf->mems[i], buf)) {
+      gst_mini_object_weak_ref (GST_MINI_OBJECT (buf->mems[i]),
+          _memory_weak_notify, self);
+    }
+  }
+}
+
+/* Associates @buf to each of its memories in @self, taking a reference
+ * on @buf until each memory is finalized. If a memory was already
+ * associated with a surface in @self, the previous one is replaced. */
+void
+gst_va_display_set_buffer_surface (GstVaDisplay * self,
+    GstVaBufferSurface * buf)
+{
+  GstVaDisplayPrivate *priv;
+
+  g_return_if_fail (GST_IS_VA_DISPLAY (self));
+  g_return_if_fail (buf != NULL);
+  g_return_if_fail (buf->display == self);
+  g_return_if_fail (buf->n_mems <= GST_VIDEO_MAX_PLANES);
+
+  priv = GET_PRIV (self);
+
+  g_mutex_lock (&priv->surfaces_lock);
+  _set_buffer_surface_unlocked (self, buf);
+  g_mutex_unlock (&priv->surfaces_lock);
+}
+
+GstVaBufferSurface *
+gst_va_display_peek_buffer_surface (GstVaDisplay * self, GstMemory * mem)
+{
+  GstVaDisplayPrivate *priv;
+  GstVaBufferSurface *buf;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
+  g_return_val_if_fail (mem != NULL, NULL);
+
+  priv = GET_PRIV (self);
+
+  g_mutex_lock (&priv->surfaces_lock);
+  buf = g_hash_table_lookup (priv->surfaces, mem);
+  g_mutex_unlock (&priv->surfaces_lock);
+
+  return buf;
+}
+
 static gboolean
 _is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
 {
@@ -518,35 +628,72 @@ _is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
   return FALSE;
 }
 
-/* Imports @mem, representing a single frame, into a VASurfaceID
- * associated with every @mem in @self, unless already imported. */
-gboolean
-gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
-    GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
+/* Associates the auxiliary surface @buf to @mem in @self, taking a
+ * reference on @buf until @mem is finalized. If @mem already had an
+ * auxiliary surface in @self, the previous one is replaced. */
+void
+gst_va_display_set_aux_surface (GstVaDisplay * self, GstMemory * mem,
+    GstVaBufferSurface * buf)
+{
+  GstVaDisplayPrivate *priv;
+
+  g_return_if_fail (GST_IS_VA_DISPLAY (self));
+  g_return_if_fail (mem != NULL);
+  g_return_if_fail (buf != NULL);
+  g_return_if_fail (buf->display == self);
+
+  priv = GET_PRIV (self);
+
+  gst_va_buffer_surface_ref (buf);
+
+  g_mutex_lock (&priv->aux_surfaces_lock);
+  if (g_hash_table_insert (priv->aux_surfaces, mem, buf)) {
+    gst_mini_object_weak_ref (GST_MINI_OBJECT (mem), _memory_aux_weak_notify,
+        self);
+  }
+  g_mutex_unlock (&priv->aux_surfaces_lock);
+}
+
+GstVaBufferSurface *
+gst_va_display_peek_aux_surface (GstVaDisplay * self, GstMemory * mem)
+{
+  GstVaDisplayPrivate *priv;
+  GstVaBufferSurface *buf;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
+  g_return_val_if_fail (mem != NULL, NULL);
+
+  priv = GET_PRIV (self);
+
+  g_mutex_lock (&priv->aux_surfaces_lock);
+  buf = g_hash_table_lookup (priv->aux_surfaces, mem);
+  g_mutex_unlock (&priv->aux_surfaces_lock);
+
+  return buf;
+}
+
+/* Must be called with surfaces_lock held, so concurrent imports of
+ * the same memories create only one surface in this display. */
+/* XXX: use a surface pool to control the created surfaces */
+static VASurfaceID
+_import_dmabuf_memories_unlocked (GstVaDisplay * self,
+    const GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
     uintptr_t fds[GST_VIDEO_MAX_PLANES], gsize offset[GST_VIDEO_MAX_PLANES],
     guint usage_hint)
 {
   GstVideoFormat format;
-  GstVideoInfo *info = &drm_info->vinfo;
-  /* *INDENT-OFF* */
-  VADRMPRIMESurfaceDescriptor desc = {
-    .width = GST_VIDEO_INFO_WIDTH (info),
-    .height = GST_VIDEO_INFO_HEIGHT (info),
-    /* GStreamer can only describe one PRIME layer */
-    .num_layers = 1,
-  };
-  /* *INDENT-ON* */
+  GstVaBufferSurface *buf;
+  const GstVideoInfo *info = &drm_info->vinfo;
+  VADRMPRIMESurfaceDescriptor desc = { 0, };
   VASurfaceID surface;
   guint32 fourcc, rt_format, drm_fourcc;
   guint64 drm_modifier;
   guint i, j, prev, n_planes;
 
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), FALSE);
-  g_return_val_if_fail (drm_info != NULL, FALSE);
-  g_return_val_if_fail (mem != NULL, FALSE);
-  g_return_val_if_fail (mem[0] != NULL, FALSE);
-  g_return_val_if_fail (fds != NULL, FALSE);
-  g_return_val_if_fail (offset != NULL, FALSE);
+  desc.width = GST_VIDEO_INFO_WIDTH (info);
+  desc.height = GST_VIDEO_INFO_HEIGHT (info);
+  /* GStreamer can only describe one PRIME layer */
+  desc.num_layers = 1;
 
   n_planes = GST_VIDEO_INFO_N_PLANES (info);
 
@@ -554,20 +701,20 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
       GST_VIDEO_INFO_FORMAT (info) :
       gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
-    return FALSE;
+    return VA_INVALID_ID;
 
   drm_fourcc = (drm_info->drm_fourcc == DRM_FORMAT_INVALID) ?
       gst_va_drm_fourcc_from_video_format (format) : drm_info->drm_fourcc;
   if (drm_fourcc == 0)
-    return FALSE;
+    return VA_INVALID_ID;
 
   rt_format = gst_va_chroma_from_video_format (format);
   if (rt_format == 0)
-    return FALSE;
+    return VA_INVALID_ID;
 
   fourcc = gst_va_fourcc_from_video_format (format);
   if (fourcc == 0)
-    return FALSE;
+    return VA_INVALID_ID;
 
   drm_modifier = (drm_info->drm_modifier == DRM_FORMAT_MOD_INVALID) ?
       DRM_FORMAT_MOD_LINEAR : drm_info->drm_modifier;
@@ -597,14 +744,53 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
 
   if (!va_create_surfaces (self, rt_format, fourcc, desc.width, desc.height,
           usage_hint, NULL, 0, &desc, &surface, 1))
-    return FALSE;
+    return VA_INVALID_ID;
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d]", surface, desc.width,
       desc.height);
 
-  gst_va_memories_set_surface (self, surface, mem, n_planes);
+  buf = gst_va_buffer_surface_new (self, surface);
+  buf->n_mems = n_planes;
+  memcpy (buf->mems, mem, sizeof (buf->mems));
+  _set_buffer_surface_unlocked (self, buf);
+  gst_va_buffer_surface_unref (buf);
 
-  return TRUE;
+  return surface;
+}
+
+/* Imports @mem, representing a single frame, into a VASurfaceID
+ * associated with every @mem in @self, unless already imported. */
+gboolean
+gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
+    GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
+    uintptr_t fds[GST_VIDEO_MAX_PLANES], gsize offset[GST_VIDEO_MAX_PLANES],
+    guint usage_hint)
+{
+  GstVaDisplayPrivate *priv;
+  GstVaBufferSurface *buf;
+  VASurfaceID surface;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), FALSE);
+  g_return_val_if_fail (drm_info != NULL, FALSE);
+  g_return_val_if_fail (mem != NULL, FALSE);
+  g_return_val_if_fail (mem[0] != NULL, FALSE);
+  g_return_val_if_fail (fds != NULL, FALSE);
+  g_return_val_if_fail (offset != NULL, FALSE);
+
+  priv = GET_PRIV (self);
+
+  /* memories of a frame are always imported together */
+  g_mutex_lock (&priv->surfaces_lock);
+  buf = g_hash_table_lookup (priv->surfaces, mem[0]);
+  if (buf) {
+    surface = buf->surface;
+  } else {
+    surface = _import_dmabuf_memories_unlocked (self, drm_info, mem, fds,
+        offset, usage_hint);
+  }
+  g_mutex_unlock (&priv->surfaces_lock);
+
+  return surface != VA_INVALID_ID;
 }
 
 /**
@@ -620,6 +806,8 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
 VASurfaceID
 gst_va_display_get_memory_surface (GstVaDisplay * self, GstMemory * mem)
 {
+  GstVaBufferSurface *buf;
+
   g_return_val_if_fail (GST_IS_VA_DISPLAY (self), VA_INVALID_ID);
   g_return_val_if_fail (mem != NULL, VA_INVALID_ID);
 
@@ -635,8 +823,8 @@ gst_va_display_get_memory_surface (GstVaDisplay * self, GstMemory * mem)
   if (!GST_IS_DMABUF_ALLOCATOR (mem->allocator))
     return VA_INVALID_ID;
 
-  /* to be changed for a specific dmabuf function */
-  return gst_va_memory_get_surface (mem);
+  buf = gst_va_display_peek_buffer_surface (self, mem);
+  return buf ? buf->surface : VA_INVALID_ID;
 }
 
 /**

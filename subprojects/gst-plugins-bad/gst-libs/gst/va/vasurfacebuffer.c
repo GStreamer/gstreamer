@@ -37,19 +37,8 @@ gst_va_buffer_surface_unref (gpointer data)
   }
 }
 
-/* The refcount starts at zero and the first attach sets it to one.
- * A saturated refcount keeps the surface alive on purpose instead
- * of freeing it too early. */
-void
-gst_va_buffer_surface_ref (GstVaBufferSurface * buf)
-{
-  if (g_atomic_ref_count_compare (&buf->ref_count, 0))
-    g_atomic_ref_count_init (&buf->ref_count);
-  else
-    g_atomic_ref_count_inc (&buf->ref_count);
-}
-
-
+/* Takes ownership of @surface, destroyed when the last reference is
+ * dropped. */
 GstVaBufferSurface *
 gst_va_buffer_surface_new (GstVaDisplay * display, VASurfaceID surface)
 {
@@ -58,10 +47,10 @@ gst_va_buffer_surface_new (GstVaDisplay * display, VASurfaceID surface)
 
   GstVaBufferSurface *buf = g_new (GstVaBufferSurface, 1);
 
-  g_atomic_int_set (&buf->ref_count, 0);
+  g_atomic_ref_count_init (&buf->ref_count);
   g_atomic_int_set (&buf->ref_mems_count, 0);
   buf->surface = surface;
-  buf->display = display ? gst_object_ref (display) : NULL;
+  buf->display = gst_object_ref (display);
   buf->n_mems = 0;
 
   return buf;
