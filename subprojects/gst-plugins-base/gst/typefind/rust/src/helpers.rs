@@ -152,7 +152,9 @@ impl<'a> Scanner<'a> {
     /// Declare the next `n` bytes consumed. May run past the window end; the
     /// next `peek` queries the engine at the right offset.
     pub fn consume(&mut self, n: usize) {
-        self.pos += n;
+        // `n` may come from an untrusted header field; saturating keeps the
+        // cursor inside usize where such a field would otherwise overflow it.
+        self.pos = self.pos.saturating_add(n);
     }
 
     /// A cursor `n` bytes behind this one. A search leaves the cursor on the
