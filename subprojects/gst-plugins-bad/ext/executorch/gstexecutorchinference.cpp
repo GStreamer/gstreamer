@@ -861,11 +861,12 @@ gst_executorch_inference_transform_caps (GstBaseTransform * trans,
     other_caps = gst_caps_intersect (restrictions, self->model_outcaps);
     gst_caps_unref (restrictions);
   } else if (direction == GST_PAD_SRC) {
+    /* Remove tensors from caps to prevent upstream propagation. */
     GstCaps *tmp_caps = gst_caps_copy (caps);
 
-    if (!gst_caps_is_empty (tmp_caps)) {
-      GstStructure *tstruct = gst_caps_get_structure (tmp_caps, 0);
-      gst_structure_remove_field (tstruct, "tensors");
+    for (guint i = 0; i < gst_caps_get_size (tmp_caps); i++) {
+      GstStructure *s = gst_caps_get_structure (tmp_caps, i);
+      gst_structure_remove_field (s, "tensors");
     }
 
     other_caps = gst_caps_intersect_full (tmp_caps, self->model_incaps,
