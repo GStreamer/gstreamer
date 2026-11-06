@@ -1192,31 +1192,14 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
   if (direction == GST_PAD_SINK) {
     other_caps = transform_sink_caps (self, caps, restrictions);
   } else if (direction == GST_PAD_SRC) {
-    /* Going from src-side (downstream, possibly carrying our own tensor
-     * group plus groups added by other onnxinference elements) to
-     * sink-side caps: remove only our own group so it doesn't propagate
-     * further upstream, keeping any other groups intact. */
+    /* Remove tensors from caps to prevent upstream propagation. Tensor
+     * groups produced upstream are merged back in transform_sink_caps(). */
     GstCaps *tmp_caps = gst_caps_copy (caps);
     guint i;
 
     for (i = 0; i < gst_caps_get_size (tmp_caps); i++) {
       GstStructure *s = gst_caps_get_structure (tmp_caps, i);
-      const GValue *tensors_value = gst_structure_get_value (s, "tensors");
-      const GstStructure *tensorgroups = tensors_value ?
-          gst_value_get_structure (tensors_value) : NULL;
-
-      if (tensorgroups && self->group_id &&
-          gst_structure_has_field (tensorgroups, self->group_id)) {
-        GstStructure *new_tensorgroups = gst_structure_copy (tensorgroups);
-
-        gst_structure_remove_field (new_tensorgroups, self->group_id);
-        if (gst_structure_n_fields (new_tensorgroups) == 0)
-          gst_structure_remove_field (s, "tensors");
-        else
-          gst_structure_set (s, "tensors", GST_TYPE_STRUCTURE,
-              new_tensorgroups, NULL);
-        gst_structure_free (new_tensorgroups);
-      }
+      gst_structure_remove_field (s, "tensors");
     }
 
     memory_caps = gst_onnx_inference_add_memory_caps (self, restrictions);
