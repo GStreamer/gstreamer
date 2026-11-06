@@ -13107,8 +13107,8 @@ info in @drm_info.</doc>
       </method>
       <method name="to_video_info" c:identifier="gst_video_info_dma_drm_to_video_info" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Convert the #GstVideoInfoDmaDrm into a traditional #GstVideoInfo with
-recognized video format. For DMA kind memory, the non linear DMA format
-should be recognized as #GST_VIDEO_FORMAT_DMA_DRM. This helper function
+recognized video format. For DMA kind memory, #GST_VIDEO_FORMAT_DMA_DRM is
+kept if no native gst format exists. This helper function
 sets @info's video format into the default value according to @drm_info's
 drm_fourcc field.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
@@ -13149,7 +13149,17 @@ it before calling this function.</doc>
       </function>
       <function name="from_video_info" c:identifier="gst_video_info_dma_drm_from_video_info" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Fills @drm_info if @info's format has a valid drm format and @modifier is also
-valid</doc>
+valid
+
+Since 1.30 non-linear @info formats are allowed, they will be converted to
+the corresponding format with the same fourcc and @modifier. If @modifier is
+DRM_FORMAT_MOD_INVALID, the modifier from @info is preserved. If non-linear
+#GstVideoFormat exists for the given fourcc and modifier
+(e.g. GST_VIDEO_FORMAT_NV12_4L4), it will be used instead of
+#GST_VIDEO_FORMAT_DMA_DRM.
+
+The @modifier parameter is considered deprecated, and should always be set to
+DRM_FORMAT_MOD_INVALID.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">%TRUE if @drm_info is filled correctly.</doc>
@@ -21178,7 +21188,17 @@ it before calling this function.</doc>
     </function>
     <function name="video_info_dma_drm_from_video_info" c:identifier="gst_video_info_dma_drm_from_video_info" moved-to="VideoInfoDmaDrm.from_video_info" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Fills @drm_info if @info's format has a valid drm format and @modifier is also
-valid</doc>
+valid
+
+Since 1.30 non-linear @info formats are allowed, they will be converted to
+the corresponding format with the same fourcc and @modifier. If @modifier is
+DRM_FORMAT_MOD_INVALID, the modifier from @info is preserved. If non-linear
+#GstVideoFormat exists for the given fourcc and modifier
+(e.g. GST_VIDEO_FORMAT_NV12_4L4), it will be used instead of
+#GST_VIDEO_FORMAT_DMA_DRM.
+
+The @modifier parameter is considered deprecated, and should always be set to
+DRM_FORMAT_MOD_INVALID.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">%TRUE if @drm_info is filled correctly.</doc>
