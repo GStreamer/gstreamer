@@ -359,12 +359,13 @@ gst_uvc_sink_update_streaming (GstUvcSink * self)
 {
   gboolean streaming, streamon, streamoff;
 
+  /* A pending STREAMOFF is handled by the idle probe, which also switches
+   * back to the fakesink. */
   UVCSINK_STATE_LOCK (self);
   streaming = self->streaming;
   streamon = self->streamon;
   streamoff = self->streamoff;
   self->streamon = FALSE;
-  self->streamoff = FALSE;
   UVCSINK_STATE_UNLOCK (self);
 
   if (streamon && !streaming)
@@ -374,6 +375,8 @@ gst_uvc_sink_update_streaming (GstUvcSink * self)
 
   if (streamon)
     gst_uvc_sink_to_v4l2sink (self);
+
+  self->renegotiating = FALSE;
 }
 
 static gboolean
@@ -433,11 +436,9 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_CAPS:
     {
       GstCaps *filter, *cur_caps, *result;
-      gboolean caps_changed;
 
       UVCSINK_STATE_LOCK (self);
       cur_caps = gst_caps_ref (self->cur_caps);
-      caps_changed = self->caps_changed;
       UVCSINK_STATE_UNLOCK (self);
 
       if (gst_caps_is_empty (cur_caps)) {
@@ -462,9 +463,6 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_set_caps_result (query, result);
       gst_caps_unref (result);
       gst_caps_unref (cur_caps);
-
-      if (!caps_changed)
-        gst_uvc_sink_update_streaming (self);
 
       return TRUE;
     }
@@ -564,25 +562,6 @@ gst_uvc_sink_to_v4l2sink (GstUvcSink * self)
 }
 
 static GstPadProbeReturn
-gst_uvc_sink_sinkpad_buffer_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, gpointer user_data)
-{
-  GstUvcSink *self = user_data;
-  gboolean pending;
-
-  UVCSINK_STATE_LOCK (self);
-  pending = self->streamon || self->streamoff;
-  UVCSINK_STATE_UNLOCK (self);
-
-  if (pending)
-    return GST_PAD_PROBE_DROP;
-
-  self->buffer_peer_probe_id = 0;
-
-  return GST_PAD_PROBE_REMOVE;
-}
-
-static GstPadProbeReturn
 gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data)
 {
@@ -595,7 +574,25 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
   caps_changed = self->caps_changed;
   UVCSINK_STATE_UNLOCK (self);
 
-  if (streamon && !caps_changed) {
+  if (streamoff) {
+    /* Nothing to renegotiate when the host stops streaming. Switch back to
+     * the fakesink right away: this stops the v4l2sink, which does the
+     * VIDIOC_STREAMOFF the gadget driver waits for before it accepts the next
+     * STREAMON from the host. */
+    GST_DEBUG_OBJECT (self, "Stopping stream");
+    gst_uvc_sink_to_fakesink (self);
+    self->renegotiating = FALSE;
+
+    UVCSINK_STATE_LOCK (self);
+    self->streamoff = FALSE;
+    UVCSINK_STATE_UNLOCK (self);
+    return GST_PAD_PROBE_PASS;
+  }
+
+  if (!streamon)
+    return GST_PAD_PROBE_PASS;
+
+  if (!caps_changed) {
     /* The negotiated caps already match the format selected by the host,
      * so there is nothing to renegotiate. Switch to the v4l2sink right away
      * instead of waiting for a CAPS query triggered by a RECONFIGURE event:
@@ -606,31 +603,19 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     return GST_PAD_PROBE_PASS;
   }
 
-  if (streamon || streamoff) {
-    /* Drop all incoming buffers until the streamoff or streamon is done. */
-    self->buffer_peer_probe_id =
-        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
-        gst_uvc_sink_sinkpad_buffer_peer_probe, self, NULL);
-
+  if (!self->renegotiating) {
+    /* Ask upstream to renegotiate to the format selected by the host. The
+     * CAPS event with the new caps then switches to the v4l2sink. Until
+     * then, buffers in the old format keep going to the fakesink. They are
+     * not dropped: with a non-live source, that would make upstream run
+     * ahead of the clock, and as no data would arrive at the pad anymore,
+     * this probe would not be called again to handle a STREAMOFF. */
     GST_DEBUG_OBJECT (self, "Send reconfigure");
+    self->renegotiating = TRUE;
     gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
   }
 
-  if (streamoff)
-    gst_uvc_sink_to_fakesink (self);
-
   return GST_PAD_PROBE_PASS;
-}
-
-static void
-gst_uvc_sink_remove_buffer_peer_probe (GstUvcSink * self)
-{
-  GstPad *peerpad = gst_pad_get_peer (self->sinkpad);
-  if (peerpad && self->buffer_peer_probe_id) {
-    gst_pad_remove_probe (peerpad, self->buffer_peer_probe_id);
-    gst_object_unref (peerpad);
-    self->buffer_peer_probe_id = 0;
-  }
 }
 
 static void
@@ -726,8 +711,6 @@ gst_uvc_sink_dispose (GObject * object)
   GstUvcSink *self = GST_UVCSINK (object);
 
   if (self->sinkpad) {
-    gst_uvc_sink_remove_buffer_peer_probe (self);
-
     gst_pad_set_active (self->sinkpad, FALSE);
     gst_element_remove_pad (GST_ELEMENT (self), self->sinkpad);
     self->sinkpad = NULL;
@@ -814,6 +797,8 @@ gst_uvc_sink_task (gpointer data)
         GST_DEBUG_OBJECT (self, "UVC_EVENT_STREAMOFF");
         UVCSINK_STATE_LOCK (self);
         self->streaming = FALSE;
+        /* If the STREAMON wasn't handled yet, it is obsolete now. */
+        self->streamon = FALSE;
         self->streamoff = TRUE;
         UVCSINK_STATE_UNLOCK (self);
         g_object_notify (G_OBJECT (self), "streaming");
