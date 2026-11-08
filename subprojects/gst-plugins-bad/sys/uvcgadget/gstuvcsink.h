@@ -56,8 +56,10 @@ struct _GstUvcSink
   int request_error_code;
 
   /* probes */
-  int buffer_peer_probe_id;
   int idle_probe_id;
+
+  /* only accessed from the streaming thread */
+  gboolean renegotiating;
 
   GstClock *v4l2_clock;
 
