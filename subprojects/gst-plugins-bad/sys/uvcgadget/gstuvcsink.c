@@ -354,13 +354,28 @@ gst_uvc_sink_get_configured_caps (GstUvcSink * self)
 static gboolean gst_uvc_sink_to_fakesink (GstUvcSink * self);
 static gboolean gst_uvc_sink_to_v4l2sink (GstUvcSink * self);
 
+/* Called from the streaming thread to handle a STREAMOFF from the host */
+static void
+gst_uvc_sink_stop_streaming (GstUvcSink * self)
+{
+  /* Nothing to renegotiate when the host stops streaming. Switch back to
+   * the fakesink right away: this stops the v4l2sink, which does the
+   * VIDIOC_STREAMOFF the gadget driver waits for before it accepts the next
+   * STREAMON from the host. */
+  GST_DEBUG_OBJECT (self, "Stopping stream");
+  gst_uvc_sink_to_fakesink (self);
+  self->renegotiating = FALSE;
+
+  UVCSINK_STATE_LOCK (self);
+  self->streamoff = FALSE;
+  UVCSINK_STATE_UNLOCK (self);
+}
+
 static void
 gst_uvc_sink_update_streaming (GstUvcSink * self)
 {
   gboolean streaming, streamon, streamoff;
 
-  /* A pending STREAMOFF is handled by the idle probe, which also switches
-   * back to the fakesink. */
   UVCSINK_STATE_LOCK (self);
   streaming = self->streaming;
   streamon = self->streamon;
@@ -373,10 +388,71 @@ gst_uvc_sink_update_streaming (GstUvcSink * self)
   if (streamoff && streaming)
     GST_ERROR_OBJECT (self, "Unexpected STREAMOFF");
 
-  if (streamon)
-    gst_uvc_sink_to_v4l2sink (self);
-
   self->renegotiating = FALSE;
+
+  /* A STREAMOFF still pending happened before the STREAMON */
+  if (streamoff)
+    gst_uvc_sink_stop_streaming (self);
+
+  if (!streamon)
+    return;
+
+  gst_uvc_sink_to_v4l2sink (self);
+
+  /* The event thread only flushes the v4l2sink on STREAMOFF if it is linked
+   * at that time. A STREAMOFF that arrived while switching would thus not
+   * unblock it, so handle it before passing any buffer to the v4l2sink. */
+  UVCSINK_STATE_LOCK (self);
+  streamoff = self->streamoff;
+  UVCSINK_STATE_UNLOCK (self);
+
+  if (streamoff)
+    gst_uvc_sink_stop_streaming (self);
+}
+
+/* When the host stops streaming, the v4l2sink gets flushed to unblock it.
+ * That is internal to this element, so don't return the resulting FLUSHING
+ * upstream, it would stop the streaming thread of the source. */
+static GstFlowReturn
+gst_uvc_sink_fix_flow_return (GstUvcSink * self, GstPad * pad,
+    GstFlowReturn ret)
+{
+  gboolean streamoff;
+
+  if (ret != GST_FLOW_FLUSHING || GST_PAD_IS_FLUSHING (pad))
+    return ret;
+
+  UVCSINK_STATE_LOCK (self);
+  streamoff = self->streamoff;
+  UVCSINK_STATE_UNLOCK (self);
+
+  if (!streamoff)
+    return ret;
+
+  GST_DEBUG_OBJECT (self, "v4l2sink flushed for STREAMOFF, ignoring");
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_uvc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  GstUvcSink *self = GST_UVCSINK (parent);
+  GstFlowReturn ret;
+
+  ret = gst_proxy_pad_chain_default (pad, parent, buffer);
+
+  return gst_uvc_sink_fix_flow_return (self, pad, ret);
+}
+
+static GstFlowReturn
+gst_uvc_sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
+{
+  GstUvcSink *self = GST_UVCSINK (parent);
+  GstFlowReturn ret;
+
+  ret = gst_proxy_pad_chain_list_default (pad, parent, list);
+
+  return gst_uvc_sink_fix_flow_return (self, pad, ret);
 }
 
 /* The colorimetry the host uses is announced by the color matching
@@ -616,17 +692,7 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
   UVCSINK_STATE_UNLOCK (self);
 
   if (streamoff) {
-    /* Nothing to renegotiate when the host stops streaming. Switch back to
-     * the fakesink right away: this stops the v4l2sink, which does the
-     * VIDIOC_STREAMOFF the gadget driver waits for before it accepts the next
-     * STREAMON from the host. */
-    GST_DEBUG_OBJECT (self, "Stopping stream");
-    gst_uvc_sink_to_fakesink (self);
-    self->renegotiating = FALSE;
-
-    UVCSINK_STATE_LOCK (self);
-    self->streamoff = FALSE;
-    UVCSINK_STATE_UNLOCK (self);
+    gst_uvc_sink_stop_streaming (self);
     return GST_PAD_PROBE_PASS;
   }
 
@@ -740,6 +806,8 @@ gst_uvc_sink_init (GstUvcSink * self)
 
   gst_pad_set_query_function (self->sinkpad, gst_uvc_sink_query);
   gst_pad_set_event_function (self->sinkpad, gst_uvc_sink_event);
+  gst_pad_set_chain_function (self->sinkpad, gst_uvc_sink_chain);
+  gst_pad_set_chain_list_function (self->sinkpad, gst_uvc_sink_chain_list);
 
   self->request_error_code = REQUEST_ERROR_CODE_NO_ERROR;
 
@@ -842,6 +910,24 @@ gst_uvc_sink_task (gpointer data)
         self->streamon = FALSE;
         self->streamoff = TRUE;
         UVCSINK_STATE_UNLOCK (self);
+
+        /* The streaming thread switches back to the fakesink once the current
+         * buffer is done. But the v4l2sink might never finish it: once all
+         * its buffers are queued, it waits for the driver to return one,
+         * which may not happen anymore now that the host stopped reading.
+         * Flush the v4l2sink to unblock it. The resulting FLUSHING flow
+         * return is not passed upstream, see gst_uvc_sink_chain().
+         *
+         * streamoff is set before checking the link, and the streaming thread
+         * checks streamoff after linking the v4l2sink, so a v4l2sink that is
+         * being switched to concurrently is either flushed here or switched
+         * away from again before it gets any buffer. A v4l2sink that was just
+         * deactivated ignores the flush. */
+        if (gst_pad_is_linked (self->v4l2sinkpad)) {
+          GST_DEBUG_OBJECT (self, "Flushing v4l2sink");
+          gst_pad_send_event (self->v4l2sinkpad, gst_event_new_flush_start ());
+        }
+
         g_object_notify (G_OBJECT (self), "streaming");
         break;
       case UVC_EVENT_SETUP:
