@@ -587,12 +587,24 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data)
 {
   GstUvcSink *self = user_data;
-  gboolean streamon, streamoff;
+  gboolean streamon, streamoff, caps_changed;
 
   UVCSINK_STATE_LOCK (self);
   streamon = self->streamon;
   streamoff = self->streamoff;
+  caps_changed = self->caps_changed;
   UVCSINK_STATE_UNLOCK (self);
+
+  if (streamon && !caps_changed) {
+    /* The negotiated caps already match the format selected by the host,
+     * so there is nothing to renegotiate. Switch to the v4l2sink right away
+     * instead of waiting for a CAPS query triggered by a RECONFIGURE event:
+     * that query is not guaranteed to reach us, e.g. parsers answer it
+     * without asking downstream. */
+    GST_DEBUG_OBJECT (self, "Caps unchanged, starting stream");
+    gst_uvc_sink_update_streaming (self);
+    return GST_PAD_PROBE_PASS;
+  }
 
   if (streamon || streamoff) {
     /* Drop all incoming buffers until the streamoff or streamon is done. */
@@ -830,6 +842,7 @@ gst_uvc_sink_task (gpointer data)
           GstCaps *configured_caps;
           GstCaps *cur_caps;
           GstCaps *prev_caps;
+          gboolean caps_changed;
 
           /* The configured caps are not sufficient for negotiation. Select caps
            * from the probed caps that match the configured caps.
@@ -853,13 +866,17 @@ gst_uvc_sink_task (gpointer data)
 
           prev_caps = gst_pad_get_current_caps (self->sinkpad);
 
-          UVCSINK_STATE_LOCK (self);
-          gst_caps_replace (&self->cur_caps, cur_caps);
-          if (prev_caps && !gst_caps_is_subset (prev_caps, cur_caps)) {
-            self->caps_changed = TRUE;
+          /* Re-evaluate on every commit, so a stale result of an earlier
+           * commit, that never got streamed, doesn't stick. */
+          caps_changed = !prev_caps
+              || !gst_caps_is_subset (prev_caps, cur_caps);
+          if (caps_changed)
             GST_DEBUG_OBJECT (self,
                 "caps changed from %" GST_PTR_FORMAT, prev_caps);
-          }
+
+          UVCSINK_STATE_LOCK (self);
+          gst_caps_replace (&self->cur_caps, cur_caps);
+          self->caps_changed = caps_changed;
           UVCSINK_STATE_UNLOCK (self);
 
           gst_clear_caps (&prev_caps);
