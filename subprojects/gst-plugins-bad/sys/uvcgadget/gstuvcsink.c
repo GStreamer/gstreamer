@@ -77,6 +77,7 @@ static GstStateChangeReturn gst_uvc_sink_change_state (GstElement *
     element, GstStateChange transition);
 
 static void gst_uvc_sink_dispose (GObject * object);
+static void gst_uvc_sink_finalize (GObject * object);
 static gboolean gst_uvc_sink_prepare_configfs (GstUvcSink * self);
 
 static void
@@ -87,7 +88,9 @@ gst_uvc_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_STREAMING:
-      g_value_set_boolean (value, g_atomic_int_get (&self->streaming));
+      UVCSINK_STATE_LOCK (self);
+      g_value_set_boolean (value, self->streaming);
+      UVCSINK_STATE_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -354,16 +357,23 @@ static gboolean gst_uvc_sink_to_v4l2sink (GstUvcSink * self);
 static void
 gst_uvc_sink_update_streaming (GstUvcSink * self)
 {
-  if (self->streamon && !self->streaming)
+  gboolean streaming, streamon, streamoff;
+
+  UVCSINK_STATE_LOCK (self);
+  streaming = self->streaming;
+  streamon = self->streamon;
+  streamoff = self->streamoff;
+  self->streamon = FALSE;
+  self->streamoff = FALSE;
+  UVCSINK_STATE_UNLOCK (self);
+
+  if (streamon && !streaming)
     GST_ERROR_OBJECT (self, "Unexpected STREAMON");
-  if (self->streamoff && self->streaming)
+  if (streamoff && streaming)
     GST_ERROR_OBJECT (self, "Unexpected STREAMOFF");
 
-  if (self->streamon)
+  if (streamon)
     gst_uvc_sink_to_v4l2sink (self);
-
-  g_atomic_int_set (&self->streamon, FALSE);
-  g_atomic_int_set (&self->streamoff, FALSE);
 }
 
 static gboolean
@@ -373,8 +383,12 @@ gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
+    {
+      gboolean caps_changed;
+
       GST_DEBUG_OBJECT (self, "Handling %" GST_PTR_FORMAT, event);
 
+      UVCSINK_STATE_LOCK (self);
       /* If the UVC host did not yet commit a format, the cur_caps may contain
        * all probed caps. In this case, the element is not able to detect, if
        * the caps have changed when the stream is enabled. Take the caps from
@@ -388,19 +402,21 @@ gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         GST_DEBUG_OBJECT (self,
             "UVC host didn't select a format, yet. Using upstream %"
-            GST_PTR_FORMAT, self->cur_caps);
+            GST_PTR_FORMAT, caps);
       }
 
       /* EVENT CAPS signals that the buffers after the event will use new caps.
        * If the UVC host requested a new format, we now must start the stream.
        */
-      if (self->caps_changed) {
-        if (self->streamon || self->streamoff)
-          g_atomic_int_set (&self->caps_changed, FALSE);
+      caps_changed = self->caps_changed;
+      if (caps_changed && (self->streamon || self->streamoff))
+        self->caps_changed = FALSE;
+      UVCSINK_STATE_UNLOCK (self);
 
+      if (caps_changed)
         gst_uvc_sink_update_streaming (self);
-      }
       break;
+    }
     default:
       break;
   }
@@ -416,10 +432,18 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
     {
-      GstCaps *filter, *result;
+      GstCaps *filter, *cur_caps, *result;
+      gboolean caps_changed;
 
-      if (gst_caps_is_empty (self->cur_caps))
+      UVCSINK_STATE_LOCK (self);
+      cur_caps = gst_caps_ref (self->cur_caps);
+      caps_changed = self->caps_changed;
+      UVCSINK_STATE_UNLOCK (self);
+
+      if (gst_caps_is_empty (cur_caps)) {
+        gst_caps_unref (cur_caps);
         return gst_pad_query_default (pad, parent, query);
+      }
 
       /* Callers (e.g. basesrc) rely on the result being a subset of the
        * filter. Before the host committed a format, cur_caps holds all the
@@ -427,19 +451,19 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
        * many upstream elements can't produce. */
       gst_query_parse_caps (query, &filter);
       if (filter) {
-        result = gst_caps_intersect_full (filter, self->cur_caps,
+        result = gst_caps_intersect_full (filter, cur_caps,
             GST_CAPS_INTERSECT_FIRST);
       } else {
-        result = gst_caps_ref (self->cur_caps);
+        result = gst_caps_ref (cur_caps);
       }
 
       GST_DEBUG_OBJECT (self, "caps %" GST_PTR_FORMAT ", filter %"
-          GST_PTR_FORMAT ", result %" GST_PTR_FORMAT, self->cur_caps, filter,
-          result);
+          GST_PTR_FORMAT ", result %" GST_PTR_FORMAT, cur_caps, filter, result);
       gst_query_set_caps_result (query, result);
       gst_caps_unref (result);
+      gst_caps_unref (cur_caps);
 
-      if (!self->caps_changed)
+      if (!caps_changed)
         gst_uvc_sink_update_streaming (self);
 
       return TRUE;
@@ -476,6 +500,7 @@ gst_uvc_sink_class_init (GstUvcSinkClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->dispose = gst_uvc_sink_dispose;
+  gobject_class->finalize = gst_uvc_sink_finalize;
   gobject_class->get_property = gst_uvc_sink_get_property;
 
   /**
@@ -543,8 +568,13 @@ gst_uvc_sink_sinkpad_buffer_peer_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data)
 {
   GstUvcSink *self = user_data;
+  gboolean pending;
 
-  if (self->streamon || self->streamoff)
+  UVCSINK_STATE_LOCK (self);
+  pending = self->streamon || self->streamoff;
+  UVCSINK_STATE_UNLOCK (self);
+
+  if (pending)
     return GST_PAD_PROBE_DROP;
 
   self->buffer_peer_probe_id = 0;
@@ -557,8 +587,14 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data)
 {
   GstUvcSink *self = user_data;
+  gboolean streamon, streamoff;
 
-  if (self->streamon || self->streamoff) {
+  UVCSINK_STATE_LOCK (self);
+  streamon = self->streamon;
+  streamoff = self->streamoff;
+  UVCSINK_STATE_UNLOCK (self);
+
+  if (streamon || streamoff) {
     /* Drop all incoming buffers until the streamoff or streamon is done. */
     self->buffer_peer_probe_id =
         gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
@@ -568,7 +604,7 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
   }
 
-  if (self->streamoff)
+  if (streamoff)
     gst_uvc_sink_to_fakesink (self);
 
   return GST_PAD_PROBE_PASS;
@@ -658,10 +694,11 @@ gst_uvc_sink_init (GstUvcSink * self)
   self->sinkpad = gst_ghost_pad_new ("sink", self->fakesinkpad);
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
-  g_atomic_int_set (&self->streaming, FALSE);
-
-  g_atomic_int_set (&self->streamon, FALSE);
-  g_atomic_int_set (&self->streamoff, FALSE);
+  g_mutex_init (&self->state_lock);
+  self->streaming = FALSE;
+  self->streamon = FALSE;
+  self->streamoff = FALSE;
+  self->caps_changed = FALSE;
 
   gst_pad_set_query_function (self->sinkpad, gst_uvc_sink_query);
   gst_pad_set_event_function (self->sinkpad, gst_uvc_sink_event);
@@ -689,6 +726,16 @@ gst_uvc_sink_dispose (GObject * object)
   gst_clear_caps (&self->cur_caps);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_uvc_sink_finalize (GObject * object)
+{
+  GstUvcSink *self = GST_UVCSINK (object);
+
+  g_mutex_clear (&self->state_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean gst_uvc_sink_unwatch (GstUvcSink * self);
@@ -744,19 +791,19 @@ gst_uvc_sink_task (gpointer data)
     switch (event.type) {
       case UVC_EVENT_STREAMON:
         GST_DEBUG_OBJECT (self, "UVC_EVENT_STREAMON");
-        GST_STATE_LOCK (GST_ELEMENT (self));
-        g_atomic_int_set (&self->streaming, TRUE);
-        g_atomic_int_set (&self->streamon, TRUE);
-        GST_STATE_UNLOCK (GST_ELEMENT (self));
+        UVCSINK_STATE_LOCK (self);
+        self->streaming = TRUE;
+        self->streamon = TRUE;
+        UVCSINK_STATE_UNLOCK (self);
         g_object_notify (G_OBJECT (self), "streaming");
         break;
       case UVC_EVENT_STREAMOFF:
       case UVC_EVENT_DISCONNECT:
         GST_DEBUG_OBJECT (self, "UVC_EVENT_STREAMOFF");
-        GST_STATE_LOCK (GST_ELEMENT (self));
-        g_atomic_int_set (&self->streaming, FALSE);
-        g_atomic_int_set (&self->streamoff, TRUE);
-        GST_STATE_UNLOCK (GST_ELEMENT (self));
+        UVCSINK_STATE_LOCK (self);
+        self->streaming = FALSE;
+        self->streamoff = TRUE;
+        UVCSINK_STATE_UNLOCK (self);
         g_object_notify (G_OBJECT (self), "streaming");
         break;
       case UVC_EVENT_SETUP:
@@ -781,6 +828,7 @@ gst_uvc_sink_task (gpointer data)
         uvc_events_process_data (self, &uvc_event->data);
         if (self->control == UVC_VS_COMMIT_CONTROL) {
           GstCaps *configured_caps;
+          GstCaps *cur_caps;
           GstCaps *prev_caps;
 
           /* The configured caps are not sufficient for negotiation. Select caps
@@ -796,23 +844,26 @@ gst_uvc_sink_task (gpointer data)
             return;
           }
 
-          gst_clear_caps (&self->cur_caps);
-          self->cur_caps =
+          cur_caps =
               gst_caps_intersect_full (self->probed_caps, configured_caps,
               GST_CAPS_INTERSECT_FIRST);
           GST_INFO_OBJECT (self, "UVC host selected %" GST_PTR_FORMAT,
-              self->cur_caps);
+              cur_caps);
           gst_caps_unref (configured_caps);
 
           prev_caps = gst_pad_get_current_caps (self->sinkpad);
-          if (prev_caps) {
-            if (!gst_caps_is_subset (prev_caps, self->cur_caps)) {
-              self->caps_changed = TRUE;
-              GST_DEBUG_OBJECT (self,
-                  "caps changed from %" GST_PTR_FORMAT, prev_caps);
-            }
-            gst_caps_unref (prev_caps);
+
+          UVCSINK_STATE_LOCK (self);
+          gst_caps_replace (&self->cur_caps, cur_caps);
+          if (prev_caps && !gst_caps_is_subset (prev_caps, cur_caps)) {
+            self->caps_changed = TRUE;
+            GST_DEBUG_OBJECT (self,
+                "caps changed from %" GST_PTR_FORMAT, prev_caps);
           }
+          UVCSINK_STATE_UNLOCK (self);
+
+          gst_clear_caps (&prev_caps);
+          gst_caps_unref (cur_caps);
         }
         break;
       default:
@@ -991,7 +1042,9 @@ gst_uvc_sink_query_probed_caps (GstUvcSink * self)
 
   self->probed_caps = gst_caps_copy (query_caps);
 
+  UVCSINK_STATE_LOCK (self);
   gst_caps_replace (&self->cur_caps, self->probed_caps);
+  UVCSINK_STATE_UNLOCK (self);
 
   return TRUE;
 }

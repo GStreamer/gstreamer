@@ -34,11 +34,7 @@ struct _GstUvcSink
   GstPad *fakesinkpad;
   GstPad *v4l2sinkpad;
 
-  /* streaming status */
-  gboolean streaming;
-
   GstCaps *probed_caps;
-  GstCaps *cur_caps;
 
   /* a poll for video_fd */
   GstPoll *poll;
@@ -65,13 +61,23 @@ struct _GstUvcSink
 
   GstClock *v4l2_clock;
 
-  int caps_changed;
-  int streamon;
-  int streamoff;
+  /* State shared between the event thread (gst_uvc_sink_task) and the
+   * streaming thread, protected by state_lock. The lock is only held to
+   * access these fields, never while calling into other elements or pads. */
+  GMutex state_lock;
+  /* the host is streaming */
+  gboolean streaming;
+  /* a STREAMON / STREAMOFF from the host is still to be handled */
+  gboolean streamon;
+  gboolean streamoff;
+  /* the format committed by the host differs from the negotiated caps */
+  gboolean caps_changed;
+  /* the caps selected by the host, or the probed caps before that */
+  GstCaps *cur_caps;
 };
 
-#define UVCSINK_MSG_LOCK(v) g_mutex_lock(&(v)->msg_lock)
-#define UVCSINK_MSG_UNLOCK(v) g_mutex_unlock(&(v)->msg_lock)
+#define UVCSINK_STATE_LOCK(s) g_mutex_lock (&(s)->state_lock)
+#define UVCSINK_STATE_UNLOCK(s) g_mutex_unlock (&(s)->state_lock)
 
 int uvc_events_process_data(GstUvcSink * self,
                                    const struct uvc_request_data *data);
