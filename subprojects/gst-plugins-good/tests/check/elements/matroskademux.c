@@ -136,6 +136,68 @@ GST_START_TEST (test_sub_terminator)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flac_empty_seektable)
+{
+  /* One 16-sample silence frame, 44100 Hz, mono, 16 bits. */
+  const guint8 flac_frame[] = {
+    0xff, 0xf8, 0x69, 0x08, 0x00, 0x0f, 0x30, 0x00,
+    0x00, 0x00, 0x46, 0x80
+  };
+  const guint8 empty_seektable[] = { 0x83, 0x00, 0x00, 0x00 };
+  const gsize expected_sizes[] = { 4, 38, 12, 4, sizeof (flac_frame) };
+  GstHarness *mux =
+      gst_harness_new_with_padnames ("matroskamux", "audio_%u", "src");
+  GstHarness *demux =
+      gst_harness_new_with_padnames ("matroskademux", "sink", NULL);
+  GstBuffer *frame = gst_buffer_new_memdup (flac_frame, sizeof (flac_frame));
+
+  g_object_set (mux->element, "streamable", TRUE, NULL);
+  gst_harness_set_src_caps_str (mux,
+      "audio/x-flac, rate=(int)44100, channels=(int)1, streamheader=(buffer)<"
+      /* OggFLAC mapping header, fLaC marker and STREAMINFO. */
+      "7f464c414301000002664c614300000022"
+      "1000100000000c00000c0ac440f000000010" "70bc8f4b72a86921468bf8e8441dce51,"
+      /* Empty VORBISCOMMENT, then an empty final SEEKTABLE. */
+      "040000080000000000000000, 83000000>");
+
+  GST_BUFFER_PTS (frame) = 0;
+  GST_BUFFER_DURATION (frame) = gst_util_uint64_scale (16, GST_SECOND, 44100);
+  fail_unless_equals_int (gst_harness_push (mux, frame), GST_FLOW_OK);
+  fail_unless (gst_harness_push_event (mux, gst_event_new_eos ()));
+
+  g_signal_connect (demux->element, "pad-added", G_CALLBACK (pad_added_cb),
+      demux);
+  gst_harness_set_src_caps_str (demux, "audio/x-matroska");
+
+  while (TRUE) {
+    GstBuffer *buf = NULL;
+
+    fail_unless (gst_harness_pull_until_eos (mux, &buf));
+    if (buf == NULL)
+      break;
+    fail_unless_equals_int (gst_harness_push (demux, buf), GST_FLOW_OK);
+  }
+  fail_unless (gst_harness_push_event (demux, gst_event_new_eos ()));
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (demux),
+      G_N_ELEMENTS (expected_sizes));
+  for (guint i = 0; i < G_N_ELEMENTS (expected_sizes); i++) {
+    GstBuffer *buf = gst_harness_pull (demux);
+
+    fail_unless_equals_int (gst_buffer_get_size (buf), expected_sizes[i]);
+    if (i < 4)
+      fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER));
+    if (i == 3)
+      gst_check_buffer_data (buf, empty_seektable, sizeof (empty_seektable));
+    gst_buffer_unref (buf);
+  }
+
+  gst_harness_teardown (demux);
+  gst_harness_teardown (mux);
+}
+
+GST_END_TEST;
+
 /* Recursively compare 2 toc entries */
 static void
 check_toc_entries (const GstTocEntry * original, const GstTocEntry * other)
@@ -492,6 +554,7 @@ matroskademux_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_sub_terminator);
+  tcase_add_test (tc_chain, test_flac_empty_seektable);
   tcase_add_test (tc_chain, test_toc_demux);
   tcase_add_test (tc_chain, test_segment_looping);
   tcase_add_test (tc_chain, test_segment_looping_middle_segment);

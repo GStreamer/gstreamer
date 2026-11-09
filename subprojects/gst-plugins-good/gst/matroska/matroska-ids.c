@@ -307,7 +307,8 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
   /* skip fLaC marker */
   off = 4;
 
-  while (off < codec_data_size - 4) {
+  /* A metadata block can have an empty payload (only the 4-byte header). */
+  while (off <= codec_data_size - 4) {
     len = GST_READ_UINT8 (pdata + off + 1) << 16;
     len |= GST_READ_UINT8 (pdata + off + 2) << 8;
     len |= GST_READ_UINT8 (pdata + off + 3);
