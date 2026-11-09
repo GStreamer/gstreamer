@@ -1011,10 +1011,10 @@ gst_onnx_base_inference_get_vsi_npu_append_func (void)
 #endif
 static gchar *
 get_selected_device_from_session (GstOnnxBaseInference * self,
-    OrtSession * session)
+    OrtSession * session, size_t input_count)
 {
   OrtStatus *status = NULL;
-  const OrtEpDevice *ep_device = NULL;
+  const OrtEpDevice **ep_devices;
   gchar *luid_or_pci_bus_id = NULL;
 #ifdef G_OS_WIN32
   const gchar *device_id_key = "LUID";
@@ -1028,23 +1028,28 @@ get_selected_device_from_session (GstOnnxBaseInference * self,
     return NULL;
   }
 
-  status = api->SessionGetEpDeviceForInputs (session, &ep_device, 1);
+  ep_devices = g_new0 (const OrtEpDevice *, input_count);
+  status = api->SessionGetEpDeviceForInputs (session, ep_devices, input_count);
   if (status) {
-    GST_WARNING_OBJECT (self, "Couldn't get EP device for input: %s",
+    GST_WARNING_OBJECT (self, "Couldn't get EP devices for inputs: %s",
         api->GetErrorMessage (status));
-    goto error;
+    api->ReleaseStatus (status);
+    goto done;
   }
 
-  if (!ep_device) {
-    GST_WARNING_OBJECT (self, "Returned device is NULL");
-    goto error;
-  }
-
-  {
-    const OrtHardwareDevice *hwdev = api->EpDevice_Device (ep_device);
-    const OrtKeyValuePairs *metadata = api->HardwareDevice_Metadata (hwdev);
+  for (size_t i = 0; i < input_count; i++) {
+    const OrtHardwareDevice *hwdev;
+    const OrtKeyValuePairs *metadata;
     const gchar *device_id_value = NULL;
 
+    if (!ep_devices[i])
+      continue;
+
+    hwdev = api->EpDevice_Device (ep_devices[i]);
+    if (api->HardwareDevice_Type (hwdev) != OrtHardwareDeviceType_GPU)
+      continue;
+
+    metadata = api->HardwareDevice_Metadata (hwdev);
     {
       const char *const *keys = NULL;
       const char *const *values = NULL;
@@ -1061,16 +1066,18 @@ get_selected_device_from_session (GstOnnxBaseInference * self,
     }
 
     device_id_value = api->GetKeyValue (metadata, device_id_key);
-    luid_or_pci_bus_id = g_strdup (device_id_value);
+    if (device_id_value) {
+      luid_or_pci_bus_id = g_strdup (device_id_value);
+      break;
+    }
   }
 
+  if (!luid_or_pci_bus_id)
+    GST_WARNING_OBJECT (self, "No GPU EP device ID found for session inputs");
+
+done:
+  g_free (ep_devices);
   return luid_or_pci_bus_id;
-
-error:
-  if (status)
-    api->ReleaseStatus (status);
-
-  return NULL;
 }
 #endif
 
@@ -1697,6 +1704,17 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
   self->api->ReleaseSessionOptions (session_options);
   session_options = NULL;
 
+  status = self->api->SessionGetInputCount (priv->session, &input_count);
+  if (status) {
+    GST_ERROR_OBJECT (self, "Failed to get input count: %s",
+        self->api->GetErrorMessage (status));
+    goto error;
+  }
+
+  if (input_count == 0) {
+    GST_ERROR_OBJECT (self, "Model has no input tensors");
+    goto error;
+  }
 #if HAVE_GST_HIP
   if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_MIGRAPHX ||
       self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP) {
@@ -1707,7 +1725,8 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
 
 #if HAVE_WINML
     {
-      gchar *luid_str = get_selected_device_from_session (self, priv->session);
+      gchar *luid_str =
+          get_selected_device_from_session (self, priv->session, input_count);
 
       if (luid_str) {
         GST_DEBUG_OBJECT (self, "Input EP device LUID: %s", luid_str);
@@ -1727,7 +1746,7 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
 #endif
     if (self->execution_provider == GST_ONNX_EXECUTION_PROVIDER_HIP) {
       gchar *pci_bus_id =
-          get_selected_device_from_session (self, priv->session);
+          get_selected_device_from_session (self, priv->session, input_count);
 
       if (pci_bus_id) {
         GST_DEBUG_OBJECT (self, "Input EP device PCI bus ID: %s", pci_bus_id);
@@ -1768,19 +1787,6 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
   if (status) {
     GST_ERROR_OBJECT (self, "Failed to get allocator: %s",
         self->api->GetErrorMessage (status));
-    goto error;
-  }
-
-  /* Get input count */
-  status = self->api->SessionGetInputCount (priv->session, &input_count);
-  if (status) {
-    GST_ERROR_OBJECT (self, "Failed to get input count: %s",
-        self->api->GetErrorMessage (status));
-    goto error;
-  }
-
-  if (input_count == 0) {
-    GST_ERROR_OBJECT (self, "Model has no input tensors");
     goto error;
   }
 
