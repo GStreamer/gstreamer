@@ -140,12 +140,11 @@ from the parent buffer of this meta.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_index_by_quark" c:identifier="gst_analytics_cls_mtd_get_index_by_quark" version="1.24">
@@ -234,12 +233,11 @@ For example with a semantic_tag = "posture/hand-21-kp", first
 member represent the "wrist", second is the thumb first joint.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsgroupmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="add_member" c:identifier="gst_analytics_group_mtd_add_member" version="1.30">
@@ -508,12 +506,11 @@ gst_analytics_relation_meta_set_relation(rmeta,
 ]|</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticskeypointmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_confidence" c:identifier="gst_analytics_keypoint_mtd_get_confidence" version="1.30">
@@ -1060,12 +1057,11 @@ or over-constrain a dynamic axis, %TRUE otherwise.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_id" c:identifier="gst_analytics_mtd_get_id" version="1.24">
@@ -1265,12 +1261,11 @@ resources it was using.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_confidence_lvl" c:identifier="gst_analytics_od_mtd_get_confidence_lvl" version="1.24">
@@ -1392,12 +1387,11 @@ identified by @id is stored.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">This metadata item represents the orientation in space of an object</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_angles" c:identifier="gst_analytics_orientation_mtd_get_angles" version="1.30">
@@ -1446,6 +1440,273 @@ See #gst_analytics_relation_meta_add_orientation_mtd for more details</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">opaque id of #GstAnalyticsMtd type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
+    <record name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">This type of metadata stores a set of key/value properties. Keys are strings
+and values are #GValue. It is intended to annotate another analytics
+metadata, like a #GstAnalyticsODMtd, with arbitrary attributes (color,
+speed, license plate, ...).
+
+The annotated metadata is associated with the #GstAnalyticsPropertiesMtd
+using #GstAnalyticsRelationMeta. The recommended relation is
+%GST_ANALYTICS_REL_TYPE_RELATE_TO from the annotated metadata to the
+#GstAnalyticsPropertiesMtd:
+
+|[&lt;!-- language="C" --&gt;
+GstAnalyticsODMtd od_mtd;
+GstAnalyticsPropertiesMtd props_mtd;
+
+gst_analytics_relation_meta_add_od_mtd (rmeta, type, x, y, w, h, conf,
+    &amp;od_mtd);
+gst_analytics_relation_meta_add_properties_mtd (rmeta, &amp;props_mtd);
+
+gst_analytics_properties_mtd_set_string (&amp;props_mtd, "color", "red");
+gst_analytics_properties_mtd_set (&amp;props_mtd,
+    "license-plate", G_TYPE_STRING, "ABC-123",
+    "speed", G_TYPE_DOUBLE, 12.5,
+    NULL);
+
+gst_analytics_relation_meta_set_relation (rmeta,
+    GST_ANALYTICS_REL_TYPE_RELATE_TO, od_mtd.id, props_mtd.id);
+]|
+
+Downstream, gst_analytics_relation_meta_iterate() filtered on
+gst_analytics_od_mtd_get_mtd_type() visits each object, and
+gst_analytics_relation_meta_get_direct_related() filtered on
+gst_analytics_properties_mtd_get_mtd_type() returns the properties
+related to it:
+
+|[&lt;!-- language="C" --&gt;
+GstAnalyticsODMtd od_mtd;
+GstAnalyticsPropertiesMtd props_mtd;
+gpointer od_state = NULL;
+
+while (gst_analytics_relation_meta_iterate (rmeta, &amp;od_state,
+        gst_analytics_od_mtd_get_mtd_type (), &amp;od_mtd)) {
+  gpointer props_state = NULL;
+
+  if (gst_analytics_relation_meta_get_direct_related (rmeta, od_mtd.id,
+          GST_ANALYTICS_REL_TYPE_RELATE_TO,
+          gst_analytics_properties_mtd_get_mtd_type (), &amp;props_state,
+          &amp;props_mtd)) {
+    const gchar *plate =
+        gst_analytics_properties_mtd_get_string (&amp;props_mtd,
+        "license-plate");
+    ...
+  }
+}
+]|</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_length" c:identifier="gst_analytics_properties_mtd_get_length" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the number of properties stored in @mtd</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="const GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_nth_key" c:identifier="gst_analytics_properties_mtd_get_nth_key" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Gets the name of the property at @index, to iterate over all properties
+along with gst_analytics_properties_mtd_get_length().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property, or %NULL if
+  @index is out of range</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="const GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the index of the property</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_string" c:identifier="gst_analytics_properties_mtd_get_string" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Gets the string value of the property @key.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the string value of the property, or
+  %NULL if @key doesn't exist or doesn't hold a string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="const GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_structure" c:identifier="gst_analytics_properties_mtd_get_structure" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Gets the #GstStructure holding all properties of @mtd. Each field of the
+structure is a property.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the properties of @mtd</doc>
+          <type name="Gst.Structure" c:type="const GstStructure*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="const GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_value" c:identifier="gst_analytics_properties_mtd_get_value" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Gets the value of the property @key.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the value of the property, or %NULL if
+  @key doesn't exist</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="const GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="has_key" c:identifier="gst_analytics_properties_mtd_has_key" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE if @mtd has a property named @key, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="const GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="remove_key" c:identifier="gst_analytics_properties_mtd_remove_key" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Removes the property @key from @mtd.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set" c:identifier="gst_analytics_properties_mtd_set" version="1.30" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Sets several properties at once, using the same variable arguments
+convention as gst_structure_set(). Existing properties are replaced.
+
+Each value must have exactly the C type of its #GType, as no conversion
+is done: pass `1.0` and not `1` for %G_TYPE_DOUBLE, and cast to #gint64
+or #guint64 for 64-bit integer types.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="first_key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the first property to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">#GType and value of the first property, followed by more
+  key/#GType/value triplets, terminated by %NULL</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_string" c:identifier="gst_analytics_properties_mtd_set_string" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Sets the property @key to a copy of the string @value. If @key already
+exists its value is replaced.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the string value of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_value" c:identifier="gst_analytics_properties_mtd_set_value" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Sets the property @key to a copy of @value. If @key already exists its
+value is replaced.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the name of the property</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the value of the property</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_mtd_type" c:identifier="gst_analytics_properties_mtd_get_mtd_type" version="1.30">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the #GstAnalyticsMtdType of #GstAnalyticsPropertiesMtd</doc>
           <type name="MtdType" c:type="GstAnalyticsMtdType"/>
         </return-value>
       </function>
@@ -1853,6 +2114,27 @@ through the image (or screen).</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Handle updated with newly added object detection
    meta. Add an object-detetion metadata to @instance.</doc>
             <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_properties_mtd" c:identifier="gst_analytics_relation_meta_add_properties_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Adds an empty #GstAnalyticsPropertiesMtd to @meta. Properties can be added
+with gst_analytics_properties_mtd_set_value() and associated with an Mtd
+it describes using gst_analytics_relation_meta_set_relation().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE on success, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="properties_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">location for the newly added
+  #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd*"/>
           </parameter>
         </parameters>
       </method>
@@ -2317,6 +2599,28 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_properties_mtd" c:identifier="gst_analytics_relation_meta_get_properties_mtd" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">Gets the #GstAnalyticsPropertiesMtd identified by @an_meta_id from @meta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">%TRUE if the metadata was found, otherwise %FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the identifier of the metadata</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">location for the #GstAnalyticsPropertiesMtd</doc>
+            <type name="PropertiesMtd" c:type="GstAnalyticsPropertiesMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_relation" c:identifier="gst_analytics_relation_meta_get_relation" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get relations between first and second analysis-meta.
 Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
@@ -2667,12 +2971,11 @@ Ids must have been obtained a call to
  Since: 1.26</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_mask" c:identifier="gst_analytics_segmentation_mtd_get_mask" version="1.26">
@@ -3612,12 +3915,11 @@ analytics-meta with additional parameters describing the tensor.
 Since 1.28</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensormtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_tensor" c:identifier="gst_analytics_tensor_mtd_get_tensor" version="1.28">
@@ -3722,12 +4024,11 @@ coordinates to video buffer coordinates. A tensor decoder can use this
 transform to map spatial inference results back to the video buffer.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstensorprovenancemtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_correlation_id" c:identifier="gst_analytics_tensor_provenance_mtd_get_correlation_id" version="1.30">
@@ -3977,12 +4278,11 @@ types such as #GstAnalyticsODMtd and associated with the text metadata
 using #GstAnalyticsRelationMeta.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_confidence" c:identifier="gst_analytics_text_mtd_get_confidence" version="1.30">
@@ -4087,12 +4387,11 @@ the buffer carrying this metadata, but is not limited to that.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Store information on results of object tracking</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance identifier.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticstextmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
-identified by @id is stored.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h">Instance of #GstAnalyticsRelationMeta where this Mtd is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_info" c:identifier="gst_analytics_tracking_mtd_get_info" version="1.24">
@@ -4553,6 +4852,13 @@ or over-constrain a dynamic axis, %TRUE otherwise.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsorientationmtd.c">opaque id of #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="properties_mtd_get_mtd_type" c:identifier="gst_analytics_properties_mtd_get_mtd_type" moved-to="PropertiesMtd.get_mtd_type" version="1.30">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticspropertiesmtd.c">the #GstAnalyticsMtdType of #GstAnalyticsPropertiesMtd</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
