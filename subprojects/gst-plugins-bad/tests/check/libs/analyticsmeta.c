@@ -3703,6 +3703,186 @@ GST_START_TEST (test_mtd_semantic_tag_survives_copy)
 
 GST_END_TEST;
 
+GST_START_TEST (test_properties_mtd)
+{
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsPropertiesMtd props_mtd, props_mtd2;
+  GValue val = G_VALUE_INIT;
+  const GValue *rval;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  fail_unless (gst_analytics_relation_meta_add_properties_mtd (rmeta,
+          &props_mtd));
+
+  g_value_init (&val, G_TYPE_STRING);
+  g_value_set_string (&val, "red");
+  fail_unless (gst_analytics_properties_mtd_set_value (&props_mtd, "color",
+          &val));
+  g_value_unset (&val);
+
+  fail_unless (gst_analytics_properties_mtd_has_key (&props_mtd, "color"));
+
+  g_value_init (&val, G_TYPE_DOUBLE);
+  g_value_set_double (&val, 12.5);
+  fail_unless (gst_analytics_properties_mtd_set_value (&props_mtd, "speed",
+          &val));
+  g_value_unset (&val);
+
+  fail_unless_equals_int (gst_analytics_properties_mtd_get_length (&props_mtd),
+      2);
+  fail_if (gst_analytics_properties_mtd_has_key (&props_mtd, "weight"));
+  fail_unless (gst_analytics_properties_mtd_get_value (&props_mtd,
+          "weight") == NULL);
+  fail_unless_equals_string (gst_analytics_properties_mtd_get_nth_key
+      (&props_mtd, 0), "color");
+  fail_unless_equals_string (gst_analytics_properties_mtd_get_nth_key
+      (&props_mtd, 1), "speed");
+  fail_unless (gst_analytics_properties_mtd_get_nth_key (&props_mtd,
+          2) == NULL);
+
+  rval = gst_analytics_properties_mtd_get_value (&props_mtd, "color");
+  fail_unless (G_VALUE_HOLDS_STRING (rval));
+  fail_unless_equals_string (g_value_get_string (rval), "red");
+
+  /* Replace existing value */
+  g_value_init (&val, G_TYPE_STRING);
+  g_value_set_string (&val, "blue");
+  fail_unless (gst_analytics_properties_mtd_set_value (&props_mtd, "color",
+          &val));
+  g_value_unset (&val);
+  fail_unless_equals_int (gst_analytics_properties_mtd_get_length (&props_mtd),
+      2);
+  rval = gst_analytics_properties_mtd_get_value (&props_mtd, "color");
+  fail_unless_equals_string (g_value_get_string (rval), "blue");
+
+  fail_unless (gst_analytics_properties_mtd_remove_key (&props_mtd, "color"));
+  fail_unless_equals_int (gst_analytics_properties_mtd_get_length (&props_mtd),
+      1);
+  fail_if (gst_analytics_properties_mtd_has_key (&props_mtd, "color"));
+
+  fail_unless (gst_structure_has_field_typed
+      (gst_analytics_properties_mtd_get_structure (&props_mtd), "speed",
+          G_TYPE_DOUBLE));
+
+  fail_unless (gst_analytics_relation_meta_get_properties_mtd (rmeta,
+          props_mtd.id, &props_mtd2));
+  fail_unless_equals_int (gst_analytics_properties_mtd_get_length (&props_mtd2),
+      1);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_properties_mtd_helpers)
+{
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsPropertiesMtd props_mtd;
+  const GstStructure *s;
+  gdouble speed;
+  gint lane;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  fail_unless (gst_analytics_relation_meta_add_properties_mtd (rmeta,
+          &props_mtd));
+
+  fail_unless (gst_analytics_properties_mtd_set_string (&props_mtd, "color",
+          "red"));
+  fail_unless (gst_analytics_properties_mtd_set (&props_mtd,
+          "license-plate", G_TYPE_STRING, "AB-123-CD",
+          "speed", G_TYPE_DOUBLE, 12.5, "lane", G_TYPE_INT, 3, NULL));
+
+  fail_unless_equals_int (gst_analytics_properties_mtd_get_length (&props_mtd),
+      4);
+  fail_unless_equals_string (gst_analytics_properties_mtd_get_string
+      (&props_mtd, "color"), "red");
+  fail_unless_equals_string (gst_analytics_properties_mtd_get_string
+      (&props_mtd, "license-plate"), "AB-123-CD");
+  /* Not a string */
+  fail_unless (gst_analytics_properties_mtd_get_string (&props_mtd,
+          "speed") == NULL);
+  /* Doesn't exist */
+  fail_unless (gst_analytics_properties_mtd_get_string (&props_mtd,
+          "weight") == NULL);
+
+  s = gst_analytics_properties_mtd_get_structure (&props_mtd);
+  fail_unless (gst_structure_get_double (s, "speed", &speed));
+  fail_unless_equals_float (speed, 12.5);
+  fail_unless (gst_structure_get_int (s, "lane", &lane));
+  fail_unless_equals_int (lane, 3);
+
+  /* Replace with the string helper */
+  fail_unless (gst_analytics_properties_mtd_set_string (&props_mtd, "color",
+          "blue"));
+  fail_unless_equals_string (gst_analytics_properties_mtd_get_string
+      (&props_mtd, "color"), "blue");
+  fail_unless_equals_int (gst_analytics_properties_mtd_get_length (&props_mtd),
+      4);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_properties_mtd_relate_to_od)
+{
+  GstBuffer *buf, *buf2;
+  GstAnalyticsRelationMeta *rmeta, *rmeta2;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsPropertiesMtd props_mtd;
+  gpointer state = NULL;
+  gboolean ret;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  ret = gst_analytics_relation_meta_add_od_mtd (rmeta,
+      g_quark_from_string ("car"), 5, 10, 50, 60, 0.85f, &od_mtd);
+  fail_unless (ret == TRUE);
+
+  ret = gst_analytics_relation_meta_add_properties_mtd (rmeta, &props_mtd);
+  fail_unless (ret == TRUE);
+
+  fail_unless (gst_analytics_properties_mtd_set_string (&props_mtd,
+          "license-plate", "AB-123-CD"));
+
+  ret = gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, od_mtd.id, props_mtd.id);
+  fail_unless (ret == TRUE);
+
+  /* Copy to new buffer, properties must be deep-copied */
+  buf2 = gst_buffer_new ();
+  ret = gst_buffer_copy_into (buf2, buf, GST_BUFFER_COPY_META, 0, -1);
+  fail_unless (ret == TRUE);
+  gst_buffer_unref (buf);
+
+  rmeta2 = gst_buffer_get_analytics_relation_meta (buf2);
+  fail_unless (rmeta2 != NULL);
+
+  ret = gst_analytics_relation_meta_iterate (rmeta2, &state,
+      gst_analytics_od_mtd_get_mtd_type (), &od_mtd);
+  fail_unless (ret == TRUE);
+
+  state = NULL;
+  ret = gst_analytics_relation_meta_get_direct_related (rmeta2, od_mtd.id,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO,
+      gst_analytics_properties_mtd_get_mtd_type (), &state, &props_mtd);
+  fail_unless (ret == TRUE);
+
+  fail_unless_equals_string (gst_analytics_properties_mtd_get_string
+      (&props_mtd, "license-plate"), "AB-123-CD");
+
+  gst_buffer_unref (buf2);
+}
+
+GST_END_TEST;
+
 static Suite *
 analyticmeta_suite (void)
 {
@@ -3721,6 +3901,7 @@ analyticmeta_suite (void)
   TCase *tc_chain_keypoint;
   TCase *tc_chain_orientation;
   TCase *tc_chain_semantic_tag;
+  TCase *tc_chain_properties;
 
   s = suite_create ("Analytic Meta Library");
 
@@ -3825,6 +4006,12 @@ analyticmeta_suite (void)
   tcase_add_test (tc_chain_semantic_tag,
       test_mtd_semantic_tag_multiple_on_same_buffer);
   tcase_add_test (tc_chain_semantic_tag, test_mtd_semantic_tag_survives_copy);
+
+  tc_chain_properties = tcase_create ("Properties");
+  suite_add_tcase (s, tc_chain_properties);
+  tcase_add_test (tc_chain_properties, test_properties_mtd);
+  tcase_add_test (tc_chain_properties, test_properties_mtd_helpers);
+  tcase_add_test (tc_chain_properties, test_properties_mtd_relate_to_od);
 
   return s;
 }
