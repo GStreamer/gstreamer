@@ -162,7 +162,10 @@ pub fn qt_probe(tf: &mut TypeFind) -> Option<(Prob, Option<&'static CStr>)> {
         if head[4..8] == *b"ftyp" && size >= 16 {
             // The declared size is bounded by what the stream actually holds; a
             // box that is not wholly present is not scanned, and the walk keeps
-            // what it has found so far.
+            // what it has found so far. The bound also caps the box at
+            // FTYP_SCAN_MAX, far past any real ftyp: a declared box larger
+            // than that is treated as absent, where C read the whole declared
+            // span.
             let room = tf.length().map_or(FTYP_SCAN_MAX, |len| {
                 len.get().saturating_sub(offset).min(FTYP_SCAN_MAX)
             });
