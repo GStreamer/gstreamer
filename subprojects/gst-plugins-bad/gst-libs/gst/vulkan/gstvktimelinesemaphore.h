@@ -42,6 +42,8 @@ GType gst_vulkan_timeline_semaphore_get_type (void);
  * GstVulkanTimelineSemaphore:
  * @parent: parent #GstMiniObject
  * @semaphore: the #GstVulkanHandle containing the sempahore
+ * @export_handle_types: the VkExternalSemaphoreHandleTypeFlags the semaphore
+ *     was created exportable with, or 0
  *
  * Since: 1.30
  */
@@ -50,6 +52,7 @@ struct _GstVulkanTimelineSemaphore
   GstMiniObject parent;
 
   GstVulkanHandle *semaphore;
+  VkExternalSemaphoreHandleTypeFlags export_handle_types;
 
   /* <private> */
   GMutex lock;

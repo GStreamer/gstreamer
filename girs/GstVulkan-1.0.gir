@@ -6861,6 +6861,11 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.h">the #GstVulkanHandle containing the sempahore</doc>
         <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
       </field>
+      <field name="export_handle_types" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktimelinesemaphore.h">the VkExternalSemaphoreHandleTypeFlags the semaphore
+    was created exportable with, or 0</doc>
+        <type name="Vulkan.ExternalSemaphoreHandleTypeFlags" c:type="VkExternalSemaphoreHandleTypeFlags"/>
+      </field>
       <field name="lock" readable="0" private="1">
         <type name="GLib.Mutex" c:type="GMutex"/>
       </field>
@@ -8291,7 +8296,9 @@ level and one array layer that were created with
 format, extent, tiling and memory properties, and the usage of the source
 image without the video usage flags. The image data is copied with
 `vkCmdCopyImage` after the pending work signalled on the timeline semaphore
-of the source image, and gst_memory_copy() waits for the copy to complete.</doc>
+of the source image, and gst_memory_copy() waits for the copy to complete.
+The copy keeps the external memory handle types of the source image and the
+export handle types of its timeline semaphore.</doc>
     </docsection>
     <docsection name="vkimageview">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.c">#GstVulkanImageView is a wrapper around a `VkImageView` mostly for

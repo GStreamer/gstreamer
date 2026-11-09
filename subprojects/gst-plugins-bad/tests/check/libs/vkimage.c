@@ -840,6 +840,74 @@ GST_START_TEST (test_image_buffer_copy_deep)
 
 GST_END_TEST;
 
+GST_START_TEST (test_image_copy_exportable)
+{
+#ifdef G_OS_WIN32
+  VkExternalMemoryHandleTypeFlags mem_handle_types =
+      VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+  VkExternalSemaphoreHandleTypeFlags sem_handle_types =
+      VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+#else
+  VkExternalMemoryHandleTypeFlags mem_handle_types =
+      VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
+  VkExternalSemaphoreHandleTypeFlags sem_handle_types =
+      VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD_BIT;
+#endif
+  GstVulkanImageMemory *img, *img_copy;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstBuffer *buffer = NULL;
+  GstMemory *mem, *copy;
+  GstCaps *caps;
+
+  caps =
+      gst_caps_from_string ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE
+      "), format=RGBA, width=64, height=32");
+  pool = gst_vulkan_image_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 0, 1, 0);
+  gst_caps_unref (caps);
+  gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
+      VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+      | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_IMAGE_LAYOUT_UNDEFINED, 0);
+  gst_vulkan_image_buffer_pool_config_set_export_handle_types (config,
+      mem_handle_types, sem_handle_types);
+
+  /* The pool queries the driver for export support, so unsupported handle
+   * types are never passed to vkCreateImage(), which drivers may reject with
+   * a validation error */
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_INFO ("exportable image memory not supported, skipping");
+    gst_object_unref (pool);
+    return;
+  }
+  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+  fail_unless_equals_int (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL),
+      GST_FLOW_OK);
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  img = (GstVulkanImageMemory *) mem;
+  fail_unless_equals_int (img->exportable_handle_types, mem_handle_types);
+  fail_unless_equals_int (img->timeline_semaphore->export_handle_types,
+      sem_handle_types);
+
+  copy = gst_memory_copy (mem, 0, -1);
+  fail_unless (copy);
+  check_image_copy (mem, copy);
+  img_copy = (GstVulkanImageMemory *) copy;
+  fail_unless_equals_int (img_copy->exportable_handle_types, mem_handle_types);
+  fail_unless_equals_int (img_copy->timeline_semaphore->export_handle_types,
+      sem_handle_types);
+
+  gst_memory_unref (copy);
+  gst_buffer_unref (buffer);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_image_copy_unsupported)
 {
   GstMemory *mem;
@@ -886,6 +954,7 @@ vkimage_suite (void)
     tcase_add_test (tc_basic, test_image_copy_video_access);
 #endif
     tcase_add_test (tc_basic, test_image_buffer_copy_deep);
+    tcase_add_test (tc_basic, test_image_copy_exportable);
     tcase_add_test (tc_basic, test_image_copy_unsupported);
   }
 

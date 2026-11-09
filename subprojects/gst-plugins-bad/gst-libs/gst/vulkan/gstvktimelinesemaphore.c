@@ -121,6 +121,7 @@ gst_vulkan_timeline_semaphore_new_with_exportable (GstVulkanDevice * device,
 
     GstVulkanTimelineSemaphore *ret = g_new0 (GstVulkanTimelineSemaphore, 1);
     gst_vulkan_timeline_semaphore_init (ret, device, semaphore);
+    ret->export_handle_types = ext_flags;
     return ret;
   }
 #endif

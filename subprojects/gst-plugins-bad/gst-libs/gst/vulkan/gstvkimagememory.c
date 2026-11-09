@@ -41,6 +41,8 @@
  * image without the video usage flags. The image data is copied with
  * `vkCmdCopyImage` after the pending work signalled on the timeline semaphore
  * of the source image, and gst_memory_copy() waits for the copy to complete.
+ * The copy keeps the external memory handle types of the source image and the
+ * export handle types of its timeline semaphore.
  */
 
 #define GST_CAT_DEFUALT GST_CAT_VULKAN_IMAGE_MEMORY
@@ -564,6 +566,12 @@ _vk_image_mem_copy (GstVulkanImageMemory * src, gssize offset, gssize size)
   VkImageCopy regions[GST_VULKAN_MAX_COMPONENTS];
   VkMemoryPropertyFlags mem_prop_flags;
   VkImageCreateInfo image_info;
+  VkExternalMemoryImageCreateInfo ext_image_info = {
+    .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
+    .pNext = NULL,
+    .handleTypes = src->exportable_handle_types,
+  };
+  VkExternalSemaphoreHandleTypeFlags ext_sem_handle_types;
   GstVulkanImageMemory *dst = NULL;
   GstVulkanQueue *queue = NULL;
   GstVulkanCommandPool *cmd_pool = NULL;
@@ -623,14 +631,25 @@ _vk_image_mem_copy (GstVulkanImageMemory * src, gssize offset, gssize size)
   image_info.queueFamilyIndexCount = 0;
   image_info.pQueueFamilyIndices = NULL;
   image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  if (src->exportable_handle_types != 0)
+    vk_link_struct (&image_info, &ext_image_info);
+
+  ext_sem_handle_types = src->timeline_semaphore ?
+      src->timeline_semaphore->export_handle_types : 0;
 
   mem_prop_flags = src->vk_mem ? src->vk_mem->properties :
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
   dst = _vk_image_mem_new_alloc_with_image_info (_vulkan_image_memory_allocator,
-      NULL, src->device, &image_info, mem_prop_flags, NULL, NULL, 0);
-  if (!dst)
+      NULL, src->device, &image_info, mem_prop_flags, NULL, NULL,
+      ext_sem_handle_types);
+  if (!dst) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: failed to "
+        "allocate the copy (export memory handle types 0x%x, semaphore "
+        "handle types 0x%x)", src, (guint) src->exportable_handle_types,
+        (guint) ext_sem_handle_types);
     return NULL;
+  }
 
   queue = gst_vulkan_device_select_queue (src->device, VK_QUEUE_GRAPHICS_BIT);
   if (!queue) {

@@ -703,15 +703,8 @@ gst_vulkan_image_buffer_pool_fill_buffer (GstVulkanImageBufferPool * vk_pool,
   };
   /* *INDENT-ON* */
 
-  /* Chain VkExternalMemoryImageCreateInfo on top of whatever pNext was
-   * already set (NULL or the video profile list). The backing allocator
-   * (gstvkimagememory.c) scans this same pNext chain to discover the
-   * requested handle types and mirrors them into a
-   * VkExportMemoryAllocateInfo for vkAllocateMemory. */
-  if (priv->export_mem_handle_types != 0) {
-    ext_image_info.pNext = image_info.pNext;
-    image_info.pNext = &ext_image_info;
-  }
+  if (priv->export_mem_handle_types != 0)
+    vk_link_struct (&image_info, &ext_image_info);
 
   priv->v_info.size = 0;
   for (i = 0; i < priv->n_imgs; i++) {
