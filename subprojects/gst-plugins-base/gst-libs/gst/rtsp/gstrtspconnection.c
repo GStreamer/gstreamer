@@ -150,6 +150,9 @@ typedef enum
 
 #define TUNNELID_LEN   24
 
+/* Bound allocations from untrusted Content-Length headers by default. */
+#define DEFAULT_CONTENT_LENGTH_LIMIT (10 * 1024 * 1024)
+
 struct _GstRTSPConnection
 {
   /*< private > */
@@ -444,7 +447,7 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->auth_params = NULL;
   newconn->version = 0;
 
-  newconn->content_length_limit = G_MAXUINT;
+  newconn->content_length_limit = DEFAULT_CONTENT_LENGTH_LIMIT;
 
   newconn->extra_http_headers =
       g_array_new (FALSE, FALSE, sizeof (GstRTSPExtraHttpHeader));
@@ -2762,7 +2765,9 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
             if (errno != 0 || content_length_parsed < 0) {
               res = GST_RTSP_EPARSE;
               goto invalid_body_len;
-            } else if (content_length_parsed > conn->content_length_limit) {
+            } else if (content_length_parsed > conn->content_length_limit ||
+                content_length_parsed >= G_MAXUINT) {
+              /* The body size, including its trailing NUL, must fit in guint. */
               res = GST_RTSP_ENOMEM;
               goto invalid_body_len;
             }
@@ -3602,8 +3607,12 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
  * @limit: Content-Length limit
  *
  * Configure @conn to use the specified Content-Length limit.
+ * The default is 10 MiB (10485760 bytes). Applications requiring larger bodies
+ * can explicitly increase this limit for trusted peers.
  * Both requests and responses are validated. If content-length is
- * exceeded, ENOMEM error will be returned.
+ * exceeded, #GST_RTSP_ENOMEM will be returned before allocating the body.
+ * Regardless of @limit, the body size including its trailing NUL must fit
+ * in a #guint.
  *
  * Since: 1.18
  */

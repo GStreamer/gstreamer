@@ -973,8 +973,12 @@ This has no effect when not using HTTP tunneling.</doc>
       </method>
       <method name="set_content_length_limit" c:identifier="gst_rtsp_connection_set_content_length_limit" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">Configure @conn to use the specified Content-Length limit.
+The default is 10 MiB (10485760 bytes). Applications requiring larger bodies
+can explicitly increase this limit for trusted peers.
 Both requests and responses are validated. If content-length is
-exceeded, ENOMEM error will be returned.</doc>
+exceeded, #GST_RTSP_ENOMEM will be returned before allocating the body.
+Regardless of @limit, the body size including its trailing NUL must fit
+in a #guint.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
