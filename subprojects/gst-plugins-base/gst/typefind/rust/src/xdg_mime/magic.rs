@@ -161,6 +161,10 @@ fn magic_rule(cur: &mut Cursor) -> Option<MagicRule> {
         _ => None,
     };
 
+    // Upstream parity: a word size is grammar to consume, not semantics to
+    // apply. The crate this derives from parses and stores it but matches on
+    // raw bytes, and every `~` entry in the shipped databases spells a value
+    // exactly as wide as its word, where the two readings agree.
     if cur.peek() == Some(b'~') {
         cur.pos += 1;
         match cur.peek() {
@@ -291,9 +295,19 @@ fn parse_entries(mut bytes: &[u8]) -> Vec<MagicEntry> {
 }
 
 pub(super) fn lookup_data(entries: &[MagicEntry], data: &[u8]) -> Option<(String, u32)> {
-    entries
-        .iter()
-        .find_map(|e| e.matches(data).map(|mime| (mime.to_string(), e.priority)))
+    // The answer is the highest-priority match, not the first in file
+    // order; on a tie the earlier entry keeps it, as GIO's loader does.
+    let mut best: Option<(String, u32)> = None;
+    for entry in entries {
+        if let Some(mime) = entry.matches(data)
+            && best
+                .as_ref()
+                .is_none_or(|(_, priority)| entry.priority > *priority)
+        {
+            best = Some((mime.to_string(), entry.priority));
+        }
+    }
+    best
 }
 
 /// Largest data extent any rule may read, used to cap sniffed input.
@@ -339,6 +353,26 @@ mod tests {
             buf.extend_from_slice(rule);
         }
         parse_entries(&buf)
+    }
+
+    /// The lookup answer is the highest-priority match, not the first in
+    /// file order; a tie keeps the earlier entry.
+    #[test]
+    fn the_highest_priority_entry_wins() {
+        let build = |specs: &[(&str, u32)]| {
+            let mut buf = b"MIME-Magic\0\n".to_vec();
+            for (mime, prio) in specs {
+                buf.extend_from_slice(format!("[{prio}:{mime}]\n").as_bytes());
+                buf.extend_from_slice(&rule_bytes(0, 0, b"AB", b""));
+            }
+            parse_entries(&buf)
+        };
+        let entries = build(&[("text/low", 40), ("text/high", 60)]);
+        let (mime, prio) = lookup_data(&entries, b"AB").unwrap();
+        assert_eq!((mime.as_str(), prio), ("text/high", 60));
+        let tied = build(&[("text/first", 60), ("text/second", 60)]);
+        let (mime, _) = lookup_data(&tied, b"AB").unwrap();
+        assert_eq!(mime, "text/first");
     }
 
     #[test]
