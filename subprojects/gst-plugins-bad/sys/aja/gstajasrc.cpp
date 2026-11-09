@@ -120,7 +120,6 @@ G_BEGIN_DECLS
 typedef enum {
   QUEUE_ITEM_TYPE_DUMMY,
   QUEUE_ITEM_TYPE_FRAME,
-  QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
   QUEUE_ITEM_TYPE_ERROR,
   QUEUE_ITEM_TYPE_FRAMES_DROPPED,
 } QueueItemType;
@@ -132,6 +131,12 @@ typedef enum {
   SIGNAL_STATE_PRESENT,
   SIGNAL_STATE_ABSENT,
 } SignalState;
+
+typedef enum {
+  SIGNAL_TRANSITION_NONE,
+  SIGNAL_TRANSITION_PRESENT,
+  SIGNAL_TRANSITION_ABSENT,
+} SignalTransition;
 
 typedef struct {
   QueueItemType type;
@@ -152,14 +157,6 @@ typedef struct {
       NTV2VideoFormat detected_format;
       guint32 vpid;
     } frame;
-    // For SIGNAL_CHANGE
-    struct {
-      gboolean have_signal;
-      NTV2VideoFormat detected_format;
-      guint32 vpid;
-      // No frames were captured but the driver reports a valid video format.
-      gboolean no_frames;
-    } signal_change;
     // For ERROR
     struct {
       GstMessage *msg;
@@ -184,8 +181,6 @@ static void queue_item_clear(QueueItem *item) {
       gst_clear_buffer(&item->frame.anc_buffer);
       gst_clear_buffer(&item->frame.anc_buffer2);
       item->frame.tc.~NTV2_RP188();
-      break;
-    case QUEUE_ITEM_TYPE_SIGNAL_CHANGE:
       break;
     case QUEUE_ITEM_TYPE_ERROR:
       gst_clear_message(&item->error.msg);
@@ -577,9 +572,12 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
       g_value_set_uint(value, self->capture_cpu_core);
       break;
 #endif
-    case PROP_SIGNAL:
+    case PROP_SIGNAL: {
+      g_mutex_lock(&self->queue_lock);
       g_value_set_boolean(value, self->signal);
+      g_mutex_unlock(&self->queue_lock);
       break;
+    }
     case PROP_ATTACH_ANCILLARY_META:
       g_value_set_boolean(value, self->attach_ancillary_meta);
       break;
@@ -870,6 +868,96 @@ static gboolean gst_aja_src_read_signal(GstAjaSrc *self,
   *detected_format = format;
   *vpid = vpid_a;
   return TRUE;
+}
+
+// Set the signal property. Must be called without queue_lock. Returns whether
+// the value changed.
+static gboolean gst_aja_src_set_signal(GstAjaSrc* self, gboolean signal) {
+  gboolean changed;
+
+  g_mutex_lock(&self->queue_lock);
+  changed = self->signal != signal;
+  self->signal = signal;
+  g_mutex_unlock(&self->queue_lock);
+
+  return changed;
+}
+
+typedef struct {
+  gboolean have_signal;
+  NTV2VideoFormat detected_format;
+  guint32 vpid;
+  gboolean no_frames;
+} AjaSignalChange;
+
+// Runs on a helper thread so that neither the bus message nor the property
+// notify runs on the capture thread.
+static void gst_aja_src_notify_signal_change(GstObject* object,
+                                             gpointer user_data) {
+  GstAjaSrc* self = GST_AJA_SRC(object);
+  AjaSignalChange* change = (AjaSignalChange*)user_data;
+
+  if (change->have_signal) {
+    GstAjaVideoFormat fmt =
+        gst_aja_video_format_from_ntv2_format(change->detected_format);
+    gchar* format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
+    std::string format_string =
+        NTV2VideoFormatToString(change->detected_format);
+    GST_ELEMENT_INFO_WITH_DETAILS(
+        GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
+        ("Input source detected"),
+        ("detected-format", G_TYPE_STRING, format_string.c_str(),
+         "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
+         change->vpid, NULL));
+    g_free(format_str);
+  } else {
+    if (change->detected_format != ::NTV2_FORMAT_UNKNOWN) {
+      GstAjaVideoFormat fmt =
+          gst_aja_video_format_from_ntv2_format(change->detected_format);
+      gchar* format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
+      std::string format_string =
+          NTV2VideoFormatToString(change->detected_format);
+      if (change->no_frames) {
+        GST_ELEMENT_WARNING_WITH_DETAILS(
+            GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+            ("No frames were captured"),
+            ("detected-format", G_TYPE_STRING, format_string.c_str(),
+             "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
+             change->vpid, NULL));
+      } else {
+        GST_ELEMENT_WARNING_WITH_DETAILS(
+            GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+            ("Input source with different mode %s was detected", format_str),
+            ("detected-format", G_TYPE_STRING, format_string.c_str(),
+             "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
+             change->vpid, NULL));
+      }
+      g_free(format_str);
+    } else {
+      GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
+                          ("No input source was detected"));
+    }
+  }
+
+  g_object_notify(G_OBJECT(object), "signal");
+  g_free(change);
+}
+
+// Must be called without queue_lock.
+static void gst_aja_src_queue_signal_change(GstAjaSrc *self,
+                                            gboolean have_signal,
+                                            NTV2VideoFormat detected_format,
+                                            guint32 vpid, gboolean no_frames) {
+  if (!gst_aja_src_set_signal(self, have_signal)) return;
+
+  AjaSignalChange* change = g_new0(AjaSignalChange, 1);
+  change->have_signal = have_signal;
+  change->detected_format = detected_format;
+  change->vpid = vpid;
+  change->no_frames = no_frames;
+
+  gst_object_call_async(GST_OBJECT(self), gst_aja_src_notify_signal_change,
+                        change);
 }
 
 // Must be called with GstAjaNtv2DeviceLocker
@@ -1686,13 +1774,12 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
   GST_DEBUG_OBJECT(self, "Starting");
 
   self->video_format = NTV2_FORMAT_UNKNOWN;
-  self->signal = FALSE;
+  if (gst_aja_src_set_signal(self, FALSE))
+    g_object_notify(G_OBJECT(self), "signal");
   self->initial_signal_present = FALSE;
-  self->initial_detected_video_format = NTV2_FORMAT_UNKNOWN;
 
-  // The device is open but not configured yet. The input sense is a pure
-  // register read, so seed the property before the capture thread starts and
-  // before the application has a chance to read it.
+  // The device is open but not configured yet. Read the input sense now so
+  // the property is valid before the application can read it.
   {
     GstAjaNtv2DeviceLocker locker(self->device);
 
@@ -1708,8 +1795,8 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     if (gst_aja_src_read_signal(self, input_source, quad_mode,
                                 &detected_format, &vpid)) {
       self->initial_signal_present = TRUE;
-      self->initial_detected_video_format = detected_format;
-      self->signal = TRUE;
+      if (gst_aja_src_set_signal(self, TRUE))
+        g_object_notify(G_OBJECT(self), "signal");
     }
   }
 
@@ -1778,10 +1865,8 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
 
   self->video_format = NTV2_FORMAT_UNKNOWN;
 
-  if (self->signal) {
-    self->signal = FALSE;
+  if (gst_aja_src_set_signal(self, FALSE))
     g_object_notify(G_OBJECT(self), "signal");
-  }
 
   GST_DEBUG_OBJECT(self, "Stopped");
 
@@ -1974,57 +2059,6 @@ next_item:
     case QUEUE_ITEM_TYPE_DUMMY:
       queue_item_clear(&item);
       goto next_item;
-    case QUEUE_ITEM_TYPE_SIGNAL_CHANGE:
-      // These are already only produced when signal status is changing
-      if (item.signal_change.have_signal) {
-        GstAjaVideoFormat fmt = gst_aja_video_format_from_ntv2_format(
-            item.signal_change.detected_format);
-        gchar *format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
-        std::string format_string =
-            NTV2VideoFormatToString(item.signal_change.detected_format);
-        GST_ELEMENT_INFO_WITH_DETAILS(
-            GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
-            ("Input source detected"),
-            ("detected-format", G_TYPE_STRING, format_string.c_str(),
-             "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
-             item.signal_change.vpid, NULL));
-        self->signal = TRUE;
-        g_object_notify(G_OBJECT(self), "signal");
-        g_free(format_str);
-      } else if (!item.signal_change.have_signal) {
-        if (item.signal_change.detected_format != ::NTV2_FORMAT_UNKNOWN) {
-          GstAjaVideoFormat fmt = gst_aja_video_format_from_ntv2_format(
-              item.signal_change.detected_format);
-          gchar *format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
-          std::string format_string =
-              NTV2VideoFormatToString(item.signal_change.detected_format);
-          if (item.signal_change.no_frames) {
-            GST_ELEMENT_WARNING_WITH_DETAILS(
-                GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
-                ("No frames were captured"),
-                ("detected-format", G_TYPE_STRING, format_string.c_str(),
-                 "gst-aja-format", G_TYPE_STRING, format_str, "vpid",
-                 G_TYPE_UINT, item.signal_change.vpid, NULL));
-          } else {
-            GST_ELEMENT_WARNING_WITH_DETAILS(
-                GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
-                ("Input source with different mode %s was detected",
-                 format_str),
-                ("detected-format", G_TYPE_STRING, format_string.c_str(),
-                 "gst-aja-format", G_TYPE_STRING, format_str, "vpid",
-                 G_TYPE_UINT, item.signal_change.vpid, NULL));
-          }
-          g_free(format_str);
-        } else {
-          GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ,
-                              ("Signal lost"),
-                              ("No input source was detected"));
-        }
-        self->signal = FALSE;
-        g_object_notify(G_OBJECT(self), "signal");
-      }
-      queue_item_clear(&item);
-      goto next_item;
     case QUEUE_ITEM_TYPE_ERROR:
       GST_ERROR_OBJECT(self, "Stopping because of error on capture thread");
       gst_element_post_message(GST_ELEMENT(self),
@@ -2063,11 +2097,6 @@ next_item:
   }
 
   g_assert(item.type == QUEUE_ITEM_TYPE_FRAME);
-
-  if (!self->signal) {
-    self->signal = TRUE;
-    g_object_notify(G_OBJECT(self), "signal");
-  }
 
   *buffer = (GstBuffer *)g_steal_pointer(&item.frame.video_buffer);
   gst_buffer_add_aja_audio_meta(*buffer, item.frame.audio_buffer);
@@ -2503,13 +2532,11 @@ next_item:
 #define SIGNAL_PRESENT_HOLD_US (100 * G_TIME_SPAN_MILLISECOND)
 #define SIGNAL_ABSENT_HOLD_US (300 * G_TIME_SPAN_MILLISECOND)
 
-// Update the signal state with hysteresis and push a signal change item on a
-// transition. Must be called with queue_lock held.
-static SignalState gst_aja_src_update_signal_state(
-    GstAjaSrc *self, SignalState signal_state, gboolean present,
-    gboolean *candidate_present, NTV2VideoFormat detected_format, guint32 vpid,
-    gint64 *state_since, gboolean *pending_recovery,
-    NTV2VideoFormat *last_detected_video_format) {
+// Update the signal state with hysteresis. Must be called with queue_lock
+// held. Returns the transition to report after releasing the lock.
+static SignalTransition gst_aja_src_update_signal_state(
+    SignalState *signal_state, gboolean present, gboolean *candidate_present,
+    gint64 *state_since, gboolean *pending_recovery) {
   const gint64 now = g_get_monotonic_time();
 
   if (present != *candidate_present) {
@@ -2520,46 +2547,34 @@ static SignalState gst_aja_src_update_signal_state(
   }
 
   if (present) {
-    if (signal_state == SIGNAL_STATE_PRESENT)
-      return signal_state;
+    if (*signal_state == SIGNAL_STATE_PRESENT) return SIGNAL_TRANSITION_NONE;
 
-    if (signal_state == SIGNAL_STATE_ABSENT)
-      *pending_recovery = TRUE;
+    if (*signal_state == SIGNAL_STATE_ABSENT) *pending_recovery = TRUE;
 
     if (now - *state_since < SIGNAL_PRESENT_HOLD_US)
-      return signal_state;
+      return SIGNAL_TRANSITION_NONE;
 
-    QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-    item.signal_change = {TRUE, detected_format, vpid};
-    gst_vec_deque_push_tail_struct(self->queue, &item);
-    g_cond_signal(&self->queue_cond);
-
-    *last_detected_video_format = detected_format;
+    *signal_state = SIGNAL_STATE_PRESENT;
     *state_since = 0;
-    return SIGNAL_STATE_PRESENT;
+    return SIGNAL_TRANSITION_PRESENT;
   }
 
-  if (signal_state == SIGNAL_STATE_UNKNOWN) {
+  if (*signal_state == SIGNAL_STATE_UNKNOWN) {
     // Nothing was ever observed, so there is nothing to hold or notify.
     *state_since = 0;
-    return SIGNAL_STATE_ABSENT;
+    *signal_state = SIGNAL_STATE_ABSENT;
+    return SIGNAL_TRANSITION_NONE;
   }
 
-  if (signal_state == SIGNAL_STATE_ABSENT)
-    return signal_state;
+  if (*signal_state == SIGNAL_STATE_ABSENT) return SIGNAL_TRANSITION_NONE;
 
   if (now - *state_since < SIGNAL_ABSENT_HOLD_US)
-    return signal_state;
+    return SIGNAL_TRANSITION_NONE;
 
-  QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-  item.signal_change = {FALSE, detected_format, vpid};
-  gst_vec_deque_push_tail_struct(self->queue, &item);
-  g_cond_signal(&self->queue_cond);
-
-  *last_detected_video_format = detected_format;
+  *signal_state = SIGNAL_STATE_ABSENT;
   *state_since = 0;
   *pending_recovery = FALSE;
-  return SIGNAL_STATE_ABSENT;
+  return SIGNAL_TRANSITION_ABSENT;
 }
 
 static void capture_thread_func(AJAThread *thread, void *data) {
@@ -2567,7 +2582,6 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   GstClock *clock = NULL;
   GstClock *real_time_clock;
   AUTOCIRCULATE_TRANSFER transfer;
-  NTV2VideoFormat last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
 
 #if defined(__APPLE__)
   pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
@@ -2680,16 +2694,13 @@ restart:
 
   clock_is_system_monotonic = gst_clock_is_system_monotonic(clock);
 
-  // Reset all local state after restart. The first start is seeded from the
-  // sensor reading in gst_aja_src_start().
+  // The first start uses the state read in gst_aja_src_start().
   if (first_start) {
     signal_state = self->initial_signal_present ? SIGNAL_STATE_PRESENT
                                                 : SIGNAL_STATE_ABSENT;
-    last_detected_video_format = self->initial_detected_video_format;
     first_start = FALSE;
   } else {
     signal_state = SIGNAL_STATE_UNKNOWN;
-    last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
   }
   signal_state_since = 0;
   signal_candidate_present = FALSE;
@@ -2736,12 +2747,17 @@ restart:
 
       if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
         GST_DEBUG_OBJECT(self, "No signal, waiting");
-        signal_state = gst_aja_src_update_signal_state(
-            self, signal_state, FALSE, &signal_candidate_present,
-            ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
-            &last_detected_video_format);
+        SignalTransition transition = gst_aja_src_update_signal_state(
+            &signal_state, FALSE, &signal_candidate_present,
+            &signal_state_since, &pending_recovery);
         driver_drops_time = GST_CLOCK_TIME_NONE;
+        g_mutex_unlock(&self->queue_lock);
+        if (transition != SIGNAL_TRANSITION_NONE)
+          gst_aja_src_queue_signal_change(
+              self, transition == SIGNAL_TRANSITION_PRESENT,
+              ::NTV2_FORMAT_UNKNOWN, 0, FALSE);
         self->device->device->WaitForInputVerticalInterrupt(self->channel);
+        g_mutex_lock(&self->queue_lock);
         continue;
       }
 
@@ -2838,12 +2854,15 @@ restart:
         self->video_format = NTV2_FORMAT_UNKNOWN;
 
       GST_DEBUG_OBJECT(self, "No signal, waiting");
-      signal_state = gst_aja_src_update_signal_state(
-          self, signal_state, FALSE, &signal_candidate_present,
-          ::NTV2_FORMAT_UNKNOWN, 0, &signal_state_since, &pending_recovery,
-          &last_detected_video_format);
+      SignalTransition transition = gst_aja_src_update_signal_state(
+          &signal_state, FALSE, &signal_candidate_present, &signal_state_since,
+          &pending_recovery);
       driver_drops_time = GST_CLOCK_TIME_NONE;
       g_mutex_unlock(&self->queue_lock);
+      if (transition != SIGNAL_TRANSITION_NONE)
+        gst_aja_src_queue_signal_change(self,
+                                        transition == SIGNAL_TRANSITION_PRESENT,
+                                        ::NTV2_FORMAT_UNKNOWN, 0, FALSE);
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
@@ -2867,31 +2886,43 @@ restart:
                        "(effective %s), waiting",
                        current_string.c_str(), configured_string.c_str(),
                        effective_string.c_str());
-      signal_state = gst_aja_src_update_signal_state(
-          self, signal_state, FALSE, &signal_candidate_present,
-          current_video_format, vpid_a, &signal_state_since, &pending_recovery,
-          &last_detected_video_format);
+      SignalTransition transition = gst_aja_src_update_signal_state(
+          &signal_state, FALSE, &signal_candidate_present, &signal_state_since,
+          &pending_recovery);
       driver_drops_time = GST_CLOCK_TIME_NONE;
       g_mutex_unlock(&self->queue_lock);
+      if (transition != SIGNAL_TRANSITION_NONE)
+        gst_aja_src_queue_signal_change(self,
+                                        transition == SIGNAL_TRANSITION_PRESENT,
+                                        current_video_format, vpid_a, FALSE);
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
     } else if (!gst_aja_src_input_locked(self, self->configured_input_source,
                                          self->quad_mode)) {
       GST_DEBUG_OBJECT(self, "Input not locked, waiting");
-      signal_state = gst_aja_src_update_signal_state(
-          self, signal_state, FALSE, &signal_candidate_present,
-          current_video_format, vpid_a, &signal_state_since, &pending_recovery,
-          &last_detected_video_format);
+      SignalTransition transition = gst_aja_src_update_signal_state(
+          &signal_state, FALSE, &signal_candidate_present, &signal_state_since,
+          &pending_recovery);
       g_mutex_unlock(&self->queue_lock);
+      if (transition != SIGNAL_TRANSITION_NONE)
+        gst_aja_src_queue_signal_change(self,
+                                        transition == SIGNAL_TRANSITION_PRESENT,
+                                        current_video_format, vpid_a, FALSE);
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
     } else {
-      signal_state = gst_aja_src_update_signal_state(
-          self, signal_state, TRUE, &signal_candidate_present,
-          current_video_format, vpid_a, &signal_state_since, &pending_recovery,
-          &last_detected_video_format);
+      SignalTransition transition = gst_aja_src_update_signal_state(
+          &signal_state, TRUE, &signal_candidate_present, &signal_state_since,
+          &pending_recovery);
+      if (transition != SIGNAL_TRANSITION_NONE) {
+        g_mutex_unlock(&self->queue_lock);
+        gst_aja_src_queue_signal_change(
+            self, transition == SIGNAL_TRANSITION_PRESENT, current_video_format,
+            vpid_a, FALSE);
+        g_mutex_lock(&self->queue_lock);
+      }
     }
 
     AUTOCIRCULATE_STATUS status;
@@ -3476,11 +3507,8 @@ restart:
         // A frame that is simply not ready yet must not restart the hold,
         // so only reset the state on an actual loss.
         if (signal_state == SIGNAL_STATE_PRESENT) {
-          QueueItem item = {QUEUE_ITEM_TYPE_SIGNAL_CHANGE};
-          item.signal_change = {FALSE, current_video_format, vpid_a, TRUE};
-          last_detected_video_format = current_video_format;
-          gst_vec_deque_push_tail_struct(self->queue, &item);
-          g_cond_signal(&self->queue_cond);
+          gst_aja_src_queue_signal_change(self, FALSE, current_video_format,
+                                          vpid_a, TRUE);
           signal_state = SIGNAL_STATE_ABSENT;
           signal_state_since = 0;
           pending_recovery = FALSE;
