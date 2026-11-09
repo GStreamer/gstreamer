@@ -33,6 +33,7 @@ from gi.repository import GstVideo
 from gi.repository import GstAnalytics
 from gi.repository import Gst
 from gi.repository import GLib
+from gi.repository import GObject
 from common import TestCase
 
 Gst.init([])
@@ -1193,3 +1194,102 @@ class TestAnalyticsMtdSemanticTag(TestCase):
         od.set_semantic_tag(None)
         self.assertEqual(od.get_semantic_tag(), "")
         self.assertFalse(od.has_semantic_tag("detector/ssd"))
+
+
+class TestAnalyticsPropertiesMtd(TestCase):
+    """Test key/value properties metadata."""
+
+    def _make_props(self):
+        buf = Gst.Buffer()
+        rmeta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        ret, props = rmeta.add_properties_mtd()
+        self.assertTrue(ret)
+        return buf, rmeta, props
+
+    def test_mtd_type(self):
+        """properties mtd has its own mtd type"""
+        buf, rmeta, props = self._make_props()
+        self.assertEqual(GstAnalytics.mtd_type_get_name(
+            GstAnalytics.PropertiesMtd.get_mtd_type()), "properties")
+        (ret, mtd) = rmeta.get_properties_mtd(props.id)
+        self.assertTrue(ret)
+        self.assertEqual(mtd, props)
+
+    def test_set_get(self):
+        """properties of different types can be set and read back"""
+        buf, rmeta, props = self._make_props()
+        self.assertEqual(props.get_length(), 0)
+
+        self.assertTrue(props.set_string("color", "red"))
+        self.assertTrue(props.set_value("speed", 12.5))
+        self.assertTrue(props.set_value("lane", 3))
+        self.assertTrue(props.set_value(
+            "first-seen", GObject.Value(GObject.TYPE_UINT64, 3600 * Gst.SECOND)))
+
+        self.assertEqual(props.get_length(), 4)
+        self.assertEqual(props.get_string("color"), "red")
+        self.assertEqual(props.get_value("color"), "red")
+        self.assertAlmostEqual(props.get_value("speed"), 12.5)
+        self.assertEqual(props.get_value("lane"), 3)
+        self.assertEqual(props.get_value("first-seen"), 3600 * Gst.SECOND)
+        self.assertEqual(props.get_structure().get_field_type("first-seen"),
+                         GObject.TYPE_UINT64)
+
+        # Not a string
+        self.assertIsNone(props.get_string("speed"))
+        # Doesn't exist
+        self.assertIsNone(props.get_value("weight"))
+        self.assertIsNone(props.get_string("weight"))
+
+    def test_replace_remove(self):
+        """setting an existing key replaces it, remove deletes it"""
+        buf, rmeta, props = self._make_props()
+        props.set_string("color", "red")
+        props.set_string("color", "blue")
+        self.assertEqual(props.get_length(), 1)
+        self.assertEqual(props.get_string("color"), "blue")
+
+        self.assertTrue(props.has_key("color"))
+        self.assertTrue(props.remove_key("color"))
+        self.assertFalse(props.has_key("color"))
+        self.assertEqual(props.get_length(), 0)
+
+    def test_iterate_keys(self):
+        """keys can be iterated in insertion order"""
+        buf, rmeta, props = self._make_props()
+        props.set_string("color", "red")
+        props.set_value("speed", 12.5)
+
+        keys = [props.get_nth_key(i) for i in range(props.get_length())]
+        self.assertEqual(keys, ["color", "speed"])
+        self.assertIsNone(props.get_nth_key(2))
+
+    def test_get_structure(self):
+        """all properties are available as a Gst.Structure"""
+        buf, rmeta, props = self._make_props()
+        props.set_string("color", "red")
+        props.set_value("lane", 3)
+
+        s = props.get_structure()
+        self.assertEqual(s.n_fields(), 2)
+        self.assertEqual(s.get_string("color"), "red")
+        self.assertEqual(s.get_int("lane"), (True, 3))
+
+    def test_relate_to_od(self):
+        """properties related to an od mtd survive a buffer copy"""
+        buf, rmeta, props = self._make_props()
+        qk = GLib.quark_from_string("car")
+        _, od = rmeta.add_od_mtd(qk, 5, 10, 50, 60, 0.85)
+        props.set_string("license-plate", "ABC-123")
+        self.assertTrue(rmeta.set_relation(
+            GstAnalytics.RelTypes.RELATE_TO, od.id, props.id))
+
+        buf2 = buf.copy()
+        del props, rmeta, buf
+
+        rmeta2 = GstAnalytics.buffer_get_analytics_relation_meta(buf2)
+        od2 = next(iter(rmeta2.iter_on_type(GstAnalytics.ODMtd)))
+        related = list(od2.iter_direct_related(
+            GstAnalytics.RelTypes.RELATE_TO, GstAnalytics.PropertiesMtd))
+        self.assertEqual(len(related), 1)
+        self.assertEqual(related[0].get_string("license-plate"), "ABC-123")
