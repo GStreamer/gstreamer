@@ -189,6 +189,8 @@ gst_video_dmabuf_pool_finalize (GObject * object)
   GstVideoDmabufPool *self = GST_VIDEO_DMABUF_POOL (object);
 
   gst_object_unref (self->sync_handler);
+
+  G_OBJECT_CLASS (gst_video_dmabuf_pool_parent_class)->finalize (object);
 }
 #endif /* HAVE_LINUX_DMA_BUF_H */
 
