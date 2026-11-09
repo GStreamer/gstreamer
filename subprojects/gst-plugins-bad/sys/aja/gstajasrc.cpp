@@ -17,6 +17,7 @@
  * Boston, MA 02110-1335, USA.
  */
 
+// clang-format off
 /**
  * SECTION:element-ajasrc
  *
@@ -28,27 +29,23 @@
  *
  * ```sh
  * gst-launch-1.0 ajasrc video-format=1080p-3000 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0
- * max-size-time=1000000000 ! videoconvert ! autovideosink \ d.audio ! queue
- * max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! audioconvert !
- * audioresample ! autoaudiosink
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! videoconvert ! autovideosink \
+ *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! audioconvert ! audioresample ! autoaudiosink
  * ```
  *
  * Capture 1080p30 audio/video and directly output it again on the same card
  *
  * ```sh
- * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1
- * audio-system=2 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0
- * max-size-time=1000000000 ! c.video \
- *     d.audio ! queue max-size-bytes=0 max-size-buffers=0
- * max-size-time=1000000000 ! c.audio \ ajasinkcombiner name=c ! ajasink
- * channel=0 reference-source=input-1
+ * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1 audio-system=2 ! ajasrcdemux name=d \
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.video \
+ *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.audio \
+ *     ajasinkcombiner name=c ! ajasink channel=0 reference-source=input-1
  * ```
  *
  * Since: 1.24
  *
  */
+// clang-format on
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
