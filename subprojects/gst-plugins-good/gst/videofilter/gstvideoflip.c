@@ -2119,9 +2119,9 @@ gst_video_flip_init (GstVideoFlip * videoflip)
    */
   videoflip->method = (GstVideoOrientationMethod) PROP_METHOD_DEFAULT;
 
-  /* AUTO is not valid for active method, this is just to ensure we setup the
-   * method in gst_video_flip_set_method() */
+  /* AUTO is not valid for active/proposed method, this is just to ensure we
+   * setup the method in gst_video_flip_set_method() */
   videoflip->active_method = GST_VIDEO_ORIENTATION_AUTO;
-  videoflip->proposed_method = GST_VIDEO_ORIENTATION_IDENTITY;
+  videoflip->proposed_method = GST_VIDEO_ORIENTATION_AUTO;
   videoflip->configuring_method = GST_VIDEO_ORIENTATION_IDENTITY;
 }

@@ -53,7 +53,7 @@ GST_START_TEST (test_passthrough)
   GstVideoInfo in_info, out_info;
   GstCaps *in_caps, *out_caps;
   GstEvent *e;
-  GstBuffer *buf;
+  GstBuffer *in_buf, *buf;
 
   gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_RGBA, 4, 9);
   in_caps = gst_video_info_to_caps (&in_info);
@@ -77,9 +77,9 @@ GST_START_TEST (test_passthrough)
   fail_unless_equals_int (GST_EVENT_TYPE (e), GST_EVENT_SEGMENT);
   gst_event_unref (e);
 
-  buf = create_test_video_buffer_rgba8 (&in_info);
-  buf = gst_harness_push_and_pull (flip, buf);
-  fail_unless (buf != NULL);
+  in_buf = create_test_video_buffer_rgba8 (&in_info);
+  buf = gst_harness_push_and_pull (flip, in_buf);
+  fail_unless (buf == in_buf);
   gst_buffer_unref (buf);
 
   gst_harness_teardown (flip);
