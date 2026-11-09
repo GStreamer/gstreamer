@@ -1625,6 +1625,105 @@ START_TEST (test_restart)
 
 END_TEST;
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  gboolean in_handler;
+  gboolean unreffed;
+  gboolean pipeline_disposed;
+  gboolean play_disposed;
+} UnrefInHandlerData;
+
+static void
+unref_in_handler_media_info_cb (GstPlaySignalAdapter * adapter,
+    GstPlayMediaInfo * info, UnrefInHandlerData * data)
+{
+  g_mutex_lock (&data->lock);
+  if (!data->in_handler) {
+    data->in_handler = TRUE;
+    g_cond_signal (&data->cond);
+    while (!data->unreffed)
+      g_cond_wait (&data->cond, &data->lock);
+  }
+  g_mutex_unlock (&data->lock);
+}
+
+static void
+unref_in_handler_pipeline_weak_notify (UnrefInHandlerData * data,
+    GObject * object)
+{
+  g_mutex_lock (&data->lock);
+  data->pipeline_disposed = TRUE;
+  g_mutex_unlock (&data->lock);
+}
+
+static void
+unref_in_handler_play_weak_notify (UnrefInHandlerData * data, GObject * object)
+{
+  g_mutex_lock (&data->lock);
+  data->play_disposed = TRUE;
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+}
+
+START_TEST (test_play_unref_during_sync_emit)
+{
+  GstPlay *player;
+  GstPlaySignalAdapter *adapter;
+  GstElement *playbin;
+  TestPlayerState state;
+  UnrefInHandlerData data = { 0, };
+  gchar *uri;
+
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+
+  memset (&state, 0, sizeof (state));
+  player = test_play_new (&state);
+
+  playbin = gst_play_get_pipeline (player);
+  g_object_weak_ref (G_OBJECT (playbin),
+      (GWeakNotify) unref_in_handler_pipeline_weak_notify, &data);
+  gst_object_unref (playbin);
+  g_object_weak_ref (G_OBJECT (player),
+      (GWeakNotify) unref_in_handler_play_weak_notify, &data);
+
+  adapter = gst_play_signal_adapter_new_sync_emit (player);
+  g_signal_connect (adapter, "media-info-updated",
+      G_CALLBACK (unref_in_handler_media_info_cb), &data);
+
+  uri = gst_filename_to_uri (TEST_PATH "/audio-short.ogg", NULL);
+  fail_unless (uri != NULL);
+  gst_play_set_uri (player, uri);
+  g_free (uri);
+
+  gst_play_pause (player);
+
+  g_mutex_lock (&data.lock);
+  while (!data.in_handler)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  /* The message being emitted on the GstPlay thread now holds the last
+   * reference */
+  g_object_unref (player);
+
+  g_mutex_lock (&data.lock);
+  data.unreffed = TRUE;
+  g_cond_signal (&data.cond);
+  while (!data.play_disposed)
+    g_cond_wait (&data.cond, &data.lock);
+  fail_unless (data.pipeline_disposed);
+  g_mutex_unlock (&data.lock);
+
+  g_object_unref (adapter);
+  g_cond_clear (&data.cond);
+  g_mutex_clear (&data.lock);
+}
+
+END_TEST;
+
 static void
 do_get (SoupServerMessage * msg, const char *path)
 {
@@ -1905,6 +2004,7 @@ play_suite (void)
   tcase_add_test (tc_general, test_play_backward_rate);
   tcase_add_test (tc_general, test_play_audio_video_seek_done);
   tcase_add_test (tc_general, test_restart);
+  tcase_add_test (tc_general, test_play_unref_during_sync_emit);
   tcase_add_test (tc_general, test_user_agent);
 
   suite_add_tcase (s, tc_general);

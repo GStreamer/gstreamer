@@ -163,6 +163,7 @@ struct _GstPlay
   GCond cond;
   GMainContext *context;
   GMainLoop *loop;
+  gboolean dispose_deferred;    /* Only accessed from the GstPlay thread */
 
   GstBus *api_bus;
 
@@ -470,7 +471,19 @@ gst_play_dispose (GObject * object)
 
   GST_TRACE_OBJECT (self, "Stopping main thread");
 
-  gst_bus_set_flushing (self->api_bus, TRUE);
+  if (self->api_bus)
+    gst_bus_set_flushing (self->api_bus, TRUE);
+
+  /* The last reference was dropped from the GstPlay thread itself, which is
+   * still running one of our callbacks. Keep the object alive until
+   * gst_play_main() is done with it and drops this reference. */
+  if (self->thread == g_thread_self () && !self->dispose_deferred) {
+    GST_DEBUG_OBJECT (self, "Disposed from the GstPlay thread, deferring");
+    self->dispose_deferred = TRUE;
+    g_main_loop_quit (self->loop);
+    gst_object_ref (self);
+    return;
+  }
 
   if (self->loop) {
     g_main_loop_quit (self->loop);
@@ -2773,6 +2786,9 @@ gst_play_main (gpointer data)
   }
 
   GST_TRACE_OBJECT (self, "Stopped main thread");
+
+  if (self->dispose_deferred)
+    gst_object_unref (self);
 
   return NULL;
 }
