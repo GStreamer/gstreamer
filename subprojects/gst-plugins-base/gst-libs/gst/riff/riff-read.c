@@ -79,11 +79,14 @@ skip_junk:
   GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
       GST_FOURCC_ARGS (*tag), size);
 
+  /* be paranoid: size may be nonsensical value here, such as (guint) -1 */
+  if (G_UNLIKELY (size > G_MAXINT))
+    goto bogus_size;
+
   /* skip 'JUNK' chunks */
   if (*tag == GST_RIFF_TAG_JUNK || *tag == GST_RIFF_TAG_JUNQ) {
-    size = GST_ROUND_UP_2 (size);
-    *_offset += 8 + size;
-    offset += 8 + size;
+    *_offset += 8 + GST_ROUND_UP_2 (size);
+    offset += 8 + GST_ROUND_UP_2 (size);
     GST_DEBUG_OBJECT (element, "skipping JUNK chunk");
     goto skip_junk;
   }
@@ -107,6 +110,11 @@ too_small:
         ", needed=%u)", gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
     return GST_FLOW_EOS;
+  }
+bogus_size:
+  {
+    GST_ERROR_OBJECT (element, "Broken file: bogus chunk size %u", size);
+    return GST_FLOW_ERROR;
   }
 }
 
