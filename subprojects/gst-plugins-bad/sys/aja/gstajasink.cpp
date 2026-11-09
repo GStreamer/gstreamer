@@ -1822,11 +1822,30 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink* bsink,
     if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
         ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
       if (!self->anc_buffer_pool) {
+        // The ANC region can be larger than 8 KiB (e.g. 16 KiB per field on
+        // IoIP cards), so size the buffers from the device like ntv2capture
+        // does.
+        ULWord anc_offset = 0, field1_size = 0, field2_size = 0;
+        if (!self->device->device->GetAncRegionOffsetAndSize(
+                anc_offset, field1_size, ::NTV2_AncRgn_Field1))
+          field1_size = 0;
+        if (!self->device->device->GetAncRegionOffsetAndSize(
+                anc_offset, field2_size, ::NTV2_AncRgn_Field2))
+          field2_size = 0;
+
+        guint anc_buffer_size = MAX(field1_size, field2_size);
+        if (anc_buffer_size == 0) {
+          GST_WARNING_OBJECT(
+              self, "Failed to query the device ANC region sizes, using 8 KiB");
+          anc_buffer_size = 8 * 1024;
+        }
+        GST_DEBUG_OBJECT(self, "Using %u byte ANC buffers", anc_buffer_size);
+
         self->anc_buffer_pool = gst_buffer_pool_new();
         GstStructure* config =
             gst_buffer_pool_get_config(self->anc_buffer_pool);
         gst_buffer_pool_config_set_params(
-            config, NULL, 8 * 1024,
+            config, NULL, anc_buffer_size,
             (self->configured_info.interlace_mode ==
                      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
                  ? 1

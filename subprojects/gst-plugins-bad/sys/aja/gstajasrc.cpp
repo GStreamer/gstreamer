@@ -1812,10 +1812,26 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
   gst_buffer_pool_set_config(self->audio_buffer_pool, config);
   gst_buffer_pool_set_active(self->audio_buffer_pool, TRUE);
 
-  guint anc_buffer_size = 8 * 1024;
-
   if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
       ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
+    // The ANC region can be larger than 8 KiB (e.g. 16 KiB per field on IoIP
+    // cards), so size the buffers from the device like ntv2capture does.
+    ULWord anc_offset = 0, field1_size = 0, field2_size = 0;
+    if (!self->device->device->GetAncRegionOffsetAndSize(
+            anc_offset, field1_size, ::NTV2_AncRgn_Field1))
+      field1_size = 0;
+    if (!self->device->device->GetAncRegionOffsetAndSize(
+            anc_offset, field2_size, ::NTV2_AncRgn_Field2))
+      field2_size = 0;
+
+    guint anc_buffer_size = MAX(field1_size, field2_size);
+    if (anc_buffer_size == 0) {
+      GST_WARNING_OBJECT(
+          self, "Failed to query the device ANC region sizes, using 8 KiB");
+      anc_buffer_size = 8 * 1024;
+    }
+    GST_DEBUG_OBJECT(self, "Using %u byte ANC buffers", anc_buffer_size);
+
     self->anc_buffer_pool = gst_buffer_pool_new();
     config = gst_buffer_pool_get_config(self->anc_buffer_pool);
     gst_buffer_pool_config_set_params(
@@ -2644,6 +2660,28 @@ static SignalTransition gst_aja_src_update_signal_state(
   *state_since = 0;
   *pending_recovery = FALSE;
   return SIGNAL_TRANSITION_ABSENT;
+}
+
+static void gst_aja_src_set_anc_buffer_size(GstAjaSrc* self, GstBuffer* buffer,
+                                            gsize captured_size,
+                                            const gchar* field) {
+  gsize offset, maxsize;
+
+  gst_buffer_get_sizes(buffer, &offset, &maxsize);
+
+  // The extractor status can be stale right after starting and report more
+  // bytes than fit. The buffer tail is stale then, so drop the whole field
+  // instead of parsing garbage.
+  if (captured_size > maxsize) {
+    GST_WARNING_OBJECT(self,
+                       "Captured %s has %" G_GSIZE_FORMAT
+                       " bytes, more than the %" G_GSIZE_FORMAT
+                       " byte buffer, dropping",
+                       field, captured_size, maxsize);
+    captured_size = 0;
+  }
+
+  gst_buffer_set_size(buffer, captured_size);
 }
 
 static void capture_thread_func(AJAThread* thread, void* data) {
@@ -3626,11 +3664,13 @@ restart:
 
       gst_buffer_set_size(audio_buffer, transfer.GetCapturedAudioByteCount());
       if (anc_buffer)
-        gst_buffer_set_size(anc_buffer,
-                            transfer.GetCapturedAncByteCount(false));
+        gst_aja_src_set_anc_buffer_size(self, anc_buffer,
+                                        transfer.GetCapturedAncByteCount(false),
+                                        "ANC field 1");
       if (anc_buffer2)
-        gst_buffer_set_size(anc_buffer2,
-                            transfer.GetCapturedAncByteCount(true));
+        gst_aja_src_set_anc_buffer_size(self, anc_buffer2,
+                                        transfer.GetCapturedAncByteCount(true),
+                                        "ANC field 2");
 
       NTV2TCIndex tc_index;
       switch (self->timecode_index) {
