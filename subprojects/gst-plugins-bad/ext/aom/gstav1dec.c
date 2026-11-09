@@ -48,17 +48,20 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "stream-format = (string) obu-stream, " "alignment = (string) tu")
     );
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define AV1_DEC_HIGH_DEPTH_FORMATS \
+    ", I420_10LE, I420_12LE, I422_10LE, I422_12LE, Y444_10LE, Y444_12LE"
+#else
+#define AV1_DEC_HIGH_DEPTH_FORMATS \
+    ", I420_10BE, I420_12BE, I422_10BE, I422_12BE, Y444_10BE, Y444_12BE"
+#endif
+
 static GstStaticPadTemplate gst_av1_dec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444"
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            ", I420_10LE, I420_12LE, I422_10LE, I422_12LE, Y444_10LE, Y444_12LE"
-#else
-            ", I420_10BE, I420_12BE, I422_10BE, I422_12BE, Y444_10BE, Y444_12BE"
-#endif
-            " }"))
+            AV1_DEC_HIGH_DEPTH_FORMATS " }"))
     );
 
 GST_DEBUG_CATEGORY_STATIC (av1_dec_debug);
