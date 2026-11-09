@@ -37,6 +37,7 @@
 #include <gst/analytics/gstanalyticsorientationmtd.h>
 #include <gst/analytics/gstanalyticstensormtd.h>
 #include <gst/analytics/gstanalyticstextmtd.h>
+#include <gst/analytics/gstanalyticspropertiesmtd.h>
 #include <gst/analytics/gsttensorlistmeta.h>
 #include <gst/analytics/gsttensormeta.h>
 #include <gst/analytics/gstanalyticsbatchmeta.h>
