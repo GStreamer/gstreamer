@@ -42,6 +42,7 @@
 #include "mxfquark.h"
 #include "mxfessence.h"
 
+#include <gst/base/gstbitreader.h>
 #include <gst/base/gstbytereader.h>
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
@@ -498,6 +499,91 @@ done:
   return ret;
 }
 
+/* Reads an Exp-Golomb coded unsigned int, see ITU-T H.264 9.1 */
+static gboolean
+mxf_mpeg_read_ue (GstBitReader * reader, guint32 * value)
+{
+  guint leading_zeros = 0;
+  guint32 bits = 0;
+  guint8 bit;
+
+  while (TRUE) {
+    if (!gst_bit_reader_get_bits_uint8 (reader, &bit, 1))
+      return FALSE;
+    if (bit)
+      break;
+    if (++leading_zeros > 31)
+      return FALSE;
+  }
+
+  if (leading_zeros > 0
+      && !gst_bit_reader_get_bits_uint32 (reader, &bits, leading_zeros))
+    return FALSE;
+
+  *value = (1U << leading_zeros) - 1 + bits;
+
+  return TRUE;
+}
+
+/* Sets the delta unit flag from the first slice, see ITU-T H.264 7.3 */
+static void
+mxf_mpeg_set_avc_delta_unit (GstBuffer * buffer)
+{
+  GstMapInfo map;
+  GstByteReader reader;
+  guint32 tmp;
+  gboolean found = FALSE, keyframe = FALSE;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
+
+  while (gst_byte_reader_get_remaining (&reader) > 3) {
+    if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
+      guint8 header = 0;
+      guint8 type;
+
+      /* Found sync code */
+      gst_byte_reader_skip_unchecked (&reader, 3);
+
+      if (!gst_byte_reader_get_uint8 (&reader, &header))
+        break;
+
+      type = header & 0x1f;
+
+      /* Keyframes start with an IDR, I or SI slice */
+      if (type == 5) {
+        keyframe = TRUE;
+        found = TRUE;
+        break;
+      } else if (type == 1 || type == 2) {
+        GstBitReader slice;
+        guint32 first_mb, slice_type;
+
+        gst_bit_reader_init (&slice,
+            map.data + gst_byte_reader_get_pos (&reader),
+            gst_byte_reader_get_remaining (&reader));
+        if (mxf_mpeg_read_ue (&slice, &first_mb)
+            && mxf_mpeg_read_ue (&slice, &slice_type)) {
+          keyframe = slice_type % 5 == 2 || slice_type % 5 == 4;
+          found = TRUE;
+        }
+        break;
+      }
+    } else if (gst_byte_reader_skip (&reader, 1) == FALSE)
+      break;
+  }
+
+  gst_buffer_unmap (buffer, &map);
+
+  if (!found)
+    return;
+
+  if (keyframe)
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  else
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+}
+
 static GstFlowReturn
 mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps, MXFMetadataTimelineTrack * track,
@@ -527,10 +613,25 @@ mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
       else
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
       break;
+    case MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC:
+      mxf_mpeg_set_avc_delta_unit (buffer);
+      break;
 
     default:
       break;
   }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+mxf_mpeg_avc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
+    GstCaps * caps, MXFMetadataTimelineTrack * track,
+    gpointer mapping_data, GstBuffer ** outbuf)
+{
+  *outbuf = buffer;
+
+  mxf_mpeg_set_avc_delta_unit (buffer);
 
   return GST_FLOW_OK;
 }
@@ -883,6 +984,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     caps =
         gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
         "byte-stream", NULL);
+    *handler = mxf_mpeg_avc_handle_essence_element;
 
     if (!*tags)
       *tags = gst_tag_list_new_empty ();
@@ -895,6 +997,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     caps =
         gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
         "byte-stream", NULL);
+    *handler = mxf_mpeg_avc_handle_essence_element;
 
     if (!*tags)
       *tags = gst_tag_list_new_empty ();
