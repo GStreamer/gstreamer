@@ -2290,6 +2290,7 @@ pipeline_error:
     GST_ERROR ("client %p: failed to configure the pipeline", client);
     send_generic_error_response (client,
         GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, ctx);
+    gst_rtsp_media_unblock_if_playing (media);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2299,6 +2300,7 @@ unsuspend_failed:
   {
     GST_ERROR ("client %p: unsuspend failed", client);
     send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    gst_rtsp_media_unblock_if_playing (media);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2308,6 +2310,7 @@ invalid_mode:
   {
     GST_ERROR ("client %p: seek failed", client);
     send_generic_error_response (client, code, ctx);
+    gst_rtsp_media_unblock_if_playing (media);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2327,6 +2330,7 @@ get_rates_error:
     GST_ERROR ("client %p: failed obtaining rate and applied_rate", client);
     send_generic_error_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR,
         ctx);
+    gst_rtsp_media_unblock_if_playing (media);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2336,6 +2340,7 @@ adjust_play_response_failed:
   {
     GST_ERROR ("client %p: failed to adjust play response", client);
     send_generic_error_response (client, code, ctx);
+    gst_rtsp_media_unblock_if_playing (media);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2346,6 +2351,7 @@ rtp_info_error:
     GST_ERROR ("client %p: failed to add RTP-Info", client);
     send_generic_error_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR,
         ctx);
+    gst_rtsp_media_unblock_if_playing (media);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);

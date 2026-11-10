@@ -71,6 +71,8 @@ GstRTSPStream *          gst_rtsp_media_create_and_join_stream (GstRTSPMedia * m
                                                                 GstElement * payloader,
                                                                 GstPad * pad);
 
+void                     gst_rtsp_media_unblock_if_playing (GstRTSPMedia * media);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SERVER_INTERNAL_H__ */

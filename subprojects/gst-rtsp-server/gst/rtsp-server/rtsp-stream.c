@@ -222,6 +222,19 @@ struct _GstRTSPStreamPrivate
   GstClockTime blocked_running_time;
   gint blocked_clock_rate;
 
+  /* consumes the data of a sender stream that was not set up, at the pace a
+   * sink of a client would, until the stream is set up */
+  GstElement *discard_sink;
+
+  /* a probe on the RTP send pad records the data that follows the data the
+   * discard sink consumed, to be copied to the blocked fields above when the
+   * stream is set up */
+  gulong discarded_probe_id;
+  gboolean discarded_buffer;
+  guint32 discarded_seqnum;
+  guint32 discarded_rtptime;
+  GstClockTime discarded_running_time;
+
   /* Whether we should send and receive RTCP */
   gboolean enable_rtcp;
 
@@ -281,6 +294,8 @@ static void gst_rtsp_stream_finalize (GObject * obj);
 static gboolean
 update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
     gboolean add);
+
+static void remove_blocked_probes (GstRTSPStream * stream);
 
 static guint gst_rtsp_stream_signals[SIGNAL_LAST] = { 0 };
 
@@ -4165,6 +4180,13 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
 
   clear_tr_cache (priv);
 
+  remove_blocked_probes (stream);
+  if (priv->discarded_probe_id) {
+    gst_pad_remove_probe (priv->send_src[0], priv->discarded_probe_id);
+    priv->discarded_probe_id = 0;
+  }
+  clear_element (bin, &priv->discard_sink);
+
   GST_INFO ("stream %p leaving bin", stream);
 
   if (priv->srcpad) {
@@ -4394,7 +4416,7 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
       } else {
         gst_sample_unref (last_sample);
       }
-    } else if (priv->blocking) {
+    } else if (priv->blocking || priv->blocked_buffer) {
       if (last_sample != NULL)
         gst_sample_unref (last_sample);
       if (seq) {
@@ -5520,6 +5542,167 @@ install_drop_probe (GstRTSPStream * stream)
 }
 
 static void
+remove_blocked_probes (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  int i;
+
+  for (i = 0; i < 2; i++) {
+    if (priv->blocked_id[i] != 0) {
+      gst_pad_remove_probe (priv->send_src[i], priv->blocked_id[i]);
+      priv->blocked_id[i] = 0;
+    }
+  }
+  priv->blocking = FALSE;
+}
+
+static GstPadProbeReturn
+record_discarded_data (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstRTSPStream *stream = user_data;
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstBuffer *first, *last;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint16 seqnum;
+  guint32 rtptime;
+  GstEvent *event;
+
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    first = last = gst_pad_probe_info_get_buffer (info);
+  } else {
+    GstBufferList *list = gst_pad_probe_info_get_buffer_list (info);
+    guint len = gst_buffer_list_length (list);
+
+    if (len == 0)
+      return GST_PAD_PROBE_OK;
+    first = gst_buffer_list_get (list, 0);
+    last = gst_buffer_list_get (list, len - 1);
+  }
+
+  /* the data that follows starts after the last packet. All packets of a
+   * list carry the same RTP timestamp, and the first one carries the buffer
+   * timestamp */
+  if (!gst_rtp_buffer_map (last, GST_MAP_READ, &rtp))
+    return GST_PAD_PROBE_OK;
+  seqnum = gst_rtp_buffer_get_seq (&rtp) + 1;
+  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
+  g_mutex_lock (&priv->lock);
+  priv->discarded_buffer = TRUE;
+  priv->discarded_seqnum = seqnum;
+  priv->discarded_rtptime = rtptime;
+  priv->discarded_running_time = GST_CLOCK_TIME_NONE;
+
+  event = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+  if (event) {
+    const GstSegment *segment;
+
+    gst_event_parse_segment (event, &segment);
+    priv->discarded_running_time =
+        gst_segment_to_stream_time (segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (first));
+    gst_event_unref (event);
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return GST_PAD_PROBE_OK;
+}
+
+/* must be called with lock */
+static void
+add_discard_sink (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstElement *sink;
+  GstPad *pad;
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  g_object_set (sink, "sync", priv->do_rate_control, "async", FALSE,
+      "enable-last-sample", FALSE, NULL);
+  gst_bin_add (priv->joined_bin, sink);
+  gst_element_sync_state_with_parent (sink);
+
+  pad = gst_element_get_static_pad (sink, "sink");
+  gst_pad_link (priv->send_src[0], pad);
+  gst_object_unref (pad);
+
+  priv->discard_sink = sink;
+  priv->discarded_buffer = FALSE;
+  priv->discarded_probe_id = gst_pad_add_probe (priv->send_src[0],
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      record_discarded_data, g_object_ref (stream), g_object_unref);
+}
+
+static GstPadProbeReturn
+remove_discard_sink_when_idle (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstElement *sink = user_data;
+  GstObject *parent;
+
+  gst_element_set_state (sink, GST_STATE_NULL);
+  parent = gst_object_get_parent (GST_OBJECT (sink));
+  if (parent) {
+    gst_bin_remove (GST_BIN (parent), sink);
+    gst_object_unref (parent);
+  }
+
+  return GST_PAD_PROBE_REMOVE;
+}
+
+/* describe the data that follows the discarded data until the blocking probe
+ * catches a packet, since the PLAY response does not wait for that. Must be
+ * called with lock */
+static void
+resume_from_discarded_data (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstCaps *caps;
+
+  if (!priv->discarded_buffer)
+    return;
+
+  priv->blocked_buffer = TRUE;
+  priv->blocked_seqnum = priv->discarded_seqnum;
+  priv->blocked_rtptime = priv->discarded_rtptime;
+  priv->blocked_running_time = priv->discarded_running_time;
+
+  caps = gst_pad_get_current_caps (priv->send_src[0]);
+  if (caps) {
+    gst_structure_get_int (gst_caps_get_structure (caps, 0), "clock-rate",
+        &priv->blocked_clock_rate);
+    gst_caps_unref (caps);
+  }
+}
+
+/* must be called with lock */
+static void
+unlink_discard_sink (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GstPad *pad;
+
+  pad = gst_element_get_static_pad (priv->discard_sink, "sink");
+  gst_pad_unlink (priv->send_src[0], pad);
+  gst_object_unref (pad);
+
+  /* the sink may still be holding a buffer, so let it return the buffer
+   * right away instead of waiting on the clock */
+  g_object_set (priv->discard_sink, "sync", FALSE, NULL);
+  /* keep it from holding the buffer to preroll while the media is paused */
+  gst_element_set_locked_state (priv->discard_sink, TRUE);
+  /* going through PAUSED interrupts a wait that has already started */
+  gst_element_set_state (priv->discard_sink, GST_STATE_PAUSED);
+  gst_element_set_state (priv->discard_sink, GST_STATE_PLAYING);
+
+  gst_pad_add_probe (priv->send_src[0], GST_PAD_PROBE_TYPE_IDLE,
+      remove_discard_sink_when_idle, gst_object_ref (priv->discard_sink),
+      gst_object_unref);
+  priv->discard_sink = NULL;
+}
+
+static void
 set_blocked (GstRTSPStream * stream, gboolean blocked)
 {
   GstRTSPStreamPrivate *priv;
@@ -5560,13 +5743,24 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
       }
     }
   } else {
-    for (i = 0; i < 2; i++) {
-      if (priv->blocked_id[i] != 0) {
-        gst_pad_remove_probe (priv->send_src[i], priv->blocked_id[i]);
-        priv->blocked_id[i] = 0;
+    /* a sender stream that has no sink would stall the streams sharing its
+     * source if it stayed blocked, so discard its data until it is set up */
+    if (priv->send_src[0] && !priv->sinkpad && (priv->discard_sink ||
+            !gst_pad_is_linked (priv->send_src[0]))) {
+      GST_DEBUG_OBJECT (stream, "no sink to consume the data, discarding it");
+      if (!priv->discard_sink)
+        add_discard_sink (stream);
+      /* RTCP stays blocked: its packets come from the rtpsession of this
+       * stream, so blocking them holds nothing else back */
+      if (priv->blocked_id[0] != 0) {
+        gst_pad_remove_probe (priv->send_src[0], priv->blocked_id[0]);
+        priv->blocked_id[0] = 0;
       }
+      priv->blocking = FALSE;
+      return;
     }
-    priv->blocking = FALSE;
+
+    remove_blocked_probes (stream);
   }
 }
 
@@ -5936,6 +6130,17 @@ gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
 
   if (!create_receiver_part (stream, transport))
     goto create_receiver_error;
+
+  if (priv->discard_sink) {
+    /* the stream has a sink now, so block it instead of discarding the data */
+    set_blocked (stream, TRUE);
+    gst_pad_remove_probe (priv->send_src[0], priv->discarded_probe_id);
+    priv->discarded_probe_id = 0;
+    resume_from_discarded_data (stream);
+    unlink_discard_sink (stream);
+  } else if (priv->blocked_id[0] == 0) {
+    priv->blocked_buffer = FALSE;
+  }
 
   /* in the RECORD case, we only add RTCP sender part */
   if (!create_sender_part (stream, transport))
@@ -6473,6 +6678,8 @@ gst_rtsp_stream_set_rate_control (GstRTSPStream * stream, gboolean enabled)
   stream->priv->do_rate_control = enabled;
   if (stream->priv->appsink[0])
     g_object_set (stream->priv->appsink[0], "sync", enabled, NULL);
+  if (stream->priv->discard_sink)
+    g_object_set (stream->priv->discard_sink, "sync", enabled, NULL);
   if (stream->priv->payloader
       && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->
               priv->payloader), "onvif-no-rate-control"))
