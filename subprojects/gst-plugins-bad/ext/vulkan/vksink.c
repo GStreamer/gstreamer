@@ -333,13 +333,17 @@ gst_vulkan_sink_query (GstBaseSink * bsink, GstQuery * query)
               vk_sink->display, vk_sink->instance, vk_sink->device))
         return TRUE;
 
+      /* The swapper only exists from READY_TO_PAUSED on, but upstream elements
+       * can already query the queue during NULL_TO_READY. */
+      if (!vk_sink->swapper)
+        break;
+
       if (vk_sink->swapper->exec)
         queue =
             gst_vulkan_operation_get_command_pool (vk_sink->swapper->
             exec)->queue;
 
-      if (vk_sink->swapper &&
-          gst_vulkan_queue_handle_context_query (GST_ELEMENT (vk_sink), query,
+      if (gst_vulkan_queue_handle_context_query (GST_ELEMENT (vk_sink), query,
               queue))
         return TRUE;
 
