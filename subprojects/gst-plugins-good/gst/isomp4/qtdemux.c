@@ -18014,7 +18014,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           }
           case FOURCC_ac_4:
           {
-            /* pass the ac4_dsi from dac4 as codec_data */
+            /* parse the ac4_dsi from dac4 to get rate/channels for caps */
             GNode *dac4 =
                 qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_dac4);
 
@@ -18027,14 +18027,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
                 GST_WARNING_OBJECT (qtdemux,
                     "discarding dac4 atom with unexpected len %u", len);
               } else {
-                GstBuffer *buf;
-
                 qtdemux_parse_ac4_dsi (qtdemux, data + 8, len - 8, entry);
-
-                buf = gst_buffer_new_memdup (data + 8, len - 8);
-                gst_caps_set_simple (entry->caps,
-                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
-                gst_buffer_unref (buf);
               }
             }
             break;
