@@ -4418,10 +4418,22 @@ gst_mxf_demux_loop (GstPad * pad)
 
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+      GstMXFDemuxEssenceTrack *etrack = p->current_essence_track;
+      GstClockTime stop = demux->segment.stop;
 
-      if (!p->eos
-          && gst_mxf_demux_pad_get_current_time (demux,
-              p) < demux->segment.stop) {
+      if (p->eos)
+        continue;
+
+      if (etrack) {
+        guint32 max_temporal_offset =
+            get_track_max_temporal_offset (demux, etrack);
+
+        stop += gst_util_uint64_scale_ceil (max_temporal_offset,
+            etrack->source_track->edit_rate.d * GST_SECOND,
+            etrack->source_track->edit_rate.n);
+      }
+
+      if (gst_mxf_demux_pad_get_current_time (demux, p) < stop) {
         eos = FALSE;
         break;
       }
