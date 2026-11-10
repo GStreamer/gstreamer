@@ -27,15 +27,6 @@ if not gstcheck_dep.found()
     subdir_done()
 endif
 
-if not build_gir
-    if get_option('doc').enabled()
-        error('Documentation enabled but introspection not built.')
-    endif
-
-    message('Introspection not built, won\'t build documentation requiring it')
-    subdir_done()
-endif
-
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
     plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
@@ -56,6 +47,15 @@ elif plugins_cache_generator.found()
     )
 else
     warning('GStreamer plugin inspector for documentation not found, can\'t update the cache')
+endif
+
+if not build_gir
+    if get_option('doc').enabled()
+        error('Documentation enabled but introspection not built.')
+    endif
+
+    message('Introspection not built, won\'t build documentation requiring it')
+    subdir_done()
 endif
 
 if get_option('doc').disabled()
