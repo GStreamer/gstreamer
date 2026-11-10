@@ -2841,7 +2841,7 @@ const FEATURES: &[Feature] = &[
         "mp3,ape,mpc,wv"
     ),
     typefinder!("application/x-ape", SECONDARY, ape_type_find, "ape"),
-    typefinder!("audio/x-au", 1, au_type_find, "au,snd"),
+    typefinder!("audio/x-au", MARGINAL, au_type_find, "au,snd"),
     typefinder!("audio/x-shorten", SECONDARY, shn_type_find, "shn"),
     typefinder!("audio/x-paris", SECONDARY, paris_type_find, "paf"),
     typefinder!("audio/x-celt", PRIMARY, celt_type_find),
@@ -2968,7 +2968,8 @@ const FEATURES: &[Feature] = &[
         "audio/x-musepack",
         PRIMARY,
         musepack_type_find,
-        "mpc,mpp,mp+"
+        "mpc,mpp,mp+",
+        "audio/x-musepack, streamversion=(int) { 7, 8 }"
     ),
     // AAC - audio/aac, in its ADTS, LOAS and ADIF framings
     typefinder!(
@@ -3060,10 +3061,16 @@ const FEATURES: &[Feature] = &[
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
     typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
     // DV - video/x-dv
-    typefinder!("video/x-dv", SECONDARY, dv_type_find, "dv,dif"),
+    typefinder!(
+        "video/x-dv",
+        SECONDARY,
+        dv_type_find,
+        "dv,dif",
+        "video/x-dv, systemstream=(boolean)true"
+    ),
     // Kate - caps (subtitle or application) are selected at runtime;
     // no file extensions are registered.
-    typefinder!("subtitle/x-kate", MARGINAL, kate_type_find),
+    typefinder!("subtitle/x-kate", MARGINAL, kate_type_find, none, none),
     // OGM video/audio/text - no extensions.
     typefinder!("application/x-ogm-video", PRIMARY, ogmvideo_type_find),
     typefinder!("application/x-ogm-audio", PRIMARY, ogmaudio_type_find),
@@ -3495,5 +3502,17 @@ mod tests {
         for d in binary {
             assert!(!looks_like_text(d), "should not be text: {d:?}");
         }
+    }
+
+    /// Rank is observable behaviour: it breaks ties between finders and
+    /// gst-inspect prints it. audio/x-au once drifted to a stray literal.
+    #[test]
+    fn au_is_registered_at_marginal() {
+        use super::{FEATURES, MARGINAL};
+        assert!(
+            FEATURES
+                .iter()
+                .any(|f| f.0 == "audio/x-au" && f.1 == MARGINAL)
+        );
     }
 }
