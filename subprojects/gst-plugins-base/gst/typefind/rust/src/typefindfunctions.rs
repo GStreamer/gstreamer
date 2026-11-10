@@ -1734,15 +1734,19 @@ extern "C" fn sds_type_find(tf: &mut TypeFind, _private: gpointer) {
     }
 }
 
-/// Whether `data` is text: valid UTF-8 that holds no NUL. A problem in the
-/// last 3 bytes is a character cut off by the window edge and counts as
-/// text, because the window is an arbitrary probe size.
+/// Whether `data` is text: valid UTF-8 that holds no NUL. A malformed
+/// sequence in the last 3 bytes is a character cut off by the window edge
+/// and counts as text, because the window is an arbitrary probe size. A
+/// NUL dismisses the data wherever it sits: it is complete UTF-8 of its
+/// own, never a fragment the edge could have made.
 fn looks_like_text(data: &[u8]) -> bool {
-    let nul = data.iter().position(|&b| b == 0);
-    let utf8_err = std::str::from_utf8(data).err().map(|e| e.valid_up_to());
-    // The earliest of the two problems decides.
-    let stop = nul.into_iter().chain(utf8_err).min();
-    stop.is_none_or(|i| i + 4 > data.len())
+    if data.contains(&0) {
+        return false;
+    }
+    match std::str::from_utf8(data) {
+        Ok(_) => true,
+        Err(e) => e.valid_up_to() + 3 >= data.len(),
+    }
 }
 
 // UTF-8 plausibility of the data at `offset`: the probe starts at 32 KiB
@@ -3489,19 +3493,20 @@ mod tests {
     #[test]
     fn text_rule() {
         // Includes a character the probe window cut in half.
-        let text: [&[u8]; 4] = [
+        let text: [&[u8]; 3] = [
             b"hello world\n",
             "naïve café 日本語".as_bytes(),
             &"café".as_bytes()[..4],
-            b"nul at the edge\0",
         ];
         for d in text {
             assert!(looks_like_text(d), "should be text: {d:?}");
         }
-        // NUL, and ill-formed UTF-8: stray continuation, overlong, surrogate.
-        let binary: [&[u8]; 5] = [
+        // NUL at the edge and in the middle, and ill-formed UTF-8: stray
+        // continuation, overlong, surrogate.
+        let binary: [&[u8]; 6] = [
             &[0; 64],
             b"ab\0cd\0ef",
+            b"nul at the edge\0",
             b"abcd\x80efgh",
             b"abcd\xC0\x80efgh",
             b"abcd\xED\xA0\x80efgh",
