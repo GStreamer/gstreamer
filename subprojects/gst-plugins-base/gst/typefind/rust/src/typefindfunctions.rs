@@ -3084,7 +3084,8 @@ const FEATURES: &[Feature] = &[
     typefinder!("video/x-nsv", MARGINAL, nsv_type_find, "nsv"),
     // NUT - application/x-nut
     typefinder!("application/x-nut", MARGINAL, nut_type_find, "nut"),
-    // Interplay MVE - video/x-ipmovie
+    // Interplay MVE. video/x-ipmovie names the codec, as gst-libav's map
+    // and the demuxer do; upstream registered application/x-ipmovie.
     typefinder!("video/x-ipmovie", SECONDARY, ipmovie_type_find),
     // SMAF - application/vnd.smaf
     typefinder!("application/vnd.smaf", SECONDARY, mmf_type_find, "mmf"),
@@ -3377,7 +3378,11 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
         }
     }
 
-    // Text factory - no default caps, suggests the encoding's caps at runtime.
+    // Text factory. One feature stands where upstream registers text/plain,
+    // text/utf-16 and text/utf-32 separately: the function cannot know which
+    // encoding the bytes carry, and consumers that matched any of the three
+    // have always had to re-read the BOM; no default caps, so no type is
+    // claimed beyond what the data shows at runtime.
     unsafe {
         gst_type_find_register(
             plugin,
@@ -3391,7 +3396,9 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
         );
     }
 
-    // Subtitles factory - no default caps, suggests format-specific caps at runtime.
+    // Subtitles factory. One feature for the formats the probe tells apart
+    // at runtime, where upstream spreads them over this plugin and subparse
+    // as one feature each; the per-format caps are suggested per stream.
     unsafe {
         gst_type_find_register(
             plugin,
