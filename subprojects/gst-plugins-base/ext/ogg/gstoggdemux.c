@@ -1735,11 +1735,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
       }
 
       /* If we were determining the duration of the stream, we're now done,
-         and can get back to sending the original event we delayed.
-         We stop a bit before the end of the stream, as if we get a EOS
-         event and there is a queue2 upstream (such as when using playbin),
-         it will pause the task *after* we come back from the EOS handler,
-         so we cannot prevent the pausing by issuing a seek. */
+         and can get back to sending the original event we delayed. */
       if (ogg->push_byte_offset >= ogg->push_byte_length) {
         GstMessage *message;
         GstFlowReturn res;
@@ -1750,10 +1746,6 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
             GST_TIME_ARGS (ogg->total_time));
         message = gst_message_new_duration_changed (GST_OBJECT (ogg));
         gst_element_post_message (GST_ELEMENT (ogg), message);
-
-        GST_DEBUG_OBJECT (ogg,
-            "We're close enough to the end, and we're scared "
-            "to get too close, seeking back to start");
 
         res = gst_ogg_demux_seek_back_after_push_duration_check_unlock (ogg);
         if (res != GST_FLOW_OK)
