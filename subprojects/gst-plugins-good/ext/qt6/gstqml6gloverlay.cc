@@ -147,6 +147,7 @@ enum
   PROP_WIDGET,
   PROP_QML_SCENE,
   PROP_ROOT_ITEM,
+  PROP_BACKGROUND_COLOUR,
 };
 
 enum
@@ -207,6 +208,17 @@ gst_qml6_gl_overlay_class_init (GstQml6GLOverlayClass * klass)
           "On set, provides the QML scene to render. If not set (!= NULL), "
           "then the qml-scene property is used to construct the QML scene. "
           "In both cases, the returned value is the root QQuickItem used for rendering.",
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstQml6GLOverlay:background-colour:
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND_COLOUR,
+      g_param_spec_uint64 ("background-colour", "Background Colour",
+          "The background colour of the window (ABGR format with 16 bits per component)",
+          0, G_MAXUINT64, G_MAXUINT64,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
@@ -293,6 +305,11 @@ gst_qml6_gl_overlay_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (qml6_gl_overlay);
       break;
     }
+    case PROP_BACKGROUND_COLOUR:
+      GST_OBJECT_LOCK (qml6_gl_overlay);
+      qml6_gl_overlay->renderer->setBackgroundColour(QColor(QRgba64::fromRgba64(g_value_get_uint64 (value))));
+      GST_OBJECT_UNLOCK (qml6_gl_overlay);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -331,6 +348,11 @@ gst_qml6_gl_overlay_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (qml6_gl_overlay);
       break;
     }
+    case PROP_BACKGROUND_COLOUR:
+      GST_OBJECT_LOCK (qml6_gl_overlay);
+      g_value_set_uint64 (value, qml6_gl_overlay->renderer->backgroundColour().rgba64());
+      GST_OBJECT_UNLOCK (qml6_gl_overlay);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -360,8 +382,10 @@ gst_qml6_gl_overlay_gl_start (GstGLBaseFilter * bfilter)
   if (!qml6_gl_overlay->renderer->init (bfilter->context, &error)) {
     GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
         ("%s", error->message), (NULL));
+    QColor background_colour = qml6_gl_overlay->renderer->backgroundColour();
     delete qml6_gl_overlay->renderer;
     qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
+    qml6_gl_overlay->renderer->setBackgroundColour(background_colour);
     GST_OBJECT_UNLOCK (bfilter);
     return FALSE;
   }
@@ -408,9 +432,11 @@ gst_qml6_gl_overlay_gl_start (GstGLBaseFilter * bfilter)
 
 fail_renderer:
   {
+    QColor background_colour = qml6_gl_overlay->renderer->backgroundColour();
     qml6_gl_overlay->renderer->cleanup();
     delete qml6_gl_overlay->renderer;
     qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
+    qml6_gl_overlay->renderer->setBackgroundColour(background_colour);
     GST_OBJECT_UNLOCK (bfilter);
     return FALSE;
   }
@@ -425,8 +451,10 @@ gst_qml6_gl_overlay_gl_stop (GstGLBaseFilter * bfilter)
   /* notify before actually destroying anything */
   GST_OBJECT_LOCK (qml6_gl_overlay);
   if (qml6_gl_overlay->renderer) {
+    QColor background_colour = qml6_gl_overlay->renderer->backgroundColour();
     renderer = qml6_gl_overlay->renderer;
     qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
+    qml6_gl_overlay->renderer->setBackgroundColour(background_colour);
   }
   GST_OBJECT_UNLOCK (qml6_gl_overlay);
 

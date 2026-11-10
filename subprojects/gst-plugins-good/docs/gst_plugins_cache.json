@@ -11807,6 +11807,20 @@
                     }
                 },
                 "properties": {
+                    "background-colour": {
+                        "blurb": "The background colour of the window (ABGR format with 16 bits per component)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446462598732840960",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "qml-scene": {
                         "blurb": "The contents of the QML scene",
                         "conditionally-available": false,
@@ -11879,6 +11893,20 @@
                     }
                 },
                 "properties": {
+                    "background-colour": {
+                        "blurb": "The background colour of the window (ABGR format with 16 bits per component)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446462598732840960",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "max-framerate": {
                         "blurb": "The maximum framerate to render when running with a variable framerate",
                         "conditionally-available": false,

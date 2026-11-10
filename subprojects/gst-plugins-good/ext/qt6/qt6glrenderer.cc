@@ -420,6 +420,7 @@ bool GstQt6QuickRenderer::init (GstGLContext * context, GError ** error)
      */
     m_quickWindow = new QQuickWindow(m_renderControl);
     m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromOpenGLContext(qt_native_context));
+    m_quickWindow->setColor(m_backgroundColour);
     /* after QQuickWindow creation as QQuickRenderControl requires it */
     m_renderControl->prepareThread (m_sharedRenderData->m_renderThread);
     g_mutex_unlock (&m_sharedRenderData->lock);
@@ -779,6 +780,18 @@ void GstQt6QuickRenderer::setNeedsGenerateCallback(GCallback cb, gpointer data, 
   m_needsGenerateCallback = cb;
   m_needsGenerateCallbackData = data;
   m_needsGenerateCallbackDestroy = destroy_notify;
+}
+
+void GstQt6QuickRenderer::setBackgroundColour(QColor background_colour)
+{
+  m_backgroundColour = background_colour;
+  if (m_quickWindow)
+    m_quickWindow->setColor(m_backgroundColour);
+}
+
+QColor GstQt6QuickRenderer::backgroundColour()
+{
+  return m_backgroundColour;
 }
 
 void GstQt6QuickRenderer::initializeWinsys()

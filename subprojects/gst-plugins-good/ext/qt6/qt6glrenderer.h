@@ -23,6 +23,7 @@
 
 #include <QThread>
 #include <QMutex>
+#include <QColor>
 
 #include <gst/gl/gl.h>
 
@@ -69,6 +70,9 @@ public:
 
     bool needsGenerate();
     void setNeedsGenerateCallback(GCallback cb, gpointer data, GDestroyNotify destroy);
+
+    void setBackgroundColour(QColor color);
+    QColor backgroundColour();
 
 private slots:
     void initializeQml();
@@ -124,6 +128,7 @@ private:
     GDestroyNotify m_needsGenerateCallbackDestroy;
 
     void callNeedsGenerateCB();
+    QColor m_backgroundColour;
 };
 
 class Qt6CreateSurfaceWorker : public QObject

@@ -76,6 +76,7 @@ enum
   PROP_ROOT_ITEM,
   PROP_QML_SCENE,
   PROP_MAX_FRAMERATE,
+  PROP_BACKGROUND_COLOUR,
 };
 
 enum
@@ -128,6 +129,17 @@ gst_qml6_gl_render_src_class_init (GstQml6GLRenderSrcClass * klass)
       gst_param_spec_fraction ("max-framerate", "Maximum framerate",
           "The maximum framerate to render when running with a variable framerate",
           0, G_MAXINT, G_MAXINT, 1, DEFAULT_MAX_FRAMERATE_NUMER, 1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstQml6GLRenderSrc:background-colour:
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND_COLOUR,
+      g_param_spec_uint64 ("background-colour", "Background Colour",
+          "The background colour of the window (ABGR format with 16 bits per component)",
+          0, G_MAXUINT64, G_MAXUINT64,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
@@ -201,6 +213,11 @@ gst_qml6_gl_render_src_set_property (GObject * object, guint prop_id,
       g_value_copy (value, &src->max_framerate);
       GST_OBJECT_UNLOCK (src);
       break;
+    case PROP_BACKGROUND_COLOUR:
+      GST_OBJECT_LOCK (src);
+      src->renderer->setBackgroundColour(QColor(QRgba64::fromRgba64(g_value_get_uint64 (value))));
+      GST_OBJECT_UNLOCK (src);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -232,6 +249,11 @@ gst_qml6_gl_render_src_get_property (GObject * object, guint prop_id,
     case PROP_MAX_FRAMERATE:
       GST_OBJECT_LOCK (src);
       g_value_copy (&src->max_framerate, value);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case PROP_BACKGROUND_COLOUR:
+      GST_OBJECT_LOCK (src);
+      g_value_set_uint64 (value, src->renderer->backgroundColour().rgba64());
       GST_OBJECT_UNLOCK (src);
       break;
     default:
@@ -314,8 +336,10 @@ gst_qml6_gl_render_src_gl_stop (GstGLBaseSrc * glbase_src)
   /* notify before actually destroying anything */
   GST_OBJECT_LOCK (src);
   if (src->renderer) {
+    QColor background_colour = src->renderer->backgroundColour();
     renderer = src->renderer;
     src->renderer = new GstQt6QuickRenderer;
+    src->renderer->setBackgroundColour(background_colour);
   }
   src->initted = FALSE;
   GST_OBJECT_UNLOCK (src);
@@ -356,8 +380,10 @@ ensure_init_renderer_gl (GstGLContext *context, GstQml6GLRenderSrc * src)
     if (!src->renderer->init (glbase_src->context, &error)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (glbase_src), RESOURCE, NOT_FOUND,
           ("%s", error->message), (NULL));
+      QColor background_color = src->renderer->backgroundColour();
       delete src->renderer;
       src->renderer = new GstQt6QuickRenderer;
+      src->renderer->setBackgroundColour(background_color);
       GST_OBJECT_UNLOCK (glbase_src);
       return FALSE;
     }
@@ -402,9 +428,11 @@ ensure_init_renderer_gl (GstGLContext *context, GstQml6GLRenderSrc * src)
 
 fail_renderer:
   {
+    QColor background_colour = src->renderer->backgroundColour();
     src->renderer->cleanup();
     delete src->renderer;
     src->renderer = new GstQt6QuickRenderer;
+    src->renderer->setBackgroundColour(background_colour);
     GST_OBJECT_UNLOCK (glbase_src);
     return FALSE;
   }
