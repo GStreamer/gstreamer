@@ -1189,7 +1189,8 @@ GST_START_TEST (test_ges_pipeline_shared_pool_context)
   GESTimeline *timeline;
   GESPipeline *pipeline;
   GstContext *context;
-  GstTaskPool *pool = NULL;
+  GstTaskPool *pool = NULL, *first_pool;
+  GList *tracks, *tmp;
 
   ges_init ();
 
@@ -1219,7 +1220,34 @@ GST_START_TEST (test_ges_pipeline_shared_pool_context)
       "Pipeline should store the shared task pool context");
   fail_unless (gst_context_get_task_pool (context, &pool));
   fail_unless (GST_IS_SHARED_TASK_POOL (pool));
+  first_pool = pool;
+  gst_context_unref (context);
+
+  /* Going to NULL drops the context, a new compositor (as when a project is
+   * reloaded) must get the same pool again rather than a new one */
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_NULL,
+      GST_STATE_CHANGE_SUCCESS);
+  tracks = ges_timeline_get_tracks (timeline);
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    if (GES_IS_VIDEO_TRACK (tmp->data))
+      fail_unless (ges_timeline_remove_track (timeline, tmp->data));
+  }
+  g_list_free_full (tracks, gst_object_unref);
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+  ges_timeline_commit (timeline);
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+  context =
+      gst_element_get_context (GST_ELEMENT (pipeline),
+      GST_TASK_POOL_CONTEXT_TYPE);
+  fail_unless (context != NULL);
+  fail_unless (gst_context_get_task_pool (context, &pool));
+  fail_unless (pool == first_pool);
   gst_object_unref (pool);
+  gst_object_unref (first_pool);
   gst_context_unref (context);
 
   ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_NULL,

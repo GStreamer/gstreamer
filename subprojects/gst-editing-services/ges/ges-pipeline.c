@@ -299,12 +299,15 @@ ges_pipeline_handle_message (GstBin * bin, GstMessage * msg)
         GstTaskPool *pool;
         GstMessage *have_msg;
 
-        pool = gst_shared_task_pool_new ();
-        gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL (pool),
-            g_get_num_processors ());
-        gst_task_pool_prepare (pool, NULL);
-
-        self->priv->shared_pool = gst_object_ref (pool);
+        /* The context is gone (e.g. the pipeline went back to NULL), keep
+         * using the pool we already own */
+        if (!self->priv->shared_pool) {
+          self->priv->shared_pool = gst_shared_task_pool_new ();
+          gst_shared_task_pool_set_max_threads (GST_SHARED_TASK_POOL
+              (self->priv->shared_pool), g_get_num_processors ());
+          gst_task_pool_prepare (self->priv->shared_pool, NULL);
+        }
+        pool = gst_object_ref (self->priv->shared_pool);
 
         pool_context = gst_context_new (GST_TASK_POOL_CONTEXT_TYPE, FALSE);
         gst_context_set_task_pool (pool_context, pool);
