@@ -49,6 +49,26 @@
   "audio/x-raw,rate=8000 ! " \
   "rtpgstpay name=pay1 pt=97"
 
+/* one live source feeding both payloaders, like an RTSP source that
+ * provides several streams. The queues are small so that the test fails
+ * right away if the data of a stream is not consumed */
+#define SHARED_SOURCE_PIPELINE_LIVE "videotestsrc is-live=true ! tee name=t " \
+  "t. ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! " \
+  "video/x-raw,format=I420,width=352,height=288 ! " \
+  "rtpgstpay name=pay0 pt=96 " \
+  "t. ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! " \
+  "video/x-raw,format=I420,width=352,height=288 ! " \
+  "rtpgstpay name=pay1 pt=97"
+
+/* one source that is not live feeding both streams through a multiqueue, like
+ * a demuxer in decodebin */
+#define MULTIQUEUE_PIPELINE_NOT_LIVE "multiqueue name=mq max-size-buffers=5 " \
+  "max-size-bytes=0 max-size-time=0 " \
+  "videotestsrc ! video/x-raw,format=I420,width=16,height=16 ! tee name=t " \
+  "t. ! mq.sink_0 t. ! mq.sink_1 " \
+  "mq.src_0 ! rtpgstpay name=pay0 pt=96 " \
+  "mq.src_1 ! rtpgstpay name=pay1 pt=97"
+
 #define TEST_MOUNT_POINT  "/test"
 #define TEST_PROTO        "RTP/AVP"
 #define TEST_ENCODING     "X-GST"
@@ -241,6 +261,40 @@ start_tcp_server (gboolean set_shared_factory)
 
   GST_DEBUG ("rtsp server listening on port %d", test_port);
 
+}
+
+/* start the tested rtsp server with a media whose two streams share a source */
+static GstRTSPMediaFactory *
+start_server_shared_source (const gchar * launch)
+{
+  GstRTSPMountPoints *mounts;
+  gchar *service;
+  GstRTSPMediaFactory *factory;
+
+  mounts = gst_rtsp_server_get_mount_points (server);
+
+  factory = gst_rtsp_media_factory_new ();
+
+  gst_rtsp_media_factory_set_launch (factory, launch);
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  g_object_unref (mounts);
+
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
+
+  /* attach to default main context */
+  source_id = gst_rtsp_server_attach (server, NULL);
+  fail_if (source_id == 0);
+
+  /* get port */
+  service = gst_rtsp_server_get_service (server);
+  test_port = atoi (service);
+  fail_unless (test_port != 0);
+  g_free (service);
+
+  GST_DEBUG ("rtsp server listening on port %d", test_port);
+
+  return factory;
 }
 
 /* start the testing rtsp server for RECORD mode */
@@ -1844,6 +1898,158 @@ GST_START_TEST (test_play_one_active_stream)
 
 GST_END_TEST;
 
+/* Set up only one of the two streams of a media whose streams share a source,
+ * and check that the data of the stream that was set up keeps flowing. */
+GST_START_TEST (test_play_one_active_stream_shared_source)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *transport = NULL;
+  GSocket *rtp_socket, *rtcp_socket;
+  gint i;
+
+  start_server_shared_source ("( " SHARED_SOURCE_PIPELINE_LIVE " )");
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get the control string of the first stream from the DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports_full (&client_port, &rtp_socket, &rtcp_socket);
+
+  /* do SETUP for the first stream only */
+  fail_unless (do_setup (conn, control, &client_port, &session,
+          &transport) == GST_RTSP_STS_OK);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+  /* Receive more data than the source and the queues can hold, so that it can
+   * only arrive when the stream that was not set up lets the source run. The
+   * timeout turns a stalled stream into a failure instead of a hang. */
+  g_socket_set_timeout (rtp_socket, 5);
+  for (i = 0; i < 1000; i++)
+    receive_rtp (rtp_socket, NULL);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
+  g_free (session);
+  gst_rtsp_transport_free (transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+static void
+store_media_cb (GstRTSPMediaFactory * factory, GstRTSPMedia * media,
+    gpointer user_data)
+{
+  GstRTSPMedia **stored = user_data;
+
+  *stored = g_object_ref (media);
+}
+
+/* Set up only one of the two streams of a media that is not live, and check
+ * that discarding the data of the other stream does not let the source run
+ * ahead: the data of the stream that was set up would pile up in the
+ * multiqueue then, since it is only sent at the pace of the clock. */
+GST_START_TEST (test_play_one_active_stream_not_live)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media = NULL;
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *transport = NULL;
+  GSocket *rtp_socket, *rtcp_socket;
+  GstElement *bin, *mq;
+  GstPad *pad;
+  guint64 level;
+  gint i;
+
+  factory = start_server_shared_source ("( " MULTIQUEUE_PIPELINE_NOT_LIVE " )");
+  g_signal_connect (factory, "media-configure", G_CALLBACK (store_media_cb),
+      &media);
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get the control string of the first stream from the DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports_full (&client_port, &rtp_socket, &rtcp_socket);
+
+  /* do SETUP for the first stream only */
+  fail_unless (do_setup (conn, control, &client_port, &session,
+          &transport) == GST_RTSP_STS_OK);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+  /* receive data for a while, so that a source that runs ahead has the time
+   * to fill the multiqueue */
+  g_socket_set_timeout (rtp_socket, 5);
+  for (i = 0; i < 30; i++)
+    receive_rtp (rtp_socket, NULL);
+
+  /* the multiqueue only lets a queue grow past its limit while another queue
+   * is empty, so with both streams consumed at the same pace the queue of the
+   * stream that was set up stays small */
+  fail_unless (media != NULL);
+  bin = gst_rtsp_media_get_element (media);
+  mq = gst_bin_get_by_name (GST_BIN (bin), "mq");
+  pad = gst_element_get_static_pad (mq, "sink_0");
+  g_object_get (pad, "current-level-time", &level, NULL);
+  fail_unless (level <= 2 * GST_SECOND,
+      "%" GST_TIME_FORMAT " queued in the multiqueue", GST_TIME_ARGS (level));
+  gst_object_unref (pad);
+  gst_object_unref (mq);
+  gst_object_unref (bin);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (media);
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
+  g_free (session);
+  gst_rtsp_transport_free (transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_play_disconnect)
 {
   GstRTSPConnection *conn;
@@ -2752,6 +2958,8 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_timeout_connection);
   tcase_add_test (tc, test_no_session_timeout);
   tcase_add_test (tc, test_play_one_active_stream);
+  tcase_add_test (tc, test_play_one_active_stream_shared_source);
+  tcase_add_test (tc, test_play_one_active_stream_not_live);
   tcase_add_test (tc, test_play_disconnect);
   tcase_add_test (tc, test_play_specific_server_port);
   tcase_add_test (tc, test_play_smpte_range);
