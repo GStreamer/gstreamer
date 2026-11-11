@@ -2200,6 +2200,7 @@ setup_borderline (GstVideoConverter * convert)
     const GstVideoFormatInfo *out_pack_finfo;
     gpointer planes[GST_VIDEO_MAX_PLANES];
     gint strides[GST_VIDEO_MAX_PLANES];
+    guint16 border_ayuv64[4] = { 0, };
 
     convert->borderline = g_malloc0 (sizeof (guint16) * width * 4);
 
@@ -2238,19 +2239,32 @@ setup_borderline (GstVideoConverter * convert)
       v = (r * cm.im[2][0] + g * cm.im[2][1] + b * cm.im[2][2] +
           cm.im[2][3]) >> SCALE;
 
-      a = CLAMP (a, 0, 255);
-      y = CLAMP (y, 0, 255);
-      u = CLAMP (u, 0, 255);
-      v = CLAMP (v, 0, 255);
+      if (convert->pack_bits == 16) {
+        a |= (a << 8);
+        border_ayuv64[0] = CLAMP (a, 0, G_MAXUINT16);
+        border_ayuv64[1] = CLAMP (y, 0, G_MAXUINT16);
+        border_ayuv64[2] = CLAMP (u, 0, G_MAXUINT16);
+        border_ayuv64[3] = CLAMP (v, 0, G_MAXUINT16);
+      } else {
+        y = CLAMP (y, 0, 255);
+        u = CLAMP (u, 0, 255);
+        v = CLAMP (v, 0, 255);
 
-      border_val = (guint32) (a | (y << 8) | (u << 16) | v << 24);
+        border_val = (guint32) (a | (y << 8) | (u << 16) | (v << 24));
+      }
     } else {
       border_val = GINT32_FROM_BE (convert->border_argb);
     }
-    if (convert->pack_bits == 8)
+    if (convert->pack_bits == 8) {
       video_orc_splat_u32 (convert->borderline, border_val, width);
-    else
+    } else if (GST_VIDEO_FORMAT_INFO_IS_YUV (out_pack_finfo)) {
+      guint64 ayuv64;
+
+      memcpy (&ayuv64, border_ayuv64, sizeof (ayuv64));
+      video_orc_splat_u64 (convert->borderline, ayuv64, width);
+    } else {
       video_orc_splat2_u64 (convert->borderline, border_val, width);
+    }
 
     /* convert pixels */
     for (i = 0; i < out_finfo->n_planes; i++) {

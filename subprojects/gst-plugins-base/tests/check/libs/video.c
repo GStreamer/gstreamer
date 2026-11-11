@@ -5041,21 +5041,41 @@ GST_START_TEST (test_video_meta_transform_matrix_rotation_45)
 GST_END_TEST;
 
 static void
-unpack_u8_pixel (const GstVideoFrame * frame, gint x, gint y, guint8 pixel[4])
+unpack_border_test_pixel (const GstVideoFrame * frame, gint x, gint y,
+    guint16 pixel[4])
 {
-  frame->info.finfo->unpack_func (frame->info.finfo,
-      GST_VIDEO_PACK_FLAG_NONE, pixel, frame->data, frame->info.stride,
-      x, y, 1);
+  const GstVideoFormatInfo *finfo = frame->info.finfo;
+  const GstVideoFormatInfo *unpack_finfo =
+      gst_video_format_get_info (finfo->unpack_format);
+  guint8 pixel_u8[4];
+  gpointer unpacked = unpack_finfo->bits == 8 ? (gpointer) pixel_u8 : pixel;
+
+  finfo->unpack_func (finfo, GST_VIDEO_PACK_FLAG_NONE, unpacked,
+      frame->data, frame->info.stride, x, y, 1);
+
+  if (unpack_finfo->bits == 8) {
+    for (guint i = 0; i < G_N_ELEMENTS (pixel_u8); i++)
+      pixel[i] = pixel_u8[i];
+  }
 }
 
 GST_START_TEST (test_video_convert_border_color)
 {
-  const GstVideoFormat formats[] = {
-    GST_VIDEO_FORMAT_RGBA,
-    GST_VIDEO_FORMAT_AYUV,
-    GST_VIDEO_FORMAT_GRAY8,
-  };
   const guint32 border_argb = 0xff4080c0;
+  const guint32 border_yuv = 0xff000000;
+  const struct
+  {
+    GstVideoFormat format;
+    guint32 border_argb;
+  } cases[] = {
+    {GST_VIDEO_FORMAT_RGBA, border_argb},
+    {GST_VIDEO_FORMAT_AYUV, border_argb},
+    {GST_VIDEO_FORMAT_GRAY8, border_argb},
+    {GST_VIDEO_FORMAT_RGB10A2_LE, border_argb},
+    {GST_VIDEO_FORMAT_RGBA64_LE, border_argb},
+    {GST_VIDEO_FORMAT_I422_10LE, border_yuv},
+    {GST_VIDEO_FORMAT_AYUV64, border_yuv},
+  };
   GstVideoInfo src_info;
   GstVideoFrame src_frame;
   GstBuffer *src_buf;
@@ -5068,9 +5088,19 @@ GST_START_TEST (test_video_convert_border_color)
   fail_unless (gst_video_frame_map (&src_frame, &src_info,
           src_buf, GST_MAP_READWRITE));
 
-  {
-    /* Fill source ARGB */
-    const guint8 argb[] = { 0xff, 0x40, 0x80, 0xc0 };
+  for (i = 0; i < G_N_ELEMENTS (cases); i++) {
+    GstVideoFormat format = cases[i].format;
+    guint32 color = cases[i].border_argb;
+    GstVideoInfo ref_info, out_info;
+    GstVideoFrame ref_frame, out_frame;
+    GstBuffer *ref_buf, *out_buf;
+    GstVideoConverter *convert;
+    guint16 ref[4], border[4];
+    guint c;
+    const guint8 argb[] = {
+      (guint8) (color >> 24), (guint8) (color >> 16),
+      (guint8) (color >> 8), (guint8) color,
+    };
     gpointer data[GST_VIDEO_MAX_PLANES] = { NULL, };
     gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
 
@@ -5080,18 +5110,9 @@ GST_START_TEST (test_video_convert_border_color)
     src_info.finfo->pack_func (src_info.finfo, GST_VIDEO_PACK_FLAG_NONE,
         (gpointer) argb, sizeof (argb), data, stride,
         GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, 1);
-  }
-
-  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    GstVideoInfo ref_info, out_info;
-    GstVideoFrame ref_frame, out_frame;
-    GstBuffer *ref_buf, *out_buf;
-    GstVideoConverter *convert;
-    guint8 ref[4], border[4];
-    guint c;
 
     /* 1st path, src -> test format to get the computed border color value */
-    fail_unless (gst_video_info_set_format (&ref_info, formats[i], 1, 1));
+    fail_unless (gst_video_info_set_format (&ref_info, format, 1, 1));
 
     ref_buf = gst_buffer_new_and_alloc (ref_info.size);
     fail_unless (gst_video_frame_map (&ref_frame, &ref_info,
@@ -5103,8 +5124,8 @@ GST_START_TEST (test_video_convert_border_color)
     gst_video_converter_frame (convert, &src_frame, &ref_frame);
     gst_video_converter_free (convert);
 
-    /* 2nd path, do actual conversion with border enabled */
-    fail_unless (gst_video_info_set_format (&out_info, formats[i], 3, 3));
+    /* Keep the left border aligned to a full chroma sample for I422. */
+    fail_unless (gst_video_info_set_format (&out_info, format, 4, 3));
 
     out_buf = gst_buffer_new_and_alloc (out_info.size);
     gst_buffer_memset (out_buf, 0, 0, out_info.size);
@@ -5114,12 +5135,11 @@ GST_START_TEST (test_video_convert_border_color)
 
     convert = gst_video_converter_new (&src_info, &out_info,
         gst_structure_new ("options",
-            GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 1,
+            GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 2,
             GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 1,
             GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 1,
             GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 1,
-            GST_VIDEO_CONVERTER_OPT_BORDER_ARGB, G_TYPE_UINT,
-            border_argb, NULL));
+            GST_VIDEO_CONVERTER_OPT_BORDER_ARGB, G_TYPE_UINT, color, NULL));
     fail_unless (convert);
 
     gst_video_converter_frame (convert, &src_frame, &out_frame);
@@ -5127,11 +5147,11 @@ GST_START_TEST (test_video_convert_border_color)
 
     /* compare color values between reference (converted via normal conversion
      * path) and produced borders */
-    unpack_u8_pixel (&ref_frame, 0, 0, ref);
-    unpack_u8_pixel (&out_frame, 0, 1, border);
+    unpack_border_test_pixel (&ref_frame, 0, 0, ref);
+    unpack_border_test_pixel (&out_frame, 0, 1, border);
     for (c = 0; c < 4; c++) {
       fail_unless (ref[c] == border[c], "%s comp %u, ref %u, border %u",
-          gst_video_format_to_string (formats[i]), c, ref[c], border[c]);
+          gst_video_format_to_string (format), c, ref[c], border[c]);
     }
 
     gst_video_frame_unmap (&out_frame);
