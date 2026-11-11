@@ -483,6 +483,130 @@ GST_START_TEST (test_filesource_stream_selection_prune)
 
 GST_END_TEST;
 
+static guint
+_n_parent_notify_handlers (gpointer object)
+{
+  guint id = g_signal_lookup ("notify", G_TYPE_OBJECT);
+  GQuark detail = g_quark_from_static_string ("parent");
+  guint n = g_signal_handlers_block_matched (object,
+      G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL, id, detail, NULL, NULL, NULL);
+
+  g_signal_handlers_unblock_matched (object,
+      G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL, id, detail, NULL, NULL, NULL);
+
+  return n;
+}
+
+/* A stream routed to no track gives a core child that never enters the
+ * timeline: the timeline must stop following it with its clip. */
+GST_START_TEST (test_filesource_stream_selection_unplaced_untracked)
+{
+  GESTimeline *timeline;
+  GESTrack *audio;
+  GESLayer *layer;
+  GESClip *clip;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0, *a1;
+  GESTrackElement *placed, *unplaced;
+  guint n_handlers;
+  GList *created;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  a1 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 1);
+  fail_unless (a0 && a1);
+
+  timeline = ges_timeline_new ();
+  audio = GES_TRACK (ges_audio_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  created = _route (clip, a0, audio, a1, NULL, NULL);
+  g_list_free_full (created, gst_object_unref);
+  placed = _core_source_for_stream (clip, a0);
+  unplaced = _core_source_for_stream (clip, a1);
+  fail_unless (placed && unplaced);
+  gst_object_ref (unplaced);
+  n_handlers = _n_parent_notify_handlers (unplaced);
+
+  fail_unless (ges_layer_add_clip (layer, gst_object_ref (clip)));
+  fail_unless (ges_track_element_get_track (placed) == audio);
+  fail_unless (ges_track_element_get_track (unplaced) == NULL);
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (unplaced) == NULL);
+  assert_equals_int (_n_parent_notify_handlers (unplaced), n_handlers + 1);
+
+  fail_unless (ges_layer_remove_clip (layer, clip));
+  assert_equals_int (_n_parent_notify_handlers (unplaced), n_handlers);
+
+  /* Changing its parent once the timeline is gone must not touch it */
+  gst_object_unref (timeline);
+  fail_unless (ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (unplaced)));
+
+  gst_object_unref (unplaced);
+  gst_object_unref (clip);
+  gst_object_unref (asset);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+/* Removed from its clip, an unplaced core child is not followed anymore */
+GST_START_TEST (test_filesource_stream_selection_unplaced_removed)
+{
+  GESTimeline *timeline;
+  GESTrack *audio;
+  GESLayer *layer;
+  GESClip *clip;
+  GESUriClipAsset *asset;
+  GESUriSourceAsset *a0, *a1;
+  GESTrackElement *unplaced;
+  guint n_handlers;
+  GList *created;
+  GError *error = NULL;
+
+  ges_init ();
+
+  asset = ges_uri_clip_asset_request_sync (MULTI_STREAM_URI, &error);
+  fail_unless (asset != NULL);
+  a0 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 0);
+  a1 = _nth_stream_asset (asset, GES_TRACK_TYPE_AUDIO, 1);
+  fail_unless (a0 && a1);
+
+  timeline = ges_timeline_new ();
+  audio = GES_TRACK (ges_audio_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, audio));
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_asset_extract (GES_ASSET (asset), NULL));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), GST_SECOND);
+  created = _route (clip, a0, audio, a1, NULL, NULL);
+  g_list_free_full (created, gst_object_unref);
+  unplaced = gst_object_ref (_core_source_for_stream (clip, a1));
+  n_handlers = _n_parent_notify_handlers (unplaced);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+  assert_equals_int (_n_parent_notify_handlers (unplaced), n_handlers + 1);
+  fail_unless (ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (unplaced)));
+  assert_equals_int (_n_parent_notify_handlers (unplaced), n_handlers);
+
+  gst_object_unref (unplaced);
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 /* Routing one stream to two tracks: the created sources are 1:1 with the
  * routings (created[0] -> first track, created[1] -> second track), and a
  * property set on a created source before the clip joins a timeline follows it
@@ -741,6 +865,9 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_filesource_properties);
   tcase_add_test (tc_chain, test_filesource_stream_selection_routing);
   tcase_add_test (tc_chain, test_filesource_stream_selection_prune);
+  tcase_add_test (tc_chain,
+      test_filesource_stream_selection_unplaced_untracked);
+  tcase_add_test (tc_chain, test_filesource_stream_selection_unplaced_removed);
   tcase_add_test (tc_chain, test_filesource_stream_selection_binding);
   tcase_add_test (tc_chain, test_filesource_stream_selection_runtime_remap);
   tcase_add_test (tc_chain, test_filesource_stream_selection_serialization);

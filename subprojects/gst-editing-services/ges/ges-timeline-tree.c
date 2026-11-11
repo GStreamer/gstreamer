@@ -208,11 +208,20 @@ find_node (GNode * root, gpointer element)
   return g_node_find (root, G_IN_ORDER, G_TRAVERSE_ALL, element);
 }
 
+static void stop_tracking_node (GNode * root, GNode * node);
+
 static void
 timeline_element_parent_cb (GESTimelineElement * child, GParamSpec * arg
     G_GNUC_UNUSED, GNode * root)
 {
   GNode *new_parent_node = NULL, *node = find_node (root, child);
+
+  /* Only tracked through its former container */
+  if (!child->parent && !child->timeline) {
+    stop_tracking_node (root, node);
+    timeline_update_duration (root->data);
+    return;
+  }
 
   if (child->parent)
     new_parent_node = find_node (root, child->parent);
@@ -269,26 +278,40 @@ timeline_tree_track_element (GNode * root, GESTimelineElement * element)
   timeline_update_duration (root->data);
 }
 
-void
-timeline_tree_stop_tracking_element (GNode * root, GESTimelineElement * element)
+static void
+stop_tracking_node (GNode * root, GNode * node)
 {
-  GNode *node = find_node (root, element);
+  GESTimelineElement *element = node->data;
 
-  node = find_node (root, element);
-
-  /* Move children to the parent */
+  /* Move children to the parent, except those that are not in the timeline
+   * themselves (e.g. track elements in no track): they were only tracked
+   * through this container, and nothing else would stop tracking them */
   while (node->children) {
     GNode *tmp = node->children;
+
+    if (!GES_TIMELINE_ELEMENT (tmp->data)->timeline) {
+      stop_tracking_node (root, tmp);
+      continue;
+    }
+
     g_node_unlink (tmp);
     g_node_prepend (node->parent, tmp);
   }
 
-  g_assert (node);
   GST_DEBUG ("Stop tracking %" GES_FORMAT, GES_ARGS (element));
   g_signal_handlers_disconnect_by_func (element, timeline_element_parent_cb,
       root);
 
   g_node_destroy (node);
+}
+
+void
+timeline_tree_stop_tracking_element (GNode * root, GESTimelineElement * element)
+{
+  GNode *node = find_node (root, element);
+
+  g_assert (node);
+  stop_tracking_node (root, node);
   timeline_update_duration (root->data);
 }
 
