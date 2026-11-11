@@ -1015,25 +1015,6 @@ static void gst_aja_src_notify_signal_change(GstObject* object,
   g_free(change);
 }
 
-// Must be called without queue_lock. The bus message is always posted, the
-// signal property is only notified when its value changed.
-static void gst_aja_src_queue_signal_change(GstAjaSrc* self,
-                                            gboolean have_signal,
-                                            SignalLossReason reason,
-                                            NTV2VideoFormat detected_format,
-                                            guint32 vpid) {
-  AjaSignalChange* change = g_new0(AjaSignalChange, 1);
-
-  change->have_signal = have_signal;
-  change->notify = gst_aja_src_set_signal(self, have_signal);
-  change->reason = reason;
-  change->detected_format = detected_format;
-  change->vpid = vpid;
-
-  gst_object_call_async(GST_OBJECT(self), gst_aja_src_notify_signal_change,
-                        change);
-}
-
 // Must be called with GstAjaNtv2DeviceLocker
 // signal_state: failing to detect a format before the first lock is normal.
 static gboolean gst_aja_src_configure(GstAjaSrc* self,
@@ -2639,13 +2620,18 @@ typedef struct {
   gboolean candidate_present;
   SignalLossReason candidate_reason;
   NTV2VideoFormat candidate_format;
+  guint32 candidate_vpid;
   gint64 candidate_since;
   // The input the last absent notification was about.
   SignalLossReason notified_reason;
   NTV2VideoFormat notified_format;
+  guint32 notified_vpid;
   // Whether the first frame after a signal recovery still needs the timestamp
   // reset and frame dropping.
   gboolean pending_recovery;
+  // The input sense can report a valid signal while no frames are
+  // transferred. The signal stays absent until frames arrive again.
+  gboolean waiting_for_frames;
 } SignalTracker;
 
 static void gst_aja_src_signal_tracker_reset(SignalTracker* tracker) {
@@ -2653,10 +2639,13 @@ static void gst_aja_src_signal_tracker_reset(SignalTracker* tracker) {
   tracker->candidate_present = FALSE;
   tracker->candidate_reason = SIGNAL_LOSS_NONE;
   tracker->candidate_format = ::NTV2_FORMAT_UNKNOWN;
+  tracker->candidate_vpid = 0;
   tracker->candidate_since = 0;
   tracker->notified_reason = SIGNAL_LOSS_NONE;
   tracker->notified_format = ::NTV2_FORMAT_UNKNOWN;
+  tracker->notified_vpid = 0;
   tracker->pending_recovery = FALSE;
+  tracker->waiting_for_frames = FALSE;
 }
 
 // Update the signal state with hysteresis and return what is to be notified
@@ -2665,18 +2654,20 @@ static void gst_aja_src_signal_tracker_reset(SignalTracker* tracker) {
 // is always notified, also when there is no signal.
 static SignalTransition gst_aja_src_update_signal_state(
     SignalTracker* tracker, gboolean present, SignalLossReason reason,
-    NTV2VideoFormat detected_format) {
+    NTV2VideoFormat detected_format, guint32 vpid) {
   const gint64 now = g_get_monotonic_time();
 
   gboolean changed =
       present != tracker->candidate_present ||
       (!present && (reason != tracker->candidate_reason ||
-                    detected_format != tracker->candidate_format));
+                    detected_format != tracker->candidate_format ||
+                    vpid != tracker->candidate_vpid));
   if (changed) {
     tracker->candidate_present = present;
     tracker->candidate_reason = present ? SIGNAL_LOSS_NONE : reason;
     tracker->candidate_format =
         present ? ::NTV2_FORMAT_UNKNOWN : detected_format;
+    tracker->candidate_vpid = present ? 0 : vpid;
     tracker->candidate_since = now;
   } else if (tracker->candidate_since == 0) {
     tracker->candidate_since = now;
@@ -2699,16 +2690,22 @@ static SignalTransition gst_aja_src_update_signal_state(
   // if the present candidate was seen before the hold expired.
   tracker->pending_recovery = FALSE;
 
+  // Recovery waits for frames from the signal loss on, the capture loop
+  // clears this again once frames arrive.
+  tracker->waiting_for_frames = TRUE;
+
   if (now - tracker->candidate_since < SIGNAL_ABSENT_HOLD_US)
     return SIGNAL_TRANSITION_NONE;
 
   if (tracker->state == SIGNAL_STATE_ABSENT) {
     if (reason == tracker->notified_reason &&
-        detected_format == tracker->notified_format)
+        detected_format == tracker->notified_format &&
+        vpid == tracker->notified_vpid)
       return SIGNAL_TRANSITION_NONE;
 
     tracker->notified_reason = reason;
     tracker->notified_format = detected_format;
+    tracker->notified_vpid = vpid;
     return SIGNAL_TRANSITION_ABSENT_UPDATE;
   }
 
@@ -2716,21 +2713,30 @@ static SignalTransition gst_aja_src_update_signal_state(
   tracker->candidate_since = 0;
   tracker->notified_reason = reason;
   tracker->notified_format = detected_format;
+  tracker->notified_vpid = vpid;
   return SIGNAL_TRANSITION_ABSENT;
 }
 
 // Notify about a transition returned by gst_aja_src_update_signal_state().
-// Must be called without queue_lock.
+// Must be called without queue_lock. The bus message is always posted, the
+// signal property is only notified when its value changed.
 static void gst_aja_src_notify_signal_transition(
     GstAjaSrc* self, SignalTracker* signal, SignalTransition transition,
     NTV2VideoFormat detected_format, guint32 vpid) {
-  gboolean present = transition == SIGNAL_TRANSITION_PRESENT;
+  gboolean have_signal = transition == SIGNAL_TRANSITION_PRESENT;
+  AjaSignalChange* change;
 
   if (transition == SIGNAL_TRANSITION_NONE) return;
 
-  gst_aja_src_queue_signal_change(
-      self, present, present ? SIGNAL_LOSS_NONE : signal->notified_reason,
-      detected_format, vpid);
+  change = g_new0(AjaSignalChange, 1);
+  change->have_signal = have_signal;
+  change->notify = gst_aja_src_set_signal(self, have_signal);
+  change->reason = have_signal ? SIGNAL_LOSS_NONE : signal->notified_reason;
+  change->detected_format = detected_format;
+  change->vpid = vpid;
+
+  gst_object_call_async(GST_OBJECT(self), gst_aja_src_notify_signal_change,
+                        change);
 }
 
 static void gst_aja_src_set_anc_buffer_size(GstAjaSrc* self, GstBuffer* buffer,
@@ -2929,7 +2935,7 @@ restart:
       if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
         GST_DEBUG_OBJECT(self, "No signal, waiting");
         SignalTransition transition = gst_aja_src_update_signal_state(
-            &signal, FALSE, SIGNAL_LOSS_NO_INPUT, ::NTV2_FORMAT_UNKNOWN);
+            &signal, FALSE, SIGNAL_LOSS_NO_INPUT, ::NTV2_FORMAT_UNKNOWN, 0);
         driver_drops_time = GST_CLOCK_TIME_NONE;
         g_mutex_unlock(&self->queue_lock);
         gst_aja_src_notify_signal_transition(self, &signal, transition,
@@ -3033,7 +3039,7 @@ restart:
 
       GST_DEBUG_OBJECT(self, "No signal, waiting");
       SignalTransition transition = gst_aja_src_update_signal_state(
-          &signal, FALSE, SIGNAL_LOSS_NO_INPUT, ::NTV2_FORMAT_UNKNOWN);
+          &signal, FALSE, SIGNAL_LOSS_NO_INPUT, ::NTV2_FORMAT_UNKNOWN, 0);
       driver_drops_time = GST_CLOCK_TIME_NONE;
       g_mutex_unlock(&self->queue_lock);
       gst_aja_src_notify_signal_transition(self, &signal, transition,
@@ -3062,7 +3068,8 @@ restart:
                        current_string.c_str(), configured_string.c_str(),
                        effective_string.c_str());
       SignalTransition transition = gst_aja_src_update_signal_state(
-          &signal, FALSE, SIGNAL_LOSS_WRONG_FORMAT, current_video_format);
+          &signal, FALSE, SIGNAL_LOSS_WRONG_FORMAT, current_video_format,
+          vpid_a);
       driver_drops_time = GST_CLOCK_TIME_NONE;
       g_mutex_unlock(&self->queue_lock);
       gst_aja_src_notify_signal_transition(self, &signal, transition,
@@ -3074,7 +3081,7 @@ restart:
                                          self->quad_mode)) {
       GST_DEBUG_OBJECT(self, "Input not locked, waiting");
       SignalTransition transition = gst_aja_src_update_signal_state(
-          &signal, FALSE, SIGNAL_LOSS_NOT_LOCKED, current_video_format);
+          &signal, FALSE, SIGNAL_LOSS_NOT_LOCKED, current_video_format, vpid_a);
       g_mutex_unlock(&self->queue_lock);
       gst_aja_src_notify_signal_transition(self, &signal, transition,
                                            current_video_format, vpid_a);
@@ -3082,8 +3089,13 @@ restart:
       g_mutex_lock(&self->queue_lock);
       continue;
     } else {
+      // The input sense can report a valid signal while no frames are
+      // transferred, so the signal only recovers once frames arrive.
+      gboolean have_signal = !signal.waiting_for_frames;
       SignalTransition transition = gst_aja_src_update_signal_state(
-          &signal, TRUE, SIGNAL_LOSS_NONE, current_video_format);
+          &signal, have_signal,
+          have_signal ? SIGNAL_LOSS_NONE : SIGNAL_LOSS_NO_FRAMES,
+          current_video_format, vpid_a);
       if (transition != SIGNAL_TRANSITION_NONE) {
         g_mutex_unlock(&self->queue_lock);
         gst_aja_src_notify_signal_transition(self, &signal, transition,
@@ -3124,6 +3136,13 @@ restart:
       GstMapInfo anc_map2 = GST_MAP_INFO_INIT;
       AUTOCIRCULATE_TRANSFER transfer;
 
+      // The first frame after a frame gap needs the same treatment as
+      // after a signal loss.
+      if (signal.waiting_for_frames && signal.state == SIGNAL_STATE_ABSENT)
+        signal.pending_recovery = TRUE;
+      signal.waiting_for_frames = FALSE;
+      iterations_without_frame = 0;
+
       if (signal.pending_recovery) {
         signal.pending_recovery = FALSE;
         reset_clock = true;
@@ -3136,8 +3155,6 @@ restart:
                            frames_to_drop);
         }
       }
-
-      iterations_without_frame = 0;
 
       if (gst_buffer_pool_acquire_buffer(self->buffer_pool, &video_buffer,
                                          NULL) != GST_FLOW_OK) {
@@ -3818,21 +3835,10 @@ restart:
       // If we don't have a frame for 32 iterations (512ms) then consider
       // this as signal loss too even if the driver still reports the
       // expected mode above
-      if (signal.state != SIGNAL_STATE_ABSENT &&
-          iterations_without_frame < 32) {
+      if (!signal.waiting_for_frames && iterations_without_frame < 32) {
         iterations_without_frame++;
       } else {
-        // A frame that is simply not ready yet must not restart the hold,
-        // so only reset the state on an actual loss.
-        if (signal.state == SIGNAL_STATE_PRESENT) {
-          gst_aja_src_queue_signal_change(self, FALSE, SIGNAL_LOSS_NO_FRAMES,
-                                          current_video_format, vpid_a);
-          signal.state = SIGNAL_STATE_ABSENT;
-          signal.candidate_since = 0;
-          signal.notified_reason = SIGNAL_LOSS_NO_FRAMES;
-          signal.notified_format = current_video_format;
-          signal.pending_recovery = FALSE;
-        }
+        signal.waiting_for_frames = TRUE;
         driver_drops_time = GST_CLOCK_TIME_NONE;
       }
 
