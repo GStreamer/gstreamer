@@ -105,20 +105,42 @@ impl MagicRule {
         );
 
         let value_len = self.value.len();
-        let mut windows = data
-            .windows(value_len)
-            .skip(self.start_offset as usize)
-            .take(self.range_length as usize);
+        let start = self.start_offset as usize;
+        let range = self.range_length as usize;
+        // Window starts run over `start..start + range`, as far as a whole
+        // window fits in `data`.
+        if data.len() < value_len || start > data.len() - value_len {
+            return false;
+        }
+        let last = start.saturating_add(range).min(data.len() - value_len + 1);
 
         match &self.mask {
-            Some(mask) => windows.any(|window| {
-                window
+            Some(mask) => (start..last).any(|i| {
+                data[i..i + value_len]
                     .iter()
                     .zip(mask)
                     .zip(self.value.iter())
                     .all(|((d, m), v)| d & m == *v)
             }),
-            None => windows.any(|window| window == &self.value[..]),
+            None => {
+                // Scan for the first byte, then compare the whole value: the
+                // range rules of the database scan up to 8 KiB, and most
+                // positions fail on the first byte.
+                let first = self.value[0];
+                let hay = &data[start..last + value_len - 1];
+                let mut from = 0;
+                while let Some(rel) = hay[from..].iter().position(|&b| b == first) {
+                    let pos = from + rel;
+                    if pos + value_len > hay.len() {
+                        break;
+                    }
+                    if hay[pos..pos + value_len] == self.value[..] {
+                        return true;
+                    }
+                    from = pos + 1;
+                }
+                false
+            }
         }
     }
 
