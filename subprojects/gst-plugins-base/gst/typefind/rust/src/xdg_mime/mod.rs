@@ -143,6 +143,9 @@ impl SharedMimeInfo {
         self.globs.add_globs(&globs);
 
         self.magic.extend(magic::read_magic_from_dir(&mime_path));
+        // One magic file per data directory: restore the global priority
+        // order the lookup relies on.
+        magic::sort_by_priority(&mut self.magic);
 
         let mtime = std::fs::metadata(&mime_path)
             .and_then(|m| m.modified())
@@ -524,6 +527,35 @@ mod tests {
         let mut gb = db.guess_mime_type();
         gb.data(&vec![b'x'; 4096]);
         assert_eq!(gb.data.len(), magic::max_extents(&db.magic));
+    }
+
+    /// The database is the concatenation of one `magic` file per data
+    /// directory; the highest priority wins across directories, not the
+    /// first directory's match.
+    #[test]
+    fn magic_priority_spans_directories() {
+        let base = std::env::temp_dir().join(format!(
+            "gst-typefind-xdg-mime-multidir-{}",
+            std::process::id()
+        ));
+        let low = base.join("low");
+        let high = base.join("high");
+        for dir in [&low, &high] {
+            std::fs::create_dir_all(dir.join("mime")).unwrap();
+        }
+        for (dir, header) in [(&low, "[40:text/low]\n"), (&high, "[60:text/high]\n")] {
+            let mut file = b"MIME-Magic\0\n".to_vec();
+            file.extend_from_slice(header.as_bytes());
+            file.extend_from_slice(&rule_bytes(0, b"AB"));
+            std::fs::write(dir.join("mime").join("magic"), file).unwrap();
+        }
+
+        let mut db = SharedMimeInfo::create();
+        db.load_directory(&low);
+        db.load_directory(&high);
+
+        let (mime, priority) = db.get_mime_type_for_data(b"AB").unwrap();
+        assert_eq!((mime.as_str(), priority), ("text/high", 60));
     }
 
     // -- fixture helpers ----------------------------------------------------

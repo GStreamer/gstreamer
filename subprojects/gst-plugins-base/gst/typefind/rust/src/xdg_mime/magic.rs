@@ -291,23 +291,28 @@ fn parse_entries(mut bytes: &[u8]) -> Vec<MagicEntry> {
             None => break,
         }
     }
+    // Highest priority first, file order kept on ties: the lookup returns the
+    // first match, which is then the answer the unsorted scan picked.
+    sort_by_priority(&mut entries);
     entries
 }
 
+/// Sort entries by descending priority, keeping the current order on ties.
+/// The database is the concatenation of one `magic` file per XDG data
+/// directory, so this runs again over the combined list.
+pub(super) fn sort_by_priority(entries: &mut [MagicEntry]) {
+    entries.sort_by_key(|entry| std::cmp::Reverse(entry.priority));
+}
+
 pub(super) fn lookup_data(entries: &[MagicEntry], data: &[u8]) -> Option<(String, u32)> {
-    // The answer is the highest-priority match, not the first in file
-    // order; on a tie the earlier entry keeps it, as GIO's loader does.
-    let mut best: Option<(String, u32)> = None;
+    // The entries are sorted by descending priority, file order kept on ties,
+    // so the first match is the highest-priority one.
     for entry in entries {
-        if let Some(mime) = entry.matches(data)
-            && best
-                .as_ref()
-                .is_none_or(|(_, priority)| entry.priority > *priority)
-        {
-            best = Some((mime.to_string(), entry.priority));
+        if let Some(mime) = entry.matches(data) {
+            return Some((mime.to_string(), entry.priority));
         }
     }
-    best
+    None
 }
 
 /// Largest data extent any rule may read, used to cap sniffed input.
@@ -458,5 +463,101 @@ mod tests {
         assert_eq!(entries[0].matches(b"abXZ"), Some("application/x-range"));
         assert_eq!(entries[0].matches(b"XZ"), Some("application/x-range"));
         assert_eq!(entries[0].matches(b"abXY"), None);
+    }
+
+    /// The old, unoptimized matching: every window compared, every entry
+    /// scanned, best priority kept.
+    fn reference_lookup(entries: &[MagicEntry], data: &[u8]) -> Option<(String, u32)> {
+        fn rule_matches(rule: &MagicRule, data: &[u8]) -> bool {
+            let value_len = rule.value.len();
+            let mut windows = data
+                .windows(value_len)
+                .skip(rule.start_offset as usize)
+                .take(rule.range_length as usize);
+            match &rule.mask {
+                Some(mask) => windows.any(|window| {
+                    window
+                        .iter()
+                        .zip(mask)
+                        .zip(rule.value.iter())
+                        .all(|((d, m), v)| d & m == *v)
+                }),
+                None => windows.any(|window| window == &rule.value[..]),
+            }
+        }
+        fn entry_matches<'a>(entry: &'a MagicEntry, data: &[u8]) -> Option<&'a str> {
+            let mut current_level = 0;
+            let mut iter = entry.rules.iter().peekable();
+            while let Some(rule) = iter.next() {
+                if rule.indent == current_level && rule_matches(rule, data) {
+                    match iter.peek() {
+                        Some(next) if next.indent <= current_level => {
+                            return Some(&entry.mime_type);
+                        }
+                        Some(_) => current_level += 1,
+                        None => return Some(&entry.mime_type),
+                    }
+                }
+            }
+            None
+        }
+        let mut best: Option<(String, u32)> = None;
+        for entry in entries {
+            if let Some(mime) = entry_matches(entry, data)
+                && best
+                    .as_ref()
+                    .is_none_or(|(_, priority)| entry.priority > *priority)
+            {
+                best = Some((mime.to_string(), entry.priority));
+            }
+        }
+        best
+    }
+
+    #[test]
+    #[ignore = "differential test against the system shared MIME database"]
+    fn optimized_lookup_matches_reference() {
+        let entries = read_magic_from_dir(std::path::Path::new("/usr/share/mime"));
+        assert!(!entries.is_empty(), "no magic rules parsed");
+
+        // Deterministic pseudo-random buffers, plus real file prefixes.
+        let mut seed = 0x2545_f491_4f6c_dd1du64;
+        let mut next = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        let mut buffers: Vec<Vec<u8>> = Vec::new();
+        for len in [0, 1, 2, 3, 5, 8, 16, 64, 256, 1024, 4096, 16384] {
+            for _ in 0..20 {
+                let mut buf = vec![0u8; len];
+                for b in &mut buf {
+                    *b = next() as u8;
+                }
+                buffers.push(buf);
+            }
+        }
+        for file in [
+            "/usr/share/mime/magic",
+            "/usr/share/mime/globs2",
+            "/etc/passwd",
+            "/usr/bin/ls",
+        ] {
+            if let Ok(bytes) = std::fs::read(file) {
+                for len in [16, 256, 4096, 16384] {
+                    buffers.push(bytes[..bytes.len().min(len)].to_vec());
+                }
+            }
+        }
+
+        for data in &buffers {
+            assert_eq!(
+                lookup_data(&entries, data),
+                reference_lookup(&entries, data),
+                "mismatch on {} bytes",
+                data.len()
+            );
+        }
     }
 }
