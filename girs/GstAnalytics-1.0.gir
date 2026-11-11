@@ -947,6 +947,79 @@ The caller must free @mins and @maxs with g_free() when done.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_tensor_data_type" c:identifier="gst_analytics_modelinfo_get_tensor_data_type" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Read the data type declared for @tensor_name in @modelinfo.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%TRUE if the tensor declares a recognized data type</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="data_type" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The declared tensor data type</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_tensor_dims" c:identifier="gst_analytics_modelinfo_get_tensor_dims" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Read the tensor's dimensions in their declared order, preserving negative
+values used for dynamic dimensions. Free the returned array with g_free().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">%TRUE if the tensor declares a non-empty list of dimensions</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="tensor_name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="num_dims" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The number of declared dimensions</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+          <parameter name="dims" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The declared dimensions</doc>
+            <array length="1" zero-terminated="0" c:type="gint**">
+              <type name="gint" c:type="gint*"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_tensor_names" c:identifier="gst_analytics_modelinfo_get_tensor_names" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">List tensor names in file order. Only sections that explicitly declare an
+input or output direction are included.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor names, or
+  an empty array if there are no matches. Free with g_strfreev().</doc>
+          <array c:type="gchar**">
+            <type name="utf8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="modelinfo" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A #GstAnalyticsModelInfo</doc>
+            <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+          </instance-parameter>
+          <parameter name="dir" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">The tensor direction, or %MODELINFO_DIRECTION_UNKNOWN for both</doc>
+            <type name="ModelInfoTensorDirection" c:type="GstAnalyticsModelInfoTensorDirection"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_version" c:identifier="gst_analytics_modelinfo_get_version" version="1.28">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Retrieve the version string of the modelinfo file format.
 
@@ -987,6 +1060,21 @@ when no longer needed.</doc>
         <parameters>
           <parameter name="model_filename" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the model file (e.g., "model.onnx", "model.tflite")</doc>
+            <type name="filename" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="load_from_file" c:identifier="gst_analytics_modelinfo_load_from_file" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Load and validate the modelinfo file at @filename.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A new #GstAnalyticsModelInfo, or %NULL
+  if the file could not be loaded or validated</doc>
+          <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+        </return-value>
+        <parameters>
+          <parameter name="filename" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the modelinfo file</doc>
             <type name="filename" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -4773,6 +4861,21 @@ when no longer needed.</doc>
       <parameters>
         <parameter name="model_filename" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the model file (e.g., "model.onnx", "model.tflite")</doc>
+          <type name="filename" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="modelinfo_load_from_file" c:identifier="gst_analytics_modelinfo_load_from_file" moved-to="ModelInfo.load_from_file" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Load and validate the modelinfo file at @filename.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">A new #GstAnalyticsModelInfo, or %NULL
+  if the file could not be loaded or validated</doc>
+        <type name="ModelInfo" c:type="GstAnalyticsModelInfo*"/>
+      </return-value>
+      <parameters>
+        <parameter name="filename" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/modelinfo.c">Path to the modelinfo file</doc>
           <type name="filename" c:type="const gchar*"/>
         </parameter>
       </parameters>

@@ -110,6 +110,24 @@ GstAnalyticsModelInfo *
 gst_analytics_modelinfo_load (const gchar *model_filename);
 
 GST_ANALYTICS_META_API
+GstAnalyticsModelInfo * gst_analytics_modelinfo_load_from_file (const gchar *filename);
+
+GST_ANALYTICS_META_API
+gchar **  gst_analytics_modelinfo_get_tensor_names (GstAnalyticsModelInfo * modelinfo,
+                                                    GstAnalyticsModelInfoTensorDirection dir);
+
+GST_ANALYTICS_META_API
+gboolean  gst_analytics_modelinfo_get_tensor_data_type (GstAnalyticsModelInfo * modelinfo,
+                                                        const gchar * tensor_name,
+                                                        GstTensorDataType * data_type);
+
+GST_ANALYTICS_META_API
+gboolean  gst_analytics_modelinfo_get_tensor_dims (GstAnalyticsModelInfo * modelinfo,
+                                                   const gchar * tensor_name,
+                                                   gsize * num_dims,
+                                                   gint ** dims);
+
+GST_ANALYTICS_META_API
 gchar *
 gst_analytics_modelinfo_find_tensor_name (GstAnalyticsModelInfo * modelinfo,
     GstAnalyticsModelInfoTensorDirection dir, gsize index, const gchar *in_tensor_name,

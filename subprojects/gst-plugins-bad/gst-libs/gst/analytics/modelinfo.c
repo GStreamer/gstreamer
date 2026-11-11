@@ -115,6 +115,23 @@
  * Since: 1.28
  */
 
+GST_DEBUG_CATEGORY_STATIC (modelinfo_debug);
+#define GST_CAT_DEFAULT modelinfo_debug
+
+static void
+ensure_debug_category (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static gsize initialized = 0;
+
+  if (g_once_init_enter (&initialized)) {
+    GST_DEBUG_CATEGORY_INIT (modelinfo_debug, "modelinfo", 0,
+        "analytics model info");
+    g_once_init_leave (&initialized, 1);
+  }
+#endif
+}
+
 /**
  * gst_analytics_modelinfo_get_type:
  *
@@ -126,12 +143,10 @@
  */
 G_DEFINE_BOXED_TYPE (GstAnalyticsModelInfo, gst_analytics_modelinfo,
     (GBoxedCopyFunc) g_key_file_ref,
-    (GBoxedFreeFunc) gst_analytics_modelinfo_free)
-#define GST_CAT_DEFAULT analytics_modelinfo_debug
-    GST_DEBUG_CATEGORY (analytics_modelinfo_debug);
+    (GBoxedFreeFunc) gst_analytics_modelinfo_free);
 
-     static gboolean
-         key_file_string_matches (GKeyFile * keyfile, const gchar * group,
+static gboolean
+key_file_string_matches (GKeyFile * keyfile, const gchar * group,
     const gchar * key, const gchar * value)
 {
   gchar *kf_value = g_key_file_get_string (keyfile, group, key, NULL);
@@ -560,6 +575,39 @@ modelinfo_find_tensor_name_by_dims (GstAnalyticsModelInfo * modelinfo,
   return tensor_name;
 }
 
+static gboolean
+modelinfo_validate_file (GKeyFile * kf)
+{
+  gint minor;
+
+  if (!modelinfo_check_version (kf, &minor)) {
+    GST_ERROR ("Unsupported modelinfo version in file");
+    return FALSE;
+  }
+  if (!modelinfo_check_mandatory_input_fields (kf, minor)) {
+    GST_ERROR ("Modelinfo file failed mandatory input field validation");
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static GstAnalyticsModelInfo *
+modelinfo_load_from_file (const gchar * filename, gboolean * loaded)
+{
+  GKeyFile *kf = g_key_file_new ();
+  gboolean ret;
+
+  g_key_file_set_list_separator (kf, ',');
+  ret = g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, NULL);
+  if (loaded)
+    *loaded = ret;
+
+  if (ret && modelinfo_validate_file (kf))
+    return (GstAnalyticsModelInfo *) kf;
+
+  g_key_file_free (kf);
+  return NULL;
+}
 
 /**
  * gst_analytics_modelinfo_load:
@@ -585,16 +633,12 @@ modelinfo_find_tensor_name_by_dims (GstAnalyticsModelInfo * modelinfo,
 GstAnalyticsModelInfo *
 gst_analytics_modelinfo_load (const gchar * model_filename)
 {
-  GKeyFile *kf = g_key_file_new ();
+  GstAnalyticsModelInfo *info;
   gchar *filename;
-  gboolean ret;
+  gboolean loaded;
   gchar *last_dot;
-  gint minor;
 
-  g_key_file_set_list_separator (kf, ',');
-
-  GST_DEBUG_CATEGORY_INIT (analytics_modelinfo_debug, "modelinfo",
-      0, "analytics model info");
+  ensure_debug_category ();
 
   if (!model_filename) {
     GST_ERROR ("model_filename is NULL");
@@ -602,48 +646,164 @@ gst_analytics_modelinfo_load (const gchar * model_filename)
   }
 
   filename = g_strconcat (model_filename, ".modelinfo", NULL);
-  ret = g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, NULL);
+  info = modelinfo_load_from_file (filename, &loaded);
   g_free (filename);
-  if (ret) {
-    /* Version check */
-    if (!modelinfo_check_version (kf, &minor)) {
-      GST_ERROR ("Unsupported modelinfo version in file");
-      g_key_file_free (kf);
-      return NULL;
-    }
-    if (!modelinfo_check_mandatory_input_fields (kf, minor)) {
-      GST_ERROR ("Modelinfo file failed mandatory input field validation");
-      g_key_file_free (kf);
-      return NULL;
-    }
-    return (GstAnalyticsModelInfo *) kf;
-  }
+
+  /* Only try the alternate filename if the first file could not be parsed */
+  if (loaded)
+    return info;
 
   last_dot = g_utf8_strrchr (model_filename, -1, '.');
   if (last_dot && !g_utf8_strchr (last_dot, -1, '/')) {
     gchar *tmp = g_strndup (model_filename, last_dot - model_filename);
     filename = g_strconcat (tmp, ".modelinfo", NULL);
     g_free (tmp);
-    ret = g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, NULL);
+    info = modelinfo_load_from_file (filename, NULL);
     g_free (filename);
-    if (ret) {
-      /* Version check */
-      if (!modelinfo_check_version (kf, &minor)) {
-        GST_ERROR ("Unsupported modelinfo version in file");
-        g_key_file_free (kf);
-        return NULL;
-      }
-      if (!modelinfo_check_mandatory_input_fields (kf, minor)) {
-        GST_ERROR ("Modelinfo file failed mandatory input field validation");
-        g_key_file_free (kf);
-        return NULL;
-      }
-      return (GstAnalyticsModelInfo *) kf;
+  }
+
+  return info;
+}
+
+/**
+ * gst_analytics_modelinfo_load_from_file:
+ * @filename: (type filename): Path to the modelinfo file
+ *
+ * Load and validate the modelinfo file at @filename.
+ *
+ * Returns: (transfer full) (nullable): A new #GstAnalyticsModelInfo, or %NULL
+ *   if the file could not be loaded or validated
+ *
+ * Since: 1.30
+ */
+GstAnalyticsModelInfo *
+gst_analytics_modelinfo_load_from_file (const gchar * filename)
+{
+  g_return_val_if_fail (filename, NULL);
+
+  ensure_debug_category ();
+
+  return modelinfo_load_from_file (filename, NULL);
+}
+
+/**
+ * gst_analytics_modelinfo_get_tensor_names:
+ * @modelinfo: A #GstAnalyticsModelInfo
+ * @dir: The tensor direction, or %MODELINFO_DIRECTION_UNKNOWN for both
+ *
+ * List tensor names in file order. Only sections that explicitly declare an
+ * input or output direction are included.
+ *
+ * Returns: (array zero-terminated=1) (transfer full): The tensor names, or
+ *   an empty array if there are no matches. Free with g_strfreev().
+ *
+ * Since: 1.30
+ */
+gchar **
+gst_analytics_modelinfo_get_tensor_names (GstAnalyticsModelInfo * modelinfo,
+    GstAnalyticsModelInfoTensorDirection dir)
+{
+  GKeyFile *kf = (GKeyFile *) modelinfo;
+  gchar **groups;
+  gsize n_names = 0;
+
+  g_return_val_if_fail (modelinfo, NULL);
+  g_return_val_if_fail (dir == MODELINFO_DIRECTION_UNKNOWN ||
+      dir == MODELINFO_DIRECTION_INPUT || dir == MODELINFO_DIRECTION_OUTPUT,
+      NULL);
+
+  groups = g_key_file_get_groups (kf, NULL);
+  for (gsize i = 0; groups[i]; i++) {
+    gchar *name = groups[i];
+    gchar *value = g_key_file_get_string (kf, name, "dir", NULL);
+    gboolean input = g_strcmp0 (value, "input") == 0;
+    gboolean output = g_strcmp0 (value, "output") == 0;
+
+    g_free (value);
+    if (!g_str_equal (name, GST_MODELINFO_SECTION_NAME) &&
+        ((input && dir != MODELINFO_DIRECTION_OUTPUT) ||
+            (output && dir != MODELINFO_DIRECTION_INPUT))) {
+      groups[n_names++] = name;
+    } else {
+      g_free (name);
     }
   }
 
-  g_key_file_free (kf);
-  return NULL;
+  groups[n_names] = NULL;
+
+  return groups;
+}
+
+/**
+ * gst_analytics_modelinfo_get_tensor_data_type:
+ * @modelinfo: A #GstAnalyticsModelInfo
+ * @tensor_name: The tensor name
+ * @data_type: (out): The declared tensor data type
+ *
+ * Read the data type declared for @tensor_name in @modelinfo.
+ *
+ * Returns: %TRUE if the tensor declares a recognized data type
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_analytics_modelinfo_get_tensor_data_type (GstAnalyticsModelInfo * modelinfo,
+    const gchar * tensor_name, GstTensorDataType * data_type)
+{
+  gchar *name;
+  gboolean ret;
+
+  g_return_val_if_fail (modelinfo, FALSE);
+  g_return_val_if_fail (tensor_name, FALSE);
+  g_return_val_if_fail (data_type, FALSE);
+
+  name = g_key_file_get_string ((GKeyFile *) modelinfo, tensor_name, "type",
+      NULL);
+  if (!name)
+    return FALSE;
+
+  ret = gst_tensor_data_type_from_name (name, data_type);
+  g_free (name);
+
+  return ret;
+}
+
+/**
+ * gst_analytics_modelinfo_get_tensor_dims:
+ * @modelinfo: A #GstAnalyticsModelInfo
+ * @tensor_name: The tensor name
+ * @num_dims: (out): The number of declared dimensions
+ * @dims: (out) (array length=num_dims) (transfer full): The declared dimensions
+ *
+ * Read the tensor's dimensions in their declared order, preserving negative
+ * values used for dynamic dimensions. Free the returned array with g_free().
+ *
+ * Returns: %TRUE if the tensor declares a non-empty list of dimensions
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_analytics_modelinfo_get_tensor_dims (GstAnalyticsModelInfo * modelinfo,
+    const gchar * tensor_name, gsize * num_dims, gint ** dims)
+{
+  gsize length;
+  gint *values;
+
+  g_return_val_if_fail (modelinfo, FALSE);
+  g_return_val_if_fail (tensor_name, FALSE);
+  g_return_val_if_fail (num_dims, FALSE);
+  g_return_val_if_fail (dims, FALSE);
+
+  values = g_key_file_get_integer_list ((GKeyFile *) modelinfo, tensor_name,
+      "dims", &length, NULL);
+  if (!values || length == 0) {
+    g_free (values);
+    return FALSE;
+  }
+
+  *num_dims = length;
+  *dims = values;
+  return TRUE;
 }
 
 /**
