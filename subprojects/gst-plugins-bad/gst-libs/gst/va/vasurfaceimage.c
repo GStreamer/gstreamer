@@ -482,14 +482,6 @@ va_get_surface_usage_hint (GstVaDisplay * display, VAEntrypoint entrypoint,
 {
   switch (entrypoint) {
     case VAEntrypointVideoProc:{
-      /* For DMA kind caps, we use VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
-         VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE to detect the modifiers.
-         And in runtime, we should use the same flags in order to keep
-         the same modifiers. */
-      if (is_dma)
-        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
-            VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
-
       if (dir == GST_PAD_SINK)
         return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
       else if (dir == GST_PAD_SRC)

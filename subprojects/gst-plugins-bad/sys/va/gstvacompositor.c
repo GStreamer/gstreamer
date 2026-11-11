@@ -1576,7 +1576,7 @@ static const gchar *caps_str =
 static void
 gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
 {
-  GstCaps *doc_caps, *caps = NULL;
+  GstCaps *doc_caps, *sink_caps = NULL, *src_caps = NULL;
   GstPadTemplate *sink_pad_templ, *src_pad_templ;
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -1603,9 +1603,11 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
   filter = gst_va_filter_new (display);
 
   if (gst_va_filter_open (filter)) {
-    caps = gst_va_filter_get_caps (filter);
+    sink_caps = gst_va_filter_get_caps (filter, GST_PAD_SINK);
+    src_caps = gst_va_filter_get_caps (filter, GST_PAD_SRC);
   } else {
-    caps = gst_caps_from_string (caps_str);
+    sink_caps = gst_caps_from_string (caps_str);
+    src_caps = gst_caps_ref (sink_caps);
   }
 
   object_class->dispose = GST_DEBUG_FUNCPTR (gst_va_compositor_dispose);
@@ -1629,20 +1631,21 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
   doc_caps = gst_caps_from_string (caps_str);
 
   sink_pad_templ = gst_pad_template_new_with_gtype ("sink_%u", GST_PAD_SINK,
-      GST_PAD_REQUEST, caps, GST_TYPE_VA_COMPOSITOR_PAD);
+      GST_PAD_REQUEST, sink_caps, GST_TYPE_VA_COMPOSITOR_PAD);
   gst_element_class_add_pad_template (element_class, sink_pad_templ);
   gst_pad_template_set_documentation_caps (sink_pad_templ,
       gst_caps_ref (doc_caps));
   gst_type_mark_as_plugin_api (GST_TYPE_VA_COMPOSITOR_PAD, 0);
 
   src_pad_templ = gst_pad_template_new_with_gtype ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, caps, GST_TYPE_AGGREGATOR_PAD);
+      GST_PAD_ALWAYS, src_caps, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_pad_template (element_class, src_pad_templ);
   gst_pad_template_set_documentation_caps (src_pad_templ,
       gst_caps_ref (doc_caps));
 
   gst_caps_unref (doc_caps);
-  gst_caps_unref (caps);
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (src_caps);
 
   agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_va_compositor_sink_query);
   agg_class->src_query = GST_DEBUG_FUNCPTR (gst_va_compositor_src_query);

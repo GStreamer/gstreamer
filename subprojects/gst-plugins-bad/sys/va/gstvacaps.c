@@ -353,8 +353,8 @@ fix_raw_formats (GstVaDisplay * display, VAProfile profile,
 
 GstCaps *
 gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
-    GArray * formats, gint min_width, gint max_width,
-    gint min_height, gint max_height)
+    GstPadDirection direction, GArray * formats, gint min_width,
+    gint max_width, gint min_height, gint max_height)
 {
   guint usage_hint;
   guint64 modifier;
@@ -365,8 +365,7 @@ gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
   GstCaps *caps = NULL;
   guint i;
 
-  usage_hint = va_get_surface_usage_hint (display,
-      entrypoint, GST_PAD_UNKNOWN, TRUE);
+  usage_hint = va_get_surface_usage_hint (display, entrypoint, direction, TRUE);
 
   drm_formats_str = g_ptr_array_new_with_free_func (g_free);
 
@@ -458,7 +457,8 @@ _get_entrypoint_from_config (GstVaDisplay * display, VAConfigID config,
 }
 
 GstCaps *
-gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
+gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config,
+    GstPadDirection direction)
 {
   GArray *formats;
   GstCaps *caps = NULL, *base_caps, *feature_caps;
@@ -558,8 +558,8 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   }
   if (mem_type & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
       || mem_type & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2) {
-    feature_caps = gst_va_create_dma_caps (display, entrypoint, formats,
-        min_width, max_width, min_height, max_height);
+    feature_caps = gst_va_create_dma_caps (display, entrypoint, direction,
+        formats, min_width, max_width, min_height, max_height);
     if (feature_caps)
       caps = gst_caps_merge (caps, feature_caps);
   }
@@ -579,7 +579,7 @@ bail:
 
 static GstCaps *
 gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
-    VAEntrypoint entrypoint, guint rt_format)
+    VAEntrypoint entrypoint, GstPadDirection direction, guint rt_format)
 {
   GstCaps *caps;
   VAConfigAttrib attrib = {
@@ -598,7 +598,7 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
     return NULL;
   }
 
-  caps = gst_va_create_raw_caps_from_config (display, config);
+  caps = gst_va_create_raw_caps_from_config (display, config, direction);
 
   status = vaDestroyConfig (dpy, config);
   if (status != VA_STATUS_SUCCESS) {
@@ -902,6 +902,9 @@ gst_va_caps_from_profiles (GstVaDisplay * display, GArray * profiles,
   guint32 rt_formats;
   gint min_width = 1, max_width = G_MAXINT;
   gint min_height = 1, max_height = G_MAXINT;
+  /* raw caps are on the src pad of decoders and sink pad of encoders */
+  GstPadDirection raw_direction = (entrypoint == VAEntrypointVLD) ?
+      GST_PAD_SRC : GST_PAD_SINK;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
   g_return_val_if_fail (profiles, FALSE);
@@ -921,7 +924,7 @@ gst_va_caps_from_profiles (GstVaDisplay * display, GArray * profiles,
     for (j = 0; rt_formats && j < G_N_ELEMENTS (va_rt_format_list); j++) {
       if (rt_formats & va_rt_format_list[j]) {
         GstCaps *profile_rawcaps = gst_va_create_raw_caps (display, profile,
-            entrypoint, va_rt_format_list[j]);
+            entrypoint, raw_direction, va_rt_format_list[j]);
 
         if (!profile_rawcaps)
           continue;

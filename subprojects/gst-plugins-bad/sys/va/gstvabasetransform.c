@@ -64,7 +64,8 @@ struct _GstVaBaseTransformPrivate
   guint uncropped_width;
   guint uncropped_height;
 
-  GstCaps *filter_caps;
+  GstCaps *sink_filter_caps;
+  GstCaps *src_filter_caps;
 };
 
 /**
@@ -117,7 +118,8 @@ gst_va_base_transform_dispose (GObject * object)
   gst_clear_caps (&self->out_caps);
   gst_clear_caps (&self->in_caps);
 
-  gst_clear_caps (&self->priv->filter_caps);
+  gst_clear_caps (&self->priv->sink_filter_caps);
+  gst_clear_caps (&self->priv->src_filter_caps);
 
   gst_clear_object (&self->filter);
   gst_clear_object (&self->display);
@@ -567,7 +569,8 @@ gst_va_base_transform_change_state (GstElement * element,
               &self->display))
         goto open_failed;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DEVICE_PATH]);
-      gst_clear_caps (&self->priv->filter_caps);
+      gst_clear_caps (&self->priv->sink_filter_caps);
+      gst_clear_caps (&self->priv->src_filter_caps);
       gst_clear_object (&self->filter);
       self->filter = gst_va_filter_new (self->display);
       if (!gst_va_filter_open (self->filter))
@@ -586,7 +589,8 @@ gst_va_base_transform_change_state (GstElement * element,
       gst_va_filter_close (self->filter);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_clear_caps (&self->priv->filter_caps);
+      gst_clear_caps (&self->priv->sink_filter_caps);
+      gst_clear_caps (&self->priv->src_filter_caps);
       gst_clear_object (&self->filter);
       gst_clear_object (&self->display);
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DEVICE_PATH]);
@@ -890,13 +894,20 @@ bail:
 }
 
 GstCaps *
-gst_va_base_transform_get_filter_caps (GstVaBaseTransform * self)
+gst_va_base_transform_get_filter_caps (GstVaBaseTransform * self,
+    GstPadDirection direction)
 {
   GstCaps *ret = NULL;
+  GstCaps **filter_caps;
 
   g_return_val_if_fail (GST_IS_VA_BASE_TRANSFORM (self), NULL);
+  g_return_val_if_fail (direction == GST_PAD_SINK
+      || direction == GST_PAD_SRC, NULL);
 
-  gst_caps_replace (&ret, self->priv->filter_caps);
+  filter_caps = (direction == GST_PAD_SINK) ?
+      &self->priv->sink_filter_caps : &self->priv->src_filter_caps;
+
+  gst_caps_replace (&ret, *filter_caps);
 
   if (ret) {
     /* Release the extra reference. */
@@ -907,9 +918,9 @@ gst_va_base_transform_get_filter_caps (GstVaBaseTransform * self)
   if (!self->filter)
     return NULL;
 
-  ret = gst_va_filter_get_caps (self->filter);
+  ret = gst_va_filter_get_caps (self->filter, direction);
   /* We do not cmp and assign here, just use our new value. */
-  gst_caps_replace (&self->priv->filter_caps, ret);
+  gst_caps_replace (filter_caps, ret);
   /* Release the extra got reference. */
   gst_caps_unref (ret);
   return ret;

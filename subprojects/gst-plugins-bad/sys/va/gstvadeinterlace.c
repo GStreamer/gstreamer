@@ -567,7 +567,7 @@ gst_va_deinterlace_transform_caps (GstBaseTransform * trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  filter_caps = gst_va_base_transform_get_filter_caps (btrans);
+  filter_caps = gst_va_base_transform_get_filter_caps (btrans, direction);
   if (filter_caps && !gst_caps_can_intersect (caps, filter_caps)) {
     ret = gst_caps_ref (caps);
     goto bail;
@@ -743,12 +743,16 @@ gst_va_deinterlace_class_init (gpointer g_class, gpointer class_data)
   filter = gst_va_filter_new (display);
 
   if (gst_va_filter_open (filter)) {
-    src_caps = gst_va_filter_get_caps (filter);
+    GstCaps *caps;
+
+    src_caps = gst_va_filter_get_caps (filter, GST_PAD_SRC);
+    caps = gst_va_filter_get_caps (filter, GST_PAD_SINK);
+    sink_caps = gst_va_deinterlace_remove_interlace (caps);
+    gst_caps_unref (caps);
   } else {
     src_caps = gst_caps_from_string (caps_str);
+    sink_caps = gst_va_deinterlace_remove_interlace (src_caps);
   }
-
-  sink_caps = gst_va_deinterlace_remove_interlace (src_caps);
 
   doc_caps = gst_caps_from_string (caps_str);
 

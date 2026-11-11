@@ -138,7 +138,8 @@ const gpointer        gst_va_filter_get_filter_caps       (GstVaFilter * self,
                                                            guint * num_caps);
 guint32               gst_va_filter_get_mem_types         (GstVaFilter * self);
 GArray *              gst_va_filter_get_surface_formats   (GstVaFilter * self);
-GstCaps *             gst_va_filter_get_caps              (GstVaFilter * self);
+GstCaps *             gst_va_filter_get_caps              (GstVaFilter * self,
+                                                           GstPadDirection direction);
 gboolean              gst_va_filter_set_video_info        (GstVaFilter * self,
                                                            GstVideoInfo * in_info,
                                                            GstVideoInfo * out_info);

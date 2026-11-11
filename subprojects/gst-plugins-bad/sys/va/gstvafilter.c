@@ -1113,7 +1113,7 @@ _create_base_caps (GstVaFilter * self)
 }
 
 GstCaps *
-gst_va_filter_get_caps (GstVaFilter * self)
+gst_va_filter_get_caps (GstVaFilter * self, GstPadDirection direction)
 {
   GArray *surface_formats = NULL, *image_formats = NULL;
   GstCaps *caps, *base_caps, *feature_caps;
@@ -1150,7 +1150,7 @@ gst_va_filter_get_caps (GstVaFilter * self)
   if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
       || mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2) {
     feature_caps = gst_va_create_dma_caps (self->display,
-        VAEntrypointVideoProc, surface_formats,
+        VAEntrypointVideoProc, direction, surface_formats,
         self->min_width, self->max_width, self->min_height, self->max_height);
     if (feature_caps)
       caps = gst_caps_merge (caps, feature_caps);

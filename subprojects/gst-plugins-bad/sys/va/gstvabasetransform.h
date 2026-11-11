@@ -91,7 +91,8 @@ GstFlowReturn         gst_va_base_transform_import_buffer (GstVaBaseTransform * 
                                                            GstBuffer ** buf);
 
 GstCaps *             gst_va_base_transform_get_filter_caps
-                                                          (GstVaBaseTransform * self);
+                                                          (GstVaBaseTransform * self,
+                                                           GstPadDirection direction);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaBaseTransform, gst_object_unref)
 

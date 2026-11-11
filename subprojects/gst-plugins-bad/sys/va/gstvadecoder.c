@@ -401,7 +401,7 @@ gst_va_decoder_get_srcpad_caps (GstVaDecoder * self)
 
   if (gst_va_decoder_is_open (self)) {
     srcpad_caps = gst_va_create_raw_caps_from_config (self->display,
-        self->config);
+        self->config, GST_PAD_SRC);
     if (!srcpad_caps) {
       GST_WARNING_OBJECT (self, "Invalid configuration caps");
       return NULL;

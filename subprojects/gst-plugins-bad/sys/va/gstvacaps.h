@@ -39,13 +39,15 @@ VASurfaceAttrib *     gst_va_get_surface_attribs          (GstVaDisplay * displa
 
 GstCaps *             gst_va_create_dma_caps              (GstVaDisplay * display,
                                                            VAEntrypoint entrypoint,
+                                                           GstPadDirection direction,
                                                            GArray * formats,
                                                            gint min_width,
                                                            gint max_width,
                                                            gint min_height,
                                                            gint max_height);
 GstCaps *             gst_va_create_raw_caps_from_config  (GstVaDisplay * display,
-                                                           VAConfigID config);
+                                                           VAConfigID config,
+                                                           GstPadDirection direction);
 GstCaps *             gst_va_create_coded_caps            (GstVaDisplay * display,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint,

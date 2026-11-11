@@ -1020,7 +1020,8 @@ gst_va_encoder_get_sinkpad_caps (GstVaEncoder * self)
     config = self->config;
     GST_OBJECT_UNLOCK (self);
 
-    sinkpad_caps = gst_va_create_raw_caps_from_config (self->display, config);
+    sinkpad_caps = gst_va_create_raw_caps_from_config (self->display, config,
+        GST_PAD_SINK);
     if (!sinkpad_caps) {
       GST_WARNING_OBJECT (self, "Invalid configuration caps");
       return NULL;

@@ -752,7 +752,7 @@ static void
 gst_va_overlay_compositor_class_init (GstVaOverlayCompositorClass * klass,
     struct CData *cdata)
 {
-  GstCaps *doc_caps, *caps = NULL;
+  GstCaps *doc_caps, *sink_caps = NULL, *src_caps = NULL;
   GstPadTemplate *sink_pad_templ, *src_pad_templ;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *btrans_class = GST_BASE_TRANSFORM_CLASS (klass);
@@ -786,12 +786,15 @@ gst_va_overlay_compositor_class_init (GstVaOverlayCompositorClass * klass,
   filter = gst_va_filter_new (display);
 
   if (gst_va_filter_open (filter)) {
-    caps = gst_va_filter_get_caps (filter);
+    sink_caps = gst_va_filter_get_caps (filter, GST_PAD_SINK);
+    src_caps = gst_va_filter_get_caps (filter, GST_PAD_SRC);
   } else {
-    caps = gst_caps_from_string (caps_str);
+    sink_caps = gst_caps_from_string (caps_str);
+    src_caps = gst_caps_ref (sink_caps);
   }
 
-  caps = _add_overlay_meta_to_caps (caps);
+  sink_caps = _add_overlay_meta_to_caps (sink_caps);
+  src_caps = _add_overlay_meta_to_caps (src_caps);
 
   gst_element_class_set_static_metadata (element_class, long_name,
       "Filter/Video",
@@ -801,19 +804,20 @@ gst_va_overlay_compositor_class_init (GstVaOverlayCompositorClass * klass,
   doc_caps = _add_overlay_meta_to_caps (gst_caps_from_string (caps_str));
 
   sink_pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, caps);
+      GST_PAD_ALWAYS, sink_caps);
   gst_element_class_add_pad_template (element_class, sink_pad_templ);
   gst_pad_template_set_documentation_caps (sink_pad_templ,
       gst_caps_ref (doc_caps));
 
   src_pad_templ = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, caps);
+      GST_PAD_ALWAYS, src_caps);
   gst_element_class_add_pad_template (element_class, src_pad_templ);
   gst_pad_template_set_documentation_caps (src_pad_templ,
       gst_caps_ref (doc_caps));
 
   gst_caps_unref (doc_caps);
-  gst_caps_unref (caps);
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (src_caps);
 
   g_clear_pointer (&long_name, g_free);
   g_clear_pointer (&cdata->description, g_free);
