@@ -86,7 +86,6 @@ struct _GstAjaSrc {
   guint capture_cpu_core;  // Unsupported only on Apple platforms
 #endif
   gboolean signal;
-  gboolean initial_signal_present;
   gboolean attach_ancillary_meta;
   gboolean use_audio_clock;
 
