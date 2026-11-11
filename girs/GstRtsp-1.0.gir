@@ -4502,6 +4502,60 @@ Currently only supported algorithm "md5".</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="rtsp_generate_digest_auth_response_with_qop" c:identifier="gst_rtsp_generate_digest_auth_response_with_qop" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Calculates the digest auth response from the values given by the server,
+the username and password, and the quality of protection, nonce count and
+client nonce. See RFC2617 for details.
+
+Currently only supported algorithm "md5" and quality of protection "auth".</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Authentication response or %NULL if unsupported</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="algorithm" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Hash algorithm to use, or %NULL for MD5</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="method" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Request method, e.g. PLAY</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="realm" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Realm</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="username" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Username</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="password" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Password</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="uri" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Original request URI</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="nonce" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Nonce</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="qop" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Quality of protection, e.g. auth</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="nc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Nonce count as 8 hexadecimal digits, e.g. 00000001</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="cnonce" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Client nonce</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="rtsp_header_allow_multiple" c:identifier="gst_rtsp_header_allow_multiple">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Check whether @field may appear multiple times in a message.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h"/>

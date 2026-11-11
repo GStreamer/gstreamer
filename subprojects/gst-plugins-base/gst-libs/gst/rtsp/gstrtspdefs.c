@@ -559,10 +559,11 @@ auth_digest_compute_a1_md5 (const gchar * realm, const gchar * username,
   return ret;
 }
 
-/* See RFC2069, 2.1.2 */
+/* See RFC2069, 2.1.2 and, if @qop is set, RFC2617, 3.2.2.1 */
 static gchar *
 auth_digest_compute_response_md5 (const gchar * method, const gchar * a1,
-    const gchar * uri, const gchar * nonce)
+    const gchar * uri, const gchar * nonce, const gchar * qop,
+    const gchar * nc, const gchar * cnonce)
 {
   gchar hex_a1[33] = { 0, };
   gchar hex_a2[33] = { 0, };
@@ -590,6 +591,14 @@ auth_digest_compute_response_md5 (const gchar * method, const gchar * a1,
   g_checksum_update (md5_context, (const guchar *) ":", 1);
   g_checksum_update (md5_context, (const guchar *) nonce, strlen (nonce));
   g_checksum_update (md5_context, (const guchar *) ":", 1);
+  if (qop) {
+    g_checksum_update (md5_context, (const guchar *) nc, strlen (nc));
+    g_checksum_update (md5_context, (const guchar *) ":", 1);
+    g_checksum_update (md5_context, (const guchar *) cnonce, strlen (cnonce));
+    g_checksum_update (md5_context, (const guchar *) ":", 1);
+    g_checksum_update (md5_context, (const guchar *) qop, strlen (qop));
+    g_checksum_update (md5_context, (const guchar *) ":", 1);
+  }
 
   g_checksum_update (md5_context, (const guchar *) hex_a2, 32);
   response = g_strdup (g_checksum_get_string (md5_context));
@@ -634,7 +643,62 @@ gst_rtsp_generate_digest_auth_response (const gchar * algorithm,
 
   if (algorithm == NULL || g_ascii_strcasecmp (algorithm, "md5") == 0) {
     gchar *a1 = auth_digest_compute_a1_md5 (realm, username, password);
-    ret = auth_digest_compute_response_md5 (method, a1, uri, nonce);
+    ret = auth_digest_compute_response_md5 (method, a1, uri, nonce, NULL, NULL,
+        NULL);
+    g_free (a1);
+  }
+
+  return ret;
+}
+
+/**
+ * gst_rtsp_generate_digest_auth_response_with_qop:
+ * @algorithm: (nullable): Hash algorithm to use, or %NULL for MD5
+ * @method: Request method, e.g. PLAY
+ * @realm: Realm
+ * @username: Username
+ * @password: Password
+ * @uri: Original request URI
+ * @nonce: Nonce
+ * @qop: Quality of protection, e.g. auth
+ * @nc: Nonce count as 8 hexadecimal digits, e.g. 00000001
+ * @cnonce: Client nonce
+ *
+ * Calculates the digest auth response from the values given by the server,
+ * the username and password, and the quality of protection, nonce count and
+ * client nonce. See RFC2617 for details.
+ *
+ * Currently only supported algorithm "md5" and quality of protection "auth".
+ *
+ * Returns: (nullable): Authentication response or %NULL if unsupported
+ *
+ * Since: 1.30
+ */
+gchar *
+gst_rtsp_generate_digest_auth_response_with_qop (const gchar * algorithm,
+    const gchar * method, const gchar * realm, const gchar * username,
+    const gchar * password, const gchar * uri, const gchar * nonce,
+    const gchar * qop, const gchar * nc, const gchar * cnonce)
+{
+  gchar *ret = NULL;
+  g_return_val_if_fail (method != NULL, NULL);
+  g_return_val_if_fail (realm != NULL, NULL);
+  g_return_val_if_fail (username != NULL, NULL);
+  g_return_val_if_fail (password != NULL, NULL);
+  g_return_val_if_fail (uri != NULL, NULL);
+  g_return_val_if_fail (nonce != NULL, NULL);
+  g_return_val_if_fail (qop != NULL, NULL);
+  g_return_val_if_fail (nc != NULL, NULL);
+  g_return_val_if_fail (cnonce != NULL, NULL);
+
+  /* auth-int would also need the entity body hash in A2 */
+  if (g_ascii_strcasecmp (qop, "auth") != 0)
+    return NULL;
+
+  if (algorithm == NULL || g_ascii_strcasecmp (algorithm, "md5") == 0) {
+    gchar *a1 = auth_digest_compute_a1_md5 (realm, username, password);
+    ret = auth_digest_compute_response_md5 (method, a1, uri, nonce, qop, nc,
+        cnonce);
     g_free (a1);
   }
 
@@ -667,7 +731,8 @@ gst_rtsp_generate_digest_auth_response_from_md5 (const gchar * algorithm,
     const gchar * nonce)
 {
   if (algorithm == NULL || g_ascii_strcasecmp (algorithm, "md5") == 0)
-    return auth_digest_compute_response_md5 (method, md5, uri, nonce);
+    return auth_digest_compute_response_md5 (method, md5, uri, nonce, NULL,
+        NULL, NULL);
 
   return NULL;
 }

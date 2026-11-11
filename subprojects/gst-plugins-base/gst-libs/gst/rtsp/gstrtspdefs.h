@@ -502,6 +502,18 @@ gchar *            gst_rtsp_generate_digest_auth_response (const gchar *algorith
                                                            const gchar *nonce);
 
 GST_RTSP_API
+gchar *            gst_rtsp_generate_digest_auth_response_with_qop (const gchar *algorithm,
+                                                                    const gchar *method,
+                                                                    const gchar *realm,
+                                                                    const gchar *username,
+                                                                    const gchar *password,
+                                                                    const gchar *uri,
+                                                                    const gchar *nonce,
+                                                                    const gchar *qop,
+                                                                    const gchar *nc,
+                                                                    const gchar *cnonce);
+
+GST_RTSP_API
 gchar *            gst_rtsp_generate_digest_auth_response_from_md5 (const gchar *algorithm,
                                                                     const gchar * method,
                                                                     const gchar * md5,

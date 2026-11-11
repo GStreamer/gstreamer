@@ -211,6 +211,8 @@ struct _GstRTSPConnection
   gchar *username;
   gchar *passwd;
   GHashTable *auth_params;
+  gchar *digest_nonce;
+  guint digest_nc;
 
   guint content_length_limit;
 
@@ -1326,6 +1328,57 @@ tunneling_failed:
   }
 }
 
+static gboolean
+digest_qop_has_auth (const gchar * qop)
+{
+  gchar **tokens;
+  gboolean found = FALSE;
+
+  tokens = g_strsplit (qop, ",", -1);
+  for (gint i = 0; tokens[i] != NULL && !found; i++) {
+    gchar *token = g_strstrip (tokens[i]);
+
+    if (g_str_has_prefix (token, "\""))
+      token++;
+    if (g_str_has_suffix (token, "\""))
+      token[strlen (token) - 1] = '\0';
+    found = g_ascii_strcasecmp (g_strstrip (token), "auth") == 0;
+  }
+  g_strfreev (tokens);
+
+  return found;
+}
+
+/* RFC 2617 qop=auth response, required by servers that reject RFC 2069 */
+static gchar *
+digest_auth_string_qop (GstRTSPConnection * conn, const gchar * method,
+    const gchar * realm, const gchar * nonce, const gchar * uri)
+{
+  gchar nc[9];
+  gchar *cnonce, *response, *auth_string;
+
+  if (g_strcmp0 (conn->digest_nonce, nonce) != 0) {
+    g_free (conn->digest_nonce);
+    conn->digest_nonce = g_strdup (nonce);
+    conn->digest_nc = 0;
+  }
+  g_snprintf (nc, sizeof (nc), "%08x", ++conn->digest_nc);
+  cnonce = g_strdup_printf ("%08x%08x", g_random_int (), g_random_int ());
+
+  response = gst_rtsp_generate_digest_auth_response_with_qop (NULL, method,
+      realm, conn->username, conn->passwd, uri, nonce, "auth", nc, cnonce);
+
+  auth_string = g_strdup_printf ("Digest username=\"%s\", realm=\"%s\", "
+      "nonce=\"%s\", uri=\"%s\", qop=auth, nc=%s, cnonce=\"%s\", "
+      "response=\"%s\"", conn->username, realm, nonce, uri, nc, cnonce,
+      response);
+
+  g_free (cnonce);
+  g_free (response);
+
+  return auth_string;
+}
+
 static void
 add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
 {
@@ -1355,6 +1408,7 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
       gchar *realm;
       gchar *nonce;
       gchar *opaque;
+      gchar *qop;
       const gchar *uri;
       const gchar *method;
 
@@ -1372,14 +1426,19 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
       method = gst_rtsp_method_as_text (message->type_data.request.method);
       uri = message->type_data.request.uri;
 
-      response =
-          gst_rtsp_generate_digest_auth_response (NULL, method, realm,
-          conn->username, conn->passwd, uri, nonce);
-      auth_string =
-          g_strdup_printf ("Digest username=\"%s\", "
-          "realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"",
-          conn->username, realm, nonce, uri, response);
-      g_free (response);
+      qop = (gchar *) g_hash_table_lookup (conn->auth_params, "qop");
+      if (qop != NULL && digest_qop_has_auth (qop)) {
+        auth_string = digest_auth_string_qop (conn, method, realm, nonce, uri);
+      } else {
+        response =
+            gst_rtsp_generate_digest_auth_response (NULL, method, realm,
+            conn->username, conn->passwd, uri, nonce);
+        auth_string =
+            g_strdup_printf ("Digest username=\"%s\", "
+            "realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"",
+            conn->username, realm, nonce, uri, response);
+        g_free (response);
+      }
 
       opaque = (gchar *) g_hash_table_lookup (conn->auth_params, "opaque");
       if (opaque) {
@@ -3125,6 +3184,9 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
   g_free (conn->passwd);
   conn->passwd = NULL;
   gst_rtsp_connection_clear_auth_params (conn);
+  g_free (conn->digest_nonce);
+  conn->digest_nonce = NULL;
+  conn->digest_nc = 0;
   conn->timeout = 60;
   conn->cseq = 0;
   conn->session_id[0] = '\0';
