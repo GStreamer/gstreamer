@@ -61,10 +61,8 @@ gboolean              va_copy_surface                     (GstVaDisplay * displa
                                                            VASurfaceID src);
 
 GST_VA_API
-guint                 va_get_surface_usage_hint           (GstVaDisplay * display,
-                                                           VAEntrypoint entrypoint,
-                                                           GstPadDirection dir,
-                                                           gboolean is_dma);
+guint                 va_get_surface_usage_hint           (VAEntrypoint entrypoint,
+                                                           GstPadDirection dir);
 
 /* images */
 gboolean              va_create_image                     (GstVaDisplay * display,

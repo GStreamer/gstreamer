@@ -294,8 +294,7 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
   surface_formats = gst_va_decoder_get_surface_formats (base->decoder);
   allocator = gst_va_allocator_new (base->display, surface_formats);
 
-  usage_hint = va_get_surface_usage_hint (base->display,
-      VAEntrypointVLD, GST_PAD_SRC, FALSE);
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVLD, GST_PAD_SRC);
 
   pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);

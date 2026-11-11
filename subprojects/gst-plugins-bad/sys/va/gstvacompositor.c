@@ -621,8 +621,7 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
   if (gst_query_get_n_allocation_pools (query) > 0)
     return TRUE;
 
-  usage_hint = va_get_surface_usage_hint (self->display,
-      VAEntrypointVideoProc, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
@@ -766,8 +765,8 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     if (gst_video_is_dma_drm_caps (caps) && GST_VIDEO_INFO_IS_RGB (&info)) {
       usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
     } else {
-      usage_hint = va_get_surface_usage_hint (self->display,
-          VAEntrypointVideoProc, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+      usage_hint =
+          va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SRC);
     }
   }
 
@@ -861,8 +860,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
     return NULL;
   }
 
-  usage_hint = va_get_surface_usage_hint (self->display,
-      VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
 
   allocator = gst_va_compositor_allocator_from_caps (self, caps);
   pad->pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,

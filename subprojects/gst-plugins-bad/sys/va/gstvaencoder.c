@@ -460,8 +460,7 @@ _get_reconstructed_buffer_pool (GstVaEncoder * self)
     goto bail;
   }
 
-  usage_hint = va_get_surface_usage_hint (self->display, self->entrypoint,
-      GST_PAD_SINK, FALSE);
+  usage_hint = va_get_surface_usage_hint (self->entrypoint, GST_PAD_SINK);
 
   gst_allocation_params_init (&params);
 

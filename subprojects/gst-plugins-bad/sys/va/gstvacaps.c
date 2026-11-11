@@ -365,7 +365,7 @@ gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
   GstCaps *caps = NULL;
   guint i;
 
-  usage_hint = va_get_surface_usage_hint (display, entrypoint, direction, TRUE);
+  usage_hint = va_get_surface_usage_hint (entrypoint, direction);
 
   drm_formats_str = g_ptr_array_new_with_free_func (g_free);
 

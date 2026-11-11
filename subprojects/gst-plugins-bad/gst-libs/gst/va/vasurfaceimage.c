@@ -477,8 +477,7 @@ va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
 }
 
 guint
-va_get_surface_usage_hint (GstVaDisplay * display, VAEntrypoint entrypoint,
-    GstPadDirection dir, gboolean is_dma)
+va_get_surface_usage_hint (VAEntrypoint entrypoint, GstPadDirection dir)
 {
   switch (entrypoint) {
     case VAEntrypointVideoProc:{

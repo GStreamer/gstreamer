@@ -397,8 +397,7 @@ gst_va_overlay_compositor_create_pool (GstVaOverlayCompositor * self,
     goto out;
   }
 
-  usage_hint = va_get_surface_usage_hint (vabtrans->display,
-      VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
   gst_allocation_params_init (&params);
 
   allocator = gst_va_base_transform_allocator_from_caps (vabtrans, caps);

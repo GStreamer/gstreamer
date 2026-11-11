@@ -36,8 +36,7 @@ _try_import_buffer (GstVaBufferImporter * importer, GstBuffer * inbuf)
 {
   guint usage_hint;
 
-  usage_hint = va_get_surface_usage_hint (importer->display,
-      importer->entrypoint, GST_PAD_SINK, TRUE);
+  usage_hint = va_get_surface_usage_hint (importer->entrypoint, GST_PAD_SINK);
 
   return gst_va_display_import_buffer (importer->display, inbuf,
       importer->in_drm_info, usage_hint) != VA_INVALID_ID;

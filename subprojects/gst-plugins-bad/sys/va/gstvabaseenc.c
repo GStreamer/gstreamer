@@ -229,8 +229,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
 
   allocator = gst_va_allocator_new (base->display, surface_formats);
 
-  usage_hint = va_get_surface_usage_hint (base->display,
-      klass->entrypoint, GST_PAD_SINK, FALSE);
+  usage_hint = va_get_surface_usage_hint (klass->entrypoint, GST_PAD_SINK);
 
   base->priv->raw_pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
@@ -517,8 +516,8 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   if (!caps)
     return FALSE;
 
-  usage_hint = va_get_surface_usage_hint (base->display,
-      VAEntrypointEncSlice, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
+  usage_hint = va_get_surface_usage_hint (GST_VA_BASE_ENC_ENTRYPOINT (base),
+      GST_PAD_SINK);
 
   gst_allocation_params_init (&params);
 

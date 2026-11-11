@@ -391,8 +391,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     if (_need_video_crop (base))
       gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
-    usage_hint = va_get_surface_usage_hint (base->display,
-        VAEntrypointVLD, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+    usage_hint = va_get_surface_usage_hint (VAEntrypointVLD, GST_PAD_SRC);
 
     gst_buffer_pool_config_set_va_allocation_params (config,
         usage_hint, _use_derived (base));
@@ -585,8 +584,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     if (base->need_valign)
       gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
-    usage_hint = va_get_surface_usage_hint (base->display,
-        VAEntrypointVLD, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+    usage_hint = va_get_surface_usage_hint (VAEntrypointVLD, GST_PAD_SRC);
 
     gst_buffer_pool_config_set_va_allocation_params (config,
         usage_hint, _use_derived (base));

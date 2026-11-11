@@ -262,8 +262,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   if (!caps)
     return FALSE;
 
-  usage_hint = va_get_surface_usage_hint (self->display,
-      VAEntrypointVideoProc, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
@@ -399,8 +398,7 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
   if (!pool)
     pool = gst_va_pool_new ();
 
-  usage_hint = va_get_surface_usage_hint (self->display,
-      VAEntrypointVideoProc, GST_PAD_SRC, gst_video_is_dma_drm_caps (outcaps));
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SRC);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
@@ -784,8 +782,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
     gst_caps_set_simple (caps, "height", G_TYPE_INT,
         self->priv->uncropped_height, NULL);
 
-  usage_hint = va_get_surface_usage_hint (self->display,
-      VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
+  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
 
   allocator = gst_va_base_transform_allocator_from_caps (self, caps);
   g_assert (GST_IS_VA_ALLOCATOR (allocator));
