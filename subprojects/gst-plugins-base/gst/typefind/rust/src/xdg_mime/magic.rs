@@ -198,6 +198,9 @@ pub(super) struct MagicEntry {
     mime_type: String,
     priority: u32,
     rules: Vec<MagicRule>,
+    /// First byte the entry's root rule pins at offset 0, when it does: the
+    /// lookup skips entries that cannot match `data[0]`.
+    first_byte: Option<u8>,
 }
 
 impl fmt::Debug for MagicEntry {
@@ -270,8 +273,28 @@ fn magic_entry(cur: &mut Cursor) -> Option<MagicEntry> {
     Some(MagicEntry {
         mime_type: mime_type.to_string(),
         priority,
+        first_byte: first_byte(&rules),
         rules,
     })
+}
+
+/// The byte every root rule of the entry requires at offset 0, if they all
+/// require the same one. Roots are alternatives: an entry matches through any
+/// of them, so the filter is only valid when they agree. A root that does not
+/// pin `data[0]` (offset, range or mask) removes the constraint.
+fn first_byte(rules: &[MagicRule]) -> Option<u8> {
+    let mut key = None;
+    for rule in rules.iter().filter(|rule| rule.indent == 0) {
+        let pinned = (rule.start_offset == 0 && rule.range_length == 1 && rule.mask.is_none())
+            .then(|| rule.value[0]);
+        match (key, pinned) {
+            (_, None) => return None,
+            (None, Some(byte)) => key = Some(byte),
+            (Some(seen), Some(byte)) if seen != byte => return None,
+            _ => {}
+        }
+    }
+    key
 }
 
 /// `file = "MIME-Magic\0\n" magic_entry*` — parsing stops at the first
@@ -307,7 +330,13 @@ pub(super) fn sort_by_priority(entries: &mut [MagicEntry]) {
 pub(super) fn lookup_data(entries: &[MagicEntry], data: &[u8]) -> Option<(String, u32)> {
     // The entries are sorted by descending priority, file order kept on ties,
     // so the first match is the highest-priority one.
+    let first = data.first().copied();
     for entry in entries {
+        if let (Some(key), Some(first)) = (entry.first_byte, first)
+            && key != first
+        {
+            continue;
+        }
         if let Some(mime) = entry.matches(data) {
             return Some((mime.to_string(), entry.priority));
         }
@@ -465,6 +494,45 @@ mod tests {
         assert_eq!(entries[0].matches(b"abXY"), None);
     }
 
+    #[test]
+    fn sibling_roots_are_all_tried() {
+        // image/x-eps in the shipped database: `%!` and `\x04%!` are
+        // alternative roots, so data starting with the second must match.
+        let entries = parse(
+            "image/x-eps",
+            &[
+                rule_bytes(0, 0, b"%!", b""),
+                rule_bytes(0, 0, b"\x04%!", b""),
+            ],
+        );
+        assert_eq!(entries[0].matches(b"%!PS"), Some("image/x-eps"));
+        assert_eq!(entries[0].matches(b"\x04%!PS"), Some("image/x-eps"));
+        assert_eq!(entries[0].matches(b"XX"), None);
+    }
+
+    #[test]
+    fn first_byte_requires_all_roots_to_agree() {
+        let agreeing = parse(
+            "text/x-agree",
+            &[rule_bytes(0, 0, b"AB", b""), rule_bytes(1, 2, b"CD", b"")],
+        );
+        assert_eq!(first_byte(&agreeing[0].rules), Some(b'A'));
+
+        // A second root with another first byte: no filter.
+        let disagreeing = parse(
+            "text/x-disagree",
+            &[rule_bytes(0, 0, b"AB", b""), rule_bytes(0, 0, b"CD", b"")],
+        );
+        assert_eq!(first_byte(&disagreeing[0].rules), None);
+
+        // A root that does not pin data[0]: no filter.
+        let unpinned = parse(
+            "text/x-unpinned",
+            &[rule_bytes(0, 0, b"AB", b""), rule_bytes(0, 1, b"CD", b"")],
+        );
+        assert_eq!(first_byte(&unpinned[0].rules), None);
+    }
+
     /// The old, unoptimized matching: every window compared, every entry
     /// scanned, best priority kept.
     fn reference_lookup(entries: &[MagicEntry], data: &[u8]) -> Option<(String, u32)> {
@@ -549,6 +617,19 @@ mod tests {
                     buffers.push(bytes[..bytes.len().min(len)].to_vec());
                 }
             }
+        }
+        // Markers of entries whose roots are alternatives (sibling indent-0
+        // rules), which random data almost never reaches.
+        for marker in [
+            b"%!PS-Adobe-3.0".as_slice(),
+            b"\x04%!PS-Adobe-3.0",
+            b"07070100000000",
+            b"FORM\0\0\0\0DJVU",
+            b"AT&TFORM\0\0\0\0",
+            b"\xd0\xcf\x11\xe0\xa1\xb1\0\0",
+            b"StarWriter\0\0",
+        ] {
+            buffers.push(marker.to_vec());
         }
 
         for data in &buffers {
