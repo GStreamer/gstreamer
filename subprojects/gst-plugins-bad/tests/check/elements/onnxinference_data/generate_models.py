@@ -31,13 +31,20 @@ def dims_to_str(shape):
     return ",".join("-1" if (v is None or v < 0) else str(v) for v in shape)
 
 
-def write_modelinfo(onnx_path, per_output_dims_order=None):
+def write_modelinfo(
+    onnx_path, per_output_dims_order=None, version="1.1", input_caps=None,
+    input_ranges="0.0,255.0;0.0,255.0;0.0,255.0",
+):
     """
     Introspect ONNX model and generate .modelinfo file.
     Uses onnxruntime to extract tensor info.
     """
     if per_output_dims_order is None:
         per_output_dims_order = {}
+    if version == "1.1" and input_caps is None:
+        raise ValueError("Version 1.1 modelinfo requires explicit input caps")
+    if version == "1.0" and input_caps is not None:
+        raise ValueError("Version 1.0 modelinfo does not support input caps")
 
     session = ort.InferenceSession(onnx_path, providers=['CPUExecutionProvider'])
     input_names = [inp.name for inp in session.get_inputs()]
@@ -61,9 +68,10 @@ def write_modelinfo(onnx_path, per_output_dims_order=None):
             f"type={dtype_str}",
             f"dims={dims_str}",
             "dir=input",
-            "ranges=0.0,255.0;0.0,255.0;0.0,255.0",  # R,G,B ranges for 3 channels
-            ""
         ]
+        if input_caps is not None:
+            lines.append(f"caps={input_caps}")
+        lines += [f"ranges={input_ranges}", ""]
 
     # Output section
     for i, (name, onnx_type, shape) in enumerate(zip(output_names, output_types, output_shapes)):
@@ -167,6 +175,31 @@ def make_model_uint8_to_f32():
 
     model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 11)])
     model.ir_version = 10
+    return model
+
+
+def make_model_flatten_gray():
+    input_tensor = helper.make_tensor_value_info(
+        "input_gray", TensorProto.FLOAT, [1, 1, 4, 4]
+    )
+    output_tensor = helper.make_tensor_value_info(
+        "output_flat", TensorProto.FLOAT, [1, 16]
+    )
+    flatten_node = helper.make_node(
+        "Flatten", inputs=["input_gray"], outputs=["flattened"], axis=1
+    )
+    reshape_node = helper.make_node(
+        "Reshape", inputs=["flattened", "shape"], outputs=["output_flat"]
+    )
+    shape_const = helper.make_tensor(
+        "shape", TensorProto.INT64, [2], [1, 16]
+    )
+    graph = helper.make_graph(
+        [flatten_node, reshape_node], "flatten_gray",
+        [input_tensor], [output_tensor], [shape_const]
+    )
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 13)])
+    model.ir_version = 7
     return model
 
 
@@ -525,30 +558,41 @@ def main():
 
     # Valid models
     models = [
-        ("flatten_float32in_float32out.onnx", make_model_flatten_f32_f32()),
-        ("flatten_uint8in_float32out.onnx", make_model_uint8_to_f32()),
-        ("int32out.onnx", make_model_int32_out()),
-        ("dynamic_batch.onnx", make_model_dynamic_batch()),
-        ("multi_output.onnx", make_model_multi_output()),
-        ("flatten_3d_float32.onnx", make_model_3d_input()),
-        ("planar_chw.onnx", make_model_planar_chw()),
-        ("invalid_dims_1d.onnx", make_model_invalid_1d()),
-        ("invalid_dims_5d.onnx", make_model_invalid_5d()),
-        ("invalid_dims_channels_2.onnx", make_model_invalid_channels_2()),
-        ("multi_input_two_tensors.onnx", make_model_multi_input()),
-        ("uint8out.onnx", make_model_uint8_out()),
-        ("float64out.onnx", make_model_float64_out()),
+        ("flatten_float32in_float32out.onnx", make_model_flatten_f32_f32(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
+        ("flatten_uint8in_float32out.onnx", make_model_uint8_to_f32(),
+         {"input_caps": "video/x-raw, format=RGB"}),
+        ("flatten_gray.onnx", make_model_flatten_gray(),
+         {"version": "1.0", "input_ranges": "0.0,255.0"}),
+        ("int32out.onnx", make_model_int32_out(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
+        ("dynamic_batch.onnx", make_model_dynamic_batch(),
+         {"version": "1.0"}),
+        ("multi_output.onnx", make_model_multi_output(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE",
+          "per_output_dims_order": {1: "col-major"}}),
+        ("flatten_3d_float32.onnx", make_model_3d_input(),
+         {"version": "1.0"}),
+        ("planar_chw.onnx", make_model_planar_chw(),
+         {"version": "1.0"}),
+        ("invalid_dims_1d.onnx", make_model_invalid_1d(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
+        ("invalid_dims_5d.onnx", make_model_invalid_5d(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
+        ("invalid_dims_channels_2.onnx", make_model_invalid_channels_2(),
+         {"version": "1.0"}),
+        ("multi_input_two_tensors.onnx", make_model_multi_input(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
+        ("uint8out.onnx", make_model_uint8_out(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
+        ("float64out.onnx", make_model_float64_out(),
+         {"input_caps": "video/x-raw, format=RGB_F32LE"}),
     ]
 
-    for filename, model in models:
+    for filename, model, modelinfo_options in models:
         path = os.path.join(BASE_DIR, filename)
         onnx.save(model, path)
-
-        # For multi_output, mark output-1 (CHW tensor) as col-major
-        if filename == "multi_output.onnx":
-            write_modelinfo(path, per_output_dims_order={1: "col-major"})
-        else:
-            write_modelinfo(path)
+        write_modelinfo(path, **modelinfo_options)
 
     # Corrupt model
     with open(os.path.join(BASE_DIR, "corrupt_model.onnx"), "wb") as f:
