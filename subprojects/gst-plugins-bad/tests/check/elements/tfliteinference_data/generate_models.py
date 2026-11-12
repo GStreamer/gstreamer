@@ -67,7 +67,14 @@ def write_modelinfo(
     outs = itp.get_output_details()
 
     group_id = os.path.basename(model_path).replace(".tflite", "") + "-group"
-    lines = ["[modelinfo]", f"version={version}", f"group-id={group_id}", ""]
+    lines = [
+        "# This file is generated. Modify generate_models.py instead.",
+        "",
+        "[modelinfo]",
+        f"version={version}",
+        f"group-id={group_id}",
+        "",
+    ]
 
     for i, d in enumerate(ins):
         name = d["name"]
