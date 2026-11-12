@@ -928,6 +928,170 @@ GST_START_TEST (test_rtspconnection_send_receive_content_length)
 
 GST_END_TEST;
 
+#define DIGEST_USER "user"
+#define DIGEST_PASS "pass"
+#define DIGEST_REALM "testrealm"
+#define DIGEST_URI "rtsp://example.com/"
+
+static gchar *
+digest_md5_hex (const gchar * str)
+{
+  return g_compute_checksum_for_string (G_CHECKSUM_MD5, str, -1);
+}
+
+/* Sends a DESCRIBE from @out, receives it on @in and returns the parsed
+ * Authorization parameters */
+static GHashTable *
+send_and_parse_digest (GstRTSPConnection * out, GstRTSPConnection * in)
+{
+  GstRTSPMessage *msg;
+  GstRTSPAuthCredential **credentials;
+  GstRTSPAuthParam **param;
+  GHashTable *params;
+
+  fail_unless (gst_rtsp_message_new_request (&msg, GST_RTSP_DESCRIBE,
+          DIGEST_URI) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_send (out, msg, NULL) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_message_free (msg) == GST_RTSP_OK);
+
+  fail_unless (gst_rtsp_message_new (&msg) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_receive (in, msg, NULL) == GST_RTSP_OK);
+
+  credentials = gst_rtsp_message_parse_auth_credentials (msg,
+      GST_RTSP_HDR_AUTHORIZATION);
+  fail_unless (credentials != NULL && credentials[0] != NULL);
+  fail_unless_equals_int (credentials[0]->scheme, GST_RTSP_AUTH_DIGEST);
+
+  params = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+  for (param = credentials[0]->params; *param != NULL; param++)
+    g_hash_table_insert (params, g_strdup ((*param)->name),
+        g_strdup ((*param)->value));
+
+  gst_rtsp_auth_credentials_free (credentials);
+  fail_unless (gst_rtsp_message_free (msg) == GST_RTSP_OK);
+
+  return params;
+}
+
+static void
+check_digest_qop_response (GHashTable * params, const gchar * nonce,
+    const gchar * expected_nc)
+{
+  const gchar *cnonce;
+  gchar *ha1, *ha2, *str, *expected;
+
+  fail_unless_equals_string (g_hash_table_lookup (params, "qop"), "auth");
+  fail_unless_equals_string (g_hash_table_lookup (params, "nc"), expected_nc);
+  fail_unless_equals_string (g_hash_table_lookup (params, "nonce"), nonce);
+  cnonce = g_hash_table_lookup (params, "cnonce");
+  fail_unless (cnonce != NULL && *cnonce != '\0');
+
+  ha1 = digest_md5_hex (DIGEST_USER ":" DIGEST_REALM ":" DIGEST_PASS);
+  ha2 = digest_md5_hex ("DESCRIBE:" DIGEST_URI);
+  str = g_strdup_printf ("%s:%s:%s:%s:auth:%s", ha1, nonce, expected_nc,
+      cnonce, ha2);
+  expected = digest_md5_hex (str);
+  fail_unless_equals_string (g_hash_table_lookup (params, "response"),
+      expected);
+
+  g_free (ha1);
+  g_free (ha2);
+  g_free (str);
+  g_free (expected);
+}
+
+static void
+setup_digest_connections (GSocketConnection ** input_conn,
+    GSocketConnection ** output_conn, GstRTSPConnection ** rtsp_input_conn,
+    GstRTSPConnection ** rtsp_output_conn)
+{
+  create_connection (input_conn, output_conn);
+  fail_unless (gst_rtsp_connection_create_from_socket
+      (g_socket_connection_get_socket (*input_conn), "127.0.0.1", 4444, NULL,
+          rtsp_input_conn) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_create_from_socket
+      (g_socket_connection_get_socket (*output_conn), "127.0.0.1", 4444, NULL,
+          rtsp_output_conn) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_set_auth (*rtsp_output_conn,
+          GST_RTSP_AUTH_DIGEST, DIGEST_USER, DIGEST_PASS) == GST_RTSP_OK);
+  gst_rtsp_connection_set_auth_param (*rtsp_output_conn, "realm", DIGEST_REALM);
+}
+
+static void
+teardown_digest_connections (GSocketConnection * input_conn,
+    GSocketConnection * output_conn, GstRTSPConnection * rtsp_input_conn,
+    GstRTSPConnection * rtsp_output_conn)
+{
+  fail_unless (gst_rtsp_connection_free (rtsp_input_conn) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_free (rtsp_output_conn) == GST_RTSP_OK);
+  g_object_unref (input_conn);
+  g_object_unref (output_conn);
+}
+
+GST_START_TEST (test_rtspconnection_digest_auth_qop)
+{
+  GSocketConnection *input_conn = NULL;
+  GSocketConnection *output_conn = NULL;
+  GstRTSPConnection *rtsp_input_conn;
+  GstRTSPConnection *rtsp_output_conn;
+  GHashTable *params;
+
+  setup_digest_connections (&input_conn, &output_conn, &rtsp_input_conn,
+      &rtsp_output_conn);
+  gst_rtsp_connection_set_auth_param (rtsp_output_conn, "nonce", "nonce1");
+  gst_rtsp_connection_set_auth_param (rtsp_output_conn, "qop", "auth,auth-int");
+
+  params = send_and_parse_digest (rtsp_output_conn, rtsp_input_conn);
+  check_digest_qop_response (params, "nonce1", "00000001");
+  g_hash_table_unref (params);
+
+  params = send_and_parse_digest (rtsp_output_conn, rtsp_input_conn);
+  check_digest_qop_response (params, "nonce1", "00000002");
+  g_hash_table_unref (params);
+
+  /* a new nonce restarts the nonce count */
+  gst_rtsp_connection_set_auth_param (rtsp_output_conn, "nonce", "nonce2");
+  params = send_and_parse_digest (rtsp_output_conn, rtsp_input_conn);
+  check_digest_qop_response (params, "nonce2", "00000001");
+  g_hash_table_unref (params);
+
+  teardown_digest_connections (input_conn, output_conn, rtsp_input_conn,
+      rtsp_output_conn);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtspconnection_digest_auth_no_qop)
+{
+  GSocketConnection *input_conn = NULL;
+  GSocketConnection *output_conn = NULL;
+  GstRTSPConnection *rtsp_input_conn;
+  GstRTSPConnection *rtsp_output_conn;
+  GHashTable *params;
+  gchar *expected;
+
+  setup_digest_connections (&input_conn, &output_conn, &rtsp_input_conn,
+      &rtsp_output_conn);
+  gst_rtsp_connection_set_auth_param (rtsp_output_conn, "nonce", "nonce1");
+
+  params = send_and_parse_digest (rtsp_output_conn, rtsp_input_conn);
+  fail_unless (!g_hash_table_contains (params, "qop"));
+  fail_unless (!g_hash_table_contains (params, "nc"));
+  fail_unless (!g_hash_table_contains (params, "cnonce"));
+
+  expected = gst_rtsp_generate_digest_auth_response (NULL, "DESCRIBE",
+      DIGEST_REALM, DIGEST_USER, DIGEST_PASS, DIGEST_URI, "nonce1");
+  fail_unless_equals_string (g_hash_table_lookup (params, "response"),
+      expected);
+  g_free (expected);
+  g_hash_table_unref (params);
+
+  teardown_digest_connections (input_conn, output_conn, rtsp_input_conn,
+      rtsp_output_conn);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspconnection_suite (void)
 {
@@ -944,6 +1108,8 @@ rtspconnection_suite (void)
   tcase_add_test (tc_chain, test_rtspconnection_backlog);
   tcase_add_test (tc_chain, test_rtspconnection_ip);
   tcase_add_test (tc_chain, test_rtspconnection_send_receive_content_length);
+  tcase_add_test (tc_chain, test_rtspconnection_digest_auth_qop);
+  tcase_add_test (tc_chain, test_rtspconnection_digest_auth_no_qop);
 
   return s;
 }

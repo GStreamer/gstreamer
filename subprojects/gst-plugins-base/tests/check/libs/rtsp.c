@@ -1096,6 +1096,31 @@ GST_START_TEST (test_rtsp_message_auth_credentials_boxed)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_digest_auth_response_with_qop)
+{
+  gchar *response;
+
+  /* Example from RFC 2617, 3.5 */
+  response = gst_rtsp_generate_digest_auth_response_with_qop (NULL, "GET",
+      "testrealm@host.com", "Mufasa", "Circle Of Life", "/dir/index.html",
+      "dcd98b7102dd2f0e8b11d0f600bfb0c093", "auth", "00000001", "0a4f113b");
+  fail_unless_equals_string (response, "6629fae49393a05397450978507c4ef1");
+  g_free (response);
+
+  response = gst_rtsp_generate_digest_auth_response_with_qop (NULL, "GET",
+      "testrealm@host.com", "Mufasa", "Circle Of Life", "/dir/index.html",
+      "dcd98b7102dd2f0e8b11d0f600bfb0c093", "auth-int", "00000001", "0a4f113b");
+  fail_unless (response == NULL);
+
+  response = gst_rtsp_generate_digest_auth_response_with_qop ("SHA-256",
+      "GET", "testrealm@host.com", "Mufasa", "Circle Of Life",
+      "/dir/index.html", "dcd98b7102dd2f0e8b11d0f600bfb0c093", "auth",
+      "00000001", "0a4f113b");
+  fail_unless (response == NULL);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtsp_suite (void)
 {
@@ -1119,6 +1144,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_message);
   tcase_add_test (tc_chain, test_rtsp_message_auth_credentials);
   tcase_add_test (tc_chain, test_rtsp_message_auth_credentials_boxed);
+  tcase_add_test (tc_chain, test_rtsp_digest_auth_response_with_qop);
 
   return s;
 }
