@@ -46,6 +46,9 @@
  */
 
 #define GST_CAT_DEFUALT GST_CAT_VULKAN_IMAGE_MEMORY
+
+/* Retries of gst_memory_copy() */
+#define MAX_COPY_ATTEMPTS 32
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
 static GstAllocator *_vulkan_image_memory_allocator;
@@ -596,7 +599,7 @@ _vk_image_mem_copy (GstVulkanImageMemory * src, gssize offset, gssize size)
   GstVulkanBarrierState *barriers;
   GstBuffer *frame = NULL;
   GError *error = NULL;
-  guint n_regions;
+  guint n_regions, attempts = 0;
 
   if (offset != 0 || (size != -1 && size != src->parent.size)) {
     GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: only "
@@ -689,17 +692,28 @@ _vk_image_mem_copy (GstVulkanImageMemory * src, gssize offset, gssize size)
   gst_buffer_append_memory (frame, gst_memory_ref (GST_MEMORY_CAST (dst)));
 
 again:
+  if (++attempts > MAX_COPY_ATTEMPTS) {
+    g_set_error (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Barrier state kept changing, giving up after %u attempts",
+        MAX_COPY_ATTEMPTS);
+    goto error;
+  }
+
   if (!gst_vulkan_operation_begin (exec, &error))
     goto error;
 
   if (!gst_vulkan_operation_add_dependency_frame (exec, frame,
           VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT)) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: timeline "
+        "semaphore changed while adding the dependencies, retrying", src);
     gst_vulkan_operation_reset (exec);
     goto again;
   }
 
   barriers = gst_vulkan_operation_get_barriers (exec);
   if (!_drop_video_access (barriers, src)) {
+    GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: barrier "
+        "state changed while dropping the video access, retrying", src);
     gst_vulkan_operation_reset (exec);
     goto again;
   }
