@@ -56,7 +56,14 @@ def write_modelinfo(
     output_shapes = [out.shape for out in session.get_outputs()]
 
     group_id = os.path.basename(onnx_path).replace(".onnx", "") + "-group"
-    lines = ["[modelinfo]", "version=1.0", f"group-id={group_id}", ""]
+    lines = [
+        "# This file is generated. Modify generate_models.py instead.",
+        "",
+        "[modelinfo]",
+        f"version={version}",
+        f"group-id={group_id}",
+        "",
+    ]
 
     # Input section (required for onnxinference)
     for i, (name, onnx_type, shape) in enumerate(zip(input_names, input_types, input_shapes)):

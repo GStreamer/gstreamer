@@ -1,3 +1,5 @@
+# This file is generated. Modify generate_models.py instead.
+
 [modelinfo]
 version=1.1
 group-id=uint8out-group
