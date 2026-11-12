@@ -195,6 +195,132 @@ GST_START_TEST (test_pull_range_boundary)
 
 GST_END_TEST;
 
+/* Flow-return tests. The stream fails every read with a chosen flow return,
+ * so what the helper does with a failed peek does not depend on which other
+ * finders run or on how much data they manage to read. */
+typedef enum
+{
+  FLOW_MODE_NONE,               /* the finder does nothing */
+  FLOW_MODE_EOS,
+  FLOW_MODE_ERROR,
+  FLOW_MODE_FLUSHING,
+} FlowMode;
+
+static FlowMode flow_mode = FLOW_MODE_NONE;
+static gboolean flow_suggest;
+
+static GstFlowReturn
+flow_get_range (GstObject * obj, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buffer)
+{
+  if (flow_mode == FLOW_MODE_EOS)
+    return GST_FLOW_EOS;
+  if (flow_mode == FLOW_MODE_ERROR)
+    return GST_FLOW_ERROR;
+
+  fail_unless (flow_mode == FLOW_MODE_FLUSHING);
+  return GST_FLOW_FLUSHING;
+}
+
+static void
+flow_typefind (GstTypeFind * tf, gpointer unused)
+{
+  if (flow_mode == FLOW_MODE_NONE)
+    return;
+
+  if (flow_suggest)
+    gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_LIKELY, "foo/x-flow");
+
+  fail_unless (gst_type_find_peek (tf, 0, 8) == NULL);
+}
+
+/* The factory stays registered for the rest of the binary. */
+static void
+ensure_flow_finder (void)
+{
+  GstPluginFeature *feature;
+
+  feature = gst_registry_find_feature (gst_registry_get (), "foo/x-flow",
+      GST_TYPE_TYPE_FIND_FACTORY);
+  if (feature != NULL) {
+    gst_object_unref (feature);
+    return;
+  }
+
+  fail_unless (gst_type_find_register (NULL, "foo/x-flow",
+          GST_RANK_PRIMARY + 2000, flow_typefind, NULL, NULL, NULL, NULL));
+}
+
+static void
+run_flow_test (FlowMode mode, gboolean suggest, GstFlowReturn expected_ret,
+    gboolean expect_caps)
+{
+  GstObject *obj;
+  GstCaps *caps = NULL;
+  GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
+
+  ensure_flow_finder ();
+  flow_mode = mode;
+  flow_suggest = suggest;
+
+  obj = GST_OBJECT (gst_bin_new (NULL));
+  /* An empty stream: the size is unknown, so the finders get no get_length,
+   * and every read returns the configured flow return. */
+  fail_unless_equals_int (gst_type_find_helper_get_range_full (obj, NULL,
+          flow_get_range, 0, NULL, &caps, &prob), expected_ret);
+
+  if (expect_caps) {
+    GstStructure *s;
+
+    fail_unless (caps != NULL);
+    fail_unless_equals_int (prob, GST_TYPE_FIND_LIKELY);
+    s = gst_caps_get_structure (caps, 0);
+    fail_unless (s != NULL);
+    fail_unless (gst_structure_has_name (s, "foo/x-flow"));
+    gst_caps_unref (caps);
+  } else {
+    fail_unless (caps == NULL);
+  }
+
+  gst_object_unref (obj);
+  flow_mode = FLOW_MODE_NONE;
+  flow_suggest = FALSE;
+}
+
+/* A finder that probes past the end of the stream after suggesting caps: the
+ * EOS is not a failure, the caps are the result. */
+GST_START_TEST (test_pull_range_eos_with_caps)
+{
+  run_flow_test (FLOW_MODE_EOS, TRUE, GST_FLOW_OK, TRUE);
+}
+
+GST_END_TEST;
+
+/* Without caps the EOS is reported as an error: the element has nothing to
+ * switch to and must not take it for the end of the stream. */
+GST_START_TEST (test_pull_range_eos_without_caps)
+{
+  run_flow_test (FLOW_MODE_EOS, FALSE, GST_FLOW_ERROR, FALSE);
+}
+
+GST_END_TEST;
+
+/* A real read error is not hidden by the caps a finder suggested before it. */
+GST_START_TEST (test_pull_range_error_with_caps)
+{
+  run_flow_test (FLOW_MODE_ERROR, TRUE, GST_FLOW_ERROR, FALSE);
+}
+
+GST_END_TEST;
+
+/* Flushing is passed through unchanged. */
+GST_START_TEST (test_pull_range_flushing)
+{
+  run_flow_test (FLOW_MODE_FLUSHING, TRUE, GST_FLOW_FLUSHING, FALSE);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_typefindhelper_suite (void)
 {
@@ -204,6 +330,10 @@ gst_typefindhelper_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_buffer_range);
   tcase_add_test (tc_chain, test_pull_range_boundary);
+  tcase_add_test (tc_chain, test_pull_range_eos_with_caps);
+  tcase_add_test (tc_chain, test_pull_range_eos_without_caps);
+  tcase_add_test (tc_chain, test_pull_range_error_with_caps);
+  tcase_add_test (tc_chain, test_pull_range_flushing);
 
   return s;
 }
