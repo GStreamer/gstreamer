@@ -141,6 +141,13 @@ gst_va_buffer_surface_ref (GstVaBufferSurface * buf)
     g_atomic_ref_count_inc (&buf->ref_count);
 }
 
+static GstVaBufferSurface *
+gst_va_display_peek_buffer_surface (GstVaDisplay * display, GstMemory * mem)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_va_buffer_surface_quark());
+}
+
 /*=========================== GstVaMemoryPool ================================*/
 
 /* queue for disposed surfaces */
@@ -184,8 +191,7 @@ gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
 
   while ((mem = gst_atomic_queue_pop (self->queue))) {
     /* destroy the surface */
-    buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-        gst_va_buffer_surface_quark ());
+    buf = gst_va_display_peek_buffer_surface (display, mem);
     if (buf) {
       if (g_atomic_ref_count_dec (&buf->ref_count)) {
         GST_LOG ("Destroying surface %#x", buf->surface);
@@ -321,8 +327,7 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
   GstVaBufferSurface *buf;
   gsize mem_size;
 
-  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (gmem),
-      gst_va_buffer_surface_quark ());
+  buf = gst_va_display_peek_buffer_surface (self->display, gmem);
 
   if (buf->n_mems > 1 && self->info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
     GST_ERROR_OBJECT (self, "Failed to copy multi-dmabuf because non-linear "
@@ -349,8 +354,7 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
     if (copy) {
       gst_object_ref (copy->allocator);
 
-      buf_copy = gst_mini_object_get_qdata (GST_MINI_OBJECT (copy),
-          gst_va_buffer_surface_quark ());
+      buf_copy = gst_va_display_peek_buffer_surface (self->display, copy);
 
       g_assert (g_atomic_int_get (&buf_copy->ref_mems_count) == 0);
 
@@ -366,8 +370,7 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
       copy = gst_buffer_get_memory (buffer, 0);
       gst_buffer_unref (buffer);
 
-      buf_copy = gst_mini_object_get_qdata (GST_MINI_OBJECT (copy),
-          gst_va_buffer_surface_quark ());
+      buf_copy = gst_va_display_peek_buffer_surface (self->display, copy);
     }
 
     g_assert (buf_copy->n_mems == 1);
@@ -498,8 +501,7 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
   guint i;
 
-  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      gst_va_buffer_surface_quark ());
+  buf = gst_va_display_peek_buffer_surface (self->display, mem);
   if (!buf)
     return TRUE;                /* free this unknown buffer */
 
@@ -844,8 +846,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
   if (!mems[0])
     return VA_INVALID_ID;
 
-  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mems[0]),
-      gst_va_buffer_surface_quark ());
+  buf = gst_va_display_peek_buffer_surface (self->display, mems[0]);
   if (!buf)
     return VA_INVALID_ID;
 
@@ -862,8 +863,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
       if (!mem)
         return VA_INVALID_ID;
 
-      pbuf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-          gst_va_buffer_surface_quark ());
+      pbuf = gst_va_display_peek_buffer_surface (self->display, mem);
       if (!pbuf)
         return VA_INVALID_ID;
 
@@ -1969,6 +1969,16 @@ gst_va_allocator_peek_display (GstAllocator * allocator)
 
 /*============ Utilities =====================================================*/
 
+static GstVaDisplay *
+_memory_peek_display (GstMemory * mem)
+{
+  /* no allocator, not VA kind memory. */
+  if (!mem || !mem->allocator)
+    return NULL;
+
+  return gst_va_allocator_peek_display (mem->allocator);
+}
+
 /**
  * gst_va_memory_get_surface: (skip)
  * @mem: a #GstMemory
@@ -1992,8 +2002,7 @@ gst_va_memory_get_surface (GstMemory * mem)
   if (GST_IS_DMABUF_ALLOCATOR (mem->allocator)) {
     GstVaBufferSurface *buf;
 
-    buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-        gst_va_buffer_surface_quark ());
+    buf = gst_va_display_peek_buffer_surface (_memory_peek_display (mem), mem);
     if (buf)
       surface = buf->surface;
   } else if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
