@@ -122,7 +122,10 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
        * at this point we save the current position and stop searching if
        * we're after the searched end offset */
       if (buf_offset <= offset) {
-        if ((offset + size) < (buf_offset + buf_size)) {
+        /* A request that ends exactly at the end of the buffer is covered
+         * by it; only a request that reaches past the end needs another
+         * buffer. */
+        if ((offset + size) <= (buf_offset + buf_size)) {
           /* must already have been mapped before */
           return (guint8 *) bmp->map.data + (offset - buf_offset);
         }
