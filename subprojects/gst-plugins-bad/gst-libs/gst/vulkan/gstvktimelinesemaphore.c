@@ -25,20 +25,23 @@
 #include "gstvktimelinesemaphore.h"
 #include "gstvkphysicaldevice.h"
 
-#define GST_CAT_DEFAULT gst_debug_vulkan_timeline_semaphore
-GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
-
-static void
-init_debug (void)
+#ifndef GST_DISABLE_GST_DEBUG
+GST_DEBUG_CATEGORY_STATIC (gst_vulkan_timeline_semaphore_debug);
+#define GST_CAT_DEFAULT ensure_debug_category ()
+static GstDebugCategory *
+ensure_debug_category (void)
 {
   static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkantimelinesemaphore", 0,
-        "Vulkan timeline semaphore");
+    GST_DEBUG_CATEGORY_INIT (gst_vulkan_timeline_semaphore_debug,
+        "vulkantimelinesemaphore", 0, "Vulkan timeline semaphore");
     g_once_init_leave (&_init, 1);
   }
+
+  return gst_vulkan_timeline_semaphore_debug;
 }
+#endif
 
 static void
 gst_vulkan_timeline_semaphore_free (GstVulkanTimelineSemaphore * timeline)
@@ -53,8 +56,6 @@ static void
 gst_vulkan_timeline_semaphore_init (GstVulkanTimelineSemaphore * timeline,
     GstVulkanDevice * device, VkSemaphore semaphore)
 {
-  init_debug ();
-
   GST_TRACE ("new %p", timeline);
 
   gst_mini_object_init (&timeline->parent, 0,
@@ -116,6 +117,7 @@ gst_vulkan_timeline_semaphore_new_with_exportable (GstVulkanDevice * device,
     if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSemaphore") < 0) {
       GST_WARNING_OBJECT (device, "Failed to create timeline semaphore: %s",
           error->message);
+      g_clear_error (&error);
       return NULL;
     }
 
