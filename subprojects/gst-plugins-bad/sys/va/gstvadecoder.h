@@ -31,6 +31,7 @@ struct _GstVaDecodePicture
   GArray *buffers;
   GArray *slices;
   GstBuffer *gstbuffer;
+  GstVaDisplay *display;
 };
 
 #define GST_TYPE_VA_DECODER (gst_va_decoder_get_type())

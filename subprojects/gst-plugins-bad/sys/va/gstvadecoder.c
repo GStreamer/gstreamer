@@ -707,17 +707,13 @@ gst_va_decoder_get_config (GstVaDecoder * self, VAProfile * profile,
 static gboolean
 _destroy_buffers (GstVaDecodePicture * pic)
 {
-  GstVaDisplay *display;
   VABufferID buffer;
   VADisplay dpy;
   VAStatus status;
   guint i;
   gboolean ret = TRUE;
 
-  display = gst_va_buffer_peek_display (pic->gstbuffer);
-  if (!display)
-    return FALSE;
-  dpy = gst_va_display_get_va_dpy (display);
+  dpy = gst_va_display_get_va_dpy (pic->display);
 
   if (pic->buffers) {
     for (i = 0; i < pic->buffers->len; i++) {
@@ -759,6 +755,7 @@ gst_va_decode_picture_new (GstVaDecoder * self, GstBuffer * buffer)
 
   pic = g_new (GstVaDecodePicture, 1);
   pic->gstbuffer = gst_buffer_ref (buffer);
+  pic->display = gst_object_ref (self->display);
   pic->buffers = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 16);
   pic->slices = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 64);
 
@@ -791,6 +788,7 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
   _destroy_buffers (pic);
 
   gst_buffer_unref (pic->gstbuffer);
+  gst_object_unref (pic->display);
   g_clear_pointer (&pic->buffers, g_array_unref);
   g_clear_pointer (&pic->slices, g_array_unref);
 
@@ -806,7 +804,8 @@ gst_va_decode_picture_dup (GstVaDecodePicture * pic)
 
   dup = g_new0 (GstVaDecodePicture, 1);
 
-  /* dups only need gstbuffer */
+  /* dups only need gstbuffer and display */
   dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
+  dup->display = gst_object_ref (pic->display);
   return dup;
 }
