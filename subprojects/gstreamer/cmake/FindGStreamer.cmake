@@ -301,7 +301,7 @@ endif()
 # Android: Ignore these libraries when constructing the IMPORTED_LOCATION
 set(_gst_IGNORED_SYSTEM_LIBRARIES c stdc++ c++ unwind m dl atomic)
 if (ANDROID)
-    list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES log GLESv2 EGL OpenSLES android vulkan)
+    list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES log GLESv2 EGL OpenSLES android vulkan c++_shared)
 elseif(WIN32)
     list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES ws2_32 kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 winmm shlwapi dnsapi iphlpapi opengl32 crypt32 d3d11 dxgi d2d1 runtimeobject mf mfplat mfreadwrite mfuuid strmiids ksuser mmdevapi)
 elseif(APPLE)
