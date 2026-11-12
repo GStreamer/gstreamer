@@ -148,6 +148,13 @@ gst_va_display_peek_buffer_surface (GstVaDisplay * display, GstMemory * mem)
       gst_va_buffer_surface_quark());
 }
 
+static GstVaBufferSurface *
+gst_va_display_peek_aux_surface (GstVaDisplay * display, GstMemory * mem)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_va_buffer_aux_surface_quark());
+}
+
 /*=========================== GstVaMemoryPool ================================*/
 
 /* queue for disposed surfaces */
@@ -2089,14 +2096,13 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   if (!mem)
     return FALSE;
 
-  /* Already created. */
-  surface_buffer = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      gst_va_buffer_aux_surface_quark ());
-  if (surface_buffer)
-    return TRUE;
-
-  if (!mem->allocator)
+  display = _memory_peek_display (mem);
+  if (!display)
     return FALSE;
+
+  /* Already created. */
+  if (gst_va_display_peek_aux_surface (display, mem))
+    return TRUE;
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (mem->allocator)) {
     GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
@@ -2111,7 +2117,6 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
       return FALSE;
     }
 
-    display = self->display;
     if (!va_create_surfaces (self->display, rt_format, fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info.vinfo),
             GST_VIDEO_INFO_HEIGHT (&self->info.vinfo), self->usage_hint, NULL,
@@ -2125,7 +2130,6 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
       return FALSE;
     }
 
-    display = self->display;
     format = GST_VIDEO_INFO_FORMAT (&self->info);
     if (!va_create_surfaces (self->display, self->rt_format, self->fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
@@ -2136,7 +2140,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     g_assert_not_reached ();
   }
 
-  if (!display || surface == VA_INVALID_ID)
+  if (surface == VA_INVALID_ID)
     return FALSE;
 
   surface_buffer = gst_va_buffer_surface_new (surface);
@@ -2163,14 +2167,18 @@ VASurfaceID
 gst_va_buffer_get_aux_surface (GstBuffer * buffer)
 {
   GstVaBufferSurface *surface_buffer;
+  GstVaDisplay *display;
   GstMemory *mem;
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!mem)
     return VA_INVALID_ID;
 
-  surface_buffer = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      gst_va_buffer_aux_surface_quark ());
+  display = _memory_peek_display (mem);
+  if (!display)
+    return VA_INVALID_ID;
+
+  surface_buffer = gst_va_display_peek_aux_surface (display, mem);
   if (!surface_buffer)
     return VA_INVALID_ID;
 
