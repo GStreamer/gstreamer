@@ -3315,7 +3315,7 @@ extern "C" fn xdgmime_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     };
 
-    let db = DB.get_or_init(SharedMimeInfo::new);
+    let db = DB.get_or_init(SharedMimeInfo::new_magic_only);
     let Some((mime, _priority)) = db.get_mime_type_for_data(data) else {
         return;
     };

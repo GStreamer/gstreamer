@@ -113,6 +113,17 @@ impl SharedMimeInfo {
         db
     }
 
+    /// Load only the content rules (`magic`), skipping the file-name, alias
+    /// and subclass databases. Content sniffing is all the typefinder does;
+    /// the other databases are most of the load time.
+    pub(crate) fn new_magic_only() -> SharedMimeInfo {
+        let mut db = SharedMimeInfo::create();
+        for dir in data_dirs() {
+            db.load_magic_directory(&dir);
+        }
+        db
+    }
+
     /// Load a single database directory (the directory *containing* `mime/`).
     pub(crate) fn new_for_directory<P: AsRef<Path>>(directory: P) -> SharedMimeInfo {
         let mut db = SharedMimeInfo::create();
@@ -128,6 +139,25 @@ impl SharedMimeInfo {
             magic: Vec::new(),
             mime_dirs: Vec::new(),
         }
+    }
+
+    fn load_magic_directory(&mut self, directory: &Path) {
+        let mime_path = directory.join("mime");
+        self.magic.extend(magic::read_magic_from_dir(&mime_path));
+        // One magic file per data directory: restore the global priority
+        // order the lookup relies on.
+        magic::sort_by_priority(&mut self.magic);
+        self.record_directory(&mime_path);
+    }
+
+    fn record_directory(&mut self, mime_path: &Path) {
+        let mtime = std::fs::metadata(mime_path)
+            .and_then(|m| m.modified())
+            .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+        self.mime_dirs.push(MimeDirectory {
+            path: mime_path.to_path_buf(),
+            mtime,
+        });
     }
 
     fn load_directory(&mut self, directory: &Path) {
@@ -147,13 +177,7 @@ impl SharedMimeInfo {
         // order the lookup relies on.
         magic::sort_by_priority(&mut self.magic);
 
-        let mtime = std::fs::metadata(&mime_path)
-            .and_then(|m| m.modified())
-            .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
-        self.mime_dirs.push(MimeDirectory {
-            path: mime_path,
-            mtime,
-        });
+        self.record_directory(&mime_path);
     }
 
     /// Re-read the databases if any directory changed since loading.
@@ -646,5 +670,53 @@ mod tests {
         let guess = db.guess_mime_type().data(b"%PDF-1.7\n").guess();
         assert_eq!(guess.mime_type(), "application/pdf");
         assert!(!guess.uncertain());
+    }
+
+    #[test]
+    #[ignore = "benchmark, run with --ignored --nocapture"]
+    fn bench_load_and_lookup() {
+        use std::time::Instant;
+
+        let dir = std::path::Path::new("/usr/share/mime");
+        let t = Instant::now();
+        let a = alias::read_aliases_from_dir(dir);
+        eprintln!("aliases: {:?} ({} items)", t.elapsed(), a.len());
+        let t = Instant::now();
+        let s = parent::read_subclasses_from_dir(dir);
+        eprintln!("subclasses: {:?} ({} items)", t.elapsed(), s.len());
+        let t = Instant::now();
+        let g = glob::read_globs_from_dir(dir);
+        eprintln!("globs: {:?} ({} items)", t.elapsed(), g.len());
+        let t = Instant::now();
+        let m = magic::read_magic_from_dir(dir);
+        eprintln!("magic: {:?} ({} items)", t.elapsed(), m.len());
+
+        let t = Instant::now();
+        let _db = SharedMimeInfo::new();
+        eprintln!("load: {:?}", t.elapsed());
+        let t = Instant::now();
+        let db_magic = SharedMimeInfo::new_magic_only();
+        eprintln!("load magic-only: {:?}", t.elapsed());
+        eprintln!("entries={}", db_magic.magic.len());
+
+        let text = vec![b'x'; 16384];
+        let mut bin = vec![0u8; 16384];
+        for (i, b) in bin.iter_mut().enumerate() {
+            *b = (i * 7 + 13) as u8;
+        }
+        let pdf = {
+            let mut v = b"%PDF-1.7\n".to_vec();
+            v.resize(16384, b'x');
+            v
+        };
+
+        for (name, data) in [("text", &text), ("binary", &bin), ("pdf", &pdf)] {
+            let t = Instant::now();
+            let n = 1000;
+            for _ in 0..n {
+                let _ = db_magic.get_mime_type_for_data(data);
+            }
+            eprintln!("{name}: {:?} per lookup", t.elapsed() / n);
+        }
     }
 }
