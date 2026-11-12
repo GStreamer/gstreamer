@@ -107,6 +107,13 @@ that surface.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <function-macro name="VA_DEPRECATED_FOR" c:identifier="GST_VA_DEPRECATED_FOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va-prelude.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="VA_DISPLAY" c:identifier="GST_VA_DISPLAY" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
       <parameters>
@@ -977,7 +984,10 @@ to it.
         </parameter>
       </parameters>
     </function>
-    <function name="va_buffer_get_surface" c:identifier="gst_va_buffer_get_surface" version="1.22" introspectable="0">
+    <function name="va_buffer_get_surface" c:identifier="gst_va_buffer_get_surface" version="1.22" introspectable="0" deprecated="1" deprecated-version="1.30">
+      <doc-deprecated xml:space="preserve">Use gst_va_display_get_buffer_surface() to check whether
+@buffer has a VASurfaceID in a given #GstVaDisplay. This function only works
+with memories allocated by a VA allocator.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <return-value>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the VASurfaceID in @buffer.</doc>
@@ -990,7 +1000,10 @@ to it.
         </parameter>
       </parameters>
     </function>
-    <function name="va_buffer_peek_display" c:identifier="gst_va_buffer_peek_display" version="1.22">
+    <function name="va_buffer_peek_display" c:identifier="gst_va_buffer_peek_display" version="1.22" deprecated="1" deprecated-version="1.30">
+      <doc-deprecated xml:space="preserve">Use gst_va_display_get_buffer_surface() to check
+whether @buffer has a VASurfaceID in a given display. This function
+only works with memories allocated by a VA allocator.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the display which this
@@ -1043,9 +1056,10 @@ to it.
         </parameter>
       </parameters>
     </function>
-    <function name="va_dmabuf_memories_setup" c:identifier="gst_va_dmabuf_memories_setup" version="1.22">
+    <function name="va_dmabuf_memories_setup" c:identifier="gst_va_dmabuf_memories_setup" version="1.22" deprecated="1" deprecated-version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">It imports the array of @mem, representing a single frame, into a
 VASurfaceID and it's attached into every @mem.</doc>
+      <doc-deprecated xml:space="preserve">Use gst_va_display_import_buffer() instead.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if frame is imported correctly into a VASurfaceID;
@@ -1205,7 +1219,10 @@ valid #GstVaDisplay in the @context</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="va_memory_get_surface" c:identifier="gst_va_memory_get_surface" version="1.22" introspectable="0">
+    <function name="va_memory_get_surface" c:identifier="gst_va_memory_get_surface" version="1.22" introspectable="0" deprecated="1" deprecated-version="1.30">
+      <doc-deprecated xml:space="preserve">Use gst_va_display_get_memory_surface() instead to check
+whether @mem has a VASurfaceID in a given #GstVaDisplay. This function only
+works with memories allocated by a VA allocator.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <return-value>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the VASurfaceID in @mem.</doc>
@@ -1218,7 +1235,10 @@ valid #GstVaDisplay in the @context</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="va_memory_peek_display" c:identifier="gst_va_memory_peek_display" version="1.22">
+    <function name="va_memory_peek_display" c:identifier="gst_va_memory_peek_display" version="1.22" deprecated="1" deprecated-version="1.30">
+      <doc-deprecated xml:space="preserve">Use gst_va_display_get_memory_surface() to check
+whether @mem has a VASurfaceID in a given display. This function only
+works with memories allocated by a VA allocator.</doc-deprecated>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the display which

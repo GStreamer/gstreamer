@@ -53,7 +53,7 @@ gboolean              gst_va_dmabuf_allocator_get_format  (GstAllocator * alloca
                                                            GstVideoInfoDmaDrm * info,
                                                            guint * usage_hint);
 
-GST_VA_API
+GST_VA_DEPRECATED_FOR(gst_va_display_import_buffer)
 gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * display,
                                                            GstVideoInfoDmaDrm * drm_info,
                                                            GstMemory * mem[GST_VIDEO_MAX_PLANES],
@@ -125,18 +125,18 @@ void                  gst_va_allocator_set_hacks          (GstAllocator * alloca
 GST_VA_API
 GstVaDisplay *        gst_va_allocator_peek_display       (GstAllocator * allocator);
 
-GST_VA_API
+GST_VA_DEPRECATED_FOR(gst_va_display_get_memory_surface)
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
-GST_VA_API
+GST_VA_DEPRECATED_FOR(gst_va_display_get_memory_surface)
 GstVaDisplay *        gst_va_memory_peek_display          (GstMemory * mem);
-GST_VA_API
+GST_VA_DEPRECATED_FOR(gst_va_display_get_buffer_surface)
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);
 
 GST_VA_API
 gboolean              gst_va_buffer_create_aux_surface    (GstBuffer * buffer);
 GST_VA_API
 VASurfaceID           gst_va_buffer_get_aux_surface       (GstBuffer * buffer);
-GST_VA_API
+GST_VA_DEPRECATED_FOR(gst_va_display_get_buffer_surface)
 GstVaDisplay *        gst_va_buffer_peek_display          (GstBuffer * buffer);
 
 G_END_DECLS
