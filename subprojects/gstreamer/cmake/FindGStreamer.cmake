@@ -268,7 +268,7 @@ find_library(GStreamer_LIBRARY
 # Android: Ignore these libraries when constructing the IMPORTED_LOCATION
 set(_gst_IGNORED_SYSTEM_LIBRARIES c c++ unwind m dl atomic)
 if (ANDROID)
-    list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES log GLESv2 EGL OpenSLES android vulkan)
+    list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES log GLESv2 EGL OpenSLES android vulkan c++_shared)
 elseif(APPLE)
     list(APPEND _gst_IGNORED_SYSTEM_LIBRARIES iconv resolv System)
 endif()
