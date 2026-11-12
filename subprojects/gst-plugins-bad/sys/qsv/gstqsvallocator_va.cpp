@@ -93,9 +93,8 @@ gst_qsv_va_allocator_upload (GstQsvAllocator * allocator,
   GstBuffer *dst_buf;
   GstFlowReturn ret;
 
-  surface = gst_va_buffer_get_surface (buffer);
-  if (surface != VA_INVALID_ID && gst_va_buffer_peek_display (buffer) ==
-      self->display) {
+  surface = gst_va_display_get_buffer_surface (self->display, buffer);
+  if (surface != VA_INVALID_ID) {
     return gst_buffer_ref (buffer);
   }
 

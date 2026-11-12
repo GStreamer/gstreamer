@@ -398,7 +398,7 @@ static gpointer
 gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (gmem->allocator);
-  VASurfaceID surface = gst_va_memory_get_surface (gmem);
+  VASurfaceID surface = gst_va_display_get_memory_surface (self->display, gmem);
 
   if (flags & GST_MAP_READWRITE) {
     if (self->info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
@@ -907,8 +907,7 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
     gst_buffer_append_memory (buffer, buf->mems[i]);
 
     GST_LOG ("bufer %p: memory %p - dmabuf %d / surface %#x", buffer,
-        buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]),
-        gst_va_memory_get_surface (buf->mems[i]));
+        buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]), buf->surface);
   }
 
   return buf->surface;
@@ -1590,7 +1589,7 @@ gst_va_memory_release (GstMiniObject * mini_object)
   GstMemory *mem = GST_MEMORY_CAST (mini_object);
   GstVaAllocator *self = GST_VA_ALLOCATOR (mem->allocator);
 
-  GST_LOG ("releasing %p: surface %#x", mem, gst_va_memory_get_surface (mem));
+  GST_LOG ("releasing %p: surface %#x", mem, ((GstVaMemory *) mem)->surface);
 
   gst_va_memory_pool_push (&self->pool, mem);
 
@@ -1710,7 +1709,7 @@ gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
     return VA_INVALID_ID;
 
   gst_object_ref (mem->allocator);
-  surface = gst_va_memory_get_surface (mem);
+  surface = ((GstVaMemory *) mem)->surface;
   gst_buffer_append_memory (buffer, mem);
 
   GST_LOG ("buffer %p: memory %p - surface %#x", buffer, mem, surface);
@@ -1977,6 +1976,10 @@ gst_va_allocator_peek_display (GstAllocator * allocator)
  * Returns: (type guint): the VASurfaceID in @mem.
  *
  * Since: 1.22
+ *
+ * Deprecated: 1.30: Use gst_va_display_get_memory_surface() instead to check
+ * whether @mem has a VASurfaceID in a given #GstVaDisplay. This function only
+ * works with memories allocated by a VA allocator.
  */
 VASurfaceID
 gst_va_memory_get_surface (GstMemory * mem)
@@ -2033,6 +2036,10 @@ gst_va_memory_peek_display (GstMemory * mem)
  * Returns: (type guint): the VASurfaceID in @buffer.
  *
  * Since: 1.22
+ *
+ * Deprecated: 1.30: Use gst_va_display_get_buffer_surface() to check whether
+ * @buffer has a VASurfaceID in a given #GstVaDisplay. This function only works
+ * with memories allocated by a VA allocator.
  */
 VASurfaceID
 gst_va_buffer_get_surface (GstBuffer * buffer)

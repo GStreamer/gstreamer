@@ -768,7 +768,7 @@ gst_va_decode_picture_get_surface (GstVaDecodePicture * pic)
   g_return_val_if_fail (pic, VA_INVALID_ID);
   g_return_val_if_fail (pic->gstbuffer, VA_INVALID_ID);
 
-  return gst_va_buffer_get_surface (pic->gstbuffer);
+  return gst_va_display_get_buffer_surface (pic->display, pic->gstbuffer);
 }
 
 VASurfaceID

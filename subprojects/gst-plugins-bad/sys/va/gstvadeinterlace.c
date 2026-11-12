@@ -419,12 +419,12 @@ gst_va_deinterlace_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       self->curr_field, surface_flags, inbuf);
 
   for (i = 0; i < self->hcurr; i++) {
-    forward_references[i] =
-        gst_va_buffer_get_surface (self->history[self->hcurr - i - 1]);
+    forward_references[i] = gst_va_display_get_buffer_surface (btrans->display,
+        self->history[self->hcurr - i - 1]);
   }
   for (i = 0; i < self->num_backward_references; i++) {
-    backward_references[i] =
-        gst_va_buffer_get_surface (self->history[self->hcurr + i + 1]);
+    backward_references[i] = gst_va_display_get_buffer_surface (btrans->display,
+        self->history[self->hcurr + i + 1]);
   }
 
   /* *INDENT-OFF* */

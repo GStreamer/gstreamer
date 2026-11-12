@@ -1591,7 +1591,7 @@ _get_surface_from_buffer (GstVaFilter * self, GstBuffer * buffer)
   VASurfaceID surface = VA_INVALID_ID;
 
   if (buffer)
-    surface = gst_va_buffer_get_surface (buffer);
+    surface = gst_va_display_get_buffer_surface (self->display, buffer);
 
   if (surface != VA_INVALID_ID) {
     /* @FIXME: in gallium vaQuerySurfaceStatus only seems to work with

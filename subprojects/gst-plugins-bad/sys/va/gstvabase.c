@@ -105,9 +105,8 @@ _try_import_buffer (GstVaBufferImporter * importer, GstBuffer * inbuf)
   VASurfaceID surface;
   gboolean ret;
 
-  surface = gst_va_buffer_get_surface (inbuf);
-  if (surface != VA_INVALID_ID &&
-      (gst_va_buffer_peek_display (inbuf) == importer->display))
+  surface = gst_va_display_get_buffer_surface (importer->display, inbuf);
+  if (surface != VA_INVALID_ID)
     return TRUE;
 
   g_rec_mutex_lock (&GST_VA_SHARED_LOCK);

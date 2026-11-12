@@ -1152,7 +1152,8 @@ gst_va_encode_picture_get_reconstruct_surface (GstVaEncodePicture * pic)
   g_return_val_if_fail (pic, VA_INVALID_ID);
   g_return_val_if_fail (pic->reconstruct_buffer, VA_INVALID_ID);
 
-  return gst_va_buffer_get_surface (pic->reconstruct_buffer);
+  return gst_va_display_get_buffer_surface (pic->display,
+      pic->reconstruct_buffer);
 }
 
 VASurfaceID
@@ -1161,7 +1162,7 @@ gst_va_encode_picture_get_raw_surface (GstVaEncodePicture * pic)
   g_return_val_if_fail (pic, VA_INVALID_ID);
   g_return_val_if_fail (pic->raw_buffer, VA_INVALID_ID);
 
-  return gst_va_buffer_get_surface (pic->raw_buffer);
+  return gst_va_display_get_buffer_surface (pic->display, pic->raw_buffer);
 }
 
 GstVaEncodePicture *

@@ -658,6 +658,7 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
   mfxFrameSurface1 *mfx_surface = NULL;
   GstMsdkMemoryID *msdk_mid = NULL;
   GDestroyNotify qdata_destroy = NULL;
+  GstObject *display;
 
   mem = gst_buffer_peek_memory (buf, 0);
   msdk_surface = g_slice_new0 (GstMsdkSurface);
@@ -670,7 +671,12 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
     return msdk_surface;
   }
 
-  va_surface = gst_va_buffer_get_surface (buf);
+  display = gst_msdk_context_get_va_display (msdk_context);
+  if (display) {
+    va_surface =
+        gst_va_display_get_buffer_surface (GST_VA_DISPLAY (display), buf);
+    gst_object_unref (display);
+  }
 
   if (va_surface == VA_INVALID_ID) {
     g_slice_free (GstMsdkSurface, msdk_surface);
