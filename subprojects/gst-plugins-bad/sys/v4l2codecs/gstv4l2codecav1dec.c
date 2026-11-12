@@ -416,6 +416,10 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
   guint min = 0, num_bitstream;
   gboolean has_videometa;
 
+  /* negotiate() only resets the allocation on a format change */
+  if (self->streaming && self->src_allocator)
+    goto no_internal_changes;
+
   g_clear_object (&self->src_pool);
   g_clear_object (&self->src_allocator);
   g_clear_object (&self->sink_allocator);
@@ -485,6 +489,7 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
   self->src_pool =
       gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo_drm);
 
+no_internal_changes:
   /* Our buffer pool is internal, we will let the base class create a video
    * pool, and use it if we are running out of buffers or if downstream does
    * not support GstVideoMeta */
