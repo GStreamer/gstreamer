@@ -116,14 +116,14 @@ gst_va_buffer_surface_unref (gpointer data)
 }
 
 static GstVaBufferSurface *
-gst_va_buffer_surface_new (VASurfaceID surface)
+gst_va_buffer_surface_new (GstVaDisplay * display, VASurfaceID surface)
 {
   GstVaBufferSurface *buf = g_new (GstVaBufferSurface, 1);
 
   g_atomic_int_set (&buf->ref_count, 0);
   g_atomic_int_set (&buf->ref_mems_count, 0);
   buf->surface = surface;
-  buf->display = NULL;
+  buf->display = display ? gst_object_ref (display) : NULL;
   buf->n_mems = 0;
 
   return buf;
@@ -748,7 +748,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
           &self->info.drm_modifier, 1, &self->info.vinfo, &surface, &desc))
     return FALSE;
 
-  buf = gst_va_buffer_surface_new (surface);
+  buf = gst_va_buffer_surface_new (NULL, surface);
   if (G_UNLIKELY (info))
     *info = self->info;
 
@@ -2143,8 +2143,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   if (surface == VA_INVALID_ID)
     return FALSE;
 
-  surface_buffer = gst_va_buffer_surface_new (surface);
-  surface_buffer->display = gst_object_ref (display);
+  surface_buffer = gst_va_buffer_surface_new (display, surface);
   gst_va_buffer_surface_ref (surface_buffer);
 
   gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
@@ -2222,8 +2221,7 @@ gst_va_memories_set_surface (GstVaDisplay * display, VASurfaceID surface,
   GstVaBufferSurface *buf;
   guint i;
 
-  buf = gst_va_buffer_surface_new (surface);
-  buf->display = gst_object_ref (display);
+  buf = gst_va_buffer_surface_new (display, surface);
   buf->n_mems = n_mems;
   memcpy (buf->mems, mem, sizeof (buf->mems));
 
