@@ -38,6 +38,7 @@ struct _GstVaEncodePicture
 
   GstBuffer *raw_buffer;
   GstBuffer *reconstruct_buffer;
+  GstVaDisplay *display;
 
   VABufferID coded_buffer;
   gboolean corrupt;
