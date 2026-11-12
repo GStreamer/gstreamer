@@ -416,6 +416,24 @@ VADisplay.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_buffer_surface" c:identifier="gst_va_display_get_buffer_surface" version="1.30" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">the VASurfaceID in @buffer, or VA_INVALID_ID
+    if @buffer has no surface associated with @self.</doc>
+          <type name="guint" c:type="VASurfaceID"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_implementation" c:identifier="gst_va_display_get_implementation" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">Get the the #GstVaImplementation type of @self.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
@@ -428,6 +446,24 @@ VADisplay.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay type display.</doc>
             <type name="VaDisplay" c:type="GstVaDisplay*"/>
           </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_memory_surface" c:identifier="gst_va_display_get_memory_surface" version="1.30" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">the VASurfaceID in @mem, or VA_INVALID_ID if
+    @mem has no surface associated with @self.</doc>
+          <type name="guint" c:type="VASurfaceID"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+          <parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstMemory</doc>
+            <type name="Gst.Memory" c:type="GstMemory*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="get_va_dpy" c:identifier="gst_va_display_get_va_dpy" version="1.20">

@@ -607,3 +607,58 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
   return TRUE;
 }
 
+/**
+ * gst_va_display_get_memory_surface: (skip)
+ * @self: a #GstVaDisplay
+ * @mem: a #GstMemory
+ *
+ * Returns: (type guint): the VASurfaceID in @mem, or VA_INVALID_ID if
+ *     @mem has no surface associated with @self.
+ *
+ * Since: 1.30
+ */
+VASurfaceID
+gst_va_display_get_memory_surface (GstVaDisplay * self, GstMemory * mem)
+{
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), VA_INVALID_ID);
+  g_return_val_if_fail (mem != NULL, VA_INVALID_ID);
+
+  if (!mem->allocator)
+    return VA_INVALID_ID;
+
+  if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
+    if (gst_va_allocator_peek_display (mem->allocator) != self)
+      return VA_INVALID_ID;
+    return gst_va_memory_get_surface (mem);
+  }
+
+  if (!GST_IS_DMABUF_ALLOCATOR (mem->allocator))
+    return VA_INVALID_ID;
+
+  return gst_va_memory_get_surface (mem);
+}
+
+/**
+ * gst_va_display_get_buffer_surface: (skip)
+ * @self: a #GstVaDisplay
+ * @buffer: a #GstBuffer
+ *
+ * Returns: (type guint): the VASurfaceID in @buffer, or VA_INVALID_ID
+ *     if @buffer has no surface associated with @self.
+ *
+ * Since: 1.30
+ */
+VASurfaceID
+gst_va_display_get_buffer_surface (GstVaDisplay * self, GstBuffer * buffer)
+{
+  GstMemory *mem;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), VA_INVALID_ID);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), VA_INVALID_ID);
+
+  if (gst_buffer_n_memory (buffer) == 0)
+    return VA_INVALID_ID;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  return gst_va_display_get_memory_surface (self, mem);
+}

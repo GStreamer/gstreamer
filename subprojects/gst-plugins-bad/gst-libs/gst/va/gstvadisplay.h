@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/va/va_fwd.h>
 #include <gst/va/va-prelude.h>
+#include <va/va.h>
 
 G_BEGIN_DECLS
 
@@ -131,6 +132,12 @@ GST_VA_API
 gboolean              gst_va_display_check_version        (GstVaDisplay * self,
                                                            guint major,
                                                            guint minor);
+GST_VA_API
+VASurfaceID           gst_va_display_get_memory_surface   (GstVaDisplay * self,
+                                                           GstMemory * mem);
+GST_VA_API
+VASurfaceID           gst_va_display_get_buffer_surface   (GstVaDisplay * self,
+                                                           GstBuffer * buffer);
 
 /**
  * gst_va_display_is_implementation:
