@@ -86,7 +86,12 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
  * Like gst_vulkan_image_memory_init() but also creates the backing timeline
  * semaphore with the export capability given by @ext_flags.
  *
- * Returns: whether the memory was initialized
+ * If @device does not support timeline semaphores and @ext_flags is 0, the
+ * memory is initialized without a timeline semaphore.
+ *
+ * Returns: whether the memory was initialized. Fails if the timeline
+ *     semaphore cannot be created while @ext_flags is non-zero or @device
+ *     supports timeline semaphores.
  *
  * Since: 1.30
  */
@@ -135,8 +140,16 @@ gst_vulkan_image_memory_init_with_external_semaphore (GstVulkanImageMemory *
   mem->outstanding_views = g_ptr_array_new ();
   mem->timeline_semaphore =
       gst_vulkan_timeline_semaphore_new_with_exportable (device, ext_flags);
-  if (!mem->timeline_semaphore)
+  /* Without timeline semaphore support the memory is still usable, unless an
+   * exportable semaphore was explicitly requested or the feature is present */
+  if (!mem->timeline_semaphore && (ext_flags != 0 ||
+          gst_vulkan_physical_device_has_feature_timeline_semaphore
+          (device->physical_device))) {
+    GST_CAT_WARNING (GST_CAT_VULKAN_IMAGE_MEMORY, "image memory %p: failed "
+        "to create exportable timeline semaphore (handle types 0x%x)", mem,
+        (guint) ext_flags);
     return FALSE;
+  }
 
   GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY,
       "new Vulkan Image memory:%p size:%" G_GSIZE_FORMAT, mem, maxsize);
@@ -257,8 +270,12 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
 
   if (!gst_vulkan_image_memory_init_with_external_semaphore (mem, allocator,
           parent, device, info.format, info.usage, info.initialLayout, &params,
-          mem->requirements.size, user_data, notify, ext_sem_handle_types))
+          mem->requirements.size, user_data, notify, ext_sem_handle_types)) {
+    vkDestroyImage (device->device, image, NULL);
+    g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Failed to initialize Vulkan image memory");
     goto vk_error;
+  }
   mem->create_info = info;
 
   /* avoid handling pNext lifetime */

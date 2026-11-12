@@ -79,6 +79,60 @@ create_image_mem (GstVideoInfo * v_info)
   return vk_mem;
 }
 
+/* Exercise the ordinary allocation fallback even on a modern device. Vulkan
+ * 1.0 plus a disabled timeline extension makes timeline semaphores unavailable. */
+GST_START_TEST (test_image_without_timeline)
+{
+  GstVulkanInstance *legacy_instance = gst_vulkan_instance_new ();
+  GstVulkanDevice *legacy_device;
+  GstMemory *mem;
+  VkImageCreateInfo image_info = {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = VK_FORMAT_R8G8B8A8_UNORM,
+    .extent = {16, 16, 1},
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_OPTIMAL,
+    .usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+
+  g_object_set (legacy_instance, "requested-api-major", 1,
+      "requested-api-minor", 0, NULL);
+  fail_unless (gst_vulkan_instance_open (legacy_instance, NULL));
+  legacy_device = gst_vulkan_device_new_with_index (legacy_instance, 0);
+  gst_vulkan_device_disable_extension (legacy_device,
+      VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+  fail_unless (gst_vulkan_device_open (legacy_device, NULL));
+  fail_if (gst_vulkan_physical_device_check_api_version
+      (legacy_device->physical_device, 1, 2, 0));
+  fail_if (gst_vulkan_device_is_extension_enabled (legacy_device,
+          VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME));
+
+  mem = gst_vulkan_image_memory_alloc_with_image_info (legacy_device,
+      &image_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  fail_unless (mem != NULL);
+  fail_unless (gst_is_vulkan_image_memory (mem));
+  fail_unless (((GstVulkanImageMemory *) mem)->timeline_semaphore == NULL);
+  gst_memory_unref (mem);
+
+  /* Explicit semaphore export cannot use the non-timeline fallback, and
+   * failing it must report an allocation failure without crashing. */
+  mem = gst_vulkan_image_memory_alloc_with_image_info2 (legacy_device,
+      &image_info, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD_BIT);
+  fail_unless (mem == NULL);
+
+  gst_object_unref (legacy_device);
+  gst_object_unref (legacy_instance);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_image_new)
 {
   GstVulkanImageMemory *vk_mem;
@@ -940,6 +994,7 @@ vkimage_suite (void)
   have_instance = gst_vulkan_instance_open (instance, NULL);
   gst_object_unref (instance);
   if (have_instance) {
+    tcase_add_test (tc_basic, test_image_without_timeline);
     tcase_add_test (tc_basic, test_image_new);
     tcase_add_test (tc_basic, test_image_wrapped_with_image_info);
     tcase_add_test (tc_basic, test_image_barrier_new);

@@ -4789,10 +4789,15 @@ Must be called with gst_vulkan_image_memory_lock() called.</doc>
       </method>
       <method name="init_with_external_semaphore" c:identifier="gst_vulkan_image_memory_init_with_external_semaphore" version="1.30">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">Like gst_vulkan_image_memory_init() but also creates the backing timeline
-semaphore with the export capability given by @ext_flags.</doc>
+semaphore with the export capability given by @ext_flags.
+
+If @device does not support timeline semaphores and @ext_flags is 0, the
+memory is initialized without a timeline semaphore.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">whether the memory was initialized</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">whether the memory was initialized. Fails if the timeline
+    semaphore cannot be created while @ext_flags is non-zero or @device
+    supports timeline semaphores.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
