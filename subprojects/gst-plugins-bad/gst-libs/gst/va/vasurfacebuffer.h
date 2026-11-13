@@ -36,7 +36,6 @@ struct _GstVaBufferSurface
   guint n_mems;
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
   gatomicrefcount ref_count;
-  gint ref_mems_count;
 };
 
 G_GNUC_INTERNAL

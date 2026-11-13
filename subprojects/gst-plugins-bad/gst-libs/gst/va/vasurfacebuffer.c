@@ -48,7 +48,6 @@ gst_va_buffer_surface_new (GstVaDisplay * display, VASurfaceID surface)
   GstVaBufferSurface *buf = g_new (GstVaBufferSurface, 1);
 
   g_atomic_ref_count_init (&buf->ref_count);
-  g_atomic_int_set (&buf->ref_mems_count, 0);
   buf->surface = surface;
   buf->display = gst_object_ref (display);
   buf->n_mems = 0;

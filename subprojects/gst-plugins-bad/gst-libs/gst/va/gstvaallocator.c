@@ -60,6 +60,16 @@ _init_debug_category (void)
 #endif
 }
 
+static void
+_free_pooled_memory (GstMemory * mem)
+{
+  /* Pooled memories no longer hold the allocator reference released by
+   * memory finalization. */
+  gst_object_ref (mem->allocator);
+  GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+  gst_memory_unref (mem);
+}
+
 /*=========================== GstVaMemoryPool ================================*/
 
 /* queue for disposed surfaces */
@@ -95,12 +105,7 @@ gst_va_memory_pool_flush (GstVaMemoryPool * self, GstVaDisplay * display)
   GstMemory *mem;
 
   while ((mem = gst_atomic_queue_pop (self->queue))) {
-    GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
-    /* when mem are pushed available queue its allocator is unref,
-     * then now it is required to ref the allocator here because
-     * memory's finalize will unref it again */
-    gst_object_ref (mem->allocator);
-    gst_memory_unref (mem);
+    _free_pooled_memory (mem);
     gst_va_memory_pool_surface_dec (self);
   }
 }
@@ -176,8 +181,8 @@ gst_va_dma_memory_pool_surface_dec (GstVaDMAMemoryPool * self)
   return g_atomic_int_dec_and_test (&self->surface_count);
 }
 
-/* Remove the first complete surface from the pool into @buf.
- * The caller must hold the pool lock. Incomplete surfaces are left untouched. */
+/* Remove the first complete surface from the pool into @buf with a reference.
+ * Incomplete surfaces are left untouched. */
 static gboolean
 gst_va_dma_memory_pool_pop_surface (GstVaDMAMemoryPool * self,
     GstVaDisplay * display, GstVaBufferSurface ** buf)
@@ -187,6 +192,8 @@ gst_va_dma_memory_pool_pop_surface (GstVaDMAMemoryPool * self,
   GList *links[GST_VIDEO_MAX_PLANES];
   GstVaBufferSurface *surface;
   guint i;
+
+  GST_VA_DMA_MEMORY_POOL_LOCK (self);
 
   for (entry = g_queue_peek_head_link (queue); entry;
       entry = g_list_next (entry)) {
@@ -208,50 +215,63 @@ gst_va_dma_memory_pool_pop_surface (GstVaDMAMemoryPool * self,
       g_queue_delete_link (queue, links[i]);
     }
 
+    gst_va_buffer_surface_ref (surface);
     *buf = surface;
+
+    GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
     return TRUE;
   }
 
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
   return FALSE;
-}
-
-static void
-gst_va_dma_memory_pool_flush_unlocked (GstVaDMAMemoryPool * self,
-    GstVaDisplay * display)
-{
-  GstMemory *mem;
-  GstVaBufferSurface *buf;
-
-  while ((mem = g_queue_pop_head (&self->queue))) {
-    buf = gst_va_display_peek_buffer_surface (display, mem);
-    if (buf && g_atomic_ref_count_compare (&buf->ref_count, 1))
-      gst_va_dma_memory_pool_surface_dec (self);
-
-    GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
-    /* Pooled memories no longer hold their allocator reference. */
-    gst_object_ref (mem->allocator);
-    gst_memory_unref (mem);
-  }
 }
 
 static void
 gst_va_dma_memory_pool_flush (GstVaDMAMemoryPool * self, GstVaDisplay * display)
 {
-  GST_VA_DMA_MEMORY_POOL_LOCK (self);
-  gst_va_dma_memory_pool_flush_unlocked (self, display);
-  GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
+  GstVaBufferSurface *buf;
+  guint i;
+
+  while (gst_va_dma_memory_pool_pop_surface (self, display, &buf)) {
+    gst_va_dma_memory_pool_surface_dec (self);
+
+    for (i = 0; i < buf->n_mems; i++)
+      _free_pooled_memory (buf->mems[i]);
+
+    gst_va_buffer_surface_unref (buf);
+  }
 }
 
 static inline void
 gst_va_dma_memory_pool_push (GstVaDMAMemoryPool * self, GstMemory * mem)
 {
+  GST_VA_DMA_MEMORY_POOL_LOCK (self);
   g_queue_push_tail (&self->queue, gst_memory_ref (mem));
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
 }
 
 static inline GstMemory *
 gst_va_dma_memory_pool_pop (GstVaDMAMemoryPool * self)
 {
-  return g_queue_pop_head (&self->queue);
+  GstMemory *mem;
+
+  GST_VA_DMA_MEMORY_POOL_LOCK (self);
+  mem = g_queue_pop_head (&self->queue);
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
+
+  return mem;
+}
+
+static inline guint
+gst_va_dma_memory_pool_get_length (GstVaDMAMemoryPool * self)
+{
+  guint ret;
+
+  GST_VA_DMA_MEMORY_POOL_LOCK (self);
+  ret = g_queue_get_length (&self->queue);
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
+
+  return ret;
 }
 
 /*=========================== GstVaDmabufAllocator ===========================*/
@@ -351,18 +371,12 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
     GstMemory *copy;
     GstVaSurfaceCopy *copy_func;
 
-    GST_VA_DMA_MEMORY_POOL_LOCK (&self->pool);
     copy = gst_va_dma_memory_pool_pop (&self->pool);
-    GST_VA_DMA_MEMORY_POOL_UNLOCK (&self->pool);
 
     if (copy) {
       gst_object_ref (copy->allocator);
 
       buf_copy = gst_va_display_peek_buffer_surface (self->display, copy);
-
-      g_assert (g_atomic_int_get (&buf_copy->ref_mems_count) == 0);
-
-      g_atomic_int_add (&buf_copy->ref_mems_count, 1);
     } else {
       GstBuffer *buffer = gst_buffer_new ();
 
@@ -438,11 +452,18 @@ static void
 gst_va_dmabuf_allocator_dispose (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
+  guint value;
 
-  gst_va_dma_memory_pool_flush_unlocked (&self->pool, self->display);
-  if (gst_va_dma_memory_pool_surface_count (&self->pool) != 0) {
-    GST_WARNING_OBJECT (self, "Surfaces leaked: %d",
-        gst_va_dma_memory_pool_surface_count (&self->pool));
+  gst_va_dma_memory_pool_flush (&self->pool, self->display);
+
+  value = gst_va_dma_memory_pool_get_length (&self->pool);
+  if (value > 0) {
+    GST_WARNING_OBJECT (self, "%u GstMemory leaks in pool.", value);
+  }
+
+  value = gst_va_dma_memory_pool_surface_count (&self->pool);
+  if (value > 0) {
+    GST_WARNING_OBJECT (self, "Surfaces leaked: %u", value);
   }
 
   G_OBJECT_CLASS (dmabuf_parent_class)->dispose (object);
@@ -503,31 +524,18 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   GstMemory *mem = GST_MEMORY_CAST (mini_object);
   GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (mem->allocator);
-  guint i;
 
   buf = gst_va_display_peek_buffer_surface (self->display, mem);
   if (!buf)
     return TRUE;                /* free this unknown buffer */
 
-  /* if this is the last reference to the GstVaBufferSurface, iterates
-   * its array of memories to push them into the queue with thread
-   * safetly. */
-  GST_VA_DMA_MEMORY_POOL_LOCK (&self->pool);
-  if (g_atomic_int_dec_and_test (&buf->ref_mems_count)) {
-    for (i = 0; i < buf->n_mems; i++) {
-      GST_LOG_OBJECT (self, "releasing %p: dmabuf %d, va surface %#x",
-          buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]), buf->surface);
-      gst_va_dma_memory_pool_push (&self->pool, buf->mems[i]);
-    }
-  }
-  GST_VA_DMA_MEMORY_POOL_UNLOCK (&self->pool);
+  GST_LOG_OBJECT (self, "releasing %p: dmabuf %d, va surface %#x",
+      mem, gst_dmabuf_memory_get_fd (mem), buf->surface);
 
-  /* note: if ref_mem_count doesn't reach zero, that memory will
-   * "float" until it's pushed back into the pool by the last va
-   * buffer surface ref */
+  gst_va_dma_memory_pool_push (&self->pool, mem);
 
   /* Keep last in case we are holding on the last allocator ref */
-  gst_object_unref (mem->allocator);
+  gst_object_unref (self);
 
   /* don't call mini_object's free */
   return FALSE;
@@ -786,7 +794,6 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
      * destroyed (e.g. gst_va_dmabuf_allocator_try()) */
     if (G_LIKELY (!info)) {
       GST_MINI_OBJECT (mem)->dispose = gst_va_dmabuf_memory_release;
-      g_atomic_int_add (&buf->ref_mems_count, 1);
     } else {
       GST_VIDEO_INFO_PLANE_OFFSET (&info->vinfo, i) =
           GST_VIDEO_INFO_SIZE (&info->vinfo);
@@ -847,18 +854,23 @@ gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
 }
 
 static VASurfaceID
-gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
+_va_dmabuf_allocator_prepare_buffer (GstVaDmabufAllocator * self,
     GstBuffer * buffer)
 {
   GstVaBufferSurface *buf;
+  VASurfaceID surface;
   guint i;
 
-  if (!gst_va_dma_memory_pool_pop_surface (&self->pool, self->display, &buf))
+  if (!gst_va_dma_memory_pool_pop_surface (&self->pool, self->display, &buf)) {
+    if (gst_va_dma_memory_pool_get_length (&self->pool) > 0) {
+      GST_DEBUG ("Surface in pool is not complete.");
+    }
+
     return VA_INVALID_ID;
+  }
 
   /* append memories */
   for (i = 0; i < buf->n_mems; i++) {
-    g_atomic_int_add (&buf->ref_mems_count, 1);
     gst_object_ref (buf->mems[i]->allocator);
     gst_buffer_append_memory (buffer, buf->mems[i]);
 
@@ -866,7 +878,10 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
         buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]), buf->surface);
   }
 
-  return buf->surface;
+  surface = buf->surface;
+  gst_va_buffer_surface_unref (buf);
+
+  return surface;
 }
 
 /**
@@ -893,9 +908,7 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
 
   self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  GST_VA_DMA_MEMORY_POOL_LOCK (&self->pool);
-  surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
-  GST_VA_DMA_MEMORY_POOL_UNLOCK (&self->pool);
+  surface = _va_dmabuf_allocator_prepare_buffer (self, buffer);
 
   return (surface != VA_INVALID_ID);
 }
