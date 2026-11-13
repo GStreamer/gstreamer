@@ -64,7 +64,7 @@ GST_ELEMENT_REGISTER_DEFINE (xingmux, "xingmux", GST_RANK_MARGINAL,
 typedef struct _GstXingSeekEntry
 {
   gint64 timestamp;
-  gint byte;
+  gint64 byte;
 } GstXingSeekEntry;
 
 static inline GstXingSeekEntry *
@@ -371,7 +371,8 @@ generate_xing_header (GstXingMux * xing)
       gint64 pos;
       guchar byte;
 
-      while ((entry->timestamp * 100) / duration >= percent) {
+      while ((gint) gst_util_uint64_scale (entry->timestamp, 100, duration) >=
+          percent) {
         pos = (entry->byte * 256) / byte_count;
         GST_DEBUG ("  %d %% -- %" G_GINT64_FORMAT " 1/256", percent, pos);
         byte = (guchar) pos;

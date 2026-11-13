@@ -58,7 +58,6 @@ struct _GstXingMux {
   GstAdapter *adapter;
   GstClockTime duration;
   guint64 byte_count;
-  guint64 frame_count;
   GList *seek_table;
   gboolean sent_xing;
 
