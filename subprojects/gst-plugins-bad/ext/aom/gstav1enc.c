@@ -235,6 +235,7 @@ enum
 #define DEFAULT_BUF_OPTIMAL_SZ                               5000
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
 #define DEFAULT_THREADS                                         0
+#define MAX_THREADS                                            64
 #define DEFAULT_ROW_MT                                       TRUE
 #define DEFAULT_TILE_COLUMNS                                    0
 #define DEFAULT_TILE_ROWS                                       0
@@ -866,7 +867,7 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
 
   if (av1enc->threads == DEFAULT_THREADS)
-    av1enc->aom_cfg.g_threads = g_get_num_processors ();
+    av1enc->aom_cfg.g_threads = MIN (g_get_num_processors (), MAX_THREADS);
   else
     av1enc->aom_cfg.g_threads = av1enc->threads;
   /* TODO: do more configuration including bit_depth config */
