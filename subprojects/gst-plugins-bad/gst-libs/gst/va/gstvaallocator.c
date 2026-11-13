@@ -142,12 +142,6 @@ gst_va_memory_pool_pop (GstVaMemoryPool * self)
   return gst_atomic_queue_pop (self->queue);
 }
 
-static inline GstMemory *
-gst_va_memory_pool_peek (GstVaMemoryPool * self)
-{
-  return gst_atomic_queue_peek (self->queue);
-}
-
 static inline guint
 gst_va_memory_pool_surface_count (GstVaMemoryPool * self)
 {
@@ -158,6 +152,131 @@ static inline void
 gst_va_memory_pool_surface_inc (GstVaMemoryPool * self)
 {
   g_atomic_int_inc (&self->surface_count);
+}
+
+/*========================= GstVaDMAMemoryPool ===============================*/
+
+typedef struct _GstVaDMAMemoryPool GstVaDMAMemoryPool;
+struct _GstVaDMAMemoryPool
+{
+  GQueue queue;
+  gint surface_count;
+  GMutex lock;
+};
+
+#define GST_VA_DMA_MEMORY_POOL_CAST(obj) ((GstVaDMAMemoryPool *)obj)
+#define GST_VA_DMA_MEMORY_POOL_LOCK(obj) g_mutex_lock (&GST_VA_DMA_MEMORY_POOL_CAST(obj)->lock)
+#define GST_VA_DMA_MEMORY_POOL_UNLOCK(obj) g_mutex_unlock (&GST_VA_DMA_MEMORY_POOL_CAST(obj)->lock)
+
+static void
+gst_va_dma_memory_pool_init (GstVaDMAMemoryPool * self)
+{
+  g_queue_init (&self->queue);
+  g_mutex_init (&self->lock);
+  self->surface_count = 0;
+}
+
+static void
+gst_va_dma_memory_pool_finalize (GstVaDMAMemoryPool * self)
+{
+  g_mutex_clear (&self->lock);
+  g_queue_clear (&self->queue);
+}
+
+static inline guint
+gst_va_dma_memory_pool_surface_count (GstVaDMAMemoryPool * self)
+{
+  return g_atomic_int_get (&self->surface_count);
+}
+
+static inline void
+gst_va_dma_memory_pool_surface_inc (GstVaDMAMemoryPool * self)
+{
+  g_atomic_int_inc (&self->surface_count);
+}
+
+static inline gboolean
+gst_va_dma_memory_pool_surface_dec (GstVaDMAMemoryPool * self)
+{
+  return g_atomic_int_dec_and_test (&self->surface_count);
+}
+
+/* Remove the first complete surface from the pool into @buf.
+ * The caller must hold the pool lock. Incomplete surfaces are left untouched. */
+static gboolean
+gst_va_dma_memory_pool_pop_surface (GstVaDMAMemoryPool * self,
+    GstVaDisplay * display, GstVaBufferSurface ** buf)
+{
+  GQueue *queue = &self->queue;
+  GList *entry;
+  GList *links[GST_VIDEO_MAX_PLANES];
+  GstVaBufferSurface *surface;
+  guint i;
+
+  for (entry = g_queue_peek_head_link (queue); entry;
+      entry = g_list_next (entry)) {
+    surface = gst_va_display_peek_buffer_surface (display, entry->data);
+    if (!surface || surface->surface == VA_INVALID_ID) {
+      GST_ERROR ("Invalid buffer surface for memory %p", entry->data);
+      continue;
+    }
+
+    for (i = 0; i < surface->n_mems; i++) {
+      links[i] = g_queue_find (queue, surface->mems[i]);
+      if (!links[i])
+        break;
+    }
+    if (i != surface->n_mems)
+      continue;
+
+    for (i = 0; i < surface->n_mems; i++) {
+      g_queue_delete_link (queue, links[i]);
+    }
+
+    *buf = surface;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+gst_va_dma_memory_pool_flush_unlocked (GstVaDMAMemoryPool * self,
+    GstVaDisplay * display)
+{
+  GstMemory *mem;
+  GstVaBufferSurface *buf;
+
+  while ((mem = g_queue_pop_head (&self->queue))) {
+    buf = gst_va_display_peek_buffer_surface (display, mem);
+    if (buf && g_atomic_ref_count_compare (&buf->ref_count, 1))
+      gst_va_dma_memory_pool_surface_dec (self);
+
+    GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+    /* Pooled memories no longer hold their allocator reference. */
+    gst_object_ref (mem->allocator);
+    gst_memory_unref (mem);
+  }
+}
+
+static void
+gst_va_dma_memory_pool_flush (GstVaDMAMemoryPool * self, GstVaDisplay * display)
+{
+  GST_VA_DMA_MEMORY_POOL_LOCK (self);
+  gst_va_dma_memory_pool_flush_unlocked (self, display);
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (self);
+}
+
+static inline void
+gst_va_dma_memory_pool_push (GstVaDMAMemoryPool * self, GstMemory * mem)
+{
+  g_queue_push_tail (&self->queue, gst_memory_ref (mem));
+}
+
+static inline GstMemory *
+gst_va_dma_memory_pool_pop (GstVaDMAMemoryPool * self)
+{
+  return g_queue_pop_head (&self->queue);
 }
 
 /*=========================== GstVaDmabufAllocator ===========================*/
@@ -192,7 +311,7 @@ struct _GstVaDmabufAllocator
 
   GstVaSurfaceCopy *copy;
 
-  GstVaMemoryPool pool;
+  GstVaDMAMemoryPool pool;
 };
 
 struct _GstVaDmabufAllocatorClass
@@ -257,9 +376,9 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
     GstMemory *copy;
     GstVaSurfaceCopy *copy_func;
 
-    GST_VA_MEMORY_POOL_LOCK (&self->pool);
-    copy = gst_va_memory_pool_pop (&self->pool);
-    GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
+    GST_VA_DMA_MEMORY_POOL_LOCK (&self->pool);
+    copy = gst_va_dma_memory_pool_pop (&self->pool);
+    GST_VA_DMA_MEMORY_POOL_UNLOCK (&self->pool);
 
     if (copy) {
       gst_object_ref (copy->allocator);
@@ -334,7 +453,7 @@ gst_va_dmabuf_allocator_finalize (GObject * object)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
   g_clear_pointer (&self->copy, gst_va_surface_copy_free);
-  gst_va_memory_pool_finalize (&self->pool);
+  gst_va_dma_memory_pool_finalize (&self->pool);
   gst_clear_object (&self->display);
 
   G_OBJECT_CLASS (dmabuf_parent_class)->finalize (object);
@@ -345,10 +464,10 @@ gst_va_dmabuf_allocator_dispose (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
-  gst_va_memory_pool_flush_unlocked (&self->pool, self->display);
-  if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
+  gst_va_dma_memory_pool_flush_unlocked (&self->pool, self->display);
+  if (gst_va_dma_memory_pool_surface_count (&self->pool) != 0) {
     GST_WARNING_OBJECT (self, "Surfaces leaked: %d",
-        gst_va_memory_pool_surface_count (&self->pool));
+        gst_va_dma_memory_pool_surface_count (&self->pool));
   }
 
   G_OBJECT_CLASS (dmabuf_parent_class)->dispose (object);
@@ -375,7 +494,7 @@ gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
 
   gst_video_info_dma_drm_init (&self->info);
 
-  gst_va_memory_pool_init (&self->pool);
+  gst_va_dma_memory_pool_init (&self->pool);
 }
 
 /**
@@ -418,15 +537,15 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   /* if this is the last reference to the GstVaBufferSurface, iterates
    * its array of memories to push them into the queue with thread
    * safetly. */
-  GST_VA_MEMORY_POOL_LOCK (&self->pool);
+  GST_VA_DMA_MEMORY_POOL_LOCK (&self->pool);
   if (g_atomic_int_dec_and_test (&buf->ref_mems_count)) {
     for (i = 0; i < buf->n_mems; i++) {
       GST_LOG_OBJECT (self, "releasing %p: dmabuf %d, va surface %#x",
           buf->mems[i], gst_dmabuf_memory_get_fd (buf->mems[i]), buf->surface);
-      gst_va_memory_pool_push (&self->pool, buf->mems[i]);
+      gst_va_dma_memory_pool_push (&self->pool, buf->mems[i]);
     }
   }
-  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (&self->pool);
 
   /* note: if ref_mem_count doesn't reach zero, that memory will
    * "float" until it's pushed back into the pool by the last va
@@ -726,7 +845,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
       GST_VIDEO_INFO_PLANE_STRIDE (&info->vinfo, i) = desc.layers[i].pitch[0];
     }
   } else {
-    gst_va_memory_pool_surface_inc (&self->pool);
+    gst_va_dma_memory_pool_surface_inc (&self->pool);
   }
 
   return TRUE;
@@ -756,68 +875,14 @@ static VASurfaceID
 gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
     GstBuffer * buffer)
 {
-  GstMemory *mems[GST_VIDEO_MAX_PLANES] = { 0, };
   GstVaBufferSurface *buf;
-  gint i, j, idx;
+  guint i;
 
-  mems[0] = gst_va_memory_pool_pop (&self->pool);
-  if (!mems[0])
+  if (!gst_va_dma_memory_pool_pop_surface (&self->pool, self->display, &buf))
     return VA_INVALID_ID;
-
-  buf = gst_va_display_peek_buffer_surface (self->display, mems[0]);
-  if (!buf)
-    return VA_INVALID_ID;
-
-  if (buf->surface == VA_INVALID_ID)
-    return VA_INVALID_ID;
-
-  for (idx = 1; idx < buf->n_mems; idx++) {
-    /* grab next memory from queue */
-    {
-      GstMemory *mem;
-      GstVaBufferSurface *pbuf;
-
-      mem = gst_va_memory_pool_peek (&self->pool);
-      if (!mem)
-        return VA_INVALID_ID;
-
-      pbuf = gst_va_display_peek_buffer_surface (self->display, mem);
-      if (!pbuf)
-        return VA_INVALID_ID;
-
-      if (pbuf->surface != buf->surface) {
-        GST_WARNING_OBJECT (self,
-            "expecting memory with surface %#x but got %#x: "
-            "possible memory interweaving", buf->surface, pbuf->surface);
-        return VA_INVALID_ID;
-      }
-    }
-
-    mems[idx] = gst_va_memory_pool_pop (&self->pool);
-  };
 
   /* append memories */
   for (i = 0; i < buf->n_mems; i++) {
-    gboolean found = FALSE;
-
-    /* find next memory to append */
-    for (j = 0; j < idx; j++) {
-      if (buf->mems[i] == mems[j]) {
-        found = TRUE;
-        break;
-      }
-    }
-
-    /* if not found, free all the popped memories and bail */
-    if (!found) {
-      for (j = 0; j < idx; j++) {
-        gst_object_ref (buf->mems[j]->allocator);
-        GST_MINI_OBJECT (mems[j])->dispose = NULL;
-        gst_memory_unref (mems[j]);
-      }
-      return VA_INVALID_ID;
-    }
-
     g_atomic_int_add (&buf->ref_mems_count, 1);
     gst_object_ref (buf->mems[i]->allocator);
     gst_buffer_append_memory (buffer, buf->mems[i]);
@@ -853,9 +918,9 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
 
   self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  GST_VA_MEMORY_POOL_LOCK (&self->pool);
+  GST_VA_DMA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
-  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
+  GST_VA_DMA_MEMORY_POOL_UNLOCK (&self->pool);
 
   return (surface != VA_INVALID_ID);
 }
@@ -877,7 +942,7 @@ gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
 
   self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  gst_va_memory_pool_flush (&self->pool, self->display);
+  gst_va_dma_memory_pool_flush (&self->pool, self->display);
 }
 
 /**
@@ -947,7 +1012,7 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
 
   self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
-  if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
+  if (gst_va_dma_memory_pool_surface_count (&self->pool) != 0) {
     if (info->drm_modifier == self->info.drm_modifier
         && GST_VIDEO_INFO_FORMAT (&info->vinfo)
         == GST_VIDEO_INFO_FORMAT (&self->info.vinfo)
