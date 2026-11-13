@@ -39,6 +39,16 @@ pub fn is_start_code(bytes: &[u8]) -> bool {
     bytes.starts_with(&START_CODE_PREFIX)
 }
 
+/// Advance `scan` to the next start code prefix within `limit` octets of it,
+/// leaving the cursor on the first octet of the prefix. `false` when the
+/// stream ends first, with the cursor left where the search stopped.
+pub fn find_start_code(scan: &mut Scanner, limit: usize) -> bool {
+    let end = scan
+        .offset()
+        .saturating_add(i64::try_from(limit).unwrap_or(i64::MAX));
+    scan.find(end, &[START_CODE])
+}
+
 /// Advance `scan` to the next start code and leave it on the octet that
 /// carries the start code's value, which is what says what was started. A
 /// prefix with no octet after it names nothing, so a candidate needs four
@@ -46,10 +56,7 @@ pub fn is_start_code(bytes: &[u8]) -> bool {
 /// search may cross; `None` ends the search, either because nothing
 /// qualified within it or because the stream ran out.
 pub fn next_start_code(scan: &mut Scanner, limit: usize) -> Option<i64> {
-    let end = scan
-        .offset()
-        .saturating_add(i64::try_from(limit).unwrap_or(i64::MAX));
-    if !scan.find(end, &[START_CODE]) {
+    if !find_start_code(scan, limit) {
         return None;
     }
     scan.consume(START_CODE_PREFIX.len());

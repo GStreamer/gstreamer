@@ -29,7 +29,7 @@
 //! [`valid_pack`].
 
 use crate::helpers::{Prob, Scanner, TypeFind, u16be};
-use crate::startcode::{START_CODE_PREFIX_LEN, is_start_code, next_start_code};
+use crate::startcode::{START_CODE_PREFIX_LEN, find_start_code, is_start_code, next_start_code};
 
 /// Start code value of a pack header, H.222.0 2.5.3.4.
 const PACK_CODE: u8 = 0xBA;
@@ -423,11 +423,13 @@ pub fn mpeg_video_probe(tf: &mut TypeFind) -> Option<Prob> {
     let mut last_pic_offset = 0i64;
 
     while scan.offset() < VID_TRY_SYNC && paired < VID_TRY_PICTURES {
-        let Some(head) = scan.peek(5) else { break };
-        if !is_start_code(head) {
-            scan.consume(1);
-            continue;
+        // The walk only ever acts on a start code, so it goes to the next one
+        // rather than peeking a header at every offset.
+        let limit = (VID_TRY_SYNC - 1 - scan.offset()) as usize;
+        if !find_start_code(&mut scan, limit) {
+            break;
         }
+        let Some(head) = scan.peek(5) else { break };
         let code = head[3];
 
         if code == PACK_CODE {
