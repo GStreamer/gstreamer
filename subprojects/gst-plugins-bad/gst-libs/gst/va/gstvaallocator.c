@@ -41,6 +41,7 @@
 #include "gstvadisplay_priv.h"
 #include "gstvasurfacecopy.h"
 #include "gstvavideoformat.h"
+#include "vasurfacebuffer.h"
 #include "vasurfaceimage.h"
 
 #define GST_CAT_DEFAULT gst_va_memory_debug
@@ -89,57 +90,6 @@ gst_va_buffer_aux_surface_quark (void)
 
 /*========================= GstVaBufferSurface ===============================*/
 
-typedef struct _GstVaBufferSurface GstVaBufferSurface;
-struct _GstVaBufferSurface
-{
-  GstVaDisplay *display;
-  VASurfaceID surface;
-  guint n_mems;
-  GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  gatomicrefcount ref_count;
-  gint ref_mems_count;
-};
-
-static void
-gst_va_buffer_surface_unref (gpointer data)
-{
-  GstVaBufferSurface *buf = data;
-
-  g_return_if_fail (buf && GST_IS_VA_DISPLAY (buf->display));
-
-  if (g_atomic_ref_count_dec (&buf->ref_count)) {
-    GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
-    va_destroy_surfaces (buf->display, &buf->surface, 1);
-    gst_clear_object (&buf->display);
-    g_free (buf);
-  }
-}
-
-static GstVaBufferSurface *
-gst_va_buffer_surface_new (GstVaDisplay * display, VASurfaceID surface)
-{
-  GstVaBufferSurface *buf = g_new (GstVaBufferSurface, 1);
-
-  g_atomic_int_set (&buf->ref_count, 0);
-  g_atomic_int_set (&buf->ref_mems_count, 0);
-  buf->surface = surface;
-  buf->display = display ? gst_object_ref (display) : NULL;
-  buf->n_mems = 0;
-
-  return buf;
-}
-
-/* The refcount starts at zero and the first attach sets it to one.
- * A saturated refcount keeps the surface alive on purpose instead
- * of freeing it too early. */
-static void
-gst_va_buffer_surface_ref (GstVaBufferSurface * buf)
-{
-  if (g_atomic_ref_count_compare (&buf->ref_count, 0))
-    g_atomic_ref_count_init (&buf->ref_count);
-  else
-    g_atomic_ref_count_inc (&buf->ref_count);
-}
 
 static GstVaBufferSurface *
 gst_va_display_peek_buffer_surface (GstVaDisplay * display, GstMemory * mem)

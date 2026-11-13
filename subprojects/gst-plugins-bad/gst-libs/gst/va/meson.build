@@ -9,6 +9,7 @@ va_sources = files(
 va_sources_priv = files(
   'gstvasurfacecopy.c',
   'gstvavideoformat.c',
+  'vasurfacebuffer.c',
   'vasurfaceimage.c',
 )
 
