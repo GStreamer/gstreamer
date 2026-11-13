@@ -45,6 +45,9 @@ const SYS_MAX_PROBE: usize = 128 * 1024;
 const SYS_MIN_PROBE: usize = 16;
 /// A run of headers has to exceed this count to be worth suggesting.
 const SYS_MIN_HEADERS: u32 = 2;
+/// The four octets `00 00 01 00`: what the rolling word reads when the three
+/// before the cursor are the start code prefix.
+const PREFIX_SYNC: u32 = 0x0000_0100;
 /// The walk stops once a run that includes a PES packet passes this count.
 /// Nothing further in the stream can change the answer, so reading on would be
 /// work for nothing.
@@ -206,12 +209,20 @@ fn sys_scan(data: &[u8]) -> Option<(u32, i32)> {
     // Index of the octet carrying a start code value; the three before it have
     // to be the prefix, so the walk starts where that first becomes possible.
     let mut i = 3usize;
+    // The four octets ending at `i - 1`, as a value. Shifting it left by one
+    // octet and comparing against the prefix leaves one compare per octet
+    // instead of a three-octet test at every position. A stream too short to
+    // hold a prefix never enters the walk, so the word is never read.
+    let mut sync = data
+        .get(..3)
+        .map_or(0, |head| u32::from_be_bytes([0, head[0], head[1], head[2]]));
 
     // Once enough headers have been seen, and some of them were PES packets,
     // the stream is settled. Nothing further in it should be able to change the
     // answer, so the walk stops rather than reading on.
     while i < end && !(pes_headers > 0 && pack_headers + pes_headers > SYS_MAX_HEADERS) {
-        if is_start_code(&data[i - 3..i]) {
+        sync <<= 8;
+        if sync == PREFIX_SYNC {
             if potential_headers == 0 {
                 // A match stands three octets behind the octet carrying its
                 // value, so one on the first octet leaves the cursor here.
@@ -253,10 +264,14 @@ fn sys_scan(data: &[u8]) -> Option<(u32, i32)> {
                 // value, so the cursor goes to where that value would be.
                 i += size;
                 since_last_sync = 3;
+                if i < end {
+                    sync = u32::from_be_bytes([0, data[i - 3], data[i - 2], data[i - 1]]);
+                }
                 continue;
             }
         }
 
+        sync |= u32::from(data[i]);
         since_last_sync += 1;
         i += 1;
     }
