@@ -252,8 +252,6 @@ GST_START_TEST (test_multiplanar_opt_in_single_image)
     vk_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, 0);
     fail_unless (vk_mem->create_info.flags &
         VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
-    fail_unless (vk_mem->create_info.flags &
-        VK_IMAGE_CREATE_EXTENDED_USAGE_BIT);
   } else {
     /* Device can't sample the composite format; pool must fall back cleanly. */
     fail_unless_equals_int (gst_buffer_n_memory (buffer),

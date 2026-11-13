@@ -824,11 +824,10 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     if (sampleable) {
       const GstVulkanFormatMap *vkmap =
           gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
-      const gboolean is_per_plane_alloc = vkmap->vkfrmt != priv->vk_fmts[0];
+      const gboolean is_single_allocation = vkmap->vkfrmt == priv->vk_fmts[0];
       const gboolean is_video_usage = _is_video_usage (requested_usage);
-      const VkImageCreateFlags mutable_extended_flags =
-          VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
-          | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT;
+      const VkImageCreateFlags additional_flags =
+          VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
       const gboolean is_multiplane =
           GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1;
       gboolean video_allows_plane_views = FALSE;
@@ -841,7 +840,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
             requested_usage);
 
         video_allows_plane_views =
-            (video_flags & mutable_extended_flags) == mutable_extended_flags;
+            (video_flags & additional_flags) == additional_flags;
         GST_DEBUG_OBJECT (pool, "video image create flags 0x%x, per-plane "
             "views %sallowed", video_flags,
             video_allows_plane_views ? "" : "not ");
@@ -850,8 +849,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
       if (!is_video_usage)
         priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
       if (is_multiplane && (is_video_usage ? video_allows_plane_views
-              : (is_per_plane_alloc || want_multiplanar_opt))) {
-        priv->img_flags |= mutable_extended_flags;
+              : is_single_allocation)) {
+        priv->img_flags |= additional_flags;
       }
     }
   }
