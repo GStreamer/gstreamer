@@ -2204,10 +2204,11 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       }
 
       cv_ret = CVPixelBufferCreateWithPlanarBytes (NULL,
-          self->video_info.width, self->video_info.height,
-          pixel_format_type,
-          frame,
-          GST_VIDEO_FRAME_SIZE (&vframe->videoframe),
+          self->video_info.width, self->video_info.height, pixel_format_type,
+          /* have to put something for dataPtr otherwise
+           * the callback is not called on older macOS resulting in a big leak.
+           * 27.3+ also does a size check if it's specified so keep it at 0 */
+          vframe, 0,
           num_planes,
           plane_base_addresses,
           plane_widths,
