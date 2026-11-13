@@ -33,8 +33,8 @@ python3 -m pip install pre-commit==3.6.0
 python3 -m pip install gitlint
 
 # Install Rust
-RUSTUP_VERSION=1.29.1
-RUST_VERSION=1.99.1
+RUSTUP_VERSION=1.29.3
+RUST_VERSION=1.100.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
