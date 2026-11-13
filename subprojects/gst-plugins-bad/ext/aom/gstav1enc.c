@@ -235,6 +235,7 @@ enum
 #define DEFAULT_BUF_OPTIMAL_SZ                               5000
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
 #define DEFAULT_THREADS                                         0
+/* libaom has a hardcoded maximum of 64 threads */
 #define MAX_THREADS                                            64
 #define DEFAULT_ROW_MT                                       TRUE
 #define DEFAULT_TILE_COLUMNS                                    0
@@ -447,7 +448,7 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
       g_param_spec_uint ("threads", "Max number of threads to use",
           "Max number of threads to use encoding, set to 0 determine the "
           "approximate number of threads that the system schedule",
-          0, G_MAXUINT, DEFAULT_THREADS,
+          0, MAX_THREADS, DEFAULT_THREADS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifdef AOM_CTRL_AV1E_SET_ROW_MT
