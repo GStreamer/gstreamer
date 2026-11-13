@@ -1924,6 +1924,17 @@ gst_va_allocator_peek_display (GstAllocator * allocator)
   return NULL;
 }
 
+VASurfaceID
+gst_va_allocator_get_memory_surface (GstMemory * mem)
+{
+  g_return_val_if_fail (GST_IS_MINI_OBJECT_TYPE (mem, GST_TYPE_MEMORY),
+      VA_INVALID_SURFACE);
+  g_return_val_if_fail (GST_IS_VA_ALLOCATOR (mem->allocator),
+      VA_INVALID_SURFACE);
+
+  return ((GstVaMemory *) mem)->surface;
+}
+
 /*============ Utilities =====================================================*/
 
 static GstVaDisplay *

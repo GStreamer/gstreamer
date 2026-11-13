@@ -629,12 +629,13 @@ gst_va_display_get_memory_surface (GstVaDisplay * self, GstMemory * mem)
   if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
     if (gst_va_allocator_peek_display (mem->allocator) != self)
       return VA_INVALID_ID;
-    return gst_va_memory_get_surface (mem);
+    return gst_va_allocator_get_memory_surface (mem);
   }
 
   if (!GST_IS_DMABUF_ALLOCATOR (mem->allocator))
     return VA_INVALID_ID;
 
+  /* to be changed for a specific dmabuf function */
   return gst_va_memory_get_surface (mem);
 }
 

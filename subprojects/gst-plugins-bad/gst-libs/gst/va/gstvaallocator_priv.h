@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/va/gstvadisplay.h>
+#include <va/va.h>
 
 #ifndef G_OS_WIN32
 #include <unistd.h>
@@ -35,6 +36,10 @@ void                  gst_va_memories_set_surface         (GstVaDisplay * displa
                                                            guint surface,
                                                            GstMemory * mem[GST_VIDEO_MAX_PLANES],
                                                            guint n_mems);
+
+G_GNUC_INTERNAL
+VASurfaceID           gst_va_allocator_get_memory_surface (GstMemory * mem);
+
 
 static inline goffset
 gst_va_get_fd_size (gint fd)
