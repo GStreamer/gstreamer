@@ -644,6 +644,12 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
         gst_element_set_state (pipeline, GST_STATE_PAUSED);
         gst_element_set_state (pipeline, GST_STATE_PLAYING);
         break;
+      case GST_MESSAGE_ERROR:
+        /* bus_sync_handler() printed it and quit the loop, on the thread
+         * that posted it; that quit is lost when it comes before
+         * g_main_loop_run(). This runs in the loop, so it cannot be. */
+        g_main_loop_quit (loop);
+        break;
       case GST_MESSAGE_EOS:{
         PRINT (_("Got EOS from element \"%s\".\n"),
             GST_MESSAGE_SRC_NAME (message));
