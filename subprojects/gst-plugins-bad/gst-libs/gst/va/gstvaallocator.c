@@ -68,66 +68,41 @@ struct _GstVaMemoryPool
 {
   GstAtomicQueue *queue;
   gint surface_count;
-
-  GMutex lock;
 };
-
-#define GST_VA_MEMORY_POOL_CAST(obj) ((GstVaMemoryPool *)obj)
-#define GST_VA_MEMORY_POOL_LOCK(obj) g_mutex_lock (&GST_VA_MEMORY_POOL_CAST(obj)->lock)
-#define GST_VA_MEMORY_POOL_UNLOCK(obj) g_mutex_unlock (&GST_VA_MEMORY_POOL_CAST(obj)->lock)
 
 static void
 gst_va_memory_pool_init (GstVaMemoryPool * self)
 {
   self->queue = gst_atomic_queue_new (2);
-
-  g_mutex_init (&self->lock);
-
   self->surface_count = 0;
 }
 
 static void
 gst_va_memory_pool_finalize (GstVaMemoryPool * self)
 {
-  g_mutex_clear (&self->lock);
-
   gst_atomic_queue_unref (self->queue);
 }
 
+static inline gboolean
+gst_va_memory_pool_surface_dec (GstVaMemoryPool * self)
+{
+  return g_atomic_int_dec_and_test (&self->surface_count);
+}
+
 static void
-gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
-    GstVaDisplay * display)
+gst_va_memory_pool_flush (GstVaMemoryPool * self, GstVaDisplay * display)
 {
   GstMemory *mem;
-  GstVaBufferSurface *buf;
 
   while ((mem = gst_atomic_queue_pop (self->queue))) {
-    /* destroy the surface */
-    buf = gst_va_display_peek_buffer_surface (display, mem);
-    if (buf) {
-      /* the display holds one reference per memory: if this is the last
-       * one, the surface is destroyed when the memory is finalized */
-      if (g_atomic_ref_count_compare (&buf->ref_count, 1))
-        self->surface_count -= 1;       /* GstVaDmabufAllocator */
-    } else {
-      self->surface_count -= 1; /* GstVaAllocator */
-    }
-
     GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
     /* when mem are pushed available queue its allocator is unref,
      * then now it is required to ref the allocator here because
      * memory's finalize will unref it again */
     gst_object_ref (mem->allocator);
     gst_memory_unref (mem);
+    gst_va_memory_pool_surface_dec (self);
   }
-}
-
-static void
-gst_va_memory_pool_flush (GstVaMemoryPool * self, GstVaDisplay * display)
-{
-  GST_VA_MEMORY_POOL_LOCK (self);
-  gst_va_memory_pool_flush_unlocked (self, display);
-  GST_VA_MEMORY_POOL_UNLOCK (self);
 }
 
 static inline void
@@ -1188,7 +1163,7 @@ gst_va_allocator_dispose (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
-  gst_va_memory_pool_flush_unlocked (&self->pool, self->display);
+  gst_va_memory_pool_flush (&self->pool, self->display);
   if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
     GST_WARNING_OBJECT (self, "Surfaces leaked: %d",
         gst_va_memory_pool_surface_count (&self->pool));
@@ -1522,9 +1497,7 @@ _va_copy (GstMemory * mem, gssize offset, gssize size)
       size);
 
   {
-    GST_VA_MEMORY_POOL_LOCK (&va_allocator->pool);
     copy = gst_va_memory_pool_pop (&va_allocator->pool);
-    GST_VA_MEMORY_POOL_UNLOCK (&va_allocator->pool);
 
     if (!copy) {
       copy = gst_va_allocator_alloc (mem->allocator);
@@ -1599,7 +1572,7 @@ gst_va_memory_release (GstMiniObject * mini_object)
   gst_va_memory_pool_push (&self->pool, mem);
 
   /* Keep last in case we are holding on the last allocator ref */
-  gst_object_unref (mem->allocator);
+  gst_object_unref (self);
 
   /* don't call mini_object's free */
   return FALSE;
@@ -1703,8 +1676,7 @@ gst_va_allocator_setup_buffer (GstAllocator * allocator, GstBuffer * buffer)
 }
 
 static VASurfaceID
-gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
-    GstBuffer * buffer)
+_gst_va_allocator_prepare_buffer (GstVaAllocator * self, GstBuffer * buffer)
 {
   GstMemory *mem;
   VASurfaceID surface;
@@ -1745,9 +1717,7 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
 
   self = GST_VA_ALLOCATOR (allocator);
 
-  GST_VA_MEMORY_POOL_LOCK (&self->pool);
-  surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
-  GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
+  surface = _gst_va_allocator_prepare_buffer (self, buffer);
 
   return (surface != VA_INVALID_ID);
 }
