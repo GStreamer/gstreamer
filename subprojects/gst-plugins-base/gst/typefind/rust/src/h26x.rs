@@ -21,6 +21,7 @@
 //! fields rather than sharing one mask.
 
 use crate::helpers::{Prob, Scanner, TypeFind};
+use crate::scan::Pattern;
 use crate::startcode::next_start_code;
 
 /// How far a finder looks into the stream. The parameter sets and the first
@@ -195,6 +196,9 @@ fn h263_picture(w: &[u8; 6]) -> Option<bool> {
     Some(w[4] & 0x02 != 0 || w[5] & 0x20 == 0)
 }
 
+/// The picture start code, 22 bits: `0x000080`.
+const H263_PSC: Pattern<3> = Pattern::new([0x00, 0x00, 0x80], [0xFF, 0xFF, 0xFC]);
+
 /// H.263 is SECONDARY, so it keeps the lowest confidence of the family and
 /// leaves the bytes to anything more specific that also claims them.
 pub fn h263_probe(tf: &mut TypeFind) -> Option<Prob> {
@@ -206,7 +210,7 @@ pub fn h263_probe(tf: &mut TypeFind) -> Option<Prob> {
     // The old typefinder reaches one candidate further at each tail and
     // asks for two more octets there than it ever reads; one candidate in
     // 128 KiB is not worth a window the fields cannot explain.
-    while scan.offset() + 4 < PROBE_LIMIT {
+    while scan.find(PROBE_LIMIT - 5, &[H263_PSC]) {
         let Some(head) = scan.peek(6) else { break };
         // `peek` answers with exactly the octets it was asked for or with
         // nothing, so the six are there to name.

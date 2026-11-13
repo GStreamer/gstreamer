@@ -16,10 +16,16 @@
 //! for octets rather than for this prefix.
 
 use crate::helpers::Scanner;
+use crate::scan::Pattern;
 
 /// Three octets, `00 00 01`, opening every start code in the formats that
 /// frame this way.
 const START_CODE_PREFIX: [u8; 3] = [0x00, 0x00, 0x01];
+
+/// The prefix and the octet that names what it opens. A start code with no
+/// octet after it names nothing, so the pattern asks for four and leaves the
+/// last one free.
+const START_CODE: Pattern<4> = Pattern::new([0x00, 0x00, 0x01, 0x00], [0xFF, 0xFF, 0xFF, 0x00]);
 
 /// How far behind the octet a search leaves the cursor the prefix begins. A
 /// caller that wants to know where the start code itself sits has to subtract
@@ -40,14 +46,14 @@ pub fn is_start_code(bytes: &[u8]) -> bool {
 /// search may cross; `None` ends the search, either because nothing
 /// qualified within it or because the stream ran out.
 pub fn next_start_code(scan: &mut Scanner, limit: usize) -> Option<i64> {
-    for _ in 0..=limit {
-        if is_start_code(scan.peek(4)?) {
-            scan.consume(3);
-            return Some(scan.offset());
-        }
-        scan.consume(1);
+    let end = scan
+        .offset()
+        .saturating_add(i64::try_from(limit).unwrap_or(i64::MAX));
+    if !scan.find(end, &[START_CODE]) {
+        return None;
     }
-    None
+    scan.consume(START_CODE_PREFIX.len());
+    Some(scan.offset())
 }
 
 #[cfg(test)]
@@ -142,5 +148,71 @@ mod tests {
                 assert_eq!(next_start_code(&mut scan, 4), None);
             },
         );
+    }
+
+    /// A prefix is found wherever the window boundary puts it: at the last
+    /// position where four octets are in view, and in the octets the window
+    /// defers to the next one.
+    #[test]
+    fn a_prefix_is_found_across_the_window_boundary() {
+        // Ask the scanner for the size of the first window it serves rather
+        // than name it here: the boundary cases sit at its edges.
+        let window = probe(&[0u8; 1 << 16], |tf| {
+            Scanner::new(tf, 0).peek_at_least(1).unwrap().len()
+        });
+        for at in [window - 4, window - 2] {
+            let mut stream = vec![0xFFu8; at];
+            stream.extend_from_slice(&[0x00, 0x00, 0x01, 0xB6]);
+            probe(&stream, |tf| {
+                let mut scan = Scanner::new(tf, 0);
+                assert_eq!(
+                    next_start_code(&mut scan, at + 8),
+                    Some(at as i64 + 3),
+                    "prefix at {at}"
+                );
+            });
+        }
+    }
+
+    /// A run of zeros is the prefilter's worst case: every octet is a hit and
+    /// the prefix is confirmed at each one. The search still terminates and
+    /// still finds the prefix at the end of the run.
+    #[test]
+    fn a_zero_run_does_not_stall_the_search() {
+        let mut stream = vec![0x00u8; 8192];
+        stream.extend_from_slice(&[0x00, 0x00, 0x01, 0xB6]);
+        probe(&stream, |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            assert_eq!(next_start_code(&mut scan, 8192), Some(8195));
+        });
+    }
+
+    /// A prefix past the limit is not answered, even though the window holds
+    /// it, and the search stops one position past the limit.
+    #[test]
+    fn a_prefix_past_the_limit_is_not_answered() {
+        let mut stream = vec![0xFFu8; 8];
+        stream.extend_from_slice(&[0x00, 0x00, 0x01, 0xB6]);
+        probe(&stream, |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            assert_eq!(next_start_code(&mut scan, 7), None);
+            assert_eq!(scan.offset(), 8);
+        });
+        // The same stream with room for the prefix answers it.
+        probe(&stream, |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            assert_eq!(next_start_code(&mut scan, 8), Some(11));
+        });
+    }
+
+    /// A search that runs out of stream leaves the cursor where the bytes ran
+    /// out, which is what a caller resuming the search relies on.
+    #[test]
+    fn a_search_that_runs_out_leaves_the_cursor_at_the_end() {
+        probe(&[0xFF, 0xFF, 0x00, 0x00], |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            assert_eq!(next_start_code(&mut scan, 8), None);
+            assert_eq!(scan.offset(), 1);
+        });
     }
 }

@@ -17,6 +17,7 @@ use crate::helpers::{
     Prob, Scanner, TypeFind, aac_channels, aac_level, aac_profile, aac_sample_rate, u16be, u16le,
     u32be, u32le,
 };
+use crate::scan::Pattern;
 use std::ffi::{CStr, c_uint};
 use std::num::NonZeroU64;
 
@@ -134,11 +135,19 @@ fn loas_frame_len(head: &[u8]) -> Option<usize> {
     (payload > 0).then(|| 3 + payload)
 }
 
+/// The three sync patterns, two octets each: ADTS (FFF), LOAS (56E) and
+/// LOAS-EP (4DE1). The header is read whole once one of them matches.
+const AAC_SYNCS: [Pattern<2>; 3] = [
+    Pattern::new([0xFF, 0xF0], [0xFF, 0xF6]),
+    Pattern::new([0x56, 0xE0], [0xFF, 0xE0]),
+    Pattern::new([0x4D, 0xE1], [0xFF, 0xFF]),
+];
+
 /// The first candidate whose chain verifies. ADTS wins outright; otherwise the
 /// longest LOAS chain wins. The three sync patterns are mutually exclusive, so
 /// a candidate is never ambiguous. A candidate that does not chain only rules
-/// out its own offset, so the probe moves one byte and tries again; an
-/// exhausted window is the only answer of none.
+/// out its own offset, so the probe moves to the next sync octet and tries
+/// again; an exhausted window is the only answer of none.
 pub fn aac_probe(tf: &mut TypeFind) -> Option<AacFraming> {
     // The ADIF header is defined to sit at the start of the sequence.
     if tf.starts_with(b"ADIF") {
@@ -147,11 +156,7 @@ pub fn aac_probe(tf: &mut TypeFind) -> Option<AacFraming> {
 
     let mut scanner = Scanner::new(tf, 0);
     let mut best_loas = 0;
-    loop {
-        let start = scanner.offset();
-        if start >= AAC_WINDOW {
-            break;
-        }
+    while scanner.find(AAC_WINDOW - 1, &AAC_SYNCS) {
         let mut probe = scanner;
         let Some(head) = probe.peek(6) else { break };
         // A chain walk runs as far as the frames reach, which says nothing about
@@ -346,9 +351,18 @@ fn dts_header(kind: DtsMarker, d: &[u8]) -> Option<(usize, i32, i32)> {
     Some((size, rate, channels))
 }
 
+/// The first two octets of each marker, in the byte order it states. The
+/// marker itself is matched whole once one of these is in view.
+const DTS_MARKERS: [Pattern<2>; 4] = [
+    Pattern::new([0x7F, 0xFE], [0xFF; 2]),
+    Pattern::new([0x1F, 0xFF], [0xFF; 2]),
+    Pattern::new([0xFE, 0x7F], [0xFF; 2]),
+    Pattern::new([0xFF, 0x1F], [0xFF; 2]),
+];
+
 pub fn dts_probe(tf: &mut TypeFind) -> Option<DtsFrame> {
     let mut scan = Scanner::new(tf, 0);
-    while scan.offset() <= DTS_WINDOW {
+    while scan.find(DTS_WINDOW, &DTS_MARKERS) {
         let start = scan.offset();
         // A header that leads nowhere must not drag the scan with it, so all of
         // the speculative reading happens on a copy of the cursor.
@@ -809,13 +823,8 @@ fn mp3_scan(tf: &mut TypeFind, start: i64) -> (u32, Option<MpegAudioLayer>) {
     // whole start. See `mp3_run`.
     let mut pending: Option<i64> = None;
     let mut settled: Option<usize> = None;
-    while scan.offset() < start + MP3_WINDOW {
+    while scan.find(start + MP3_WINDOW - 1, &[MP3_SYNC]) {
         let at = scan.offset();
-        let Some(head) = scan.peek(4) else { break };
-        if head[0] != 0xFF {
-            scan.consume(1);
-            continue;
-        }
         // The run reads ahead as far as the frames reach, which says nothing
         // about where the next candidate starts. A copy of the cursor reads
         // ahead; the scan stays on the byte it is trying.
@@ -860,6 +869,9 @@ pub struct Mp3Stream {
     pub probability: u32,
     pub layer: i32,
 }
+
+/// The frame sync, eleven bits set: 0xFFE.
+const MP3_SYNC: Pattern<2> = Pattern::new([0xFF, 0xE0], [0xFF, 0xE0]);
 
 /// Free format, bitrate index zero, is read by the same rule the parser that
 /// consumes such a stream uses, so the typefinder finds what that parser can
@@ -1131,6 +1143,9 @@ const AC4_SCAN_LIMIT: i64 = 1024;
 /// Whether the two octets open a frame, and if so how many crc octets that sync
 /// word announces. The sync word marks the start of a frame, and the second of
 /// the two also says that a `crc_word` follows the payload. G.4.1.
+/// The sync word, sixteen bits with its low bit free: 0xAC40 or 0xAC41.
+const AC4_SYNC: Pattern<2> = Pattern::new([0xAC, 0x40], [0xFF, 0xFE]);
+
 fn ac4_sync(head: &[u8]) -> Option<usize> {
     match u16be(head) {
         0xAC40 => Some(0),
@@ -1165,7 +1180,7 @@ fn ac4_frame_len(head: &[u8; 7]) -> Option<usize> {
 /// open part way through a frame.
 pub fn ac4_probe(tf: &mut TypeFind) -> Option<Prob> {
     let mut scan = Scanner::new(tf, 0);
-    while scan.offset() < AC4_SCAN_LIMIT {
+    while scan.find(AC4_SCAN_LIMIT - 1, &[AC4_SYNC]) {
         let Some(head) = scan.peek(7) else {
             // A frame is at least five octets and its follower needs two more,
             // and what is available only shrinks as the scan moves.
@@ -1404,6 +1419,7 @@ pub fn mod_probe(tf: &mut TypeFind) -> Option<(Prob, &'static CStr)> {
 mod tests {
     use super::*;
     use crate::helpers::probe_engine::probe;
+    use crate::scan::find_any;
 
     /// A free-format frame reaches to the next header the walk meets,
     /// and the bitrate that distance implies decides whether the frame
@@ -1709,5 +1725,68 @@ mod tests {
         // Nor is the right magic sitting at offset 0 instead of offset 4.
         let shifted = [0x57, 0x90, 0x75, 0x36, 0, 0, 0, 0, 0, 0, 0, 0];
         assert_eq!(prob(&shifted, None), None);
+    }
+
+    /// A DTS frame header that parses: eight blocks of 200 octets at 48 kHz,
+    /// two channels, under the 16-bit big-endian marker.
+    const DTS_HEAD: [u8; 16] = [
+        0x7F, 0xFE, 0x80, 0x01, 0x00, 0x20, 0x0C, 0x70, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00,
+    ];
+
+    /// The marker patterns are the markers the header match accepts.
+    #[test]
+    fn the_marker_patterns_are_the_marker_set() {
+        for marker in [0x7FFE_8001u32, 0x1FFF_E800, 0xFE7F_0180, 0xFF1F_00E8] {
+            assert!(DtsMarker::new(marker).is_some(), "{marker:08X}");
+            assert!(
+                find_any(&DTS_MARKERS, &marker.to_be_bytes()[..2]) == Some(0),
+                "{marker:08X}"
+            );
+        }
+    }
+
+    /// A frame followed by a second one at its stated length is the whole
+    /// format, wherever in the search window the first one sits.
+    fn dts_stream(at: usize) -> Vec<u8> {
+        let mut stream = vec![0u8; at];
+        stream.extend_from_slice(&DTS_HEAD);
+        stream.resize(at + 200, 0x00);
+        stream.extend_from_slice(&DTS_HEAD[..4]);
+        stream
+    }
+
+    /// A frame is found wherever the window boundary puts it: at the start, at
+    /// the last position where its header is in view, and in the octets the
+    /// window defers to the next one.
+    #[test]
+    fn a_frame_is_found_across_the_window_boundary() {
+        // Ask the scanner for the size of the first window it serves rather
+        // than name it here: the boundary cases sit at its edges.
+        let window = probe(&[0u8; 1 << 16], |tf| {
+            Scanner::new(tf, 0).peek_at_least(1).unwrap().len()
+        });
+        for at in [0, window - DTS_MIN_FRAME, window - (DTS_MIN_FRAME - 1)] {
+            let frame = probe(&dts_stream(at), dts_probe);
+            assert_eq!(
+                frame.map(|f| f.probability),
+                Some(Prob::MAXIMUM.get()),
+                "frame at {at}"
+            );
+        }
+    }
+
+    /// Past the search window nothing is claimed, however well the header
+    /// parses.
+    #[test]
+    fn a_frame_past_the_search_window_is_not_found() {
+        let at = DTS_WINDOW as usize + 1;
+        assert!(probe(&dts_stream(at), dts_probe).is_none());
+    }
+
+    /// A stream too short to hold a frame is not a fragment of one.
+    #[test]
+    fn a_stream_shorter_than_a_frame_is_not_found() {
+        assert!(probe(&DTS_HEAD[..4], dts_probe).is_none());
     }
 }

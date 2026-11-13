@@ -18,6 +18,7 @@ mod containers;
 mod h26x;
 mod helpers;
 mod mpeg;
+mod scan;
 mod startcode;
 mod subtitles;
 mod typefindfunctions;

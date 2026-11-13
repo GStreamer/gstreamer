@@ -10,6 +10,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::bindings::{self, gpointer};
+use crate::scan::{Pattern, find_any};
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
@@ -130,6 +131,20 @@ impl<'a> Scanner<'a> {
     /// when the cached window cannot cover them. `None` when fewer than
     /// `min` bytes remain in the stream.
     pub fn peek(&mut self, min: usize) -> Option<&[u8]> {
+        self.peek_at_least(min).map(|window| &window[..min])
+    }
+
+    /// The bytes the cursor can serve without querying the engine again: at
+    /// least `min` of them, at most one window. `None` when fewer than `min`
+    /// bytes remain in the stream.
+    ///
+    /// A finder that has to search the stream asks for the header it needs
+    /// and searches the whole slice, instead of peeking that header at every
+    /// offset. The slice stays valid until the typefinding function returns,
+    /// so it may be searched and then handed back through [`consume`].
+    ///
+    /// [`consume`]: Scanner::consume
+    pub fn peek_at_least(&mut self, min: usize) -> Option<&[u8]> {
         if min == 0 {
             return Some(&[]);
         }
@@ -146,7 +161,43 @@ impl<'a> Scanner<'a> {
         // cache, so a window outlives any number of later peeks from any
         // number of scanners. `refill` yields at least `min` bytes or nothing,
         // never a short window, so the bytes are there to hand out.
-        Some(unsafe { std::slice::from_raw_parts(self.base.add(self.pos), min) })
+        Some(unsafe { std::slice::from_raw_parts(self.base.add(self.pos), self.len - self.pos) })
+    }
+
+    /// Move the cursor to the next position at or before `end` where one of
+    /// `patterns` matches, leaving it on the first octet of the match.
+    /// `false` when the stream ends first, with the cursor left where the
+    /// search stopped.
+    ///
+    /// The window is searched whole rather than a header peeked at every
+    /// offset: the last octets of a window are left for the next one, so a
+    /// match opening there is still in view complete.
+    pub(crate) fn find<const N: usize, const M: usize>(
+        &mut self,
+        end: i64,
+        patterns: &[Pattern<N>; M],
+    ) -> bool {
+        while self.offset() <= end {
+            let reach = usize::try_from(end - self.offset())
+                .unwrap_or(usize::MAX)
+                .saturating_add(1);
+            let (span_len, hit) = {
+                let Some(window) = self.peek_at_least(N) else {
+                    return false;
+                };
+                let span = &window[..reach.saturating_add(N - 1).min(window.len())];
+                let hit = find_any(patterns, span);
+                (span.len(), hit)
+            };
+            match hit {
+                Some(at) => {
+                    self.consume(at);
+                    return true;
+                }
+                None => self.consume(span_len.saturating_sub(N - 1)),
+            }
+        }
+        false
     }
 
     /// Declare the next `n` bytes consumed. May run past the window end; the
@@ -667,5 +718,58 @@ pub(crate) mod probe_engine {
         };
         guarded(&mut probe, read);
         probe.suggestions
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Scanner;
+    use super::probe_engine::probe;
+
+    /// A window serves at least the header the finder asked for, and more
+    /// when the cache holds more.
+    #[test]
+    fn a_window_serves_at_least_what_was_asked_for() {
+        probe(&[0xAA; 100], |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            let window = scan.peek_at_least(4).unwrap();
+            assert_eq!(window.len(), 100);
+            assert_eq!(&window[..4], &[0xAA; 4]);
+        });
+    }
+
+    /// The tail of a stream is served whole, and a request for more than it
+    /// holds is refused rather than answered short.
+    #[test]
+    fn a_short_tail_is_served_whole() {
+        probe(&[0xAA; 10], |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            assert_eq!(scan.peek_at_least(4).unwrap().len(), 10);
+            assert!(scan.peek_at_least(11).is_none());
+        });
+    }
+
+    /// A cursor that leaves the window behind gets a fresh one at its new
+    /// position, however far past the end it walked.
+    #[test]
+    fn a_window_is_renewed_after_the_cursor_leaves_it() {
+        probe(&[0x11; 8192], |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            let first = scan.peek_at_least(4).unwrap().len();
+            scan.consume(first + 7);
+            assert_eq!(scan.peek_at_least(4).unwrap().len(), 8192 - first - 7);
+        });
+    }
+
+    /// An empty request is answered, and one past the end of the stream is
+    /// not.
+    #[test]
+    fn a_request_past_the_end_is_refused() {
+        probe(&[0xAA; 10], |tf| {
+            let mut scan = Scanner::new(tf, 0);
+            assert!(scan.peek_at_least(0).unwrap().is_empty());
+            scan.consume(10);
+            assert!(scan.peek_at_least(1).is_none());
+        });
     }
 }

@@ -32,6 +32,7 @@ use crate::containers::{
 use crate::h26x::{h263_probe, h264_probe, h265_probe, h266_probe};
 use crate::helpers::{Feature, Prob, Scanner, TypeFind, opt, suggest, typefinder, u16le, u32le};
 use crate::mpeg::{mpeg_sys_probe, mpeg_ts_probe, mpeg_video_probe, mpeg4_video_probe};
+use crate::scan::{Pattern, find_any};
 use crate::subtitles;
 use crate::xdg_mime::SharedMimeInfo;
 use crate::xml::{XmlProbe, xml_probe};
@@ -1343,6 +1344,9 @@ extern "C" fn ea_type_find(tf: &mut TypeFind, _private: gpointer) {
 // i+19..i+24 are num_aux (4 bits), vsize (20 bits) and asize (16 bits).
 // The frame spans i..i+24+vsize+asize; a nonsync frame right after starts
 // with the bytes EF BE. Bare marker suggests 1.
+/// The sync frame marker, `NSVs`.
+const NSV_SYNC: Pattern<4> = Pattern::new(*b"NSVs", [0xFF; 4]);
+
 extern "C" fn nsv_type_find(tf: &mut TypeFind, _private: gpointer) {
     let Some(data) = tf.peek_at_most(4096) else {
         return;
@@ -1353,7 +1357,7 @@ extern "C" fn nsv_type_find(tf: &mut TypeFind, _private: gpointer) {
         return;
     }
     // First "NSVs" chunk marker (offset 0 already handled above).
-    if let Some(i) = data.windows(4).position(|w| w == *b"NSVs")
+    if let Some(i) = find_any(&[NSV_SYNC], data)
         && data.len() >= i + 24
     {
         // Bit-packed sizes at i+19..i+24: low nibble of i+19 is num_aux,
