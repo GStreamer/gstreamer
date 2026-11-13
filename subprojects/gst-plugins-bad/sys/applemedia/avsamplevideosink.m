@@ -582,9 +582,10 @@ _enqueue_sample (GstAVSampleVideoSink * av_sink, GstBuffer *buf)
         GST_VIDEO_INFO_WIDTH (&v_frame->info),
         GST_VIDEO_INFO_HEIGHT (&v_frame->info),
         _cv_pixel_format_type_from_video_format (GST_VIDEO_INFO_FORMAT (&v_frame->info)),
-         /* have to put something for these two parameters otherwise
-          * the callback is not called resulting in a big leak */
-        v_frame, v_frame->info.size,
+         /* have to put something for dataPtr otherwise
+          * the callback is not called on older macOS resulting in a big leak.
+          * 27.3+ also does a size check if it's specified so keep it at 0 */
+        v_frame, 0,
         GST_VIDEO_INFO_N_PLANES (&v_frame->info), v_frame->data,
         widths, heights, strides,
         (CVPixelBufferReleasePlanarBytesCallback) _unmap_planar_frame,
