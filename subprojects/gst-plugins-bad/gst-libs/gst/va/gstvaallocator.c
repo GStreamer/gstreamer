@@ -1528,13 +1528,14 @@ _va_copy (GstMemory * mem, gssize offset, gssize size)
 
   if (!gst_memory_map (mem, &sinfo, GST_MAP_READ)) {
     GST_WARNING ("failed to map memory to copy");
+    gst_memory_unref (copy);
     return NULL;
   }
 
   if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
     GST_WARNING ("could not write map memory %p", copy);
-    gst_allocator_free (mem->allocator, copy);
     gst_memory_unmap (mem, &sinfo);
+    gst_memory_unref (copy);
     return NULL;
   }
 
