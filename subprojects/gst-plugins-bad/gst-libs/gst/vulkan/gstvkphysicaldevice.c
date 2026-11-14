@@ -95,6 +95,7 @@ struct _GstVulkanPhysicalDevicePrivate
 #endif
 #if defined (VK_KHR_get_physical_device_properties2)
   PFN_vkGetPhysicalDeviceFormatProperties2KHR get_format_props_fn;
+  PFN_vkGetPhysicalDeviceImageFormatProperties2KHR get_image_format_props_fn;
 #endif
 #if defined (VK_KHR_video_queue)
   PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR get_video_format_props_fn;
@@ -1790,6 +1791,96 @@ fallback:
     if (props)
       _copy_format_properties (props, &prop1);
   }
+}
+
+/**
+ * gst_vulkan_physical_device_get_image_format_properties: (skip):
+ * @device: a #GstVulkanPhysicalDevice
+ * @vk_format: Vulkan format of the image (VkFormat)
+ * @image_type: Vulkan image type (VkImageType)
+ * @tiling: Vulkan image tiling (VkImageTiling)
+ * @usage: Vulkan image usage (VkImageUsageFlags)
+ * @flags: Vulkan image create flags (VkImageCreateFlags)
+ * @props: (out caller-allocates) (nullable): Where the Vulkan image format
+ *     properties will be stored (VkImageFormatProperties)
+ * @error: a #GError pointer
+ *
+ * This method will query @device whether an image with the given parameters
+ * is supported, and its properties, depending on the supported extensions by
+ * the driver.
+ *
+ * Returns: %TRUE if supported; otherwise %FALSE and @error is set
+ */
+gboolean
+gst_vulkan_physical_device_get_image_format_properties (GstVulkanPhysicalDevice
+    * device, guint vk_format, guint image_type, guint tiling, guint usage,
+    guint flags, gpointer props, GError ** error)
+{
+  VkImageFormatProperties *props_out = props;
+  VkResult res;
+#if defined (VK_KHR_get_physical_device_properties2)
+  GstVulkanPhysicalDevicePrivate *priv;
+  VkPhysicalDeviceImageFormatInfo2KHR info = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHR,
+    .pNext = NULL,
+    .format = vk_format,
+    .type = image_type,
+    .tiling = tiling,
+    .usage = usage,
+    .flags = flags,
+  };
+  VkImageFormatProperties2KHR prop2 = {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2_KHR,
+    .pNext = NULL,
+  };
+#endif
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+#if defined (VK_KHR_get_physical_device_properties2)
+  priv = GET_PRIV (device);
+
+  if (!priv->get_image_format_props_fn) {
+    if (gst_vulkan_physical_device_check_api_version (device, 1, 1, 0)) {
+      priv->get_image_format_props_fn =
+          gst_vulkan_instance_get_proc_address (device->instance,
+          "vkGetPhysicalDeviceImageFormatProperties2");
+    } else {
+      priv->get_image_format_props_fn =
+          gst_vulkan_instance_get_proc_address (device->instance,
+          "vkGetPhysicalDeviceImageFormatProperties2KHR");
+    }
+
+    if (!priv->get_image_format_props_fn)
+      goto fallback;
+  }
+
+  res = priv->get_image_format_props_fn (device->device, &info, &prop2);
+  if (gst_vulkan_error_to_g_error (res, error,
+          "vkGetPhysicalDeviceImageFormatProperties2") != VK_SUCCESS)
+    return FALSE;
+
+  if (props_out)
+    *props_out = prop2.imageFormatProperties;
+
+  return TRUE;
+
+fallback:
+#endif
+  {
+    VkImageFormatProperties prop1;
+
+    res = vkGetPhysicalDeviceImageFormatProperties (device->device, vk_format,
+        image_type, tiling, usage, flags, &prop1);
+    if (gst_vulkan_error_to_g_error (res, error,
+            "vkGetPhysicalDeviceImageFormatProperties") != VK_SUCCESS)
+      return FALSE;
+
+    if (props_out)
+      *props_out = prop1;
+  }
+
+  return TRUE;
 }
 
 /**

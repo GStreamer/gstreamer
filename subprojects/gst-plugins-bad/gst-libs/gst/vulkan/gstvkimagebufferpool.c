@@ -265,22 +265,27 @@ internal_config_get_allocation_params (GstStructure * config,
     gst_structure_get (config, "encode-caps", GST_TYPE_CAPS, encode_caps, NULL);
 }
 
-/* Returns the VkImageCreateFlags the driver allows for video images of
- * @format with @usage, for every video profile of the pool, or 0 if they
- * cannot be determined (e.g. no profiles, or @format not supported for
- * @usage). */
-static VkImageCreateFlags
-_get_video_image_create_flags (GstVulkanImageBufferPool * vk_pool,
-    VkFormat format, VkImageUsageFlags usage)
+/* Returns TRUE if the driver allows video images of @format, @tiling and
+ * @usage to be created with @flags, for every video profile of the pool.
+ * The driver may report several entries for @format (e.g. per tiling), each
+ * with its own allowed flags, so @flags have to be allowed altogether by one
+ * entry matching the image. Non-zero @flags are never allowed if they cannot
+ * be determined (e.g. no profiles, or @format not supported for @usage). */
+static gboolean
+_check_video_image_create_flags (GstVulkanImageBufferPool * vk_pool,
+    VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+    VkImageCreateFlags flags)
 {
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
-  VkImageCreateFlags flags = ~((VkImageCreateFlags) 0);
   guint i, j;
 
+  if (flags == 0)
+    return TRUE;
+
   if (priv->n_profiles == 0)
-    return 0;
+    return FALSE;
 
   for (i = 0; i < priv->n_profiles; i++) {
     GError *error = NULL;
@@ -293,28 +298,26 @@ _get_video_image_create_flags (GstVulkanImageBufferPool * vk_pool,
       GST_DEBUG_OBJECT (vk_pool, "Failed to query video formats: %s",
           error ? error->message : "unknown error");
       g_clear_error (&error);
-      return 0;
+      return FALSE;
     }
 
-    for (j = 0; j < fmts->len; j++) {
+    for (j = 0; j < fmts->len && !found; j++) {
       VkVideoFormatPropertiesKHR *props =
           &g_array_index (fmts, VkVideoFormatPropertiesKHR, j);
 
-      if (props->format == format) {
-        flags &= props->imageCreateFlags;
-        found = TRUE;
-        break;
-      }
+      found = props->format == format && props->imageTiling == tiling
+          && props->imageType == VK_IMAGE_TYPE_2D
+          && (flags & ~props->imageCreateFlags) == 0;
     }
     g_array_unref (fmts);
 
     if (!found)
-      return 0;
+      return FALSE;
   }
 
-  return flags;
+  return TRUE;
 #else
-  return 0;
+  return flags == 0;
 #endif
 }
 
@@ -431,6 +434,45 @@ _get_vulkan_func_pointer (GstVulkanImageBufferPool * vk_pool, guint major,
     return NULL;
   }
   return func;
+}
+
+/* Returns TRUE if the driver supports creating every image of the pool with
+ * @flags, @tiling and @usage. Video images may only use the flags the driver
+ * allows for the video profiles of the pool, while non-video images are
+ * probed with the image format properties. */
+static gboolean
+_check_image_create_flags (GstVulkanImageBufferPool * vk_pool,
+    VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags)
+{
+  GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  const gboolean is_video_usage = _is_video_usage (usage);
+  int i;
+
+  for (i = 0; i < priv->n_imgs; i++) {
+    GError *error = NULL;
+
+    if (is_video_usage) {
+      if (!_check_video_image_create_flags (vk_pool, priv->vk_fmts[i], tiling,
+              usage, flags)) {
+        GST_DEBUG_OBJECT (vk_pool, "image create flags 0x%x not allowed for "
+            "vk_fmt=%d usage=0x%x tiling=%d by the video profiles",
+            (guint) flags, (gint) priv->vk_fmts[i], (guint) usage,
+            (gint) tiling);
+        return FALSE;
+      }
+    } else if (!gst_vulkan_physical_device_get_image_format_properties
+        (vk_pool->device->physical_device, priv->vk_fmts[i], VK_IMAGE_TYPE_2D,
+            tiling, usage, flags, NULL, &error)) {
+      GST_DEBUG_OBJECT (vk_pool, "image create flags 0x%x not supported for "
+          "vk_fmt=%d usage=0x%x tiling=%d: %s", (guint) flags,
+          (gint) priv->vk_fmts[i], (guint) usage, (gint) tiling,
+          error ? error->message : "unknown error");
+      g_clear_error (&error);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 /* Verify that the driver actually advertises external-memory export for
@@ -759,7 +801,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     GstVulkanPhysicalDevice *gpu = vk_pool->device->physical_device;
     /* Profile-independent images don't need the profiles to be created, but
      * they are still used to query the video format properties (see
-     * _get_video_image_create_flags()) */
+     * _check_video_image_create_flags()) */
     const gboolean profiles_required =
         !gst_vulkan_physical_device_has_feature_video_maintenance1 (gpu)
         || !_is_video_profile_independent (requested_usage);
@@ -826,31 +868,43 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
           gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
       const gboolean is_single_allocation = vkmap->vkfrmt == priv->vk_fmts[0];
       const gboolean is_video_usage = _is_video_usage (requested_usage);
-      const VkImageCreateFlags additional_flags =
-          VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
       const gboolean is_multiplane =
           GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1;
-      gboolean video_allows_plane_views = FALSE;
 
-      /* video images may use these flags only if the driver allows them for
-       * the video profiles and the actual usage of the images */
-      if (is_video_usage && is_multiplane) {
-        VkImageCreateFlags video_flags =
-            _get_video_image_create_flags (vk_pool, priv->vk_fmts[0],
-            requested_usage);
-
-        video_allows_plane_views =
-            (video_flags & additional_flags) == additional_flags;
-        GST_DEBUG_OBJECT (pool, "video image create flags 0x%x, per-plane "
-            "views %sallowed", video_flags,
-            video_allows_plane_views ? "" : "not ");
+      /* video images are never aliased */
+      if (!is_video_usage) {
+        if (_check_image_create_flags (vk_pool, tiling, requested_usage,
+                VK_IMAGE_CREATE_ALIAS_BIT)) {
+          priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
+        } else {
+          GST_INFO_OBJECT (pool, "ALIAS create flag isn't supported by the "
+              "driver for usage 0x%x, not setting it", requested_usage);
+        }
       }
 
-      if (!is_video_usage)
-        priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
-      if (is_multiplane && (is_video_usage ? video_allows_plane_views
-              : is_single_allocation)) {
-        priv->img_flags |= additional_flags;
+      if (is_multiplane && is_single_allocation) {
+        if (_check_image_create_flags (vk_pool, tiling, requested_usage,
+                VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT)) {
+          priv->img_flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+        } else {
+          GST_INFO_OBJECT (pool, "MUTABLE_FORMAT create flag isn't allowed by "
+              "the driver for %susage 0x%x, per-plane "
+              "image views won't be possible", is_video_usage ?
+              "the video profiles and " : "", requested_usage);
+        }
+      }
+
+      /* Each create flag was validated alone above, but the driver might
+       * still reject their combination. MUTABLE_FORMAT is needed for
+       * per-plane image views, so drop ALIAS instead.
+       * (flags & (flags - 1)) is non-zero when more than one bit is set */
+      if ((priv->img_flags & (priv->img_flags - 1))
+          && !_check_image_create_flags (vk_pool, tiling, requested_usage,
+              priv->img_flags)) {
+        GST_INFO_OBJECT (pool, "create flags 0x%x aren't supported together "
+            "by the driver for usage 0x%x, dropping ALIAS", priv->img_flags,
+            requested_usage);
+        priv->img_flags &= ~VK_IMAGE_CREATE_ALIAS_BIT;
       }
     }
   }
