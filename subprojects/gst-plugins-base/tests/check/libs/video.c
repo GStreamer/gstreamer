@@ -4870,14 +4870,19 @@ GST_START_TEST (test_info_dma_drm)
   fail_unless (drm_info.drm_fourcc == DRM_FORMAT_NV12
       && drm_info.drm_modifier == I915_FORMAT_MOD_Y_TILED);
 
+  /* No native format for this modifier, fallback to linear format */
   fail_unless (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
-  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_DMA_DRM);
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_NV12);
 
   ncaps = gst_video_info_dma_drm_to_caps (&drm_info);
   fail_unless (ncaps);
   fail_unless (gst_caps_is_equal (caps, ncaps));
   gst_caps_unref (caps);
   gst_caps_unref (ncaps);
+
+  /* No native format for this fourcc */
+  drm_info.drm_fourcc = GST_MAKE_FOURCC ('Z', 'Z', 'Z', 'Z');
+  fail_if (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
 
   caps = gst_caps_from_string (invaliddrm_str);
   fail_if (gst_video_info_dma_drm_from_caps (&drm_info, caps));
@@ -4936,8 +4941,15 @@ GST_START_TEST (test_info_dma_drm_from_video_info)
   fail_unless_equals_int (GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, 1), 0);
   fail_unless_equals_int (GST_VIDEO_INFO_SIZE (&drm_info.vinfo), 0);
 
+  /* No native format for this modifier, fallback to linear format */
   fail_unless (gst_video_info_dma_drm_to_video_info (&drm_info, &info));
-  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_DMA_DRM);
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_NV12);
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0),
+      GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, 0));
+  fail_unless_equals_int (GST_VIDEO_INFO_PLANE_OFFSET (&info, 1),
+      GST_VIDEO_INFO_PLANE_OFFSET (&vinfo, 1));
+  fail_unless_equals_int (GST_VIDEO_INFO_SIZE (&info),
+      GST_VIDEO_INFO_SIZE (&vinfo));
   fail_unless (gst_video_colorimetry_matches (&info.colorimetry, "bt601"));
   fail_unless_equals_int (info.chroma_site, GST_VIDEO_CHROMA_SITE_JPEG);
   fail_unless_equals_int (info.fps_n, 30);

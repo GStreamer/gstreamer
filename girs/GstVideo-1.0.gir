@@ -13113,8 +13113,10 @@ info in @drm_info.</doc>
       </method>
       <method name="to_video_info" c:identifier="gst_video_info_dma_drm_to_video_info" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Convert the #GstVideoInfoDmaDrm into a traditional #GstVideoInfo with
-recognized video format. For DMA kind memory, #GST_VIDEO_FORMAT_DMA_DRM is
-kept if no native gst format exists. This helper function
+recognized video format. For DMA kind memory, if no native GStreamer format
+corresponds to the same fourcc and modifier, it fallbacks to a format with
+the same fourcc ignoring the modifier. If no native GStreamer format
+corresponds to this fourcc, %FALSE is returned. This helper function
 sets @info's video format into the default value according to @drm_info's
 drm_fourcc field.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
