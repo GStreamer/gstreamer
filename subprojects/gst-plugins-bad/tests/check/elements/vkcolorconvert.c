@@ -356,6 +356,274 @@ GST_START_TEST (test_vulkan_color_convert_av12_passthrough)
 
 GST_END_TEST;
 
+/* These conversions only sample and transfer the composite image. They need
+ * MUTABLE_FORMAT for plane views, which the image buffer pool sets on
+ * composite multi-planar images when the driver allows it. Returns an
+ * inactive pool, or NULL if the device can't allocate such images. */
+static GstBufferPool *
+create_composite_pool (GstVulkanDevice * device, const GstVideoInfo * info,
+    VkFormat * format)
+{
+  const VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT |
+      VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  GstBufferPool *pool = gst_vulkan_image_buffer_pool_new (device);
+  GstStructure *config = gst_buffer_pool_get_config (pool);
+  GstCaps *caps = gst_video_info_to_caps (info);
+  GstBuffer *buffer = NULL;
+  GstVulkanImageMemory *image;
+  gboolean usable;
+
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
+  gst_buffer_pool_config_set_params (config, caps, info->size, 0, 0);
+  gst_caps_unref (caps);
+  gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_LAYOUT_UNDEFINED, 0);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VULKAN_IMAGE_MULTIPLANAR_YUV);
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+
+  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+  fail_unless_equals_int (gst_buffer_pool_acquire_buffer (pool, &buffer, NULL),
+      GST_FLOW_OK);
+  image = (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, 0);
+  usable = gst_buffer_n_memory (buffer) == 1
+      && (image->create_info.flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
+  *format = image->create_info.format;
+  gst_buffer_unref (buffer);
+  fail_unless (gst_buffer_pool_set_active (pool, FALSE));
+
+  if (!usable)
+    gst_clear_object (&pool);
+
+  return pool;
+}
+
+/* Request the composite fixture at the allocation boundary and verify that
+ * the producer actually used it before accepting any pixel results. */
+typedef struct
+{
+  GstBufferPool *pool;
+  VkFormat format;
+  gboolean saw_buffer;
+} CompositeAllocation;
+
+static GstPadProbeReturn
+composite_allocation_probe (GstPad * pad, GstPadProbeInfo * probe,
+    gpointer user_data)
+{
+  CompositeAllocation *allocation = user_data;
+
+  if (GST_PAD_PROBE_INFO_TYPE (probe) & GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM) {
+    GstQuery *query = GST_PAD_PROBE_INFO_QUERY (probe);
+
+    if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION) {
+      GstStructure *config = gst_buffer_pool_get_config (allocation->pool);
+      guint size;
+
+      gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+      gst_structure_free (config);
+      while (gst_query_get_n_allocation_pools (query))
+        gst_query_remove_nth_allocation_pool (query, 0);
+      gst_query_add_allocation_pool (query, allocation->pool, size, 0, 0);
+      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+      return GST_PAD_PROBE_HANDLED;
+    }
+  } else if (GST_PAD_PROBE_INFO_TYPE (probe) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (probe);
+    GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
+    GstVulkanImageMemory *image;
+
+    fail_unless_equals_int (gst_buffer_n_memory (buffer), 1);
+    fail_unless (gst_is_vulkan_image_memory (mem));
+    image = (GstVulkanImageMemory *) mem;
+    fail_unless_equals_int (image->create_info.format, allocation->format);
+    fail_unless (image->create_info.flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
+    allocation->saw_buffer = TRUE;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+/* Keep each RGB colour constant over a 2x2 block so 4:2:0 downsampling has
+ * an unambiguous reference. Chroma varies in both directions. */
+static void
+composite_rgb_pixel (guint x, guint y, guint frame, gdouble rgb[3])
+{
+  rgb[0] = 48 + 24 * (x / 2) + frame * 8;
+  rgb[1] = 64 + 32 * (y / 2);
+  rgb[2] = 176 - 16 * ((x / 2 + y / 2 + frame) % 4);
+}
+
+static guint8
+composite_yuv_value (guint component, guint x, guint y, guint frame)
+{
+  if (component == 0)
+    return 80 + (x * 7 + y * 11 + frame * 13) % 80;
+  /* Unequal U/V, changed between frames, also catch swapped/stale views. */
+  return component == 1 ? 96 + frame * 32 : 160 - frame * 32;
+}
+
+static void
+check_composite_color_convert (GstVideoFormat format, gboolean composite_input)
+{
+  GstHarness *h = gst_harness_new_parse ("vulkanupload name=upload ! "
+      "vulkancolorconvert name=convert ! vulkandownload");
+  GstElement *producer = gst_bin_get_by_name (GST_BIN (h->element),
+      composite_input ? "upload" : "convert");
+  GstPad *sinkpad = gst_element_get_static_pad (producer, "sink");
+  GstPad *srcpad = gst_element_get_static_pad (producer, "src");
+  GstQuery *query = gst_query_new_context (GST_VULKAN_DEVICE_CONTEXT_TYPE_STR);
+  GstContext *context;
+  GstVulkanDevice *device = NULL;
+  GstVideoInfo yuv_info, rgb_info, *in_info, *out_info;
+  CompositeAllocation allocation = { 0, };
+  gulong probe_id;
+  const gchar *name = gst_video_format_to_string (format);
+
+  fail_unless (gst_pad_query (sinkpad, query));
+  gst_query_parse_context (query, &context);
+  fail_unless (gst_context_get_vulkan_device (context, &device));
+  gst_query_unref (query);
+  fail_unless (gst_video_info_set_format (&yuv_info, format, 12, 8));
+  fail_unless (gst_video_info_set_format (&rgb_info, GST_VIDEO_FORMAT_RGBA, 12,
+          8));
+  fail_unless (gst_video_colorimetry_from_string (&yuv_info.colorimetry,
+          "bt601"));
+  yuv_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+  rgb_info.colorimetry = yuv_info.colorimetry;
+  rgb_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  in_info = composite_input ? &yuv_info : &rgb_info;
+  out_info = composite_input ? &rgb_info : &yuv_info;
+
+  allocation.pool = create_composite_pool (device, &yuv_info,
+      &allocation.format);
+  if (!allocation.pool) {
+    g_print ("SKIP composite %s %s: device cannot allocate a composite "
+        "mutable-format image\n", name, composite_input ? "input" : "output");
+    goto cleanup;
+  }
+
+  probe_id = gst_pad_add_probe (srcpad,
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM | GST_PAD_PROBE_TYPE_BUFFER,
+      composite_allocation_probe, &allocation, NULL);
+  gst_harness_set_caps (h, gst_video_info_to_caps (in_info),
+      gst_video_info_to_caps (out_info));
+
+  for (guint frame = 0; frame < 2; frame++) {
+    GstBuffer *input = gst_buffer_new_allocate (NULL, in_info->size, NULL);
+    GstBuffer *output;
+    GstVideoFrame mapped;
+
+    fail_unless (gst_video_frame_map (&mapped, in_info, input, GST_MAP_WRITE));
+    for (guint c = 0; c < GST_VIDEO_INFO_N_COMPONENTS (in_info); c++) {
+      guint8 *data = GST_VIDEO_FRAME_COMP_DATA (&mapped, c);
+      for (guint y = 0; y < GST_VIDEO_FRAME_COMP_HEIGHT (&mapped, c); y++) {
+        for (guint x = 0; x < GST_VIDEO_FRAME_COMP_WIDTH (&mapped, c); x++) {
+          gdouble rgb[3];
+          guint8 value;
+
+          composite_rgb_pixel (x, y, frame, rgb);
+          value = composite_input ? composite_yuv_value (c, x, y, frame) :
+              (c == 3 ? 255 : rgb[c]);
+          data[y * GST_VIDEO_FRAME_COMP_STRIDE (&mapped, c) +
+              x * GST_VIDEO_FRAME_COMP_PSTRIDE (&mapped, c)] = value;
+        }
+      }
+    }
+    gst_video_frame_unmap (&mapped);
+    allocation.saw_buffer = FALSE;
+    fail_unless_equals_int (gst_harness_push (h, input), GST_FLOW_OK);
+    fail_unless (allocation.saw_buffer);
+    output = gst_harness_try_pull (h);
+    fail_unless (output != NULL);
+    fail_unless (gst_video_frame_map (&mapped, out_info, output, GST_MAP_READ));
+
+    for (guint c = 0; c < GST_VIDEO_INFO_N_COMPONENTS (out_info); c++) {
+      const guint8 *data = GST_VIDEO_FRAME_COMP_DATA (&mapped, c);
+      for (guint y = 0; y < GST_VIDEO_FRAME_COMP_HEIGHT (&mapped, c); y++) {
+        for (guint x = 0; x < GST_VIDEO_FRAME_COMP_WIDTH (&mapped, c); x++) {
+          gdouble expected;
+          guint8 actual = data[y * GST_VIDEO_FRAME_COMP_STRIDE (&mapped, c) +
+              x * GST_VIDEO_FRAME_COMP_PSTRIDE (&mapped, c)];
+
+          if (composite_input) {
+            gdouble luma = composite_yuv_value (0, x, y, frame);
+            gdouble u = composite_yuv_value (1, 0, 0, frame) - 128.;
+            gdouble v = composite_yuv_value (2, 0, 0, frame) - 128.;
+            gdouble rgba[] = { luma + 1.402 * v,
+              luma - 0.344136 * u - 0.714136 * v, luma + 1.772 * u, 255.
+            };
+            expected = CLAMP (rgba[c], 0., 255.);
+          } else {
+            gdouble rgb[3], luma, yuv[3];
+
+            composite_rgb_pixel (c == 0 ? x : x * 2,
+                c == 0 ? y : y * 2, frame, rgb);
+            luma = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+            yuv[0] = luma;
+            yuv[1] = (rgb[2] - luma) / 1.772 + 128.;
+            yuv[2] = (rgb[0] - luma) / 1.402 + 128.;
+            expected = yuv[c];
+          }
+          fail_unless (ABS (actual - expected) <= 2.,
+              "composite %s %s frame %u component %u at %u,%u: "
+              "expected %.2f, got %u", name,
+              composite_input ? "input" : "output", frame, c, x, y,
+              expected, actual);
+        }
+      }
+    }
+    gst_video_frame_unmap (&mapped);
+    gst_buffer_unref (output);
+  }
+  g_print ("PASS composite %s %s: verified image layout and two frames\n",
+      name, composite_input ? "input" : "output");
+  gst_pad_remove_probe (srcpad, probe_id);
+
+cleanup:
+  gst_harness_teardown (h);
+  if (allocation.pool) {
+    gst_buffer_pool_set_active (allocation.pool, FALSE);
+    gst_object_unref (allocation.pool);
+  }
+  gst_object_unref (device);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (producer);
+}
+
+GST_START_TEST (test_vulkan_color_convert_composite_nv12_to_rgba)
+{
+  check_composite_color_convert (GST_VIDEO_FORMAT_NV12, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_color_convert_rgba_to_composite_nv12)
+{
+  check_composite_color_convert (GST_VIDEO_FORMAT_NV12, FALSE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_vulkan_color_convert_composite_i420_to_rgba)
+{
+  check_composite_color_convert (GST_VIDEO_FORMAT_I420, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vulkan_color_convert_rgba_to_composite_i420)
+{
+  check_composite_color_convert (GST_VIDEO_FORMAT_I420, FALSE);
+}
+
+GST_END_TEST;
+
 static Suite *
 vkcolorconvert_suite (void)
 {
@@ -370,11 +638,17 @@ vkcolorconvert_suite (void)
   have_instance = gst_vulkan_instance_open (instance, NULL);
   gst_object_unref (instance);
   if (have_instance) {
+    tcase_add_test (tc_basic, test_vulkan_color_convert_composite_i420_to_rgba);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_rgba_to_composite_i420);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_composite_nv12_to_rgba);
+    tcase_add_test (tc_basic, test_vulkan_color_convert_rgba_to_composite_nv12);
     tcase_add_test (tc_basic, test_vulkan_color_convert_rgba_reorder);
     tcase_add_test (tc_basic, test_vulkan_color_convert_av12_to_rgba);
     tcase_add_test (tc_basic, test_vulkan_color_convert_rgba_to_av12);
     tcase_add_test (tc_basic, test_vulkan_color_convert_rgbx_to_av12_alpha);
     tcase_add_test (tc_basic, test_vulkan_color_convert_av12_passthrough);
+  } else {
+    g_print ("SKIP vkcolorconvert: Vulkan instance unavailable\n");
   }
 
   return s;
