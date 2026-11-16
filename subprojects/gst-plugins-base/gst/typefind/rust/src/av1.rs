@@ -98,10 +98,10 @@ pub fn av1_probe(tf: &mut TypeFind) -> Option<(&'static CStr, Prob)> {
     // The first frame unit's length, then the first OBU's, both counted
     // from the end of the prefix before them.
     let (temporal, at) = leb128(data)?;
-    let (frame, n) = leb128(&data[at..])?;
-    let at = at + n;
-    let (obu, n) = leb128(&data[at..])?;
-    let at = at + n;
+    let (frame, frame_prefix) = leb128(&data[at..])?;
+    let at = at + frame_prefix;
+    let (obu, obu_prefix) = leb128(&data[at..])?;
+    let at = at + obu_prefix;
 
     // The delimiter header sits after the prefixes, so the prefixes end
     // inside the frame unit, and the frame unit inside the temporal unit.
@@ -110,10 +110,10 @@ pub fn av1_probe(tf: &mut TypeFind) -> Option<(&'static CStr, Prob)> {
     // octet the bound of this one.
     // Delimiter header: forbidden and reserved zero, type 2, size flag
     // clear. Everything but the extension bit is fixed in it.
-    if data[at] & 0xFB != 0x10 || obu == 0 || obu as usize + n > frame as usize {
+    if data[at] & 0xFB != 0x10 || obu == 0 || obu as usize + obu_prefix > frame as usize {
         return None;
     }
-    let unit = frame + n as u64;
+    let unit = frame + frame_prefix as u64;
     if unit > temporal {
         return None;
     }
@@ -238,6 +238,17 @@ mod tests {
         assert_eq!(answer(&padded(&[0x02, 0x01, 0x00, TYPE_2_BARE])), None);
         // Frame unit longer than the temporal unit that holds it.
         assert_eq!(answer(&padded(&[0x02, 0x03, 0x01, TYPE_2_BARE])), None);
+        // A frame unit whose size takes two octets is 130 octets long
+        // with its prefix, one more than the temporal unit claims.
+        assert_eq!(
+            answer(&padded(&[0x81, 0x01, 0x80, 0x01, 0x01, TYPE_2_BARE])),
+            None
+        );
+        // The same unit with room for the two-octet prefix is accepted.
+        assert_eq!(
+            format_of(&padded(&[0x82, 0x01, 0x80, 0x01, 0x01, TYPE_2_BARE])),
+            Some(c"annexb")
+        );
         // OBU longer than the frame unit that holds it.
         assert_eq!(answer(&padded(&[0x06, 0x04, 0x05, TYPE_2_BARE])), None);
         // Size flag on a delimiter: an empty OBU has nothing to size.
