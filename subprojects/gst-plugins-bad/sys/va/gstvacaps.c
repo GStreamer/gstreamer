@@ -382,12 +382,8 @@ gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
       g_ptr_array_add (drm_formats_str, drm_fmt_str);
     }
 
-    /* Also probe for linear modifier support. This only seems to work reliable
-     * on the Gallium driver, e.g. the Intel driver succeeds here when probing
-     * but during actual usage it gives us back a dmabuf with a different
-     * modifier. */
-    if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, MESA_GALLIUM) &&
-        modifier != DRM_FORMAT_MOD_LINEAR &&
+    /* Also probe for linear modifier support. */
+    if (modifier != DRM_FORMAT_MOD_LINEAR &&
         gst_va_dmabuf_try_modifier_for_format (display, fmt, usage_hint,
             DRM_FORMAT_MOD_LINEAR)) {
       drm_fmt_str = gst_video_dma_drm_fourcc_to_string (fourcc,
