@@ -658,6 +658,7 @@ gst_onnx_inference_init (GstOnnxInference * self)
   self->input_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
   self->output_tensors_caps = gst_caps_new_empty_simple ("video/x-raw");
 
+  self->optimization_level = GST_ONNX_INFERENCE_DEFAULT_OPTIMIZATION_LEVEL;
   self->execution_provider = GST_ONNX_EXECUTION_PROVIDER_CPU;
   self->device = NULL;
   self->model_cache_dir = NULL;
