@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvkformat.h"
+#include "gstvkformat-private.h"
 #include "gstvkphysicaldevice-private.h"
 
 /**
@@ -593,8 +594,8 @@ struct vkUsage
   VkImageUsageFlags usage;
 };
 
-static VkImageUsageFlags
-_get_usage (guint64 feature)
+VkImageUsageFlags
+gst_vulkan_format_features_to_usage (guint64 feature)
 {
   int i;
   VkImageUsageFlags usage = 0;
@@ -675,7 +676,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
     }
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
-      usage = _get_usage (feats_primary);
+      usage = gst_vulkan_format_features_to_usage (feats_primary);
       if ((requested_usage & usage) == requested_usage) {
         if (fmts)
           fmts[0] = vk_formats_map[i].vkfrmt;
@@ -686,7 +687,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
         return TRUE;
       }
 
-      usage = _get_usage (feats_secondary);
+      usage = gst_vulkan_format_features_to_usage (feats_secondary);
       if ((requested_usage & usage) == requested_usage) {
         if (fmts)
           fmts[0] = vk_formats_map[i].vkfrmts[0];
@@ -699,7 +700,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
       return FALSE;
     } else {
       if (!no_multiplane && GST_VIDEO_INFO_N_PLANES (info) > 1) {
-        usage = _get_usage (feats_primary);
+        usage = gst_vulkan_format_features_to_usage (feats_primary);
         if ((requested_usage & usage) == requested_usage) {
           if (fmts)
             fmts[0] = vk_formats_map[i].vkfrmt;
@@ -711,7 +712,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanDevice * device,
         }
       }
 
-      usage = _get_usage (feats_secondary);
+      usage = gst_vulkan_format_features_to_usage (feats_secondary);
       if ((requested_usage & usage) == requested_usage) {
         if (fmts) {
           memcpy (fmts, vk_formats_map[i].vkfrmts,

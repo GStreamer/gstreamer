@@ -8748,9 +8748,11 @@ properties.</doc>
 packed into a single composite #GstVulkanImageMemory (@buffer has one
 memory), by deriving a single-plane view via the plane's own format and
 VK_IMAGE_ASPECT_PLANE_0_BIT &lt;&lt; @plane. That requires the image to be
-created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT (and
-VK_IMAGE_CREATE_EXTENDED_USAGE_BIT if its usage isn't supported by the
-plane's format); if it is missing, @error is set and %NULL is returned.
+created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT; if it is missing, @error is
+set and %NULL is returned. The usage of such a view is restricted to the
+part of the image usage that the plane's format supports (e.g. without the
+video decode usages of a decoded image), which requires Vulkan 1.1 if the
+image has any usage the plane's format doesn't support.
 
 Any other combination (more than one but fewer memories than planes) fails,
 as do formats without planes (e.g. %GST_VIDEO_FORMAT_DMA_DRM).</doc>
