@@ -79,6 +79,7 @@ base_tests = [
   [['elements/pcapparse.c'], false, [libparser_dep]],
   [['elements/pnm.c'], get_option('pnm').disabled()],
   [['elements/proxysink.c'], get_option('proxy').disabled()],
+  [['elements/qroverlay.c'], not qrencode_dep.found() or not json_dep.found()],
   [['elements/ristrtpext.c']],
   [['elements/rtponvifparse.c'], get_option('onvif').disabled()],
   [['elements/rtponviftimestamp.c'], get_option('onvif').disabled()],
