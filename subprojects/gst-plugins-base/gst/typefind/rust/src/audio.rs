@@ -767,8 +767,11 @@ fn mp3_run(
             }
             len
         } else if let Some(first) = *pending {
-            let distance = (at - first) as usize;
-            if let Some(len) = free_frame_len(distance, &frame) {
+            // A run reads ahead of the scan, so the mark can lie past this
+            // candidate. It settles nothing until the scan reaches it.
+            if let Ok(distance) = usize::try_from(at - first)
+                && let Some(len) = free_frame_len(distance, &frame)
+            {
                 *settled = Some(distance);
                 // Turn back to the marked header: the run is read from
                 // there, at the pitch the two headers agreed on.
