@@ -35,14 +35,6 @@ GstVaBufferSurface *  gst_va_display_peek_buffer_surface  (GstVaDisplay * self,
                                                            GstMemory * mem);
 
 G_GNUC_INTERNAL
-void                  gst_va_display_set_aux_surface      (GstVaDisplay * self,
-                                                           GstMemory * mem,
-                                                           GstVaBufferSurface * buf);
-G_GNUC_INTERNAL
-GstVaBufferSurface *  gst_va_display_peek_aux_surface     (GstVaDisplay * self,
-                                                           GstMemory * mem);
-
-G_GNUC_INTERNAL
 gboolean              gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
                                                             GstVideoInfoDmaDrm * drm_info,
                                                             GstMemory * mem[GST_VIDEO_MAX_PLANES],

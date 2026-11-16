@@ -131,11 +131,6 @@ GST_VA_DEPRECATED_FOR(gst_va_display_get_memory_surface)
 GstVaDisplay *        gst_va_memory_peek_display          (GstMemory * mem);
 GST_VA_DEPRECATED_FOR(gst_va_display_get_buffer_surface)
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);
-
-GST_VA_API
-gboolean              gst_va_buffer_create_aux_surface    (GstBuffer * buffer);
-GST_VA_API
-VASurfaceID           gst_va_buffer_get_aux_surface       (GstBuffer * buffer);
 GST_VA_DEPRECATED_FOR(gst_va_display_get_buffer_surface)
 GstVaDisplay *        gst_va_buffer_peek_display          (GstBuffer * buffer);
 

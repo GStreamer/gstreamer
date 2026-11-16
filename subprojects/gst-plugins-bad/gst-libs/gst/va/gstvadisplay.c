@@ -77,9 +77,6 @@ struct _GstVaDisplayPrivate
   /* GstMemory (weak ref) -> GstVaBufferSurface (ref) */
   GMutex surfaces_lock;
   GHashTable *surfaces;
-  /* GstMemory (weak ref) -> GstVaBufferSurface (ref) */
-  GMutex aux_surfaces_lock;
-  GHashTable *aux_surfaces;
 };
 
 #define gst_va_display_parent_class parent_class
@@ -309,10 +306,7 @@ gst_va_display_finalize (GObject * object)
   /* every surface in the table holds a reference on the display */
   g_assert (g_hash_table_size (priv->surfaces) == 0);
   g_hash_table_unref (priv->surfaces);
-  g_assert (g_hash_table_size (priv->aux_surfaces) == 0);
-  g_hash_table_unref (priv->aux_surfaces);
   g_mutex_clear (&priv->surfaces_lock);
-  g_mutex_clear (&priv->aux_surfaces_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -348,10 +342,7 @@ gst_va_display_init (GstVaDisplay * self)
   priv->impl = GST_VA_IMPLEMENTATION_INVALID;
 
   g_mutex_init (&priv->surfaces_lock);
-  g_mutex_init (&priv->aux_surfaces_lock);
   priv->surfaces =
-      g_hash_table_new_full (NULL, NULL, NULL, gst_va_buffer_surface_unref);
-  priv->aux_surfaces =
       g_hash_table_new_full (NULL, NULL, NULL, gst_va_buffer_surface_unref);
 }
 
@@ -537,21 +528,6 @@ _memory_weak_notify (gpointer data, GstMiniObject * obj)
 }
 
 static void
-_memory_aux_weak_notify (gpointer data, GstMiniObject * obj)
-{
-  GstVaDisplay *self = data;
-  GstVaDisplayPrivate *priv = GET_PRIV (self);
-  GstVaBufferSurface *buf = NULL;
-
-  g_mutex_lock (&priv->aux_surfaces_lock);
-  g_hash_table_steal_extended (priv->aux_surfaces, obj, NULL,
-      (gpointer *) & buf);
-  g_mutex_unlock (&priv->aux_surfaces_lock);
-
-  gst_va_buffer_surface_unref (buf);
-}
-
-static void
 _set_buffer_surface_unlocked (GstVaDisplay * self, GstVaBufferSurface * buf)
 {
   GstVaDisplayPrivate *priv = GET_PRIV (self);
@@ -626,50 +602,6 @@ _is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
     }
   }
   return FALSE;
-}
-
-/* Associates the auxiliary surface @buf to @mem in @self, taking a
- * reference on @buf until @mem is finalized. If @mem already had an
- * auxiliary surface in @self, the previous one is replaced. */
-void
-gst_va_display_set_aux_surface (GstVaDisplay * self, GstMemory * mem,
-    GstVaBufferSurface * buf)
-{
-  GstVaDisplayPrivate *priv;
-
-  g_return_if_fail (GST_IS_VA_DISPLAY (self));
-  g_return_if_fail (mem != NULL);
-  g_return_if_fail (buf != NULL);
-  g_return_if_fail (buf->display == self);
-
-  priv = GET_PRIV (self);
-
-  gst_va_buffer_surface_ref (buf);
-
-  g_mutex_lock (&priv->aux_surfaces_lock);
-  if (g_hash_table_insert (priv->aux_surfaces, mem, buf)) {
-    gst_mini_object_weak_ref (GST_MINI_OBJECT (mem), _memory_aux_weak_notify,
-        self);
-  }
-  g_mutex_unlock (&priv->aux_surfaces_lock);
-}
-
-GstVaBufferSurface *
-gst_va_display_peek_aux_surface (GstVaDisplay * self, GstMemory * mem)
-{
-  GstVaDisplayPrivate *priv;
-  GstVaBufferSurface *buf;
-
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
-  g_return_val_if_fail (mem != NULL, NULL);
-
-  priv = GET_PRIV (self);
-
-  g_mutex_lock (&priv->aux_surfaces_lock);
-  buf = g_hash_table_lookup (priv->aux_surfaces, mem);
-  g_mutex_unlock (&priv->aux_surfaces_lock);
-
-  return buf;
 }
 
 /* Must be called with surfaces_lock held, so concurrent imports of
