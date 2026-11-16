@@ -74,7 +74,7 @@ struct _GstVaAV1Dec
 
   GstAV1SequenceHeaderOBU seq;
   GstVideoFormat preferred_format;
-  /* Used for layers not output. */
+  /* Used for layers not output and film grain. */
   GstBufferPool *internal_pool;
 };
 
@@ -364,10 +364,9 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
 }
 
 static inline GstFlowReturn
-_acquire_internal_buffer (GstVaAV1Dec * self, GstVideoCodecFrame * frame)
+_acquire_internal_buffer (GstVaAV1Dec * self, GstBuffer ** buffer)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (self);
-  GstFlowReturn ret;
 
   if (!self->internal_pool) {
     self->internal_pool =
@@ -381,15 +380,7 @@ _acquire_internal_buffer (GstVaAV1Dec * self, GstVideoCodecFrame * frame)
       return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  ret = gst_buffer_pool_acquire_buffer (self->internal_pool,
-      &frame->output_buffer, NULL);
-  if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (self,
-        "Failed to allocated output buffer from internal pool, return %s",
-        gst_flow_get_name (ret));
-  }
-
-  return ret;
+  return gst_buffer_pool_acquire_buffer (self->internal_pool, buffer, NULL);
 }
 
 static GstFlowReturn
@@ -400,15 +391,20 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
   GstVaDecodePicture *pic;
+  GstBuffer *aux_buffer = NULL;
   GstVideoInfo *info = &base->output_info;
   GstFlowReturn ret;
 
   /* Only output the highest spatial layer. For non output pictures,
      we just use internal pool, then no negotiation needed. */
   if (picture->spatial_id < decoder->highest_spatial_layer) {
-    ret = _acquire_internal_buffer (self, frame);
-    if (ret != GST_FLOW_OK)
+    ret = _acquire_internal_buffer (self, &frame->output_buffer);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self,
+          "Failed to allocated output buffer from internal pool, return %s",
+          gst_flow_get_name (ret));
       return ret;
+    }
   } else {
     if (frame_hdr->upscaled_width != GST_VIDEO_INFO_WIDTH (info)
         || frame_hdr->frame_height != GST_VIDEO_INFO_HEIGHT (info)) {
@@ -438,15 +434,17 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   }
 
   if (picture->apply_grain) {
-    if (!gst_va_buffer_create_aux_surface (frame->output_buffer)) {
+    ret = _acquire_internal_buffer (self, &aux_buffer);
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self,
-          "Failed to allocated aux surface for buffer %p",
-          frame->output_buffer);
-      return GST_FLOW_ERROR;
+          "Failed to allocate auxiliary buffer, return %s",
+          gst_flow_get_name (ret));
+      return ret;
     }
   }
 
   pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
+  pic->aux_buffer = aux_buffer;
 
   gst_av1_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
@@ -468,7 +466,6 @@ gst_va_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture)
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaDecodePicture *pic;
   GstVaDecodePicture *new_pic;
   GstAV1Picture *new_picture;
@@ -481,7 +478,7 @@ gst_va_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
 
   new_picture = gst_av1_picture_new ();
   g_assert (pic->gstbuffer);
-  new_pic = gst_va_decode_picture_new (base->decoder, pic->gstbuffer);
+  new_pic = gst_va_decode_picture_dup (pic);
 
   GST_LOG_OBJECT (self, "Duplicate output with buffer %" GST_PTR_FORMAT
       " (surface %#x)", pic, gst_va_decode_picture_get_surface (pic));

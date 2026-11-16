@@ -755,6 +755,7 @@ gst_va_decode_picture_new (GstVaDecoder * self, GstBuffer * buffer)
 
   pic = g_new (GstVaDecodePicture, 1);
   pic->gstbuffer = gst_buffer_ref (buffer);
+  pic->aux_buffer = NULL;
   pic->display = gst_object_ref (self->display);
   pic->buffers = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 16);
   pic->slices = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 64);
@@ -775,9 +776,9 @@ VASurfaceID
 gst_va_decode_picture_get_aux_surface (GstVaDecodePicture * pic)
 {
   g_return_val_if_fail (pic, VA_INVALID_ID);
-  g_return_val_if_fail (pic->gstbuffer, VA_INVALID_ID);
+  g_return_val_if_fail (pic->aux_buffer, VA_INVALID_ID);
 
-  return gst_va_buffer_get_aux_surface (pic->gstbuffer);
+  return gst_va_display_get_buffer_surface (pic->display, pic->aux_buffer);
 }
 
 void
@@ -788,6 +789,7 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
   _destroy_buffers (pic);
 
   gst_buffer_unref (pic->gstbuffer);
+  gst_clear_buffer (&pic->aux_buffer);
   gst_object_unref (pic->display);
   g_clear_pointer (&pic->buffers, g_array_unref);
   g_clear_pointer (&pic->slices, g_array_unref);
@@ -804,8 +806,10 @@ gst_va_decode_picture_dup (GstVaDecodePicture * pic)
 
   dup = g_new0 (GstVaDecodePicture, 1);
 
-  /* dups only need gstbuffer and display */
+  /* dups only need gstbuffer, aux_buffer and display */
   dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
+  if (pic->aux_buffer)
+    dup->aux_buffer = gst_buffer_ref (pic->aux_buffer);
   dup->display = gst_object_ref (pic->display);
   return dup;
 }

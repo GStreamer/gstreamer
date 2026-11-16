@@ -31,6 +31,7 @@ struct _GstVaDecodePicture
   GArray *buffers;
   GArray *slices;
   GstBuffer *gstbuffer;
+  GstBuffer *aux_buffer;
   GstVaDisplay *display;
 };
 
