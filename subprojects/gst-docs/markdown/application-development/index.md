@@ -36,8 +36,8 @@ understanding of the *C language*.
 
 Since GStreamer adheres to the GObject programming model, this guide
 also assumes that you understand the basics of
-[GObject](http://library.gnome.org/devel/gobject/stable/) and
-[glib](http://library.gnome.org/devel/glib/stable/) programming.
+[GObject](https://docs.gtk.org/gobject/) and
+[glib](https://docs.gtk.org/glib/) programming.
 Especially,
 
   - GObject instantiation
