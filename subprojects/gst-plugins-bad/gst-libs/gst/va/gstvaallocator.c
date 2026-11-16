@@ -617,6 +617,15 @@ gst_va_dmabuf_try_modifier_for_format (GstVaDisplay * display,
   VASurfaceID surface;
   GstVideoInfo info;
 
+  /* Probing fails on Intel, but we know that's supported.
+   * See https://github.com/intel/media-driver/issues/2068. */
+  if (usage_hint & (VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER |
+          VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ)
+      && GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD) &&
+      modifier == DRM_FORMAT_MOD_LINEAR) {
+    return TRUE;
+  }
+
   gst_video_info_init (&info);
   gst_video_info_set_format (&info, format, 64, 64);
 
