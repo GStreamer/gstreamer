@@ -952,6 +952,29 @@ _append_drm_formats_from_video_format (GstGLContext * context,
       modifier != DRM_FORMAT_MOD_LINEAR)
     return;
 
+  /* RGBA is imported directly with the negotiated modifier, so any
+   * non-external modifier supported for its fourcc can be used. Other
+   * formats are imported with a linear modifier only. */
+  if (!(flags & GST_GL_DRM_FORMAT_LINEAR_ONLY) &&
+      format == GST_VIDEO_FORMAT_RGBA) {
+    const GArray *mods = NULL;
+
+    if (gst_gl_context_egl_get_format_modifiers (context, fourcc, &mods)
+        && mods) {
+      for (guint i = 0; i < mods->len; i++) {
+        GstGLDmaModifier *mod = &g_array_index (mods, GstGLDmaModifier, i);
+
+        if (mod->modifier == DRM_FORMAT_MOD_LINEAR)
+          continue;
+        if (mod->external_only && !include_external)
+          continue;
+
+        g_ptr_array_add (drm_formats,
+            gst_video_dma_drm_fourcc_to_string (fourcc, mod->modifier));
+      }
+    }
+  }
+
   if (gst_gl_context_egl_format_supports_modifier (context, fourcc, modifier,
           include_external)) {
     drm_format = gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
