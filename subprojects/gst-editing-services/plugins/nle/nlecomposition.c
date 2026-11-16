@@ -1524,6 +1524,7 @@ nle_composition_reset (NleComposition * comp)
   priv->seek_seqnum = 0;
   priv->next_eos_seqnum = 0;
   priv->flush_seqnum = 0;
+  gst_clear_event (&priv->stack_initialization_seek);
 
   _empty_bin (GST_BIN_CAST (priv->current_bin));
   priv->setup_new_stack_start_ts = GST_CLOCK_TIME_NONE;
