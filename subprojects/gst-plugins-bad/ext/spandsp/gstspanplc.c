@@ -36,6 +36,11 @@
 #include "gstspanplc.h"
 
 #include <gst/audio/audio.h>
+#include <spandsp/version.h>
+
+#if SPANDSP_RELEASE_DATE >= 20120902
+#include <spandsp/private/plc.h>
+#endif
 
 G_DEFINE_TYPE (GstSpanPlc, gst_span_plc, GST_TYPE_ELEMENT);
 GST_ELEMENT_REGISTER_DEFINE (spanplc, "spanplc", GST_RANK_PRIMARY,
