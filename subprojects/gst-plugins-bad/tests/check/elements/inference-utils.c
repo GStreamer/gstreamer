@@ -157,6 +157,10 @@ setup_model_with_modelinfo (const gchar * data_path,
   g_free (base_model);
   g_free (tmp_modelinfo);
 
+#ifdef G_OS_WIN32
+  g_strdelimit (tmp_model, "\\", '/');
+#endif
+
   return tmp_model;
 }
 
