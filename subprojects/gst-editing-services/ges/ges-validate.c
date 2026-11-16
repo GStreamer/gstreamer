@@ -977,17 +977,44 @@ GES_START_VALIDATE_ACTION (_validate_action_execute)
 
 GST_END_VALIDATE_ACTION;
 
+typedef struct
+{
+  GstValidateAction *action;
+  GstState state;
+} LoadProjectData;
+
+static void
+_load_project_data_free (LoadProjectData * data, GClosure * closure)
+{
+  gst_validate_action_unref (data->action);
+  g_free (data);
+}
+
 static void
 _project_loaded_cb (GESProject * project, GESTimeline * timeline,
-    GstValidateAction * action)
+    LoadProjectData * data)
 {
-  gst_validate_action_set_done (action);
+  GstValidateScenario *scenario =
+      gst_validate_action_get_scenario (data->action);
+
+  if (scenario) {
+    GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
+
+    if (pipeline) {
+      gst_element_set_state (pipeline, data->state);
+      gst_object_unref (pipeline);
+    }
+    gst_object_unref (scenario);
+  }
+
+  gst_validate_action_set_done (data->action);
 }
 
 GES_START_VALIDATE_ACTION (_load_project)
 {
   GstState state;
   GESProject *project = NULL;
+  LoadProjectData *data;
   GList *tmp, *tmp_full;
 
   gchar *uri = NULL;
@@ -1031,13 +1058,16 @@ GES_START_VALIDATE_ACTION (_load_project)
     ges_timeline_remove_track (timeline, tmp->data);
   g_list_free_full (tmp_full, gst_object_unref);
 
+  data = g_new0 (LoadProjectData, 1);
+  data->action = gst_validate_action_ref (action);
+  data->state = state;
+
   project = ges_project_new (uri);
-  g_signal_connect (project, "loaded", G_CALLBACK (_project_loaded_cb), action);
+  g_signal_connect_data (project, "loaded", G_CALLBACK (_project_loaded_cb),
+      data, (GClosureNotify) _load_project_data_free, 0);
   ges_project_load (project, gst_object_ref (timeline), &error);
   REPORT_UNLESS (!error, local_done,
       "Could not load timeline: %s", error->message);
-
-  gst_element_set_state (pipeline, state);
 
 local_done:
   gst_clear_object (&project);
