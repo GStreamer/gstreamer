@@ -238910,6 +238910,7 @@
                 "description": "Apply neural network to video frames and create tensor output",
                 "hierarchy": [
                     "GstOnnxInference",
+                    "GstOnnxBaseInference",
                     "GstBaseTransform",
                     "GstElement",
                     "GstObject",
@@ -238929,6 +238930,64 @@
                         "presence": "always"
                     }
                 },
+                "rank": "primary",
+                "untrusted-aware": "true"
+            },
+            "onnxtensorinference": {
+                "author": "Seungha Yang <seungha@centricular.com>",
+                "description": "Apply neural network to input tensors and create tensor output",
+                "hierarchy": [
+                    "GstOnnxTensorInference",
+                    "GstOnnxBaseInference",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "remove-tensor-meta": {
+                        "blurb": "Remove used input tensor meta after inference",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstonnx",
+        "license": "LGPL",
+        "other-types": {
+            "GstOnnxBaseInference": {
+                "hierarchy": [
+                    "GstOnnxBaseInference",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
                 "properties": {
                     "device": {
                         "blurb": "Device identifier for inference, interpreted per execution provider (e.g. \"0\" for device index). NULL means use the provider default.",
@@ -238952,46 +239011,6 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstOnnxExecutionProvider",
-                        "writable": true
-                    },
-                    "input-image-format": {
-                        "blurb": "Input image format",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "hwc (0)",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstMlInputImageFormat",
-                        "writable": true
-                    },
-                    "input-tensor-offset": {
-                        "blurb": "offset each tensor value by this value",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0",
-                        "max": "3.40282e+38",
-                        "min": "-3.40282e+38",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gfloat",
-                        "writable": true
-                    },
-                    "input-tensor-scale": {
-                        "blurb": "Divide each tensor value by this value",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "1",
-                        "max": "3.40282e+38",
-                        "min": "1.17549e-38",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gfloat",
                         "writable": true
                     },
                     "model-cache-dir": {
@@ -239025,7 +239044,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "disable-all (0)",
+                        "default": "enable-extended (2)",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstOnnxOptimizationLevel",
@@ -239043,28 +239062,7 @@
                         "type": "gchararray",
                         "writable": true
                     }
-                },
-                "rank": "primary",
-                "untrusted-aware": "true"
-            }
-        },
-        "filename": "gstonnx",
-        "license": "LGPL",
-        "other-types": {
-            "GstMlInputImageFormat": {
-                "kind": "enum",
-                "values": [
-                    {
-                        "desc": "Height Width Channel (HWC) a.k.a. interleaved image data format",
-                        "name": "hwc",
-                        "value": "0"
-                    },
-                    {
-                        "desc": "Channel Height Width (CHW) a.k.a. planar image data format",
-                        "name": "chw",
-                        "value": "1"
-                    }
-                ]
+                }
             },
             "GstOnnxExecutionProvider": {
                 "kind": "enum",
