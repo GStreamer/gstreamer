@@ -287,6 +287,61 @@ GST_START_TEST (test_push)
 
 GST_END_TEST;
 
+static GstElement *
+_open_mxf_file (const gchar * name)
+{
+  GstElement *pipeline, *src;
+  gchar *path;
+
+  pipeline = gst_parse_launch ("filesrc name=src ! mxfdemux name=demux "
+      "demux. ! queue ! fakesink demux. ! queue ! fakesink", NULL);
+  fail_unless (pipeline != NULL);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  path = g_build_filename (GST_TEST_FILES_PATH, name, NULL);
+  g_object_set (src, "location", path, NULL);
+  gst_object_unref (src);
+  g_free (path);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+
+  return pipeline;
+}
+
+static void
+_seek_and_play_to_eos (GstElement * pipeline, GstClockTime start)
+{
+  GstBus *bus = gst_element_get_bus (pipeline);
+  GstMessage *msg;
+
+  gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, start);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+}
+
+GST_START_TEST (test_eos_seek_past_end_of_open_file)
+{
+  /* 25 frames of video/audio into mxfmux
+   * without gracefully EOSing it */
+  GstElement *pipeline = _open_mxf_file ("mxf-open.mxf");
+
+  /* seek just past the last video frame and check for proper EOS */
+  _seek_and_play_to_eos (pipeline, GST_SECOND + 10 * GST_MSECOND);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 mxfdemux_suite (void)
 {
@@ -302,6 +357,7 @@ mxfdemux_suite (void)
   tcase_set_timeout (tc_chain, 180);
   tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_push);
+  tcase_add_test (tc_chain, test_eos_seek_past_end_of_open_file);
 
   return s;
 }
