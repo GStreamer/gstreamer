@@ -162,7 +162,7 @@ _gst_libde265_dec_free_decoder (GstLibde265Dec * dec)
   if (dec->ctx != NULL) {
     de265_free_decoder (dec->ctx);
   }
-  free (dec->codec_data);
+  g_free (dec->codec_data);
   if (dec->input_state != NULL) {
     gst_video_codec_state_unref (dec->input_state);
   }
@@ -570,11 +570,20 @@ gst_libde265_dec_set_format (GstVideoDecoder * decoder,
       }
       data = info.data;
       size = info.size;
-      free (dec->codec_data);
-      dec->codec_data = malloc (size);
-      g_assert (dec->codec_data != NULL);
-      dec->codec_data_size = size;
-      memcpy (dec->codec_data, data, size);
+      if (G_UNLIKELY (size > G_MAXINT)) {
+        gst_buffer_unmap (buf, &info);
+        GST_ELEMENT_ERROR (decoder, STREAM, FORMAT,
+            ("Codec data too large: %" G_GSIZE_FORMAT, size), (NULL));
+        return FALSE;
+      }
+      g_free (dec->codec_data);
+      dec->codec_data = NULL;
+      dec->codec_data_size = 0;
+      if (size > 0) {
+        dec->codec_data = g_malloc (size);
+        dec->codec_data_size = (int) size;
+        memcpy (dec->codec_data, data, size);
+      }
       if (size > 3 && (data[0] || data[1] || data[2] > 1)) {
         /* encoded in "hvcC" format (assume version 0) */
         dec->format = GST_TYPE_LIBDE265_FORMAT_PACKETIZED;
