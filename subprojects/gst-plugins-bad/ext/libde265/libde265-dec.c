@@ -597,6 +597,7 @@ gst_libde265_dec_set_format (GstVideoDecoder * decoder,
               GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
                   ("Buffer underrun in extra header (%d >= %" G_GSIZE_FORMAT
                       ")", pos + 3, size), (NULL));
+              gst_buffer_unmap (buf, &info);
               return FALSE;
             }
             /* ignore flags + NAL type (1 byte) */
@@ -608,6 +609,7 @@ gst_libde265_dec_set_format (GstVideoDecoder * decoder,
                 GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
                     ("Buffer underrun in extra nal header (%d >= %"
                         G_GSIZE_FORMAT ")", pos + 2, size), (NULL));
+                gst_buffer_unmap (buf, &info);
                 return FALSE;
               }
               nal_size = data[pos] << 8 | data[pos + 1];
@@ -615,6 +617,7 @@ gst_libde265_dec_set_format (GstVideoDecoder * decoder,
                 GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
                     ("Buffer underrun in extra nal (%d >= %" G_GSIZE_FORMAT ")",
                         pos + 2 + nal_size, size), (NULL));
+                gst_buffer_unmap (buf, &info);
                 return FALSE;
               }
               err =
@@ -623,6 +626,7 @@ gst_libde265_dec_set_format (GstVideoDecoder * decoder,
                 GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
                     ("Failed to push data: %s (%d)", de265_get_error_text (err),
                         err), (NULL));
+                gst_buffer_unmap (buf, &info);
                 return FALSE;
               }
               pos += 2 + nal_size;
