@@ -711,6 +711,9 @@ _gst_libde265_return_image (GstVideoDecoder * decoder,
       de265_get_image_height (img, 0));
   if (result != GST_FLOW_OK) {
     GST_ERROR_OBJECT (dec, "Failed to notify about available image");
+    if (frame != NULL) {
+      gst_video_codec_frame_unref (frame);
+    }
     return result;
   }
 
@@ -732,6 +735,7 @@ _gst_libde265_return_image (GstVideoDecoder * decoder,
   result = gst_video_decoder_allocate_output_frame (decoder, out_frame);
   if (result != GST_FLOW_OK) {
     GST_ERROR_OBJECT (dec, "Failed to allocate output frame");
+    gst_video_decoder_drop_frame (decoder, out_frame);
     return result;
   }
 
@@ -739,6 +743,7 @@ _gst_libde265_return_image (GstVideoDecoder * decoder,
   if (!gst_video_frame_map (&outframe, &dec->output_state->info,
           out_frame->output_buffer, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (dec, "Failed to map output buffer");
+    gst_video_decoder_drop_frame (decoder, out_frame);
     return GST_FLOW_ERROR;
   }
 
