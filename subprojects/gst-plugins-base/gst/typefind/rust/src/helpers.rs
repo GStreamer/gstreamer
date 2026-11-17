@@ -259,13 +259,61 @@ impl<'a> Scanner<'a> {
 /// repr(transparent) wrapper, so `&mut TypeFind` has pointer ABI.
 pub type TypeFindFunc = extern "C" fn(&mut TypeFind, gpointer);
 
-pub(crate) struct Feature(
-    pub(crate) &'static CStr,         // feature name
-    pub(crate) c_uint,                // rank
-    pub(crate) Option<TypeFindFunc>,  // typefind fn
-    pub(crate) Option<&'static CStr>, // extensions
-    pub(crate) Option<&'static CStr>, // caps string
-);
+/// What a [`Feature`] does when the engine asks it about a stream.
+pub(crate) enum Finder {
+    /// Nothing: the row answers by extension only.
+    None,
+    /// A finder of its own.
+    Func(TypeFindFunc),
+    /// The shared magic-prefix finder, with this row's pattern and confidence.
+    StartWith {
+        magic: &'static [&'static [u8]],
+        prob: TypeFindProbability,
+    },
+}
+
+/// One row of the registration table.
+pub(crate) struct Feature {
+    pub(crate) name: &'static CStr,
+    pub(crate) rank: c_uint,
+    pub(crate) extensions: Option<&'static CStr>,
+    pub(crate) caps: Option<&'static CStr>,
+    pub(crate) finder: Finder,
+}
+
+impl Finder {
+    /// The C function and private data to register for this row.
+    ///
+    /// The shared finder is only reachable from [`Finder::StartWith`], so the
+    /// engine can never call it with a pointer that is not a row.
+    pub(crate) fn registration(&self, row: &'static Feature) -> (Option<TypeFindFunc>, gpointer) {
+        match self {
+            Finder::None => (None, std::ptr::null_mut()),
+            Finder::Func(func) => (Some(*func), std::ptr::null_mut()),
+            Finder::StartWith { .. } => (
+                Some(start_with_type_find),
+                row as *const Feature as gpointer,
+            ),
+        }
+    }
+}
+
+/// Typefind function for the [`Finder::StartWith`] rows.
+///
+/// The engine hands back the row registration passed, so the row supplies both
+/// the pattern to match and the name to suggest.
+extern "C" fn start_with_type_find(tf: &mut TypeFind, private: gpointer) {
+    // SAFETY: `Finder::registration` pairs this function with a `&'static
+    // Feature` and nothing else, and the engine passes that pointer back
+    // unchanged.
+    let feature = unsafe { &*(private as *const Feature) };
+    let Finder::StartWith { magic, prob } = &feature.finder else {
+        unreachable!("start_with_type_find registered for a non-StartWith row")
+    };
+    if magic.iter().any(|pattern| tf.starts_with(pattern)) {
+        suggest!(tf, *prob, feature.name);
+    }
+}
 
 /// 16-bit little-endian value at the start of `d`. The caller's peek
 /// guarantees the length.
@@ -321,6 +369,12 @@ impl TypeFindProbability {
     pub const LIKELY: Self = Self(bindings::GST_TYPE_FIND_LIKELY);
     pub const NEARLY_CERTAIN: Self = Self(bindings::GST_TYPE_FIND_NEARLY_CERTAIN);
     pub const MAXIMUM: Self = Self(bindings::GST_TYPE_FIND_MAXIMUM);
+
+    /// Wraps a raw `GstTypeFindProbability` value, for the few finders that
+    /// report a confidence between the named levels.
+    pub(crate) const fn from_raw(v: c_uint) -> Self {
+        Self(v)
+    }
 
     #[inline]
     pub fn get(self) -> c_uint {
@@ -417,9 +471,9 @@ macro_rules! opt {
     };
 }
 
-/// One row of the registration table (typefindfunctions.rs::FEATURES), in
-/// gst_type_find_register() argument order. The strings are `&'static CStr`
-/// literals, so registration hands them to C without copying.
+/// One row of the registration table (typefindfunctions.rs::FEATURES).
+/// The strings are `&'static CStr` literals, so registration hands them to C
+/// without copying.
 /// Caps default to the feature name; verify each row against the C caps string.
 ///
 /// - `typefinder!(c"image/bmp", PRIMARY, bmp_type_find, c"bmp")`
@@ -437,30 +491,105 @@ macro_rules! opt {
 /// extensions = None.
 macro_rules! typefinder {
     ($name:expr, $rank:expr, $func:expr) => {
-        Feature($name, $rank, opt!($func), None, Some($name))
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: None,
+            caps: Some($name),
+            finder: Finder::Func($func),
+        }
     };
     // `none` in the function position has to be matched as a literal, exactly as
     // in the extensions and caps positions below: captured as an expression it no
-    // longer matches the literal, and `opt!` would build `Some(none)`. Only the
-    // form with an extension is here, because a factory with neither a function
-    // nor an extension can never answer for anything.
+    // longer matches the literal, and the row would carry a function that does
+    // not exist. Only the form with an extension is here, because a factory with
+    // neither a function nor an extension can never answer for anything.
     ($name:expr, $rank:expr, none, $exts:expr, $caps:expr) => {
-        Feature($name, $rank, None, opt!($exts), opt!($caps))
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: opt!($exts),
+            caps: opt!($caps),
+            finder: Finder::None,
+        }
     };
     ($name:expr, $rank:expr, $func:expr, $exts:expr) => {
-        Feature($name, $rank, opt!($func), Some($exts), Some($name))
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: Some($exts),
+            caps: Some($name),
+            finder: Finder::Func($func),
+        }
     };
     // Ahead of the arms that capture `$exts` or `$caps`: `none` parses as an
     // expression there, and a captured expression no longer matches the
     // literal `none` pattern.
     ($name:expr, $rank:expr, $func:expr, none, none) => {
-        Feature($name, $rank, opt!($func), None, None)
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: None,
+            caps: None,
+            finder: Finder::Func($func),
+        }
     };
     ($name:expr, $rank:expr, $func:expr, none, $caps:expr) => {
-        Feature($name, $rank, opt!($func), None, opt!($caps))
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: None,
+            caps: opt!($caps),
+            finder: Finder::Func($func),
+        }
     };
     ($name:expr, $rank:expr, $func:expr, $exts:expr, $caps:expr) => {
-        Feature($name, $rank, opt!($func), opt!($exts), opt!($caps))
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: opt!($exts),
+            caps: opt!($caps),
+            finder: Finder::Func($func),
+        }
+    };
+}
+
+/// A [`typefinder!`] row that uses [`start_with_type_find`]: the format is
+/// recognised by the magic bytes at offset 0 and nothing else.
+///
+/// `start_with!(c"video/x-flv", SECONDARY, c"flv", [b"FLV"], Prob::MAXIMUM)`
+/// expands to the row that pairs the shared finder with this pattern and
+/// confidence. `none` in the extension position means no extension.
+///
+/// The advertised caps are always the feature name, which is also what the
+/// finder suggests; a format needing caps fields of its own does not fit here.
+macro_rules! start_with {
+    // `none` has to be matched as a literal here for the same reason as in
+    // `typefinder!`: captured as an expression it no longer matches the
+    // literal pattern, and `opt!` would build `Some(none)`.
+    ($name:expr, $rank:expr, none, [$($magic:expr),+ $(,)?], $prob:expr $(,)?) => {
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: None,
+            caps: Some($name),
+            finder: Finder::StartWith {
+                magic: &[$($magic as &'static [u8]),+],
+                prob: $prob,
+            },
+        }
+    };
+    ($name:expr, $rank:expr, $exts:expr, [$($magic:expr),+ $(,)?], $prob:expr $(,)?) => {
+        Feature {
+            name: $name,
+            rank: $rank,
+            extensions: Some($exts),
+            caps: Some($name),
+            finder: Finder::StartWith {
+                magic: &[$($magic as &'static [u8]),+],
+                prob: $prob,
+            },
+        }
     };
 }
 
@@ -562,7 +691,7 @@ pub(crate) fn aac_sample_rate(asc: &[u8]) -> u32 {
 pub(crate) use TypeFindProbability as Prob;
 
 // Re-export macros and items needed by typefindfunctions.rs.
-pub(crate) use {map_type_name, map_value, opt, suggest, typefinder};
+pub(crate) use {map_type_name, map_value, opt, start_with, suggest, typefinder};
 
 /// A real typefind context, for tests that drive a finder.
 ///
