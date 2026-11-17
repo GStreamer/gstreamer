@@ -75,6 +75,7 @@ if host_machine.system() != 'windows'
     [ 'elements/multifdsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
     # FIXME: multisocketsink test on windows/msvc
     [ 'elements/multisocketsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
+    [ 'elements/oggdemux.c', not ogg_dep.found() ],
     [ 'elements/playbin-complex.c', not ogg_dep.found() ],
     [ 'elements/textoverlay.c', not pango_dep.found() ],
     [ 'elements/theoradec.c', not ogg_dep.found() or not theoradec_dep.found() ],
