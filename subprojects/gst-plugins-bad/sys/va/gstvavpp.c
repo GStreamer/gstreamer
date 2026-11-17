@@ -160,7 +160,8 @@ enum
   VPP_CONVERT_DIRECTION = 1 << 3,
   VPP_CONVERT_FEATURE = 1 << 4,
   VPP_CONVERT_CROP = 1 << 5,
-  VPP_CONVERT_DUMMY = 1 << 6,
+  VPP_CONVERT_MODIFIER = 1 << 6,
+  VPP_CONVERT_DUMMY = 1 << 7,
 };
 
 /* *INDENT-OFF* */
@@ -576,6 +577,21 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
       self->op_flags |= VPP_CONVERT_SIZE;
     else
       self->op_flags &= ~VPP_CONVERT_SIZE;
+  }
+
+  self->op_flags &= ~VPP_CONVERT_MODIFIER;
+  if (gst_video_is_dma_drm_caps (incaps)
+      && gst_video_is_dma_drm_caps (outcaps)) {
+    GstVideoInfoDmaDrm out_drm_info;
+
+    if (!gst_video_info_dma_drm_from_caps (&out_drm_info, outcaps)) {
+      GST_ERROR_OBJECT (self, "invalid output DMA DRM caps %" GST_PTR_FORMAT,
+          outcaps);
+      return FALSE;
+    }
+
+    if (btrans->in_drm_info.drm_modifier != out_drm_info.drm_modifier)
+      self->op_flags |= VPP_CONVERT_MODIFIER;
   }
 
   infeat = gst_caps_get_features (incaps, 0);
