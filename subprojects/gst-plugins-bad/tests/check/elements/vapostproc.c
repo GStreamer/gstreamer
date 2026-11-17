@@ -26,9 +26,86 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/video/video.h>
+
+GST_START_TEST (transform_template_caps)
+{
+  GstElement *vpp;
+  GstBaseTransformClass *klass;
+  guint i;
+
+  vpp = gst_element_factory_make ("vapostproc", NULL);
+  fail_unless (vpp != NULL);
+  klass = GST_BASE_TRANSFORM_GET_CLASS (vpp);
+
+  for (i = 0; i < 2; i++) {
+    GstPadDirection direction = i == 0 ? GST_PAD_SINK : GST_PAD_SRC;
+    GstPadTemplate *templ, *other_templ;
+    GstCaps *caps, *filter, *expected;
+
+    templ = gst_element_get_pad_template (vpp, i == 0 ? "sink" : "src");
+    other_templ = gst_element_get_pad_template (vpp, i == 0 ? "src" : "sink");
+
+    caps = klass->transform_caps (GST_BASE_TRANSFORM (vpp), direction,
+        templ->caps, NULL);
+    fail_unless (gst_caps_is_equal (caps, other_templ->caps));
+    gst_caps_unref (caps);
+
+    filter = gst_caps_from_string ("video/x-raw(memory:DMABuf)");
+    expected = gst_caps_intersect (other_templ->caps, filter);
+    caps = klass->transform_caps (GST_BASE_TRANSFORM (vpp), direction,
+        templ->caps, filter);
+    fail_unless (gst_caps_is_equal (caps, expected));
+    gst_caps_unref (caps);
+    gst_caps_unref (expected);
+    gst_caps_unref (filter);
+  }
+
+  gst_object_unref (vpp);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (dmabuf_modifier_passthrough)
+{
+  GstElement *vpp;
+  GstBaseTransform *trans;
+  GstBaseTransformClass *klass;
+  GstCaps *caps[2];
+  guint i;
+
+  vpp = gst_element_factory_make ("vapostproc", NULL);
+  fail_unless (vpp != NULL);
+  fail_if (gst_element_set_state (vpp, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+  trans = GST_BASE_TRANSFORM (vpp);
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  caps[0] = gst_caps_from_string ("video/x-raw(memory:DMABuf), "
+      "format=DMA_DRM, drm-format=YUYV, "
+      "width=640, height=480, framerate=30/1, colorimetry=bt601");
+  caps[1] = gst_caps_from_string ("video/x-raw(memory:DMABuf), "
+      "format=DMA_DRM, drm-format=YUYV:0x0100000000000002, "
+      "width=640, height=480, framerate=30/1, colorimetry=bt601");
+
+  for (i = 0; i < G_N_ELEMENTS (caps); i++) {
+    fail_unless (klass->set_caps (trans, caps[i], caps[1 - i]));
+    fail_if (gst_base_transform_is_passthrough (trans));
+
+    fail_unless (klass->set_caps (trans, caps[i], caps[i]));
+    fail_unless (gst_base_transform_is_passthrough (trans));
+  }
+
+  gst_caps_unref (caps[0]);
+  gst_caps_unref (caps[1]);
+  gst_element_set_state (vpp, GST_STATE_NULL);
+  gst_object_unref (vpp);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (raw_copy)
 {
@@ -171,6 +248,8 @@ main (int argc, char **argv)
 
   suite_add_tcase (s, tc_chain);
 
+  tcase_add_test (tc_chain, transform_template_caps);
+  tcase_add_test (tc_chain, dmabuf_modifier_passthrough);
   tcase_add_test (tc_chain, raw_copy);
   tcase_add_test (tc_chain, dmabuf_copy);
 
