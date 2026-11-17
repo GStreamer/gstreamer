@@ -2540,7 +2540,12 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gboolean drop = FALSE;
       GST_DEBUG_OBJECT (ogg, "got an EOS event");
       GST_PUSH_LOCK (ogg);
-      if (ogg->push_state == PUSH_DURATION) {
+      if (ogg->seek_event_drop_till > 0) {
+        GST_DEBUG_OBJECT (ogg, "Dropping EOS (seqnum:%u) because we have "
+            "a pending seek (seqnum:%u)", gst_event_get_seqnum (event),
+            ogg->seek_event_drop_till);
+        drop = TRUE;
+      } else if (ogg->push_state == PUSH_DURATION) {
         GST_DEBUG_OBJECT (ogg, "Got EOS while determining length");
         res = gst_ogg_demux_seek_back_after_push_duration_check_unlock (ogg);
         if (res != GST_FLOW_OK) {
@@ -2550,16 +2555,9 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_unref (event);
         res = TRUE;
         break;
-      } else {
-        if (ogg->seek_event_drop_till > 0) {
-          GST_DEBUG_OBJECT (ogg, "Dropping EOS (seqnum:%u) because we have "
-              "a pending seek (seqnum:%u)", gst_event_get_seqnum (event),
-              ogg->seek_event_drop_till);
-          drop = TRUE;
-        }
-        GST_PUSH_UNLOCK (ogg);
-        res = TRUE;
       }
+      GST_PUSH_UNLOCK (ogg);
+      res = TRUE;
       if (!drop)
         res = gst_ogg_demux_send_event (ogg, event);
       else
