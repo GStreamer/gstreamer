@@ -4126,16 +4126,6 @@ from_track_offset:
       }
       /* For the searched track this is really our position */
       etrack->duration = etrack->position;
-
-      for (i = 0; i < demux->src->len; i++) {
-        GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
-
-        if (!p->eos
-            && p->current_essence_track_position >=
-            p->current_essence_track->duration) {
-          gst_mxf_demux_eos_single_stream (demux, p);
-        }
-      }
     }
 
     GST_LOG_OBJECT (demux,
