@@ -3055,4 +3055,184 @@ mod tests {
                 .any(|f| f.name == c"audio/x-au" && f.rank == MARGINAL)
         );
     }
+
+    /// The magic bytes and probability each `start_with!` row must carry,
+    /// taken from the per-format functions the table replaced. Kept apart from
+    /// `FEATURES` so that a typo in either place fails the test below.
+    const START_WITH_EXPECTED: &[(&str, &[&[u8]], Prob)] = &[
+        ("audio/midi", &[b"MThd"], Prob::MAXIMUM),
+        ("audio/x-au", &[b".snd", b"dns."], Prob::MAXIMUM),
+        ("application/x-ape", &[b"MAC "], Prob::from_raw(90)),
+        ("audio/x-paris", &[b" paf", b"fap "], Prob::MAXIMUM),
+        ("audio/x-celt", &[b"CELT    "], Prob::MAXIMUM),
+        ("audio/iLBC-sh", &[b"#!iLBC30", b"#!iLBC20"], Prob::LIKELY),
+        (
+            "audio/x-tap-tap",
+            &[b"C64-TAPE-RAW", b"C16-TAPE-RAW"],
+            Prob::MAXIMUM,
+        ),
+        ("audio/x-ttafile", &[b"TTA"], Prob::MAXIMUM),
+        ("video/x-flv", &[b"FLV"], Prob::MAXIMUM),
+        ("image/gif", &[b"GIF8"], Prob::MAXIMUM),
+        ("application/x-gzip", &[b"\x1f\x8b"], Prob::LIKELY),
+        ("application/zip", &[b"PK\x03\x04"], Prob::LIKELY),
+        ("audio/x-imelody", &[b"BEGIN:IMELODY"], Prob::MAXIMUM),
+        ("application/x-scc", &[b"Scenarist_SCC V1.0"], Prob::MAXIMUM),
+        ("application/vnd.rn-realmedia", &[b".RMF"], Prob::MAXIMUM),
+        ("application/x-pn-realaudio", &[b".ra\xfd"], Prob::MAXIMUM),
+        ("audio/x-nist", &[b"NIST"], Prob::MAXIMUM),
+        ("audio/x-voc", &[b"Creative"], Prob::MAXIMUM),
+        ("audio/x-rf64", &[b"RF64"], Prob::MAXIMUM),
+        ("audio/x-amr-nb-sh", &[b"#!AMR"], Prob::LIKELY),
+        ("audio/x-amr-wb-sh", &[b"#!AMR-WB"], Prob::MAXIMUM),
+        ("audio/x-w64", &[b"riff"], Prob::MAXIMUM),
+        ("image/x-xpixmap", &[b"/* XPM */"], Prob::MAXIMUM),
+        ("image/x-xbitmap", &[b"/* XBM */"], Prob::MAXIMUM),
+        ("image/x-farbfeld", &[b"farbfeld"], Prob::NEARLY_CERTAIN),
+        ("image/qoi", &[b"qoif"], Prob::NEARLY_CERTAIN),
+        ("image/vnd.ms-dds", &[b"DDS "], Prob::NEARLY_CERTAIN),
+        ("audio/x-sid", &[b"PSID"], Prob::MAXIMUM),
+        ("image/x-xcf", &[b"gimp xcf"], Prob::MAXIMUM),
+        ("application/x-bzip", &[b"BZh"], Prob::LIKELY),
+        ("application/x-compress", &[b"\x1f\x9d"], Prob::LIKELY),
+        ("application/x-executable", &[b"\x7fELF"], Prob::MAXIMUM),
+        (
+            "audio/x-spc",
+            &[b"SNES-SPC700 Sound File Data"],
+            Prob::MAXIMUM,
+        ),
+        ("audio/x-caf", &[b"caff\x00\x01"], Prob::MAXIMUM),
+        ("application/x-rar", &[b"Rar!"], Prob::LIKELY),
+        ("audio/x-nsf", &[b"NESM\x1a"], Prob::MAXIMUM),
+        ("audio/x-gym", &[b"GYMX"], Prob::MAXIMUM),
+        ("audio/x-ay", &[b"ZXAYEMUL"], Prob::MAXIMUM),
+        ("audio/x-gbs", &[b"GBS\x01"], Prob::MAXIMUM),
+        ("audio/x-vgm", &[b"Vgm "], Prob::MAXIMUM),
+        ("audio/x-sap", &[b"SAP\r\nAUTHOR "], Prob::MAXIMUM),
+        ("video/x-ivf", &[b"DKIF"], Prob::NEARLY_CERTAIN),
+        ("audio/x-kss", &[b"KSSX\x00"], Prob::MAXIMUM),
+        ("application/pdf", &[b"%PDF-"], Prob::LIKELY),
+        (
+            "application/octet-stream",
+            &[b"\x00\x00\x00\x01Bud1"],
+            Prob::LIKELY,
+        ),
+        ("audio/x-tap-dmp", &[b"DC2N-TAP-RAW"], Prob::LIKELY),
+        (
+            "image/vnd.adobe.photoshop",
+            &[b"8BPS\x00\x01\x00\x00\x00\x00"],
+            Prob::LIKELY,
+        ),
+        ("audio/x-xi", &[b"Extended Instrument: "], Prob::MAXIMUM),
+        ("video/x-dirac", &[b"BBCD", b"KW-DIRAC"], Prob::MAXIMUM),
+        ("video/x-theora", &[b"\x80theora"], Prob::MAXIMUM),
+        (
+            "image/vnd.radiance",
+            &[b"#?RADIANCE", b"#?RGBE"],
+            Prob::NEARLY_CERTAIN,
+        ),
+        (
+            "application/x-shockwave-flash",
+            &[b"FWS", b"CWS"],
+            Prob::MAXIMUM,
+        ),
+        (
+            "video/x-ms-asf",
+            &[b"\x30\x26\xb2\x75\x8e\x66\xcf\x11\xa6\xd9\x00\xaa\x00\x62\xce\x6c"],
+            Prob::MAXIMUM,
+        ),
+        (
+            "video/x-mve",
+            &[b"Interplay MVE File\x1a\x00\x1a\x00\x00\x01\x33\x11"],
+            Prob::MAXIMUM,
+        ),
+        ("video/x-mng", &[b"\x8aMNG\r\n\x1a\n"], Prob::MAXIMUM),
+        ("image/x-jng", &[b"\x8bJNG\r\n\x1a\n"], Prob::MAXIMUM),
+        ("image/x-sun-raster", &[b"\x59\xa6\x6a\x95"], Prob::MAXIMUM),
+        (
+            "application/msword",
+            &[b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"],
+            Prob::LIKELY,
+        ),
+        ("video/x-avs", &[b"\x77\x57\x10\x00"], Prob::LIKELY),
+        (
+            "video/x-nuv",
+            &[b"MythTVVideo", b"NuppelVideo"],
+            Prob::MAXIMUM,
+        ),
+        (
+            "application/x-ogm-video",
+            &[b"\x01video\x00\x00\x00"],
+            Prob::MAXIMUM,
+        ),
+        (
+            "application/x-ogm-audio",
+            &[b"\x01audio\x00\x00\x00"],
+            Prob::MAXIMUM,
+        ),
+        (
+            "application/x-ogm-text",
+            &[b"\x01text\x00\x00\x00\x00"],
+            Prob::MAXIMUM,
+        ),
+    ];
+
+    /// Every `start_with!` row answers for its own magic, and for nothing else.
+    ///
+    /// These formats' magic bytes, probability and caps are table data, so no
+    /// other test looks at them. The expectations above are separate from the
+    /// table: a flipped byte, a wrong probability or a row whose data drifted
+    /// from its function would otherwise silently drop a format.
+    #[test]
+    fn start_with_rows_answer_for_their_magic_only() {
+        use super::FEATURES;
+        use crate::helpers::Finder;
+
+        let mut checked = 0;
+        for &(name, magics, prob) in START_WITH_EXPECTED {
+            let row = FEATURES
+                .iter()
+                .find(|f| f.name.to_str().unwrap() == name)
+                .unwrap_or_else(|| panic!("no row for {name}"));
+            let Finder::StartWith {
+                magic: row_magic,
+                prob: row_prob,
+            } = &row.finder
+            else {
+                panic!("{name} is not a start_with row")
+            };
+            assert_eq!(*row_magic, magics, "{name}");
+            assert_eq!(*row_prob, prob, "{name}");
+
+            // Drive the finder exactly as registration would.
+            let (func, data_ptr) = row.finder.registration(row);
+            let func = func.expect("start_with row has a finder");
+
+            let magic = magics[0];
+            let mut stream = magic.to_vec();
+            stream.resize(magic.len() + 8, 0);
+
+            let got = probe_suggestions(&stream, |tf| func(tf, data_ptr));
+            assert_eq!(got, vec![(prob.get(), name.to_owned())], "{name}");
+
+            // One byte off the magic: nothing is recognised.
+            let mut wrong = stream.clone();
+            wrong[magic.len() - 1] ^= 0xFF;
+            let got = probe_suggestions(&wrong, |tf| func(tf, data_ptr));
+            assert!(got.is_empty(), "{name} matched a corrupted magic");
+
+            // One byte short: the engine cannot serve the peek, so again
+            // nothing is recognised.
+            let got = probe_suggestions(&stream[..magic.len() - 1], |tf| func(tf, data_ptr));
+            assert!(got.is_empty(), "{name} matched a truncated magic");
+
+            checked += 1;
+        }
+        // No `start_with!` row may escape the expectations above.
+        let rows = FEATURES
+            .iter()
+            .filter(|f| matches!(f.finder, Finder::StartWith { .. }))
+            .count();
+        assert_eq!(rows, checked, "one expectation per start_with! row");
+    }
 }
