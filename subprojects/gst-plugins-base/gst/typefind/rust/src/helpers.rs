@@ -256,11 +256,11 @@ impl<'a> Scanner<'a> {
 pub type TypeFindFunc = extern "C" fn(&mut TypeFind, gpointer);
 
 pub(crate) struct Feature(
-    pub(crate) &'static str,         // feature name
-    pub(crate) c_uint,               // rank
-    pub(crate) Option<TypeFindFunc>, // typefind fn
-    pub(crate) Option<&'static str>, // extensions
-    pub(crate) Option<&'static str>, // caps string
+    pub(crate) &'static CStr,         // feature name
+    pub(crate) c_uint,                // rank
+    pub(crate) Option<TypeFindFunc>,  // typefind fn
+    pub(crate) Option<&'static CStr>, // extensions
+    pub(crate) Option<&'static CStr>, // caps string
 );
 
 /// 16-bit little-endian value at the start of `d`. The caller's peek
@@ -414,18 +414,18 @@ macro_rules! opt {
 }
 
 /// One row of the registration table (typefindfunctions.rs::FEATURES), in
-/// gst_type_find_register() argument order. Strings stay plain Rust data;
-/// NULL-terminated conversion happens in gst_typefindfunctions_rs_register().
+/// gst_type_find_register() argument order. The strings are `&'static CStr`
+/// literals, so registration hands them to C without copying.
 /// Caps default to the feature name; verify each row against the C caps string.
 ///
-/// - `typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp")`
+/// - `typefinder!(c"image/bmp", PRIMARY, bmp_type_find, c"bmp")`
 ///   extensions "bmp", caps = feature name (default)
-/// - `typefinder!("audio/x-gsm", PRIMARY, none, "gsm", "audio/x-gsm, rate=8000, channels=1")`
+/// - `typefinder!(c"audio/x-gsm", PRIMARY, none, c"gsm", c"audio/x-gsm, rate=8000, channels=1")`
 ///   NULL func, so nothing is recognised from content and only the extension
 ///   answers; caps given explicitly because they differ from the name
-/// - `typefinder!("image/tiff", PRIMARY, tiff_type_find, "tif,tiff", "image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }")`
+/// - `typefinder!(c"image/tiff", PRIMARY, tiff_type_find, c"tif,tiff", c"image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }")`
 ///   caps differing from the feature name
-/// - `typefinder!("image/x-icon", MARGINAL, windows_icon_type_find, none, none)`
+/// - `typefinder!(c"image/x-icon", MARGINAL, windows_icon_type_find, none, none)`
 ///   NULL extensions and NULL caps
 ///
 /// Ranks: PRIMARY/SECONDARY/MARGINAL (or offsets like `PRIMARY+103`).

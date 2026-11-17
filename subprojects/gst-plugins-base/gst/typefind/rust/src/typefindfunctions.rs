@@ -2799,504 +2799,504 @@ extern "C" fn mpeg4_video_type_find(tf: &mut TypeFind, _private: gpointer) {
 const FEATURES: &[Feature] = &[
     // Trivial finders - magic bytes only
     typefinder!(
-        "application/x-shockwave-flash",
+        c"application/x-shockwave-flash",
         SECONDARY,
         swf_type_find,
-        "swf,swfl"
+        c"swf,swfl"
     ),
     typefinder!(
-        "image/tiff",
+        c"image/tiff",
         PRIMARY,
         tiff_type_find,
-        "tif,tiff",
-        "image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }"
+        c"tif,tiff",
+        c"image/tiff, endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }"
     ),
-    typefinder!("video/x-flv", SECONDARY, flv_type_find, "flv"),
-    typefinder!("image/gif", PRIMARY, gif_type_find, "gif"),
-    typefinder!("video/x-dirac", PRIMARY, dirac_type_find),
-    typefinder!("video/x-theora", PRIMARY, theora_type_find),
-    typefinder!("application/x-gzip", SECONDARY, gz_type_find, "gz"),
-    typefinder!("application/zip", SECONDARY, zip_type_find, "zip"),
+    typefinder!(c"video/x-flv", SECONDARY, flv_type_find, c"flv"),
+    typefinder!(c"image/gif", PRIMARY, gif_type_find, c"gif"),
+    typefinder!(c"video/x-dirac", PRIMARY, dirac_type_find),
+    typefinder!(c"video/x-theora", PRIMARY, theora_type_find),
+    typefinder!(c"application/x-gzip", SECONDARY, gz_type_find, c"gz"),
+    typefinder!(c"application/zip", SECONDARY, zip_type_find, c"zip"),
     typefinder!(
-        "application/x-id3v2",
+        c"application/x-id3v2",
         PRIMARY + 103,
         id3v2_type_find,
-        "mp3,mp2,mp1,mpga,ogg,flac,tta",
-        "application/x-id3"
+        c"mp3,mp2,mp1,mpga,ogg,flac,tta",
+        c"application/x-id3"
     ),
-    typefinder!("audio/x-m4a", PRIMARY, m4a_type_find, "m4a"),
-    typefinder!("audio/mobile-xmf", PRIMARY, mxmf_type_find, "mxmf"),
-    typefinder!("application/x-ar", SECONDARY, ar_type_find, "a"),
-    typefinder!("video/x-ms-asf", SECONDARY, asf_type_find, "asf,wm,wma,wmv"),
-    typefinder!("application/x-mmsh", SECONDARY, mmsh_type_find),
-    typefinder!("text/x-cmml", PRIMARY, cmml_type_find),
+    typefinder!(c"audio/x-m4a", PRIMARY, m4a_type_find, c"m4a"),
+    typefinder!(c"audio/mobile-xmf", PRIMARY, mxmf_type_find, c"mxmf"),
+    typefinder!(c"application/x-ar", SECONDARY, ar_type_find, c"a"),
+    typefinder!(c"video/x-ms-asf", SECONDARY, asf_type_find, c"asf,wm,wma,wmv"),
+    typefinder!(c"application/x-mmsh", SECONDARY, mmsh_type_find),
+    typefinder!(c"text/x-cmml", PRIMARY, cmml_type_find),
     // Note: typefindfunctions_subtitles registered below with no default caps.
     // Complex finders - structure validation and chunk/marker walking
-    typefinder!("image/bmp", PRIMARY, bmp_type_find, "bmp"),
-    typefinder!("image/png", PRIMARY + 14, png_type_find, "png"),
-    typefinder!("image/x-exr", PRIMARY, exr_type_find, "exr"),
+    typefinder!(c"image/bmp", PRIMARY, bmp_type_find, c"bmp"),
+    typefinder!(c"image/png", PRIMARY + 14, png_type_find, c"png"),
+    typefinder!(c"image/x-exr", PRIMARY, exr_type_find, c"exr"),
     // JP2 can also detect MJ2 - register as both
-    typefinder!("image/jp2", PRIMARY, jp2_type_find, "jp2"),
-    typefinder!("video/mj2", PRIMARY, jp2_type_find, "mj2"),
-    typefinder!("image/jpeg", PRIMARY + 15, jpeg_type_find, "jpg,jpe,jpeg"),
+    typefinder!(c"image/jp2", PRIMARY, jp2_type_find, c"jp2"),
+    typefinder!(c"video/mj2", PRIMARY, jp2_type_find, c"mj2"),
+    typefinder!(c"image/jpeg", PRIMARY + 15, jpeg_type_find, c"jpg,jpe,jpeg"),
     // Additional startswith finders
-    typefinder!("audio/midi", PRIMARY, mid_type_find, "mid,midi"),
-    typefinder!("audio/x-ttafile", PRIMARY, tta_type_find, "tta"),
+    typefinder!(c"audio/midi", PRIMARY, mid_type_find, c"mid,midi"),
+    typefinder!(c"audio/x-ttafile", PRIMARY, tta_type_find, c"tta"),
     typefinder!(
-        "application/x-apetag",
+        c"application/x-apetag",
         PRIMARY + 102,
         apetag_type_find,
-        "mp3,ape,mpc,wv"
+        c"mp3,ape,mpc,wv"
     ),
-    typefinder!("application/x-ape", SECONDARY, ape_type_find, "ape"),
-    typefinder!("audio/x-au", MARGINAL, au_type_find, "au,snd"),
-    typefinder!("audio/x-shorten", SECONDARY, shn_type_find, "shn"),
-    typefinder!("audio/x-paris", SECONDARY, paris_type_find, "paf"),
-    typefinder!("audio/x-celt", PRIMARY, celt_type_find),
-    typefinder!("audio/x-svx", SECONDARY, svx_type_find, "iff,svx"),
-    typefinder!("audio/iLBC-sh", PRIMARY, ilbc_type_find, "ilbc"),
-    typefinder!("audio/x-dsf", PRIMARY, dsf_type_find),
-    typefinder!("audio/x-aiff", SECONDARY, aiff_type_find, "aiff,aif,aifc"),
-    typefinder!("audio/x-brstm", SECONDARY, brstm_type_find, "brstm"),
-    typefinder!("audio/x-bfstm", SECONDARY, bfstm_type_find, "bfstm,bcstm"),
-    typefinder!("audio/x-tap-tap", PRIMARY, tap_type_find, "tap"),
-    typefinder!("audio/x-amr-nb-sh", PRIMARY, amr_type_find, "amr"),
-    typefinder!("audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, "amr"),
-    typefinder!("video/x-vcd", PRIMARY, vcd_type_find, "dat"),
+    typefinder!(c"application/x-ape", SECONDARY, ape_type_find, c"ape"),
+    typefinder!(c"audio/x-au", MARGINAL, au_type_find, c"au,snd"),
+    typefinder!(c"audio/x-shorten", SECONDARY, shn_type_find, c"shn"),
+    typefinder!(c"audio/x-paris", SECONDARY, paris_type_find, c"paf"),
+    typefinder!(c"audio/x-celt", PRIMARY, celt_type_find),
+    typefinder!(c"audio/x-svx", SECONDARY, svx_type_find, c"iff,svx"),
+    typefinder!(c"audio/iLBC-sh", PRIMARY, ilbc_type_find, c"ilbc"),
+    typefinder!(c"audio/x-dsf", PRIMARY, dsf_type_find),
+    typefinder!(c"audio/x-aiff", SECONDARY, aiff_type_find, c"aiff,aif,aifc"),
+    typefinder!(c"audio/x-brstm", SECONDARY, brstm_type_find, c"brstm"),
+    typefinder!(c"audio/x-bfstm", SECONDARY, bfstm_type_find, c"bfstm,bcstm"),
+    typefinder!(c"audio/x-tap-tap", PRIMARY, tap_type_find, c"tap"),
+    typefinder!(c"audio/x-amr-nb-sh", PRIMARY, amr_type_find, c"amr"),
+    typefinder!(c"audio/x-amr-wb-sh", PRIMARY, amr_wb_type_find, c"amr"),
+    typefinder!(c"video/x-vcd", PRIMARY, vcd_type_find, c"dat"),
     typefinder!(
-        "audio/x-imelody",
+        c"audio/x-imelody",
         PRIMARY,
         imelody_type_find,
-        "imy,ime,imelody"
+        c"imy,ime,imelody"
     ),
     // Ogg Skeleton - no extensions; custom caps with parsed=false
     typefinder!(
-        "application/x-ogg-skeleton",
+        c"application/x-ogg-skeleton",
         PRIMARY,
         oggskel_type_find,
         none,
-        "application/x-ogg-skeleton, parsed=(boolean)FALSE"
+        c"application/x-ogg-skeleton, parsed=(boolean)FALSE"
     ),
-    typefinder!("application/x-yuv4mpeg", PRIMARY, y4m_type_find, "y4m"),
-    typefinder!("application/x-scc", PRIMARY, scc_type_find, "scc"),
+    typefinder!(c"application/x-yuv4mpeg", PRIMARY, y4m_type_find, c"y4m"),
+    typefinder!(c"application/x-scc", PRIMARY, scc_type_find, c"scc"),
     typefinder!(
-        "application/vnd.rn-realmedia",
+        c"application/vnd.rn-realmedia",
         SECONDARY,
         rmf_type_find,
-        "ra,ram,rm,rmvb"
+        c"ra,ram,rm,rmvb"
     ),
     typefinder!(
-        "application/x-pn-realaudio",
+        c"application/x-pn-realaudio",
         SECONDARY,
         ram_type_find,
-        "ra,ram,rm,rmvb"
+        c"ra,ram,rm,rmvb"
     ),
-    typefinder!("audio/x-nist", SECONDARY, nist_type_find, "nist"),
-    typefinder!("audio/x-voc", SECONDARY, voc_type_find, "voc"),
-    typefinder!("audio/x-rf64", PRIMARY, rf64_type_find, "rf64"),
-    typefinder!("audio/x-sid", MARGINAL, sid_type_find, "sid"),
-    typefinder!("image/x-xcf", SECONDARY, xcf_type_find, "xcf"),
-    typefinder!("video/x-mng", SECONDARY, mng_type_find, "mng"),
-    typefinder!("video/x-mve", SECONDARY, mve_type_find, "mve"),
-    typefinder!("video/x-pva", SECONDARY, pva_type_find, "pva"),
-    typefinder!("video/x-film-cpk", SECONDARY, film_cpk_type_find, "cpk"),
+    typefinder!(c"audio/x-nist", SECONDARY, nist_type_find, c"nist"),
+    typefinder!(c"audio/x-voc", SECONDARY, voc_type_find, c"voc"),
+    typefinder!(c"audio/x-rf64", PRIMARY, rf64_type_find, c"rf64"),
+    typefinder!(c"audio/x-sid", MARGINAL, sid_type_find, c"sid"),
+    typefinder!(c"image/x-xcf", SECONDARY, xcf_type_find, c"xcf"),
+    typefinder!(c"video/x-mng", SECONDARY, mng_type_find, c"mng"),
+    typefinder!(c"video/x-mve", SECONDARY, mve_type_find, c"mve"),
+    typefinder!(c"video/x-pva", SECONDARY, pva_type_find, c"pva"),
+    typefinder!(c"video/x-film-cpk", SECONDARY, film_cpk_type_find, c"cpk"),
     typefinder!(
-        "application/x-id3v1",
+        c"application/x-id3v1",
         PRIMARY + 101,
         id3v1_type_find,
-        "mp3,mp2,mp1,mpga,ogg,flac,tta",
-        "application/x-id3"
+        c"mp3,mp2,mp1,mpga,ogg,flac,tta",
+        c"application/x-id3"
     ),
-    typefinder!("image/x-jng", SECONDARY, jng_type_find, "jng"),
-    typefinder!("image/x-sun-raster", SECONDARY, ras_type_find, "ras"),
-    typefinder!("application/x-tar", SECONDARY, tar_type_find, "tar"),
-    typefinder!("application/x-bzip", SECONDARY, bz2_type_find, "bz2"),
-    typefinder!("application/x-compress", SECONDARY, z_type_find, "Z"),
-    typefinder!("application/x-executable", MARGINAL, elf_type_find),
-    typefinder!("audio/x-spc", SECONDARY, spc_type_find, "spc"),
-    typefinder!("audio/x-caf", SECONDARY, caf_type_find, "caf"),
-    typefinder!("application/x-rar", SECONDARY, rar_type_find, "rar"),
-    typefinder!("audio/x-nsf", SECONDARY, nsf_type_find, "nsf"),
-    typefinder!("audio/x-gym", SECONDARY, gym_type_find, "gym"),
-    typefinder!("audio/x-ay", SECONDARY, ay_type_find, "ay"),
-    typefinder!("audio/x-gbs", SECONDARY, gbs_type_find, "gbs"),
-    typefinder!("audio/x-vgm", SECONDARY, vgm_type_find, "vgm"),
-    typefinder!("audio/x-w64", SECONDARY, w64_type_find, "w64"),
-    typefinder!("audio/x-sap", SECONDARY, sap_type_find, "sap"),
-    typefinder!("video/x-ivf", SECONDARY, ivf_type_find, "ivf"),
-    typefinder!("audio/x-kss", SECONDARY, kss_type_find, "kss"),
-    typefinder!("application/pdf", SECONDARY, pdf_type_find, "pdf"),
-    typefinder!("application/msword", SECONDARY, doc_type_find, "doc"),
-    typefinder!("video/x-4xm", PRIMARY, fourxm_type_find),
+    typefinder!(c"image/x-jng", SECONDARY, jng_type_find, c"jng"),
+    typefinder!(c"image/x-sun-raster", SECONDARY, ras_type_find, c"ras"),
+    typefinder!(c"application/x-tar", SECONDARY, tar_type_find, c"tar"),
+    typefinder!(c"application/x-bzip", SECONDARY, bz2_type_find, c"bz2"),
+    typefinder!(c"application/x-compress", SECONDARY, z_type_find, c"Z"),
+    typefinder!(c"application/x-executable", MARGINAL, elf_type_find),
+    typefinder!(c"audio/x-spc", SECONDARY, spc_type_find, c"spc"),
+    typefinder!(c"audio/x-caf", SECONDARY, caf_type_find, c"caf"),
+    typefinder!(c"application/x-rar", SECONDARY, rar_type_find, c"rar"),
+    typefinder!(c"audio/x-nsf", SECONDARY, nsf_type_find, c"nsf"),
+    typefinder!(c"audio/x-gym", SECONDARY, gym_type_find, c"gym"),
+    typefinder!(c"audio/x-ay", SECONDARY, ay_type_find, c"ay"),
+    typefinder!(c"audio/x-gbs", SECONDARY, gbs_type_find, c"gbs"),
+    typefinder!(c"audio/x-vgm", SECONDARY, vgm_type_find, c"vgm"),
+    typefinder!(c"audio/x-w64", SECONDARY, w64_type_find, c"w64"),
+    typefinder!(c"audio/x-sap", SECONDARY, sap_type_find, c"sap"),
+    typefinder!(c"video/x-ivf", SECONDARY, ivf_type_find, c"ivf"),
+    typefinder!(c"audio/x-kss", SECONDARY, kss_type_find, c"kss"),
+    typefinder!(c"application/pdf", SECONDARY, pdf_type_find, c"pdf"),
+    typefinder!(c"application/msword", SECONDARY, doc_type_find, c"doc"),
+    typefinder!(c"video/x-4xm", PRIMARY, fourxm_type_find),
     typefinder!(
-        "application/postscript",
+        c"application/postscript",
         SECONDARY,
         postscript_type_find,
-        "ps"
+        c"ps"
     ),
     // RIFF variants
-    typefinder!("video/x-msvideo", PRIMARY, avi_type_find, "avi,avf"),
-    typefinder!("audio/qcelp", PRIMARY, qcp_type_find, "qcp"),
-    typefinder!("video/x-cdxa", PRIMARY, cdxa_type_find, "dat"),
-    typefinder!("audio/riff-midi", PRIMARY, riff_mid_type_find, "mid,midi"),
-    typefinder!("audio/x-wav", PRIMARY, wav_type_find, "wav"),
-    typefinder!("image/webp", PRIMARY, webp_type_find, "webp"),
-    typefinder!("audio/x-xwma", PRIMARY, xwma_type_find),
+    typefinder!(c"video/x-msvideo", PRIMARY, avi_type_find, c"avi,avf"),
+    typefinder!(c"audio/qcelp", PRIMARY, qcp_type_find, c"qcp"),
+    typefinder!(c"video/x-cdxa", PRIMARY, cdxa_type_find, c"dat"),
+    typefinder!(c"audio/riff-midi", PRIMARY, riff_mid_type_find, c"mid,midi"),
+    typefinder!(c"audio/x-wav", PRIMARY, wav_type_find, c"wav"),
+    typefinder!(c"image/webp", PRIMARY, webp_type_find, c"webp"),
+    typefinder!(c"audio/x-xwma", PRIMARY, xwma_type_find),
     typefinder!(
-        "application/octet-stream",
+        c"application/octet-stream",
         SECONDARY,
         ds_store_type_find,
-        "DS_Store"
+        c"DS_Store"
     ),
     // Registers after the DS_Store row of the same name, and replaces it
     // in the registry: the feature answers for both, as it does upstream.
-    typefinder!("application/octet-stream", MARGINAL, dvdiso_type_find),
-    typefinder!("audio/x-tap-dmp", SECONDARY, dmp_type_find, "dmp"),
-    typefinder!("video/x-avs", SECONDARY, avs_type_find),
-    typefinder!("image/vnd.adobe.photoshop", SECONDARY, psd_type_find, "psd"),
-    typefinder!("audio/x-xi", SECONDARY, xi_type_find, "xi"),
-    typefinder!("image/x-xpixmap", SECONDARY, xpm_type_find, "xpm"),
-    typefinder!("image/x-xbitmap", SECONDARY, xbm_type_find, "xbm"),
-    typefinder!("image/x-farbfeld", SECONDARY, farbfeld_type_find, "ff"),
-    typefinder!("image/qoi", SECONDARY, qoif_type_find, "qoi"),
-    typefinder!("image/vnd.ms-dds", SECONDARY, dds_type_find, "dds"),
+    typefinder!(c"application/octet-stream", MARGINAL, dvdiso_type_find),
+    typefinder!(c"audio/x-tap-dmp", SECONDARY, dmp_type_find, c"dmp"),
+    typefinder!(c"video/x-avs", SECONDARY, avs_type_find),
+    typefinder!(c"image/vnd.adobe.photoshop", SECONDARY, psd_type_find, c"psd"),
+    typefinder!(c"audio/x-xi", SECONDARY, xi_type_find, c"xi"),
+    typefinder!(c"image/x-xpixmap", SECONDARY, xpm_type_find, c"xpm"),
+    typefinder!(c"image/x-xbitmap", SECONDARY, xbm_type_find, c"xbm"),
+    typefinder!(c"image/x-farbfeld", SECONDARY, farbfeld_type_find, c"ff"),
+    typefinder!(c"image/qoi", SECONDARY, qoif_type_find, c"qoi"),
+    typefinder!(c"image/vnd.ms-dds", SECONDARY, dds_type_find, c"dds"),
     // OTIO - JSON-based with OTIO_SCHEMA key
     typefinder!(
-        "application/vnd.pixar.opentimelineio+json",
+        c"application/vnd.pixar.opentimelineio+json",
         SECONDARY,
         otio_type_find,
-        "otio"
+        c"otio"
     ),
     // FLIC/FLC - video/x-fli
-    typefinder!("video/x-fli", MARGINAL, flx_type_find, "flc,fli"),
+    typefinder!(c"video/x-fli", MARGINAL, flx_type_find, c"flc,fli"),
     // JPEG 2000 Code Stream - image/x-jpc
-    typefinder!("image/x-jpc", PRIMARY, jpc_type_find, "jpc,j2k"),
+    typefinder!(c"image/x-jpc", PRIMARY, jpc_type_find, c"jpc,j2k"),
     // Musepack - audio/x-musepack
     typefinder!(
-        "audio/x-musepack",
+        c"audio/x-musepack",
         PRIMARY,
         musepack_type_find,
-        "mpc,mpp,mp+",
-        "audio/x-musepack, streamversion=(int) { 7, 8 }"
+        c"mpc,mpp,mp+",
+        c"audio/x-musepack, streamversion=(int) { 7, 8 }"
     ),
     // AAC - audio/aac, in its ADTS, LOAS and ADIF framings
     typefinder!(
-        "audio/aac",
+        c"audio/aac",
         SECONDARY,
         aac_type_find,
-        "aac,adts,adif,loas",
-        "audio/mpeg, mpegversion = (int) { 2, 4 }, framed = (bool) false"
+        c"aac,adts,adif,loas",
+        c"audio/mpeg, mpegversion = (int) { 2, 4 }, framed = (bool) false"
     ),
     // DTS - audio/x-dts
     typefinder!(
-        "audio/x-dts",
+        c"audio/x-dts",
         SECONDARY,
         dts_type_find,
-        "dts",
-        "audio/x-dts"
+        c"dts",
+        c"audio/x-dts"
     ),
     // AC-3 - audio/x-ac3, which also suggests audio/x-eac3
     typefinder!(
-        "audio/x-ac3",
+        c"audio/x-ac3",
         PRIMARY,
         ac3_type_find,
-        "ac3,eac3",
-        "audio/x-ac3"
+        c"ac3,eac3",
+        c"audio/x-ac3"
     ),
     // MP3 - audio/mpeg
     typefinder!(
-        "audio/mpeg",
+        c"audio/mpeg",
         PRIMARY,
         mp3_type_find,
-        "mp3,mp2,mp1,mpga",
-        "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]"
+        c"mp3,mp2,mp1,mpga",
+        c"audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]"
     ),
     // SBC - audio/x-sbc
-    typefinder!("audio/x-sbc", MARGINAL, sbc_type_find, "sbc", "audio/x-sbc"),
+    typefinder!(c"audio/x-sbc", MARGINAL, sbc_type_find, c"sbc", c"audio/x-sbc"),
     // WavPack - audio/x-wavpack. One finder answers for both streams, since
     // telling them apart is what the probe does.
     typefinder!(
-        "audio/x-wavpack",
+        c"audio/x-wavpack",
         SECONDARY,
         wavpack_type_find,
-        "wv,wvp",
-        "audio/x-wavpack, framed = (boolean) false"
+        c"wv,wvp",
+        c"audio/x-wavpack, framed = (boolean) false"
     ),
     // WavPack correction - audio/x-wavpack-correction
     typefinder!(
-        "audio/x-wavpack-correction",
+        c"audio/x-wavpack-correction",
         SECONDARY,
         wavpack_type_find,
-        "wvc",
-        "audio/x-wavpack-correction, framed = (boolean) false"
+        c"wvc",
+        c"audio/x-wavpack-correction, framed = (boolean) false"
     ),
     // AC-4 - audio/x-ac4
     typefinder!(
-        "audio/x-ac4",
+        c"audio/x-ac4",
         PRIMARY,
         ac4_type_find,
-        "ac4",
-        "audio/x-ac4, stream-format = (string) syncframe"
+        c"ac4",
+        c"audio/x-ac4, stream-format = (string) syncframe"
     ),
     // Audible AA - audio/audible. The registered name and the suggested caps
     // differ: the caps are what a match suggests, the name is the registry
     // feature name, which is also what gst-inspect prints for the factory.
     typefinder!(
-        "audio/audible",
+        c"audio/audible",
         MARGINAL,
         aa_type_find,
-        "aa,aax",
-        "audio/x-audible"
+        c"aa,aax",
+        c"audio/x-audible"
     ),
     // GSM - audio/x-gsm. A bare GSM stream is a run of frames with no header and
     // no magic, so there is nothing to recognise from content and only the file
     // extension can answer.
     typefinder!(
-        "audio/x-gsm",
+        c"audio/x-gsm",
         PRIMARY,
         none,
-        "gsm",
-        "audio/x-gsm, rate=8000, channels=1"
+        c"gsm",
+        c"audio/x-gsm, rate=8000, channels=1"
     ),
     // Tracker modules - audio/x-mod. One media type for twenty eight tracker
     // families, which the `type` property on the suggestion tells apart.
     typefinder!(
-        "audio/x-mod",
+        c"audio/x-mod",
         SECONDARY,
         mod_type_find,
-        "669,amf,ams,dbm,digi,dmf,dsm,gdm,far,imf,it,j2b,mdl,med,mod,mt2,mtm,okt,psm,ptm,sam,s3m,stm,stx,ult,umx,xm"
+        c"669,amf,ams,dbm,digi,dmf,dsm,gdm,far,imf,it,j2b,mdl,med,mod,mt2,mtm,okt,psm,ptm,sam,s3m,stm,stx,ult,umx,xm"
     ),
     // NUV (MythTVVideo/NuppelVideo) - video/x-nuv
-    typefinder!("video/x-nuv", SECONDARY, nuv_type_find, "nuv"),
+    typefinder!(c"video/x-nuv", SECONDARY, nuv_type_find, c"nuv"),
     // DV - video/x-dv
     typefinder!(
-        "video/x-dv",
+        c"video/x-dv",
         SECONDARY,
         dv_type_find,
-        "dv,dif",
-        "video/x-dv, systemstream=(boolean)true"
+        c"dv,dif",
+        c"video/x-dv, systemstream=(boolean)true"
     ),
     // Kate - caps (subtitle or application) are selected at runtime;
     // no file extensions are registered.
-    typefinder!("subtitle/x-kate", MARGINAL, kate_type_find, none, none),
+    typefinder!(c"subtitle/x-kate", MARGINAL, kate_type_find, none, none),
     // OGM video/audio/text - no extensions.
-    typefinder!("application/x-ogm-video", PRIMARY, ogmvideo_type_find),
-    typefinder!("application/x-ogm-audio", PRIMARY, ogmaudio_type_find),
-    typefinder!("application/x-ogm-text", PRIMARY, ogmtext_type_find),
-    typefinder!("audio/x-flac", PRIMARY, flac_type_find, "flac"),
+    typefinder!(c"application/x-ogm-video", PRIMARY, ogmvideo_type_find),
+    typefinder!(c"application/x-ogm-audio", PRIMARY, ogmaudio_type_find),
+    typefinder!(c"application/x-ogm-text", PRIMARY, ogmtext_type_find),
+    typefinder!(c"audio/x-flac", PRIMARY, flac_type_find, c"flac"),
     // SDP - application/sdp
-    typefinder!("application/sdp", SECONDARY, sdp_type_find, "sdp"),
+    typefinder!(c"application/sdp", SECONDARY, sdp_type_find, c"sdp"),
     // EA - video/x-ea
-    typefinder!("video/x-ea", SECONDARY, ea_type_find),
+    typefinder!(c"video/x-ea", SECONDARY, ea_type_find),
     // NSV - video/x-nsv
-    typefinder!("video/x-nsv", MARGINAL, nsv_type_find, "nsv"),
+    typefinder!(c"video/x-nsv", MARGINAL, nsv_type_find, c"nsv"),
     // NUT - application/x-nut
-    typefinder!("application/x-nut", MARGINAL, nut_type_find, "nut"),
+    typefinder!(c"application/x-nut", MARGINAL, nut_type_find, c"nut"),
     // Interplay MVE. video/x-ipmovie names the codec, as gst-libav's map
     // and the demuxer do; upstream registered application/x-ipmovie.
-    typefinder!("video/x-ipmovie", SECONDARY, ipmovie_type_find),
+    typefinder!(c"video/x-ipmovie", SECONDARY, ipmovie_type_find),
     // SMAF - application/vnd.smaf
-    typefinder!("application/vnd.smaf", SECONDARY, mmf_type_find, "mmf"),
+    typefinder!(c"application/vnd.smaf", SECONDARY, mmf_type_find, c"mmf"),
     // IFF - application/x-iff
-    typefinder!("application/x-iff", SECONDARY, iff_type_find),
+    typefinder!(c"application/x-iff", SECONDARY, iff_type_find),
     // GXF - application/gxf
-    typefinder!("application/gxf", SECONDARY, gxf_type_find),
+    typefinder!(c"application/gxf", SECONDARY, gxf_type_find),
     // MS-DOS/PE executable - application/x-ms-dos-executable
     typefinder!(
-        "application/x-ms-dos-executable",
+        c"application/x-ms-dos-executable",
         SECONDARY,
         msdos_type_find,
-        "dll,exe,ocx,sys,scr,msstyles,cpl"
+        c"dll,exe,ocx,sys,scr,msstyles,cpl"
     ),
     // Speex - audio/x-speex
-    typefinder!("audio/x-speex", PRIMARY, speex_type_find),
+    typefinder!(c"audio/x-speex", PRIMARY, speex_type_find),
     // Vorbis - audio/x-vorbis
-    typefinder!("audio/x-vorbis", PRIMARY, vorbis_type_find),
+    typefinder!(c"audio/x-vorbis", PRIMARY, vorbis_type_find),
     // Ogg/Annodex - application/ogg
     typefinder!(
-        "application/ogg",
+        c"application/ogg",
         PRIMARY,
         ogganx_type_find,
-        "ogg,oga,ogv,ogm,ogx,spx,anx,axa,axv",
-        "application/ogg;video/ogg;audio/ogg;application/kate"
+        c"ogg,oga,ogv,ogm,ogx,spx,anx,axa,axv",
+        c"application/ogg;video/ogg;audio/ogg;application/kate"
     ),
     // IRCAM - audio/x-ircam
-    typefinder!("audio/x-ircam", SECONDARY, ircam_type_find, "sf"),
+    typefinder!(c"audio/x-ircam", SECONDARY, ircam_type_find, c"sf"),
     // XML - application/xml
-    typefinder!("application/xml", MARGINAL, xml_type_find, "xml"),
+    typefinder!(c"application/xml", MARGINAL, xml_type_find, c"xml"),
     // DASH MPD - application/dash+xml
     typefinder!(
-        "application/dash+xml",
+        c"application/dash+xml",
         PRIMARY,
         dash_mpd_type_find,
-        "mpd,MPD"
+        c"mpd,MPD"
     ),
     // GES - application/xges
-    typefinder!("application/xges", PRIMARY, xges_type_find, "xges"),
+    typefinder!(c"application/xges", PRIMARY, xges_type_find, c"xges"),
     // FCPXML - application/vnd.apple-fcp+xml
     typefinder!(
-        "application/vnd.apple-fcp+xml",
+        c"application/vnd.apple-fcp+xml",
         SECONDARY,
         fcpxml_type_find,
-        "fcpxml"
+        c"fcpxml"
     ),
     // XMEML - application/vnd.apple-xmeml+xml
     typefinder!(
-        "application/vnd.apple-xmeml+xml",
+        c"application/vnd.apple-xmeml+xml",
         SECONDARY,
         xmeml_type_find,
-        "xmeml"
+        c"xmeml"
     ),
     // SMIL - application/smil
-    typefinder!("application/smil", SECONDARY, smil_type_find, "smil"),
+    typefinder!(c"application/smil", SECONDARY, smil_type_find, c"smil"),
     // TTML - application/ttml+xml
     typefinder!(
-        "application/ttml+xml",
+        c"application/ttml+xml",
         SECONDARY,
         ttml_xml_type_find,
-        "ttml+xml"
+        c"ttml+xml"
     ),
     // HTML - text/html
-    typefinder!("text/html", SECONDARY, html_type_find, "htm,html"),
+    typefinder!(c"text/html", SECONDARY, html_type_find, c"htm,html"),
     // SVG - image/svg+xml
-    typefinder!("image/svg+xml", SECONDARY, svg_type_find, "svg"),
+    typefinder!(c"image/svg+xml", SECONDARY, svg_type_find, c"svg"),
     // HLS - application/x-hls
-    typefinder!("application/x-hls", MARGINAL, hls_type_find, "m3u8"),
+    typefinder!(c"application/x-hls", MARGINAL, hls_type_find, c"m3u8"),
     // SDS - audio/x-sds
-    typefinder!("audio/x-sds", SECONDARY, sds_type_find, "sds"),
+    typefinder!(c"audio/x-sds", SECONDARY, sds_type_find, c"sds"),
     // Note: typefindfunctions_text registered below with no default caps.
     // Smooth Streaming Manifest - application/vnd.ms-sstr+xml
     typefinder!(
-        "application/vnd.ms-sstr+xml",
+        c"application/vnd.ms-sstr+xml",
         PRIMARY,
         mss_manifest_type_find
     ),
     // URI list - text/uri-list
-    typefinder!("text/uri-list", MARGINAL, uri_type_find, "ram"),
+    typefinder!(c"text/uri-list", MARGINAL, uri_type_find, c"ram"),
     // Legacy game video and audio
-    typefinder!("video/vivo", SECONDARY, vivo_type_find, "viv"),
-    typefinder!("video/x-idcin", MARGINAL, idcin_type_find),
-    typefinder!("application/x-mm", MARGINAL, mm_type_find),
-    typefinder!("application/x-smk", MARGINAL, smk_type_find, "smk"),
-    typefinder!("application/x-sol", MARGINAL, sol_type_find, "sol"),
-    typefinder!("application/x-vmd", MARGINAL, vmd_type_find, "vmd"),
+    typefinder!(c"video/vivo", SECONDARY, vivo_type_find, c"viv"),
+    typefinder!(c"video/x-idcin", MARGINAL, idcin_type_find),
+    typefinder!(c"application/x-mm", MARGINAL, mm_type_find),
+    typefinder!(c"application/x-smk", MARGINAL, smk_type_find, c"smk"),
+    typefinder!(c"application/x-sol", MARGINAL, sol_type_find, c"sol"),
+    typefinder!(c"application/x-vmd", MARGINAL, vmd_type_find, c"vmd"),
     typefinder!(
-        "application/x-wc3movie",
+        c"application/x-wc3movie",
         MARGINAL,
         wc3movie_type_find,
-        "wc3movie"
+        c"wc3movie"
     ),
-    typefinder!("application/x-wsaud", MARGINAL, wsaud_type_find, "wsaud"),
-    typefinder!("application/x-wsvqa", MARGINAL, wsvqa_type_find, "wsvqa"),
+    typefinder!(c"application/x-wsaud", MARGINAL, wsaud_type_find, c"wsaud"),
+    typefinder!(c"application/x-wsvqa", MARGINAL, wsvqa_type_find, c"wsvqa"),
     // Images
-    typefinder!("application/itc", SECONDARY, itc_type_find, "itc"),
+    typefinder!(c"application/itc", SECONDARY, itc_type_find, c"itc"),
     typefinder!(
-        "image/x-portable-pixmap",
+        c"image/x-portable-pixmap",
         SECONDARY,
         pnm_type_find,
-        "pnm,ppm,pgm,pbm",
-        "image/x-portable-bitmap; image/x-portable-graymap; image/x-portable-pixmap; image/x-portable-anymap"
+        c"pnm,ppm,pgm,pbm",
+        c"image/x-portable-bitmap; image/x-portable-graymap; image/x-portable-pixmap; image/x-portable-anymap"
     ),
-    typefinder!("image/vnd.wap.wbmp", MARGINAL, wbmp_type_find, none, none),
-    typefinder!("image/x-icon", MARGINAL, windows_icon_type_find, none, none),
-    typefinder!("image/x-degas", MARGINAL, degas_type_find, none, none),
-    typefinder!("image/vnd.radiance", MARGINAL, radiance_type_find, "hdr"),
-    typefinder!("application/x-mcc", PRIMARY, mcc_type_find, "mcc"),
-    typefinder!("multipart/x-mixed-replace", SECONDARY, multipart_type_find),
-    typefinder!("application/x-3gp", PRIMARY, q3gp_type_find, "3gp"),
-    typefinder!("video/quicktime", PRIMARY, qt_type_find, "mov,mp4"),
+    typefinder!(c"image/vnd.wap.wbmp", MARGINAL, wbmp_type_find, none, none),
+    typefinder!(c"image/x-icon", MARGINAL, windows_icon_type_find, none, none),
+    typefinder!(c"image/x-degas", MARGINAL, degas_type_find, none, none),
+    typefinder!(c"image/vnd.radiance", MARGINAL, radiance_type_find, c"hdr"),
+    typefinder!(c"application/x-mcc", PRIMARY, mcc_type_find, c"mcc"),
+    typefinder!(c"multipart/x-mixed-replace", SECONDARY, multipart_type_find),
+    typefinder!(c"application/x-3gp", PRIMARY, q3gp_type_find, c"3gp"),
+    typefinder!(c"video/quicktime", PRIMARY, qt_type_find, c"mov,mp4"),
     typefinder!(
-        "image/x-quicktime",
+        c"image/x-quicktime",
         SECONDARY,
         qtif_type_find,
-        "qif,qtif,qti"
+        c"qif,qtif,qti"
     ),
     typefinder!(
-        "video/x-h263",
+        c"video/x-h263",
         SECONDARY,
         h263_video_type_find,
-        "h263,263",
-        "video/x-h263, variant=(string)itu"
+        c"h263,263",
+        c"video/x-h263, variant=(string)itu"
     ),
     typefinder!(
-        "video/x-h264",
+        c"video/x-h264",
         PRIMARY,
         h264_video_type_find,
-        "h264,x264,264",
-        "video/x-h264,stream-format=byte-stream"
+        c"h264,x264,264",
+        c"video/x-h264,stream-format=byte-stream"
     ),
     typefinder!(
-        "video/x-h265",
+        c"video/x-h265",
         PRIMARY,
         h265_video_type_find,
-        "h265,x265,265",
-        "video/x-h265,stream-format=byte-stream"
+        c"h265,x265,265",
+        c"video/x-h265,stream-format=byte-stream"
     ),
     typefinder!(
-        "video/x-h266",
+        c"video/x-h266",
         PRIMARY,
         h266_video_type_find,
-        "h266,266",
-        "video/x-h266,stream-format=byte-stream"
+        c"h266,266",
+        c"video/x-h266,stream-format=byte-stream"
     ),
     // PXSTR - application/x-pxstr
-    typefinder!("application/x-pxstr", MARGINAL, pxstr_type_find, "pxstr"),
+    typefinder!(c"application/x-pxstr", MARGINAL, pxstr_type_find, c"pxstr"),
     // SSA/ASS - application/x-ssa
     typefinder!(
-        "application/x-ssa",
+        c"application/x-ssa",
         SECONDARY,
         subtitles::ssa_type_find,
-        "ssa,ass",
-        "application/x-ssa; application/x-ass"
+        c"ssa,ass",
+        c"application/x-ssa; application/x-ass"
     ),
     // Matroska - video/x-matroska
     typefinder!(
-        "video/x-matroska",
+        c"video/x-matroska",
         PRIMARY,
         matroska_type_find,
-        "mkv,mka,mk3d,webm"
+        c"mkv,mka,mk3d,webm"
     ),
     // MXF - application/mxf
-    typefinder!("application/mxf", PRIMARY, mxf_type_find, "mxf"),
+    typefinder!(c"application/mxf", PRIMARY, mxf_type_find, c"mxf"),
     // AV1 - video/x-av1
     typefinder!(
-        "video/x-av1",
+        c"video/x-av1",
         MARGINAL,
         av1_type_find,
-        "av1",
-        "video/x-av1, stream-format=(string){ obu-stream, annexb }, alignment=(string)none"
+        c"av1",
+        c"video/x-av1, stream-format=(string){ obu-stream, annexb }, alignment=(string)none"
     ),
     typefinder!(
-        "video/mpeg-sys",
+        c"video/mpeg-sys",
         PRIMARY,
         mpeg_sys_type_find,
-        "mpe,mpeg,mpg",
-        "video/mpeg, systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]"
+        c"mpe,mpeg,mpg",
+        c"video/mpeg, systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]"
     ),
     typefinder!(
-        "video/mpegts",
+        c"video/mpegts",
         PRIMARY,
         mpeg_ts_type_find,
-        "ts,mts",
-        "video/mpegts, systemstream = (boolean) true, packetsize = (int) [ 188, 208 ]"
+        c"ts,mts",
+        c"video/mpegts, systemstream = (boolean) true, packetsize = (int) [ 188, 208 ]"
     ),
     typefinder!(
-        "video/mpeg-elementary",
+        c"video/mpeg-elementary",
         MARGINAL,
         mpeg_video_stream_type_find,
-        "mpv,mpeg,mpg",
-        "video/mpeg, systemstream = (boolean) false"
+        c"mpv,mpeg,mpg",
+        c"video/mpeg, systemstream = (boolean) false"
     ),
     typefinder!(
-        "video/mpeg4",
+        c"video/mpeg4",
         PRIMARY,
         mpeg4_video_type_find,
-        "m4v",
-        "video/mpeg, systemstream = (boolean) false"
+        c"m4v",
+        c"video/mpeg, systemstream = (boolean) false"
     ),
     // Content types from the OS-installed shared MIME database, for streams
     // no specific finder claimed.
-    typefinder!("xdgmime-base", MARGINAL, xdgmime_type_find, none, none),
+    typefinder!(c"xdgmime-base", MARGINAL, xdgmime_type_find, none, none),
 ];
 
 /// The content-type fallback: the installed XDG shared MIME database is
@@ -3353,13 +3353,7 @@ extern "C" fn xdgmime_type_find(tf: &mut TypeFind, _private: gpointer) {
 /// Register all Rust-implemented typefinders with the GStreamer plugin system.
 #[unsafe(no_mangle)]
 pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> gboolean {
-    let cs = |s: &str| CString::new(s).expect("NULL in registration table string");
-
     for &Feature(name, rank, func, extensions, caps_str) in FEATURES {
-        let name = cs(name);
-        let extensions = extensions.map(cs);
-        let caps_str = caps_str.map(cs);
-
         // NULL on a typo'd caps string.
         let caps = caps_str.map_or(ptr::null_mut(), |s| unsafe {
             gst_caps_from_string(s.as_ptr())
@@ -3372,7 +3366,7 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
                 name.as_ptr(),
                 rank,
                 func,
-                extensions.as_deref().map_or(ptr::null(), CStr::as_ptr),
+                extensions.map_or(ptr::null(), CStr::as_ptr),
                 caps,
                 ptr::null_mut(),
                 None,
@@ -3528,7 +3522,7 @@ mod tests {
         assert!(
             FEATURES
                 .iter()
-                .any(|f| f.0 == "audio/x-au" && f.1 == MARGINAL)
+                .any(|f| f.0 == c"audio/x-au" && f.1 == MARGINAL)
         );
     }
 }
