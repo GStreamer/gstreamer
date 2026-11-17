@@ -299,7 +299,7 @@ gst_audio_rate_fill_to_time (GstAudioRate * audiorate, GstClockTime time)
   gst_audio_rate_chain (audiorate->sinkpad, GST_OBJECT_CAST (audiorate), buf);
 }
 
-/* FIXME: videorate has a copy, should it be public API? */
+/* FIXME: ignores segment.start, see videorate's convert_position() */
 static guint64
 convert_position (GstSegment * old_segment, GstSegment * new_segment,
     guint64 position)
