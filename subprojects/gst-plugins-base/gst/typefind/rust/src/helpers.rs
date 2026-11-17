@@ -82,10 +82,14 @@ impl TypeFind {
         (data.len() >= min).then_some(data)
     }
 
-    /// Peek N bytes from offset 0 and compare with a magic array.
+    /// Peek as many bytes as `magic` is long from offset 0 and compare.
     /// Returns `true` only when enough data is available and matches.
-    pub fn starts_with<const N: usize>(&mut self, magic: &[u8; N]) -> bool {
-        matches!(self.peek::<N>(0), Some(data) if data == magic)
+    ///
+    /// An empty `magic` matches nothing: the engine cannot answer a
+    /// zero-length peek.
+    pub fn starts_with(&mut self, magic: &[u8]) -> bool {
+        !magic.is_empty()
+            && matches!(self.peek_var(0, magic.len() as u32), Some(data) if data == magic)
     }
 }
 
