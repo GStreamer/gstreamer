@@ -76,6 +76,164 @@ GST_START_TEST (test_operation_empty)
 
 GST_END_TEST;
 
+static void
+check_binary_semaphores (GstVulkanDevice * test_device,
+    GstVulkanCommandPool * test_pool, guint64 signal_stage)
+{
+  GstVulkanOperation *signal = gst_vulkan_operation_new (test_pool);
+  GstVulkanOperation *wait = gst_vulkan_operation_new (test_pool);
+  GstVulkanHandle *semaphores[2];
+  const guint64 stages[] = { VK_PIPELINE_STAGE_TRANSFER_BIT,
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
+  };
+  VkSemaphoreCreateInfo info = {
+    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+  };
+  GError *error = NULL;
+
+  for (guint i = 0; i < G_N_ELEMENTS (semaphores); i++) {
+    VkSemaphore semaphore;
+
+    fail_unless_equals_int (vkCreateSemaphore (test_device->device, &info,
+            NULL, &semaphore), VK_SUCCESS);
+    semaphores[i] = gst_vulkan_handle_new_wrapped (test_device,
+        GST_VULKAN_HANDLE_TYPE_SEMAPHORE, (GstVulkanHandleTypedef) semaphore,
+        gst_vulkan_handle_free_semaphore, NULL);
+  }
+
+  /* Exercise multiple waits with different stages and reuse the operations
+   * across submissions to exercise clearing the recorded dependencies. */
+  for (guint round = 0; round < 2; round++) {
+    fail_unless (gst_vulkan_operation_begin (signal, &error));
+    fail_if (error);
+    for (guint i = 0; i < G_N_ELEMENTS (semaphores); i++)
+      gst_vulkan_operation_add_signal_semaphore (signal,
+          gst_vulkan_handle_ref (semaphores[i]), signal_stage);
+    fail_unless (gst_vulkan_operation_end (signal, &error));
+    fail_if (error);
+
+    fail_unless (gst_vulkan_operation_begin (wait, &error));
+    fail_if (error);
+    for (guint i = 0; i < G_N_ELEMENTS (semaphores); i++)
+      gst_vulkan_operation_add_wait_semaphore (wait,
+          gst_vulkan_handle_ref (semaphores[i]), stages[i]);
+    fail_unless (gst_vulkan_operation_end (wait, &error));
+    fail_if (error);
+    fail_unless (gst_vulkan_operation_wait (wait));
+  }
+
+  gst_object_unref (wait);
+  gst_object_unref (signal);
+  for (guint i = 0; i < G_N_ELEMENTS (semaphores); i++)
+    gst_vulkan_handle_unref (semaphores[i]);
+}
+
+GST_START_TEST (test_operation_binary_semaphores)
+{
+  check_binary_semaphores (device, cmd_pool,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_operation_binary_semaphores_legacy)
+{
+  GstVulkanInstance *legacy_instance = gst_vulkan_instance_new ();
+  GstVulkanDevice *legacy_device;
+  GstVulkanQueue *legacy_queue;
+  GstVulkanCommandPool *legacy_pool;
+
+  g_object_set (legacy_instance, "requested-api-major", 1,
+      "requested-api-minor", 0, NULL);
+  fail_unless (gst_vulkan_instance_open (legacy_instance, NULL));
+  legacy_device = gst_vulkan_device_new_with_index (legacy_instance, 0);
+  gst_vulkan_device_disable_extension (legacy_device,
+      VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+  fail_unless (gst_vulkan_device_open (legacy_device, NULL));
+  fail_if (gst_vulkan_physical_device_check_api_version
+      (legacy_device->physical_device, 1, 2, 0));
+  fail_if (gst_vulkan_device_is_extension_enabled (legacy_device,
+          VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME));
+  legacy_queue =
+      gst_vulkan_device_select_queue (legacy_device, VK_QUEUE_GRAPHICS_BIT);
+  fail_unless (legacy_queue != NULL);
+  legacy_pool = gst_vulkan_queue_create_command_pool (legacy_queue, NULL);
+  fail_unless (legacy_pool != NULL);
+
+  check_binary_semaphores (legacy_device, legacy_pool,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+
+  gst_object_unref (legacy_pool);
+  gst_object_unref (legacy_queue);
+  gst_object_unref (legacy_device);
+  gst_object_unref (legacy_instance);
+}
+
+GST_END_TEST;
+
+/* Keep timeline values in the legacy submit, even for signal stages that
+ * cannot be represented by VkPipelineStageFlags. */
+GST_START_TEST (test_operation_binary_semaphores_legacy_timeline)
+{
+  GstVulkanInstance *legacy_instance = gst_vulkan_instance_new ();
+  GstVulkanDevice *legacy_device;
+  GstVulkanQueue *legacy_queue;
+  GstVulkanCommandPool *legacy_pool;
+  GstVulkanOperation *op;
+  const VkBaseInStructure *feature;
+  const VkPhysicalDeviceVulkan12Features *features12 = NULL;
+
+  g_object_set (legacy_instance, "requested-api-major", 1,
+      "requested-api-minor", 2, NULL);
+  if (!gst_vulkan_instance_open (legacy_instance, NULL)) {
+    g_print
+        ("SKIP legacy timeline binary semaphores: Vulkan 1.2 unavailable\n");
+    gst_object_unref (legacy_instance);
+    return;
+  }
+  legacy_device = gst_vulkan_device_new_with_index (legacy_instance, 0);
+  feature = (const VkBaseInStructure *)
+      gst_vulkan_physical_device_get_features (legacy_device->physical_device);
+  for (; feature; feature = feature->pNext) {
+    if (feature->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
+      features12 = (const VkPhysicalDeviceVulkan12Features *) feature;
+  }
+  if (!features12 || !features12->timelineSemaphore) {
+    g_print ("SKIP legacy timeline binary semaphores: timeline support "
+        "unavailable\n");
+    gst_object_unref (legacy_device);
+    gst_object_unref (legacy_instance);
+    return;
+  }
+
+  gst_vulkan_device_disable_extension (legacy_device,
+      VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
+  fail_unless (gst_vulkan_device_open (legacy_device, NULL));
+  fail_if (gst_vulkan_physical_device_check_api_version
+      (legacy_device->physical_device, 1, 3, 0));
+  fail_if (gst_vulkan_device_is_extension_enabled (legacy_device,
+          VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME));
+  legacy_queue =
+      gst_vulkan_device_select_queue (legacy_device, VK_QUEUE_GRAPHICS_BIT);
+  fail_unless (legacy_queue != NULL);
+  legacy_pool = gst_vulkan_queue_create_command_pool (legacy_queue, NULL);
+  fail_unless (legacy_pool != NULL);
+  op = gst_vulkan_operation_new (legacy_pool);
+  fail_if (gst_vulkan_operation_use_sync2 (op));
+  gst_object_unref (op);
+
+  check_binary_semaphores (legacy_device, legacy_pool,
+      VK_PIPELINE_STAGE_2_COPY_BIT);
+  g_print ("PASS legacy timeline binary semaphores: high-bit signal stage\n");
+
+  gst_object_unref (legacy_pool);
+  gst_object_unref (legacy_queue);
+  gst_object_unref (legacy_device);
+  gst_object_unref (legacy_instance);
+}
+
+GST_END_TEST;
+
 static GstBufferPool *
 create_buffer_pool (const char *format, VkImageUsageFlags usage,
     VkImageLayout initial_layout, guint64 initial_access)
@@ -335,6 +493,9 @@ vkoperation_suite (void)
   if (have_instance) {
     tcase_add_test (tc_basic, test_new);
     tcase_add_test (tc_basic, test_operation_empty);
+    tcase_add_test (tc_basic, test_operation_binary_semaphores);
+    tcase_add_test (tc_basic, test_operation_binary_semaphores_legacy);
+    tcase_add_test (tc_basic, test_operation_binary_semaphores_legacy_timeline);
     tcase_add_test (tc_basic, test_barrier_update);
     tcase_add_test (tc_basic, test_barrier_update_concurrent);
 #if defined(VK_KHR_video_maintenance1)

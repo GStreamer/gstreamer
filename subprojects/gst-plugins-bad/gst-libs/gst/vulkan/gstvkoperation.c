@@ -80,8 +80,9 @@ struct _GstVulkanOperationPrivate
     GArray *signal_semaphores;
     GPtrArray *semaphores;
 
-    /* if sync2 isn't supported but timeline is */
+    /* Used by legacy vkQueueSubmit, with or without timeline semaphores. */
     GArray *wait_dst_stage_mask;
+    /* Timeline values for legacy vkQueueSubmit. */
     GArray *wait_semaphore_values;
     GArray *signal_semaphore_values;
   } deps;
@@ -214,6 +215,8 @@ gst_vulkan_operation_constructed (GObject * object)
         g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
     priv->deps.wait_semaphores =
         g_array_new (FALSE, FALSE, sizeof (VkSemaphore));
+    priv->deps.wait_dst_stage_mask =
+        g_array_new (FALSE, FALSE, sizeof (VkPipelineStageFlags));
   }
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
@@ -543,6 +546,19 @@ gst_vulkan_operation_submit1 (GstVulkanOperation * self, GstVulkanFence * fence,
         priv->deps.wait_dst_stage_mask->data : NULL,
   };
   /* *INDENT-ON* */
+
+  g_assert (submit_info.waitSemaphoreCount ==
+      (priv->deps.wait_dst_stage_mask ? priv->deps.
+          wait_dst_stage_mask->len : 0));
+
+#if defined(VK_KHR_timeline_semaphore)
+  if (priv->has_timeline) {
+    g_assert (submit_info.waitSemaphoreCount ==
+        semaphore_submit_info.waitSemaphoreValueCount);
+    g_assert (submit_info.signalSemaphoreCount ==
+        semaphore_submit_info.signalSemaphoreValueCount);
+  }
+#endif
 
   gst_vulkan_queue_submit_lock (priv->cmd_pool->queue);
   err = vkQueueSubmit (priv->cmd_pool->queue->queue, 1, &submit_info,
@@ -987,15 +1003,22 @@ gst_vulkan_operation_add_wait_semaphore (GstVulkanOperation * self,
         , 1);
   } else
 #endif /* synchronization2 */
-  if (priv->has_timeline && stage <= G_MAXUINT32) {
-    // value is required to be present but ignored for non-timeline semaphores
-    guint64 value = 0;
-    g_array_append_val (priv->deps.wait_semaphores, semaphore->handle);
-    g_array_append_val (priv->deps.wait_semaphore_values, value);
-  } else
 #endif /* timeline semaphore */
   {
+    /* Legacy submission cannot represent stage2-only bits. Waiting at all
+     * commands is a conservative fallback for those stages. */
+    VkPipelineStageFlags stage1 = stage <= G_MAXUINT32 ?
+        (VkPipelineStageFlags) stage : VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+
     g_array_append_val (priv->deps.wait_semaphores, semaphore->handle);
+    g_array_append_val (priv->deps.wait_dst_stage_mask, stage1);
+#if defined(VK_KHR_timeline_semaphore)
+    if (priv->has_timeline) {
+      /* Required in the array, but ignored for binary semaphores. */
+      guint64 value = 0;
+      g_array_append_val (priv->deps.wait_semaphore_values, value);
+    }
+#endif
   }
 
   g_ptr_array_add (priv->deps.semaphores, semaphore);
@@ -1036,8 +1059,8 @@ gst_vulkan_operation_add_signal_semaphore (GstVulkanOperation * self,
         , 1);
   } else
 #endif /* synchronization2 */
-  if (priv->has_timeline && stage <= G_MAXUINT32) {
-    // value is required to be present but ignored for non-timeline semaphores
+  if (priv->has_timeline) {
+    /* Keep values aligned with handles; binary semaphore values are ignored. */
     guint64 value = 0;
     g_array_append_val (priv->deps.signal_semaphores, semaphore->handle);
     g_array_append_val (priv->deps.signal_semaphore_values, value);
