@@ -1398,8 +1398,11 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
     ;
     if (is_keyframe)
       mux->last_keyframe_pos = pad->pos;
-    segment->index_entries[segment->n_index_entries].key_frame_offset =
-        MIN (pad->pos - mux->last_keyframe_pos, 127);
+    if (pad->pos - mux->last_keyframe_pos <= 128)
+      segment->index_entries[segment->n_index_entries].key_frame_offset =
+          -(gint) (pad->pos - mux->last_keyframe_pos);
+    else
+      segment->index_entries[segment->n_index_entries].key_frame_offset = 0;
     segment->index_entries[segment->n_index_entries].flags = is_keyframe ? 0x80 : 0x20; /* FIXME: Need to distinguish all the cases */
     segment->index_entries[segment->n_index_entries].stream_offset =
         mux->partition.body_offset;
