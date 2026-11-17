@@ -952,38 +952,6 @@ configuration, out of the typical video aligment.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="va_buffer_create_aux_surface" c:identifier="gst_va_buffer_create_aux_surface" version="1.22">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Creates a new VASurfaceID with @buffer's allocator and attached it
-to it.
-
-*This method is used only by plugin's internal VA decoder.*</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the new VASurfaceID is attached to @buffer
-    correctly; %FALSE, otherwise.</doc>
-        <type name="gboolean" c:type="gboolean"/>
-      </return-value>
-      <parameters>
-        <parameter name="buffer" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
-          <type name="Gst.Buffer" c:type="GstBuffer*"/>
-        </parameter>
-      </parameters>
-    </function>
-    <function name="va_buffer_get_aux_surface" c:identifier="gst_va_buffer_get_aux_surface" version="1.22" introspectable="0">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
-      <return-value>
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the VASurfaceID attached to
-    @buffer.</doc>
-        <type name="guint" c:type="VASurfaceID"/>
-      </return-value>
-      <parameters>
-        <parameter name="buffer" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
-          <type name="Gst.Buffer" c:type="GstBuffer*"/>
-        </parameter>
-      </parameters>
-    </function>
     <function name="va_buffer_get_surface" c:identifier="gst_va_buffer_get_surface" version="1.22" introspectable="0" deprecated="1" deprecated-version="1.30">
       <doc-deprecated xml:space="preserve">Use gst_va_display_get_buffer_surface() to check whether
 @buffer has a VASurfaceID in a given #GstVaDisplay. This function only works
