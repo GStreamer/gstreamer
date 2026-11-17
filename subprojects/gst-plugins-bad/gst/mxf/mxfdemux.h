@@ -201,6 +201,7 @@ struct _GstMXFDemuxPad
 
   guint32 track_id;
   gboolean need_segment;
+  gboolean need_eos;
 
   /* Current position in the material track (in edit units) */
   guint64 current_material_track_position;

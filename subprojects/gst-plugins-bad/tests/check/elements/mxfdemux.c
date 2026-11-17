@@ -294,7 +294,8 @@ _open_mxf_file (const gchar * name)
   gchar *path;
 
   pipeline = gst_parse_launch ("filesrc name=src ! mxfdemux name=demux "
-      "demux. ! queue ! fakesink demux. ! queue ! fakesink", NULL);
+      "demux. ! video/x-raw ! queue ! fakesink name=video "
+      "demux. ! audio/x-raw ! queue ! fakesink", NULL);
   fail_unless (pipeline != NULL);
 
   src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
@@ -317,8 +318,8 @@ _seek_and_play_to_eos (GstElement * pipeline, GstClockTime start)
   GstBus *bus = gst_element_get_bus (pipeline);
   GstMessage *msg;
 
-  gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
-      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, start);
+  fail_unless (gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
+          GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, start));
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
@@ -342,6 +343,30 @@ GST_START_TEST (test_eos_seek_past_end_of_open_file)
 
 GST_END_TEST;
 
+GST_START_TEST (test_seek_past_end_of_shorter_track)
+{
+  /* 25 frames of video but only 15 of audio */
+  GstElement *pipeline = _open_mxf_file ("mxf-short-audio.mxf");
+  GstElement *video;
+  GstSample *sample;
+
+  /* Between the end of the audio and the end of the video */
+  _seek_and_play_to_eos (pipeline, 800 * GST_MSECOND);
+
+  video = gst_bin_get_by_name (GST_BIN (pipeline), "video");
+  g_object_get (video, "last-sample", &sample, NULL);
+  fail_unless (sample != NULL);
+  fail_unless (GST_BUFFER_PTS (gst_sample_get_buffer (sample)) >=
+      800 * GST_MSECOND, "No video after the seek");
+  gst_sample_unref (sample);
+  gst_object_unref (video);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 mxfdemux_suite (void)
 {
@@ -358,6 +383,7 @@ mxfdemux_suite (void)
   tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_push);
   tcase_add_test (tc_chain, test_eos_seek_past_end_of_open_file);
+  tcase_add_test (tc_chain, test_seek_past_end_of_shorter_track);
 
   return s;
 }

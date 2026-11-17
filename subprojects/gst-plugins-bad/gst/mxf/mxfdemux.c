@@ -360,6 +360,7 @@ gst_mxf_demux_eos_single_stream (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   }
 
   pad->eos = TRUE;
+  pad->need_eos = FALSE;
 
   if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     GstClockTime time = gst_mxf_demux_pad_get_current_time (demux, pad);
@@ -3955,6 +3956,12 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
       " of track 0x%08x with body_sid %u (keyframe %d)", *position,
       etrack->track_number, etrack->body_sid, keyframe);
 
+  if ((etrack->duration > 0 && etrack->duration != -1)
+      && *position >= etrack->duration) {
+    GST_DEBUG_OBJECT (demux, "Position after end of essence track");
+    return -1;
+  }
+
   /* Get entry from index table if present */
   if (find_edit_entry (demux, etrack, *position, keyframe, &index_entry)) {
     GST_DEBUG_OBJECT (demux,
@@ -3977,12 +3984,6 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
           " in generated index at offset %" G_GUINT64_FORMAT, *position,
           requested_position, offset);
     return offset;
-  }
-
-  if ((etrack->duration > 0 && etrack->duration != -1)
-      && *position >= etrack->duration) {
-    GST_DEBUG_OBJECT (demux, "Position after end of essence track");
-    return -1;
   }
 
 from_track_offset:
@@ -4091,6 +4092,15 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   gboolean force_switch = FALSE;
 
   if (demux->src->len > 0) {
+    guint i;
+
+    for (i = 0; i < demux->src->len; i++) {
+      GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+      if (p->need_eos)
+        gst_mxf_demux_eos_single_stream (demux, p);
+    }
+
     if (!gst_mxf_demux_get_earliest_pad (demux)) {
       ret = GST_FLOW_EOS;
       GST_DEBUG_OBJECT (demux, "All tracks are EOS");
@@ -5244,7 +5254,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   gboolean update, flush, keyframe;
   GstSegment seeksegment;
   guint i;
-  gboolean ret = TRUE;
   guint32 seqnum;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -5389,8 +5398,9 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       guint64 position;
       guint64 off;
 
-      /* Reset EOS flag on all pads */
+      /* Reset EOS flags on all pads */
       p->eos = FALSE;
+      p->need_eos = FALSE;
       gst_mxf_demux_pad_set_position (demux, p, seeksegment.position);
 
       /* we always want to send data starting with a key unit */
@@ -5402,6 +5412,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
         GST_DEBUG_OBJECT (demux, "Unable to find offset for pad %s",
             GST_PAD_NAME (p));
         p->current_essence_track_position = p->current_essence_track->duration;
+        p->need_eos = TRUE;
       } else {
         new_offset = MIN (off, new_offset);
         if (position != p->current_essence_track_position) {
@@ -5418,13 +5429,13 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       p->current_essence_track->position = p->current_essence_track_position;
       p->discont = TRUE;
     }
+
     gst_flow_combiner_reset (demux->flowcombiner);
-    if (new_offset == -1) {
-      GST_WARNING_OBJECT (demux, "No new offset found");
-      ret = FALSE;
-    } else {
+
+    if (new_offset == -1)
+      GST_DEBUG_OBJECT (demux, "Seek position past the end of all tracks");
+    else
       demux->offset = new_offset + demux->run_in;
-    }
     gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
     /* Reset the state accordingly */
     if (demux->current_partition->single_track
@@ -5475,7 +5486,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
-  return ret;
+  return TRUE;
 
   /* ERRORS */
 wrong_format:
