@@ -3075,24 +3075,47 @@ static const struct
   {30000, 1001, 30},
 };
 
-/* Equal input and output rates must preserve every frame during reverse
- * playback, including the last frame at the segment start. */
+/* With equal input and output rates, preserve each inside picture once in
+ * reverse order, including the picture at segment.start. Discard inputs at or
+ * beyond segment.stop, and check output content, timing, flags and counters.
+ *
+ * Run twice per reverse_framerates entry: __i__ / 2 selects the framerate and
+ * __i__ % 2 selects drop-out-of-segment (false, then true). Each run covers all
+ * duration modes and outside-input prefixes below. */
 GST_START_TEST (test_reverse_frames)
 {
-  const guint fps_n = reverse_framerates[__i__].numerator;
-  const guint fps_d = reverse_framerates[__i__].denominator;
-  const guint frames = reverse_framerates[__i__].frames;
+  enum
+  {
+    /* All input durations are unknown; infer them for accepted pictures. */
+    DURATION_INFERRED,
+    /* All inputs carry their known, positive frame duration. */
+    DURATION_KNOWN,
+    /* Outside inputs have zero duration; inside durations are known. */
+    DURATION_ZERO_OUTSIDE,
+  };
+  const guint fps_index = __i__ / 2;
+  const gboolean drop_out_of_segment = __i__ % 2;
+  const guint fps_n = reverse_framerates[fps_index].numerator;
+  const guint fps_d = reverse_framerates[fps_index].denominator;
+  const guint frames = reverse_framerates[fps_index].frames;
   const guint64 time_scale = GST_SECOND * fps_d;
   const GstClockTime stop = gst_util_uint64_scale (frames, time_scale, fps_n);
 
-  for (guint include_stop_frame = 0; include_stop_frame < 2;
-      include_stop_frame++) {
-    for (guint durations = 0; durations < 2; durations++) {
+  /* 0: start inside; 1: start at stop; 2: start beyond stop, then reach stop.
+   * Two outside inputs also check that consecutive drops leave the next inside
+   * input's duration inference intact. More outside inputs would repeat these
+   * boundary cases. */
+  for (guint outside_frames = 0; outside_frames < 3; outside_frames++) {
+    for (guint duration_mode = DURATION_INFERRED;
+        duration_mode <= DURATION_ZERO_OUTSIDE; duration_mode++) {
       GstElement *videorate = setup_videorate ();
       GstCaps *caps = gst_caps_from_string (VIDEO_CAPS_STRING);
       GstSegment segment;
       guint n = 0;
+      guint64 in_count, out_count, drop_count, dup_count;
 
+      g_object_set (videorate, "drop-out-of-segment", drop_out_of_segment,
+          "silent", FALSE, NULL);
       fail_unless (gst_element_set_state (videorate,
               GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
           "could not set to playing");
@@ -3108,21 +3131,26 @@ GST_START_TEST (test_reverse_frames)
       fail_unless (gst_pad_push_event (mysrcpad,
               gst_event_new_segment (&segment)));
 
-      for (gint i = frames - 1 + include_stop_frame; i >= 0; i--) {
+      for (gint i = frames - 1 + outside_frames; i >= 0; i--) {
         GstBuffer *buf = gst_buffer_new_and_alloc (4);
         GstClockTime pts = gst_util_uint64_scale (i, time_scale, fps_n);
         GstClockTime end = gst_util_uint64_scale (i + 1, time_scale, fps_n);
 
         gst_buffer_memset (buf, 0, i, 4);
         GST_BUFFER_PTS (buf) = pts;
-        /* FIXME: a stop frame without a duration replaces the last frame */
-        GST_BUFFER_DURATION (buf) = durations || (guint) i == frames ?
+        GST_BUFFER_DURATION (buf) = duration_mode != DURATION_INFERRED ?
             end - pts : GST_CLOCK_TIME_NONE;
+        if (duration_mode == DURATION_ZERO_OUTSIDE && (guint) i >= frames)
+          GST_BUFFER_DURATION (buf) = 0;
         fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
 
-        /* every frame after the first one goes out right away */
-        fail_unless_equals_int (g_list_length (buffers),
-            i == frames - 1 && !include_stop_frame ? 0 : frames - i);
+        /* Inputs at or beyond stop are discarded. Hold the first
+         * usable input until another one arrives. */
+        guint expected = (guint) i >= frames ? 0 : frames - i;
+
+        if (i == frames - 1)
+          expected = 0;
+        fail_unless_equals_int (g_list_length (buffers), expected);
       }
       fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
       fail_unless_equals_int (g_list_length (buffers), frames);
@@ -3139,9 +3167,220 @@ GST_START_TEST (test_reverse_frames)
             offset - previous);
         fail_if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP));
       }
+      g_object_get (videorate, "in", &in_count, "out", &out_count,
+          "drop", &drop_count, "duplicate", &dup_count, NULL);
+      fail_unless_equals_uint64 (in_count, frames + outside_frames);
+      fail_unless_equals_uint64 (out_count, frames);
+      fail_unless_equals_uint64 (drop_count, outside_frames);
+      fail_unless_equals_uint64 (dup_count, 0);
       cleanup_videorate (videorate);
     }
   }
+}
+
+GST_END_TEST;
+
+/* An input at or beyond the reverse segment stop must remain unused when
+ * EOS follows. With no inside input, EOS must produce nothing. If an inside
+ * input follows, output only that picture and infer its 40 ms duration without
+ * using the discarded input's timestamp.
+ *
+ * Run at stop, stop + 1 ns and stop + 40 ms. For each offset, four independent
+ * boolean flags give 16 subcases. Each subcase sends one outside input, then
+ * either EOS immediately or one inside input followed by EOS. */
+GST_START_TEST (test_reverse_empty_boundary_eos)
+{
+  const GstClockTime offsets[] = { 0, 1, 40 * GST_MSECOND };
+
+  /* Bits 0 through 3 enumerate all combinations of the flags below. */
+  for (guint mode = 0; mode < 16; mode++) {
+    GstElement *videorate = setup_videorate ();
+    GstCaps *caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+    GstSegment segment;
+    GstBuffer *buffer;
+    guint64 in_count, out_count, drop_count, dup_count;
+    /* Bit 0: supply zero duration if true, unknown duration otherwise. */
+    gboolean explicit_zero = (mode & 1) != 0;
+    /* Bit 1: enable drop-only, which forbids picture duplication. */
+    gboolean drop_only = (mode & 2) != 0;
+    /* Bit 2: enable filtering of output buffers outside the segment. */
+    gboolean drop_out_of_segment = (mode & 4) != 0;
+    /* Bit 3: send an inside input before EOS instead of EOS immediately. */
+    gboolean following = (mode & 8) != 0;
+
+    g_object_set (videorate, "drop-only", drop_only,
+        "drop-out-of-segment", drop_out_of_segment, "silent", FALSE,
+        /* In normal mode, limit EOS tail filling to one 40 ms frame. */
+        "max-closing-segment-duplication-duration",
+        (guint64) (40 * GST_MSECOND), NULL);
+    fail_unless (gst_element_set_state (videorate,
+            GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
+    gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+    gst_caps_unref (caps);
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.rate = -1.0;
+    segment.stop = GST_SECOND;
+    segment.position = segment.stop;
+    fail_unless (gst_pad_push_event (mysrcpad,
+            gst_event_new_segment (&segment)));
+    buffer = gst_buffer_new_and_alloc (4);
+    /* Distinct byte markers let us verify that any output uses the inside
+     * picture (24), never this outside picture (25). */
+    gst_buffer_memset (buffer, 0, 25, 4);
+    GST_BUFFER_PTS (buffer) = GST_SECOND + offsets[__i__];
+    /* Neither zero nor unknown duration may make this outside input usable. */
+    GST_BUFFER_DURATION (buffer) = explicit_zero ? 0 : GST_CLOCK_TIME_NONE;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+    fail_unless_equals_int (g_list_length (buffers), 0);
+    if (following) {
+      /* This is the only usable input: PTS 960 ms, inferred duration 40 ms. */
+      buffer = gst_buffer_new_and_alloc (4);
+      gst_buffer_memset (buffer, 0, 24, 4);
+      GST_BUFFER_PTS (buffer) = GST_SECOND - 40 * GST_MSECOND;
+      GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+      fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+    }
+    /* EOS flushes the held inside input in normal mode. In drop-only mode
+     * it was already output; EOS must not add anything. */
+    fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+    fail_unless_equals_int (g_list_length (buffers), following ? 1 : 0);
+    if (following) {
+      buffer = buffers->data;
+      fail_unless_equals_int (buffer_get_byte (buffer, 0), 24);
+      fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer),
+          GST_SECOND - 40 * GST_MSECOND);
+      fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
+          40 * GST_MSECOND);
+    }
+    g_object_get (videorate, "in", &in_count, "out", &out_count,
+        "drop", &drop_count, "duplicate", &dup_count, NULL);
+    fail_unless_equals_uint64 (in_count, following ? 2 : 1);
+    fail_unless_equals_uint64 (out_count, following ? 1 : 0);
+    fail_unless_equals_uint64 (drop_count, 1);
+    fail_unless_equals_uint64 (dup_count, 0);
+    cleanup_videorate (videorate);
+  }
+}
+
+GST_END_TEST;
+
+/* Missing input pictures are filled from the first inside picture,
+ * independently of the outside picture's known positive duration. */
+GST_START_TEST (test_reverse_boundary_gap)
+{
+  GstElement *videorate = setup_videorate ();
+  GstCaps *caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  GstSegment segment;
+  /* At 25 fps, each picture ID also determines its PTS in 40 ms steps. */
+  const guint input_ids[] = {
+    25,                         /* PTS 1000 ms, at segment.stop: discard. */
+    22,                         /* PTS 880 ms: first inside picture; inputs at
+                                 * 960 and 920 ms are missing. */
+    21,                         /* PTS 840 ms: next inside picture. */
+  };
+  /* Use picture 22 at output PTS 960, 920 and 880 ms, then picture 21 at
+   * 840 ms. The outside picture must not fill the missing input pictures. */
+  const guint output_ids[] = { 22, 22, 22, 21 };
+  guint n = 0;
+  guint64 in_count, out_count, drop_count, dup_count;
+
+  g_object_set (videorate, "drop-out-of-segment", (gboolean) __i__, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = GST_SECOND;
+  segment.position = segment.stop;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  for (guint i = 0; i < G_N_ELEMENTS (input_ids); i++) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (4);
+
+    /* Tag each picture so reading one output byte checks that its content
+     * remains paired with the expected timestamp. */
+    gst_buffer_memset (buf, 0, input_ids[i], 4);
+    GST_BUFFER_PTS (buf) = input_ids[i] * 40 * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  fail_unless_equals_int (g_list_length (buffers), G_N_ELEMENTS (output_ids));
+  for (GList * l = buffers; l; l = l->next, n++) {
+    GstBuffer *buf = l->data;
+
+    fail_unless_equals_int (buffer_get_byte (buf, 0), output_ids[n]);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf),
+        GST_SECOND - (n + 1) * 40 * GST_MSECOND);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+  }
+  /* Three inputs: discard picture 25, output picture 22 three times and
+   * picture 21 once. The two extra uses of picture 22 are duplicates. */
+  g_object_get (videorate, "in", &in_count, "out", &out_count,
+      "drop", &drop_count, "duplicate", &dup_count, NULL);
+  fail_unless_equals_uint64 (in_count, 3);
+  fail_unless_equals_uint64 (out_count, 4);
+  fail_unless_equals_uint64 (drop_count, 1);
+  fail_unless_equals_uint64 (dup_count, 2);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* Drop-only also infers durations from the last accepted reverse timestamp. */
+GST_START_TEST (test_reverse_drop_only_timestamp_order)
+{
+  GstElement *videorate = setup_videorate ();
+  GstCaps *caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  GstSegment segment;
+  const guint input_ms[] = {
+    0,                          /* Known duration: output this picture. */
+    0,                          /* Duplicate PTS with unknown duration: drop. */
+    40,                         /* PTS increases during reverse playback: drop. */
+    0,                          /* Still a duplicate: the rejected 40 ms input
+                                 * must not change the duration-inference anchor. */
+  };
+  const guint input_ids[] = { 0, 99, 98, 97 };
+  guint64 in_count, out_count, drop_count, dup_count;
+
+  g_object_set (videorate, "drop-only", TRUE, "silent", FALSE, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = GST_SECOND;
+  segment.position = segment.stop;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* After the picture at segment.start, duplicate and increasing reverse
+   * timestamps must not cause more output or underflow duration inference. */
+  for (guint i = 0; i < G_N_ELEMENTS (input_ms); i++) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (4);
+
+    /* Tag each picture so reading one output byte checks that its content
+     * remains paired with the expected timestamp. */
+    gst_buffer_memset (buf, 0, input_ids[i], 4);
+    GST_BUFFER_PTS (buf) = input_ms[i] * GST_MSECOND;
+    GST_BUFFER_DURATION (buf) = i == 0 ? 40 * GST_MSECOND : GST_CLOCK_TIME_NONE;
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless_equals_int (buffer_get_byte (buffers->data, 0), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_PTS ((GstBuffer *) buffers->data), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_DURATION ((GstBuffer *) buffers->data),
+      40 * GST_MSECOND);
+  g_object_get (videorate, "in", &in_count, "out", &out_count,
+      "drop", &drop_count, "duplicate", &dup_count, NULL);
+  fail_unless_equals_uint64 (in_count, 4);
+  fail_unless_equals_uint64 (out_count, 1);
+  fail_unless_equals_uint64 (drop_count, 3);
+  fail_unless_equals_uint64 (dup_count, 0);
+  cleanup_videorate (videorate);
 }
 
 GST_END_TEST;
@@ -3187,7 +3426,11 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_drop_only_ref_count);
   tcase_add_test (tc_chain, test_backward_pts_with_caps_change);
   tcase_add_loop_test (tc_chain, test_reverse_frames, 0,
-      G_N_ELEMENTS (reverse_framerates));
+      2 * G_N_ELEMENTS (reverse_framerates));
+
+  tcase_add_loop_test (tc_chain, test_reverse_empty_boundary_eos, 0, 3);
+  tcase_add_loop_test (tc_chain, test_reverse_boundary_gap, 0, 2);
+  tcase_add_test (tc_chain, test_reverse_drop_only_timestamp_order);
 
   return s;
 }

@@ -2136,6 +2136,9 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   /* get the time of the next expected buffer timestamp, we use this when the
    * next buffer has -1 as a timestamp */
   last_ts = videorate->last_ts;
+  /* Do not select pictures starting at or beyond the reverse segment stop. */
+  if (videorate->segment.rate < 0.0 && in_ts >= videorate->segment.stop)
+    goto drop_reverse_buffer;
   videorate->last_ts = in_ts;
   if (GST_CLOCK_TIME_IS_VALID (in_dur) && videorate->segment.rate > 0.0)
     videorate->last_ts += in_dur;
@@ -2145,15 +2148,15 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
   /* we need to have two buffers to compare */
   if (videorate->prevbuf == NULL || videorate->drop_only) {
-    /* We can calculate the duration of the buffer here if not given for
-     * reverse playback. We need this later */
+    /* Check timestamp order before inferring a positive duration
+     * from last_ts or segment.stop. */
     if (videorate->segment.rate < 0.0 && !GST_BUFFER_DURATION_IS_VALID (buffer)) {
-      /* As we require valid timestamps all the time for reverse playback, we either
-       * have a valid last_ts or we're at the very first buffer. */
-      if (!GST_CLOCK_TIME_IS_VALID (last_ts))
-        GST_BUFFER_DURATION (buffer) = videorate->segment.stop - in_ts;
-      else
-        GST_BUFFER_DURATION (buffer) = last_ts - in_ts;
+      GstClockTime end_ts = GST_CLOCK_TIME_IS_VALID (last_ts) ?
+          last_ts : videorate->segment.stop;
+
+      if (in_ts >= end_ts)
+        goto drop_reverse_buffer;
+      GST_BUFFER_DURATION (buffer) = end_ts - in_ts;
     }
 
     gst_video_rate_swap_prev (videorate, buffer, in_ts, NULL);
@@ -2327,6 +2330,15 @@ done:
   }
 
   return res;
+
+drop_reverse_buffer:
+  /* A discarded input must not affect the next inferred duration. */
+  videorate->last_ts = last_ts;
+  videorate->in++;
+  videorate->drop++;
+  if (!videorate->silent)
+    gst_video_rate_notify_drop (videorate);
+  goto done;
 
   /* ERRORS */
 not_negotiated:
