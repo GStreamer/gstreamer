@@ -1734,9 +1734,11 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
         return GST_FLOW_SKIP_PUSH;
       }
 
-      /* If we were determining the duration of the stream, we're now done,
+      /* We reached the end of the stream and drained ogg_sync_state.
+         If we were determining the duration of the stream, we're now done,
          and can get back to sending the original event we delayed. */
-      if (ogg->push_byte_offset >= ogg->push_byte_length) {
+      if (ogg->push_byte_offset >= ogg->push_byte_length &&
+          (ogg->sync.fill - ogg->sync.returned) == 0) {
         GstMessage *message;
         GstFlowReturn res;
 
@@ -3758,9 +3760,8 @@ gst_ogg_demux_get_duration_push (GstOggDemux * ogg, int flags)
   GST_DEBUG_OBJECT (ogg,
       "Getting duration, seeking near the end, to %" G_GINT64_FORMAT, position);
   ogg->push_state = PUSH_DURATION;
-  /* do not read the last byte */
   sevent = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags, GST_SEEK_TYPE_SET,
-      position, GST_SEEK_TYPE_SET, ogg->push_byte_length - 1);
+      position, GST_SEEK_TYPE_SET, ogg->push_byte_length);
   gst_event_replace (&ogg->seek_event, sevent);
   ogg->seek_event_drop_till = gst_event_get_seqnum (sevent);
   gst_event_unref (sevent);
