@@ -1187,10 +1187,12 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened,
     if (!opened) {
       GstClockTime offset = out_fragment_info->fragment_offset;
       GstClockTime duration = out_fragment_info->fragment_duration;
+      GstClockTime reference_duration = out_fragment_info->reference_duration;
 
       gst_structure_set (s,
           "fragment-offset", GST_TYPE_CLOCK_TIME, offset,
-          "fragment-duration", GST_TYPE_CLOCK_TIME, duration, NULL);
+          "fragment-duration", GST_TYPE_CLOCK_TIME, duration,
+          "reference-duration", GST_TYPE_CLOCK_TIME, reference_duration, NULL);
 
       if (out_fragment_info->end_tc)
         gst_structure_set (s, "end-timecode", GST_TYPE_VIDEO_TIME_CODE,
@@ -1306,6 +1308,8 @@ update_output_fragment_info (GstSplitMuxSink * splitmux)
       splitmux->out_fragment_start_runts - splitmux->out_start_runts;
 
   GstClockTime duration = GST_CLOCK_TIME_NONE;
+  GstClockTime reference_duration = GST_CLOCK_TIME_NONE;
+  MqStreamCtx *ref = splitmux->reference_ctx;
 
   /* Look for the largest duration across all streams */
   for (GList * item = splitmux->contexts; item; item = item->next) {
@@ -1319,12 +1323,20 @@ update_output_fragment_info (GstSplitMuxSink * splitmux)
     }
   }
 
+  if (ref && GST_CLOCK_STIME_IS_VALID (ref->out_fragment_start_runts)
+      && GST_CLOCK_STIME_IS_VALID (ref->out_running_time_end)
+      && ref->out_running_time_end > ref->out_fragment_start_runts) {
+    reference_duration =
+        ref->out_running_time_end - ref->out_fragment_start_runts;
+  }
+
   GST_LOG_OBJECT (splitmux,
       "Updating fragment info for fragment %u with reference TS %"
       GST_STIME_FORMAT " with fragment-offset %" GST_TIMEP_FORMAT
-      " and fragment-duration %" GST_TIMEP_FORMAT, splitmux->cur_fragment_id,
+      " and fragment-duration %" GST_TIMEP_FORMAT
+      " and reference-duration %" GST_TIMEP_FORMAT, splitmux->cur_fragment_id,
       GST_STIME_ARGS (splitmux->reference_ctx->out_running_time), &offset,
-      &duration);
+      &duration, &reference_duration);
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
@@ -1352,6 +1364,7 @@ update_output_fragment_info (GstSplitMuxSink * splitmux)
       splitmux->reference_ctx->out_running_time;
   splitmux->out_fragment_info.fragment_offset = offset;
   splitmux->out_fragment_info.fragment_duration = duration;
+  splitmux->out_fragment_info.reference_duration = reference_duration;
 
   video_time_code_replace (&splitmux->out_fragment_info.start_tc,
       splitmux->reference_ctx->out_fragment_start_tc);

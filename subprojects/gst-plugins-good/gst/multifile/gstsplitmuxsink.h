@@ -75,6 +75,7 @@ typedef struct
 
   GstClockTime fragment_offset;
   GstClockTime fragment_duration;
+  GstClockTime reference_duration;
 
   GstVideoTimeCode *start_tc, *end_tc;
 } OutputFragmentInfo;

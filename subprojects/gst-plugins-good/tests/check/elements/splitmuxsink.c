@@ -105,7 +105,8 @@ dump_error (GstMessage * msg)
 static GstMessage *
 run_pipeline (GstElement * pipeline, guint num_fragments_expected,
     const GstClockTime * fragment_offsets,
-    const GstClockTime * fragment_durations)
+    const GstClockTime * fragment_durations,
+    const GstClockTime * reference_durations)
 {
   GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   GstMessage *msg;
@@ -148,6 +149,32 @@ run_pipeline (GstElement * pipeline, guint num_fragments_expected,
               GST_TIME_ARGS (fragment_durations[fragment_id]),
               fragment_id, GST_TIME_ARGS (fragment_duration));
         }
+
+        if (gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
+          GstClockTime reference_duration;
+
+          fail_unless (gst_structure_get_clock_time (s, "reference-duration",
+                  &reference_duration));
+
+          if (GST_CLOCK_TIME_IS_VALID (reference_duration) &&
+              GST_CLOCK_TIME_IS_VALID (fragment_duration)) {
+            fail_unless (reference_duration <= fragment_duration,
+                "Reference duration %" GST_TIME_FORMAT
+                " longer than fragment duration %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (reference_duration),
+                GST_TIME_ARGS (fragment_duration));
+          }
+
+          if (reference_durations != NULL) {
+            fail_unless (reference_durations[fragment_id] ==
+                reference_duration,
+                "Expected reference duration %" GST_TIME_FORMAT
+                " for fragment %u. Got %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (reference_durations[fragment_id]),
+                fragment_id, GST_TIME_ARGS (reference_duration));
+          }
+        }
+
         fragments_seen++;
       }
     }
@@ -308,7 +335,7 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   fail_unless (first_ts == GST_CLOCK_TIME_NONE);
   msg =
       run_pipeline (pipeline, num_fragments_expected, fragment_offsets,
-      fragment_durations);
+      fragment_durations, NULL);
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
@@ -326,7 +353,7 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
     seek_pipeline (pipeline, -1.0, 0, -1);
     msg =
         run_pipeline (pipeline, num_fragments_expected, fragment_offsets,
-        fragment_durations);
+        fragment_durations, NULL);
     fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
     gst_message_unref (msg);
     /* Check we saw the entire range of values */
@@ -450,7 +477,9 @@ GST_START_TEST (test_splitmuxsink)
 
   GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
   GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
-  msg = run_pipeline (pipeline, 3, offsets, durations);
+
+  /* Single stream pipeline: reference-duration must equal fragment-duration */
+  msg = run_pipeline (pipeline, 3, offsets, durations, durations);
 
   /* Clean up the location state */
   g_free (location_state.current_location);
@@ -535,7 +564,7 @@ GST_START_TEST (test_splitmuxsink_missing_timestamp)
   gst_pad_add_probe (probe_pad, GST_PAD_PROBE_TYPE_BUFFER, remove_timestamps,
       &num_buffers, NULL);
 
-  msg = run_pipeline (pipeline, 0, NULL, NULL);
+  msg = run_pipeline (pipeline, 0, NULL, NULL, NULL);
 
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
   gst_message_unref (msg);
@@ -570,7 +599,7 @@ GST_START_TEST (test_splitmuxsink_clean_failure)
   g_object_set (sink, "sink", fakesink, NULL);
   gst_object_unref (sink);
 
-  msg = run_pipeline (pipeline, 0, NULL, NULL);
+  msg = run_pipeline (pipeline, 0, NULL, NULL, NULL);
 
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
   gst_message_unref (msg);
@@ -615,7 +644,13 @@ GST_START_TEST (test_splitmuxsink_multivid)
 
   GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
   GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
-  msg = run_pipeline (pipeline, 3, offsets, durations);
+
+  /*
+   * Multiple streams on an aligned 0.2s buffer grid with 1s split
+   * points: reference-duration (primary video) must equal
+   * fragment-duration (longest stream)
+   */
+  msg = run_pipeline (pipeline, 3, offsets, durations, durations);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -669,7 +704,12 @@ GST_START_TEST (test_splitmuxsink_async)
 
   GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
   GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
-  msg = run_pipeline (pipeline, 3, offsets, durations);
+
+  /*
+   * Aligned audio/video buffer grids: reference-duration (video)
+   * equals fragment-duration
+   */
+  msg = run_pipeline (pipeline, 3, offsets, durations, durations);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -732,6 +772,78 @@ GST_START_TEST (test_splitmuxsink_reuse_simple)
 
 GST_END_TEST;
 
+GST_START_TEST (test_splitmuxsink_reference_duration)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  GstPad *splitmux_sink_pad;
+  GstPad *enc_src_pad;
+  gchar *dest_pattern;
+  guint count;
+
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc num-buffers=15 ! video/x-raw,width=80,height=64,framerate=5/1 ! videoconvert !"
+      " queue ! theoraenc keyframe-force=5 ! splitmuxsink name=splitsink "
+      " max-size-time=1000000000 async-finalize=true "
+      " muxer-factory=matroskamux audiotestsrc num-buffers=11 samplesperbuffer=14400 ! "
+      " audio/x-raw,rate=48000 ! splitsink.audio_%u", NULL);
+  fail_if (pipeline == NULL);
+
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+
+  dest_pattern = g_build_filename (tmpdir, "refdur%05d.mkv", NULL);
+
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
+  GstClockTime durations[] = { 1200 * GST_MSECOND, 1100 * GST_MSECOND,
+    1300 * GST_MSECOND
+  };
+  GstClockTime reference_durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
+
+  msg = run_pipeline (pipeline, 3, offsets, durations, reference_durations);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  /* unlink manually and release request pad to ensure that we *can* do that
+   * - https://bugzilla.gnome.org/show_bug.cgi?id=753622 */
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+
+  splitmux_sink_pad = gst_element_get_static_pad (sink, "video");
+  fail_if (splitmux_sink_pad == NULL);
+
+  enc_src_pad = gst_pad_get_peer (splitmux_sink_pad);
+  fail_if (enc_src_pad == NULL);
+
+  fail_unless (gst_pad_unlink (enc_src_pad, splitmux_sink_pad));
+
+  gst_object_unref (enc_src_pad);
+  gst_element_release_request_pad (sink, splitmux_sink_pad);
+  gst_object_unref (splitmux_sink_pad);
+
+  splitmux_sink_pad = gst_element_get_static_pad (sink, "video");
+  fail_if (splitmux_sink_pad != NULL);
+
+  g_object_unref (sink);
+  gst_object_unref (pipeline);
+
+  count = count_files (tmpdir);
+  fail_unless (count == 3, "Expected 3 output files, got %d", count);
+}
+
+GST_END_TEST;
 GST_START_TEST (test_splitmuxsink_muxer_pad_map)
 {
   GstElement *sink, *muxer;
@@ -806,7 +918,7 @@ run_eos_pipeline (guint num_video_buf, guint num_audio_buf,
 
   fail_if (pipeline == NULL);
 
-  msg = run_pipeline (pipeline, 0, NULL, NULL);
+  msg = run_pipeline (pipeline, 0, NULL, NULL, NULL);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -894,7 +1006,7 @@ splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
   gst_object_unref (srcpad);
   gst_object_unref (enc);
 
-  msg = run_pipeline (pipeline, 0, 0, NULL);
+  msg = run_pipeline (pipeline, 0, 0, NULL, NULL);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -1017,6 +1129,7 @@ splitmuxsink_suite (void)
           tempdir_cleanup);
 
       tcase_add_test (tc_chain, test_splitmuxsink_async);
+      tcase_add_test (tc_chain, test_splitmuxsink_reference_duration);
     } else {
       GST_INFO ("Skipping tests, missing plugins: matroska and/or vorbis");
     }
