@@ -648,7 +648,7 @@ gst_va_dmabuf_try_modifier_for_format (GstVaDisplay * display,
  */
 static gboolean
 gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
-    GstBuffer * buffer, GstVideoInfoDmaDrm * info)
+    GstBuffer * buffer, GstVideoInfoDmaDrm * info, gboolean probing)
 {
   GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
@@ -661,7 +661,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
   if (!_va_create_surface_and_export_to_dmabuf (self->display, self->usage_hint,
           &self->info.drm_modifier, 1, &self->info.vinfo, &surface, &desc,
-          FALSE))
+          probing))
     return FALSE;
 
   buf = gst_va_buffer_surface_new (self->display, surface);
@@ -748,7 +748,8 @@ gboolean
 gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
     GstBuffer * buffer)
 {
-  return gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, NULL);
+  return gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, NULL,
+      FALSE);
 }
 
 static VASurfaceID
@@ -904,7 +905,9 @@ gst_va_dmabuf_allocator_try (GstAllocator * allocator)
   info = self->info;
 
   buffer = gst_buffer_new ();
-  ret = gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, &info);
+  ret =
+      gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, &info,
+      TRUE);
   gst_buffer_unref (buffer);
 
   if (ret)
