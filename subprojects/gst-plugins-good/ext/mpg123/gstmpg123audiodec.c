@@ -41,6 +41,23 @@
 GST_DEBUG_CATEGORY_STATIC (mpg123_debug);
 #define GST_CAT_DEFAULT mpg123_debug
 
+#if defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) || defined(_M_ARM64) || defined(_M_ARM64EC)
+#define GST_MPG123_IS_ARM 1
+#else
+#define GST_MPG123_IS_ARM 0
+#endif
+
+#if GST_MPG123_IS_ARM
+/* mpg123's signal-based ARM NEON probe uses a static jump buffer and a
+ * process-wide SIGILL handler during mpg123_new(). Before 1.33.8, ARM builds
+ * with runtime CPU detection use this probe. Since 1.33.8, it remains the
+ * fallback when neither compiler-enabled NEON nor kernel hardware-capability
+ * flags determine NEON support. Serialize our handle creation calls because
+ * the signal-based probe is not thread-safe.
+ * See https://scm.orgis.org/mpg123/trunk/src/libmpg123/getcpuflags_arm.c */
+G_LOCK_DEFINE_STATIC (mpg123_new_lock);
+#endif
+
 #define CHANNEL_MASK_STEREO (GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) | GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT))
 
 /* Omitted sample formats that mpg123 supports (or at least can support):
@@ -251,7 +268,13 @@ gst_mpg123_audio_dec_start (GstAudioDecoder * dec)
   mpg123_decoder = GST_MPG123_AUDIO_DEC (dec);
   error = 0;
 
+#if GST_MPG123_IS_ARM
+  G_LOCK (mpg123_new_lock);
+#endif
   mpg123_decoder->handle = mpg123_new (NULL, &error);
+#if GST_MPG123_IS_ARM
+  G_UNLOCK (mpg123_new_lock);
+#endif
   mpg123_decoder->has_next_audioinfo = FALSE;
   mpg123_decoder->frame_offset = 0;
 
