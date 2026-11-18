@@ -47,6 +47,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_vp9_alpha_dbin_debug);
 #define GST_CAT_DEFAULT gst_d3d12_vp9_alpha_dbin_debug
 
+#define DOC_SINK_CAPS \
+    "video/x-vp9, profile = (string) 0, " \
+    "width = (int) [ 1, 8192 ], height = (int) [ 1, 8192 ], " \
+    "codec-alpha = (boolean) true; " \
+    "video/x-vp9, profile = (string) 2, " \
+    "bit-depth-luma = (uint) 10, bit-depth-chroma = (uint) 10, " \
+    "width = (int) [ 1, 8192 ], height = (int) [ 1, 8192 ], " \
+    "codec-alpha = (boolean) true"
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -128,16 +137,18 @@ gst_d3d12_vp9_alpha_dbin_class_init (GstD3D12Vp9AlphaDbinClass * klass,
 
   std::string long_name = "Direct3D12 " +
       std::string (cdata->description) + " VP9 Alpha Decodebin";
-  std::string desc =
-      "Direct3D12-based wrapper bin for VP9 with alpha decoding on " +
-      std::string (cdata->description);
 
   gst_element_class_set_metadata (elem_class, long_name.c_str (),
-      "Codec/Decoder/Video/Hardware", desc.c_str (),
+      "Codec/Decoder/Video/Hardware",
+      "Direct3D12-based wrapper bin for VP9 with alpha decoding",
       "Seungha Yang <seungha@centricular.com>");
+
+  auto doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
 
   auto pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       cdata->sink_caps);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
   gst_element_class_add_pad_template (elem_class, pad_templ);
   gst_element_class_add_static_pad_template (elem_class, &src_template);
 

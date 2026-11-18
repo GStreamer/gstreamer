@@ -14178,6 +14178,57 @@
     "d3d12": {
         "description": "Direct3D12 plugin",
         "elements": {
+            "d3d12alphacombine": {
+                "author": "Seungha Yang <seungha@centricular.com>",
+                "description": "A Direct3D12 alpha combiner",
+                "hierarchy": [
+                    "GstD3D12AlphaCombine",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor/Video/Compositor",
+                "pad-templates": {
+                    "alpha": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always",
+                        "type": "GstAggregatorPad"
+                    },
+                    "sink": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always",
+                        "type": "GstAggregatorPad"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { AV12, A420_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always",
+                        "type": "GstAggregatorPad"
+                    }
+                },
+                "properties": {
+                    "adapter-luid": {
+                        "blurb": "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "untrusted-aware": "true"
+            },
             "d3d12av1dec": {
                 "author": "Seungha Yang <seungha@centricualr.com>",
                 "description": "Direct3D12/DXVA based AV1 video decoder",
@@ -14266,15 +14317,15 @@
                 "interfaces": [
                     "GstColorBalance"
                 ],
-                "klass": "Filter/Converter/Video/Hardware",
+                "klass": "Filter/Converter/Video/Colorspace/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14361,7 +14412,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12compositor": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -14381,7 +14433,7 @@
                 "klass": "Filter/Editor/Video/Compositor",
                 "pad-templates": {
                     "sink_%%u": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstD3D12CompositorPad"
@@ -14447,7 +14499,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12convert": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -14466,15 +14519,15 @@
                     "GstVideoDirection",
                     "GstColorBalance"
                 ],
-                "klass": "Filter/Converter/Scaler/Effect/Video/Hardware",
+                "klass": "Filter/Converter/Scaler/Colorspace/Effect/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14561,7 +14614,7 @@
                         "writable": true
                     },
                     "max-mip-levels": {
-                        "blurb": "Maximum mip levels of shader resource to create if viewport size is smaller than shader resource (0 = maximum level)",
+                        "blurb": "Maximum mip levels of shader resource to create if render viewport size is smaller than shader resource (0 = generate full mip chain, G_MAXUINT16 = generate only the target mip level and one additional level)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
@@ -14584,6 +14637,20 @@
                         "mutable": "playing",
                         "readable": true,
                         "type": "GstD3D12SamplingMethod",
+                        "writable": true
+                    },
+                    "most-detailed-mip": {
+                        "blurb": "Index of the most detailed mip level to generate and sample (ignored when max-mip-levels is G_MAXUINT16)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "65535",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
                         "writable": true
                     },
                     "primaries-mode": {
@@ -14613,7 +14680,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12deinterlace": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -14630,12 +14698,12 @@
                 "klass": "Filter/Deinterlace/Effect/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14666,7 +14734,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12download": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -14680,20 +14749,21 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Video",
+                "klass": "Filter/Video/Downloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12fisheyedewarp": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -14710,12 +14780,12 @@
                 "klass": "Filter/Converter/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15024,7 +15094,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12h264dec": {
                 "author": "Seungha Yang <seungha@centricualr.com>",
@@ -15116,12 +15187,12 @@
                 "klass": "Codec/Encoder/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: NV12\n          width: [ 1, 4096 ]\n         height: [ 1, 4096 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: NV12\n          width: [ 1, 4096 ]\n         height: [ 1, 4096 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h264:\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)high, (string)main, (string)constrained-baseline }\n",
+                        "caps": "video/x-h264:\n          width: [ 1, 4096 ]\n         height: [ 1, 4096 ]\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)high, (string)main, (string)constrained-baseline }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15454,6 +15525,290 @@
                 },
                 "rank": "primary + 2"
             },
+            "d3d12h265enc": {
+                "author": "Seungha Yang <seungha@centricular.com>",
+                "description": "Direct3D12 H.265 Video Encoder",
+                "hierarchy": [
+                    "GstD3D12H265Enc",
+                    "GstD3D12Encoder",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Codec/Encoder/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 1, 8192 ]\n         height: [ 1, 8192 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 1, 8192 ]\n         height: [ 1, 8192 ]\n interlace-mode: progressive\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-h265:\n          width: [ 1, 8192 ]\n         height: [ 1, 8192 ]\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)main, (string)main-10 }\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "aud": {
+                        "blurb": "Use AU delimiter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "bitrate": {
+                        "blurb": "Target bitrate in kbits/second. Used for \"cbr\", \"vbr\", and \"qvbr\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "2000",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "cc-insert": {
+                        "blurb": "Closed Caption insert mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "insert (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstD3D12EncoderSeiInsertMode",
+                        "writable": true
+                    },
+                    "frame-analysis": {
+                        "blurb": "Enable 2 pass encoding if supported by hardware",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "gop-size": {
+                        "blurb": "Size of GOP (0 = infinite)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "60",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-bitrate": {
+                        "blurb": "Peak bitrate in kbits/second. Used for \"vbr\", and \"qvbr\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4000",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-b": {
+                        "blurb": "Constant QP value for B frames. Used for \"cqp\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-i": {
+                        "blurb": "Constant QP value for I frames. Used for \"cqp\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-init": {
+                        "blurb": "Initial QP value. Used for \"cbr\", \"vbr\", and \"qvbr\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-max": {
+                        "blurb": "Maximum QP value for \"cbr\", \"vbr\", and \"qvbr\" rate control. To enable min/max QP setting, \"qp-max >= qp-min > 0\" condition should be satisfied",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-min": {
+                        "blurb": "Minimum QP value for \"cbr\", \"vbr\", and \"qvbr\" rate control. To enable min/max QP setting, \"qp-max >= qp-min > 0\" condition should be satisfied",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-p": {
+                        "blurb": "Constant QP value for P frames. Used for \"cqp\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qvbr-quality": {
+                        "blurb": "Constant quality target value for \"qvbr\" rate control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rate-control": {
+                        "blurb": "Rate Control Method",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "vbr (3)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstD3D12EncoderRateControl",
+                        "writable": true
+                    },
+                    "rate-control-support": {
+                        "blurb": "Supported rate control modes",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "(none)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstD3D12EncoderRateControlSupport",
+                        "writable": false
+                    },
+                    "ref-frames": {
+                        "blurb": "Preferred number of reference frames. Actual number of reference frames can be limited depending on hardware (0 = unspecified)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "16",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "slice-mode": {
+                        "blurb": "Slice partiton mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "full (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstD3D12EncoderSubregionLayout",
+                        "writable": true
+                    },
+                    "slice-mode-support": {
+                        "blurb": "Supported slice partition modes",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "full",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstD3D12EncoderSubregionLayoutSupport",
+                        "writable": false
+                    },
+                    "slice-partition": {
+                        "blurb": "Slice partition threshold interpreted depending on \"slice-mode\". If set zero, full frame encoding will be selected without partitioning regardless of requested \"slice-mode\"",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
             "d3d12interlace": {
                 "author": "Seungha Yang <seungha@centricular.com>",
                 "description": "A Direct3D12 interlacer element",
@@ -15469,12 +15824,12 @@
                 "klass": "Filter/Interlace/Effect/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: interleaved\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: interleaved\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: interleaved\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15517,7 +15872,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12ipcsink": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -15658,7 +16014,7 @@
                 "klass": "Filter/Converter/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -15698,7 +16054,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12mpeg2dec": {
                 "author": "Seungha Yang <seungha@centricualr.com>",
@@ -15787,17 +16144,18 @@
                 "klass": "Filter/Effect/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12remap": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -15814,12 +16172,12 @@
                 "klass": "Filter/Converter/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15837,7 +16195,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12scale": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -15855,12 +16214,12 @@
                 "klass": "Filter/Converter/Video/Scaler/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -15893,7 +16252,7 @@
                         "writable": true
                     },
                     "max-mip-levels": {
-                        "blurb": "Maximum mip levels of shader resource to create if viewport size is smaller than shader resource (0 = maximum level)",
+                        "blurb": "Maximum mip levels of shader resource to create if render viewport size is smaller than shader resource (0 = generate full mip chain, G_MAXUINT16 = generate only the target mip level and one additional level)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
@@ -15905,9 +16264,24 @@
                         "readable": true,
                         "type": "guint",
                         "writable": true
+                    },
+                    "most-detailed-mip": {
+                        "blurb": "Index of the most detailed mip level to generate and sample (ignored when max-mip-levels is G_MAXUINT16)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "65535",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12screencapturesrc": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -16122,7 +16496,7 @@
                 "klass": "Sink/Video",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -16211,12 +16585,26 @@
                         "writable": true
                     },
                     "max-mip-levels": {
-                        "blurb": "Maximum mip levels of shader resource to create if viewport size is smaller than shader resource (0 = maximum level)",
+                        "blurb": "Maximum mip levels of shader resource to create if render viewport size is smaller than shader resource (0 = generate full mip chain, G_MAXUINT16 = generate only the target mip level and one additional level)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
                         "default": "1",
+                        "max": "65535",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "most-detailed-mip": {
+                        "blurb": "Index of the most detailed mip level to generate and sample (ignored when max-mip-levels is G_MAXUINT16)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
                         "max": "65535",
                         "min": "0",
                         "mutable": "null",
@@ -16375,7 +16763,7 @@
                 "klass": "Source/Video",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -16462,20 +16850,21 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Video",
+                "klass": "Filter/Video/Uploader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d12videosink": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -16497,7 +16886,7 @@
                 "klass": "Sink/Video",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D12Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, RGBA_F32LE, RGBA_F16LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, ARGB64_LE, AYUV64, ARGB_F32, AYUV_F32, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, A444_16LE, A444_12LE, A444_10LE, A444, A422_16LE, A422_12LE, A422_10LE, A422, A420_16LE, A420_12LE, A420_10LE, A420, AV12, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, RGBP_F32LE, RGBP_F16LE, xBGR, xRGB, Y42B, NV24, NV16, NV61, NV21, I420, YV12, Y41B, YUV9, YVU9, GRAY16_LE, GRAY8, GRAY_F32LE, GRAY_F16LE, v216, v210, r210, v308, IYU2, RGB, RGB_F32LE, RGB_F16LE, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -16682,12 +17071,26 @@
                         "writable": true
                     },
                     "max-mip-levels": {
-                        "blurb": "Maximum mip levels of shader resource to create if viewport size is smaller than shader resource (0 = maximum level)",
+                        "blurb": "Maximum mip levels of shader resource to create if render viewport size is smaller than shader resource (0 = generate full mip chain, G_MAXUINT16 = generate only the target mip level and one additional level)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
                         "default": "1",
+                        "max": "65535",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "most-detailed-mip": {
+                        "blurb": "Index of the most detailed mip level to generate and sample (ignored when max-mip-levels is G_MAXUINT16)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
                         "max": "65535",
                         "min": "0",
                         "mutable": "null",
@@ -16969,6 +17372,79 @@
                     }
                 },
                 "rank": "primary + 2"
+            },
+            "d3d12vp9alphadecodebin": {
+                "author": "Seungha Yang <seungha@centricular.com>",
+                "description": "Direct3D12-based wrapper bin for VP9 with alpha decoding",
+                "hierarchy": [
+                    "GstD3D12Vp9AlphaDecodebin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp9:\n        profile: 0\n          width: [ 1, 8192 ]\n         height: [ 1, 8192 ]\n    codec-alpha: true\nvideo/x-vp9:\n        profile: 2\n bit-depth-luma: 10\nbit-depth-chroma: 10\n          width: [ 1, 8192 ]\n         height: [ 1, 8192 ]\n    codec-alpha: true\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "adapter-luid": {
+                        "blurb": "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": false
+                    },
+                    "device-id": {
+                        "blurb": "DXGI Device ID",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "vendor-id": {
+                        "blurb": "DXGI Vendor ID",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    }
+                },
+                "rank": "primary + 11"
             },
             "d3d12vp9dec": {
                 "author": "Seungha Yang <seungha@centricualr.com>",
@@ -17343,6 +17819,20 @@
                         "readable": true,
                         "type": "gint64",
                         "writable": false
+                    },
+                    "async-depth": {
+                        "blurb": "Number of in-flight GPU commands which can be scheduled without synchronization (0 = unlimited)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "2",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
                     },
                     "device-id": {
                         "blurb": "DXGI Device ID",

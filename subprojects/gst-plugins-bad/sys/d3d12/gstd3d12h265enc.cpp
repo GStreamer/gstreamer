@@ -17,6 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12h265enc
+ * @title: d3d12h265enc
+ *
+ * Encodes raw video into H.265 using Direct3D12
+ *
+ * Since: 1.30
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -48,6 +57,21 @@ using namespace Microsoft::WRL;
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_h265_enc_debug);
 #define GST_CAT_DEFAULT gst_d3d12_h265_enc_debug
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "), " \
+    "format = (string) { NV12, P010_10LE }, " \
+    "width = (int) [ 1, 8192 ], height = (int) [ 1, 8192 ], " \
+    "interlace-mode = (string) progressive; " \
+    "video/x-raw, format = (string) { NV12, P010_10LE }, " \
+    "width = (int) [ 1, 8192 ], height = (int) [ 1, 8192 ], " \
+    "interlace-mode = (string) progressive"
+
+#define DOC_SRC_CAPS \
+    "video/x-h265, " \
+    "width = (int) [ 1, 8192 ], height = (int) [ 1, 8192 ], " \
+    "stream-format = (string) byte-stream, alignment = (string) au, " \
+    "profile = (string) { main, main-10 }"
 
 enum
 {
@@ -633,12 +657,20 @@ gst_d3d12_h265_enc_class_init (GstD3D12H265EncClass * klass, gpointer data)
       "Codec/Encoder/Video/Hardware", "Direct3D12 H.265 Video Encoder",
       "Seungha Yang <seungha@centricular.com>");
 
-  pad_templ = gst_pad_template_new ("sink",
-      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  auto doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  pad_templ =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      cdata->sink_caps);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
   gst_element_class_add_pad_template (element_class, pad_templ);
 
-  pad_templ = gst_pad_template_new ("src",
-      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  pad_templ =
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      cdata->src_caps);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
   gst_element_class_add_pad_template (element_class, pad_templ);
 
   encoder_class->start = GST_DEBUG_FUNCPTR (gst_d3d12_h265_enc_start);
