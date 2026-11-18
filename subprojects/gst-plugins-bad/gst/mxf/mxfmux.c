@@ -1291,12 +1291,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
         mxf_uuid_init (&s.instance_id, mux->metadata);
         memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
             sizeof (s.index_edit_rate));
-        if (mux->index_table->len > 0)
-          s.index_start_position =
-              g_array_index (mux->index_table, MXFIndexTableSegment,
-              mux->index_table->len - 1).index_start_position;
-        else
-          s.index_start_position = 0;
+        s.index_start_position =
+            (guint64) mux->index_table->len * max_segment_size;
         s.index_duration = 0;
         s.edit_unit_byte_count = 0;
         s.index_sid =
@@ -1346,12 +1342,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * pad)
             mxf_uuid_init (&s.instance_id, mux->metadata);
             memcpy (&s.index_edit_rate, &pad->source_track->edit_rate,
                 sizeof (s.index_edit_rate));
-            if (mux->index_table->len > 0)
-              s.index_start_position =
-                  g_array_index (mux->index_table, MXFIndexTableSegment,
-                  mux->index_table->len - 1).index_start_position;
-            else
-              s.index_start_position = 0;
+            s.index_start_position =
+                (guint64) mux->index_table->len * max_segment_size;
             s.index_duration = 0;
             s.edit_unit_byte_count = 0;
             s.index_sid =
