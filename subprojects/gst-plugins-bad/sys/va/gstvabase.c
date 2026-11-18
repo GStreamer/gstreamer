@@ -138,3 +138,97 @@ gst_va_base_convert_caps_to_va (GstCaps * caps)
 
   return TRUE;
 }
+
+/**
+ * gst_va_base_propose_allocation:
+ * @element: the element answering the query
+ * @cat: debug category for logging
+ * @display: a #GstVaDisplay
+ * @entrypoint: the VA entrypoint consuming the surfaces
+ * @surface_formats: (nullable): surface formats supported by @entrypoint
+ * @min_buffers: buffers needed by @element
+ * @query: the ALLOCATION query to answer
+ *
+ * Answers an upstream ALLOCATION query. If upstream wants system memory and
+ * udmabuf is available, a dmabuf pool is proposed so buffers can be imported
+ * without copy. Otherwise a VA pool is proposed.
+ *
+ * Returns: %TRUE if the query was answered.
+ */
+gboolean
+gst_va_base_propose_allocation (GstElement * element, GstDebugCategory * cat,
+    GstVaDisplay * display, VAEntrypoint entrypoint, GArray * surface_formats,
+    guint min_buffers, GstQuery * query)
+{
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstBufferPool *pool;
+  GstCaps *caps;
+  gboolean need_pool;
+  gboolean ret = FALSE;
+  guint size, usage_hint;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+  if (!caps)
+    return FALSE;
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  if (!need_pool)
+    return TRUE;
+
+  /* Testing showed that we need at least 3 buffers for good performance */
+  min_buffers = MAX (min_buffers, 3);
+
+  /* Prefer udmabuf allocator if available and upstream wants system memory */
+  if (gst_caps_features_contains (gst_caps_get_features (caps, 0),
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
+    GstVideoInfo vinfo;
+
+    if (!gst_video_info_from_caps (&vinfo, caps))
+      return FALSE;
+
+    allocator = gst_udmabuf_allocator_get ();
+    if (allocator) {
+      pool = gst_video_dmabuf_pool_new ();
+      gst_query_add_allocation_pool (query, pool, vinfo.size, min_buffers, 0);
+      GST_CAT_DEBUG_OBJECT (cat, element,
+          "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
+          pool, allocator);
+      gst_object_unref (pool);
+      gst_object_unref (allocator);
+      return TRUE;
+    }
+  }
+
+  if (gst_video_is_dma_drm_caps (caps))
+    allocator = gst_va_dmabuf_allocator_new (display);
+  else
+    allocator = gst_va_allocator_new (display, surface_formats);
+  if (!allocator)
+    return FALSE;
+
+  gst_allocation_params_init (&params);
+  usage_hint = va_get_surface_usage_hint (entrypoint, GST_PAD_SINK);
+
+  pool = gst_va_pool_new_with_config (caps, min_buffers, 0, usage_hint,
+      GST_VA_FEATURE_AUTO, allocator, &params);
+  if (!pool || !gst_va_pool_get_buffer_size (pool, &size)) {
+    GST_CAT_WARNING_OBJECT (cat, element, "failed to set config");
+    goto done;
+  }
+
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_query_add_allocation_pool (query, pool, size, min_buffers, 0);
+  ret = TRUE;
+
+  GST_CAT_DEBUG_OBJECT (cat, element,
+      "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
+      pool, allocator);
+
+done:
+  gst_clear_object (&pool);
+  gst_object_unref (allocator);
+
+  return ret;
+}

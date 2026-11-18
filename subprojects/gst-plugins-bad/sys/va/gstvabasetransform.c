@@ -32,8 +32,12 @@
 #include "gstvacaps.h"
 #include "gstvapluginutils.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_va_base_transform_debug);
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_va_base_transform_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
 
 enum
 {
@@ -234,80 +238,20 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstVaBaseTransform *self = GST_VA_BASE_TRANSFORM (trans);
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params = { 0, };
-  GstBufferPool *pool;
-  GstCaps *caps;
-  gboolean update_allocator = FALSE;
-  guint size, usage_hint;
-  guint min_buffers = 1 + self->extra_min_buffers + 2;
+  gboolean ret;
 
-  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query))
-    return FALSE;
+  ret =
+      GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
+      decide_query, query);
 
   /* passthrough, we're done */
   if (!decide_query)
-    return TRUE;
+    return ret;
 
-  if (gst_query_get_n_allocation_pools (query) > 0)
-    return TRUE;
-
-  gst_query_parse_allocation (query, &caps, NULL);
-  if (!caps)
-    return FALSE;
-
-  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
-
-  if (gst_query_get_n_allocation_params (query) > 0) {
-    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
-    if (!GST_IS_VA_DMABUF_ALLOCATOR (allocator)
-        && !GST_IS_VA_ALLOCATOR (allocator))
-      gst_clear_object (&allocator);
-    update_allocator = TRUE;
-  } else {
-    gst_allocation_params_init (&params);
-  }
-
-  if (!allocator) {
-    if (!(allocator = gst_va_base_transform_allocator_from_caps (self, caps)))
-      return FALSE;
-  }
-
-  pool = gst_va_pool_new_with_config (caps, min_buffers, 0,
-      usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
-  if (!pool) {
-    gst_object_unref (allocator);
-    goto config_failed;
-  }
-
-  if (update_allocator)
-    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
-  else
-    gst_query_add_allocation_param (query, allocator, &params);
-
-  if (!gst_va_pool_get_buffer_size (pool, &size))
-    goto config_failed;
-
-  gst_query_add_allocation_pool (query, pool, size, min_buffers, 0);
-
-  GST_DEBUG_OBJECT (self,
-      "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
-      pool, allocator);
-
-  gst_object_unref (allocator);
-  gst_object_unref (pool);
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-
-  return TRUE;
-
-  /* ERRORS */
-config_failed:
-  {
-    GST_ERROR_OBJECT (self, "failed to set config");
-    return FALSE;
-  }
+  return gst_va_base_propose_allocation (GST_ELEMENT (self), GST_CAT_DEFAULT,
+      self->display, VAEntrypointVideoProc,
+      gst_va_filter_get_surface_formats (self->filter),
+      self->extra_min_buffers + 1, query);
 }
 
 /* configure the allocation query that was answered downstream, we can

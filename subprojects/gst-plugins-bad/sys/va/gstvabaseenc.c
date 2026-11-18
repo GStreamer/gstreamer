@@ -511,6 +511,7 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   GstCaps *caps;
   gboolean need_pool = FALSE;
   guint size = 0, usage_hint;
+  guint min_buffers = base->min_buffers;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
@@ -524,7 +525,10 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   if (!(allocator = _allocator_from_caps (base, caps)))
     return FALSE;
 
-  pool = gst_va_pool_new_with_config (caps, base->min_buffers, 0, usage_hint,
+  /* Testing showed that we need at least 3 buffers for good performance */
+  min_buffers = MAX (min_buffers, 3);
+
+  pool = gst_va_pool_new_with_config (caps, min_buffers, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
@@ -535,7 +539,7 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
     goto config_failed;
 
   gst_query_add_allocation_param (query, allocator, &params);
-  gst_query_add_allocation_pool (query, pool, size, base->min_buffers, 0);
+  gst_query_add_allocation_pool (query, pool, size, min_buffers, 0);
 
   GST_DEBUG_OBJECT (base,
       "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,

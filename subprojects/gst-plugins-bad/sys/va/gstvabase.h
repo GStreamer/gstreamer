@@ -51,3 +51,11 @@ GstFlowReturn         gst_va_buffer_importer_import       (GstVaBufferImporter *
                                                            GstBuffer ** outbuf);
 
 gboolean              gst_va_base_convert_caps_to_va      (GstCaps * caps);
+
+gboolean              gst_va_base_propose_allocation      (GstElement * element,
+                                                           GstDebugCategory * cat,
+                                                           GstVaDisplay * display,
+                                                           VAEntrypoint entrypoint,
+                                                           GArray * surface_formats,
+                                                           guint min_buffers,
+                                                           GstQuery * query);

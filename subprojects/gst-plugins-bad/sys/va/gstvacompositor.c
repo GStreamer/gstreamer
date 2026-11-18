@@ -59,7 +59,11 @@
 #include "gstvapluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_compositor_debug);
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_va_compositor_debug
+#else
+#define GST_CAT_DEFAULT NULL
+#endif
 
 /**
  * GstVaCompositorPad:
@@ -602,78 +606,15 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
     GstAggregatorPad * aggpad, GstQuery * decide_query, GstQuery * query)
 {
   GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params = { 0, };
-  GstBufferPool *pool;
-  GstCaps *caps;
-  GstVideoInfo info;
-  gboolean update_allocator = FALSE;
-  guint size, usage_hint;
 
-  gst_query_parse_allocation (query, &caps, NULL);
-
-  if (!caps)
+  if (!gst_va_base_propose_allocation (GST_ELEMENT (self), GST_CAT_DEFAULT,
+          self->display, VAEntrypointVideoProc,
+          gst_va_filter_get_surface_formats (self->filter), 1, query))
     return FALSE;
 
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
-
-  if (gst_query_get_n_allocation_pools (query) > 0)
-    return TRUE;
-
-  usage_hint = va_get_surface_usage_hint (VAEntrypointVideoProc, GST_PAD_SINK);
-
-  if (gst_query_get_n_allocation_params (query) > 0) {
-    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
-    if (!GST_IS_VA_DMABUF_ALLOCATOR (allocator)
-        && !GST_IS_VA_ALLOCATOR (allocator))
-      gst_clear_object (&allocator);
-    update_allocator = TRUE;
-  } else {
-    gst_allocation_params_init (&params);
-  }
-
-  if (!allocator) {
-    if (!(allocator = gst_va_compositor_allocator_from_caps (self, caps)))
-      return FALSE;
-  }
-
-  /* Now we have a VA-based allocator */
-
-  pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
-      GST_VA_FEATURE_AUTO, allocator, &params);
-  if (!pool) {
-    gst_object_unref (allocator);
-    goto config_failed;
-  }
-
-  if (!gst_va_pool_get_buffer_size (pool, &size))
-    goto config_failed;
-
-  if (update_allocator)
-    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
-  else
-    gst_query_add_allocation_param (query, allocator, &params);
-
-  gst_query_add_allocation_pool (query, pool, size, 1, 0);
-
-  GST_DEBUG_OBJECT (self,
-      "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
-      pool, allocator);
-
-  gst_object_unref (allocator);
-  gst_object_unref (pool);
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
-
-config_failed:
-  {
-    GST_ERROR_OBJECT (self, "failed to set config");
-    return FALSE;
-  }
 }
 
 /* configure the allocation query that was answered downstream */
