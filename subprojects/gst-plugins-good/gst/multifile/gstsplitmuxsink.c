@@ -2018,7 +2018,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
     if (GST_CLOCK_TIME_IS_VALID (buf_info->duration)) {
       end_run_ts += buf_info->duration;
     }
-    if (!GST_CLOCK_TIME_IS_VALID (ctx->out_running_time_end) ||
+    if (!GST_CLOCK_STIME_IS_VALID (ctx->out_running_time_end) ||
         end_run_ts > ctx->out_running_time_end) {
       ctx->out_running_time_end = end_run_ts;
 
