@@ -1691,7 +1691,7 @@ _sort_mux_pads (gconstpointer a, gconstpointer b)
     return ta - tb;
 
   return pa->source_track->parent.track_number -
-      pa->source_track->parent.track_number;
+      pb->source_track->parent.track_number;
 }
 
 
