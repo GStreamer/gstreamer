@@ -323,6 +323,42 @@ gst_caps_set_drm_format_array (GstCaps * caps, GPtrArray * formats)
   return TRUE;
 }
 
+/* Move linear modifiers after non-linear ones in drm-format lists, keeping
+ * the relative order otherwise. Non-linear formats are likely more performant
+ * and should be prefered. */
+static void
+_drm_formats_put_linear_last (GstCaps * caps)
+{
+  guint i, j, pass, size;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *st = gst_caps_get_structure (caps, i);
+    const GValue *val = gst_structure_get_value (st, "drm-format");
+    GValue sorted = G_VALUE_INIT;
+
+    if (!val || !GST_VALUE_HOLDS_LIST (val))
+      continue;
+
+    size = gst_value_list_get_size (val);
+    gst_value_list_init (&sorted, size);
+
+    /* first pass: non-linear modifiers, second pass: linear ones */
+    for (pass = 0; pass < 2; pass++) {
+      for (j = 0; j < size; j++) {
+        const GValue *v = gst_value_list_get_value (val, j);
+        guint64 modifier;
+
+        gst_video_dma_drm_fourcc_from_string (g_value_get_string (v),
+            &modifier);
+        if ((modifier == DRM_FORMAT_MOD_LINEAR) == (pass == 1))
+          gst_value_list_append_value (&sorted, v);
+      }
+    }
+
+    gst_structure_take_value (st, "drm-format", &sorted);
+  }
+}
+
 /* Fix raw frames ill reported by drivers.
  *
  * Mesa Gallium reports P010 and P016 for H264 encoder:
@@ -408,6 +444,8 @@ gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
     gst_clear_caps (&caps);
     goto out;
   }
+
+  _drm_formats_put_linear_last (caps);
 
 out:
   g_ptr_array_unref (drm_formats_str);
@@ -878,6 +916,7 @@ _regroup_raw_caps (GstCaps * caps)
   sys_caps = gst_caps_simplify (sys_caps);
   va_caps = gst_caps_simplify (va_caps);
   dma_caps = gst_caps_simplify (dma_caps);
+  _drm_formats_put_linear_last (dma_caps);
 
   va_caps = gst_caps_merge (va_caps, dma_caps);
   va_caps = gst_caps_merge (va_caps, sys_caps);
