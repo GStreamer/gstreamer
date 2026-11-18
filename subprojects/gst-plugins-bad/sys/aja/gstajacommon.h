@@ -75,6 +75,11 @@ gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device* device,
                                                  NTV2Channel channel,
                                                  guint frame_count);
 
+G_GNUC_INTERNAL
+gboolean gst_aja_ntv2_device_has_quad_link_enabled(GstAjaNtv2Device* device,
+                                                   NTV2Channel channel,
+                                                   bool* quad_quad_enabled);
+
 #define GST_AJA_ALLOCATOR_MEMTYPE "aja"
 
 #define GST_TYPE_AJA_ALLOCATOR (gst_aja_allocator_get_type())

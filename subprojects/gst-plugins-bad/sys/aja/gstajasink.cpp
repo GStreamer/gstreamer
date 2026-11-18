@@ -788,6 +788,29 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
     return FALSE;
   }
 
+  const NTV2Channel quad_channel =
+      self->channel < ::NTV2_CHANNEL5 ? ::NTV2_CHANNEL1 : ::NTV2_CHANNEL5;
+  bool had_quad_enabled = false, had_quad_quad_enabled = false;
+
+  had_quad_enabled = gst_aja_ntv2_device_has_quad_link_enabled(
+      self->device, self->channel, &had_quad_quad_enabled);
+
+  // Tear down a previous quad-link mode on the quad channels before using one
+  // of them on its own.
+  //
+  // This must not be done unconditionally: on devices with 12G routing the
+  // quad frame flag of the first channel is also what makes a single-link
+  // 6G/12G UHD/4K mode on that channel UHD/4K, and clearing it would turn an
+  // unrelated, running channel (or this one) into HD. It also has to happen
+  // before the video format is configured below, as that is what sets the flag
+  // for this channel.
+  if (!self->quad_mode && (had_quad_enabled || had_quad_quad_enabled)) {
+    self->device->device->Set4kSquaresEnable(false, quad_channel);
+    self->device->device->SetTsiFrameEnable(false, quad_channel);
+    self->device->device->SetQuadQuadFrameEnable(false, quad_channel);
+    self->device->device->SetQuadQuadSquaresEnable(false, quad_channel);
+  }
+
   self->device->device->SetMode(self->channel, NTV2_MODE_DISPLAY, false);
   if (self->quad_mode) {
     for (int i = 1; i < 4; i++)
@@ -1090,18 +1113,6 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
     }
   }
 
-  bool had_quad_enabled = false, had_quad_quad_enabled = false;
-
-  if (self->channel < ::NTV2_CHANNEL5) {
-    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL1);
-    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
-                                                 ::NTV2_CHANNEL1);
-  } else {
-    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL5);
-    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
-                                                 ::NTV2_CHANNEL5);
-  }
-
   if (self->quad_mode) {
     switch (self->sdi_mode) {
       case GST_AJA_SDI_MODE_SINGLE_LINK:
@@ -1134,18 +1145,6 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
         }
         break;
     }
-  } else {
-    NTV2Channel quad_channel;
-
-    if (self->channel < ::NTV2_CHANNEL5)
-      quad_channel = ::NTV2_CHANNEL1;
-    else
-      quad_channel = ::NTV2_CHANNEL5;
-
-    self->device->device->Set4kSquaresEnable(false, quad_channel);
-    self->device->device->SetTsiFrameEnable(false, quad_channel);
-    self->device->device->SetQuadQuadFrameEnable(false, quad_channel);
-    self->device->device->SetQuadQuadSquaresEnable(false, quad_channel);
   }
 
   NTV2SmpteLineNumber smpte_line_num_info = ::GetSmpteLineNumber(standard);

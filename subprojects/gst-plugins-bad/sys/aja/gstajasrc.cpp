@@ -1044,45 +1044,18 @@ static gboolean gst_aja_src_configure(GstAjaSrc* self,
   // HDMI can also be internally quad mode but it runs on a single channel.
   if (!(self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
         self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4)) {
-    if (self->channel < ::NTV2_CHANNEL5) {
-      self->device->device->GetQuadFrameEnable(had_quad_enabled,
-                                               ::NTV2_CHANNEL1);
-
-      // 12G UHD is also internally considered quad modes but they run on a
-      // single channel.
-      if (had_quad_enabled && ::NTV2DeviceCanDo12gRouting(self->device_id)) {
-        NTV2VideoFormat fmt =
-            self->device->device->GetInputVideoFormat(::NTV2_INPUTSOURCE_SDI1);
-        if (fmt >= NTV2_FORMAT_FIRST_UHD_TSI_DEF_FORMAT &&
-            fmt < NTV2_FORMAT_END_4K_TSI_DEF_FORMATS)
-          had_quad_enabled = false;
-      }
-
-      self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
-                                                   ::NTV2_CHANNEL1);
-    } else {
-      self->device->device->GetQuadFrameEnable(had_quad_enabled,
-                                               ::NTV2_CHANNEL5);
-
-      // 12G UHD is also internally considered quad modes but they run on a
-      // single channel.
-      if (had_quad_enabled && ::NTV2DeviceCanDo12gRouting(self->device_id)) {
-        NTV2VideoFormat fmt =
-            self->device->device->GetInputVideoFormat(::NTV2_INPUTSOURCE_SDI5);
-        if (fmt >= NTV2_FORMAT_FIRST_UHD_TSI_DEF_FORMAT &&
-            fmt < NTV2_FORMAT_END_4K_TSI_DEF_FORMATS)
-          had_quad_enabled = false;
-      }
-
-      self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
-                                                   ::NTV2_CHANNEL5);
-    }
+    // 6G/12G UHD/4K is also internally considered a quad mode but runs on a
+    // single channel, and that channel can just as well be an output or have
+    // no signal right now. So this can't be decided from the input signal on
+    // the first SDI input of the quad channels.
+    had_quad_enabled = gst_aja_ntv2_device_has_quad_link_enabled(
+        self->device, self->channel, &had_quad_quad_enabled);
   }
 
   // Stop any previously running quad mode, or other configurations on the
   // quad channels
   self->device->device->AutoCirculateStop(self->channel);
-  if (self->quad_mode || had_quad_enabled || had_quad_enabled) {
+  if (self->quad_mode || had_quad_enabled || had_quad_quad_enabled) {
     NTV2Channel quad_channel;
 
     if (self->channel < ::NTV2_CHANNEL5)

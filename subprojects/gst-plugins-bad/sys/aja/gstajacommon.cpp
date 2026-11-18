@@ -938,6 +938,69 @@ static guint gst_aja_device_get_frame_multiplier(GstAjaNtv2Device* device,
   return 1;
 }
 
+// Returns whether a quad-link mode, i.e. one that spans all four channels of
+// the group (1-4 or 5-8) that the channel is part of, is currently configured
+// on that group. Whether a quad-quad (UHD2/8K) mode is configured on that
+// group is returned in quad_quad_enabled.
+//
+// GetQuadFrameEnable() on the first channel of the group is not enough for
+// this: on devices with 12G routing the TSI quad frame flag is per channel and
+// is also set while that channel runs single-link 6G/12G UHD/4K, which does
+// not involve the other three channels at all. Quad-link TSI is routed via the
+// 425 muxes while single-link 6G/12G is not, so that is used to tell them
+// apart.
+gboolean gst_aja_ntv2_device_has_quad_link_enabled(GstAjaNtv2Device* device,
+                                                   NTV2Channel channel,
+                                                   bool* quad_quad_enabled) {
+  g_assert(device != NULL);
+  g_assert(device->device->IsOpen());
+  g_assert(quad_quad_enabled != NULL);
+
+  const bool first_group = channel < ::NTV2_CHANNEL5;
+  const NTV2Channel quad_channel =
+      first_group ? ::NTV2_CHANNEL1 : ::NTV2_CHANNEL5;
+
+  *quad_quad_enabled = false;
+  device->device->GetQuadQuadFrameEnable(*quad_quad_enabled, quad_channel);
+
+  bool quad_enabled = false;
+  device->device->GetQuadFrameEnable(quad_enabled, quad_channel);
+  if (!quad_enabled) return FALSE;
+
+  if (!::NTV2DeviceCanDo12gRouting(device->device->GetDeviceID())) return TRUE;
+
+  bool squares_enabled = false;
+  device->device->Get4kSquaresEnable(squares_enabled, quad_channel);
+  if (squares_enabled) return TRUE;
+
+  CNTV2SignalRouter router;
+  device->device->GetRouting(router);
+  const NTV2ActualConnections connections = router.GetConnections();
+
+  for (auto iter = connections.begin(); iter != connections.end(); iter++) {
+    if (first_group) {
+      if (iter->first == NTV2_Xpt425Mux1AInput ||
+          iter->first == NTV2_Xpt425Mux1BInput ||
+          iter->first == NTV2_Xpt425Mux2AInput ||
+          iter->first == NTV2_Xpt425Mux2BInput)
+        return TRUE;
+    } else {
+      if (iter->first == NTV2_Xpt425Mux3AInput ||
+          iter->first == NTV2_Xpt425Mux3BInput ||
+          iter->first == NTV2_Xpt425Mux4AInput ||
+          iter->first == NTV2_Xpt425Mux4BInput)
+        return TRUE;
+    }
+  }
+
+  GST_TRACE(
+      "Channel %d has the quad frame flag set but no quad-link routing, "
+      "assuming single-link 6G/12G",
+      (gint)quad_channel);
+
+  return FALSE;
+}
+
 // Returns -1 on failure or otherwise the start_frame.
 // end_frame would be start_frame + frame_count - 1
 gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device* device,
