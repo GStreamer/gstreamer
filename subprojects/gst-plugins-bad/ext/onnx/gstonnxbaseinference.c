@@ -1338,6 +1338,14 @@ gst_onnx_base_inference_start (GstBaseTransform * trans)
     }
   }
 
+  /* Disable telemetry events */
+  status = self->api->DisableTelemetryEvents (priv->env);
+  if (status) {
+    GST_WARNING_OBJECT (self, "Failed to disable telemetry events: %s",
+        self->api->GetErrorMessage (status));
+    goto error;
+  }
+
   /* Create session options */
   status = self->api->CreateSessionOptions (&session_options);
   if (status) {
