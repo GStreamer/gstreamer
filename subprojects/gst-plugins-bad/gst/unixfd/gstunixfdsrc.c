@@ -288,11 +288,11 @@ from_monotonic (GstClockTime timestamp, GstClockTime base_time,
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* Convert from system monotonic clock time to pipeline clock time */
     if (clock_diff > 0 && clock_diff > timestamp)
-      return 0;
+      return GST_CLOCK_TIME_NONE;
     timestamp -= clock_diff;
     /* Convert to running time */
     if (base_time > timestamp)
-      return 0;
+      return GST_CLOCK_TIME_NONE;
     timestamp -= base_time;
   }
   return timestamp;
@@ -384,6 +384,21 @@ again:
       GST_BUFFER_OFFSET (*outbuf) = new_buffer->offset;
       GST_BUFFER_OFFSET_END (*outbuf) = new_buffer->offset_end;
       GST_BUFFER_FLAGS (*outbuf) = new_buffer->flags;
+
+      /* If monotonic PTS/DTS cannot be converted to pipeline running time,
+       * it means they are before this pipeline started. */
+      if ((GST_CLOCK_TIME_IS_VALID (new_buffer->pts)
+              && !GST_BUFFER_PTS_IS_VALID (*outbuf))
+          || (GST_CLOCK_TIME_IS_VALID (new_buffer->dts)
+              && !GST_BUFFER_DTS_IS_VALID (*outbuf))) {
+        GST_DEBUG_OBJECT (self,
+            "Drop buffer with PTS %" GST_TIME_FORMAT " and DTS %"
+            GST_TIME_FORMAT " before this pipeline base time",
+            GST_TIME_ARGS (new_buffer->pts), GST_TIME_ARGS (new_buffer->dts));
+        close_and_free_fds (fds_arr, fds_arr_len);
+        gst_clear_buffer (outbuf);
+        break;
+      }
 
       for (int i = 0; i < new_buffer->n_meta; i++) {
         guint32 consumed = 0;
