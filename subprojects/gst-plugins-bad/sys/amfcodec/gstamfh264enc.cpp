@@ -339,6 +339,7 @@ enum
   PROP_MAX_QP,
   PROP_QP_I,
   PROP_QP_P,
+  PROP_QP_B,
   PROP_REF_FRAMES,
   PROP_AUD,
   PROP_CABAC,
@@ -424,6 +425,7 @@ typedef struct _GstAmfH264Enc
   gint max_qp;
   guint qp_i;
   guint qp_p;
+  guint qp_b;
   guint qvbr_quality;
   guint ref_frames;
 
@@ -538,6 +540,17 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
       g_param_spec_uint ("qp-p", "QP P",
           "Constant QP for P frames", 0, 51,
           (guint) dev_caps->default_qp_p, param_flags));
+  /**
+   * GstAmfH264Enc:qp-b:
+   *
+   * Constant QP for B frames
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_QP_B,
+      g_param_spec_uint ("qp-b", "QP B",
+          "Constant QP for B frames", 0, 51,
+          (guint) dev_caps->default_qp_b, param_flags));
   g_object_class_install_property (object_class, PROP_QVBR_QUALITY,
       g_param_spec_uint ("qvbr-quality", "QVBR Quality",
           "Quality level for \"qvbr\" rate-control mode", 1, 51,
@@ -961,6 +974,7 @@ gst_amf_h264_enc_init (GstAmfH264Enc * self)
   self->max_qp = DEFAULT_MIN_MAX_QP;
   self->qp_i = (guint) dev_caps->default_qp_i;
   self->qp_p = (guint) dev_caps->default_qp_p;
+  self->qp_b = (guint) dev_caps->default_qp_b;
   self->qvbr_quality = (guint) dev_caps->default_qvbr_quality;
   self->ref_frames = (guint) dev_caps->min_ref_frames;
   self->aud = DEFAULT_AUD;
@@ -1091,6 +1105,9 @@ gst_amf_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_QP_P:
       update_uint (self, &self->qp_p, value);
       break;
+    case PROP_QP_B:
+      update_uint (self, &self->qp_b, value);
+      break;
     case PROP_REF_FRAMES:
       update_uint (self, &self->ref_frames, value);
       break;
@@ -1220,6 +1237,9 @@ gst_amf_h264_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_QP_P:
       g_value_set_uint (value, self->qp_p);
+      break;
+    case PROP_QP_B:
+      g_value_set_uint (value, self->qp_b);
       break;
     case PROP_REF_FRAMES:
       g_value_set_uint (value, self->ref_frames);
@@ -1736,6 +1756,14 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
       if (result != AMF_OK) {
         GST_ERROR_OBJECT (self,
             "Failed to set using B-frames as reference, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_QP_B,
+          (amf_int64) self->qp_b);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set QP B, result %"
             GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
         goto error;
       }
@@ -2384,8 +2412,8 @@ gst_amf_h264_enc_create_class_data (GstObject * device, AMFComponent * comp)
 } G_STMT_END
 
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_i, 22);
-  QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_p, 22);
-  QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_b, 22);
+  QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_P, default_qp_p, 22);
+  QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_B, default_qp_b, 22);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QVBR_QUALITY_LEVEL,
       default_qvbr_quality, 23);
 #undef QUERY_DEFAULT_PROP
