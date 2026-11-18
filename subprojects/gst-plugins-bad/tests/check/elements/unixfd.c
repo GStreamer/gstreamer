@@ -388,6 +388,102 @@ GST_START_TEST (test_unixfd_big_payload)
 
 GST_END_TEST;
 
+static void
+push_buffer (GstElement * appsrc, GstCaps * caps, GstClockTime pts,
+    GstClockTime dts, guint64 offset)
+{
+  GstSegment segment;
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  GstBuffer *buf = gst_buffer_new ();
+  GST_BUFFER_PTS (buf) = pts;
+  GST_BUFFER_DTS (buf) = dts;
+  GST_BUFFER_OFFSET (buf) = offset;
+  GstSample *sample = gst_sample_new (buf, caps, &segment, NULL);
+  fail_unless_equals_int (gst_app_src_push_sample (GST_APP_SRC (appsrc),
+          sample), GST_FLOW_OK);
+  gst_sample_unref (sample);
+  gst_buffer_unref (buf);
+}
+
+GST_START_TEST (test_unixfd_drop_before_base_time)
+{
+  GError *error = NULL;
+
+  /* Ensure we don't have socket from previous failed test */
+  gchar *tempdir = g_dir_make_tmp ("unixfd-test-XXXXXX", &error);
+  g_assert_no_error (error);
+  gchar *socket_path = g_strdup_printf ("%s/socket", tempdir);
+
+  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  /* Setup service */
+  gchar *pipeline_str =
+      g_strdup_printf
+      ("appsrc name=src format=time ! unixfdsink socket-path=%s sync=false async=false wait-for-connection=true",
+      socket_path);
+  GstElement *pipeline_service = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsrc = gst_bin_get_by_name (GST_BIN (pipeline_service), "src");
+  gst_object_unref (appsrc);
+  g_free (pipeline_str);
+
+  /* Make sure client's base time is later than service's base time */
+  g_usleep (G_USEC_PER_SEC / 10);
+
+  /* Setup client */
+  pipeline_str =
+      g_strdup_printf
+      ("unixfdsrc socket-path=%s ! appsink name=sink sync=false async=false",
+      socket_path);
+  GstElement *pipeline_client = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsink = gst_bin_get_by_name (GST_BIN (pipeline_client), "sink");
+  gst_object_unref (appsink);
+  g_free (pipeline_str);
+
+  fail_unless (gst_element_get_base_time (pipeline_client) >
+      gst_element_get_base_time (pipeline_service));
+
+  /* Buffers with running time 0 in the service pipeline are before client's
+   * base time, they must be dropped. */
+  push_buffer (appsrc, caps, 0, GST_CLOCK_TIME_NONE, 1);
+  push_buffer (appsrc, caps, GST_CLOCK_TIME_NONE, 0, 2);
+  push_buffer (appsrc, caps, 0, 0, 3);
+
+  /* This one is after client's base time */
+  push_buffer (appsrc, caps, 10 * GST_SECOND, 10 * GST_SECOND, 4);
+
+  GstSample *sample = gst_app_sink_pull_sample (GST_APP_SINK (appsink));
+  fail_unless (sample != NULL);
+  GstBuffer *buf = gst_sample_get_buffer (sample);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET (buf), 4);
+  fail_unless (GST_BUFFER_PTS_IS_VALID (buf));
+  fail_unless (GST_BUFFER_PTS (buf) > 0);
+  fail_unless (GST_BUFFER_PTS (buf) < 10 * GST_SECOND);
+  fail_unless (GST_BUFFER_DTS_IS_VALID (buf));
+  gst_sample_unref (sample);
+
+  /* Teardown */
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  g_rmdir (tempdir);
+  g_free (tempdir);
+
+  gst_object_unref (pipeline_service);
+  gst_object_unref (pipeline_client);
+  g_free (socket_path);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 unixfd_suite (void)
 {
@@ -399,6 +495,7 @@ unixfd_suite (void)
   tcase_add_test (tc, test_unixfd_segment);
   tcase_add_test (tc, test_unixfd_copy);
   tcase_add_test (tc, test_unixfd_big_payload);
+  tcase_add_test (tc, test_unixfd_drop_before_base_time);
 
   return s;
 }
