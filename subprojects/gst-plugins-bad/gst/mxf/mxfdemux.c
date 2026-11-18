@@ -4360,12 +4360,13 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
             next_partition = (GstMXFDemuxPartition *) cur_part->next->data;
 
           /* If we have completely processed this partition, skip to next partition */
-          if (partition_done
-              || lowest_offset > next_partition->partition.this_partition) {
+          if (next_partition && (partition_done
+                  || lowest_offset >
+                  next_partition->partition.this_partition)) {
             GST_DEBUG_OBJECT (demux,
                 "Partition entirely processed, skipping to next one");
             demux->offset = next_partition->partition.this_partition;
-          } else {
+          } else if (lowest_offset != G_MAXUINT64) {
             GST_DEBUG_OBJECT (demux,
                 "Skipping to demuxer offset %" G_GUINT64_FORMAT " (from %"
                 G_GUINT64_FORMAT ")", lowest_offset, demux->offset);
