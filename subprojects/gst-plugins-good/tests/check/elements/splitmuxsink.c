@@ -844,6 +844,69 @@ GST_START_TEST (test_splitmuxsink_reference_duration)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_splitmuxsink_reuse_duration)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  GstElement *src;
+  gchar *dest_pattern;
+  GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
+  GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
+  GstClockTime short_offsets[] = { 0 };
+  GstClockTime short_durations[] = { GST_SECOND };
+
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc name=vsrc num-buffers=15 ! video/x-raw,width=80,height=64,framerate=5/1 ! videoconvert !"
+      " queue ! theoraenc keyframe-force=5 ! splitmuxsink name=splitsink "
+      " max-size-time=1000000000 async-finalize=true "
+      " sink-factory=fakesink muxer-factory=matroskamux", NULL);
+  fail_if (pipeline == NULL);
+
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+
+  dest_pattern = g_build_filename (tmpdir, "reuse%05d.mkv", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  /*
+   * First run: 3 s of video split into 3 fragments of 1 s each.
+   * run_pipeline() leaves the pipeline in NULL, which resets the
+   * element.
+   */
+  msg = run_pipeline (pipeline, 3, offsets, durations, durations);
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  /*
+   * Second run of the same element with only 1 s of video. The single
+   * fragment must report 1 s, not the 3 s end time of the first run
+   */
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "vsrc");
+  fail_if (src == NULL);
+  g_object_set (G_OBJECT (src), "num-buffers", 5, NULL);
+  gst_object_unref (src);
+
+  msg = run_pipeline (pipeline, 1, short_offsets, short_durations,
+      short_durations);
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_splitmuxsink_muxer_pad_map)
 {
   GstElement *sink, *muxer;
@@ -1130,6 +1193,7 @@ splitmuxsink_suite (void)
 
       tcase_add_test (tc_chain, test_splitmuxsink_async);
       tcase_add_test (tc_chain, test_splitmuxsink_reference_duration);
+      tcase_add_test (tc_chain, test_splitmuxsink_reuse_duration);
     } else {
       GST_INFO ("Skipping tests, missing plugins: matroska and/or vorbis");
     }
