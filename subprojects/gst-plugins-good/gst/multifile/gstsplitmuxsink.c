@@ -1087,6 +1087,13 @@ mq_stream_ctx_reset (MqStreamCtx * ctx)
   gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
   ctx->out_fragment_start_runts = ctx->in_running_time = ctx->out_running_time =
       GST_CLOCK_STIME_NONE;
+
+  /*
+   * The fragment end is a running maximum, so it must not survive a reset.
+   * A reused element would otherwise report the previous run's end times.
+   */
+  ctx->out_running_time_end = GST_CLOCK_STIME_NONE;
+
   g_queue_foreach (&ctx->queued_bufs, (GFunc) mq_stream_buf_free, NULL);
   g_queue_clear (&ctx->queued_bufs);
 }
