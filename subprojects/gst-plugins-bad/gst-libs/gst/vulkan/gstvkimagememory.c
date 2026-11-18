@@ -1000,19 +1000,37 @@ gst_vulkan_image_memory_release_view (GstVulkanImageView * view)
   int old_ref;
   guint index;
 
+  g_return_val_if_fail (!view->image
+      || gst_is_vulkan_image_memory (GST_MEMORY_CAST (view->image)), FALSE);
+
   g_mutex_lock (&view->lock);
 
-  old_ref = g_atomic_int_add (&view->parent.refcount, -1);
-
-  if (old_ref != 1) {
-    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY,
-        "not ready to free view %p as ref %d != 1", view, old_ref);
-    g_mutex_unlock (&view->lock);
-    return FALSE;
-  }
-  gst_vulkan_image_view_ref (view);
-
   image = view->image;
+
+  if (image) {
+    /* find_view() refs outstanding views under the image lock: with it
+     * held, a refcount of 1 cannot be raised behind our back */
+    g_mutex_lock (&image->lock);
+    GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p",
+        image);
+  }
+
+  for (;;) {
+    old_ref = g_atomic_int_get (&view->parent.refcount);
+    if (old_ref == 1)
+      break;
+
+    if (g_atomic_int_compare_and_exchange (&view->parent.refcount, old_ref,
+            old_ref - 1)) {
+      GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY,
+          "not ready to free view %p as ref %d != 1", view, old_ref);
+      if (image)
+        g_mutex_unlock (&image->lock);
+      g_mutex_unlock (&view->lock);
+      return FALSE;
+    }
+  }
+
   if (!image) {
     GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "view %p without image -> free",
         view);
@@ -1020,11 +1038,6 @@ gst_vulkan_image_memory_release_view (GstVulkanImageView * view)
     return TRUE;
   }
 
-  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)),
-      FALSE);
-
-  g_mutex_lock (&image->lock);
-  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "locked image memory %p", image);
   view->image = NULL;
   g_mutex_unlock (&view->lock);
 
