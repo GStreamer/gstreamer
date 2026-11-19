@@ -58,7 +58,6 @@ struct _GstVaBaseTransformPrivate
 
   GstBufferPool *other_pool;
 
-  GstCaps *sinkpad_caps;
   GstVideoInfo sinkpad_info;
   GstBufferPool *sinkpad_pool;
   guint uncropped_width;
@@ -79,8 +78,7 @@ struct _GstVaBaseTransformPrivate
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseTransform, gst_va_base_transform,
     GST_TYPE_BASE_TRANSFORM, G_ADD_PRIVATE (GstVaBaseTransform)
     GST_DEBUG_CATEGORY_INIT (gst_va_base_transform_debug,
-        "vabasetransform", 0, "vabasetransform element");
-    );
+        "vabasetransform", 0, "vabasetransform element"););
 
 static void
 gst_va_base_transform_get_property (GObject * object, guint prop_id,
@@ -128,8 +126,6 @@ gst_va_base_transform_dispose (GObject * object)
     gst_buffer_pool_set_active (self->priv->sinkpad_pool, FALSE);
     gst_clear_object (&self->priv->sinkpad_pool);
   }
-
-  gst_clear_caps (&self->priv->sinkpad_caps);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -246,8 +242,6 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   guint size, usage_hint;
   guint min_buffers = 1 + self->extra_min_buffers + 2;
 
-  gst_clear_caps (&self->priv->sinkpad_caps);
-
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
     return FALSE;
@@ -305,8 +299,6 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   gst_object_unref (pool);
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-
-  self->priv->sinkpad_caps = gst_caps_ref (caps);
 
   return TRUE;
 
@@ -761,10 +753,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   if (self->priv->sinkpad_pool)
     return self->priv->sinkpad_pool;
 
-  if (self->priv->sinkpad_caps)
-    caps = gst_caps_copy (self->priv->sinkpad_caps);
-  else
-    caps = gst_caps_copy (self->in_caps);
+  caps = gst_caps_copy (self->in_caps);
 
   if (!gst_va_base_convert_caps_to_va (caps)) {
     GST_ERROR_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
