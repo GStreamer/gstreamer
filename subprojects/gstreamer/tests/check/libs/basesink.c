@@ -23,6 +23,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
+#include <gst/check/gsttestclock.h>
 #include <gst/base/gstbasesink.h>
 
 GST_START_TEST (basesink_last_sample_enabled)
@@ -490,6 +491,201 @@ GST_START_TEST (basesink_instant_rate_change_during_state_change)
 
 GST_END_TEST;
 
+/* A sink that counts how many times ::render() is called */
+typedef struct
+{
+  GstBaseSink parent;
+  guint rendered;
+} CountingSink;
+
+typedef GstBaseSinkClass CountingSinkClass;
+
+GType counting_sink_get_type (void);
+G_DEFINE_TYPE (CountingSink, counting_sink, GST_TYPE_BASE_SINK);
+
+static GstStaticPadTemplate counting_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
+
+static GstFlowReturn
+counting_sink_render (GstBaseSink * bsink, GstBuffer * buf)
+{
+  ((CountingSink *) bsink)->rendered++;
+
+  return GST_FLOW_OK;
+}
+
+static void
+counting_sink_class_init (CountingSinkClass * klass)
+{
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &counting_sink_template);
+  klass->render = counting_sink_render;
+}
+
+static void
+counting_sink_init (CountingSink * sink)
+{
+}
+
+/* A CountingSink with a ::prepare() that does nothing */
+typedef CountingSink CountingPrepareSink;
+typedef CountingSinkClass CountingPrepareSinkClass;
+
+GType counting_prepare_sink_get_type (void);
+G_DEFINE_TYPE (CountingPrepareSink, counting_prepare_sink,
+    counting_sink_get_type ());
+
+static GstFlowReturn
+counting_prepare_sink_prepare (GstBaseSink * bsink, GstBuffer * buf)
+{
+  return GST_FLOW_OK;
+}
+
+static void
+counting_prepare_sink_class_init (CountingPrepareSinkClass * klass)
+{
+  klass->prepare = counting_prepare_sink_prepare;
+}
+
+static void
+counting_prepare_sink_init (CountingPrepareSink * sink)
+{
+}
+
+static void
+push_frames (GstPad * pad, guint first_frame, guint n_frames, gint fps)
+{
+  guint i;
+
+  for (i = first_frame; i < first_frame + n_frames; i++) {
+    GstBuffer *buf = gst_buffer_new ();
+
+    GST_BUFFER_PTS (buf) = gst_util_uint64_scale_int (i, GST_SECOND, fps);
+    GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (1, GST_SECOND, fps);
+    fail_unless_equals_int (gst_pad_chain (pad, buf), GST_FLOW_OK);
+  }
+}
+
+/* Pushes late buffers to a sink of the given type and checks that the
+ * emergency rendering of one buffer per second works, before and after a
+ * non-flushing segment */
+static void
+check_emergency_rendering (GType type)
+{
+  GstElement *sink;
+  CountingSink *counting_sink;
+  GstClock *clock;
+  GstPad *pad;
+  GstSegment segment;
+
+  sink = g_object_new (type, NULL);
+  counting_sink = (CountingSink *) sink;
+  g_object_set (sink, "async", FALSE, "max-lateness",
+      (gint64) (20 * GST_MSECOND), NULL);
+  pad = gst_element_get_static_pad (sink, "sink");
+
+  /* With the realtime clock and a base time of 0, every buffer is very late */
+  clock = gst_system_clock_new (NULL, GST_CLOCK_TYPE_REALTIME);
+  gst_element_set_clock (sink, clock);
+  gst_element_set_base_time (sink, 0);
+
+  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (gst_pad_send_event (pad, gst_event_new_stream_start ("test")));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_send_event (pad, gst_event_new_segment (&segment)));
+
+  push_frames (pad, 0, 90, 30);
+  /* In frames [0, 90) at 30 fps, 31 and 62 get the emergency rendering */
+  fail_unless_equals_int (counting_sink->rendered, 2);
+
+  fail_unless (gst_pad_send_event (pad, gst_event_new_segment (&segment)));
+  push_frames (pad, 90, 90, 30);
+  /* In frames [90, 180) at 30 fps, 121 and 152 get the emergency rendering */
+  fail_unless_equals_int (counting_sink->rendered, 4);
+
+  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pad);
+  gst_object_unref (sink);
+  gst_object_unref (clock);
+}
+
+GST_START_TEST (basesink_emergency_rendering)
+{
+  check_emergency_rendering (counting_sink_get_type ());
+}
+
+GST_END_TEST;
+
+GST_START_TEST (basesink_emergency_rendering_with_prepare)
+{
+  check_emergency_rendering (counting_prepare_sink_get_type ());
+}
+
+GST_END_TEST;
+
+static gpointer
+push_frame_in_time (GstPad * pad)
+{
+  GstBuffer *buf = gst_buffer_new ();
+
+  GST_BUFFER_PTS (buf) = GST_SECOND;
+  fail_unless_equals_int (gst_pad_chain (pad, buf), GST_FLOW_OK);
+
+  return NULL;
+}
+
+GST_START_TEST (basesink_throttle_time_with_prepare)
+{
+  GstElement *sink;
+  CountingSink *counting_sink;
+  GstClock *clock;
+  GstPad *pad;
+  GstSegment segment;
+  GThread *thread;
+
+  sink = g_object_new (counting_prepare_sink_get_type (), NULL);
+  counting_sink = (CountingSink *) sink;
+  g_object_set (sink, "async", FALSE, "throttle-time",
+      (guint64) (100 * GST_MSECOND), NULL);
+  pad = gst_element_get_static_pad (sink, "sink");
+
+  /* The test clock stays at 0 until cranked, so the buffer must wait */
+  clock = gst_test_clock_new ();
+  gst_element_set_clock (sink, clock);
+  gst_element_set_base_time (sink, 0);
+
+  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (gst_pad_send_event (pad, gst_event_new_stream_start ("test")));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_send_event (pad, gst_event_new_segment (&segment)));
+
+  thread = g_thread_new ("push", (GThreadFunc) push_frame_in_time, pad);
+
+  /* The sink waits for the clock and has not rendered the buffer yet */
+  fail_unless (gst_test_clock_timed_wait_for_multiple_pending_ids
+      (GST_TEST_CLOCK (clock), 1, 5000, NULL));
+  fail_unless_equals_int (counting_sink->rendered, 0);
+
+  /* Once the clock reaches the buffer's time, the sink renders it once */
+  gst_test_clock_crank (GST_TEST_CLOCK (clock));
+  g_thread_join (thread);
+  fail_unless_equals_int (counting_sink->rendered, 1);
+
+  fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pad);
+  gst_object_unref (sink);
+  gst_object_unref (clock);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -505,6 +701,9 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesink_stream_start_after_eos);
   tcase_add_test (tc, basesink_instant_rate_change_segment);
   tcase_add_test (tc, basesink_instant_rate_change_during_state_change);
+  tcase_add_test (tc, basesink_emergency_rendering);
+  tcase_add_test (tc, basesink_emergency_rendering_with_prepare);
+  tcase_add_test (tc, basesink_throttle_time_with_prepare);
 
   return s;
 }
