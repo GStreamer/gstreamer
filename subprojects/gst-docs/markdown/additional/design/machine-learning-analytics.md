@@ -412,7 +412,7 @@ Example 2: Cascaded inferences
 ```
 ... ! inference model-file=ssd
     ! inference model-file=mobilenet !
-    ! ssdtensordecoder ! classifiertensordecoder ! ...
+    ! ssdtensordecoder ! classifiertensordec ! ...
 ```
 
 Example 3: Tensor decoders auto-plugging

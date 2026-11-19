@@ -34,11 +34,11 @@
  *
  * ## Example launch command:
  *
- * GST_DEBUG="executorchinference:5,classifiertensordecoder:7" \
+ * GST_DEBUG="executorchinference:5,classifiertensordec:7" \
  * gst-launch-1.0 filesrc location=path/to/dog.jpg ! \
  * jpegdec ! videoconvertscale ! \
  * executorchinference model-file=mobilenetv2.pte ! \
- * classifiertensordecoder ! fakesink
+ * classifiertensordec ! fakesink
  */
 
 #ifdef HAVE_CONFIG_H

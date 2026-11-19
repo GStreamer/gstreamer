@@ -252749,60 +252749,6 @@
     "tensordecoders": {
         "description": "Tensor decoders elements",
         "elements": {
-            "classifiertensordecoder": {
-                "author": "Daniel Morin <daniel.morin@collabora.com>",
-                "description": "Decode tensors output from classification model using common format.\n\tTensor format must be: \n\t\tDims: [batch-size, class_count]\n\t\tDatatype: float32 \n\n\t\tTensor [M,N]\n\t\t\tBatch 0   | Class 0 confidence level | ... | Class N-1 confidence level |\n\t\t\t...\n\t\t\tBatch M-1 | Class 0 confidence level | ... | Class N-1 confidence level |\n\t\t\n\tIn-memory tensor format:\n\n\t\t|Batch 0, Class 0 confidence level     |\n\t\t|Batch 0,           ...                |\n\t\t|Batch 0, Class N-1 confidence level   |\n\t\t|               ...                    |\n\t\t|Batch M-1, Class 0 confidence level   |\n\t\t|Batch M-1,           ...              |\n\t\t|Batch M-1, Class N-1 confidence level |\n\n model",
-                "hierarchy": [
-                    "GstClassifierTensorDecoder",
-                    "GstBaseTransform",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Tensordecoder",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/x-raw(ANY):\n        tensors: \"tensorgroups\\,\\ classification-generic-out\\=\\(/uniquelist\\)\\{\\ \\(caps\\)\\\"tensor/strided\\\\\\,\\\\\\ tensor-id\\\\\\=\\\\\\(string\\\\\\)classification-generic-out\\\\\\,\\\\\\ dims\\\\\\=\\\\\\(int\\\\\\)\\\\\\<\\\\\\ \\\\\\[\\\\\\ 0\\\\\\,\\\\\\ 1\\\\\\ \\\\\\]\\\\\\,\\\\\\ \\\\\\[\\\\\\ 1\\\\\\,\\\\\\ 2147483647\\\\\\ \\\\\\]\\\\\\ \\\\\\>\\\\\\,\\\\\\ dims-order\\\\\\=\\\\\\(string\\\\\\)row-major\\\\\\,\\\\\\ type\\\\\\=\\\\\\(string\\\\\\)\\\\\\{\\\\\\ float32\\\\\\,\\\\\\ uint8\\\\\\ \\\\\\}\\\\\\;\\\\\\ tensor/strided\\\\\\,\\\\\\ tensor-id\\\\\\=\\\\\\(string\\\\\\)classification-generic-out\\\\\\,\\\\\\ dims\\\\\\=\\\\\\(int\\\\\\)\\\\\\<\\\\\\ \\\\\\[\\\\\\ 1\\\\\\,\\\\\\ 2147483647\\\\\\ \\\\\\]\\\\\\ \\\\\\>\\\\\\,\\\\\\ dims-order\\\\\\=\\\\\\(string\\\\\\)row-major\\\\\\,\\\\\\ type\\\\\\=\\\\\\(string\\\\\\)\\\\\\{\\\\\\ float32\\\\\\,\\\\\\ uint8\\\\\\ \\\\\\}\\\"\\ \\}\\;\"\n\nvideo/x-raw(ANY):\n        tensors: \"tensorgroups\\,\\ classification-generic-softmaxed-out\\=\\(/uniquelist\\)\\{\\ \\(caps\\)\\\"tensor/strided\\\\\\,\\\\\\ tensor-id\\\\\\=\\\\\\(string\\\\\\)classification-generic-softmaxed-out\\\\\\,\\\\\\ dims\\\\\\=\\\\\\(int\\\\\\)\\\\\\<\\\\\\ \\\\\\[\\\\\\ 0\\\\\\,\\\\\\ 1\\\\\\ \\\\\\]\\\\\\,\\\\\\ \\\\\\[\\\\\\ 1\\\\\\,\\\\\\ 2147483647\\\\\\ \\\\\\]\\\\\\ \\\\\\>\\\\\\,\\\\\\ dims-order\\\\\\=\\\\\\(string\\\\\\)row-major\\\\\\,\\\\\\ type\\\\\\=\\\\\\(string\\\\\\)\\\\\\{\\\\\\ float32\\\\\\,\\\\\\ uint8\\\\\\ \\\\\\}\\\\\\;\\\\\\ tensor/strided\\\\\\,\\\\\\ tensor-id\\\\\\=\\\\\\(string\\\\\\)classification-generic-softmaxed-out\\\\\\,\\\\\\ dims\\\\\\=\\\\\\(int\\\\\\)\\\\\\<\\\\\\ \\\\\\[\\\\\\ 1\\\\\\,\\\\\\ 2147483647\\\\\\ \\\\\\]\\\\\\ \\\\\\>\\\\\\,\\\\\\ dims-order\\\\\\=\\\\\\(string\\\\\\)row-major\\\\\\,\\\\\\ type\\\\\\=\\\\\\(string\\\\\\)\\\\\\{\\\\\\ float32\\\\\\,\\\\\\ uint8\\\\\\ \\\\\\}\\\"\\ \\}\\;\"\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "ANY",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "class-confidence-threshold": {
-                        "blurb": "Classes with a confidence level inferior to this threshold will be excluded",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "0.7",
-                        "max": "1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gfloat",
-                        "writable": true
-                    },
-                    "labels-file": {
-                        "blurb": "Path to a file containing class label. COCO format",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "NULL",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gchararray",
-                        "writable": true
-                    }
-                },
-                "rank": "secondary"
-            },
             "ioutracker": {
                 "author": "Santosh Mahto <santosh.mahto@collabora.com>",
                 "description": "Track the objects across frames based on Intersection-over-Union (IoU)",

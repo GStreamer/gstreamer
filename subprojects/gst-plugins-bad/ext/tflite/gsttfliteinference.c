@@ -34,10 +34,10 @@
  * ## Example launch line
  *
  * |[
- * GST_DEBUG=classifiertensordecoder:6 \
+ * GST_DEBUG=classifiertensordec:6 \
  * gst-launch-1.0 filesrc location=tflite-models/images/bus.jpg ! \
  * jpegdec ! videoconvertscale ! tfliteinference model-file=/path/to/ssd_mobilenet_v1_coco.tflite ! \
- * classifiertensordecoder labels-file=/path/to/labels.txt ! fakesink
+ * classifiertensordec labels-file=/path/to/labels.txt ! fakesink
  * ]|
  *
  * Note: in order for downstream tensor decoders to correctly parse the tensor
