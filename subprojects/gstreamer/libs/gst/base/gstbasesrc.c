@@ -3223,6 +3223,10 @@ gst_base_src_set_allocator (GstBaseSrc * basesrc, GstBufferPool * pool,
       goto activate_failed;
   }
 
+  GST_INFO_OBJECT (basesrc,
+      "Set allocator %" GST_PTR_FORMAT " and pool %" GST_PTR_FORMAT, allocator,
+      pool);
+
   GST_OBJECT_LOCK (basesrc);
   oldpool = priv->pool;
   priv->pool = pool;
