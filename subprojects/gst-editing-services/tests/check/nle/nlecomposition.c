@@ -337,6 +337,89 @@ GST_START_TEST (test_dispose_on_commit)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  gboolean blocked;
+} BlockData;
+
+static GstPadProbeReturn
+data_blocked_cb (GstPad * pad, GstPadProbeInfo * info, BlockData * data)
+{
+  if (GST_IS_QUERY (info->data) && !GST_QUERY_IS_SERIALIZED (info->data))
+    return GST_PAD_PROBE_PASS;
+
+  g_mutex_lock (&data->lock);
+  data->blocked = TRUE;
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_ready_before_stack_initialization_seek)
+{
+  GstElement *pipeline, *comp, *source, *sink;
+  GstPad *srcpad;
+  gulong probe_id;
+  gboolean ret = FALSE;
+  BlockData data = { 0, };
+
+  ges_init ();
+
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+
+  pipeline = gst_pipeline_new ("test_pipeline");
+  comp =
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
+  gst_element_set_state (comp, GST_STATE_READY);
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
+  gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
+  fail_unless (gst_element_link (comp, sink));
+
+  source = videotest_nle_src ("source1", 0, 2 * GST_SECOND, 2, 2);
+  nle_composition_add (GST_BIN (comp), source);
+  commit_and_wait (comp, &ret);
+
+  /* Hold the first buffer or serialized query before it reaches the
+   * composition so that the stack initialization seek is never sent */
+  srcpad = gst_element_get_static_pad (source, "src");
+  probe_id = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER |
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM | GST_PAD_PROBE_TYPE_BLOCK,
+      (GstPadProbeCallback) data_blocked_cb, &data, NULL);
+
+  fail_if (gst_element_set_state (pipeline,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE);
+
+  g_mutex_lock (&data.lock);
+  while (!data.blocked)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  fail_if (gst_element_set_state (pipeline,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  gst_pad_remove_probe (srcpad, probe_id);
+  gst_object_unref (srcpad);
+
+  fail_if (gst_element_set_state (pipeline,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE);
+  fail_unless_equals_int (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE), GST_STATE_CHANGE_SUCCESS);
+
+  fail_if (gst_element_set_state (pipeline,
+          GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE);
+  gst_check_objects_destroyed_on_unref (pipeline, comp, NULL);
+
+  g_mutex_clear (&data.lock);
+  g_cond_clear (&data.cond);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_simple_audiomixer)
 {
   GstBus *bus;
@@ -776,6 +859,7 @@ gnonlin_suite (void)
   tcase_add_test (tc_chain, test_nest_deep);
 
   tcase_add_test (tc_chain, test_dispose_on_commit);
+  tcase_add_test (tc_chain, test_ready_before_stack_initialization_seek);
 
   if (gst_registry_check_feature_version (gst_registry_get (), "audiomixer", 1,
           0, 0)) {
