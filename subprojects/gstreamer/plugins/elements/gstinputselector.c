@@ -2144,10 +2144,9 @@ gst_input_selector_reset (GstInputSelector * sel)
 
     gst_selector_pad_reset (selpad);
 
-    if (selpad->tags) {
-      gst_tag_list_unref (selpad->tags);
-      selpad->tags = NULL;
-    }
+    GST_OBJECT_LOCK (selpad);
+    gst_clear_tag_list (&selpad->tags);
+    GST_OBJECT_UNLOCK (selpad);
   }
   GST_OBJECT_UNLOCK (sel);
 
