@@ -604,11 +604,8 @@ _is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
   return FALSE;
 }
 
-/* Must be called with surfaces_lock held, so concurrent imports of
- * the same memories create only one surface in this display. */
-/* XXX: use a surface pool to control the created surfaces */
-static VASurfaceID
-_import_dmabuf_memories_unlocked (GstVaDisplay * self,
+static GstVaBufferSurface *
+_setup_dma_buffer_surface (GstVaDisplay * self,
     const GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
     uintptr_t fds[GST_VIDEO_MAX_PLANES], gsize offset[GST_VIDEO_MAX_PLANES],
     guint usage_hint)
@@ -633,20 +630,20 @@ _import_dmabuf_memories_unlocked (GstVaDisplay * self,
       GST_VIDEO_INFO_FORMAT (info) :
       gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
-    return VA_INVALID_ID;
+    return NULL;
 
   drm_fourcc = (drm_info->drm_fourcc == DRM_FORMAT_INVALID) ?
       gst_va_drm_fourcc_from_video_format (format) : drm_info->drm_fourcc;
   if (drm_fourcc == 0)
-    return VA_INVALID_ID;
+    return NULL;
 
   rt_format = gst_va_chroma_from_video_format (format);
   if (rt_format == 0)
-    return VA_INVALID_ID;
+    return NULL;
 
   fourcc = gst_va_fourcc_from_video_format (format);
   if (fourcc == 0)
-    return VA_INVALID_ID;
+    return NULL;
 
   drm_modifier = (drm_info->drm_modifier == DRM_FORMAT_MOD_INVALID) ?
       DRM_FORMAT_MOD_LINEAR : drm_info->drm_modifier;
@@ -676,7 +673,7 @@ _import_dmabuf_memories_unlocked (GstVaDisplay * self,
 
   if (!va_create_surfaces (self, rt_format, fourcc, desc.width, desc.height,
           usage_hint, NULL, 0, &desc, &surface, 1))
-    return VA_INVALID_ID;
+    return NULL;
 
   GST_LOG_OBJECT (self, "Created surface %#x [%dx%d]", surface, desc.width,
       desc.height);
@@ -684,10 +681,7 @@ _import_dmabuf_memories_unlocked (GstVaDisplay * self,
   buf = gst_va_buffer_surface_new (self, surface);
   buf->n_mems = n_planes;
   memcpy (buf->mems, mem, sizeof (buf->mems));
-  _set_buffer_surface_unlocked (self, buf);
-  gst_va_buffer_surface_unref (buf);
-
-  return surface;
+  return buf;
 }
 
 /* Imports @mem, representing a single frame, into a VASurfaceID
@@ -699,7 +693,7 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
     guint usage_hint)
 {
   GstVaDisplayPrivate *priv;
-  GstVaBufferSurface *buf;
+  GstVaBufferSurface *buf, *buf2;;
   VASurfaceID surface;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (self), FALSE);
@@ -711,16 +705,35 @@ gst_va_display_setup_dmabuf_memories (GstVaDisplay * self,
 
   priv = GET_PRIV (self);
 
-  /* memories of a frame are always imported together */
   g_mutex_lock (&priv->surfaces_lock);
   buf = g_hash_table_lookup (priv->surfaces, mem[0]);
+  g_mutex_unlock (&priv->surfaces_lock);
+
   if (buf) {
     surface = buf->surface;
   } else {
-    surface = _import_dmabuf_memories_unlocked (self, drm_info, mem, fds,
+    buf = _setup_dma_buffer_surface (self, drm_info, mem, fds,
         offset, usage_hint);
+    if (!buf) {
+      GST_DEBUG_OBJECT (self, "Fails to created the buffer surface.");
+      return FALSE;
+    }
+
+    g_mutex_lock (&priv->surfaces_lock);
+    buf2 = g_hash_table_lookup (priv->surfaces, mem[0]);
+    if (buf2) {
+      /* Some one already did the thing it for us. */
+      surface = buf2->surface;
+      GST_DEBUG_OBJECT (self, "Already created surface %#x for DMA mem %"
+          GST_PTR_FORMAT, surface, mem[0]);
+    } else {
+      _set_buffer_surface_unlocked (self, buf);
+      surface = buf->surface;
+    }
+
+    g_mutex_unlock (&priv->surfaces_lock);
+    gst_va_buffer_surface_unref (buf);
   }
-  g_mutex_unlock (&priv->surfaces_lock);
 
   return surface != VA_INVALID_ID;
 }
@@ -805,7 +818,7 @@ gst_va_display_import_buffer (GstVaDisplay * self, GstBuffer * buffer,
     const GstVideoInfoDmaDrm * drm_info, guint usage_hint)
 {
   GstVaDisplayPrivate *priv;
-  GstVaBufferSurface *buf;
+  GstVaBufferSurface *buf, *buf2;
   GstMemory *mem;
   VASurfaceID surface = VA_INVALID_ID;
 
@@ -826,6 +839,8 @@ gst_va_display_import_buffer (GstVaDisplay * self, GstBuffer * buffer,
 
   g_mutex_lock (&priv->surfaces_lock);
   buf = g_hash_table_lookup (priv->surfaces, mem);
+  g_mutex_unlock (&priv->surfaces_lock);
+
   if (buf) {
     surface = buf->surface;
   } else {
@@ -835,11 +850,30 @@ gst_va_display_import_buffer (GstVaDisplay * self, GstBuffer * buffer,
     gsize offset[GST_VIDEO_MAX_PLANES];
 
     if (_find_dmabuf_memories (buffer, &info, mems, fds, offset)) {
-      surface = _import_dmabuf_memories_unlocked (self, &info, mems, fds,
+      buf = _setup_dma_buffer_surface (self, &info, mems, fds,
           offset, usage_hint);
+      if (!buf) {
+        GST_DEBUG_OBJECT (self, "Fails to created the buffer surface.");
+        return VA_INVALID_ID;
+      }
+
+      g_mutex_lock (&priv->surfaces_lock);
+      /* mem[0] is always the first mem of buffer, so key is the same. */
+      buf2 = g_hash_table_lookup (priv->surfaces, mems[0]);
+      if (buf2) {
+        /* Some one already did the thing it for us. */
+        surface = buf2->surface;
+        GST_DEBUG_OBJECT (self, "Already created surface %#x for DMA buffer %"
+            GST_PTR_FORMAT, surface, buffer);
+      } else {
+        _set_buffer_surface_unlocked (self, buf);
+        surface = buf->surface;
+      }
+
+      g_mutex_unlock (&priv->surfaces_lock);
+      gst_va_buffer_surface_unref (buf);
     }
   }
-  g_mutex_unlock (&priv->surfaces_lock);
 
   return surface;
 }
