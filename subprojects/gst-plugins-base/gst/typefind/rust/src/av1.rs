@@ -17,7 +17,8 @@
 //! one with three of those lengths before its first OBU, so the probe reads
 //! no more than the header arithmetic: twenty-five octets at offset 0.
 
-use crate::helpers::{Prob, TypeFind};
+use crate::helpers::Prob;
+use crate::scanner::TypeFind;
 use std::ffi::CStr;
 
 /// The largest prefix a LEB128 can occupy, in octets.

@@ -28,7 +28,8 @@
 //! program stream finder is left to claim them. That is why all three share
 //! [`valid_pack`].
 
-use crate::helpers::{Prob, Scanner, TypeFind, u16be};
+use crate::helpers::{Prob, u16be};
+use crate::scanner::{Scanner, TypeFind};
 use crate::startcode::{START_CODE_PREFIX_LEN, find_start_code, is_start_code, next_start_code};
 
 /// Start code value of a pack header, H.222.0 2.5.3.4.

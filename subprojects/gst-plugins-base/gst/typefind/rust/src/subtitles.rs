@@ -16,7 +16,8 @@
 use std::ffi::CStr;
 
 use crate::bindings::gpointer;
-use crate::helpers::{Prob, TypeFind, convert_to_utf8, locale_charset, suggest};
+use crate::helpers::{Prob, convert_to_utf8, locale_charset, suggest};
+use crate::scanner::TypeFind;
 
 /// Supported subtitle formats.
 #[derive(Clone, Copy, Debug, PartialEq)]

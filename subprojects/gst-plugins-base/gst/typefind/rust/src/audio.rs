@@ -14,10 +14,10 @@
 //! decision.
 
 use crate::helpers::{
-    Prob, Scanner, TypeFind, aac_channels, aac_level, aac_profile, aac_sample_rate, u16be, u16le,
-    u32be, u32le,
+    Prob, aac_channels, aac_level, aac_profile, aac_sample_rate, u16be, u16le, u32be, u32le,
 };
 use crate::scan::Pattern;
+use crate::scanner::{Scanner, TypeFind};
 use std::ffi::{CStr, c_uint};
 use std::num::NonZeroU64;
 

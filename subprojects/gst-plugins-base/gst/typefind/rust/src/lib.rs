@@ -17,11 +17,13 @@ mod bindings;
 mod containers;
 mod h26x;
 mod helpers;
+mod misc;
 mod mpeg;
+mod registry;
 mod scan;
+mod scanner;
 mod startcode;
 mod subtitles;
-mod typefindfunctions;
 // Vendored shared-MIME reader (see the module docs). The finder uses only
 // the content-sniffing entry point; the rest of the API is kept whole from
 // upstream xdg-mime for fidelity and is covered by this module's tests, so

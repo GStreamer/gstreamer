@@ -20,8 +20,9 @@
 //! first two octets after the start code, which is why each reads its own
 //! fields rather than sharing one mask.
 
-use crate::helpers::{Prob, Scanner, TypeFind};
+use crate::helpers::Prob;
 use crate::scan::Pattern;
+use crate::scanner::{Scanner, TypeFind};
 use crate::startcode::next_start_code;
 
 /// How far a finder looks into the stream. The parameter sets and the first

@@ -15,8 +15,8 @@
 //! start code that is a bit pattern inside a byte-aligned word, so it scans
 //! for octets rather than for this prefix.
 
-use crate::helpers::Scanner;
 use crate::scan::Pattern;
+use crate::scanner::Scanner;
 
 /// Three octets, `00 00 01`, opening every start code in the formats that
 /// frame this way.
@@ -66,8 +66,8 @@ pub fn next_start_code(scan: &mut Scanner, limit: usize) -> Option<i64> {
 #[cfg(test)]
 mod tests {
     use super::{START_CODE_PREFIX, START_CODE_PREFIX_LEN, is_start_code, next_start_code};
-    use crate::helpers::Scanner;
     use crate::helpers::probe_engine::probe;
+    use crate::scanner::Scanner;
 
     #[test]
     fn a_start_code_prefix_is_recognised() {

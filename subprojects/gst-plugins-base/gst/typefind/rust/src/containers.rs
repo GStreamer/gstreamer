@@ -12,7 +12,8 @@
 //! top-level boxes rather than by a single magic value. Each probe decides what
 //! the stream is; the typefinders only render the decision.
 
-use crate::helpers::{Prob, TypeFind, u32be};
+use crate::helpers::{Prob, u32be};
+use crate::scanner::TypeFind;
 use std::ffi::CStr;
 
 /// A four octet box type or brand, as ISOBMFF stores them.
