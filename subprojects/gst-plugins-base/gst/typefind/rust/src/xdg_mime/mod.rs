@@ -298,16 +298,22 @@ impl Default for SharedMimeInfo {
 fn data_dirs() -> Vec<PathBuf> {
     let mut dirs = Vec::new();
 
+    // SAFETY: GLib returns a static NUL-terminated string.
     let user = unsafe { bindings::g_get_user_data_dir() };
     if !user.is_null() {
+        // SAFETY: `user` is non-NULL and NUL-terminated.
         let user = unsafe { CStr::from_ptr(user) }.to_string_lossy();
         dirs.push(PathBuf::from(user.as_ref()));
     }
 
+    // SAFETY: GLib returns a NULL-terminated array of static strings.
     let mut system = unsafe { bindings::g_get_system_data_dirs() };
+    // SAFETY: `system` is non-NULL and NULL-terminated.
     while !system.is_null() && unsafe { !(*system).is_null() } {
+        // SAFETY: the current entry is non-NULL and NUL-terminated.
         let dir = unsafe { CStr::from_ptr(*system) }.to_string_lossy();
         dirs.push(PathBuf::from(dir.as_ref()));
+        // SAFETY: the loop stops at the terminating NULL entry.
         system = unsafe { system.add(1) };
     }
 

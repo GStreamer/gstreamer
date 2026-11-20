@@ -2867,6 +2867,7 @@ extern "C" fn xdgmime_type_find(tf: &mut TypeFind, _private: gpointer) {
     let Ok(mime) = CString::new(mime) else {
         return;
     };
+    // SAFETY: `tf` is live and `mime` outlives the call.
     unsafe {
         bindings::gst_type_find_suggest_simple(
             &mut tf.0,
@@ -2885,11 +2886,13 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
         let (func, data) = feature.finder.registration(feature);
 
         // NULL on a typo'd caps string.
+        // SAFETY: `s` is a static `&CStr`.
         let caps = feature.caps.map_or(ptr::null_mut(), |s| unsafe {
             gst_caps_from_string(s.as_ptr())
         });
 
         // Return value ignored: only a NULL name fails.
+        // SAFETY: `plugin` is live; the row's strings outlive the call.
         unsafe {
             gst_type_find_register(
                 plugin,
@@ -2915,6 +2918,7 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
     // encoding the bytes carry, and consumers that matched any of the three
     // have always had to re-read the BOM; no default caps, so no type is
     // claimed beyond what the data shows at runtime.
+    // SAFETY: `plugin` is live and the strings are static.
     unsafe {
         gst_type_find_register(
             plugin,
@@ -2931,6 +2935,7 @@ pub extern "C" fn gst_typefindfunctions_rs_register(plugin: &mut GstPlugin) -> g
     // Subtitles factory. One feature for the formats the probe tells apart
     // at runtime, where upstream spreads them over this plugin and subparse
     // as one feature each; the per-format caps are suggested per stream.
+    // SAFETY: `plugin` is live and the strings are static.
     unsafe {
         gst_type_find_register(
             plugin,

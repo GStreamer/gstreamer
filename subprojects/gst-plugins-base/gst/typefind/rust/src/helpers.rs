@@ -24,6 +24,8 @@ impl TypeFind {
     pub fn peek_var(&mut self, offset: i64, size: u32) -> Option<&[u8]> {
         assert!(size > 0);
 
+        // SAFETY: a successful peek grants `size` readable bytes, valid until
+        // the finder returns.
         unsafe {
             let data = bindings::gst_type_find_peek(&mut self.0, offset, size);
             if data.is_null() {
@@ -38,6 +40,8 @@ impl TypeFind {
         assert!(S <= u32::MAX as usize);
         assert!(S > 0);
 
+        // SAFETY: a successful peek grants `S` readable bytes, valid until the
+        // finder returns.
         unsafe {
             let data = bindings::gst_type_find_peek(&mut self.0, offset, S as u32);
             if data.is_null() {
@@ -54,6 +58,7 @@ impl TypeFind {
     /// its total size; a pushed one states the bytes gathered so far, a
     /// known bound on what peeks can reach but not the whole file.
     pub fn length(&mut self) -> Option<NonZeroU64> {
+        // SAFETY: `self.0` is the live `GstTypeFind`.
         let raw = unsafe { bindings::gst_type_find_get_length(&mut self.0) };
         NonZeroU64::new(raw)
     }
@@ -160,7 +165,7 @@ impl<'a> Scanner<'a> {
             self.len = len;
             self.pos = 0;
         }
-        // Sound: a window is documented to stay valid until the typefinding
+        // SAFETY: a window is documented to stay valid until the typefinding
         // function returns, and the engine only ever appends to its buffer
         // cache, so a window outlives any number of later peeks from any
         // number of scanners. `refill` yields at least `min` bytes or nothing,
@@ -239,6 +244,7 @@ impl<'a> Scanner<'a> {
         // stream reports a broken read to the engine rather than nothing,
         // and a cursor may well walk there — a frame that runs to the last
         // octet leaves the cursor exactly at the end.
+        // SAFETY: `self.tf` is the live `GstTypeFind`.
         let left = NonZeroU64::new(unsafe { bindings::gst_type_find_get_length(self.tf) })
             .map_or(u64::MAX, NonZeroU64::get)
             .checked_sub(offset.max(0) as u64)?;
@@ -249,6 +255,8 @@ impl<'a> Scanner<'a> {
         // read would reach past its end. Ask for the remainder instead, an
         // exact request the engine can serve whole.
         let chunk = WINDOW.max(min).min(left as usize) as u32;
+        // SAFETY: a successful peek grants `chunk` readable bytes, valid until
+        // the finder returns.
         let base = unsafe { bindings::gst_type_find_peek(self.tf, offset, chunk) };
         (!base.is_null()).then_some((base, chunk as usize))
     }
@@ -424,6 +432,7 @@ macro_rules! map_value {
 /// ```
 macro_rules! suggest {
     ($tf:expr, $prob:expr, $name:expr $(,)?) => {{
+        // SAFETY: `$tf` is live and `$name` outlives the call.
         unsafe {
             $crate::bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
@@ -438,6 +447,7 @@ macro_rules! suggest {
     }};
     ($tf:expr, $prob:expr, $name:expr, [ $( ($key:expr, $type:ident : $val:expr) , )*] $(,)?) => {
         let _p = $crate::helpers::TypeFindProbability::from($prob).into();
+        // SAFETY: `$tf` is live; `$name` and the keys outlive the call.
         unsafe {
             $crate::bindings::gst_type_find_suggest_simple(
                 &mut $tf.0,
@@ -597,6 +607,7 @@ macro_rules! start_with {
 /// Strips any UTF-8 BOM that the converter passes through. Returns None on converter error.
 pub(crate) fn convert_to_utf8(data: &[u8], from_codeset: &str) -> Option<Vec<u8>> {
     let from = CString::new(from_codeset).ok()?;
+    // SAFETY: `data` and `from` are valid for the call; GLib owns the result.
     let bytes = unsafe {
         let mut error: *mut bindings::GError = ptr::null_mut();
 
@@ -633,6 +644,7 @@ pub(crate) fn convert_to_utf8(data: &[u8], from_codeset: &str) -> Option<Vec<u8>
 
 /// The charset of the current locale and whether it is UTF-8.
 pub(crate) fn locale_charset() -> Option<(String, bool)> {
+    // SAFETY: `g_get_charset` returns a static NUL-terminated string or NULL.
     unsafe {
         let mut charset: *const c_char = ptr::null();
         let is_utf8 = bindings::g_get_charset(&mut charset);
@@ -657,11 +669,13 @@ pub(crate) fn locale_charset() -> Option<(String, bool)> {
 /// unbounded because both callers hand back a string literal or an entry of a
 /// function-local static table, never a pointer into the config passed in.
 fn named(ptr: *const c_char) -> Option<&'static CStr> {
+    // SAFETY: pbutils returns a static string, never a pointer into `asc`.
     (!ptr.is_null()).then(|| unsafe { CStr::from_ptr(ptr) })
 }
 
 /// Profile, as pbutils names it.
 pub(crate) fn aac_profile(asc: &[u8]) -> Option<&'static CStr> {
+    // SAFETY: `asc` is valid for `asc.len()` bytes.
     named(unsafe { bindings::gst_codec_utils_aac_get_profile(asc.as_ptr(), asc.len() as c_uint) })
 }
 
@@ -673,17 +687,20 @@ pub(crate) fn aac_profile(asc: &[u8]) -> Option<&'static CStr> {
 /// the LFE element for channel configuration 6. Upstream report pending;
 /// parity with every other AAC caps producer comes first.
 pub(crate) fn aac_level(asc: &[u8]) -> Option<&'static CStr> {
+    // SAFETY: `asc` is valid for `asc.len()` bytes.
     named(unsafe { bindings::gst_codec_utils_aac_get_level(asc.as_ptr(), asc.len() as c_uint) })
 }
 
 /// Speaker count, or 0 when the layout is left to a program_config_element.
 /// Configuration 7 is eight speakers.
 pub(crate) fn aac_channels(asc: &[u8]) -> u32 {
+    // SAFETY: `asc` is valid for `asc.len()` bytes.
     unsafe { bindings::gst_codec_utils_aac_get_channels(asc.as_ptr(), asc.len() as c_uint) }
 }
 
 /// Sampling frequency in Hz, or 0 when the config does not carry one.
 pub(crate) fn aac_sample_rate(asc: &[u8]) -> u32 {
+    // SAFETY: `asc` is valid for `asc.len()` bytes.
     unsafe { bindings::gst_codec_utils_aac_get_sample_rate(asc.as_ptr(), asc.len() as c_uint) }
 }
 
@@ -727,6 +744,7 @@ pub(crate) mod probe_engine {
     /// from the end: the real element's peek contract, pinned in the
     /// fuzz harness.
     unsafe extern "C" fn peek(data: bindings::gpointer, offset: i64, size: c_uint) -> *const u8 {
+        // SAFETY: `data` is the context's `Probe`.
         let probe = unsafe { &*(data as *const Probe) };
         let Ok(size) = usize::try_from(size) else {
             return ptr::null();
@@ -752,6 +770,7 @@ pub(crate) mod probe_engine {
             return ptr::null();
         };
         match at.checked_add(size) {
+            // SAFETY: `at` is in bounds and `end` bounds the read.
             Some(end) if end <= probe.stream.len() => unsafe { probe.stream.as_ptr().add(at) },
             _ => ptr::null(),
         }
@@ -762,6 +781,7 @@ pub(crate) mod probe_engine {
     /// unknown one answers zero (gst/gsttypefindhelper.c); neither is a
     /// complete file, so no probe-level test here models them.
     unsafe extern "C" fn get_length(data: bindings::gpointer) -> u64 {
+        // SAFETY: `data` is the context's `Probe`.
         let probe = unsafe { &*(data as *const Probe) };
         probe.stream.len() as u64
     }
@@ -776,14 +796,18 @@ pub(crate) mod probe_engine {
         probability: c_uint,
         caps: *mut bindings::GstCaps,
     ) {
+        // SAFETY: `data` is the context's `Probe`; only the suggestion list is borrowed.
         let suggestions = unsafe { &mut (*(data as *mut Probe)).suggestions };
+        // SAFETY: `caps` is valid for this callback.
         let raw = unsafe { bindings::gst_caps_to_string(caps) };
         let caps_str = if raw.is_null() {
             String::new()
         } else {
+            // SAFETY: `raw` is NUL-terminated.
             let s = unsafe { std::ffi::CStr::from_ptr(raw) }
                 .to_string_lossy()
                 .into_owned();
+            // SAFETY: `raw` came from GLib and is not used again.
             unsafe { bindings::g_free(raw.cast()) };
             s
         };
@@ -821,6 +845,7 @@ pub(crate) mod probe_engine {
     fn init_gstreamer() {
         use std::sync::Once;
         static INIT: Once = Once::new();
+        // SAFETY: `gst_init` may be called once per process.
         INIT.call_once(|| unsafe {
             bindings::gst_init(ptr::null_mut(), ptr::null_mut());
         });
