@@ -70,7 +70,8 @@ impl TypeFind {
         let len = self
             .length()
             .map_or(max as u64, NonZeroU64::get)
-            .min(max as u64);
+            .min(max as u64)
+            .min(u32::MAX as u64);
         if len == 0 {
             return None;
         }
@@ -221,7 +222,10 @@ impl<'a> Scanner<'a> {
     /// prefix first.
     pub fn before(&self, n: usize) -> Self {
         let mut earlier = *self;
-        earlier.offset = self.offset() - n as i64;
+        earlier.offset = self
+            .offset()
+            .checked_sub(n as i64)
+            .expect("callers step back only over bytes already read");
         // Drop the cached window rather than index into it at the wrong place.
         earlier.base = ptr::null();
         earlier.len = 0;
