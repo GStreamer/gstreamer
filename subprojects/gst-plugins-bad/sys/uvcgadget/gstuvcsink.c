@@ -1018,7 +1018,7 @@ gst_uvc_sink_watch (GstUvcSink * self)
 
   g_object_get (G_OBJECT (self->v4l2sink), "device-fd", &device_fd, NULL);
 
-  fd = dup3 (device_fd, device_fd + 1, O_CLOEXEC);
+  fd = fcntl (device_fd, F_DUPFD_CLOEXEC, 0);
   if (fd < 0)
     return FALSE;
 
