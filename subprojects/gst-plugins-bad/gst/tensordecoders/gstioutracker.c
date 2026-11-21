@@ -393,7 +393,7 @@ gst_iou_tracker_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       } else {
         //  Since object is not seen in this frame, we need to calulate predicted position
         //  based on previous position change
-        guint count = tdata->bbqueue.length;
+        gint count = tdata->bbqueue.length;
         BBox *new_box = g_new0 (BBox, 1);
 
         BBox *cur_box = g_queue_peek_head (&tdata->bbqueue);

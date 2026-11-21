@@ -444,6 +444,85 @@ GST_START_TEST (test_catch_up)
 
 GST_END_TEST;
 
+/* Same as test_catch_up, but with the object moving up and to the left so
+ * that the predicted position change is negative */
+GST_START_TEST (test_catch_up_negative)
+{
+  GstHarness *h = setup_ioutracker ();
+  GstBuffer *b;
+  GstAnalyticsODMtd od_mtd;
+  GstAnalyticsTrackingMtd t_mtd;
+  guint64 tracking_id;
+  guint64 tracking_id1;
+  GstClockTime tracking_first_seen, tracking_last_seen;
+  gboolean tracking_lost;
+  GstClockTime ts;
+
+  g_object_set (h->element, "iou-score-threshold", 0.2,
+      "min-frame-count-for-lost-track", 10, NULL);
+
+  b = gst_harness_push_and_pull (h, create_buffer (0, 16, 16, 10, 10, &od_mtd));
+  fail_unless (b);
+
+  fail_unless (gst_analytics_relation_meta_get_direct_related (od_mtd.meta,
+          od_mtd.id, GST_ANALYTICS_REL_TYPE_RELATE_TO,
+          gst_analytics_tracking_mtd_get_mtd_type (), NULL, &t_mtd));
+  fail_unless (gst_analytics_tracking_mtd_get_info (&t_mtd,
+          &tracking_id1, &tracking_first_seen, &tracking_last_seen,
+          &tracking_lost));
+  gst_buffer_unref (b);
+
+  /* Second buffer, moved up and to the left, still intersecting */
+  b = gst_harness_push_and_pull (h, create_buffer (10, 13, 13, 10, 10,
+          &od_mtd));
+  fail_unless (b);
+
+  fail_unless_equals_int (gst_analytics_relation_get_length (od_mtd.meta), 2);
+  fail_unless (gst_analytics_relation_meta_get_direct_related (od_mtd.meta,
+          od_mtd.id, GST_ANALYTICS_REL_TYPE_RELATE_TO,
+          gst_analytics_tracking_mtd_get_mtd_type (), NULL, &t_mtd));
+  fail_unless (gst_analytics_tracking_mtd_get_info (&t_mtd,
+          &tracking_id, &tracking_first_seen, &tracking_last_seen,
+          &tracking_lost));
+  fail_unless_equals_int64 (tracking_id, tracking_id1);
+  gst_buffer_unref (b);
+
+  /* A few buffers with no meta, the position gets predicted */
+  for (ts = 20; ts < 50; ts += 10) {
+    b = gst_buffer_new ();
+    GST_BUFFER_PTS (b) = GST_BUFFER_DTS (b) = ts;
+    b = gst_harness_push_and_pull (h, b);
+    fail_unless (b);
+    gst_buffer_unref (b);
+  }
+
+  /* No intersection with the last seen position, but with the
+   * predicted one */
+  b = gst_harness_push_and_pull (h, create_buffer (50, 8, 8, 10, 10, &od_mtd));
+  fail_unless (b);
+
+  /* Now 1 object and 1 track */
+  fail_unless_equals_int (gst_analytics_relation_get_length (od_mtd.meta), 2);
+
+  fail_unless (gst_analytics_relation_meta_get_direct_related (od_mtd.meta,
+          od_mtd.id, GST_ANALYTICS_REL_TYPE_RELATE_TO,
+          gst_analytics_tracking_mtd_get_mtd_type (), NULL, &t_mtd));
+
+  fail_unless (gst_analytics_tracking_mtd_get_info (&t_mtd,
+          &tracking_id, &tracking_first_seen, &tracking_last_seen,
+          &tracking_lost));
+  fail_unless_equals_int64 (tracking_first_seen, 0);
+  fail_unless_equals_int64 (tracking_last_seen, 50);
+  fail_unless_equals_int64 (tracking_id, tracking_id1);
+  fail_unless (tracking_lost == FALSE);
+
+  gst_buffer_unref (b);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 ioutracker_suite (void)
@@ -459,6 +538,7 @@ ioutracker_suite (void)
   tcase_add_test (tc_chain, test_intersection);
   tcase_add_test (tc_chain, test_lost);
   tcase_add_test (tc_chain, test_catch_up);
+  tcase_add_test (tc_chain, test_catch_up_negative);
 
   return s;
 }
