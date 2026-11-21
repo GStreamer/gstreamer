@@ -244,6 +244,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   GstCaps *caps;
   gboolean update_allocator = FALSE;
   guint size, usage_hint;
+  guint min_buffers = 1 + self->extra_min_buffers + 2;
 
   gst_clear_caps (&self->priv->sinkpad_caps);
 
@@ -279,7 +280,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
       return FALSE;
   }
 
-  pool = gst_va_pool_new_with_config (caps, 1 + self->extra_min_buffers, 0,
+  pool = gst_va_pool_new_with_config (caps, min_buffers, 0,
       usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
@@ -294,8 +295,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   if (!gst_va_pool_get_buffer_size (pool, &size))
     goto config_failed;
 
-  gst_query_add_allocation_pool (query, pool, size, 1 + self->extra_min_buffers,
-      0);
+  gst_query_add_allocation_pool (query, pool, size, min_buffers, 0);
 
   GST_DEBUG_OBJECT (self,
       "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
