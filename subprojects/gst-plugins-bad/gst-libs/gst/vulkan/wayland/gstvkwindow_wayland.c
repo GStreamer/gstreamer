@@ -59,6 +59,8 @@ static VkSurfaceKHR gst_vulkan_window_wayland_get_surface (GstVulkanWindow
 static gboolean
 gst_vulkan_window_wayland_get_presentation_support (GstVulkanWindow *
     window, GstVulkanDevice * device, guint32 queue_family_idx);
+static void apply_window_resize (GstVulkanWindowWayland * window_wl,
+    gint width, gint height);
 
 static void
 handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
@@ -74,17 +76,12 @@ static void
 handle_xdg_toplevel_configure (void *data, struct xdg_toplevel *xdg_toplevel,
     int32_t width, int32_t height, struct wl_array *states)
 {
-#if 0
   GstVulkanWindowWayland *window_wl = data;
-  const uint32_t *state;
-#endif
-  GST_DEBUG ("configure event on XDG toplevel %p, %ix%i", xdg_toplevel,
-      width, height);
-#if 0
-  // TODO: deal with resizes
-  if (width > 0 && height > 0)
-    window_resize (window_egl, width, height);
-#endif
+
+  GST_DEBUG_OBJECT (window_wl, "configure event on XDG toplevel %p, %ix%i",
+      xdg_toplevel, width, height);
+
+  apply_window_resize (window_wl, width, height);
 }
 
 static const struct xdg_toplevel_listener xdg_toplevel_listener = {
@@ -149,10 +146,6 @@ handle_ping (void *data, struct wl_shell_surface *shell_surface,
   wl_shell_surface_pong (shell_surface, serial);
 }
 
-/*
-static void window_resize (GstVulkanWindowWayland * window_wl, guint width,
-    guint height);*/
-
 static void
 handle_configure (void *data, struct wl_shell_surface *shell_surface,
     uint32_t edges, int32_t width, int32_t height)
@@ -162,7 +155,7 @@ handle_configure (void *data, struct wl_shell_surface *shell_surface,
   GST_DEBUG_OBJECT (window_wl, "configure event on surface %p, %ix%i",
       shell_surface, width, height);
 
-  /*window_resize (window_wl, width, height); */
+  apply_window_resize (window_wl, width, height);
 }
 
 static void
@@ -232,26 +225,66 @@ create_surfaces (GstVulkanWindowWayland * window_wl)
     create_wl_shell_surface (window_wl);
   }
 
-  if (window_wl->window_width > 0)
-    width = window_wl->window_width;
-  else
-    width = 320;
+  /* Reread the size as the event thread may have applied a configure while
+   * the surfaces were being created */
+  g_mutex_lock (&window_wl->lock);
+  width = window_wl->window_width;
+  height = window_wl->window_height;
+  g_mutex_unlock (&window_wl->lock);
+
+  gst_vulkan_window_resize (GST_VULKAN_WINDOW (window_wl), width, height);
+}
+
+static void
+apply_window_resize (GstVulkanWindowWayland * window_wl, gint width,
+    gint height)
+{
+  GstVulkanWindow *window = GST_VULKAN_WINDOW (window_wl);
+
+  /* A non-positive size means the client is free to choose, or that the
+   * surface is not mapped yet */
+  if (width <= 0 || height <= 0)
+    return;
+
+  g_mutex_lock (&window_wl->lock);
+
+  /* Configure events are also sent when only states such as the focus or
+   * the maximized state change. Recreating the swapchain for those is
+   * wasteful. */
+  if (window_wl->window_width == width && window_wl->window_height == height) {
+    g_mutex_unlock (&window_wl->lock);
+    return;
+  }
+
   window_wl->window_width = width;
-
-  if (window_wl->window_height > 0)
-    height = window_wl->window_height;
-  else
-    height = 240;
   window_wl->window_height = height;
+  g_mutex_unlock (&window_wl->lock);
 
-  gst_vulkan_window_resize (GST_VULKAN_WINDOW (window_wl),
-      window_wl->window_width, window_wl->window_height);
+  GST_DEBUG_OBJECT (window_wl, "resizing window to %ix%i", width, height);
+
+  /* Not holding the lock: the resize signal handler in the swapper
+   * recreates the swapchain synchronously. */
+  gst_vulkan_window_resize (window, width, height);
+}
+
+static void
+gst_vulkan_window_wayland_finalize (GObject * object)
+{
+  GstVulkanWindowWayland *window_wl = GST_VULKAN_WINDOW_WAYLAND (object);
+
+  g_mutex_clear (&window_wl->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gst_vulkan_window_wayland_class_init (GstVulkanWindowWaylandClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstVulkanWindowClass *window_class = (GstVulkanWindowClass *) klass;
+
+  gobject_class->finalize =
+      GST_DEBUG_FUNCPTR (gst_vulkan_window_wayland_finalize);
 
   window_class->close = GST_DEBUG_FUNCPTR (gst_vulkan_window_wayland_close);
   window_class->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_wayland_open);
@@ -264,6 +297,10 @@ gst_vulkan_window_wayland_class_init (GstVulkanWindowWaylandClass * klass)
 static void
 gst_vulkan_window_wayland_init (GstVulkanWindowWayland * window)
 {
+  window->window_width = 320;
+  window->window_height = 240;
+
+  g_mutex_init (&window->lock);
 }
 
 GstVulkanWindowWayland *

@@ -58,6 +58,7 @@ struct _GstVulkanWindowWayland {
   struct xdg_toplevel       *xdg_toplevel;
 
   int window_width, window_height;
+  GMutex lock;
 
   GSource *wl_source;
 
