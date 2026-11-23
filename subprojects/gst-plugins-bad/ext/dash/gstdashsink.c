@@ -959,13 +959,14 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
   GOutputStream *file_stream = NULL;
   gsize bytes_to_write;
 
+  /* This runs on the streaming thread of every stream. Keep the lock until
+   * the file is closed, so that two threads never replace the MPD at once. */
   GST_DASHSINK_MPD_LOCK (sink);
   gst_dash_sink_generate_mpd_content (sink, current_stream);
   if (!gst_mpd_client_get_xml_content (sink->mpd_client, &mpd_content, &size)) {
-    g_mutex_unlock (&sink->mpd_lock);
+    GST_DASHSINK_MPD_UNLOCK (sink);
     return;
   }
-  GST_DASHSINK_MPD_UNLOCK (sink);
 
   if (sink->mpd_root_path)
     mpd_filepath =
@@ -979,13 +980,21 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
   g_signal_emit (sink, signals[SIGNAL_GET_PLAYLIST_STREAM], 0, mpd_filepath,
       &file_stream);
   if (!file_stream) {
+    GST_DASHSINK_MPD_UNLOCK (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         (("Got no output stream for fragment '%s'."), mpd_filepath), (NULL));
+    g_free (mpd_content);
+    g_free (mpd_filepath);
+    return;
   }
 
   bytes_to_write = strlen (mpd_content);
-  if (!g_output_stream_write_all (file_stream, mpd_content, bytes_to_write,
-          NULL, NULL, &error)) {
+  g_output_stream_write_all (file_stream, mpd_content, bytes_to_write,
+      NULL, NULL, &error);
+  g_object_unref (file_stream);
+  GST_DASHSINK_MPD_UNLOCK (sink);
+
+  if (error) {
     GST_ERROR ("Failed to write mpd content: %s", error->message);
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         (("Failed to write playlist '%s'."), error->message), (NULL));
@@ -997,7 +1006,6 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
 
   g_free (mpd_content);
   g_free (mpd_filepath);
-  g_object_unref (file_stream);
 }
 
 static void
