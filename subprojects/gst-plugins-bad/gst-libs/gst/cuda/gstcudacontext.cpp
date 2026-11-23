@@ -415,7 +415,7 @@ gst_create_cucontext (guint * device_id, CUcontext * context)
     return FALSE;
   }
 
-  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, 0, cuda_dev))) {
+  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, CU_CTX_SCHED_BLOCKING_SYNC, cuda_dev))) {
     GST_WARNING ("Failed to create CUDA context for cuda device %d", cuda_dev);
     return FALSE;
   }

@@ -54,6 +54,14 @@ typedef enum
 
 typedef enum
 {
+  CU_CTX_SCHED_AUTO = 0x00,
+  CU_CTX_SCHED_SPIN = 0x01,
+  CU_CTX_SCHED_YIELD = 0x02,
+  CU_CTX_SCHED_BLOCKING_SYNC = 0x04,
+} CUctx_flags;
+
+typedef enum
+{
   CU_MEMORYTYPE_HOST = 1,
   CU_MEMORYTYPE_DEVICE = 2,
   CU_MEMORYTYPE_ARRAY = 3,
