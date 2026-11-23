@@ -723,11 +723,27 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
 
   /* select the initial variant stream */
   if (start_bitrate > 0) {
+    start_bitrate = gst_adaptive_demux_clamp_bitrate (demux, start_bitrate);
     variant =
         gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
         FALSE, start_bitrate, demux->min_bitrate, hlsdemux->failed_variants);
   } else {
+    guint clamped_bitrate;
+
     variant = hlsdemux->master->default_variant;
+
+    /* Only keep the default variant if it is within min/max-bitrate */
+    clamped_bitrate =
+        gst_adaptive_demux_clamp_bitrate (demux, variant->bandwidth);
+    if (clamped_bitrate != (guint) variant->bandwidth) {
+      GST_INFO_OBJECT (hlsdemux, "Default variant bitrate %d is outside "
+          "min/max-bitrate, selecting variant for %u", variant->bandwidth,
+          clamped_bitrate);
+      variant =
+          gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
+          FALSE, clamped_bitrate, demux->min_bitrate,
+          hlsdemux->failed_variants);
+    }
   }
 
   if (variant == NULL) {

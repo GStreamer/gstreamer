@@ -483,6 +483,7 @@ void gst_adaptive_demux2_manual_manifest_update (GstAdaptiveDemux * demux);
 GstAdaptiveDemuxLoop *gst_adaptive_demux_get_loop (GstAdaptiveDemux *demux);
 gint gst_adaptive_demux_max_retries (GstAdaptiveDemux *self);
 GstClockTime gst_adaptive_demux_retry_delay (GstAdaptiveDemux * self, gint retry, GstClockTime default_delay);
+guint gst_adaptive_demux_clamp_bitrate (GstAdaptiveDemux * self, guint bitrate);
 
 G_END_DECLS
 

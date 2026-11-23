@@ -2714,7 +2714,7 @@ gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux2Stream *
 {
   guint64 average_bitrate;
   guint64 fragment_bitrate;
-  guint connection_speed, min_bitrate, max_bitrate, target_download_rate;
+  guint connection_speed, target_download_rate;
 
   fragment_bitrate = stream->last_bitrate;
   GST_DEBUG_OBJECT (stream, "Download bitrate is : %" G_GUINT64_FORMAT " bps",
@@ -2750,14 +2750,12 @@ gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux2Stream *
   }
 
   connection_speed = demux->connection_speed;
-  min_bitrate = demux->min_bitrate;
-  max_bitrate = demux->max_bitrate;
   GST_OBJECT_UNLOCK (demux);
 
   if (connection_speed) {
     GST_LOG_OBJECT (stream, "connection-speed is set to %u kbps, using it",
         connection_speed / 1000);
-    return connection_speed;
+    return gst_adaptive_demux_clamp_bitrate (demux, connection_speed);
   }
 
   /* No explicit connection_speed, so choose the new variant to use as a
@@ -2781,17 +2779,8 @@ gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux2Stream *
   }
 #endif
 
-  if (min_bitrate > 0 && target_download_rate < min_bitrate) {
-    target_download_rate = min_bitrate;
-    GST_LOG_OBJECT (stream, "Bitrate adjusted due to min-bitrate : %u bits/s",
-        min_bitrate);
-  }
-
-  if (max_bitrate > 0 && target_download_rate > max_bitrate) {
-    target_download_rate = max_bitrate;
-    GST_LOG_OBJECT (stream, "Bitrate adjusted due to max-bitrate : %u bits/s",
-        max_bitrate);
-  }
+  target_download_rate =
+      gst_adaptive_demux_clamp_bitrate (demux, target_download_rate);
 
   GST_DEBUG_OBJECT (stream, "Returning target download rate of %u bps",
       target_download_rate);

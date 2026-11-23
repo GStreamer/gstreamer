@@ -773,6 +773,11 @@ gst_dash_demux_setup_mpdparser_streams (GstDashDemux2 * demux,
     g_object_get (demux, "connection-bitrate", &start_bitrate, NULL);
   }
 
+  if (start_bitrate > 0)
+    start_bitrate =
+        gst_adaptive_demux_clamp_bitrate (GST_ADAPTIVE_DEMUX_CAST (demux),
+        start_bitrate);
+
   adapt_sets = gst_mpd_client2_get_adaptation_sets (client);
   for (iter = adapt_sets; iter; iter = g_list_next (iter)) {
     GstMPDAdaptationSetNode *adapt_set_node = iter->data;

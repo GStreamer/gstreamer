@@ -4201,3 +4201,26 @@ gst_adaptive_demux_retry_delay (GstAdaptiveDemux * self, gint retry,
 
   return delay;
 }
+
+guint
+gst_adaptive_demux_clamp_bitrate (GstAdaptiveDemux * self, guint bitrate)
+{
+  GST_OBJECT_LOCK (self);
+  guint min_bitrate = self->min_bitrate;
+  guint max_bitrate = self->max_bitrate;
+  GST_OBJECT_UNLOCK (self);
+
+  if (min_bitrate > 0 && bitrate < min_bitrate) {
+    GST_LOG_OBJECT (self, "Bitrate %u adjusted due to min-bitrate : %u bps",
+        bitrate, min_bitrate);
+    bitrate = min_bitrate;
+  }
+
+  if (max_bitrate > 0 && bitrate > max_bitrate) {
+    GST_LOG_OBJECT (self, "Bitrate %u adjusted due to max-bitrate : %u bps",
+        bitrate, max_bitrate);
+    bitrate = max_bitrate;
+  }
+
+  return bitrate;
+}
