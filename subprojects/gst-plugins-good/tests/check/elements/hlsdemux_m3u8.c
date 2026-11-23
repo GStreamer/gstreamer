@@ -808,6 +808,50 @@ GST_START_TEST (test_get_stream_for_bitrate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_get_stream_for_bitrate_with_min)
+{
+  GstHLSMasterPlaylist *master;
+  GstHLSVariantStream *stream;
+  GList *failed = NULL;
+  GList *l;
+
+  master = load_master_playlist (VARIANT_PLAYLIST);
+
+  /* Variant below bitrate is under min-bitrate: lowest one above min */
+  stream =
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 70000,
+      100000, NULL);
+  assert_equals_int (stream->bandwidth, 128000);
+
+  /* No variant reaches min-bitrate: highest one */
+  stream =
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 1000000,
+      1000000, NULL);
+  assert_equals_int (stream->bandwidth, 768000);
+
+  /* Same, ignoring failed variants */
+  failed = g_list_append (failed, g_list_last (master->variants)->data);
+  stream =
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 1000000,
+      1000000, failed);
+  assert_equals_int (stream->bandwidth, 256000);
+
+  /* All variants failed: nothing to return */
+  g_list_free (failed);
+  failed = NULL;
+  for (l = master->variants; l; l = l->next)
+    failed = g_list_append (failed, l->data);
+  stream =
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 1000000,
+      1000000, failed);
+  fail_unless (stream == NULL);
+
+  g_list_free (failed);
+  gst_hls_master_playlist_unref (master);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_url_with_slash_query_param)
 {
   static const gchar *MASTER_PLAYLIST = "#EXTM3U \n"
@@ -998,6 +1042,7 @@ hlsdemux_suite (void)
   tcase_add_test (tc_m3u8, test_get_duration);
   tcase_add_test (tc_m3u8, test_get_target_duration);
   tcase_add_test (tc_m3u8, test_get_stream_for_bitrate);
+  tcase_add_test (tc_m3u8, test_get_stream_for_bitrate_with_min);
   tcase_add_test (tc_m3u8, test_url_with_slash_query_param);
   tcase_add_test (tc_m3u8, test_stream_inf_tag);
   tcase_add_test (tc_m3u8, test_map_tag);

@@ -3363,6 +3363,7 @@ hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
 {
   GstHLSVariantStream *variant = NULL;
   GstHLSVariantStream *variant_by_min = NULL;
+  GstHLSVariantStream *highest_variant = NULL;
   GList *l;
 
   /* variant lists are sorted low to high, so iterate from highest to lowest */
@@ -3379,6 +3380,8 @@ hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
     }
 
     variant = l->data;
+    if (highest_variant == NULL)
+      highest_variant = variant;
     if (variant->bandwidth >= min_bitrate)
       variant_by_min = variant;
     if (variant->bandwidth <= bitrate)
@@ -3393,7 +3396,11 @@ hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
 
   /* Otherwise, return the last (lowest bitrate) variant we saw that
    * was higher than the min_bitrate */
-  return variant_by_min;
+  if (variant_by_min)
+    return variant_by_min;
+
+  /* No variant reaches min_bitrate, use the highest one available */
+  return highest_variant;
 }
 
 static gboolean
