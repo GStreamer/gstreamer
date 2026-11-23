@@ -1344,6 +1344,30 @@ needs_color_convert (const GstVideoInfo * in_info,
 }
 
 static gboolean
+gst_cuda_base_convert_ensure_converter (GstCudaBaseConvert * self)
+{
+  GstCudaBaseTransform *btrans = GST_CUDA_BASE_TRANSFORM (self);
+
+  if (self->converter)
+    return TRUE;
+
+  self->converter = gst_cuda_converter_new (&btrans->in_info,
+      &btrans->out_info, btrans->context, NULL);
+  if (!self->converter) {
+    GST_ERROR_OBJECT (self, "Couldn't create converter");
+    return FALSE;
+  }
+
+  g_object_set (self->converter, "dest-x", self->borders_w / 2,
+      "dest-y", self->borders_h / 2,
+      "dest-width", btrans->out_info.width - self->borders_w,
+      "dest-height", btrans->out_info.height - self->borders_h,
+      "fill-border", TRUE, "video-direction", self->active_method, NULL);
+
+  return TRUE;
+}
+
+static gboolean
 gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
@@ -1437,18 +1461,20 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     self->same_caps = TRUE;
   }
 
-  self->converter = gst_cuda_converter_new (in_info,
-      out_info, btrans->context, NULL);
-  if (!self->converter) {
-    GST_ERROR_OBJECT (self, "Couldn't create converter");
-    return FALSE;
-  }
+  if (!self->same_caps) {
+    self->converter =
+        gst_cuda_converter_new (in_info, out_info, btrans->context, NULL);
+    if (!self->converter) {
+      GST_ERROR_OBJECT (self, "Couldn't create converter");
+      return FALSE;
+    }
 
-  g_object_set (self->converter, "dest-x", self->borders_w / 2,
-      "dest-y", self->borders_h / 2,
-      "dest-width", out_info->width - self->borders_w,
-      "dest-height", out_info->height - self->borders_h,
-      "fill-border", TRUE, "video-direction", active_method, NULL);
+    g_object_set (self->converter, "dest-x", self->borders_w / 2,
+        "dest-y", self->borders_h / 2,
+        "dest-width", out_info->width - self->borders_w,
+        "dest-height", out_info->height - self->borders_h,
+        "fill-border", TRUE, "video-direction", active_method, NULL);
+  }
 
   GST_DEBUG_OBJECT (self, "%s from=%dx%d (par=%d/%d dar=%d/%d), size %"
       G_GSIZE_FORMAT " -> %s to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
@@ -1504,6 +1530,9 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   } else {
     in_rect = self->in_rect;
   }
+
+  if (!gst_cuda_base_convert_ensure_converter (self))
+    return GST_FLOW_ERROR;
 
   g_object_set (self->converter, "src-x", in_rect.x, "src-y", in_rect.y,
       "src-width", in_rect.w, "src-height", in_rect.h, NULL);
