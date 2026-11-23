@@ -1246,6 +1246,9 @@ bio_method_write (BIO * bio, const char *data, int size)
   gboolean ret = TRUE;
 
   GST_LOG_OBJECT (self, "BIO: writing %d", size);
+
+  BIO_clear_retry_flags (bio);
+
   self->priv->syscall_flow_return = GST_FLOW_OK;
 
   if (self->priv->send_callback)
