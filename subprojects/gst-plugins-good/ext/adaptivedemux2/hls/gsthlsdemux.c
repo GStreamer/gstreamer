@@ -734,6 +734,9 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
     GST_ELEMENT_ERROR (demux, STREAM, FAILED,
         (_("Internal data stream error.")),
         ("Could not find an initial variant to play"));
+    if (simple_media_playlist)
+      gst_hls_media_playlist_unref (simple_media_playlist);
+    return FALSE;
   }
 
   GST_INFO_OBJECT (hlsdemux,
