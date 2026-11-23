@@ -393,28 +393,31 @@ GST_START_TEST (test_dashsink_mpd_open_failure)
 
 GST_END_TEST;
 
-static gint mpd_writers;
-static gint mpd_writes_overlapped;
-static gint mpd_first_write;
+typedef struct
+{
+  gint writers;
+  gint overlapped;
+  gint first_write;
+} MpdWriteCheck;
 
 static GOutputStream *
 playlist_stream_cb (GstElement * sink, const gchar * location,
-    gpointer user_data)
+    MpdWriteCheck * check)
 {
   gint64 deadline;
 
-  if (g_atomic_int_add (&mpd_writers, 1) > 0)
-    g_atomic_int_set (&mpd_writes_overlapped, 1);
+  if (g_atomic_int_add (&check->writers, 1) > 0)
+    g_atomic_int_set (&check->overlapped, 1);
 
   /* Hold the first write to give the other stream's writer time to come in */
-  if (g_atomic_int_compare_and_exchange (&mpd_first_write, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&check->first_write, 1, 0)) {
     deadline = g_get_monotonic_time () + 500 * G_TIME_SPAN_MILLISECOND;
-    while (!g_atomic_int_get (&mpd_writes_overlapped)
+    while (!g_atomic_int_get (&check->overlapped)
         && g_get_monotonic_time () < deadline)
       g_usleep (10 * G_TIME_SPAN_MILLISECOND);
   }
 
-  g_atomic_int_add (&mpd_writers, -1);
+  g_atomic_int_add (&check->writers, -1);
 
   /* Let the default handler open the file */
   return NULL;
@@ -425,10 +428,7 @@ GST_START_TEST (test_dashsink_mpd_writes_serialized)
   GstMessage *msg;
   GstElement *pipeline;
   GstElement *sink;
-
-  mpd_writers = 0;
-  mpd_writes_overlapped = 0;
-  mpd_first_write = 1;
+  MpdWriteCheck check = {.first_write = 1 };
 
   /* Two streams close their fragments at the same running times */
   pipeline =
@@ -444,7 +444,7 @@ GST_START_TEST (test_dashsink_mpd_writes_serialized)
   g_object_set (G_OBJECT (sink), "mpd-root-path", tmpdir,
       "target-duration", 1, NULL);
   g_signal_connect (sink, "get-playlist-stream",
-      G_CALLBACK (playlist_stream_cb), NULL);
+      G_CALLBACK (playlist_stream_cb), &check);
   g_object_unref (sink);
 
   msg = run_pipeline (pipeline, 0, NULL);
@@ -453,7 +453,7 @@ GST_START_TEST (test_dashsink_mpd_writes_serialized)
 
   gst_object_unref (pipeline);
 
-  fail_if (g_atomic_int_get (&mpd_writes_overlapped),
+  fail_if (g_atomic_int_get (&check.overlapped),
       "Two threads wrote the MPD at the same time");
 }
 

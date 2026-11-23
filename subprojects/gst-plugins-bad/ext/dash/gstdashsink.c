@@ -579,6 +579,9 @@ gst_dash_sink_class_init (GstDashSinkClass * klass)
    * @sink: the #GstDashSink
    * @location: Location for the playlist file
    *
+   * This signal is emitted from the streaming threads, one emission at a
+   * time. A handler that blocks delays every stream.
+   *
    * Returns: #GOutputStream for writing the playlist file.
    *
    * Since: 1.20
