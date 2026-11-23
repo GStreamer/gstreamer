@@ -2005,23 +2005,21 @@ gst_video_rate_past_buffer (GstVideoRate * videorate)
      timestamp calculation */
 
   /* On variable framerate we cannot push upfront */
-  if (videorate->force_variable_rate)
+  if (!videorate->to_rate_numerator)
     return FALSE;
 
   if (videorate->segment.rate < 0.0) {
+    GstClockTime frame_duration;
+
     next_ts = videorate->next_output_ts;
 
     if (!GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts))
       return FALSE;
 
-    if (videorate->to_rate_numerator) {
-      GstClockTime frame_duration = gst_util_uint64_scale (1,
-          videorate->to_rate_denominator * GST_SECOND,
-          videorate->to_rate_numerator);
-      next_end_ts = next_ts + frame_duration;
-    } else {
-      next_end_ts = next_ts + GST_BUFFER_DURATION (videorate->prevbuf);
-    }
+    frame_duration = gst_util_uint64_scale (1,
+        videorate->to_rate_denominator * GST_SECOND,
+        videorate->to_rate_numerator);
+    next_end_ts = next_ts + frame_duration;
 
     next_ts =
         MAX (0,
