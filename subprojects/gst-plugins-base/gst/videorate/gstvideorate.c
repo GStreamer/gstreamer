@@ -2254,6 +2254,9 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
         diff1 = GST_CLOCK_DIFF (best_input_end_ts, prev_endtime);
         diff2 = GST_CLOCK_DIFF (in_endtime, best_input_end_ts);
+        /* reverse output ends count back from segment.stop and can be 1ns later */
+        if (diff1 > 0 && (diff2 == 0 || diff2 == 1))
+          break;
         diff1 *= (1.0 - videorate->new_pref);
         diff2 *= videorate->new_pref;
 
@@ -2266,6 +2269,8 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
         diff1 = GST_CLOCK_DIFF (prev_ts, best_input_ts);
         diff2 = GST_CLOCK_DIFF (best_input_ts, in_ts);
+        if (diff1 > 0 && diff2 == 0)
+          break;
         diff1 *= videorate->new_pref;
         diff2 *= (1.0 - videorate->new_pref);
 

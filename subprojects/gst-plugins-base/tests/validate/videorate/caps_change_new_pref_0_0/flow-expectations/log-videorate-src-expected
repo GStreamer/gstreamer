@@ -13,6 +13,6 @@ buffer: content-id=0, pts=0:00:00.600000000, dur=0:00:00.100000000, flags=gap
 buffer: content-id=0, pts=0:00:00.700000000, dur=0:00:00.100000000, flags=gap
 buffer: content-id=0, pts=0:00:00.800000000, dur=0:00:00.100000000, flags=gap
 buffer: content-id=0, pts=0:00:00.900000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=0, pts=0:00:01.000000000, dur=0:00:00.100000000, flags=gap
 event caps: video/x-raw, format=(string)I420, framerate=(fraction)10/1, height=(int)480, width=(int)640;
+buffer: content-id=1, pts=0:00:01.000000000, dur=0:00:00.100000000
 event eos: (no structure)
