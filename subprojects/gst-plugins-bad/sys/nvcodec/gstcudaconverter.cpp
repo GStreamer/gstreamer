@@ -1552,21 +1552,23 @@ gst_cuda_converter_setup (GstCudaConverter * self)
         std::string (priv->texture_fmt->sample_func);
     std::string output_define = std::string ("-DOUTPUT=Output") + output_name;
     const gchar *opts[2] = { sampler_define.c_str (), output_define.c_str () };
-
-    std::lock_guard < std::mutex > lk (g_kernel_table_lock);
     std::string cubin_kernel_name =
         kernel_name + "_device_" + std::to_string (cuda_device);
-    auto cubin = g_cubin_table.find (cubin_kernel_name);
-    if (cubin == g_cubin_table.end ()) {
-      GST_DEBUG_OBJECT (self, "Building CUBIN");
-      program =
-          gst_cuda_nvrtc_compile_cubin_with_option (GstCudaConverterMain_str,
-          cuda_device, opts, 2);
-      if (program)
-        g_cubin_table[cubin_kernel_name] = program;
-    } else {
-      GST_DEBUG_OBJECT (self, "Found cached CUBIN");
-      program = cubin->second;
+
+    {
+      std::lock_guard < std::mutex > lk (g_kernel_table_lock);
+      auto cubin = g_cubin_table.find (cubin_kernel_name);
+      if (cubin == g_cubin_table.end ()) {
+        GST_DEBUG_OBJECT (self, "Building CUBIN");
+        program =
+            gst_cuda_nvrtc_compile_cubin_with_option (GstCudaConverterMain_str,
+            cuda_device, opts, 2);
+        if (program)
+          g_cubin_table[cubin_kernel_name] = program;
+      } else {
+        GST_DEBUG_OBJECT (self, "Found cached CUBIN");
+        program = cubin->second;
+      }
     }
 
     if (program) {
@@ -1580,6 +1582,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     }
 
     if (!program) {
+      std::lock_guard < std::mutex > lk (g_kernel_table_lock);
       auto ptx = g_ptx_table.find (kernel_name);
       if (ptx == g_ptx_table.end ()) {
         GST_DEBUG_OBJECT (self, "Building PTX");
@@ -1636,20 +1639,22 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     }
 
     if (!program) {
-      std::lock_guard < std::mutex > lk (g_kernel_table_lock);
       std::string cubin_kernel_name =
           unpack_module_name + "_device_" + std::to_string (cuda_device);
 
-      auto cubin = g_cubin_table.find (cubin_kernel_name);
-      if (cubin == g_cubin_table.end ()) {
-        GST_DEBUG_OBJECT (self, "Building CUBIN");
-        program = gst_cuda_nvrtc_compile_cubin (GstCudaConverterUnpack_str,
-            cuda_device);
-        if (program)
-          g_cubin_table[cubin_kernel_name] = program;
-      } else {
-        GST_DEBUG_OBJECT (self, "Found cached CUBIN");
-        program = cubin->second;
+      {
+        std::lock_guard < std::mutex > lk (g_kernel_table_lock);
+        auto cubin = g_cubin_table.find (cubin_kernel_name);
+        if (cubin == g_cubin_table.end ()) {
+          GST_DEBUG_OBJECT (self, "Building CUBIN");
+          program = gst_cuda_nvrtc_compile_cubin (GstCudaConverterUnpack_str,
+              cuda_device);
+          if (program)
+            g_cubin_table[cubin_kernel_name] = program;
+        } else {
+          GST_DEBUG_OBJECT (self, "Found cached CUBIN");
+          program = cubin->second;
+        }
       }
 
       if (program) {
@@ -1663,6 +1668,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       }
 
       if (!program) {
+        std::lock_guard < std::mutex > lk (g_kernel_table_lock);
         auto ptx = g_ptx_table.find (unpack_module_name);
         if (ptx == g_ptx_table.end ()) {
           GST_DEBUG_OBJECT (self, "Building PTX");
