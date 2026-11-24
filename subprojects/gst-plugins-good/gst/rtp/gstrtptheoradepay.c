@@ -465,6 +465,10 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
   F = (header & 0xc0) >> 6;
   packets = (header & 0xf);
 
+  /* fragments carry a 2 byte length after the 4 byte header */
+  if (G_UNLIKELY (F != 0 && payload_len < 6))
+    goto packet_short;
+
   GST_DEBUG_OBJECT (depayload, "ident: 0x%08x, F: %d, TDT: %d, packets: %d",
       ident, F, TDT, packets);
 
@@ -626,7 +630,7 @@ switch_failed:
 packet_short:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
-        (NULL), ("Packet was too short (%d < 4)", payload_len));
+        (NULL), ("Packet was too short (%d bytes)", payload_len));
     gst_rtp_base_depayload_dropped (depayload);
     goto request_keyframe;
   }
