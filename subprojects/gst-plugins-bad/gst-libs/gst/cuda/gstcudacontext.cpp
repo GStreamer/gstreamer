@@ -71,6 +71,7 @@ struct _GstCudaContextPrivate
   guint default_gpu_stack_size;
 
   gint tex_align;
+  gsize video_align;
 
   GHashTable *accessible_peer;
   gboolean owns_context;
@@ -639,6 +640,12 @@ gst_cuda_context_get_texture_alignment (GstCudaContext * ctx)
   return ctx->priv->tex_align;
 }
 
+gsize
+gst_cuda_context_get_video_alignment (GstCudaContext * context)
+{
+  return context->priv->video_align;
+}
+
 /**
  * gst_cuda_context_can_access_peer:
  * @ctx: a #GstCudaContext
@@ -689,6 +696,7 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
 {
   GList *iter;
   gint tex_align = 0;
+  gint tex_pitch_align = 0;
   GstCudaContext *self;
   size_t default_gpu_stack_size;
 
@@ -705,11 +713,25 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
     return nullptr;
   }
 
+  if (!gst_cuda_result (CuDeviceGetAttribute (&tex_pitch_align,
+              CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT, device)) ||
+      tex_pitch_align <= 0 || tex_align <= 0) {
+    GST_ERROR ("Could not get texture pitch alignment for %d", device);
+
+    return nullptr;
+  }
+
   self = (GstCudaContext *)
       g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device, nullptr);
   self->priv->context = handler;
   self->priv->device = device;
   self->priv->tex_align = tex_align;
+  self->priv->video_align = tex_align;
+  if (tex_align != tex_pitch_align) {
+    self->priv->video_align = (gsize) tex_align /
+        gst_util_greatest_common_divisor (tex_align, tex_pitch_align) *
+        tex_pitch_align;
+  }
 
   gst_cuda_context_push (self);
   if (CuCtxGetLimit (&default_gpu_stack_size,

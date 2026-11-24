@@ -104,9 +104,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCudaBufferPoolPrivate *priv = self->priv;
   GstCaps *caps = nullptr;
   guint size, min_buffers, max_buffers;
-  GstVideoInfo info;
-  GstMemory *mem = nullptr;
-  GstCudaMemory *cmem;
+  GstVideoInfo info, alloc_info;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers)) {
@@ -121,6 +119,12 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (self, "Failed to convert caps to video-info");
+    return FALSE;
+  }
+
+  if (!gst_cuda_allocator_align_video_info (self->context, &info, &alloc_info)
+      || alloc_info.size > G_MAXUINT) {
+    GST_ERROR_OBJECT (self, "Couldn't calculate aligned buffer size");
     return FALSE;
   }
 
@@ -176,26 +180,10 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     return FALSE;
   }
 
-  if (!gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), TRUE)) {
-    GST_ERROR_OBJECT (self, "Couldn't set active");
-    return FALSE;
-  }
-
-  gst_cuda_pool_allocator_acquire_memory (priv->alloc, &mem);
-  gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), FALSE);
-  if (!mem) {
-    GST_WARNING_OBJECT (self, "Failed to allocate memory");
-    return FALSE;
-  }
-
-  cmem = GST_CUDA_MEMORY_CAST (mem);
-
   gst_buffer_pool_config_set_params (config, caps,
-      GST_VIDEO_INFO_SIZE (&cmem->info), min_buffers, max_buffers);
+      GST_VIDEO_INFO_SIZE (&alloc_info), min_buffers, max_buffers);
 
   priv->info = info;
-
-  gst_memory_unref (mem);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 }

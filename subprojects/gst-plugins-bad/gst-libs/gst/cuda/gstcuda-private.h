@@ -69,6 +69,14 @@ gboolean      gst_cuda_context_supports_gl_interop (GstCudaContext * context,
                                                     GstGLContext * gl_context);
 #endif
 
+GST_CUDA_API
+gsize         gst_cuda_context_get_video_alignment (GstCudaContext * context);
+
+GST_CUDA_API
+gboolean      gst_cuda_allocator_align_video_info (GstCudaContext * context,
+                                                   const GstVideoInfo * info,
+                                                   GstVideoInfo * aligned);
+
 gpointer      gst_cuda_get_win32_handle_metadata (void);
 
 G_END_DECLS

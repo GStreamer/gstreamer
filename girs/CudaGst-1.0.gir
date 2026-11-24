@@ -504,6 +504,8 @@ and/or use gtk-doc annotations.  -->
       </member>
       <member name="unified_addressing" value="41" c:identifier="CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING">
       </member>
+      <member name="texture_pitch_alignment" value="51" c:identifier="CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT">
+      </member>
       <member name="compute_capability_major" value="75" c:identifier="CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR">
       </member>
       <member name="compute_capability_minor" value="76" c:identifier="CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR">

@@ -107,7 +107,7 @@ struct _GstCudaMemoryPrivate
   int os_handle = 0;
 #endif
 
-  /* params used for cuMemAllocPitch */
+  /* Device allocation layout */
   gsize pitch = 0;
   guint width_in_bytes = 0;
   guint height = 0;
@@ -211,8 +211,8 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
       ret.stride[1] = pitch;
       ret.stride[2] = pitch;
       ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] + (ret.stride[1] * chroma_height);
+      ret.offset[1] = pitch * height;
+      ret.offset[2] = ret.offset[1] + pitch * chroma_height;
       break;
     }
     case GST_VIDEO_FORMAT_Y42B:
@@ -222,8 +222,8 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
       ret.stride[1] = pitch;
       ret.stride[2] = pitch;
       ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] + (ret.stride[1] * height);
+      ret.offset[1] = pitch * height;
+      ret.offset[2] = ret.offset[1] + pitch * height;
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
@@ -233,7 +233,7 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
       ret.stride[0] = pitch;
       ret.stride[1] = pitch;
       ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[1] = pitch * height;
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_10LE:
@@ -249,7 +249,7 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
       ret.stride[1] = pitch;
       ret.stride[2] = pitch;
       ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[1] = pitch * height;
       ret.offset[2] = ret.offset[1] * 2;
       break;
     case GST_VIDEO_FORMAT_GBRA:
@@ -258,7 +258,7 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
       ret.stride[2] = pitch;
       ret.stride[3] = pitch;
       ret.offset[0] = 0;
-      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[1] = pitch * height;
       ret.offset[2] = ret.offset[1] * 2;
       ret.offset[3] = ret.offset[1] * 3;
       break;
@@ -299,6 +299,22 @@ do_align (size_t value, size_t align)
   return ((value + align - 1) / align) * align;
 }
 
+static gboolean
+gst_cuda_allocator_calculate_layout (GstCudaContext * context,
+    const GstVideoInfo * info, guint width_in_bytes, guint alloc_height,
+    GstVideoInfo * aligned)
+{
+  if (width_in_bytes == 0 || width_in_bytes > G_MAXINT || alloc_height == 0)
+    return FALSE;
+
+  gsize pitch = do_align (width_in_bytes,
+      gst_cuda_context_get_video_alignment (context));
+  if (pitch == 0 || pitch > G_MAXINT || pitch > G_MAXSIZE / alloc_height)
+    return FALSE;
+
+  return gst_cuda_allocator_update_info (info, pitch, alloc_height, aligned);
+}
+
 static GstMemory *
 gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
     GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info,
@@ -309,10 +325,15 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
   GstCudaMemory *mem;
   CUdeviceptr data;
   gboolean ret = FALSE;
-  gsize pitch;
   GstVideoInfo alloc_info;
   gint texture_align = gst_cuda_context_get_texture_alignment (context);
   auto stream_handle = gst_cuda_stream_get_handle (stream);
+
+  if (!gst_cuda_allocator_calculate_layout (context, info, width_in_bytes,
+          alloc_height, &alloc_info)) {
+    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
+    return nullptr;
+  }
 
   if (!gst_cuda_context_push (context))
     return nullptr;
@@ -320,21 +341,19 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
   if (stream_ordered) {
     g_assert (stream_handle);
 
-    pitch = do_align (width_in_bytes, texture_align);
     if (pool) {
       ret = gst_cuda_result (CuMemAllocFromPoolAsync (&data,
-              pitch * alloc_height, gst_cuda_memory_pool_get_handle (pool),
+              alloc_info.size, gst_cuda_memory_pool_get_handle (pool),
               stream_handle));
     } else {
-      ret = gst_cuda_result (CuMemAllocAsync (&data, pitch * alloc_height,
+      ret = gst_cuda_result (CuMemAllocAsync (&data, alloc_info.size,
               stream_handle));
     }
 
     if (ret)
       ret = gst_cuda_result (CuStreamSynchronize (stream_handle));
   } else {
-    ret = gst_cuda_result (CuMemAllocPitch (&data, &pitch, width_in_bytes,
-            alloc_height, 16));
+    ret = gst_cuda_result (CuMemAlloc (&data, alloc_info.size));
   }
 
   gst_cuda_context_pop (nullptr);
@@ -344,26 +363,13 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
     return nullptr;
   }
 
-  if (!gst_cuda_allocator_update_info (info, pitch, alloc_height, &alloc_info)) {
-    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
-    gst_cuda_context_push (context);
-
-    if (stream_ordered)
-      gst_cuda_result (CuMemFreeAsync (data, stream_handle));
-    else
-      gst_cuda_result (CuMemFree (data));
-
-    gst_cuda_context_pop (nullptr);
-    return nullptr;
-  }
-
   mem = g_new0 (GstCudaMemory, 1);
   mem->context = (GstCudaContext *) gst_object_ref (context);
   mem->info = alloc_info;
   mem->priv = priv = new GstCudaMemoryPrivate ();
 
   priv->data = data;
-  priv->pitch = pitch;
+  priv->pitch = alloc_info.stride[0];
   priv->width_in_bytes = width_in_bytes;
   priv->height = alloc_height;
   priv->texture_align = texture_align;
@@ -659,7 +665,7 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   param.dstMemoryType = CU_MEMORYTYPE_DEVICE;
   param.dstDevice = (CUdeviceptr) dst_info.data;
-  param.dstPitch = src_mem->priv->pitch;
+  param.dstPitch = GST_CUDA_MEMORY_CAST (copy)->priv->pitch;
   param.WidthInBytes = src_mem->priv->width_in_bytes;
   param.Height = src_mem->priv->height;
 
@@ -1088,6 +1094,7 @@ gst_cuda_allocator_calculate_alloc_height (const GstVideoInfo * info)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
@@ -1136,6 +1143,14 @@ gst_cuda_allocator_calculate_alloc_height (const GstVideoInfo * info)
   }
 
   return alloc_height;
+}
+
+gboolean
+gst_cuda_allocator_align_video_info (GstCudaContext * context,
+    const GstVideoInfo * info, GstVideoInfo * aligned)
+{
+  return gst_cuda_allocator_calculate_layout (context, info, info->stride[0],
+      gst_cuda_allocator_calculate_alloc_height (info), aligned);
 }
 
 /**
@@ -1402,11 +1417,12 @@ gst_cuda_allocator_virtual_alloc (GstCudaAllocator * allocator,
   alloc_height = gst_cuda_allocator_calculate_alloc_height (info);
   texture_alignment = gst_cuda_context_get_texture_alignment (context);
 
-  stride = do_align (info->stride[0], texture_alignment);
-  if (!gst_cuda_allocator_update_info (info, stride, alloc_height, &alloc_info)) {
+  if (!gst_cuda_allocator_calculate_layout (context, info, info->stride[0],
+          alloc_height, &alloc_info)) {
     GST_ERROR_OBJECT (context, "Couldn't calculate aligned info");
     return nullptr;
   }
+  stride = alloc_info.stride[0];
 
   if (!gst_cuda_context_push (context))
     return nullptr;
