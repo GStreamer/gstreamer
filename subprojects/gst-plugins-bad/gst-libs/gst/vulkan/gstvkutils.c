@@ -615,12 +615,64 @@ gst_vulkan_get_or_create_image_view (GstVulkanImageMemory * image)
   return gst_vulkan_get_or_create_image_view_with_info (image, NULL);
 }
 
+/* Returns the part of the image usage that @format supports, e.g. without
+ * VIDEO_DECODE_DST for a plane view of a decoded image, or without STORAGE for
+ * an NV12 view of an EXTENDED_USAGE image. DRM modifier tiling keeps the whole
+ * usage, as the format properties don't cover it. */
+static VkImageUsageFlags
+_get_view_usage (GstVulkanImageMemory * image, VkFormat format)
+{
+  GstVulkanFormatProperties props = { 0, };
+  VkImageTiling tiling = image->create_info.tiling;
+
+  if (tiling != VK_IMAGE_TILING_OPTIMAL && tiling != VK_IMAGE_TILING_LINEAR)
+    return image->create_info.usage;
+
+  gst_vulkan_physical_device_get_format_properties
+      (image->device->physical_device, format, &props);
+
+  return image->create_info.usage & gst_vulkan_format_features_to_usage
+      (tiling == VK_IMAGE_TILING_LINEAR ?
+      props.linear_tiling_feat : props.optimal_tiling_feat);
+}
+
+/* Only a view with a format other than the image's own, or extended usage
+ * case, may not support the image usage */
+static gboolean
+_view_needs_usage_check (GstVulkanImageMemory * image, VkFormat format)
+{
+  return format != image->create_info.format
+      || (image->create_info.flags & VK_IMAGE_CREATE_EXTENDED_USAGE_BIT);
+}
+
+/* VkImageViewUsageCreateInfo is core since Vulkan 1.1, or comes with
+ * VK_KHR_maintenance2 */
+static gboolean
+_can_restrict_view_usage (GstVulkanDevice * device)
+{
+  if (gst_vulkan_physical_device_check_api_version (device->physical_device,
+          1, 1, 0))
+    return TRUE;
+
+#if defined(VK_KHR_maintenance2)
+  return gst_vulkan_device_is_extension_enabled (device,
+      VK_KHR_MAINTENANCE_2_EXTENSION_NAME);
+#else
+  return FALSE;
+#endif
+}
+
 /**
  * gst_vulkan_get_or_create_image_view_with_info
  * @image: a #GstVulkanImageMemory
  * @create_info: (nullable): a VkImageViewCreateInfo
  *
  * Create a new #GstVulkanImageView with a specific @create_info.
+ *
+ * A new view gets only the part of @image's usage its format supports,
+ * unless @create_info already chains a VkImageViewUsageCreateInfo (requires
+ * Vulkan 1.1 or VK_KHR_maintenance2). Existing views are reused regardless of
+ * the pNext chain.
  *
  * Returns: (transfer full): a #GstVulkanImageView for @image matching the
  *                           original layout and format of @image
@@ -632,6 +684,8 @@ gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
     const VkImageViewCreateInfo * create_info)
 {
   VkImageViewCreateInfo _create_info;
+  VkImageViewUsageCreateInfo usage_info;
+  VkImageUsageFlags view_usage;
   GstVulkanImageView *ret;
 
   if (!create_info) {
@@ -658,10 +712,40 @@ gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
   ret = gst_vulkan_image_memory_find_view (image,
       (GstVulkanImageMemoryFindViewFunc) find_compatible_view,
       (gpointer) create_info);
-  if (!ret) {
-    ret = gst_vulkan_image_view_new (image, create_info);
-    gst_vulkan_image_memory_add_view (image, ret);
+  if (ret)
+    return ret;
+
+  if (_view_needs_usage_check (image, create_info->format)
+      && !vk_find_struct (create_info->pNext,
+          VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO)) {
+    view_usage = _get_view_usage (image, create_info->format);
+
+    if (view_usage == 0) {
+      GST_WARNING_OBJECT (image->device, "Format %i supports none of the "
+          "image usage 0x%x, not restricting the view usage",
+          create_info->format, image->create_info.usage);
+    } else if (view_usage != image->create_info.usage) {
+      if (!_can_restrict_view_usage (image->device)) {
+        GST_WARNING_OBJECT (image->device, "Restricting the view usage to "
+            "0x%x requires Vulkan 1.1 or VK_KHR_maintenance2", view_usage);
+      } else {
+        /* *INDENT-OFF* */
+        usage_info = (VkImageViewUsageCreateInfo) {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO,
+            .pNext = create_info->pNext,
+            .usage = view_usage,
+        };
+        /* *INDENT-ON* */
+        if (create_info != &_create_info)
+          _create_info = *create_info;
+        _create_info.pNext = &usage_info;
+        create_info = &_create_info;
+      }
+    }
   }
+
+  ret = gst_vulkan_image_view_new (image, create_info);
+  gst_vulkan_image_memory_add_view (image, ret);
 
   return ret;
 }
@@ -678,10 +762,9 @@ gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
  * memory), by deriving a single-plane view via the plane's own format and
  * VK_IMAGE_ASPECT_PLANE_0_BIT << @plane. That requires the image to be
  * created with VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT; if it is missing, @error is
- * set and %NULL is returned. The usage of such a view is restricted to the
- * part of the image usage that the plane's format supports (e.g. without the
- * video decode usages of a decoded image), which requires Vulkan 1.1 if the
- * image has any usage the plane's format doesn't support.
+ * set and %NULL is returned, as well as if the plane's format supports none
+ * of the image usage. The view's usage is restricted as described in
+ * gst_vulkan_get_or_create_image_view_with_info().
  *
  * Any other combination (more than one but fewer memories than planes) fails,
  * as do formats without planes (e.g. %GST_VIDEO_FORMAT_DMA_DRM).
@@ -701,8 +784,6 @@ gst_vulkan_get_or_create_image_view_for_plane (GstBuffer * buffer,
   GstVulkanImageMemory *img_mem;
   GstVulkanImageView *view;
   VkFormat plane_format;
-  VkImageUsageFlags view_usage;
-  VkImageViewUsageCreateInfo usage_info;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (info != NULL, NULL);
@@ -777,54 +858,24 @@ gst_vulkan_get_or_create_image_view_for_plane (GstBuffer * buffer,
     return NULL;
   }
 
-  /* Without a VkImageViewUsageCreateInfo the view inherits the whole image
-   * usage, but the plane's format may not support all of it, e.g.
-   * VIDEO_DECODE_DST on a decoded image (VUID-VkImageViewCreateInfo-image-08333).
-   * Images with other tilings (e.g. DRM format modifiers) keep the image
-   * usage, as the format properties don't describe them. */
-  view_usage = img_mem->create_info.usage;
-  if (img_mem->create_info.tiling == VK_IMAGE_TILING_OPTIMAL
-      || img_mem->create_info.tiling == VK_IMAGE_TILING_LINEAR) {
-    GstVulkanFormatProperties props = { 0, };
-
-    gst_vulkan_physical_device_get_format_properties
-        (img_mem->device->physical_device, plane_format, &props);
-    view_usage &= gst_vulkan_format_features_to_usage
-        (img_mem->create_info.tiling == VK_IMAGE_TILING_LINEAR ?
-        props.linear_tiling_feat : props.optimal_tiling_feat);
-  }
-
-  if (view_usage == 0) {
+  /* gst_vulkan_get_or_create_image_view_with_info() restricts the view usage
+   * to what the plane's format supports, but if none of the image usage is
+   * supported, it only warns and creates an invalid view with the whole image
+   * usage. Fail with an error instead. */
+  if (_view_needs_usage_check (img_mem, plane_format)
+      && _get_view_usage (img_mem, plane_format) == 0) {
     g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
         "Format %i of plane %u supports none of the image usage 0x%x",
         plane_format, plane, img_mem->create_info.usage);
     return NULL;
   }
 
-  if (view_usage != img_mem->create_info.usage
-      && !gst_vulkan_physical_device_check_api_version
-      (img_mem->device->physical_device, 1, 1, 0)) {
-    g_set_error (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
-        "Restricting the usage of the view for plane %u requires Vulkan 1.1",
-        plane);
-    return NULL;
-  }
-
-  /* Only chained to the view if it actually restricts the image usage */
-  /* *INDENT-OFF* */
-  usage_info = (VkImageViewUsageCreateInfo) {
-      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO,
-      .pNext = NULL,
-      .usage = view_usage,
-  };
-  /* *INDENT-ON* */
-
   /* Create plane view with VK_IMAGE_ASPECT_PLANE_X_BIT */
 
   /* *INDENT-OFF* */
   VkImageViewCreateInfo view_info = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-      .pNext = view_usage != img_mem->create_info.usage ? &usage_info : NULL,
+      .pNext = NULL,
       .image = img_mem->image,
       .format = plane_format,
       .viewType = VK_IMAGE_VIEW_TYPE_2D,
