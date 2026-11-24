@@ -134,6 +134,7 @@ gst_rtp_celt_pay_clear_queued (GstRtpCELTPay * rtpceltpay)
   rtpceltpay->qduration = 0;
 }
 
+#if 0
 static void
 gst_rtp_celt_pay_add_queued (GstRtpCELTPay * rtpceltpay, GstBuffer * buffer,
     guint ssize, guint size, GstClockTime duration)
@@ -152,12 +153,18 @@ gst_rtp_celt_pay_add_queued (GstRtpCELTPay * rtpceltpay, GstBuffer * buffer,
       rtpceltpay->qduration = -1;
   }
 }
+#endif
 
 static gboolean
 gst_rtp_celt_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
+  // See comment below
+  return FALSE;
+
+#if 0
   /* don't configure yet, we wait for the ident packet */
   return TRUE;
+#endif
 }
 
 
@@ -216,6 +223,7 @@ gst_rtp_celt_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   return caps;
 }
 
+#if 0
 static gboolean
 gst_rtp_celt_pay_parse_ident (GstRtpCELTPay * rtpceltpay,
     const guint8 * data, guint size)
@@ -317,7 +325,9 @@ payload_too_small:
     return FALSE;
   }
 }
+#endif
 
+#if 0
 static GstFlowReturn
 gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
 {
@@ -382,11 +392,29 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
 
   return ret;
 }
+#endif
 
 static GstFlowReturn
 gst_rtp_celt_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
+  /* There is no plausible reason this code should ever be executed in 2026
+   * seeing that this was an experimental audio codec that never really gained
+   * adoption and was superseded by (and included in) Opus more than a decade
+   * ago. There are no decoders or encoders in GStreamer for this, and the
+   * RTP mapping RFC never made it out of draft state either.
+   *
+   * We simply return here as defensive measure.
+   *
+   * We post an error message in the state change function, so this processing
+   * function should never be reached, we just ifdef the code out for clarity.
+   *
+   * If anyone actually does have a legitimate need for this and can provide
+   * sample streams, we will happily implement a payloader in Rust.
+   */
+  return GST_FLOW_ERROR;
+
+#if 0
   GstFlowReturn ret;
   GstRtpCELTPay *rtpceltpay;
   gsize payload_len;
@@ -465,6 +493,7 @@ parse_error:
     gst_buffer_unmap (buffer, &map);
     return GST_FLOW_ERROR;
   }
+#endif
 }
 
 static GstStateChangeReturn
@@ -477,7 +506,10 @@ gst_rtp_celt_pay_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
+      GST_ELEMENT_ERROR (element, STREAM, DECODE,
+          ("This element should not be used."),
+          ("Please report an issue if you encounter this message."));
+      return GST_STATE_CHANGE_FAILURE;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       rtpceltpay->packet = 0;
       break;
