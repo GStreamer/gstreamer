@@ -138,7 +138,7 @@ gst_vulkan_queue_create_command_pool (GstVulkanQueue * queue, GError ** error)
       vkCreateCommandPool (queue->device->device, &cmd_pool_info, NULL,
       &vk_pool);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandPool") < 0) {
-    GST_OBJECT_LOCK (queue->device);
+    GST_OBJECT_UNLOCK (queue->device);
     goto error;
   }
   GST_OBJECT_UNLOCK (queue->device);
