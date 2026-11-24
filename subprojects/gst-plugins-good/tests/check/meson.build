@@ -103,6 +103,7 @@ if not get_option('rtp').disabled() and not get_option('rtpmanager').disabled()
     [ 'elements/rtpopus' ],
     [ 'elements/rtppassthrough' ],
     [ 'elements/rtpvp8' ],
+    [ 'elements/rtpxiph' ],
     [ 'elements/rtpvp9' ],
     [ 'elements/rtpbin' ],
     [ 'elements/rtpbin_buffer_list' ],
