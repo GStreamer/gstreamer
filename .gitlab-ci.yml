@@ -574,6 +574,8 @@ build debian x86_64 debug:
     - echo $env:MESON_ARGS $env:GTK_ARGS
     # We do not pick up any deps with cmake, so speed up dependency checks
     - $env:CMAKE = 'false'
+    # HACK to sneak Nasm under Meson's nose. (It's provided by a subproject.)
+    - $env:PATH="$(pwd)\subprojects\win-nasm\nasm-2.15.04;$env:PATH"
   artifacts:
    expire_in: "7 days"
    when: "always"
