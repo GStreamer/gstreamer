@@ -986,9 +986,7 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
     GST_DASHSINK_MPD_UNLOCK (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         (("Got no output stream for fragment '%s'."), mpd_filepath), (NULL));
-    g_free (mpd_content);
-    g_free (mpd_filepath);
-    return;
+    goto done;
   }
 
   bytes_to_write = strlen (mpd_content);
@@ -1007,6 +1005,7 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
 
   gst_dash_sink_send_mpd_update_msg (sink, mpd_filepath);
 
+done:
   g_free (mpd_content);
   g_free (mpd_filepath);
 }
