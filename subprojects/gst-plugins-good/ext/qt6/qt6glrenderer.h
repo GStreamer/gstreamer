@@ -35,6 +35,7 @@ QT_FORWARD_DECLARE_CLASS(QQmlComponent)
 QT_FORWARD_DECLARE_CLASS(QQuickItem)
 QT_FORWARD_DECLARE_CLASS(GstAnimationDriver)
 QT_FORWARD_DECLARE_CLASS(GstBackingSurface)
+QT_FORWARD_DECLARE_CLASS(QRhi)
 
 class GstQt6QuickRenderer : public QObject
 {
@@ -107,6 +108,8 @@ private:
     QQmlComponent *m_qmlComponent;
     QQuickItem *m_rootItem;
     QQuickItem *m_setRootItem;
+    /* Qt Quick's rendering interface, created by us (see initializeGstGL()) */
+    QRhi *m_rhi = nullptr;
 
     GstGLBaseMemoryAllocator *gl_allocator;
     GstGLAllocationParams *gl_params;

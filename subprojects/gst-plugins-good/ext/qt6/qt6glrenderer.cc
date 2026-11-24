@@ -13,6 +13,10 @@
 #include <QAnimationDriver>
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <QOffscreenSurface>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+#include <rhi/qrhi.h>
+#endif
 
 #include <gst/gl/gl.h>
 #include "gstqt6gl.h"
@@ -126,6 +130,8 @@ struct SharedRenderData
   GstQt6AnimationDriver *m_animationDriver;
   QOpenGLContext *m_context;
   GstQt6BackingSurface *m_surface;
+  /* QRhi fallback surface, created on the GUI thread */
+  QOffscreenSurface *m_fallbackSurface;
   QThread *m_renderThread;
 };
 
@@ -161,6 +167,10 @@ shared_render_data_free (struct SharedRenderData * data)
   if (data->m_surface)
     data->m_surface->deleteLater();
   data->m_surface = nullptr;
+  /* after all the QRhis using it are gone, on the GUI thread */
+  if (data->m_fallbackSurface)
+    data->m_fallbackSurface->deleteLater();
+  data->m_fallbackSurface = nullptr;
 }
 
 static struct SharedRenderData *
@@ -274,6 +284,14 @@ bool Qt6CreateSurfaceWorker::event(QEvent * ev)
         GST_TRACE ("%p creating surface", m_sharedRenderData);
         /* create the window surface in the main thread */
         g_mutex_lock (&m_sharedRenderData->lock);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+        /* Fallback surface for the QRhi (see initializeGstGL()). Unlike the
+         * backing window, a QOffscreenSurface is not closed when the
+         * application quits, and creating it here keeps its reaction to
+         * screen removal on this thread. */
+        m_sharedRenderData->m_fallbackSurface =
+            QRhiGles2InitParams::newFallbackSurface(m_sharedRenderData->m_context->format());
+#endif
         m_sharedRenderData->m_surface = new GstQt6BackingSurface;
         m_sharedRenderData->m_surface->create();
         GST_TRACE ("%p created surface %p", m_sharedRenderData,
@@ -505,6 +523,17 @@ void GstQt6QuickRenderer::stopAfterGL ()
 {
     GST_DEBUG ("%p stop QOpenGLContext curent: %p stored: %p", this,
         QOpenGLContext::currentContext(), m_sharedRenderData->m_context);
+    /* Our QRhi (see initializeGstGL()): released after the render control
+     * and the window that used it are gone, and before its fallback surface
+     * may be. Qt Quick does not own it, so unlike its own QRhi, invalidating
+     * the render control left the wrapped context current: release that too,
+     * as Qt Quick would have. */
+    if (m_rhi) {
+        delete m_rhi;
+        m_rhi = nullptr;
+        if (m_sharedRenderData && QOpenGLContext::currentContext() == m_sharedRenderData->m_context)
+            m_sharedRenderData->m_context->doneCurrent();
+    }
     g_assert (QOpenGLContext::currentContext() == nullptr);
 
     if (m_sharedRenderData)
@@ -692,6 +721,33 @@ void GstQt6QuickRenderer::initializeGstGL ()
      * ASSERT: "!m_gl->property(QSG_RENDERCONTEXT_PROPERTY).isValid()" in file /path/to/qt5/qtdeclarative/src/quick/scenegraph/qsgdefaultrendercontext.cpp, line 121
      */
     //m_sharedRenderData->m_context->setProperty("_q_sgrendercontext", QVariant());
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    /* Create Qt Quick's QRhi here instead of letting
+     * QQuickRenderControl::initialize() do it. Qt Quick would create it with
+     * a fallback QOffscreenSurface made on this thread (GStreamer's OpenGL
+     * thread), which then belongs to this thread: when its screen is removed
+     * (a monitor unplugged or switched off), the QScreen is deleted on the GUI
+     * thread and the surface's reaction runs here later, on the freed screen,
+     * and crashes. Qt documents that QSurface subclasses can often be created
+     * on the GUI thread only, so the fallback surface is created on the GUI
+     * thread (Qt6CreateSurfaceWorker). It is a QOffscreenSurface rather than
+     * the backing window, which is closed when the application quits and
+     * could then not be made current when this QRhi is released. */
+    {
+        QRhiGles2InitParams params;
+        params.format = m_sharedRenderData->m_context->format();
+        params.fallbackSurface = m_sharedRenderData->m_fallbackSurface;
+        QRhiGles2NativeHandles importDev;
+        importDev.context = m_sharedRenderData->m_context;
+        m_rhi = QRhi::create(QRhi::OpenGLES2, &params, QRhi::Flags(), &importDev);
+        if (!m_rhi) {
+            m_errorString = "Failed to create a QRhi for Qt's wrapped OpenGL context";
+            return;
+        }
+        m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromRhi(m_rhi));
+    }
+#endif
 
     m_renderControl->initialize();
 
