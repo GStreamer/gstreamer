@@ -1267,7 +1267,9 @@ reacquire:
 
   GstVulkanCommandPool *cmd_pool =
       gst_vulkan_operation_get_command_pool (swapper->exec);
+  gst_vulkan_queue_submit_lock (cmd_pool->queue);
   err = priv->QueuePresentKHR (cmd_pool->queue->queue, &present);
+  gst_vulkan_queue_submit_unlock (cmd_pool->queue);
 
   if (present_err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame submitted");
