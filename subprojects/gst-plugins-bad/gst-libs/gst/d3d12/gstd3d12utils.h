@@ -73,6 +73,21 @@ gboolean  gst_d3d12_buffer_copy_into_full (GstBuffer * dest,
                                            D3D12_COMMAND_LIST_TYPE queue_type);
 
 GST_D3D12_API
+gboolean  gst_d3d12_buffer_copy_bytes_into (GstBuffer * dest,
+                                           gsize dest_offset,
+                                           GstBuffer * src,
+                                           gsize src_offset,
+                                           gsize size);
+
+GST_D3D12_API
+gboolean  gst_d3d12_buffer_copy_bytes_into_full (GstBuffer * dest,
+                                                gsize dest_offset,
+                                                GstBuffer * src,
+                                                gsize src_offset,
+                                                gsize size,
+                                                D3D12_COMMAND_LIST_TYPE queue_type);
+
+GST_D3D12_API
 void      gst_d3d12_buffer_set_fence (GstBuffer * buffer,
                                       ID3D12Fence * fence,
                                       guint64 fence_value,

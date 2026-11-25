@@ -101,6 +101,23 @@ gst_is_d3d12_staging_memory (GstMemory * mem)
 }
 
 /**
+ * gst_d3d12_staging_memory_get_resource_handle:
+ * @mem: a #GstD3D12StagingMemory
+ *
+ * Returns: (transfer none): ID3D12Resource handle
+ *
+ * Since: 1.30
+ */
+ID3D12Resource *
+gst_d3d12_staging_memory_get_resource_handle (GstD3D12StagingMemory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d12_staging_memory (GST_MEMORY_CAST (mem)),
+      nullptr);
+
+  return mem->priv->resource.Get ();
+}
+
+/**
  * gst_d3d12_staging_memory_sync:
  * @mem: a #GstD3D12StagingMemory
  *

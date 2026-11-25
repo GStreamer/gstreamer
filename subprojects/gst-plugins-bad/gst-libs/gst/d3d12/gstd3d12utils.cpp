@@ -943,6 +943,262 @@ gst_d3d12_buffer_copy_into_full (GstBuffer * dest, GstBuffer * src,
   return ret;
 }
 
+static GstD3D12Device *
+get_copy_memory_device (GstMemory * mem)
+{
+  if (gst_is_d3d12_staging_memory (mem))
+    return GST_D3D12_STAGING_MEMORY_CAST (mem)->device;
+
+  if (gst_is_d3d12_memory (mem))
+    return GST_D3D12_MEMORY_CAST (mem)->device;
+
+  return nullptr;
+}
+
+static ID3D12Resource *
+get_copy_buffer_resource (GstMemory * mem, GstMapFlags flags, guint64 offset,
+    gsize size)
+{
+  GstMapInfo map;
+  /* Prepare the memory for GPU access before using its resource. */
+  if (!gst_memory_map (mem, &map, flags)) {
+    GST_DEBUG ("Couldn't map memory %p for GPU access", mem);
+    return nullptr;
+  }
+
+  gst_memory_unmap (mem, &map);
+
+  auto resource = gst_is_d3d12_staging_memory (mem) ?
+      gst_d3d12_staging_memory_get_resource_handle
+      (GST_D3D12_STAGING_MEMORY_CAST (mem)) :
+      gst_d3d12_memory_get_resource_handle (GST_D3D12_MEMORY_CAST (mem));
+  auto desc = GetDesc (resource);
+  if (desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER) {
+    GST_DEBUG ("Memory %p does not hold a buffer resource", mem);
+    return nullptr;
+  }
+
+  if (offset > desc.Width || size > desc.Width - offset) {
+    GST_DEBUG ("Copy range offset %" G_GUINT64_FORMAT ", size %" G_GSIZE_FORMAT
+        " exceeds resource %p size %" G_GUINT64_FORMAT,
+        offset, size, resource, desc.Width);
+    return nullptr;
+  }
+
+  return resource;
+}
+
+static void
+append_copy_memory_wait (GstMemory * mem, ComPtr < ID3D12Fence > *fences,
+    ID3D12Fence ** wait_fences, guint64 * wait_values, guint & num_waits)
+{
+  auto & fence = fences[num_waits];
+  guint64 value;
+
+  if (gst_is_d3d12_staging_memory (mem)) {
+    gst_d3d12_staging_memory_get_fence (GST_D3D12_STAGING_MEMORY_CAST (mem),
+        &fence, &value);
+  } else {
+    gst_d3d12_memory_get_fence (GST_D3D12_MEMORY_CAST (mem), &fence, &value);
+  }
+
+  if (fence) {
+    wait_fences[num_waits] = fence.Get ();
+    wait_values[num_waits] = value;
+    num_waits++;
+  }
+}
+
+static gboolean
+copy_buffer_bytes_cpu (GstBuffer * dest, gsize dest_offset, GstBuffer * src,
+    gsize src_offset, gsize size)
+{
+  GstMapInfo src_map, dst_map;
+
+  if (!gst_buffer_map (src, &src_map, GST_MAP_READ)) {
+    GST_ERROR ("Couldn't map source buffer for CPU copy");
+    return FALSE;
+  }
+
+  if (!gst_buffer_map (dest, &dst_map, GST_MAP_WRITE)) {
+    GST_ERROR ("Couldn't map destination buffer for CPU copy");
+    gst_buffer_unmap (src, &src_map);
+    return FALSE;
+  }
+
+  memcpy (dst_map.data + dest_offset, src_map.data + src_offset, size);
+  gst_buffer_unmap (dest, &dst_map);
+  gst_buffer_unmap (src, &src_map);
+
+  GST_LOG ("Copied %" G_GSIZE_FORMAT " bytes on the CPU", size);
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d12_buffer_copy_bytes_into:
+ * @dest: a writable destination #GstBuffer
+ * @dest_offset: byte offset from the start of @dest
+ * @src: source #GstBuffer
+ * @src_offset: byte offset from the start of @src
+ * @size: number of bytes to copy
+ *
+ * Copies a byte range, using the direct queue for GPU copies. See
+ * gst_d3d12_buffer_copy_bytes_into_full().
+ *
+ * Returns: %TRUE if the GPU copy was submitted or the CPU copy completed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_buffer_copy_bytes_into (GstBuffer * dest, gsize dest_offset,
+    GstBuffer * src, gsize src_offset, gsize size)
+{
+  return gst_d3d12_buffer_copy_bytes_into_full (dest, dest_offset, src,
+      src_offset, size, D3D12_COMMAND_LIST_TYPE_DIRECT);
+}
+
+/**
+ * gst_d3d12_buffer_copy_bytes_into_full:
+ * @dest: a writable destination #GstBuffer
+ * @dest_offset: byte offset from the start of @dest
+ * @src: source #GstBuffer
+ * @src_offset: byte offset from the start of @src
+ * @size: number of bytes to copy
+ * @queue_type: direct, compute or copy command queue to use
+ *
+ * Submits a GPU copy when both buffers are backed by D3D12 buffer resources
+ * on the same device. Falls back to a CPU copy otherwise.
+ *
+ * Returns: %TRUE if the GPU copy was submitted or the CPU copy completed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_d3d12_buffer_copy_bytes_into_full (GstBuffer * dest, gsize dest_offset,
+    GstBuffer * src, gsize src_offset, gsize size,
+    D3D12_COMMAND_LIST_TYPE queue_type)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (dest), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+
+  if (!size) {
+    GST_DEBUG ("Cannot copy an empty byte range");
+    return FALSE;
+  }
+
+  if (dest == src) {
+    GST_DEBUG ("Expected distinct source and destination buffers");
+    return FALSE;
+  }
+
+  auto dst_size = gst_buffer_get_size (dest);
+  auto src_size = gst_buffer_get_size (src);
+  if (dest_offset > dst_size || size > dst_size - dest_offset ||
+      src_offset > src_size || size > src_size - src_offset) {
+    GST_WARNING ("Copy of %" G_GSIZE_FORMAT " bytes exceeds buffer bounds "
+        "(src offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT
+        ", dst offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT ")",
+        size, src_offset, src_size, dest_offset, dst_size);
+    return FALSE;
+  }
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      break;
+    default:
+      GST_WARNING ("Invalid queue type %d", queue_type);
+      return FALSE;
+  }
+
+  if (gst_buffer_n_memory (dest) != 1 || gst_buffer_n_memory (src) != 1) {
+    GST_DEBUG ("Expected one memory per buffer for GPU copy");
+    return copy_buffer_bytes_cpu (dest, dest_offset, src, src_offset, size);
+  }
+
+  auto dst_mem = gst_buffer_peek_memory (dest, 0);
+  auto src_mem = gst_buffer_peek_memory (src, 0);
+  auto device = get_copy_memory_device (dst_mem);
+  auto src_device = get_copy_memory_device (src_mem);
+  if (!device || !src_device) {
+    GST_DEBUG ("Expected D3D12 or staging memory (src %p, dst %p)",
+        src_mem, dst_mem);
+    return copy_buffer_bytes_cpu (dest, dest_offset, src, src_offset, size);
+  }
+
+  if (!gst_d3d12_device_is_equal (device, src_device)) {
+    GST_DEBUG ("Buffer devices differ (src %" GST_PTR_FORMAT
+        ", dst %" GST_PTR_FORMAT ")", src_device, device);
+    return copy_buffer_bytes_cpu (dest, dest_offset, src, src_offset, size);
+  }
+
+  auto queue = gst_d3d12_device_get_cmd_queue (device, queue_type);
+  if (!queue) {
+    GST_DEBUG_OBJECT (device, "No command queue for type %d", queue_type);
+    return FALSE;
+  }
+
+  guint64 src_byte_offset = (guint64) src_mem->offset + src_offset;
+  guint64 dst_byte_offset = (guint64) dst_mem->offset + dest_offset;
+  auto src_resource = get_copy_buffer_resource (src_mem, GST_MAP_READ_D3D12,
+      src_byte_offset, size);
+  auto dst_resource = get_copy_buffer_resource (dst_mem, GST_MAP_WRITE_D3D12,
+      dst_byte_offset, size);
+  if (!src_resource || !dst_resource)
+    return copy_buffer_bytes_cpu (dest, dest_offset, src, src_offset, size);
+
+  if (src_resource == dst_resource) {
+    GST_DEBUG_OBJECT (device, "Source and destination share resource %p",
+        src_resource);
+    return FALSE;
+  }
+
+  GstD3D12FenceData *fence_data;
+  if (!gst_d3d12_device_acquire_fence_data (device, &fence_data)) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire copy fence data");
+    return FALSE;
+  }
+
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src)));
+
+  ComPtr < ID3D12Fence > fences[2];
+  ID3D12Fence *wait_fences[2];
+  guint64 wait_values[2];
+  guint num_waits = 0;
+  auto queue_fence = gst_d3d12_cmd_queue_get_fence_handle (queue);
+
+  append_copy_memory_wait (src_mem,
+      fences, wait_fences, wait_values, num_waits);
+  append_copy_memory_wait (dst_mem,
+      fences, wait_fences, wait_values, num_waits);
+
+  guint64 fence_value = 0;
+  if (!gst_d3d12_device_copy_buffer_region (device, dst_resource,
+          dst_byte_offset, src_resource, src_byte_offset, size, fence_data,
+          num_waits, wait_fences, wait_values, queue_type, &fence_value)) {
+    GST_ERROR_OBJECT (device, "Couldn't submit buffer byte copy");
+    return FALSE;
+  }
+
+  if (gst_is_d3d12_staging_memory (dst_mem)) {
+    gst_d3d12_staging_memory_set_fence (GST_D3D12_STAGING_MEMORY_CAST (dst_mem),
+        queue_fence, fence_value, FALSE);
+  } else {
+    gst_d3d12_buffer_set_fence (dest, queue_fence, fence_value, FALSE);
+  }
+
+  GST_LOG_OBJECT (device, "Submitted copy of %" G_GSIZE_FORMAT
+      " bytes from resource %p at %" G_GUINT64_FORMAT " to %p at %"
+      G_GUINT64_FORMAT " on queue type %d, fence value %" G_GUINT64_FORMAT,
+      size, src_resource, src_byte_offset, dst_resource, dst_byte_offset,
+      queue_type, fence_value);
+
+  return TRUE;
+}
+
 /**
  * gst_d3d12_buffer_set_fence:
  * @buffer: a #GstBuffer

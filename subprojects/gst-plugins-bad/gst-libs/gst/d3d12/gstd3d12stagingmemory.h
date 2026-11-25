@@ -73,6 +73,9 @@ GST_D3D12_API
 gboolean          gst_is_d3d12_staging_memory        (GstMemory * mem);
 
 GST_D3D12_API
+ID3D12Resource *  gst_d3d12_staging_memory_get_resource_handle (GstD3D12StagingMemory * mem);
+
+GST_D3D12_API
 gboolean          gst_d3d12_staging_memory_sync      (GstD3D12StagingMemory * mem);
 
 GST_D3D12_API
