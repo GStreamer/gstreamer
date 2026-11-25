@@ -774,6 +774,190 @@ gst_hip_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   return gst_hip_result (hip_ret, vendor);
 }
 
+static gboolean
+copy_buffer_bytes_cpu (GstBuffer * dest, gsize dest_offset, GstBuffer * src,
+    gsize src_offset, gsize size)
+{
+  GstMapInfo src_map, dst_map;
+
+  if (!gst_buffer_map (src, &src_map, GST_MAP_READ)) {
+    GST_ERROR ("Couldn't map source buffer for CPU copy");
+    return FALSE;
+  }
+
+  if (!gst_buffer_map (dest, &dst_map, GST_MAP_WRITE)) {
+    GST_ERROR ("Couldn't map destination buffer for CPU copy");
+    gst_buffer_unmap (src, &src_map);
+    return FALSE;
+  }
+
+  memcpy (dst_map.data + dest_offset, src_map.data + src_offset, size);
+  gst_buffer_unmap (dest, &dst_map);
+  gst_buffer_unmap (src, &src_map);
+
+  GST_LOG ("Copied %" G_GSIZE_FORMAT " bytes on the CPU", size);
+
+  return TRUE;
+}
+
+static GstHipDevice *
+get_copy_memory_device (GstMemory * mem)
+{
+  if (gst_is_hip_memory (mem))
+    return GST_HIP_MEMORY_CAST (mem)->device;
+
+  if (gst_is_hip_host_memory (mem))
+    return GST_HIP_HOST_MEMORY_CAST (mem)->device;
+
+  return nullptr;
+}
+
+/**
+ * gst_hip_buffer_copy_bytes_into:
+ * @dest: a writable destination #GstBuffer
+ * @dest_offset: byte offset from the start of @dest
+ * @src: source #GstBuffer
+ * @src_offset: byte offset from the start of @src
+ * @size: number of bytes to copy
+ *
+ * Copies a byte range. See gst_hip_buffer_copy_bytes_into_full().
+ *
+ * Returns: %TRUE if the copy completed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_buffer_copy_bytes_into (GstBuffer * dest, gsize dest_offset,
+    GstBuffer * src, gsize src_offset, gsize size)
+{
+  return gst_hip_buffer_copy_bytes_into_full (dest, dest_offset, src,
+      src_offset, size, nullptr);
+}
+
+/**
+ * gst_hip_buffer_copy_bytes_into_full:
+ * @dest: a writable destination #GstBuffer
+ * @dest_offset: byte offset from the start of @dest
+ * @src: source #GstBuffer
+ * @src_offset: byte offset from the start of @src
+ * @size: number of bytes to copy
+ * @stream: (nullable): a #GstHipStream, or %NULL to use the memory's stream
+ *
+ * Copies between HIP device or pinned host memories on the same device.
+ * Waits for the copy to complete before returning. Falls back to a CPU
+ * copy when the buffers cannot use the HIP copy path. The byte ranges
+ * must fit within their buffers and must not overlap.
+ *
+ * Returns: %TRUE if the copy completed
+ *
+ * Since: 1.30
+ */
+gboolean
+gst_hip_buffer_copy_bytes_into_full (GstBuffer * dest, gsize dest_offset,
+    GstBuffer * src, gsize src_offset, gsize size, GstHipStream * stream)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (dest), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+
+  if (!size || dest == src) {
+    GST_DEBUG ("Expected a nonempty byte range and distinct buffers");
+    return FALSE;
+  }
+
+  auto dst_size = gst_buffer_get_size (dest);
+  auto src_size = gst_buffer_get_size (src);
+  if (dest_offset > dst_size || size > dst_size - dest_offset ||
+      src_offset > src_size || size > src_size - src_offset) {
+    GST_DEBUG ("Copy of %" G_GSIZE_FORMAT " bytes exceeds buffer bounds "
+        "(src offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT
+        ", dst offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT ")",
+        size, src_offset, src_size, dest_offset, dst_size);
+    return FALSE;
+  }
+
+  if (gst_buffer_n_memory (dest) != 1 || gst_buffer_n_memory (src) != 1) {
+    GST_DEBUG ("Expected one memory per buffer for HIP copy");
+    return copy_buffer_bytes_cpu (dest, dest_offset, src, src_offset, size);
+  }
+
+  auto src_mem = gst_buffer_peek_memory (src, 0);
+  auto dst_mem = gst_buffer_peek_memory (dest, 0);
+  auto src_device = get_copy_memory_device (src_mem);
+  auto dst_device = get_copy_memory_device (dst_mem);
+  auto src_hip = gst_is_hip_memory (src_mem);
+  auto dst_hip = gst_is_hip_memory (dst_mem);
+
+  if ((!src_hip && !dst_hip) || !src_device || !dst_device ||
+      !gst_hip_device_is_equal (src_device, dst_device)) {
+    GST_DEBUG ("Buffers do not contain compatible HIP memories");
+    return copy_buffer_bytes_cpu (dest, dest_offset, src, src_offset, size);
+  }
+
+  auto device = src_hip ? src_device : dst_device;
+  auto vendor = gst_hip_device_get_vendor (device);
+  if (!stream) {
+    auto mem = src_hip ? src_mem : dst_mem;
+    stream = gst_hip_memory_get_stream (GST_HIP_MEMORY_CAST (mem));
+    if (!stream)
+      stream = gst_hip_device_get_stream (device);
+  }
+
+  if (gst_hip_stream_get_vendor (stream) != vendor ||
+      gst_hip_stream_get_device_id (stream) !=
+      gst_hip_device_get_device_id (device)) {
+    GST_ERROR_OBJECT (device, "Copy stream belongs to another device");
+    return FALSE;
+  }
+
+  GstMapInfo src_map, dst_map;
+  if (!gst_memory_map (src_mem, &src_map,
+          src_hip ? GST_MAP_READ_HIP : GST_MAP_READ)) {
+    GST_ERROR_OBJECT (device, "Couldn't map source memory for HIP copy");
+    return FALSE;
+  }
+
+  if (!gst_memory_map (dst_mem, &dst_map,
+          dst_hip ? GST_MAP_WRITE_HIP : GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (device, "Couldn't map destination memory for HIP copy");
+    gst_memory_unmap (src_mem, &src_map);
+    return FALSE;
+  }
+
+  gboolean ret = FALSE;
+  if (gst_hip_device_set_current (device) &&
+      gst_hip_stream_schedule_wait_buffer (stream, src) &&
+      gst_hip_stream_schedule_wait_buffer (stream, dest)) {
+    auto src_data = src_map.data + src_offset;
+    auto dst_data = dst_map.data + dest_offset;
+    auto handle = gst_hip_stream_get_handle (stream);
+    hipError_t status;
+
+    if (src_hip && dst_hip) {
+      status = HipMemcpyDtoDAsync (vendor, dst_data, src_data, size, handle);
+    } else if (src_hip) {
+      status = HipMemcpyDtoHAsync (vendor, dst_data, src_data, size, handle);
+    } else {
+      status = HipMemcpyHtoDAsync (vendor, dst_data, src_data, size, handle);
+    }
+
+    if (gst_hip_result (status, vendor))
+      ret = gst_hip_stream_synchronize (stream);
+  }
+
+  gst_memory_unmap (dst_mem, &dst_map);
+  gst_memory_unmap (src_mem, &src_map);
+
+  if (ret) {
+    GST_LOG_OBJECT (device, "Copied %" G_GSIZE_FORMAT " bytes on stream %p "
+        "(src offset %" G_GSIZE_FORMAT ", dst offset %" G_GSIZE_FORMAT ")",
+        size, stream, src_offset, dest_offset);
+  } else {
+    GST_ERROR_OBJECT (device, "Couldn't copy buffer bytes on HIP stream");
+  }
+
+  return ret;
+}
+
 /**
  * gst_hip_buffer_set_event:
  * @buffer: a #GstBuffer

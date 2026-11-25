@@ -105,6 +105,21 @@ gboolean     gst_hip_buffer_copy_into (GstBuffer * dest,
                                        const GstVideoInfo * info);
 
 GST_HIP_API
+gboolean     gst_hip_buffer_copy_bytes_into (GstBuffer * dest,
+                                             gsize dest_offset,
+                                             GstBuffer * src,
+                                             gsize src_offset,
+                                             gsize size);
+
+GST_HIP_API
+gboolean     gst_hip_buffer_copy_bytes_into_full (GstBuffer * dest,
+                                                  gsize dest_offset,
+                                                  GstBuffer * src,
+                                                  gsize src_offset,
+                                                  gsize size,
+                                                  GstHipStream * stream);
+
+GST_HIP_API
 gboolean     gst_hip_stream_schedule_wait_buffer (GstHipStream * stream,
                                                   GstBuffer * buffer);
 

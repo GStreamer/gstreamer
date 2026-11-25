@@ -2605,6 +2605,73 @@ This function does not wait on the CPU.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="hip_buffer_copy_bytes_into" c:identifier="gst_hip_buffer_copy_bytes_into" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Copies a byte range. See gst_hip_buffer_copy_bytes_into_full().</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">%TRUE if the copy completed</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="dest" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a writable destination #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="dest_offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">byte offset from the start of @dest</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="src" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">source #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="src_offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">byte offset from the start of @src</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">number of bytes to copy</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="hip_buffer_copy_bytes_into_full" c:identifier="gst_hip_buffer_copy_bytes_into_full" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Copies between HIP device or pinned host memories on the same device.
+Waits for the copy to complete before returning. Falls back to a CPU
+copy when the buffers cannot use the HIP copy path. The byte ranges
+must fit within their buffers and must not overlap.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">%TRUE if the copy completed</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="dest" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a writable destination #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="dest_offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">byte offset from the start of @dest</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="src" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">source #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="src_offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">byte offset from the start of @src</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">number of bytes to copy</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">a #GstHipStream, or %NULL to use the memory's stream</doc>
+          <type name="HipStream" c:type="GstHipStream*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="hip_buffer_copy_into" c:identifier="gst_hip_buffer_copy_into" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/hip/gsthiputils.cpp">Copies video data from @src into @dest according to @info.
 
