@@ -2737,7 +2737,8 @@ need_new_fragment (GstSplitMuxSink * splitmux,
 
   if (splitmux->tc_interval) {
     GstClockTimeDiff next_gop_start_time =
-        next_gop ? next_gop->start_time : splitmux->max_in_running_time;
+        next_gop ? next_gop->start_time :
+        MAX (splitmux->max_in_running_time_end, splitmux->max_in_running_time);
 
     if (GST_CLOCK_TIME_IS_VALID (splitmux->next_fragment_start_tc_time) &&
         GST_CLOCK_STIME_IS_VALID (next_gop_start_time) &&
@@ -2804,7 +2805,7 @@ video_time_code_replace (GstVideoTimeCode ** old_tc, GstVideoTimeCode * new_tc)
  */
 static void
 handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
-    GstClockTimeDiff next_gop_start_time, GstClockTimeDiff max_out_running_time)
+    GstClockTimeDiff gop_end_time, GstClockTimeDiff max_out_running_time)
 {
   guint64 queued_bytes;
   GstClockTimeDiff queued_time = 0;
@@ -2818,7 +2819,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
    * but extra pieces won't be released to the muxer beyond the reference
    * stream cut-off anyway - so it forms the limit. */
   queued_bytes = splitmux->fragment_total_bytes + gop->total_bytes;
-  queued_time = next_gop_start_time;
+  queued_time = gop_end_time;
   /* queued_gop_time tracks how much unwritten data there is waiting to
    * be written to this fragment including this GOP */
   if (splitmux->reference_ctx->out_running_time != GST_CLOCK_STIME_NONE)
@@ -2828,10 +2829,10 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
 
   GST_LOG_OBJECT (splitmux, " queued_bytes %" G_GUINT64_FORMAT, queued_bytes);
   GST_LOG_OBJECT (splitmux, "mq at TS %" GST_STIME_FORMAT
-      " bytes %" G_GUINT64_FORMAT " in next gop start time %" GST_STIME_FORMAT
+      " bytes %" G_GUINT64_FORMAT " in gop end time %" GST_STIME_FORMAT
       " gop start time %" GST_STIME_FORMAT,
       GST_STIME_ARGS (queued_time), queued_bytes,
-      GST_STIME_ARGS (next_gop_start_time), GST_STIME_ARGS (gop->start_time));
+      GST_STIME_ARGS (gop_end_time), GST_STIME_ARGS (gop->start_time));
 
   if (queued_gop_time < 0) {
     GST_WARNING_OBJECT (splitmux,
@@ -2958,6 +2959,7 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     GstClockTimeDiff next_gop_start = GST_CLOCK_STIME_NONE;
 
     if (splitmux->input_state == SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT) {
+      GstClockTimeDiff gop_end_time;
       GstClockTimeDiff max_out_running_time;
       gboolean ready = TRUE;
       InputGop *gop;
@@ -2988,10 +2990,14 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
             GST_STIME_ARGS (gop->start_time),
             GST_STIME_ARGS (next_gop->start_time));
         next_gop_start = next_gop->start_time;
+        gop_end_time = next_gop->start_time;
         max_out_running_time = next_gop->start_time;
       } else if (!next_gop) {
         GST_LOG_OBJECT (splitmux, "Reference context is EOS");
         next_gop_start = splitmux->max_in_running_time;
+        gop_end_time =
+            MAX (splitmux->max_in_running_time_end,
+            splitmux->max_in_running_time);
         max_out_running_time = G_MAXINT64;
       } else if (!gop) {
         GST_LOG_OBJECT (splitmux, "No further GOPs finished collecting");
@@ -3029,8 +3035,7 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         GST_DEBUG_OBJECT (splitmux,
             "Collected GOP is complete. Processing (ctx %p)", ctx);
         /* All pads have a complete GOP, release it into the multiqueue */
-        handle_gathered_gop (splitmux, gop, next_gop_start,
-            max_out_running_time);
+        handle_gathered_gop (splitmux, gop, gop_end_time, max_out_running_time);
 
         g_queue_pop_head (&splitmux->pending_input_gops);
         input_gop_free (gop);
@@ -3474,6 +3479,14 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
           if (ctx->in_running_time > splitmux->max_in_running_time)
             splitmux->max_in_running_time = ctx->in_running_time;
+          if (GST_CLOCK_STIME_IS_VALID (running_time)) {
+            GstClockTimeDiff end_running_time = running_time;
+
+            if (GST_CLOCK_TIME_IS_VALID (buf_info->duration))
+              end_running_time += buf_info->duration;
+            splitmux->max_in_running_time_end =
+                MAX (splitmux->max_in_running_time_end, end_running_time);
+          }
           if (running_time_dts > splitmux->max_in_running_time_dts)
             splitmux->max_in_running_time_dts = running_time_dts;
 
@@ -4315,6 +4328,7 @@ static void
 gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
 {
   splitmux->max_in_running_time = GST_CLOCK_STIME_NONE;
+  splitmux->max_in_running_time_end = GST_CLOCK_STIME_NONE;
   splitmux->max_in_running_time_dts = GST_CLOCK_STIME_NONE;
 
   splitmux->fragment_start_time = GST_CLOCK_STIME_NONE;

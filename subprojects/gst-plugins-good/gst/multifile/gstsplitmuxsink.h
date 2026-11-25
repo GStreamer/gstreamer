@@ -196,6 +196,7 @@ struct _GstSplitMuxSink
 
   SplitMuxInputState input_state;
   GstClockTimeDiff max_in_running_time;
+  GstClockTimeDiff max_in_running_time_end;
   GstClockTimeDiff max_in_running_time_dts;
 
   /* Number of bytes sent to the

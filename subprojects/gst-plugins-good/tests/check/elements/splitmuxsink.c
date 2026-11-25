@@ -1245,6 +1245,18 @@ GST_START_TEST (test_splitmuxsink_eos_pending_gop_dts_lag)
 
 GST_END_TEST;
 
+GST_START_TEST (test_splitmuxsink_eos_single_buffer_final_gop)
+{
+  const GstClockTime expected_offsets[2] = { 0, 2 * GST_SECOND };
+  const GstClockTime expected_durations[2] = { 2 * GST_SECOND,
+    100 * GST_MSECOND
+  };
+
+  run_eos_boundary_test (21, 0, FALSE, expected_offsets, expected_durations);
+}
+
+GST_END_TEST;
+
 static Suite *
 splitmuxsink_suite (void)
 {
@@ -1333,6 +1345,8 @@ splitmuxsink_suite (void)
   if (have_matroska) {
     tcase_add_checked_fixture (tc_eos_boundary, tempdir_setup, tempdir_cleanup);
     tcase_add_test (tc_eos_boundary, test_splitmuxsink_eos_pending_gop_dts_lag);
+    tcase_add_test (tc_eos_boundary,
+        test_splitmuxsink_eos_single_buffer_final_gop);
   }
 
   return s;
