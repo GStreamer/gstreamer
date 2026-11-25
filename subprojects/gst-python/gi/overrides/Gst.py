@@ -88,6 +88,17 @@ class Float(float):
 __all__.append('Float')
 
 
+# Backward compatibility: these were exposed as ParamArray and ParamFraction
+# before their GType names were fixed to match the C struct names.
+ParamArray = Gst.ParamSpecArray
+"""Deprecated alias of :class:`Gst.ParamSpecArray`, use that instead."""
+__all__.append('ParamArray')
+
+ParamFraction = Gst.ParamSpecFraction
+"""Deprecated alias of :class:`Gst.ParamSpecFraction`, use that instead."""
+__all__.append('ParamFraction')
+
+
 # Ensuring that PyGObject loads the URIHandler interface
 # so we can force our own implementation soon enough (in gstmodule.c)
 class URIHandler(Gst.URIHandler):
