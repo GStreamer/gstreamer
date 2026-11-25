@@ -1095,21 +1095,27 @@ my_segment_to_running_time (GstSegment * segment, GstClockTime val)
 static void
 mq_stream_ctx_reset (MqStreamCtx * ctx)
 {
+  ctx->flushing = FALSE;
+  ctx->in_eos = FALSE;
+  ctx->out_eos = FALSE;
+  ctx->out_eos_async_done = FALSE;
+  ctx->need_unblock = FALSE;
+  ctx->caps_change = FALSE;
+  ctx->cur_out_buffer = NULL;
+
+  ctx->out_fragment_start_runts = GST_CLOCK_STIME_NONE;
+  ctx->in_running_time = GST_CLOCK_STIME_NONE;
+  ctx->out_running_time = GST_CLOCK_STIME_NONE;
+  ctx->out_running_time_end = GST_CLOCK_STIME_NONE;
+
   gst_segment_init (&ctx->in_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
-  ctx->out_fragment_start_runts = ctx->in_running_time = ctx->out_running_time =
-      GST_CLOCK_STIME_NONE;
-
-  /*
-   * The fragment end is a running maximum, so it must not survive a reset.
-   * A reused element would otherwise report the previous run's end times.
-   */
-  ctx->out_running_time_end = GST_CLOCK_STIME_NONE;
 
   g_clear_pointer (&ctx->out_fragment_start_tc, gst_video_time_code_free);
   g_clear_pointer (&ctx->out_tc, gst_video_time_code_free);
   g_queue_foreach (&ctx->queued_bufs, (GFunc) mq_stream_buf_free, NULL);
   g_queue_clear (&ctx->queued_bufs);
+  gst_clear_event (&ctx->pending_gap);
 }
 
 static MqStreamCtx *
@@ -1147,6 +1153,7 @@ mq_stream_ctx_free (MqStreamCtx * ctx)
   g_queue_clear (&ctx->queued_bufs);
   g_clear_pointer (&ctx->out_fragment_start_tc, gst_video_time_code_free);
   g_clear_pointer (&ctx->out_tc, gst_video_time_code_free);
+  gst_clear_event (&ctx->pending_gap);
   g_free (ctx);
 }
 
@@ -4312,6 +4319,7 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
   splitmux->fragment_start_time = GST_CLOCK_STIME_NONE;
   splitmux->fragment_start_time_pts = GST_CLOCK_STIME_NONE;
   g_clear_pointer (&splitmux->fragment_start_tc, gst_video_time_code_free);
+  splitmux->next_fragment_start_tc_time = GST_CLOCK_TIME_NONE;
 
   g_queue_foreach (&splitmux->pending_input_gops, (GFunc) input_gop_free, NULL);
   g_queue_clear (&splitmux->pending_input_gops);
@@ -4321,6 +4329,7 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
   splitmux->fragment_reference_bytes = 0;
   splitmux->muxed_out_bytes = 0;
   splitmux->ready_for_output = FALSE;
+  splitmux->switching_fragment = FALSE;
 
   g_atomic_int_set (&(splitmux->split_requested), FALSE);
   g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
