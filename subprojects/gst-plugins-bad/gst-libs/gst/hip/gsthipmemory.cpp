@@ -235,6 +235,39 @@ gst_hip_allocator_free (GstAllocator * allocator, GstMemory * mem)
 }
 
 static gboolean
+gst_hip_memory_prepare_transfer (GstHipAllocator * self, GstHipMemory * mem,
+    hipStream_t stream)
+{
+  auto priv = mem->priv;
+  auto event = priv->event;
+
+  if (event) {
+    auto event_vendor = gst_hip_event_get_vendor (event);
+    if (event_vendor != priv->vendor ||
+        gst_hip_event_get_device_id (event) !=
+        gst_hip_device_get_device_id (mem->device)) {
+      if (!gst_hip_result (gst_hip_event_synchronize (event), event_vendor))
+        return FALSE;
+
+      event = nullptr;
+    }
+  }
+
+  if (!gst_hip_device_set_current (mem->device)) {
+    GST_ERROR_OBJECT (self, "Failed to set device");
+    return FALSE;
+  }
+
+  if (event && gst_hip_event_get_recorded_stream (event) != stream) {
+    auto ret = HipStreamWaitEvent (priv->vendor, stream,
+        gst_hip_event_get_handle (event), 0);
+    return gst_hip_result (ret, priv->vendor);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
 {
   auto priv = mem->priv;
@@ -244,24 +277,25 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
     return TRUE;
   }
 
-  if (!gst_hip_device_set_current (mem->device)) {
-    GST_ERROR_OBJECT (self, "Failed to set device");
-    return FALSE;
-  }
-
   auto stream = gst_hip_stream_get_handle (priv->stream);
+  if (!gst_hip_memory_prepare_transfer (self, mem, stream))
+    return FALSE;
+
   auto hip_ret = HipMemcpyHtoDAsync (priv->vendor, priv->data, priv->staging,
       priv->alloc_size, stream);
+  if (!gst_hip_result (hip_ret, priv->vendor))
+    return FALSE;
 
-  if (gst_hip_result (hip_ret, priv->vendor))
-    hip_ret = HipStreamSynchronize (priv->vendor, stream);
+  hip_ret = HipStreamSynchronize (priv->vendor, stream);
+  if (!gst_hip_result (hip_ret, priv->vendor))
+    return FALSE;
 
   /* Already synchronized */
   gst_clear_hip_event (&priv->event);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD);
 
-  return gst_hip_result (hip_ret, priv->vendor);
+  return TRUE;
 }
 
 static gboolean
@@ -272,10 +306,9 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   if (!GST_MEMORY_FLAG_IS_SET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD))
     return TRUE;
 
-  if (!gst_hip_device_set_current (mem->device)) {
-    GST_ERROR_OBJECT (self, "Failed to push cuda context");
+  auto stream = gst_hip_stream_get_handle (priv->stream);
+  if (!gst_hip_memory_prepare_transfer (self, mem, stream))
     return FALSE;
-  }
 
   if (!priv->staging) {
     auto hip_ret = HipHostMalloc (priv->vendor,
@@ -287,18 +320,21 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
     }
   }
 
-  auto stream = gst_hip_stream_get_handle (priv->stream);
   auto hip_ret = HipMemcpyDtoHAsync (priv->vendor, priv->staging, priv->data,
       priv->alloc_size, stream);
-  if (gst_hip_result (hip_ret, priv->vendor))
-    hip_ret = HipStreamSynchronize (priv->vendor, stream);
+  if (!gst_hip_result (hip_ret, priv->vendor))
+    return FALSE;
+
+  hip_ret = HipStreamSynchronize (priv->vendor, stream);
+  if (!gst_hip_result (hip_ret, priv->vendor))
+    return FALSE;
 
   /* Already synchronized */
   gst_clear_hip_event (&priv->event);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-  return gst_hip_result (hip_ret, priv->vendor);
+  return TRUE;
 }
 
 static gpointer
