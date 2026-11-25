@@ -224,6 +224,16 @@ class TestInt64Range(TestCase):
         self.assertEqual(value, range(0, 10, 2))
 
 
+class TestParamSpec(TestCase):
+    def testParamSpecArray(self):
+        self.assertEqual(Gst.ParamSpecArray.__gtype__.name, 'GstParamSpecArray')
+        self.assertIs(Gst.ParamArray, Gst.ParamSpecArray)
+
+    def testParamSpecFraction(self):
+        self.assertEqual(Gst.ParamSpecFraction.__gtype__.name, 'GstParamSpecFraction')
+        self.assertIs(Gst.ParamFraction, Gst.ParamSpecFraction)
+
+
 class TestValueArray(TestCase):
     def testConstructor(self):
         Gst.init(None)
