@@ -45,43 +45,28 @@
 #ifndef MOTIONCELLS_WRAPPER_H
 #define MOTIONCELLS_WRAPPER_H
 
-#include <stdbool.h>
-
-#ifdef __cplusplus
 #include "MotionCells.h"
-struct instanceOfMC
-{
-  int id;
-  MotionCells *mc;
-};
 
-int searchIdx (int p_id);
-extern "C"
-{
-#endif
+/* Each wrapper call takes the MotionCells instance owned by the element;
+ * there is no process-wide registry, so instances are independent and
+ * usable from different threads concurrently. */
 
-  int motion_cells_init ();
-  int perform_detection_motion_cells (cv::Mat p_image, double p_sensitivity,
-      double p_framerate, int p_gridx, int p_gridy,
-      long int p_timestamp_millisec, bool p_isVisible, bool p_useAlpha,
-      int motionmaskcoord_count, motionmaskcoordrect * motionmaskcoords,
-      int motionmaskcells_count, motioncellidx * motionmaskcellsidx,
-      cellscolor motioncellscolor, int motioncells_count,
-      motioncellidx * motioncellsidx, gint64 starttime, char *datafile,
-      bool p_changed_datafile, int p_thickness, int p_id);
-  void setPrevFrame (cv::Mat p_prevFrame, int p_id);
-  void motion_cells_free (int p_id);
-  void motion_cells_free_resources (int p_id);
-  char *getMotionCellsIdx (int p_id);
-  int getMotionCellsIdxCnt (int p_id);
-  bool getChangedDataFile (int p_id);
-  char *getInitDataFileFailed (int p_id);
-  char *getSaveDataFileFailed (int p_id);
-  int getInitErrorCode (int p_id);
-  int getSaveErrorCode (int p_id);
-
-#ifdef __cplusplus
-}
-#endif
+int perform_detection_motion_cells (MotionCells * mc, cv::Mat p_image,
+    double p_sensitivity, double p_framerate, int p_gridx, int p_gridy,
+    long int p_timestamp_millisec, bool p_isVisible, bool p_useAlpha,
+    int motionmaskcoord_count, motionmaskcoordrect * motionmaskcoords,
+    int motionmaskcells_count, motioncellidx * motionmaskcellsidx,
+    cellscolor motioncellscolor, int motioncells_count,
+    motioncellidx * motioncellsidx, gint64 starttime, char *datafile,
+    bool p_changed_datafile, int p_thickness);
+void setPrevFrame (MotionCells * mc, cv::Mat p_prevFrame);
+void motion_cells_free_resources (MotionCells * mc);
+char *getMotionCellsIdx (MotionCells * mc);
+int getMotionCellsIdxCnt (MotionCells * mc);
+bool getChangedDataFile (MotionCells * mc);
+char *getInitDataFileFailed (MotionCells * mc);
+char *getSaveDataFileFailed (MotionCells * mc);
+int getInitErrorCode (MotionCells * mc);
+int getSaveErrorCode (MotionCells * mc);
 
 #endif  /* MOTIONCELLS_WRAPPER_H */
