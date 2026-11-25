@@ -889,6 +889,9 @@ gst_cuda_converter_dispose (GObject * object)
   auto stream = gst_cuda_stream_get_handle (priv->stream);
 
   if (self->context && gst_cuda_context_push (self->context)) {
+    if (stream)
+      CuStreamSynchronize (stream);
+
     if (priv->unpack_module) {
       CuModuleUnload (priv->unpack_module);
       priv->unpack_module = nullptr;
@@ -898,6 +901,8 @@ gst_cuda_converter_dispose (GObject * object)
       CuModuleUnload (priv->main_module);
       priv->main_module = nullptr;
     }
+
+    gst_cuda_context_pop (nullptr);
   }
 
   if (priv->fallback_mem) {
@@ -905,8 +910,6 @@ gst_cuda_converter_dispose (GObject * object)
     priv->fallback_mem = nullptr;
   }
 
-  if (stream)
-    CuStreamSynchronize (stream);
   gst_clear_cuda_stream (&priv->stream);
   gst_clear_object (&self->context);
 
