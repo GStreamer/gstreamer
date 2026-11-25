@@ -2800,7 +2800,7 @@ video_time_code_replace (GstVideoTimeCode ** old_tc, GstVideoTimeCode * new_tc)
  * Assess if mq contents overflowed the current file
  *   -> If yes, need to switch to new file
  *   -> if no, set max_out_running_time to let this GOP in and
- *      go to COLLECTING_GOP_START state
+ *      move to the next input state
  */
 static void
 handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
@@ -2884,11 +2884,11 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
   }
 
   /* And set up to collect the next GOP */
-  if (max_out_running_time != G_MAXINT64) {
-    splitmux->input_state = SPLITMUX_INPUT_STATE_COLLECTING_GOP_START;
-  } else {
+  if (max_out_running_time == G_MAXINT64) {
     /* This is probably already the current state, but just in case: */
     splitmux->input_state = SPLITMUX_INPUT_STATE_FINISHING_UP;
+  } else if (!splitmux->reference_ctx->in_eos) {
+    splitmux->input_state = SPLITMUX_INPUT_STATE_COLLECTING_GOP_START;
   }
 
   /* And wake all input contexts to send a wake-up event */
@@ -2988,8 +2988,7 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
             GST_STIME_ARGS (gop->start_time),
             GST_STIME_ARGS (next_gop->start_time));
         next_gop_start = next_gop->start_time;
-        max_out_running_time =
-            splitmux->reference_ctx->in_eos ? G_MAXINT64 : next_gop->start_time;
+        max_out_running_time = next_gop->start_time;
       } else if (!next_gop) {
         GST_LOG_OBJECT (splitmux, "Reference context is EOS");
         next_gop_start = splitmux->max_in_running_time;
@@ -3042,6 +3041,8 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
                 TRUE, FALSE)) {
           g_atomic_int_set (&(splitmux->do_split_next_gop), TRUE);
         }
+
+        continue;
       }
     }
 

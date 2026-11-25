@@ -1144,6 +1144,107 @@ GST_START_TEST (test_splitmuxsink_keyframe_request_less)
 
 GST_END_TEST;
 
+static void
+run_eos_boundary_test (guint num_frames, GstClockTime dts_lag,
+    gboolean with_audio, const GstClockTime * expected_offsets,
+    const GstClockTime * expected_durations)
+{
+  GstElement *pipeline, *appsrc, *sink;
+  GstCaps *caps;
+  GstMessage *msg;
+  gchar *dest_pattern;
+  const GstClockTime base = GST_SECOND;
+  const GstClockTime frame_dur = 100 * GST_MSECOND;
+
+  pipeline = gst_pipeline_new ("splitmux-eos-boundary");
+  appsrc = gst_element_factory_make ("appsrc", "src");
+  sink = gst_element_factory_make ("splitmuxsink", "splitsink");
+  fail_unless (pipeline && appsrc && sink);
+
+  dest_pattern = g_build_filename (tmpdir, "out%05d.mkv", NULL);
+  g_object_set (sink,
+      "location", dest_pattern,
+      "muxer-factory", "matroskamux",
+      "max-size-time", 2 * GST_SECOND, "send-keyframe-requests", FALSE, NULL);
+  g_free (dest_pattern);
+
+  caps = gst_caps_new_simple ("video/x-h264",
+      "stream-format", G_TYPE_STRING, "avc",
+      "alignment", G_TYPE_STRING, "au",
+      "width", G_TYPE_INT, 320, "height", G_TYPE_INT, 240, NULL);
+  g_object_set (appsrc, "format", GST_FORMAT_TIME, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  gst_bin_add_many (GST_BIN (pipeline), appsrc, sink, NULL);
+  fail_unless (gst_element_link_pads (appsrc, "src", sink, "video"));
+
+  if (with_audio) {
+    GstElement *audiosrc = gst_element_factory_make ("appsrc", "asrc");
+    GstCaps *acaps;
+
+    fail_unless (audiosrc != NULL);
+    acaps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, "S16LE",
+        "layout", G_TYPE_STRING, "interleaved",
+        "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
+    g_object_set (audiosrc, "format", GST_FORMAT_TIME, "caps", acaps, NULL);
+    gst_caps_unref (acaps);
+
+    gst_bin_add (GST_BIN (pipeline), audiosrc);
+    fail_unless (gst_element_link_pads (audiosrc, "src", sink, "audio_%u"));
+
+    for (guint i = 0; i < num_frames; i++) {
+      GstBuffer *buf = gst_buffer_new_allocate (NULL, 1600, NULL);
+
+      gst_buffer_memset (buf, 0, 0, 1600);
+      GST_BUFFER_PTS (buf) = base + i * frame_dur;
+      GST_BUFFER_DURATION (buf) = frame_dur;
+      fail_unless_equals_int (gst_app_src_push_buffer (GST_APP_SRC (audiosrc),
+              buf), GST_FLOW_OK);
+    }
+    fail_unless_equals_int (gst_app_src_end_of_stream (GST_APP_SRC (audiosrc)),
+        GST_FLOW_OK);
+  }
+
+  for (guint i = 0; i < num_frames; i++) {
+    GstBuffer *buf = gst_buffer_new_allocate (NULL, 8, NULL);
+
+    gst_buffer_memset (buf, 0, 0, 8);
+    GST_BUFFER_PTS (buf) = base + i * frame_dur;
+    GST_BUFFER_DTS (buf) = base + i * frame_dur - dts_lag;
+    GST_BUFFER_DURATION (buf) = frame_dur;
+    if (i != 0 && i != 10 && i != 20)
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    fail_unless_equals_int (gst_app_src_push_buffer (GST_APP_SRC (appsrc), buf),
+        GST_FLOW_OK);
+  }
+  fail_unless_equals_int (gst_app_src_end_of_stream (GST_APP_SRC (appsrc)),
+      GST_FLOW_OK);
+
+  msg = run_pipeline (pipeline, 2, expected_offsets, expected_durations,
+      expected_durations);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  fail_unless_equals_int (count_files (tmpdir), 2);
+
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_splitmuxsink_eos_pending_gop_dts_lag)
+{
+  const GstClockTime expected_offsets[2] = { 0, 2 * GST_SECOND };
+  const GstClockTime expected_durations[2] = { 2 * GST_SECOND,
+    200 * GST_MSECOND
+  };
+
+  run_eos_boundary_test (22, 200 * GST_MSECOND, TRUE, expected_offsets,
+      expected_durations);
+}
+
+GST_END_TEST;
+
 static Suite *
 splitmuxsink_suite (void)
 {
@@ -1153,6 +1254,7 @@ splitmuxsink_suite (void)
   TCase *tc_chain_complex = tcase_create ("complex");
   TCase *tc_chain_mp4_jpeg = tcase_create ("caps_change");
   TCase *tc_chain_keyframe_request = tcase_create ("keyframe_request");
+  TCase *tc_eos_boundary = tcase_create ("eos_boundary");
   gboolean have_theora, have_ogg, have_vorbis, have_matroska, have_qtmux,
       have_jpeg, have_vp8;
 
@@ -1177,6 +1279,7 @@ splitmuxsink_suite (void)
   suite_add_tcase (s, tc_chain_complex);
   suite_add_tcase (s, tc_chain_mp4_jpeg);
   suite_add_tcase (s, tc_chain_keyframe_request);
+  suite_add_tcase (s, tc_eos_boundary);
 
   tcase_add_test (tc_chain_basic, test_splitmuxsink_reuse_simple);
 
@@ -1225,6 +1328,11 @@ splitmuxsink_suite (void)
         test_splitmuxsink_keyframe_request_less);
   } else {
     GST_INFO ("Skipping tests, missing plugins: vp8enc or mp4mux");
+  }
+
+  if (have_matroska) {
+    tcase_add_checked_fixture (tc_eos_boundary, tempdir_setup, tempdir_cleanup);
+    tcase_add_test (tc_eos_boundary, test_splitmuxsink_eos_pending_gop_dts_lag);
   }
 
   return s;
