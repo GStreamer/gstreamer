@@ -166,7 +166,7 @@ gst_motion_cells_finalize (GObject * obj)
 {
   GstMotioncells *filter = gst_motion_cells (obj);
 
-  motion_cells_free (filter->id);
+  delete filter->mc;
 
   //freeing previously allocated dynamic array
   if (filter->motionmaskcoord_count > 0) {
@@ -383,7 +383,7 @@ gst_motion_cells_init (GstMotioncells * filter)
   filter->thickness = THICKNESS_DEF;
 
   filter->datafileidx = 0;
-  filter->id = motion_cells_init ();
+  filter->mc = new MotionCells ();
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       TRUE);
@@ -488,7 +488,7 @@ gst_motion_cells_set_property (GObject * object, guint prop_id,
         filter->sent_init_error_msg = FALSE;
         filter->sent_save_error_msg = FALSE;
         filter->datafileidx = 0;
-        motion_cells_free_resources (filter->id);
+        motion_cells_free_resources (filter->mc);
       } else {
         filter->changed_datafile = FALSE;
       }
@@ -896,7 +896,7 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     motioncellidx *motioncellsidx;
 
     if (filter->firstframe) {
-      setPrevFrame (img, filter->id);
+      setPrevFrame (filter->mc, img);
       filter->firstframe = FALSE;
     }
 
@@ -937,7 +937,7 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
             g_strdup_printf ("%s-%d.%s", filter->basename_datafile,
             filter->datafileidx, filter->datafile_extension);
         filter->changed_datafile = TRUE;
-        motion_cells_free_resources (filter->id);
+        motion_cells_free_resources (filter->mc);
       }
       if (filter->motioncells_count > 0)
         gst_motioncells_update_motion_cells (filter);
@@ -974,13 +974,13 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     useAlpha = filter->usealpha;
     thickness = filter->thickness;
     success =
-        perform_detection_motion_cells (img, sensitivity,
+        perform_detection_motion_cells (filter->mc, img, sensitivity,
         framerate, gridx, gridy,
         (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND) -
         filter->diff_timestamp, display, useAlpha, motionmaskcoord_count,
         motionmaskcoords, motionmaskcells_count, motionmaskcellsidx,
         motioncellscolor, motioncells_count, motioncellsidx, starttime,
-        datafile, changed_datafile, thickness, filter->id);
+        datafile, changed_datafile, thickness);
 
     if ((success == 1) && (filter->sent_init_error_msg == FALSE)) {
       char *initfailedreason;
@@ -988,8 +988,8 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       GstStructure *s;
       GstMessage *m;
 
-      initfailedreason = getInitDataFileFailed (filter->id);
-      initerrorcode = getInitErrorCode (filter->id);
+      initfailedreason = getInitDataFileFailed (filter->mc);
+      initerrorcode = getInitErrorCode (filter->mc);
       s = gst_structure_new ("motion", "init_error_code", G_TYPE_INT,
           initerrorcode, "details", G_TYPE_STRING, initfailedreason, NULL);
       m = gst_message_new_element (GST_OBJECT (filter), s);
@@ -1002,8 +1002,8 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       GstStructure *s;
       GstMessage *m;
 
-      savefailedreason = getSaveDataFileFailed (filter->id);
-      saveerrorcode = getSaveErrorCode (filter->id);
+      savefailedreason = getSaveDataFileFailed (filter->mc);
+      saveerrorcode = getSaveErrorCode (filter->mc);
       s = gst_structure_new ("motion", "save_error_code", G_TYPE_INT,
           saveerrorcode, "details", G_TYPE_STRING, savefailedreason, NULL);
       m = gst_message_new_element (GST_OBJECT (filter), s);
@@ -1022,8 +1022,8 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       return GST_FLOW_OK;
     }
 
-    filter->changed_datafile = getChangedDataFile (filter->id);
-    motioncellsidxcnt = getMotionCellsIdxCnt (filter->id);
+    filter->changed_datafile = getChangedDataFile (filter->mc);
+    motioncellsidxcnt = getMotionCellsIdxCnt (filter->mc);
     numberOfCells = filter->gridx * filter->gridy;
     motioncellsnumber = motioncellsidxcnt / MSGLEN;
     cellsOfInterestNumber = (filter->motioncells_count > 0) ?   //how many cells interest for us
@@ -1036,7 +1036,7 @@ gst_motion_cells_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       char *detectedmotioncells;
 
       filter->last_motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
-      detectedmotioncells = getMotionCellsIdx (filter->id);
+      detectedmotioncells = getMotionCellsIdx (filter->mc);
       if (detectedmotioncells) {
         filter->consecutive_motion++;
         if ((filter->previous_motion == FALSE)

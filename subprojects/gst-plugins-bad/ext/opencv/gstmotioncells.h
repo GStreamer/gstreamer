@@ -73,7 +73,8 @@ struct _GstMotioncells
       firstdatafile, firstframe;
   gboolean sent_init_error_msg, sent_save_error_msg;
   gchar *prev_datafile, *cur_datafile, *basename_datafile, *datafile_extension;
-  gint prevgridx, gridx, prevgridy, gridy, id;
+  gint prevgridx, gridx, prevgridy, gridy;
+  MotionCells *mc;
   gdouble sensitivity, threshold;
   motionmaskcoordrect *motionmaskcoords;
   cellscolor *motioncellscolor;
