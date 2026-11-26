@@ -32,6 +32,10 @@
 GST_DEBUG_CATEGORY_STATIC (rtph263pdepay_debug);
 #define GST_CAT_DEFAULT (rtph263pdepay_debug)
 
+/* RFC 4629 declares no frame size field; this is a robustness bound against
+ * senders that never complete a frame. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (32 * 1024 * 1024)
+
 static GstStaticPadTemplate gst_rtp_h263p_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -443,6 +447,17 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
     if (P)
       gst_buffer_memset (outbuf, 0, 0, 2);
     gst_adapter_push (rtph263pdepay->adapter, outbuf);
+
+    if (gst_adapter_available (rtph263pdepay->adapter) >
+        DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+      GST_WARNING_OBJECT (rtph263pdepay,
+          "Too big (> %u bytes) frame, dropping.",
+          DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+      rtph263pdepay->wait_start = TRUE;
+      gst_rtp_base_depayload_flush (depayload, FALSE);
+      gst_rtp_base_depayload_dropped (depayload);
+      gst_adapter_clear (rtph263pdepay->adapter);
+    }
   }
   return NULL;
 
