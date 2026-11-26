@@ -734,6 +734,192 @@ GST_START_TEST (test_imagefreeze_flush_keeps_caps)
 
 GST_END_TEST;
 
+typedef struct flush_test_shared_data
+{
+  GstObject *source;
+  GMutex *lock;
+  GCond *cond;
+  gboolean first_time;
+  gboolean parked;
+  gboolean flushed;
+  gboolean have_buffer;
+} flush_test_shared_data;
+
+
+static gboolean
+wait_for (flush_test_shared_data * shared_data, gboolean * wait_for_flag,
+    gint64 usec)
+{
+  gboolean result = FALSE;
+  gint64 wait_until = g_get_monotonic_time () + usec;
+
+  g_mutex_lock (shared_data->lock);
+  while (!*wait_for_flag) {
+    if (!g_cond_wait_until (shared_data->cond, shared_data->lock, wait_until))
+      break;
+  }
+  result = *wait_for_flag;
+  g_mutex_unlock (shared_data->lock);
+  return result;
+}
+
+/*
+ * Intercept a log message from imagefreeze. When we see it pushing segment, park the thread
+ * and raise a flag. Another thread will send FLUSH_START to reproduce the crash.
+ */
+static void
+handle_log_message (GstDebugCategory * category,
+    GstDebugLevel level,
+    const gchar * file,
+    const gchar * function,
+    gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
+{
+  flush_test_shared_data *shared_data = (flush_test_shared_data *) user_data;
+
+  const gchar *msg = gst_debug_message_get (message);
+  if (object == (GObject *) shared_data->source
+      && strstr (msg, "Pushing SEGMENT event")) {
+    g_mutex_lock (shared_data->lock);
+    if (!shared_data->first_time) {
+      g_mutex_unlock (shared_data->lock);
+      return;
+    }
+    shared_data->first_time = FALSE;
+    shared_data->parked = TRUE;
+    g_mutex_unlock (shared_data->lock);
+    g_cond_signal (shared_data->cond);
+
+    // release the thread when we get a signal or on timeout
+    wait_for (shared_data, &shared_data->flushed, G_USEC_PER_SEC);
+  }
+}
+
+/*
+ * Wait for buffer, set flag and signal once we have received it 
+ */
+static GstPadProbeReturn
+probe_imagefreeze_buffer (GstPad * srcpad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  flush_test_shared_data *shared_data = (flush_test_shared_data *) user_data;
+  g_mutex_lock (shared_data->lock);
+  shared_data->have_buffer = TRUE;
+  g_mutex_unlock (shared_data->lock);
+  g_cond_signal (shared_data->cond);
+  return GST_PAD_PROBE_PASS;
+}
+
+/*
+* Make sure imagefreeze does not divide by 0 if FLUSH is received when src_loop has unlocked the mutex
+*/
+static void
+test_imagefreeze_no_crash_after_flush (gboolean flush_stop_while_parked)
+{
+  GstElement *pipeline;
+  GstCaps *caps1;
+  GstVideoInfo i1;
+  GstElement *imagefreeze;
+  GstPad *freeze_sink;
+  GstPad *freeze_src;
+  GMutex lock;
+  GCond cond;
+  gint64 wait_until;
+  GstBuffer *empty_buf;
+  GstSegment seg;
+
+  g_mutex_init (&lock);
+  g_cond_init (&cond);
+
+  gst_video_info_init (&i1);
+  gst_video_info_set_format (&i1, GST_VIDEO_FORMAT_xRGB, 640, 480);
+  i1.fps_n = 25;
+  i1.fps_d = 1;
+  caps1 = gst_video_info_to_caps (&i1);
+
+  pipeline = setup_imagefreeze (caps1, caps1, NULL, NULL);
+
+  imagefreeze = gst_bin_get_by_name (GST_BIN (pipeline), "freeze");
+  freeze_sink = gst_element_get_static_pad (imagefreeze, "sink");
+  freeze_src = gst_element_get_static_pad (imagefreeze, "src");
+
+  flush_test_shared_data shared_data = {
+    GST_OBJECT (freeze_src),
+    &lock,
+    &cond,
+    TRUE, FALSE, FALSE, FALSE
+  };
+
+  /* The only way for us to simulate race condition is to hook to debug-level log message. */
+  gst_debug_set_threshold_for_name ("imagefreeze", GST_LEVEL_DEBUG);
+  gst_debug_add_log_function (handle_log_message, &shared_data, NULL);
+
+  gst_pad_add_probe (freeze_src, GST_PAD_PROBE_TYPE_BUFFER,
+      probe_imagefreeze_buffer, &shared_data, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* wait until src thread is parked inside src_loop function, unlocked */
+  fail_unless (wait_for (&shared_data, &shared_data.parked, G_USEC_PER_SEC));
+
+  /* and now try to crash it */
+  gst_pad_send_event (freeze_sink, gst_event_new_flush_start ());
+  /* In this mode - test if src_loop survives after start & stop */
+  if (flush_stop_while_parked)
+    gst_pad_send_event (freeze_sink, gst_event_new_flush_stop (FALSE));
+
+  g_mutex_lock (shared_data.lock);
+  shared_data.flushed = TRUE;
+  g_cond_signal (shared_data.cond);
+  g_mutex_unlock (shared_data.lock);
+
+  wait_until = g_get_monotonic_time () + G_USEC_PER_SEC;
+  while (g_get_monotonic_time () < wait_until) {
+    if (gst_pad_get_task_state (freeze_src) == GST_TASK_PAUSED)
+      break;
+    g_usleep (1000);
+  }
+
+  fail_unless (gst_pad_get_task_state (freeze_src) == GST_TASK_PAUSED);
+
+  /* In this mode - test if src_loop survives flush start only */
+  if (!flush_stop_while_parked)
+    gst_pad_send_event (freeze_sink, gst_event_new_flush_stop (FALSE));
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  gst_pad_send_event (freeze_sink, gst_event_new_segment (&seg));
+  empty_buf = gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&i1), NULL);
+  fail_unless (gst_pad_chain (freeze_sink, empty_buf) == GST_FLOW_EOS);
+
+  fail_unless (wait_for (&shared_data, &shared_data.have_buffer,
+          G_USEC_PER_SEC));
+
+  gst_debug_remove_log_function (handle_log_message);
+  gst_debug_unset_threshold_for_name ("imagefreeze");
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (imagefreeze);
+  gst_object_unref (freeze_sink);
+  gst_object_unref (freeze_src);
+  gst_object_unref (pipeline);
+  gst_caps_unref (caps1);
+  g_mutex_clear (&lock);
+  g_cond_clear (&cond);
+}
+
+GST_START_TEST (test_imagefreeze_no_crash_after_flush_start)
+{
+  test_imagefreeze_no_crash_after_flush (FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_imagefreeze_no_crash_after_flush_stop)
+{
+  test_imagefreeze_no_crash_after_flush (TRUE);
+}
+
+GST_END_TEST;
+
 static Suite *
 imagefreeze_suite (void)
 {
@@ -755,7 +941,11 @@ imagefreeze_suite (void)
 
   tcase_add_test (tc_chain, test_imagefreeze_25_1_live);
   tcase_add_test (tc_chain, test_imagefreeze_flush_keeps_caps);
-
+#ifndef GST_DISABLE_GST_DEBUG
+  // these tests need debug hook to work
+  tcase_add_test (tc_chain, test_imagefreeze_no_crash_after_flush_start);
+  tcase_add_test (tc_chain, test_imagefreeze_no_crash_after_flush_stop);
+#endif
   return s;
 }
 
