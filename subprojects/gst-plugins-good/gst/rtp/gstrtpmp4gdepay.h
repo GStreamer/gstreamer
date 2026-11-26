@@ -71,7 +71,8 @@ struct _GstRtpMP4GDepay
   gboolean warn_adts;  /* warn about ADTS headers */
 
   GQueue *packets;
-  
+  gsize queued_bytes;   /* total size of the buffers held in packets */
+
   GstAdapter *adapter;
   GstBufferList *outbufs;
 };

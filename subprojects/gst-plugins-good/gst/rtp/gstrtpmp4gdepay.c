@@ -32,6 +32,11 @@
 GST_DEBUG_CATEGORY_STATIC (rtpmp4gdepay_debug);
 #define GST_CAT_DEFAULT (rtpmp4gdepay_debug)
 
+/* RFC 3640 defines no absolute limit on the size of an access unit (the width
+ * of the AU-size field is the session's sizelength), so cap both the
+ * fragmented AU accumulator and the reorder queue at 1 MiB. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (1024 * 1024)
+
 static GstStaticPadTemplate gst_rtp_mp4g_depay_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -134,6 +139,7 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpmp4gdepay, "rtpmp4gdepay",
     GST_RANK_SECONDARY, GST_TYPE_RTP_MP4G_DEPAY, rtp_element_init (plugin));
 
 static void gst_rtp_mp4g_depay_finalize (GObject * object);
+static void gst_rtp_mp4g_depay_clear_queue (GstRtpMP4GDepay * rtpmp4gdepay);
 
 static gboolean gst_rtp_mp4g_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
@@ -197,8 +203,10 @@ gst_rtp_mp4g_depay_finalize (GObject * object)
 
   g_object_unref (rtpmp4gdepay->adapter);
   rtpmp4gdepay->adapter = NULL;
+  gst_rtp_mp4g_depay_clear_queue (rtpmp4gdepay);
   g_queue_free (rtpmp4gdepay->packets);
   rtpmp4gdepay->packets = NULL;
+  gst_clear_buffer_list (&rtpmp4gdepay->outbufs);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -319,6 +327,8 @@ gst_rtp_mp4g_depay_clear_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 
   while ((outbuf = g_queue_pop_head (rtpmp4gdepay->packets)))
     gst_buffer_unref (outbuf);
+
+  rtpmp4gdepay->queued_bytes = 0;
 }
 
 static void
@@ -366,6 +376,7 @@ gst_rtp_mp4g_depay_flush_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 
   while ((outbuf = g_queue_pop_head (rtpmp4gdepay->packets))) {
     AU_index = GST_BUFFER_OFFSET (outbuf);
+    rtpmp4gdepay->queued_bytes -= gst_buffer_get_size (outbuf);
 
     GST_DEBUG_OBJECT (rtpmp4gdepay, "next available AU_index %u", AU_index);
 
@@ -397,6 +408,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
 
       if (rtpmp4gdepay->next_AU_index == AU_index) {
         outbuf = g_queue_pop_head (rtpmp4gdepay->packets);
+        rtpmp4gdepay->queued_bytes -= gst_buffer_get_size (outbuf);
         gst_rtp_mp4g_depay_push_outbuf (rtpmp4gdepay, outbuf, AU_index);
       } else {
         GST_DEBUG_OBJECT (rtpmp4gdepay, "waiting for next AU_index %u",
@@ -430,6 +442,8 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
       g_queue_insert_before (rtpmp4gdepay->packets, list, outbuf);
     else
       g_queue_push_tail (rtpmp4gdepay->packets, outbuf);
+
+    rtpmp4gdepay->queued_bytes += gst_buffer_get_size (outbuf);
   }
 }
 
@@ -676,6 +690,27 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             gst_rtp_buffer_get_payload_subbuffer (rtp, payload_AU, AU_size);
         gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
 
+        /* the AU is not complete until the marker bit is seen; bound the
+         * accumulator so a sender dribbling fragments cannot grow it
+         * without limit */
+        if (!M) {
+          if (gst_adapter_available (rtpmp4gdepay->adapter) >
+              DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+            GST_WARNING_OBJECT (rtpmp4gdepay,
+                "Too big (> %u bytes) AU, dropping.",
+                DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+            /* hand over AUs already collected for this RTP packet */
+            if (rtpmp4gdepay->outbufs) {
+              gst_rtp_base_depayload_push_list (depayload,
+                  g_steal_pointer (&rtpmp4gdepay->outbufs));
+            }
+            gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
+            gst_rtp_base_depayload_flush (depayload, FALSE);
+            gst_rtp_base_depayload_dropped (depayload);
+            return NULL;
+          }
+        }
+
         if (M) {
           guint32 v = 0;
           guint avail;
@@ -732,6 +767,25 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
           gst_rtp_mp4g_depay_queue (rtpmp4gdepay, outbuf);
 
+          /* bound the reorder queue; a sender skipping AU-Index
+           * indefinitely cannot grow it without limit. The bound applies
+           * to the queue as a whole: it can hold any number of complete
+           * AUs, each within the bound, until their combined size passes
+           * it. */
+          if (rtpmp4gdepay->queued_bytes > DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+            GST_WARNING_OBJECT (rtpmp4gdepay,
+                "Too big (> %u bytes) reorder buffer, dropping.",
+                DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+            /* hand over AUs already collected for this RTP packet */
+            if (rtpmp4gdepay->outbufs) {
+              gst_rtp_base_depayload_push_list (depayload,
+                  g_steal_pointer (&rtpmp4gdepay->outbufs));
+            }
+            gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
+            gst_rtp_base_depayload_flush (depayload, FALSE);
+            gst_rtp_base_depayload_dropped (depayload);
+            return NULL;
+          }
         }
         payload_AU += AU_size;
         payload_AU_size -= AU_size;
@@ -745,6 +799,20 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       /* push complete buffer in adapter */
       outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, 0, payload_len);
       gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
+
+      /* bound the accumulator as above */
+      if (!M) {
+        if (gst_adapter_available (rtpmp4gdepay->adapter) >
+            DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+          GST_WARNING_OBJECT (rtpmp4gdepay,
+              "Too big (> %u bytes) frame, dropping.",
+              DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+          gst_rtp_mp4g_depay_reset (rtpmp4gdepay);
+          gst_rtp_base_depayload_flush (depayload, FALSE);
+          gst_rtp_base_depayload_dropped (depayload);
+          return NULL;
+        }
+      }
 
       /* if this was the last packet of the VOP, create and push a buffer */
       if (M) {

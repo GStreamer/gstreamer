@@ -113,6 +113,7 @@ if not get_option('rtp').disabled() and not get_option('rtpmanager').disabled()
     [ 'elements/rtphdrextsdes', false, [gstrtp_dep, gstsdp_dep] ],
     [ 'elements/rtpjitterbuffer' ],
     [ 'elements/rtpjpeg' ],
+    [ 'elements/rtpmp4g' ],
 
     [ 'elements/rtptimerqueue', false, [gstrtp_dep],
       ['../../gst/rtpmanager/rtptimerqueue.c']],
