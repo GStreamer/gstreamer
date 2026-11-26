@@ -35,6 +35,12 @@
 GST_DEBUG_CATEGORY_STATIC (rtpjpegdepay_debug);
 #define GST_CAT_DEFAULT (rtpjpegdepay_debug)
 
+/* RFC 2435 section 3.1.2 bounds the fragment offset to 24 bits: the last
+ * fragment of a well-formed frame starts below 2^24 bytes. A frame at most
+ * one payload larger could still be well formed; nothing realistic comes
+ * near that, so the bound is 16 MiB and such frames are dropped. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (16 * 1024 * 1024)
+
 static GstStaticPadTemplate gst_rtp_jpeg_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -700,6 +706,22 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   outbuf = gst_rtp_buffer_get_payload_subbuffer (rtp, header_len, -1);
   gst_adapter_push (rtpjpegdepay->adapter, outbuf);
   outbuf = NULL;
+
+  if (!gst_rtp_buffer_get_marker (rtp)) {
+    if (gst_adapter_available (rtpjpegdepay->adapter) >
+        DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+      GST_WARNING_OBJECT (rtpjpegdepay,
+          "Too big (> %u bytes) frame, dropping.",
+          DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+      /* with the adapter empty, fragments of the ongoing frame are
+       * discarded until the next packet with a fragment offset of zero */
+      rtpjpegdepay->discont = TRUE;
+      gst_rtp_base_depayload_flush (depayload, FALSE);
+      gst_rtp_base_depayload_dropped (depayload);
+      gst_adapter_clear (rtpjpegdepay->adapter);
+    }
+    return NULL;
+  }
 
   if (gst_rtp_buffer_get_marker (rtp)) {
     guint avail;
