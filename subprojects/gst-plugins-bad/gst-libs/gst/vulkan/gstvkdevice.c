@@ -255,6 +255,10 @@ static const struct extension optional_extensions[] = {
   OPTIONAL_EXTENSION_VERSION (VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
       VK_MAKE_VERSION (1, 0, 0), VK_MAKE_VERSION (1, 1, 0)),
 #endif
+#if defined(VK_KHR_maintenance2)
+  OPTIONAL_EXTENSION_VERSION (VK_KHR_MAINTENANCE_2_EXTENSION_NAME,
+      VK_MAKE_VERSION (1, 0, 0), VK_MAKE_VERSION (1, 1, 0)),
+#endif
 #if defined(VK_KHR_get_physical_device_properties2)
   OPTIONAL_EXTENSION_VERSION
       (VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
