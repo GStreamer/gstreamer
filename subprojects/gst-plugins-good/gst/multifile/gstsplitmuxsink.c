@@ -2334,6 +2334,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         || splitmux->cur_fragment_id != splitmux->start_index) {
       gchar *newname;
       GstElement *new_sink, *new_muxer;
+      gint eos_from_us;
 
       GST_DEBUG_OBJECT (splitmux, "Starting fragment %u",
           splitmux->next_fragment_id);
@@ -2378,15 +2379,16 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
       g_list_foreach (splitmux->contexts, (GFunc) relink_context, splitmux);
       gst_element_link (new_muxer, new_sink);
 
-      if (g_object_get_qdata ((GObject *) sink, EOS_FROM_US)) {
-        if (GPOINTER_TO_INT (g_object_get_qdata ((GObject *) sink,
-                    EOS_FROM_US)) == 2) {
-          _lock_and_set_to_null (muxer, splitmux);
-          _lock_and_set_to_null (sink, splitmux);
-        } else {
-          g_object_set_qdata ((GObject *) sink, EOS_FROM_US,
-              GINT_TO_POINTER (2));
-        }
+      GST_SPLITMUX_LOCK (splitmux);
+      eos_from_us =
+          GPOINTER_TO_INT (g_object_get_qdata ((GObject *) sink, EOS_FROM_US));
+      if (eos_from_us == 1)
+        g_object_set_qdata ((GObject *) sink, EOS_FROM_US, GINT_TO_POINTER (2));
+      GST_SPLITMUX_UNLOCK (splitmux);
+
+      if (eos_from_us == 2) {
+        _lock_and_set_to_null (muxer, splitmux);
+        _lock_and_set_to_null (sink, splitmux);
       }
       gst_object_unref (muxer);
       gst_object_unref (sink);
