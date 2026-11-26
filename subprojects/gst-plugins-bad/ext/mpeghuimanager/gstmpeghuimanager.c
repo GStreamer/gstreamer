@@ -18,108 +18,116 @@
  */
 
 /**
-* SECTION:element-mpeghuimanager
-* @title: mpeghuimanager
-* @see_also: mpeghdec
-*
-* The mpeghuimanager element handles user interactivity for MPEG-H Audio,
-* using the UI manager component of the Fraunhofer MPEG-H decoder library
-* (mpeghdec). It takes framed MHAS frames and outputs them with the user's
-* personalization settings (preset, dialogue level, object position, ...)
-* embedded as MPEG-H UI packets. It is placed before an MPEG-H decoder such
-* as mpeghdec, which renders the audio scene accordingly.
-*
-* ## XML interface
-*
-* The element exchanges two XML message types with the application. Both
-* are defined by the MPEG-H UI manager, not by GStreamer, and the element
-* passes them on unchanged:
-*
-* * `AudioSceneConfig` (from the element): the AudioSceneConfig XML message,
-*   containing the audio scene description and its interactivity options,
-*   such as preset selection, audio object selection and adjustments, etc.
-*   The application's MPEG-H UI renderer uses this message to present these
-*   options to the user.
-* * `ActionEvent` (to the element): a user or system setting, such as
-*   selecting a preset or changing the prominence level of an audio element.
-*
-* Both message types and the XML interface format are specified in
-* [MPEG-H UI manager XML format](https://github.com/Fraunhofer-IIS/mpeghdec/wiki/MPEG-H-UI-manager-XML-format).
-*
-* ## Audio scene configuration
-*
-* When the MPEG-H UI manager provides a new `AudioSceneConfig` XML message,
-* the element posts an element message named `mpegh-ui-config` with these
-* fields:
-*
-* * `config` (string): the new `AudioSceneConfig` XML message.
-* * `timestamp`, `stream-time`, `running-time` and `duration` (guint64):
-*   the times of the frame it belongs to, #GST_CLOCK_TIME_NONE when unknown.
-*
-* The message is posted when the frame is processed, usually ahead of
-* playback. To update the UI in sync with playback, compare the running time
-* with the pipeline clock. The latest posted `AudioSceneConfig` XML message
-* can also be read from the #GstMpeghUiManager:config property.
-*
-* ## User interaction commands (ActionEvent)
-*
-* User actions are sent to the element as custom events named
-* `mpegh-ui-event`. The string field `xml` holds an `ActionEvent` XML
-* message, whose `uuid` is the one of the current `AudioSceneConfig`. The
-* event can be sent in two ways:
-*
-* * As a #GST_EVENT_CUSTOM_UPSTREAM event. It is not serialized with the data
-*   flow and is applied to the next frame that is processed. It can be sent to
-*   the whole pipeline with gst_element_send_event(), which passes it to the
-*   sinks, from where it travels upstream to this element. The application
-*   doesn't need a reference to the element, which also works when the element
-*   is inside a bin such as playbin.
-* * As a #GST_EVENT_CUSTOM_DOWNSTREAM event sent into the element's sink pad,
-*   for example from a pad probe. It is serialized with the data flow and is
-*   applied to exactly the frame that follows it.
-*
-* ## Persistence
-*
-* The UI manager can remember user settings across sessions in a persistence
-* memory, which the application provides and stores through the
-* #GstMpeghUiManager:persistence property:
-*
-* 1. In the NULL or READY state, set the property to the data stored in a
-*    previous session. To start without stored data, set it to a zero-filled
-*    buffer of the desired size.
-* 2. After the element has stopped, i.e. is back in the READY or NULL state,
-*    read the property and store the persistence memory state. While the
-*    element is running, the property reads as %NULL.
-*
-* If the property is not set, persistence is disabled.
-*
-* On a gst-launch-1.0 command line the property can be set as a base64
-* string, for example to start every run from the same stored state.
-* gst-launch-1.0 has no way to read the updated data back, so settings made
-* during such a run are not kept.
-*
-* ## Inactive UI manager and errors
-*
-* Since the element is not required for decoding, it never stops the
-* pipeline due to stream errors:
-*
-* * While the UI manager is inactive, frames are passed through unchanged.
-*   It is inactive until the first configuration of the stream has been
-*   received, and while the stream already contains MPEG-H UI packets, i.e.
-*   another UI manager upstream takes precedence. This is not an error and
-*   posts no message.
-* * A frame the UI manager can't process is passed through unchanged as
-*   well. The first frame of each run of such frames posts a warning
-*   message.
-*
-* ## Example launch line
-* |[
-* gst-launch-1.0 filesrc location=test.mp4 ! qtdemux ! mpeghuimanager ! mpeghdec ! audioconvert ! audioresample ! autoaudiosink
-* ]| This pipeline plays an MPEG-H Audio MP4 file through the UI manager.
-* Without UI events, the scene plays with its default settings.
-*
-* Since: 1.30
-*/
+ * SECTION:element-mpeghuimanager
+ * @title: mpeghuimanager
+ * @see_also: mpeghdec
+ *
+ * The mpeghuimanager element handles user interactivity for MPEG-H Audio,
+ * using the UI manager component of the Fraunhofer MPEG-H decoder library
+ * (mpeghdec). It takes framed MHAS frames and outputs them with the user's
+ * personalization settings (preset, dialogue level, object position, ...)
+ * embedded as MPEG-H UI packets. It is placed before an MPEG-H decoder such
+ * as mpeghdec, which renders the audio scene accordingly.
+ *
+ * ## XML interface
+ *
+ * The element exchanges two XML message types with the application. Both
+ * are defined by the MPEG-H UI manager, not by GStreamer, and the element
+ * passes them on unchanged:
+ *
+ * * `AudioSceneConfig` (from the element): the AudioSceneConfig XML message,
+ *   containing the audio scene description and its interactivity options,
+ *   such as preset selection, audio object selection and adjustments, etc.
+ *   The application's MPEG-H UI renderer uses this message to present these
+ *   options to the user.
+ * * `ActionEvent` (to the element): a user or system setting, such as
+ *   selecting a preset or changing the prominence level of an audio element.
+ *
+ * Both message types and the XML interface format are specified in
+ * [MPEG-H UI manager XML format](https://github.com/Fraunhofer-IIS/mpeghdec/wiki/MPEG-H-UI-manager-XML-format).
+ *
+ * ## Audio scene configuration
+ *
+ * When the MPEG-H UI manager provides a new `AudioSceneConfig` XML message,
+ * the element posts an element message named `mpegh-ui-config` with these
+ * fields:
+ *
+ * * `config` (string): the new `AudioSceneConfig` XML message.
+ * * `timestamp`, `stream-time`, `running-time` and `duration` (guint64):
+ *   the times of the frame it belongs to, #GST_CLOCK_TIME_NONE when unknown.
+ *
+ * The message is posted when the frame is processed, usually ahead of
+ * playback. To update the UI in sync with playback, compare the running time
+ * with the pipeline clock. The latest posted `AudioSceneConfig` XML message
+ * can also be read from the #GstMpeghUiManager:config property.
+ *
+ * ## User interaction commands (ActionEvent)
+ *
+ * User actions are sent to the element as custom events named
+ * `mpegh-ui-event`. The string field `xml` holds an `ActionEvent` XML
+ * message, whose `uuid` is the one of the current `AudioSceneConfig`. The
+ * event can be sent in two ways:
+ *
+ * * As a #GST_EVENT_CUSTOM_UPSTREAM event. It is not serialized with the data
+ *   flow and is applied to the next frame that is processed. It can be sent to
+ *   the whole pipeline with gst_element_send_event(), which passes it to the
+ *   sinks, from where it travels upstream to this element. The application
+ *   doesn't need a reference to the element, which also works when the element
+ *   is inside a bin such as playbin.
+ * * As a #GST_EVENT_CUSTOM_DOWNSTREAM event sent into the element's sink pad,
+ *   for example from a pad probe. It is serialized with the data flow and is
+ *   applied to exactly the frame that follows it.
+ *
+ * ## Persistence
+ *
+ * The UI manager remembers user settings, such as the chosen preset, per
+ * stream in a persistence memory, which the element creates and manages. To
+ * keep the settings across sessions, the application stores its content and
+ * passes it back the next time:
+ *
+ * 1. Optionally, in the NULL or READY state, set
+ *    #GstMpeghUiManager:input-persistence to the data stored in a previous
+ *    session. Without it, the element starts without stored settings.
+ * 2. Read #GstMpeghUiManager:output-persistence and store the data. It always
+ *    holds the latest state and is notified when it changes: after UI events
+ *    have been applied, on EOS and when the element stops. The application
+ *    can store the data on each notification or once after the element has
+ *    stopped.
+ *
+ * The data is opaque to the application. When the element is started again
+ * without setting #GstMpeghUiManager:input-persistence in between, it
+ * continues with the settings of the previous run.
+ *
+ * On a gst-launch-1.0 command line #GstMpeghUiManager:input-persistence can
+ * be set as a base64 string. With `-v`, gst-launch-1.0 prints each update of
+ * #GstMpeghUiManager:output-persistence in base64, which can be passed back as
+ * #GstMpeghUiManager:input-persistence in the next run. This requires the
+ * stream to end with EOS or UI events to have been applied, as gst-launch-1.0
+ * stops printing updates before it stops the pipeline, e.g. on Ctrl-C without
+ * `-e`.
+ *
+ * ## Inactive UI manager and errors
+ *
+ * Since the element is not required for decoding, it never stops the
+ * pipeline due to stream errors:
+ *
+ * * While the UI manager is inactive, frames are passed through unchanged.
+ *   It is inactive until the first configuration of the stream has been
+ *   received, and while the stream already contains MPEG-H UI packets, i.e.
+ *   another UI manager upstream takes precedence. This is not an error and
+ *   posts no message.
+ * * A frame the UI manager can't process is passed through unchanged as
+ *   well. The first frame of each run of such frames posts a warning
+ *   message.
+ *
+ * ## Example launch line
+ * |[
+ * gst-launch-1.0 filesrc location=test.mp4 ! qtdemux ! mpeghuimanager ! mpeghdec ! audioconvert ! audioresample ! autoaudiosink
+ * ]| This pipeline plays an MPEG-H Audio MP4 file through the UI manager.
+ * Without UI events, the scene plays with its default settings.
+ *
+ * Since: 1.30
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -149,11 +157,23 @@
  * while no valid scene is available */
 #define MAX_PENDING_UI_EVENTS 64
 
+/* Size in bytes of the persistence memory created without stored data. The
+ * UI manager divides it into entries for the settings of one stream each
+ * (44 bytes on average) and needs at least 10 of them; this size holds about
+ * 90. Stored data keeps the size it was created with, as the layout of the
+ * memory depends on it. */
+#define DEFAULT_PERSISTENCE_MEMORY_SIZE 4096
+
 GST_DEBUG_CATEGORY_STATIC (gst_mpeghuimanager_debug);
 #define GST_CAT_DEFAULT gst_mpeghuimanager_debug
 
 enum
-{ PROP_0, PROP_CONFIG, PROP_PERSISTENCE };
+{
+  PROP_0,
+  PROP_CONFIG,
+  PROP_INPUT_PERSISTENCE,
+  PROP_OUTPUT_PERSISTENCE,
+};
 
 #define gst_mpeghuimanager_parent_class parent_class
 G_DEFINE_TYPE (GstMpeghUiManager, gst_mpeghuimanager, GST_TYPE_BASE_TRANSFORM);
@@ -193,6 +213,8 @@ static gboolean gst_mpeghuimanager_src_event (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_mpeghuimanager_generate_output (GstBaseTransform *
     trans, GstBuffer ** outbuf);
+static void gst_mpeghuimanager_publish_persistence (GstMpeghUiManager *
+    filter);
 
 static void
 gst_mpeghuimanager_class_init (GstMpeghUiManagerClass * klass)
@@ -236,38 +258,55 @@ gst_mpeghuimanager_class_init (GstMpeghUiManagerClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstMpeghUiManager:persistence:
+   * GstMpeghUiManager:input-persistence:
    *
-   * The persistence memory of the UI manager, in which it keeps user
-   * settings across sessions. Its content is opaque to the application.
-   *
-   * Set it in the NULL or READY state, either to data stored in a previous
-   * session or, to start without stored data, to a zero-filled buffer of the
-   * desired size. The size is at most 65535 bytes; the UI manager recommends
-   * at least 512 bytes and rejects a buffer that is too small, which disables
-   * persistence for that session. While the element is running, the UI
-   * manager updates the data, but it is only complete and consistent once
-   * the element has stopped, so the property reads as %NULL in that time.
-   * Read it and store the data after the element is back in the READY or
-   * NULL state.
+   * Persistence data stored by the application in a previous session, as
+   * read from #GstMpeghUiManager:output-persistence. Its content is opaque
+   * to the application. Set it in the NULL or READY state; it is used from
+   * the next start of the element. Data the UI manager can't use, e.g.
+   * because it is too small, is ignored with a warning, and the element
+   * starts without stored settings.
    *
    * As a string, for example on a gst-launch-1.0 command line, the data is
    * given in base64.
    *
-   * %NULL, the default, disables persistence.
+   * %NULL, the default, starts without stored settings. When the element is
+   * started again without setting this property in between, it continues
+   * with the settings of the previous run.
    *
    * Since: 1.30
    */
-  g_object_class_install_property (gobject_class, PROP_PERSISTENCE,
-      g_param_spec_boxed ("persistence", "Persistence",
-          "Persistence memory of the UI manager (at most 65535 bytes, at least "
-          "512 recommended). Set it before starting, zero-filled for a new "
-          "state or with previously stored data; after stopping it holds the "
-          "updated data to be stored by the application. NULL disables "
-          "persistence. Reads as NULL while running. Base64 as a string",
-          G_TYPE_BYTES,
+  g_object_class_install_property (gobject_class, PROP_INPUT_PERSISTENCE,
+      g_param_spec_boxed ("input-persistence", "Input persistence",
+          "Persistence data stored in a previous session, as read from "
+          "output-persistence (NULL to start without stored settings). "
+          "Base64 as a string", G_TYPE_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  /**
+   * GstMpeghUiManager:output-persistence:
+   *
+   * The current persistence data of the UI manager, in which it keeps user
+   * settings across sessions. Its content is opaque to the application.
+   * Store it to pass it to #GstMpeghUiManager:input-persistence in a later
+   * session.
+   *
+   * It always holds a complete and consistent state and can be read at any
+   * time. It is updated and notified when it changes: when the element
+   * starts, with the data it starts from, after UI events have been applied,
+   * on EOS and when the element stops. The notifications while running are
+   * emitted from the streaming thread. It is %NULL before the element has
+   * been started.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_PERSISTENCE,
+      g_param_spec_boxed ("output-persistence", "Output persistence",
+          "Current persistence data, notified when it changes, to be stored "
+          "by the application and passed to input-persistence in a later "
+          "session. Base64 as a string",
+          G_TYPE_BYTES, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_mpeghuimanager_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_mpeghuimanager_stop);
@@ -284,6 +323,8 @@ gst_mpeghuimanager_init (GstMpeghUiManager * filter)
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
 
   filter->mpegh_ui_manager = NULL;
+  filter->input_persistence = NULL;
+  filter->output_persistence = NULL;
   filter->persistence_memory = NULL;
   filter->persistence_memory_size = 0;
   filter->consecutive_errors = 0;
@@ -301,6 +342,8 @@ gst_mpeghuimanager_finalize (GObject * object)
 
   g_queue_clear_full (&filter->ui_event_queue, g_free);
   g_free (filter->latest_config);
+  g_clear_pointer (&filter->input_persistence, g_bytes_unref);
+  g_clear_pointer (&filter->output_persistence, g_bytes_unref);
   g_free (filter->persistence_memory);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -315,7 +358,7 @@ gst_mpeghuimanager_set_property (GObject * object, guint prop_id,
   gsize size;
 
   switch (prop_id) {
-    case PROP_PERSISTENCE:
+    case PROP_INPUT_PERSISTENCE:
       persistence = g_value_get_boxed (value);
       size = persistence ? g_bytes_get_size (persistence) : 0;
       /* The UI manager stores the size as unsigned short */
@@ -332,15 +375,12 @@ gst_mpeghuimanager_set_property (GObject * object, guint prop_id,
             "supported in NULL or READY state");
         break;
       }
+      g_clear_pointer (&filter->input_persistence, g_bytes_unref);
+      if (size > 0)
+        filter->input_persistence = g_bytes_ref (persistence);
+      /* Replaces the memory of the previous run, start() creates it anew */
       g_clear_pointer (&filter->persistence_memory, g_free);
-      filter->persistence_memory_size = size;
-      if (size > 0) {
-        /* g_malloc() memory satisfies the 16 bit alignment the UI manager
-         * requires */
-        filter->persistence_memory = g_malloc (size);
-        memcpy (filter->persistence_memory, g_bytes_get_data (persistence,
-                NULL), size);
-      }
+      filter->persistence_memory_size = 0;
       GST_INFO_OBJECT (filter, "setting persistence data of %" G_GSIZE_FORMAT
           " bytes", size);
       GST_OBJECT_UNLOCK (filter);
@@ -359,18 +399,17 @@ gst_mpeghuimanager_get_property (GObject * object, guint prop_id,
   GstMpeghUiManager *filter = GST_MPEGHUIMANAGER (object);
 
   switch (prop_id) {
-    case PROP_PERSISTENCE:
+    case PROP_INPUT_PERSISTENCE:
       GST_OBJECT_LOCK (filter);
-      /* While the UI manager is open it updates the memory from the streaming
-       * thread without the lock, and only brings it up to date in stop(), so
-       * a copy taken now could be inconsistent */
-      if (filter->mpegh_ui_manager != NULL) {
-        GST_DEBUG_OBJECT (filter, "persistence data is not available while "
-            "running");
-      } else if (filter->persistence_memory != NULL) {
-        g_value_take_boxed (value, g_bytes_new (filter->persistence_memory,
-                filter->persistence_memory_size));
-      }
+      g_value_set_boxed (value, filter->input_persistence);
+      GST_OBJECT_UNLOCK (filter);
+      break;
+
+    case PROP_OUTPUT_PERSISTENCE:
+      /* A copy, as the UI manager updates persistence_memory in place from
+       * the streaming thread */
+      GST_OBJECT_LOCK (filter);
+      g_value_set_boxed (value, filter->output_persistence);
       GST_OBJECT_UNLOCK (filter);
       break;
 
@@ -426,6 +465,12 @@ gst_mpeghuimanager_sink_event (GstBaseTransform * trans, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM
       && gst_event_has_name (event, MPEGH_UI_EVENT_NAME))
     return gst_mpeghuimanager_queue_ui_event (filter, event);
+
+  /* Publish the final state before EOS is forwarded, so it is notified
+   * before the EOS message is posted, e.g. for gst-launch-1.0 -v, which stops
+   * watching notifications before shutting the pipeline down */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+    gst_mpeghuimanager_publish_persistence (filter);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
@@ -534,6 +579,7 @@ gst_mpeghuimanager_process (GstMpeghUiManager * filter, GstBuffer * inbuf,
   MPEGH_UI_ERROR ret;
   GQueue ui_events;
   gchar *event;
+  gboolean events_applied = FALSE;
 
   GST_DEBUG_OBJECT (filter, "input %" GST_PTR_FORMAT, inbuf);
 
@@ -575,6 +621,8 @@ gst_mpeghuimanager_process (GstMpeghUiManager * filter, GstBuffer * inbuf,
     if (ret != MPEGH_UI_OK) {
       GST_WARNING_OBJECT (filter, "mpegh_UI_ApplyXmlAction failed with: %d",
           ret);
+    } else {
+      events_applied = TRUE;
     }
 
     /* Element message "mpegh-ui-event-result" telling the application
@@ -597,6 +645,11 @@ gst_mpeghuimanager_process (GstMpeghUiManager * filter, GstBuffer * inbuf,
       g_queue_push_head (&filter->ui_event_queue, event);
     GST_OBJECT_UNLOCK (filter);
   }
+
+  /* The UI manager stores the settings of applied events in the persistence
+   * memory, publish them so the application can store them at any time */
+  if (events_applied)
+    gst_mpeghuimanager_publish_persistence (filter);
 
   /* Obtain the UI config from the MPEG-H UI manager. A scene state that
    * doesn't fit into the buffer is returned in parts, which are joined. */
@@ -781,6 +834,9 @@ gst_mpeghuimanager_generate_output (GstBaseTransform * trans,
         "Failed to map output buffer");
     processed = FALSE;
   } else {
+    /* The one copy of the frame: the input can't be updated in place, as it
+     * may not be writable and has no room for inserted packets. Unlike
+     * mapping it, extracting doesn't merge an input of several memories. */
     if (gst_buffer_extract (inbuf, 0, map.data, size) != size) {
       gst_mpeghuimanager_processing_failed (filter,
           "Failed to read input buffer");
@@ -812,6 +868,118 @@ gst_mpeghuimanager_generate_output (GstBaseTransform * trans,
   return GST_FLOW_OK;
 }
 
+/* Brings the persistence memory up to date, copies it to
+ * "output-persistence" and notifies it if it changed. Called without the
+ * object lock from start() and stop(), and from the streaming thread, which
+ * is the only other user of the UI manager while it is open. */
+static void
+gst_mpeghuimanager_publish_persistence (GstMpeghUiManager * filter)
+{
+  gpointer memory = NULL;
+  guint16 size = 0;
+  MPEGH_UI_ERROR err;
+  GBytes *persistence;
+
+  GST_OBJECT_LOCK (filter);
+  if (filter->mpegh_ui_manager == NULL || filter->persistence_memory == NULL)
+    goto done;
+
+  err = mpegh_UI_GetPersistenceMemory (filter->mpegh_ui_manager, &memory,
+      &size);
+  if (err != MPEGH_UI_OK) {
+    GST_WARNING_OBJECT (filter, "Unable to get persistence memory: %d", err);
+    goto done;
+  }
+  if (memory == NULL || size == 0) {
+    GST_DEBUG_OBJECT (filter, "Persistence handling is not active");
+    goto done;
+  }
+
+  /* The size can be smaller than the memory, as the UI manager only uses an
+   * even number of bytes */
+  persistence = g_bytes_new (memory, size);
+  if (filter->output_persistence != NULL
+      && g_bytes_equal (persistence, filter->output_persistence)) {
+    g_bytes_unref (persistence);
+    goto done;
+  }
+  g_clear_pointer (&filter->output_persistence, g_bytes_unref);
+  filter->output_persistence = persistence;
+  GST_OBJECT_UNLOCK (filter);
+
+  GST_DEBUG_OBJECT (filter, "persistence data of %u bytes updated", size);
+  g_object_notify (G_OBJECT (filter), "output-persistence");
+  return;
+
+done:
+  GST_OBJECT_UNLOCK (filter);
+}
+
+/* Lets the UI manager use the persistence memory, creating it from
+ * "input-persistence", or empty with the default size, unless the previous
+ * run left one. Called with the object lock held. */
+static void
+gst_mpeghuimanager_set_persistence_memory (GstMpeghUiManager * filter)
+{
+  gboolean fresh = FALSE;
+  MPEGH_UI_ERROR err;
+
+  if (filter->persistence_memory == NULL) {
+    /* g_malloc() memory satisfies the 16 bit alignment the UI manager
+     * requires */
+    if (filter->input_persistence != NULL) {
+      gsize size;
+      gconstpointer data = g_bytes_get_data (filter->input_persistence, &size);
+
+      filter->persistence_memory = g_memdup2 (data, size);
+      filter->persistence_memory_size = size;
+    } else {
+      filter->persistence_memory = g_malloc0 (DEFAULT_PERSISTENCE_MEMORY_SIZE);
+      filter->persistence_memory_size = DEFAULT_PERSISTENCE_MEMORY_SIZE;
+      fresh = TRUE;
+    }
+  }
+
+  err = mpegh_UI_SetPersistenceMemory (filter->mpegh_ui_manager,
+      filter->persistence_memory, filter->persistence_memory_size);
+
+  /* Data the UI manager can't use, e.g. because it is too small: start
+   * without stored settings instead of without persistence */
+  if (err != MPEGH_UI_OK && err != MPEGH_UI_OK_BUT_NO_VALID_DATA && !fresh) {
+    GST_WARNING_OBJECT (filter, "Ignoring persistence data of %u bytes: "
+        "mpegh_UI_SetPersistenceMemory failed with: %d",
+        filter->persistence_memory_size, err);
+    g_free (filter->persistence_memory);
+    filter->persistence_memory = g_malloc0 (DEFAULT_PERSISTENCE_MEMORY_SIZE);
+    filter->persistence_memory_size = DEFAULT_PERSISTENCE_MEMORY_SIZE;
+    fresh = TRUE;
+    err = mpegh_UI_SetPersistenceMemory (filter->mpegh_ui_manager,
+        filter->persistence_memory, filter->persistence_memory_size);
+  }
+
+  if (err == MPEGH_UI_OK) {
+    GST_INFO_OBJECT (filter, "Restored persistence data of %u bytes",
+        filter->persistence_memory_size);
+  } else if (err == MPEGH_UI_OK_BUT_NO_VALID_DATA) {
+    /* The memory is in use, but holds no stored settings, e.g. data of
+     * another version of the UI manager */
+    if (fresh) {
+      GST_INFO_OBJECT (filter, "Starting without stored settings, with "
+          "persistence memory of %u bytes", filter->persistence_memory_size);
+    } else {
+      GST_WARNING_OBJECT (filter, "Persistence data of %u bytes holds no "
+          "valid settings, starting without stored settings",
+          filter->persistence_memory_size);
+    }
+  } else {
+    GST_WARNING_OBJECT (filter, "mpegh_UI_SetPersistenceMemory with %u "
+        "bytes failed with: %d, persistence is disabled",
+        filter->persistence_memory_size, err);
+    g_clear_pointer (&filter->persistence_memory, g_free);
+    filter->persistence_memory_size = 0;
+  }
+}
+
 static gboolean
 gst_mpeghuimanager_start (GstBaseTransform * trans)
 {
@@ -832,30 +1000,13 @@ gst_mpeghuimanager_start (GstBaseTransform * trans)
   filter->inactive = FALSE;
 
   GST_OBJECT_LOCK (filter);
-  /* Let the UI manager use the persistence data set by the application
-   * (optional). It updates the memory in place until it is closed. */
-  if (filter->persistence_memory != NULL) {
-    MPEGH_UI_ERROR err;
-
-    err = mpegh_UI_SetPersistenceMemory (mpegh_ui_manager,
-        filter->persistence_memory, filter->persistence_memory_size);
-    if (err == MPEGH_UI_OK) {
-      GST_INFO_OBJECT (filter, "Restored persistence data of %u bytes",
-          filter->persistence_memory_size);
-    } else if (err == MPEGH_UI_OK_BUT_NO_VALID_DATA) {
-      /* The expected result for a zero-filled buffer: the memory is in use,
-       * but holds no stored settings, so the UI manager starts afresh */
-      GST_INFO_OBJECT (filter, "Persistence data of %u bytes holds no valid "
-          "settings, starting with empty persistence",
-          filter->persistence_memory_size);
-    } else {
-      GST_WARNING_OBJECT (filter, "mpegh_UI_SetPersistenceMemory with %u "
-          "bytes failed with: %d, persistence is disabled",
-          filter->persistence_memory_size, err);
-    }
-  }
   filter->mpegh_ui_manager = mpegh_ui_manager;
+  /* The UI manager updates the memory in place until it is closed */
+  gst_mpeghuimanager_set_persistence_memory (filter);
   GST_OBJECT_UNLOCK (filter);
+
+  /* Publish the data the element starts from */
+  gst_mpeghuimanager_publish_persistence (filter);
 
   return TRUE;
 }
@@ -868,24 +1019,11 @@ gst_mpeghuimanager_stop (GstBaseTransform * trans)
   if (filter->mpegh_ui_manager == NULL)
     return TRUE;
 
+  /* Publish the settings made since the last update, e.g. when stopping
+   * without EOS */
+  gst_mpeghuimanager_publish_persistence (filter);
+
   GST_OBJECT_LOCK (filter);
-  /* Bring the persistence data up to date, so the application can read it
-   * back through the "persistence" property */
-  if (filter->persistence_memory != NULL) {
-    gpointer memory = NULL;
-    guint16 size = 0;
-    MPEGH_UI_ERROR err;
-
-    err = mpegh_UI_GetPersistenceMemory (filter->mpegh_ui_manager, &memory,
-        &size);
-    if (err != MPEGH_UI_OK) {
-      GST_WARNING_OBJECT (filter, "Unable to get persistence memory: %d", err);
-    } else if (memory != filter->persistence_memory) {
-      /* SetPersistenceMemory() failed in start(), the data is unchanged */
-      GST_DEBUG_OBJECT (filter, "Persistence handling was not active");
-    }
-  }
-
   mpegh_UI_Manager_Close (filter->mpegh_ui_manager);
   filter->mpegh_ui_manager = NULL;
   GST_OBJECT_UNLOCK (filter);

@@ -42,8 +42,8 @@ typedef struct _GstMpeghUiManagerClass GstMpeghUiManagerClass;
 struct _GstMpeghUiManager {
   GstBaseTransform element;
 
-  /* set under the object lock, so "persistence" is not replaced while the
-   * UI manager uses persistence_memory */
+  /* set under the object lock, so persistence_memory is not replaced while
+   * the UI manager uses it */
   HANDLE_MPEGH_UI_MANAGER mpegh_ui_manager;
 
   /* protected by the object lock */
@@ -51,8 +51,14 @@ struct _GstMpeghUiManager {
   gchar* latest_config;
   /* XML messages of "mpegh-ui-event" events not applied yet */
   GQueue ui_event_queue;
-  /* persistence data set by the application, used in place by the UI manager
-   * and updated in stop(); NULL disables persistence */
+  /* "input-persistence": stored data set by the application, or NULL */
+  GBytes* input_persistence;
+  /* "output-persistence": copy of persistence_memory taken when it was last
+   * brought up to date, or NULL before the first start */
+  GBytes* output_persistence;
+  /* memory used in place by the UI manager. Created in start() from
+   * input_persistence or with the default size, and kept across runs until
+   * "input-persistence" is set again. */
   guint8* persistence_memory;
   guint16 persistence_memory_size;
 
