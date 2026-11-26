@@ -1331,7 +1331,7 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
       profile_idc = GST_H265_PROFILE_IDC_MAIN;
       break;
     case VAProfileHEVCMain10:
-      profile_idc = GST_H265_PROFILE_IDC_MAIN;
+      profile_idc = GST_H265_PROFILE_IDC_MAIN_10;
       break;
     case VAProfileHEVCMain12:
     case VAProfileHEVCMain422_10:
