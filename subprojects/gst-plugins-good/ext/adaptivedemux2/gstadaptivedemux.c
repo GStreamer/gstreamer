@@ -1380,14 +1380,13 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
       struct http_headers_collector c = { demux, NULL };
 
       if (gst_structure_has_name (structure, "http-headers")) {
-        const gchar *uri = NULL;
+        const gchar *uri;
 
         /* Origin for cookies from these headers. Prefer the redirect target
          * since a redirected request's headers belong to it. */
-        gst_structure_get (structure, "redirection-uri", G_TYPE_STRING, &uri,
-            NULL);
+        uri = gst_structure_get_string (structure, "redirection-uri");
         if (uri == NULL)
-          gst_structure_get (structure, "uri", G_TYPE_STRING, &uri, NULL);
+          uri = gst_structure_get_string (structure, "uri");
         c.uri = uri;
 
         if (gst_structure_has_field (structure, "request-headers")) {
