@@ -70,6 +70,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 #define DEFAULT_WAIT_FOR_KEYFRAME FALSE
 #define DEFAULT_REQUEST_KEYFRAME FALSE
 
+/* A picture is only bounded by the RTP marker bit, so this is a robustness
+ * bound on the memory accumulated while waiting for it. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (32 * 1024 * 1024)
+
 enum
 {
   PROP_0,
@@ -482,6 +486,18 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   gst_adapter_push (self->adapter, payload);
   self->last_picture_id = picture_id;
   self->inter_picture |= p_bit;
+
+  if (!gst_rtp_buffer_get_marker (rtp)) {
+    if (gst_adapter_available (self->adapter) >
+        DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+      GST_WARNING_OBJECT (self, "Too big (> %u bytes) frame, dropping.",
+          DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+      self->started = FALSE;
+      gst_rtp_base_depayload_flush (depay, FALSE);
+      gst_adapter_clear (self->adapter);
+      goto done;
+    }
+  }
 
   /* Marker indicates that it was the last rtp packet for this picture. Note
    * that if spatial scalability is used, e_bit will be set for the last

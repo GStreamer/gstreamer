@@ -311,6 +311,124 @@ GST_START_TEST (test_depay_stop_gap_events)
 
 GST_END_TEST;
 
+/* Build an RTP packet with a VP9 payload descriptor (B bit set when @start)
+ * followed by @payload_size bytes of frame data. */
+static GstBuffer *
+create_rtp_vp9_fragment_buffer (guint seqnum, GstClockTime buf_pts,
+    gboolean start, gboolean marker, gsize payload_size)
+{
+  gsize size = 12 + 1 + payload_size;
+  GstBuffer *ret;
+  guint8 *packet = g_malloc0 (size);
+
+  packet[0] = 0x80;             /* RTP version 2 */
+  packet[1] = 96 | (marker ? 0x80 : 0x00);
+  packet[2] = (seqnum >> 8) & 0xff;
+  packet[3] = (seqnum >> 0) & 0xff;
+  packet[12] = start ? 0x08 : 0x00;
+
+  ret = gst_buffer_new_wrapped (packet, size);
+  GST_BUFFER_PTS (ret) = buf_pts;
+  return ret;
+}
+
+/* A sender that never sets the marker bit must not be able to grow the
+ * depayload buffer without bound. */
+GST_START_TEST (test_depay_oversized_frame_dropped)
+{
+  guint i;
+  GstClockTime pts = 0;
+  GstBuffer *buffer, *out;
+  GstMapInfo map;
+  guint8 *expected = NULL;
+  gsize expected_size = 0;
+  GstHarness *h = gst_harness_new ("rtpvp9depay");
+  gst_harness_set_src_caps_str (h, RTP_VP9_CAPS_STR);
+
+  /* One complete frame is depayloaded as usual */
+  out = gst_harness_push_and_pull (h,
+      create_rtp_vp9_buffer (100, 0, BT_PLAIN_PICID_NONE, pts));
+  fail_unless (out != NULL);
+  fail_unless (gst_buffer_map (out, &map, GST_MAP_READ));
+  expected = g_memdup2 (map.data, map.size);
+  expected_size = map.size;
+  gst_buffer_unmap (out, &map);
+  gst_buffer_unref (out);
+  pts += 33 * GST_MSECOND;
+
+  /* A start packet plus 32768 continuation fragments of 1024 bytes exceed
+   * the built-in limit on the last continuation, and none of the frame's
+   * packets produces output */
+  buffer = create_rtp_vp9_buffer_full (101, 0, BT_PLAIN_PICID_NONE, pts,
+      TRUE, FALSE);
+  /* align the RTP timestamp and SSRC with the handcrafted continuation
+   * packets below; a mismatch raises a discontinuity in the base class */
+  gst_buffer_fill (buffer, 4, "\0\0\0\0", 4);
+  gst_buffer_fill (buffer, 8, "\0\0\0\0", 4);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  for (i = 0; i < 32768; i++) {
+    buffer = create_rtp_vp9_fragment_buffer (102 + i, pts, FALSE, FALSE, 1024);
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer));
+    fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+  }
+
+  /* Nor does the end of the frame that was dropped */
+  buffer = create_rtp_vp9_fragment_buffer (102 + 32768, pts, FALSE, TRUE, 1024);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  /* Depayloading resumes with the next frame */
+  pts += 33 * GST_MSECOND;
+  out = gst_harness_push_and_pull (h,
+      create_rtp_vp9_buffer (102 + 32769, 0, BT_PLAIN_PICID_NONE, pts));
+  fail_unless (out != NULL);
+  fail_unless (gst_buffer_map (out, &map, GST_MAP_READ));
+  fail_unless (map.size == expected_size);
+  fail_unless (memcmp (map.data, expected, expected_size) == 0);
+  gst_buffer_unmap (out, &map);
+  gst_buffer_unref (out);
+  fail_unless_equals_int (2, gst_harness_buffers_received (h));
+
+  g_free (expected);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* A picture whose last checked fragment fills the limit exactly is not over
+ * it: the checks are strict, so the picture must still depayload. This pins
+ * the boundary against an accidental >= comparison. */
+GST_START_TEST (test_depay_picture_at_limit)
+{
+  guint i;
+  GstClockTime pts = 0;
+  GstBuffer *buffer, *out;
+  GstHarness *h = gst_harness_new ("rtpvp9depay");
+  gst_harness_set_src_caps_str (h, RTP_VP9_CAPS_STR);
+
+  /* 32768 fragments of 1024 bytes: the last one checked sits on the built-in
+   * 32 MiB limit; all are handcrafted, so SSRC and timestamp already
+   * match */
+  for (i = 0; i < 32768; i++) {
+    buffer = create_rtp_vp9_fragment_buffer (i, pts, i == 0, FALSE, 1024);
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer));
+    fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+  }
+
+  /* a final fragment with the marker closes the picture */
+  buffer = create_rtp_vp9_fragment_buffer (32768, pts, FALSE, TRUE, 511);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer));
+  fail_unless_equals_int (1, gst_harness_buffers_in_queue (h));
+  out = gst_harness_pull (h);
+  gst_buffer_unref (out);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /* Packet loss + lost picture ids */
 static const DepayGapEventTestData resend_gap_event_test_data[][2] = {
   /* 7bit picture ids */
@@ -624,6 +742,8 @@ rtpvp9_suite (void)
       G_N_ELEMENTS (resend_gap_event_test_data));
   tcase_add_test (tc_chain, test_depay_svc_merge_layers);
   tcase_add_test (tc_chain, test_depay_svc_forgive_invalid_sid);
+  tcase_add_test (tc_chain, test_depay_oversized_frame_dropped);
+  tcase_add_test (tc_chain, test_depay_picture_at_limit);
 
   return s;
 }
