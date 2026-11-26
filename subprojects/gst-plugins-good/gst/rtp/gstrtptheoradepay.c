@@ -33,6 +33,11 @@
 GST_DEBUG_CATEGORY_STATIC (rtptheoradepay_debug);
 #define GST_CAT_DEFAULT (rtptheoradepay_debug)
 
+/* A reassembled data group has no total-size bound in the format: the
+ * subpacket lengths are 16 bits but the number of subpackets is not limited,
+ * so cap the assembly at a generous robustness limit. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (32 * 1024 * 1024)
+
 static GstStaticPadTemplate gst_rtp_theora_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -514,8 +519,19 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
     gst_adapter_push (rtptheoradepay->adapter, vdata);
 
     /* packet is not complete, we are done */
-    if (F != 3)
+    if (F != 3) {
+      if (gst_adapter_available (rtptheoradepay->adapter) >
+          DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+        GST_WARNING_OBJECT (rtptheoradepay,
+            "Too big (> %u bytes) frame, dropping.",
+            DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+        rtptheoradepay->assembling = FALSE;
+        gst_rtp_base_depayload_flush (depayload, FALSE);
+        gst_rtp_base_depayload_dropped (depayload);
+        gst_adapter_clear (rtptheoradepay->adapter);
+      }
       goto no_output;
+    }
 
     /* construct assembled buffer */
     length = gst_adapter_available (rtptheoradepay->adapter);
