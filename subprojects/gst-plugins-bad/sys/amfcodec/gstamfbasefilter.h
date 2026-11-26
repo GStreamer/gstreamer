@@ -54,6 +54,8 @@ typedef struct _GstAmfBaseFilterPrivate GstAmfBaseFilterPrivate;
  * converter, HQ scaler...). It owns the AMF context and the
  * AMFComponent and implements the GstBaseTransform vmethods that are
  * common to every AMF post-processor.
+ *
+ * Since: 1.30
  */
 struct _GstAmfBaseFilter
 {

@@ -551,6 +551,14 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
       g_param_spec_uint ("qp-b", "QP B",
           "Constant QP for B frames", 0, 51,
           (guint) dev_caps->default_qp_b, param_flags));
+
+  /**
+   * GstAmfH264Enc:qvbr-quality:
+   *
+   * Quality level for "qvbr" rate-control mode
+   *
+   * Since: 1.30
+   */
   g_object_class_install_property (object_class, PROP_QVBR_QUALITY,
       g_param_spec_uint ("qvbr-quality", "QVBR Quality",
           "Quality level for \"qvbr\" rate-control mode", 1, 51,

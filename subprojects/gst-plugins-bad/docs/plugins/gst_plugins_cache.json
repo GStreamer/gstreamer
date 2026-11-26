@@ -1815,7 +1815,7 @@
                 "klass": "Codec/Encoder/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -1860,12 +1860,17 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "30",
+                        "default": "240",
                         "max": "2147483647",
                         "min": "0",
                         "mutable": "playing",
                         "readable": true,
                         "type": "guint",
+                        "unstable-values": [
+                            "default",
+                            "max",
+                            "min"
+                        ],
                         "writable": true
                     },
                     "max-bitrate": {
@@ -2176,6 +2181,20 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "qvbr-quality": {
+                        "blurb": "Quality level for \"qvbr\" rate-control mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "rate-control": {
                         "blurb": "Rate Control Method",
                         "conditionally-available": false,
@@ -2247,12 +2266,12 @@
                 "klass": "Codec/Encoder/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D11Memory):\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: NV12\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h264:\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n        profile: { (string)main, (string)high, (string)constrained-baseline, (string)baseline }\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n",
+                        "caps": "video/x-h264:\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n        profile: { (string)main, (string)high, (string)constrained-high, (string)constrained-baseline, (string)baseline }\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -2628,6 +2647,20 @@
                         "type": "GstAmfH264EncPreset",
                         "writable": true
                     },
+                    "qp-b": {
+                        "blurb": "Constant QP for B frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "22",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "qp-i": {
                         "blurb": "Constant QP for I frames",
                         "conditionally-available": false,
@@ -2651,6 +2684,20 @@
                         "default": "22",
                         "max": "51",
                         "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qvbr-quality": {
+                        "blurb": "Quality level for \"qvbr\" rate-control mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "1",
                         "mutable": "playing",
                         "readable": true,
                         "type": "guint",
@@ -2727,12 +2774,12 @@
                 "klass": "Codec/Encoder/Video/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n",
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h265:\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n        profile: { (string)main, (string)main-10 }\n  stream-format: byte-stream\n      alignment: au\n",
+                        "caps": "video/x-h265:\n          width: [ 128, 4096 ]\n         height: [ 128, 4096 ]\n        profile: { (string)main, (string)main-10 }\n           tier: { (string)main, (string)high }\n  stream-format: byte-stream\n      alignment: au\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -2784,12 +2831,17 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "30",
+                        "default": "240",
                         "max": "2147483647",
                         "min": "0",
                         "mutable": "playing",
                         "readable": true,
                         "type": "guint",
+                        "unstable-values": [
+                            "default",
+                            "max",
+                            "min"
+                        ],
                         "writable": true
                     },
                     "max-bitrate": {
@@ -3100,6 +3152,20 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "qvbr-quality": {
+                        "blurb": "Quality level for \"qvbr\" rate-control mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "23",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "rate-control": {
                         "blurb": "Rate Control Method",
                         "conditionally-available": false,
@@ -3152,6 +3218,144 @@
                     }
                 },
                 "rank": "primary"
+            },
+            "amfhqscaler": {
+                "author": "GStreamer AMF contributors",
+                "description": "High-quality video upscaling using AMD AMF (VSR / FSR / Bicubic)",
+                "hierarchy": [
+                    "GstAmfHQScaler",
+                    "GstAmfBaseFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Converter/Video/Scaler/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE, BGRA, RGBA }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE, BGRA, RGBA }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE, BGRA, RGBA }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE, BGRA, RGBA }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE, BGRA, RGBA }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE, BGRA, RGBA }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "add-borders": {
+                        "blurb": "Keep the original aspect ratio when scaling and fill padding with border-color",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "algorithm": {
+                        "blurb": "High-quality scaling algorithm to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "bilinear (0)",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "GstAmfHQScalerAlgorithm",
+                        "writable": true
+                    },
+                    "border-color": {
+                        "blurb": "Border color when add-borders is enabled (RGBA, 0xAARRGGBB)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "sharpness": {
+                        "blurb": "Sharpness factor (0.0 - 2.0)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0.5",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "untrusted-aware": "true"
+            },
+            "amfvqenhancer": {
+                "author": "GStreamer AMF contributors",
+                "description": "Reduces AVC/HEVC compression (blocking) artifacts while preserving details using AMD AMF",
+                "hierarchy": [
+                    "GstAmfVQEnhancer",
+                    "GstAmfBaseFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Effect/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:D3D12Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { NV12, P010_10LE }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\nvideo/x-raw:\n         format: { NV12, P010_10LE }\n          width: [ 128, 8192 ]\n         height: [ 128, 4096 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "attenuation": {
+                        "blurb": "Enhancement strength: lower is subtler, higher is stronger",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0.1",
+                        "max": "0.4",
+                        "min": "0.02",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "split-view": {
+                        "blurb": "Experimental side-by-side view of the enhanced and original picture",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstamfcodec",
@@ -3214,6 +3418,21 @@
                         "desc": "Constant Bitrate",
                         "name": "cbr",
                         "value": "3"
+                    },
+                    {
+                        "desc": "Quality VBR",
+                        "name": "qvbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "High quality VBR",
+                        "name": "hqvbr",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "High quality CBR",
+                        "name": "hqcbr",
+                        "value": "6"
                     }
                 ]
             },
@@ -3229,8 +3448,29 @@
                         "desc": "Low Latency",
                         "name": "low-latency",
                         "value": "1"
+                    },
+                    {
+                        "desc": "High Quality",
+                        "name": "high-quality",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Low Latency High Quality",
+                        "name": "low-latency-hq",
+                        "value": "5"
                     }
                 ]
+            },
+            "GstAmfBaseFilter": {
+                "hierarchy": [
+                    "GstAmfBaseFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object"
             },
             "GstAmfEncPAActivityType": {
                 "kind": "enum",
@@ -3393,6 +3633,11 @@
                         "desc": "Quality",
                         "name": "quality",
                         "value": "2"
+                    },
+                    {
+                        "desc": "High quality",
+                        "name": "high-quality",
+                        "value": "3"
                     }
                 ]
             },
@@ -3423,6 +3668,21 @@
                         "desc": "Latency Constrained VBR",
                         "name": "lcvbr",
                         "value": "3"
+                    },
+                    {
+                        "desc": "Quality VBR",
+                        "name": "qvbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "High quality VBR",
+                        "name": "hqvbr",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "High quality CBR",
+                        "name": "hqcbr",
+                        "value": "6"
                     }
                 ]
             },
@@ -3448,6 +3708,16 @@
                         "desc": "Webcam",
                         "name": "webcam",
                         "value": "3"
+                    },
+                    {
+                        "desc": "High Quality",
+                        "name": "high-quality",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Low Latency High Quality",
+                        "name": "low-latency-hq",
+                        "value": "5"
                     }
                 ]
             },
@@ -3473,6 +3743,11 @@
                         "desc": "Speed",
                         "name": "speed",
                         "value": "10"
+                    },
+                    {
+                        "desc": "High quality",
+                        "name": "high-quality",
+                        "value": "15"
                     }
                 ]
             },
@@ -3503,6 +3778,21 @@
                         "desc": "Constant Bitrate",
                         "name": "cbr",
                         "value": "3"
+                    },
+                    {
+                        "desc": "Quality VBR",
+                        "name": "qvbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "High quality VBR",
+                        "name": "hqvbr",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "High quality CBR",
+                        "name": "hqcbr",
+                        "value": "6"
                     }
                 ]
             },
@@ -3528,6 +3818,46 @@
                         "desc": "Webcam",
                         "name": "webcam",
                         "value": "3"
+                    },
+                    {
+                        "desc": "High Quality",
+                        "name": "high-quality",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Low Latency High Quality",
+                        "name": "low-latency-hq",
+                        "value": "5"
+                    }
+                ]
+            },
+            "GstAmfHQScalerAlgorithm": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Bilinear",
+                        "name": "bilinear",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Bicubic",
+                        "name": "bicubic",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Video SR 1.0",
+                        "name": "videosr1-0",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Point (nearest)",
+                        "name": "point",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "Video SR 1.1",
+                        "name": "videosr1-1",
+                        "value": "4"
                     }
                 ]
             }

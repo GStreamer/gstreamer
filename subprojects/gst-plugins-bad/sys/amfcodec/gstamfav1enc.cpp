@@ -511,6 +511,14 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
       g_param_spec_uint ("qp-p", "QP P",
           "Constant QP for P frames", 0, 255,
           (guint) dev_caps->default_qp_p, param_flags));
+
+  /**
+   * GstAmfAv1Enc:qvbr-quality:
+   *
+   * Quality level for "qvbr" rate-control mode
+   *
+   * Since: 1.30
+   */
   g_object_class_install_property (object_class, PROP_QVBR_QUALITY,
       g_param_spec_uint ("qvbr-quality", "QVBR Quality",
           "Quality level for \"qvbr\" rate-control mode", 1, 51,

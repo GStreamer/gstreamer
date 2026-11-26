@@ -128,6 +128,13 @@ static gboolean gst_amf_hq_scaler_configure_component (GstAmfBaseFilter * self,
 static gboolean gst_amf_hq_scaler_validate_caps (GstAmfBaseFilter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info);
 
+/**
+ * GstAmfHQScalerAlgorithm:
+ *
+ * High-quality scaling algorithm
+ *
+ * Since: 1.30
+ */
 #define GST_TYPE_AMF_HQS_ALGORITHM (gst_amf_hqs_algorithm_get_type())
 static GType
 gst_amf_hqs_algorithm_get_type (void)

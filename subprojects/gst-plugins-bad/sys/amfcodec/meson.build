@@ -19,21 +19,28 @@ amf_headers = [
   'gstamfd3dcommon.h',
 ]
 
-if host_system == 'windows'
-  amf_sources += 'gstamfhqscaler.cpp'
-  amf_headers += 'gstamfhqscaler.h'
-  amf_sources += 'gstamfvqenhancer.cpp'
-  amf_headers += 'gstamfvqenhancer.h'
-endif
+amf_filter_sources = [
+  'gstamfhqscaler.cpp',
+  'gstamfvqenhancer.cpp',
+]
+
+amf_filter_headers = [
+  'gstamfhqscaler.h',
+  'gstamfvqenhancer.h',
+]
 
 doc_sources = []
-foreach s: amf_sources + amf_headers
+foreach s: amf_sources + amf_headers + amf_filter_sources + amf_filter_headers
   doc_sources += meson.current_source_dir() / s
 endforeach
 
 plugin_sources += {
   'amfcodec': pathsep.join(doc_sources)
 }
+
+if host_system == 'windows'
+  amf_sources += amf_filter_sources
+endif
 
 amf_option = get_option('amfcodec')
 if amf_option.disabled()
