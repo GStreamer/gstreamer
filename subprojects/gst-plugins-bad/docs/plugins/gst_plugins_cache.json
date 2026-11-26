@@ -6285,7 +6285,7 @@
                 "klass": "Source/Audio/Hardware",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -6360,7 +6360,7 @@
                 "klass": "Source/Audio/Hardware",
                 "pad-templates": {
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -12152,7 +12152,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Converter/Video/Hardware",
+                "klass": "Filter/Converter/Video/Colorspace/Hardware",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
@@ -12215,7 +12215,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d11compositor": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -12287,7 +12288,8 @@
                         "writable": true
                     }
                 },
-                "rank": "secondary"
+                "rank": "secondary",
+                "untrusted-aware": "true"
             },
             "d3d11convert": {
                 "author": "Seungha Yang <seungha.yang@navercorp.com>, Jeongki Kim <jeongki.kim@jeongki.kim>",
@@ -12305,7 +12307,7 @@
                 "interfaces": [
                     "GstVideoDirection"
                 ],
-                "klass": "Filter/Converter/Scaler/Effect/Video/Hardware",
+                "klass": "Filter/Converter/Scaler/Colorspace/Effect/Video/Hardware",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
@@ -12502,7 +12504,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d11deinterlace": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -12719,7 +12722,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Video",
+                "klass": "Filter/Video/Downloader",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
@@ -12732,7 +12735,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d11h264dec": {
                 "author": "Seungha Yang <seungha.yang@navercorp.com>",
@@ -13147,7 +13151,8 @@
                         "return-type": "gboolean",
                         "when": "last"
                     }
-                }
+                },
+                "untrusted-aware": "true"
             },
             "d3d11scale": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -13203,7 +13208,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d11screencapturesrc": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -13487,7 +13493,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Video",
+                "klass": "Filter/Video/Uploader",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-raw:\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:D3D11Memory, meta:GstVideoOverlayComposition):\n         format: { RGBA64_LE, BGRA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, BGR10A2_LE, Y216_LE, Y212_LE, Y210, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12, AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, I420, YV12, GRAY16_LE, GRAY8, v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15 }\n          width: [ 1, 16384 ]\n         height: [ 1, 16384 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
@@ -13500,7 +13506,8 @@
                         "presence": "always"
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "d3d11videosink": {
                 "author": "Seungha Yang <seungha.yang@navercorp.com>",
@@ -24613,7 +24620,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -24638,7 +24645,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -24663,7 +24670,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -24688,7 +24695,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -24713,7 +24720,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -24738,7 +24745,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -24763,7 +24770,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -25475,7 +25482,7 @@
                         "writable": true
                     }
                 },
-                "rank": "secondary"
+                "rank": "marginal"
             }
         },
         "filename": "gstdirectsoundsrc",
@@ -28212,7 +28219,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dwritesubtitlemux": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -28580,7 +28588,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dwritetextoverlay": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -28661,7 +28670,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             },
             "dwritetimeoverlay": {
                 "author": "Seungha Yang <seungha@centricular.com>",
@@ -28749,7 +28759,8 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "untrusted-aware": "true"
             }
         },
         "filename": "gstdwrite",
@@ -227874,10 +227885,15 @@
                         "controllable": false,
                         "default": "2",
                         "max": "16",
-                        "min": "0",
+                        "min": "1",
                         "mutable": "null",
                         "readable": true,
                         "type": "guint",
+                        "unstable-values": [
+                            "default",
+                            "max",
+                            "min"
+                        ],
                         "writable": true
                     },
                     "vbv-buffer-size": {
@@ -260754,7 +260770,7 @@
                 "long-name": "WasapiSrc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -260853,7 +260869,7 @@
                 "long-name": "WasapiSrc",
                 "pad-templates": {
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20_32LE, S20_32BE, U20_32LE, U20_32BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -262954,7 +262970,7 @@
                 "klass": "Sink/Video",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, BGR10x2_LE, RGB10x2_LE, r210, I422_10LE, I422_10BE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE16, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { AYUV_F32, RGBA_F32LE, ARGB_F32, RGBA_F32BE, A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, RGBA_F16LE, RGBA_F16BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, RGBP_F32LE, RGBP_F32BE, RGB_F32LE, RGB_F32BE, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, RGBP_F16LE, RGBP_F16BE, RGB_F16LE, RGB_F16BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, BGR10x2_LE, RGB10x2_LE, r210, I422_10LE, I422_10BE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY_F32LE, GRAY_F32BE, GRAY16_LE, GRAY16_BE, GRAY_F16LE, GRAY_F16BE, GRAY10_LE16, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -262990,7 +263006,7 @@
                 "klass": "Source/Video",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, BGR10x2_LE, RGB10x2_LE, r210, I422_10LE, I422_10BE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE16, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { AYUV_F32, RGBA_F32LE, ARGB_F32, RGBA_F32BE, A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, RGBA_F16LE, RGBA_F16BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, RGBP_F32LE, RGBP_F32BE, RGB_F32LE, RGB_F32BE, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, RGBP_F16LE, RGBP_F16BE, RGB_F16LE, RGB_F16BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, BGR10x2_LE, RGB10x2_LE, r210, I422_10LE, I422_10BE, NV16_10LE40, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY_F32LE, GRAY_F32BE, GRAY16_LE, GRAY16_BE, GRAY_F16LE, GRAY_F16BE, GRAY10_LE16, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
