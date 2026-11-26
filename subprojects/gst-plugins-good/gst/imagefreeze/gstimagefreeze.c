@@ -1072,6 +1072,15 @@ gst_image_freeze_src_loop (GstImageFreeze * self)
       gst_event_set_seqnum (e, self->seqnum);
 
     g_mutex_lock (&self->lock);
+    if (self->flushing || !self->buffer || self->fps_d == 0) {
+      /* While the mutex was unlocked, we got FLUSH_START */
+      flow_ret = GST_FLOW_FLUSHING;
+      g_mutex_unlock (&self->lock);
+      gst_buffer_unref (buffer);
+      gst_event_unref (e);
+      GST_DEBUG_OBJECT (pad, "Flushing");
+      goto pause_task;
+    }
     if (self->segment.rate >= 0) {
       self->offset =
           gst_util_uint64_scale (self->segment.start, self->fps_n,
@@ -1090,6 +1099,14 @@ gst_image_freeze_src_loop (GstImageFreeze * self)
   }
 
   g_mutex_lock (&self->lock);
+  if (self->flushing || !self->buffer || self->fps_d == 0) {
+    /* While the mutex was unlocked, we got FLUSH_START */
+    g_mutex_unlock (&self->lock);
+    gst_buffer_unref (buffer);
+    flow_ret = GST_FLOW_FLUSHING;
+    goto pause_task;
+  }
+
   offset = self->offset;
   if (self->is_live) {
     GstClockTime base_time, clock_time;
