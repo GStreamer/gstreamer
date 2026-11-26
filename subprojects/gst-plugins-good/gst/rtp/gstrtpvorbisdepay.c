@@ -37,6 +37,11 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
  * http://www.rfc-editor.org/rfc/rfc5215.txt
  */
 
+/* RFC 5215 negotiates the Vorbis configuration in the caps, so only audio
+ * frames are assembled here. Real audio packets stay well below 12 KiB, so
+ * anything assembled beyond a modest limit cannot be a legitimate frame. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (64 * 1024)
+
 static GstStaticPadTemplate gst_rtp_vorbis_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -552,8 +557,19 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
     gst_adapter_push (rtpvorbisdepay->adapter, vdata);
 
     /* packet is not complete, we are done */
-    if (F != 3)
+    if (F != 3) {
+      if (gst_adapter_available (rtpvorbisdepay->adapter) >
+          DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+        GST_WARNING_OBJECT (rtpvorbisdepay,
+            "Too big (> %u bytes) frame, dropping.",
+            DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+        rtpvorbisdepay->assembling = FALSE;
+        gst_rtp_base_depayload_flush (depayload, FALSE);
+        gst_rtp_base_depayload_dropped (depayload);
+        gst_adapter_clear (rtpvorbisdepay->adapter);
+      }
       goto no_data_output;
+    }
 
     /* construct assembled buffer */
     length = gst_adapter_available (rtpvorbisdepay->adapter);
