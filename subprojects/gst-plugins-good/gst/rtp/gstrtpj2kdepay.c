@@ -67,6 +67,12 @@ static GstStaticPadTemplate gst_rtp_j2k_depay_sink_template =
         "encoding-name = (string) \"JPEG2000\";")
     );
 
+/* Robustness bound, mirroring rtph264depay and rtph265depay. RFC 5371
+ * fragment offsets are 24 bits wide, and a payload unit cannot grow past
+ * 16 MiB, but tiles assemble payload units and frames assemble tiles;
+ * both loops need a bound of their own. */
+#define DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE (32 * 1024 * 1024)
+
 enum
 {
   PROP_0,
@@ -138,6 +144,9 @@ gst_rtp_j2k_depay_init (GstRtpJ2KDepay * rtpj2kdepay)
   rtpj2kdepay->pu_adapter = gst_adapter_new ();
   rtpj2kdepay->t_adapter = gst_adapter_new ();
   rtpj2kdepay->f_adapter = gst_adapter_new ();
+  /* -1 accepts the first main header and the first tile of a frame */
+  rtpj2kdepay->last_mh_id = -1;
+  rtpj2kdepay->last_tile = -1;
 }
 
 static void
@@ -169,6 +178,8 @@ gst_rtp_j2k_depay_reset (GstRtpJ2KDepay * rtpj2kdepay)
   gst_adapter_clear (rtpj2kdepay->t_adapter);
   gst_adapter_clear (rtpj2kdepay->f_adapter);
   rtpj2kdepay->next_frag = 0;
+  rtpj2kdepay->last_mh_id = -1;
+  rtpj2kdepay->last_tile = -1;
 }
 
 static void
@@ -276,6 +287,17 @@ gst_rtp_j2k_depay_flush_pu (GstRTPBaseDepayload * depayload)
       gst_adapter_push (rtpj2kdepay->t_adapter, buf);
     }
     g_list_free (packets);
+
+    /* a tile that never ends assembles payload unit after payload unit */
+    if (gst_adapter_available (rtpj2kdepay->t_adapter) >
+        DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+      GST_WARNING_OBJECT (rtpj2kdepay, "Too big (> %u bytes) tile, dropping.",
+          DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+      rtpj2kdepay->last_tile = -1;
+      gst_rtp_base_depayload_flush (depayload, FALSE);
+      gst_rtp_base_depayload_dropped (depayload);
+      gst_adapter_clear (rtpj2kdepay->t_adapter);
+    }
   } else {
     /* we have a header */
     GST_DEBUG_OBJECT (rtpj2kdepay, "keeping header %u", mh_id);
@@ -372,6 +394,21 @@ gst_rtp_j2k_depay_flush_tile (GstRTPBaseDepayload * depayload)
     gst_adapter_push (rtpj2kdepay->f_adapter, buf);
   }
   g_list_free (packets);
+
+  /* a frame that never ends assembles tile after tile; the cap on the tile
+   * keeps one tile bounded, so the check here bounds the frame */
+  if (gst_adapter_available (rtpj2kdepay->f_adapter) >
+      DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE) {
+    GST_WARNING_OBJECT (rtpj2kdepay, "Too big (> %u bytes) frame, dropping.",
+        DEFAULT_MAX_FRAGMENTATION_UNIT_SIZE);
+    rtpj2kdepay->last_tile = -1;
+    /* the frame is gone, so any main header id is acceptable again;
+     * flush_frame resets it only when it has data to */
+    rtpj2kdepay->last_mh_id = -1;
+    gst_rtp_base_depayload_flush (depayload, FALSE);
+    gst_rtp_base_depayload_dropped (depayload);
+    gst_adapter_clear (rtpj2kdepay->f_adapter);
+  }
 
 done:
   rtpj2kdepay->last_tile = -1;
