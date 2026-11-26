@@ -4,6 +4,8 @@ line-length=100
 [general]
 ignore=body-is-missing
 regex-style-search=True
+# User-defined rules (see scripts/gitlint-rules/)
+extra-path=scripts/gitlint-rules
 
 [body-max-line-length]
 line-length=120
