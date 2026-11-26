@@ -227,6 +227,37 @@ static const guint8 rtp_jpeg_frame_data_s5[] = {
  *
  */
 
+static GstBuffer *
+create_rtp_jpeg_packet (guint32 frag_offset, guint8 type, guint8 Q,
+    guint8 width, guint8 height, const guint8 * data, gsize size,
+    guint32 timestamp, guint16 seqnum, gboolean marker)
+{
+  GstBuffer *buf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 *payload;
+
+  buf = gst_rtp_buffer_new_allocate (8 + size, 0, 0);
+  GST_BUFFER_PTS (buf) = gst_util_uint64_scale (timestamp, GST_SECOND, 90000);
+
+  gst_rtp_buffer_map (buf, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_seq (&rtp, seqnum);
+  gst_rtp_buffer_set_timestamp (&rtp, timestamp);
+  gst_rtp_buffer_set_marker (&rtp, marker);
+  payload = gst_rtp_buffer_get_payload (&rtp);
+  /* main JPEG header (RFC 2435 section 3.1), Type-specific left zero */
+  payload[1] = (frag_offset >> 16) & 0xff;
+  payload[2] = (frag_offset >> 8) & 0xff;
+  payload[3] = frag_offset & 0xff;
+  payload[4] = type;
+  payload[5] = Q;
+  payload[6] = width;
+  payload[7] = height;
+  memcpy (&payload[8], data, size);
+  gst_rtp_buffer_unmap (&rtp);
+
+  return buf;
+}
+
 GST_START_TEST (test_rtpjpegpay_1_slice)
 {
   GstFlowReturn ret;
@@ -347,6 +378,172 @@ GST_START_TEST (test_rtpjpegpay_5_slices)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtpjpegdepay_oversized_dropped)
+{
+  GstHarness *h;
+  GstBuffer *buf, *out, *ref;
+  guint8 continuation[512];
+  guint8 *ref_data;
+  gsize ref_size;
+  guint32 timestamp, frag_offset;
+  guint i;
+
+  memset (continuation, 0x5a, sizeof (continuation));
+
+  h = gst_harness_new ("rtpjpegdepay");
+  gst_harness_set_src_caps_str (h, "application/x-rtp,media=(string)video,"
+      "clock-rate=(int)90000,encoding-name=(string)JPEG,payload=(int)26");
+
+  /* a complete frame below the built-in bound depayloads as usual */
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1,
+      rtp_jpeg_frame_data, sizeof (rtp_jpeg_frame_data), 0, 0, TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  fail_unless_equals_int (1, gst_harness_buffers_received (h));
+  ref = gst_harness_pull (h);
+
+  /* an oversized frame without marker set is dropped once it exceeds the
+   * built-in 16 MiB bound; the packet with the marker bit set is dropped as
+   * well, as the depayloader waits for a new fragment offset of zero */
+  timestamp = 90000;
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1, continuation,
+      sizeof (continuation), timestamp, 1, FALSE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  frag_offset = sizeof (continuation);
+  for (i = 1; i < 32767; i++) {
+    buf = create_rtp_jpeg_packet (frag_offset, 0, 1, 1, 1,
+        continuation, sizeof (continuation), timestamp, (i + 1) & 0xffff,
+        FALSE);
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+    frag_offset += sizeof (continuation);
+  }
+  buf = create_rtp_jpeg_packet (frag_offset, 0, 1, 1, 1, continuation,
+      sizeof (continuation), timestamp, 32772, TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  /* the next complete frame is depayloaded intact */
+  timestamp = 180000;
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1,
+      rtp_jpeg_frame_data, sizeof (rtp_jpeg_frame_data), timestamp, 32773,
+      TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  fail_unless_equals_int (1, gst_harness_buffers_in_queue (h));
+
+  out = gst_harness_pull (h);
+  fail_unless_equals_int (gst_buffer_get_size (out), gst_buffer_get_size (ref));
+  ref_size = gst_buffer_get_size (ref);
+  ref_data = g_malloc (ref_size);
+  gst_buffer_extract (ref, 0, ref_data, ref_size);
+  fail_unless (gst_buffer_memcmp (out, 0, ref_data, ref_size) == 0);
+  g_free (ref_data);
+  gst_buffer_unref (out);
+  gst_buffer_unref (ref);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* The built-in 16 MiB bound is not settable; a frame is built to land on it
+ * exactly. The first fragment counts as the header the depayloader builds
+ * for it (start marker and tables) plus its payload; the default header
+ * measures 605 bytes (asserted below, it is deterministic for the test
+ * type and Q), and its size is a multiple of four. The start payload is
+ * sized so the first fragment contributes 1536 bytes and the last of 32765
+ * continuations of 512 bytes fills the bound exactly. */
+#define JPEG_RTP_PAYLOAD 512
+#define JPEG_NCON 32765
+#define JPEG_START_PAYLOAD \
+  (16 * 1024 * 1024 - JPEG_NCON * JPEG_RTP_PAYLOAD - 605)
+
+/* Every check against the bound sees what earlier fragments left in the
+ * adapter, so a frame landing on the bound exactly lets every check see
+ * less than it: a strict > lets the frame through while >= would drop it.
+ * One continuation more is over the bound: the frame is dropped and the
+ * depayloader recovers on the next whole frame. */
+GST_START_TEST (test_rtpjpegdepay_at_limit)
+{
+  GstHarness *h;
+  GstBuffer *buf, *out;
+  guint8 frag[JPEG_START_PAYLOAD];
+  guint i;
+  gsize framed;
+
+  memset (frag, 0x5a, sizeof (frag));
+
+  h = gst_harness_new ("rtpjpegdepay");
+  gst_harness_set_src_caps_str (h, "application/x-rtp,media=(string)video,"
+      "clock-rate=(int)90000,encoding-name=(string)JPEG,payload=(int)26");
+
+  /* a single fragment frame reveals the framed size of the first
+   * fragment: the header the depayloader builds, the payload, and the
+   * appended end marker */
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1, frag, sizeof (frag), 90000, 0,
+      TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  fail_unless_equals_int (1, gst_harness_buffers_received (h));
+  out = gst_harness_pull (h);
+  framed = gst_buffer_get_size (out);
+  gst_buffer_unref (out);
+  fail_unless (framed > sizeof (frag));
+  /* the measured header is the expected default one, so that the first
+   * fragment of the next frame contributes exactly 1536 bytes */
+  fail_unless_equals_int (framed - sizeof (frag) - 2, 605);
+
+  /* the end marker the depayloader appends is not in the adapter while
+   * checking, and the start packet is not checked before the bound could
+   * matter. With the first fragment of JPEG_START_PAYLOAD bytes, the last
+   * of JPEG_NCON continuations leaves exactly 16 MiB in the adapter: that
+   * check sees the bound and no more, which a strict > must let through;
+   * the completed frame is that size plus the appended end marker. */
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1, frag, sizeof (frag), 180000, 1,
+      FALSE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  for (i = 0; i < JPEG_NCON; i++) {
+    buf = create_rtp_jpeg_packet (sizeof (frag) + (i + 1) * JPEG_RTP_PAYLOAD,
+        0, 1, 1, 1, frag, JPEG_RTP_PAYLOAD, 180000, (2 + i) & 0xffff, FALSE);
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  }
+  /* the frame ends on a fragment without data: the previous checked
+   * fragment filled the adapter to exactly the built-in bound */
+  buf = create_rtp_jpeg_packet (sizeof (frag) + JPEG_NCON * JPEG_RTP_PAYLOAD,
+      0, 1, 1, 1, frag, 0, 180000, (2 + JPEG_NCON) & 0xffff, TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  fail_unless_equals_int (1, gst_harness_buffers_in_queue (h));
+  out = gst_harness_pull (h);
+  fail_unless_equals_int (16 * 1024 * 1024 + 2, gst_buffer_get_size (out));
+  gst_buffer_unref (out);
+
+  /* one continuation fragment more is over the bound: the check trips on
+   * that fragment, the incomplete frame is dropped, and a following whole
+   * frame depayloads */
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1, frag, sizeof (frag), 270000,
+      (3 + JPEG_NCON) & 0xffff, FALSE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  for (i = 0; i < JPEG_NCON + 1; i++) {
+    buf = create_rtp_jpeg_packet (sizeof (frag) + (i + 1) * JPEG_RTP_PAYLOAD,
+        0, 1, 1, 1, frag, JPEG_RTP_PAYLOAD, 270000,
+        (4 + JPEG_NCON + i) & 0xffff, FALSE);
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  }
+  buf = create_rtp_jpeg_packet (sizeof (frag) + (JPEG_NCON + 2) *
+      JPEG_RTP_PAYLOAD, 0, 1, 1, 1, frag, 0, 270000,
+      (5 + 2 * JPEG_NCON) & 0xffff, TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  buf = create_rtp_jpeg_packet (0, 0, 1, 1, 1, frag, JPEG_RTP_PAYLOAD, 360000,
+      (6 + 2 * JPEG_NCON) & 0xffff, TRUE);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
+  fail_unless_equals_int (1, gst_harness_buffers_in_queue (h));
+  out = gst_harness_pull (h);
+  gst_buffer_unref (out);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtpjpeg_suite (void)
@@ -359,6 +556,8 @@ rtpjpeg_suite (void)
 
   tcase_add_test (tc_chain, test_rtpjpegpay_1_slice);
   tcase_add_test (tc_chain, test_rtpjpegpay_5_slices);
+  tcase_add_test (tc_chain, test_rtpjpegdepay_oversized_dropped);
+  tcase_add_test (tc_chain, test_rtpjpegdepay_at_limit);
 
   return s;
 }
