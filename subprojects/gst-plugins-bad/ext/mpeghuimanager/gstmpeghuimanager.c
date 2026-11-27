@@ -213,8 +213,7 @@ static gboolean gst_mpeghuimanager_src_event (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_mpeghuimanager_generate_output (GstBaseTransform *
     trans, GstBuffer ** outbuf);
-static void gst_mpeghuimanager_publish_persistence (GstMpeghUiManager *
-    filter);
+static void gst_mpeghuimanager_publish_persistence (GstMpeghUiManager * filter);
 
 static void
 gst_mpeghuimanager_class_init (GstMpeghUiManagerClass * klass)
