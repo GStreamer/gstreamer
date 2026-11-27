@@ -372,7 +372,7 @@ init_cuda_ctx (void)
 
 /* *INDENT-OFF* */
 static gboolean
-gst_create_cucontext (guint * device_id, CUcontext * context)
+gst_create_cucontext (guint * device_id, guint flags, CUcontext * context)
 {
   CUcontext cuda_ctx;
   CUdevice cdev = 0, cuda_dev = -1;
@@ -415,7 +415,7 @@ gst_create_cucontext (guint * device_id, CUcontext * context)
     return FALSE;
   }
 
-  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, CU_CTX_SCHED_BLOCKING_SYNC, cuda_dev))) {
+  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, flags, cuda_dev))) {
     GST_WARNING ("Failed to create CUDA context for cuda device %d", cuda_dev);
     return FALSE;
   }
@@ -538,11 +538,29 @@ gst_cuda_context_finalize (GObject * object)
 GstCudaContext *
 gst_cuda_context_new (guint device_id)
 {
+  return gst_cuda_context_new_with_flags (device_id,
+      CU_CTX_SCHED_BLOCKING_SYNC);
+}
+
+/**
+ * gst_cuda_context_new_with_flags:
+ * @device_id: device-id for creating #GstCudaContext
+ * @flags: CUDA context creation flags passed to CuCtxCreate
+ *
+ * Creates a #GstCudaContext for @device_id with the given @flags.
+ *
+ * Returns: (transfer full) (nullable): a new #GstCudaContext or %NULL on failure
+ *
+ * Since: 1.30
+ */
+GstCudaContext *
+gst_cuda_context_new_with_flags (guint device_id, guint flags)
+{
   CUcontext old_ctx;
   CUcontext ctx;
   GstCudaContext *self;
 
-  if (!gst_create_cucontext (&device_id, &ctx)) {
+  if (!gst_create_cucontext (&device_id, flags, &ctx)) {
     return nullptr;
   }
 

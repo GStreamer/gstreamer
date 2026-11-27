@@ -69,6 +69,10 @@ GST_CUDA_API
 GstCudaContext * gst_cuda_context_new         (guint device_id) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CUDA_API
+GstCudaContext * gst_cuda_context_new_with_flags (guint device_id,
+                                                  guint flags) G_GNUC_WARN_UNUSED_RESULT;
+
+GST_CUDA_API
 GstCudaContext * gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_CUDA_API
