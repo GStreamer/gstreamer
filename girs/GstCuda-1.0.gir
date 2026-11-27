@@ -691,6 +691,24 @@ failure</doc>
           </parameter>
         </parameters>
       </constructor>
+      <constructor name="new_with_flags" c:identifier="gst_cuda_context_new_with_flags" version="1.30">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">Creates a #GstCudaContext for @device_id with the given @flags.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">a new #GstCudaContext or %NULL on failure</doc>
+          <type name="CudaContext" c:type="GstCudaContext*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">device-id for creating #GstCudaContext</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">CUDA context creation flags passed to CuCtxCreate</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </constructor>
       <constructor name="new_wrapped" c:identifier="gst_cuda_context_new_wrapped" version="1.22">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">Note: The caller is responsible for ensuring that the CUcontext and CUdevice
 represented by @handle and @device stay alive while the returned
