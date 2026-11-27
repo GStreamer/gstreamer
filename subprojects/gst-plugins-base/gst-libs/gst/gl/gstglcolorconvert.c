@@ -1166,11 +1166,8 @@ struct _GstGLColorConvertPrivate
 GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_debug);
 #define GST_CAT_DEFAULT gst_gl_color_convert_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_color_convert_debug, "glconvert", 0, "convert");
-
 G_DEFINE_TYPE_WITH_CODE (GstGLColorConvert, gst_gl_color_convert,
-    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLColorConvert) DEBUG_INIT);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLColorConvert));
 
 static void gst_gl_color_convert_finalize (GObject * object);
 static void gst_gl_color_convert_reset (GstGLColorConvert * convert);
@@ -1179,8 +1176,22 @@ static void gst_gl_color_convert_reset (GstGLColorConvert * convert);
     GST_TYPE_GL_COLOR_CONVERT, GstGLColorConvertPrivate))
 
 static void
+init_debug (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static gsize _debug;
+  if (g_once_init_enter (&_debug)) {
+    GST_DEBUG_CATEGORY_INIT (gst_gl_color_convert_debug, "glconvert", 0,
+        "convert");
+    g_once_init_leave (&_debug, 1);
+  }
+#endif
+}
+
+static void
 gst_gl_color_convert_class_init (GstGLColorConvertClass * klass)
 {
+  init_debug ();
   G_OBJECT_CLASS (klass)->finalize = gst_gl_color_convert_finalize;
 }
 
@@ -1988,6 +1999,7 @@ GstCaps *
 gst_gl_color_convert_fixate_caps (GstGLContext * context,
     GstPadDirection direction, GstCaps * caps, GstCaps * other)
 {
+  init_debug ();
   GstCaps *result;
 
   result =
