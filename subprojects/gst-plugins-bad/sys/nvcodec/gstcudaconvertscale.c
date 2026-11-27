@@ -336,7 +336,7 @@ gst_cuda_base_convert_fixate_caps (GstBaseTransform * trans,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       self->selected_method, NULL, GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT |
-      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, caps, othercaps);
+      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, caps, othercaps, NULL);
   if (!result)
     return othercaps;
 
@@ -1165,7 +1165,7 @@ gst_cuda_convert_fixate_caps (GstBaseTransform * base,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       self->selected_method, NULL, GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT,
-      caps, othercaps);
+      caps, othercaps, NULL);
   if (!result)
     return othercaps;
 
@@ -1326,7 +1326,7 @@ gst_cuda_scale_fixate_caps (GstBaseTransform * base,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       self->selected_method, NULL, GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE,
-      caps, othercaps);
+      caps, othercaps, NULL);
   if (!result)
     return othercaps;
 

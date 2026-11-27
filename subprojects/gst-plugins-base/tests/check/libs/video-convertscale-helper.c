@@ -42,7 +42,7 @@ GST_START_TEST (test_fixate_multiple_formats)
   GstCaps *fixed = gst_video_convertscale_fixate_caps (GST_OBJECT (element),
       GST_PAD_SRC, GST_VIDEO_ORIENTATION_IDENTITY, NULL,
       GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT |
-      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, incaps, outcaps);
+      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, incaps, outcaps, NULL);
   fail_unless (fixed != NULL);
   fail_unless (gst_caps_is_equal (fixed, expected));
   gst_caps_unref (incaps);

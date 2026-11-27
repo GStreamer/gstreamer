@@ -246,7 +246,7 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (bt), direction,
       GST_VIDEO_ORIENTATION_IDENTITY, NULL,
-      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, caps, othercaps);
+      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, caps, othercaps, NULL);
   if (!result)
     return othercaps;
 

@@ -56,6 +56,7 @@ typedef enum
  * @out_features: The output #GstCapsFeatures
  * @ins: #GstStructure of the input caps
  * @outs: #GstStructure of the output caps
+ * @user_data: The user data passed to gst_video_convertscale_fixate_caps()
  *
  * Callback to guestimate conversion loss between the input and output formats.
  * A value of %G_MAXINT means the conversion is not possible, a value of 0 means
@@ -74,13 +75,14 @@ typedef gint (*GstVideoConvertScaleFormatLossFunc) (GstObject * object,
     const GstVideoFormatInfo * in_info,
     const GstVideoFormatInfo * out_info,
     const GstCapsFeatures * out_features,
-    const GstStructure * ins, GstStructure * outs);
+    const GstStructure * ins, GstStructure * outs, gpointer user_data);
 
 GST_VIDEO_API
 GstCaps * gst_video_convertscale_fixate_caps (GstObject * object,
     GstPadDirection direction,
     GstVideoOrientationMethod orientation,
     GstVideoConvertScaleFormatLossFunc format_loss,
-    GstVideoConvertScaleFixateFlags flags, GstCaps * caps, GstCaps * othercaps);
+    GstVideoConvertScaleFixateFlags flags, GstCaps * caps, GstCaps * othercaps,
+    gpointer user_data);
 
 G_END_DECLS

@@ -1326,7 +1326,7 @@ gst_video_convert_scale_fixate_caps (GstBaseTransform * base,
 
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (base), direction,
-      GST_VIDEO_ORIENTATION_IDENTITY, NULL, flags, caps, othercaps);
+      GST_VIDEO_ORIENTATION_IDENTITY, NULL, flags, caps, othercaps, NULL);
   if (!result)
     return othercaps;
 

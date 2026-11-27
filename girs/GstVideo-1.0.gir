@@ -7178,6 +7178,10 @@ For example, this is used by glcolorconvert to fixate "target-texture" field.</d
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">#GstStructure of the output caps</doc>
           <type name="Gst.Structure" c:type="GstStructure*"/>
         </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="6">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.h">The user data passed to gst_video_convertscale_fixate_caps()</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
       </parameters>
     </callback>
     <record name="VideoConverter" c:type="GstVideoConverter" disguised="1" opaque="1">
@@ -20422,7 +20426,7 @@ Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
         </parameter>
       </parameters>
     </function>
-    <function name="video_convertscale_fixate_caps" c:identifier="gst_video_convertscale_fixate_caps" version="1.30" introspectable="0">
+    <function name="video_convertscale_fixate_caps" c:identifier="gst_video_convertscale_fixate_caps" version="1.30">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">Fixates the output video format and resolution given the input caps and the pad direction.
 This uses heuristics to minimize the loss when converting the video format and/or resolution.
 
@@ -20448,8 +20452,9 @@ If %NULL, all format conversions are considered supported.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The #GstVideoOrientationMethod</doc>
           <type name="VideoOrientationMethod" c:type="GstVideoOrientationMethod"/>
         </parameter>
-        <parameter name="format_loss" transfer-ownership="none" nullable="1" allow-none="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">A callback to estimate the conversion loss, or %NULL</doc>
+        <parameter name="format_loss" transfer-ownership="none" nullable="1" allow-none="1" scope="call" closure="7">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">A callback to
+  estimate the conversion loss, or %NULL</doc>
           <type name="VideoConvertScaleFormatLossFunc" c:type="GstVideoConvertScaleFormatLossFunc"/>
         </parameter>
         <parameter name="flags" transfer-ownership="none">
@@ -20463,6 +20468,10 @@ If %NULL, all format conversions are considered supported.</doc>
         <parameter name="othercaps" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">The output #GstCaps</doc>
           <type name="Gst.Caps" c:type="GstCaps*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-convertscale-helper.c">User data passed to @format_loss</doc>
+          <type name="gpointer" c:type="gpointer"/>
         </parameter>
       </parameters>
     </function>

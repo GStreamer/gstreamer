@@ -1947,7 +1947,7 @@ _texture_target_mask (const GstStructure * s)
 static gint
 format_loss (GstObject * object, const GstVideoFormatInfo * in_info,
     const GstVideoFormatInfo * out_info, const GstCapsFeatures * out_features,
-    const GstStructure * ins, GstStructure * outs)
+    const GstStructure * ins, GstStructure * outs, gpointer user_data)
 {
   gint loss = 0;
 
@@ -2005,7 +2005,7 @@ gst_gl_color_convert_fixate_caps (GstGLContext * context,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (context), direction,
       GST_VIDEO_ORIENTATION_IDENTITY, format_loss,
-      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT, caps, other);
+      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT, caps, other, NULL);
   if (!result)
     return other;
 

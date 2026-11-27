@@ -1126,7 +1126,7 @@ update_hdr_fields (GstVaVpp * self, GstCaps * result)
 static gint
 format_loss (GstObject * object, const GstVideoFormatInfo * in_info,
     const GstVideoFormatInfo * out_info, const GstCapsFeatures * out_features,
-    const GstStructure * ins, GstStructure * outs)
+    const GstStructure * ins, GstStructure * outs, gpointer user_data)
 {
   GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (object);
   if (!gst_va_filter_has_video_format (btrans->filter,
@@ -1153,7 +1153,7 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       gst_va_filter_get_orientation (btrans->filter),
-      format_loss, flags, caps, othercaps);
+      format_loss, flags, caps, othercaps, NULL);
   if (!result)
     return othercaps;
 

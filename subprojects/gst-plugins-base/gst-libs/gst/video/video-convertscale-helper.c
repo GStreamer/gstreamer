@@ -103,7 +103,7 @@ static gint
 score_value (GstObject * object, const GstVideoFormatInfo * in_info,
     GstVideoFormat format, const GstCapsFeatures * features,
     const GstStructure * ins, GstStructure * outs,
-    GstVideoConvertScaleFormatLossFunc format_loss)
+    GstVideoConvertScaleFormatLossFunc format_loss, gpointer user_data)
 {
   const GstVideoFormatInfo *t_info;
   GstVideoFormatFlags in_flags, t_flags;
@@ -114,7 +114,8 @@ score_value (GstObject * object, const GstVideoFormatInfo * in_info,
     return G_MAXINT;
 
   if (format_loss) {
-    loss = format_loss (object, in_info, t_info, features, ins, outs);
+    loss = format_loss (object, in_info, t_info, features, ins, outs,
+        user_data);
     if (loss == G_MAXINT)
       return G_MAXINT;
   }
@@ -221,7 +222,7 @@ update_result_with_score (GstCaps * result, gint loss, gint * min_loss,
 static GstCaps *
 _fixate_format (GstObject * object,
     GstVideoConvertScaleFormatLossFunc format_loss, GstCaps * caps,
-    GstCaps * othercaps)
+    GstCaps * othercaps, gpointer user_data)
 {
   GstStructure *ins;
   const gchar *in_format;
@@ -311,7 +312,7 @@ _fixate_format (GstObject * object,
           GstStructure *outs_copy = gst_structure_copy (outs);
           gint loss =
               score_value (object, in_info, fmt, features, ins, outs_copy,
-              format_loss);
+              format_loss, user_data);
           result =
               update_result_with_score (result, loss, &min_loss, fmt, outs_copy,
               features, modifier);
@@ -333,7 +334,7 @@ _fixate_format (GstObject * object,
 
       GstStructure *outs_copy = gst_structure_copy (outs);
       gint loss = score_value (object, in_info, fmt, features, ins, outs_copy,
-          format_loss);
+          format_loss, user_data);
       result =
           update_result_with_score (result, loss, &min_loss, fmt, outs_copy,
           features, modifier);
@@ -970,10 +971,12 @@ copy_misc_fields_from_input (GstCaps * in_caps, GstCaps * out_caps)
  * @object: The object to use for logging
  * @direction: The #GstPadDirection of the pad
  * @orientation: The #GstVideoOrientationMethod
- * @format_loss: (nullable): A callback to estimate the conversion loss, or %NULL
+ * @format_loss: (nullable) (scope call) (closure user_data): A callback to
+ *   estimate the conversion loss, or %NULL
  * @flags: #GstVideoConvertScaleFixateFlags
  * @caps: The input #GstCaps
  * @othercaps: The output #GstCaps
+ * @user_data: (nullable): User data passed to @format_loss
  *
  * Fixates the output video format and resolution given the input caps and the pad direction.
  * This uses heuristics to minimize the loss when converting the video format and/or resolution.
@@ -990,7 +993,8 @@ GstCaps *
 gst_video_convertscale_fixate_caps (GstObject * object,
     GstPadDirection direction, GstVideoOrientationMethod orientation,
     GstVideoConvertScaleFormatLossFunc format_loss,
-    GstVideoConvertScaleFixateFlags flags, GstCaps * caps, GstCaps * othercaps)
+    GstVideoConvertScaleFixateFlags flags, GstCaps * caps, GstCaps * othercaps,
+    gpointer user_data)
 {
   GstCaps *result;
 
@@ -1002,7 +1006,7 @@ gst_video_convertscale_fixate_caps (GstObject * object,
 
   if (flags & GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT) {
     /* will iterate in all structures to find one with "best color" */
-    result = _fixate_format (object, format_loss, caps, othercaps);
+    result = _fixate_format (object, format_loss, caps, othercaps, user_data);
     if (!result)
       return NULL;
   } else {

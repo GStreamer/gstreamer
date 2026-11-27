@@ -697,7 +697,7 @@ gst_d3d12_base_convert_fixate_caps (GstBaseTransform * trans,
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       priv->selected_method, NULL, (GstVideoConvertScaleFixateFlags)
       (GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT |
-          GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE), caps, othercaps);
+          GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE), caps, othercaps, NULL);
   if (!result)
     return othercaps;
 
@@ -1952,7 +1952,7 @@ gst_d3d12_color_convert_fixate_caps (GstBaseTransform * base,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       priv->selected_method, NULL, GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_FORMAT,
-      caps, othercaps);
+      caps, othercaps, NULL);
   if (!result)
     return othercaps;
 
@@ -2148,7 +2148,7 @@ gst_d3d12_scale_fixate_caps (GstBaseTransform * base,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (self), direction,
       priv->selected_method, NULL, GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE,
-      caps, othercaps);
+      caps, othercaps, NULL);
   if (!result)
     return othercaps;
 

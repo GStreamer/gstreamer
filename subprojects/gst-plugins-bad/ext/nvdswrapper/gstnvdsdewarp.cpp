@@ -982,7 +982,7 @@ gst_nv_ds_dewarp_fixate_caps (GstBaseTransform * base,
   result =
       gst_video_convertscale_fixate_caps (GST_OBJECT (base), direction,
       GST_VIDEO_ORIENTATION_IDENTITY, NULL,
-      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, caps, othercaps);
+      GST_VIDEO_CONVERTSCALE_FIXATE_FLAG_SIZE, caps, othercaps, NULL);
   if (!result)
     return othercaps;
 
