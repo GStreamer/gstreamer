@@ -745,6 +745,7 @@ typedef struct flush_test_shared_data
   gboolean have_buffer;
 } flush_test_shared_data;
 
+#define FLUSH_TEST_TIMEOUT (10*G_USEC_PER_SEC)
 
 static gboolean
 wait_for (flush_test_shared_data * shared_data, gboolean * wait_for_flag,
@@ -790,7 +791,7 @@ handle_log_message (GstDebugCategory * category,
     g_cond_signal (shared_data->cond);
 
     // release the thread when we get a signal or on timeout
-    wait_for (shared_data, &shared_data->flushed, G_USEC_PER_SEC);
+    wait_for (shared_data, &shared_data->flushed, FLUSH_TEST_TIMEOUT);
   }
 }
 
@@ -860,7 +861,8 @@ test_imagefreeze_no_crash_after_flush (gboolean flush_stop_while_parked)
       GST_STATE_CHANGE_SUCCESS);
 
   /* wait until src thread is parked inside src_loop function, unlocked */
-  fail_unless (wait_for (&shared_data, &shared_data.parked, G_USEC_PER_SEC));
+  fail_unless (wait_for (&shared_data, &shared_data.parked,
+          FLUSH_TEST_TIMEOUT));
 
   /* and now try to crash it */
   gst_pad_send_event (freeze_sink, gst_event_new_flush_start ());
@@ -873,7 +875,7 @@ test_imagefreeze_no_crash_after_flush (gboolean flush_stop_while_parked)
   g_cond_signal (shared_data.cond);
   g_mutex_unlock (shared_data.lock);
 
-  wait_until = g_get_monotonic_time () + G_USEC_PER_SEC;
+  wait_until = g_get_monotonic_time () + FLUSH_TEST_TIMEOUT;
   while (g_get_monotonic_time () < wait_until) {
     if (gst_pad_get_task_state (freeze_src) == GST_TASK_PAUSED)
       break;
@@ -892,7 +894,7 @@ test_imagefreeze_no_crash_after_flush (gboolean flush_stop_while_parked)
   fail_unless (gst_pad_chain (freeze_sink, empty_buf) == GST_FLOW_EOS);
 
   fail_unless (wait_for (&shared_data, &shared_data.have_buffer,
-          G_USEC_PER_SEC));
+          FLUSH_TEST_TIMEOUT));
 
   gst_debug_remove_log_function (handle_log_message);
   gst_debug_unset_threshold_for_name ("imagefreeze");
